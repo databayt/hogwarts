@@ -25,9 +25,6 @@ vi.mock("@/lib/db", () => ({
       count: vi.fn(),
       deleteMany: vi.fn(),
     },
-    class: {
-      findFirst: vi.fn(),
-    },
     subject: {
       findFirst: vi.fn(),
     },
@@ -131,11 +128,7 @@ describe("Exam Actions", () => {
         schoolId: mockSchoolId,
       }
 
-      // Mock class and subject existence checks
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "class-1",
-        schoolId: mockSchoolId,
-      } as any)
+      // Mock subject existence check
       vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
         id: "selection-1",
         catalogSubjectId: "subject-1",
@@ -256,7 +249,8 @@ describe("Exam Actions", () => {
         examDate: futureDate,
         startTime: "09:00",
         endTime: "11:00",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: null,
       } as any)
       vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 } as any)
 
@@ -326,7 +320,7 @@ describe("Exam Actions", () => {
           schoolId: mockSchoolId,
           examDate: new Date(),
           createdAt: new Date(),
-          class: { name: "Class A" },
+          grade: { name: "Grade 7" },
           subject: { name: "Math" },
         },
         {
@@ -335,7 +329,7 @@ describe("Exam Actions", () => {
           schoolId: mockSchoolId,
           examDate: new Date(),
           createdAt: new Date(),
-          class: { name: "Class B" },
+          grade: { name: "Grade 8" },
           subject: { name: "Science" },
         },
       ]
@@ -358,10 +352,6 @@ describe("Exam Actions", () => {
         description: "Covers chapters 1-5",
         schoolId: mockSchoolId,
       }
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "class-1",
-        schoolId: mockSchoolId,
-      } as any)
       vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
         id: "selection-1",
         catalogSubjectId: "subject-1",
@@ -401,7 +391,8 @@ describe("Exam Actions", () => {
         examDate: futureDate,
         startTime: "09:00",
         endTime: "11:00",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: null,
       } as any)
       vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 } as any)
 

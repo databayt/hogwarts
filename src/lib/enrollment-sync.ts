@@ -99,7 +99,6 @@ export async function syncGradeSubjectEnrollments(
       client.student.findMany({
         where: {
           ...audienceRosterWhere(schoolId, {
-            classId: null,
             gradeId,
             sectionId: null,
           }),

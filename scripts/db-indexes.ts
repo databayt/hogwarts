@@ -46,13 +46,6 @@ const suggestions: IndexSuggestion[] = [
     priority: "high",
     sql: "CREATE INDEX IF NOT EXISTS idx_teachers_school_id ON teachers(schoolId);",
   },
-  {
-    table: "classes",
-    column: "schoolId",
-    reason: "Foreign key used in WHERE clauses frequently",
-    priority: "high",
-    sql: "CREATE INDEX IF NOT EXISTS idx_classes_school_id ON classes(schoolId);",
-  },
 
   // Composite indexes for common queries
   {
@@ -61,13 +54,6 @@ const suggestions: IndexSuggestion[] = [
     reason: "Common query: attendance by school and date",
     priority: "high",
     sql: "CREATE INDEX IF NOT EXISTS idx_attendance_school_date ON attendance(schoolId, date);",
-  },
-  {
-    table: "student_classes",
-    column: "schoolId, classId",
-    reason: "Common query: students in class",
-    priority: "medium",
-    sql: "CREATE INDEX IF NOT EXISTS idx_student_classes_school_class ON student_classes(schoolId, classId);",
   },
 
   // Text search indexes

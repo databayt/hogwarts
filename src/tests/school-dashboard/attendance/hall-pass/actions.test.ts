@@ -70,7 +70,6 @@ describe("hall-pass actions", () => {
       vi.mocked(db.hallPass.create).mockResolvedValue({
         id: "h1",
         student: { firstName: "Sara", lastName: "Ali" },
-        class: null,
         section: { name: "7-A" },
         destination: "BATHROOM",
         expectedReturn: new Date(),

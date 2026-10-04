@@ -33,7 +33,7 @@ describe("loadUpcomingData", () => {
       { student: { id: "s1", firstName: "Khadija", lastName: "Alnoor" } },
     ] as never)
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "s1", sectionId: "7a", gradeId: "g7", classIds: [] },
+      { studentId: "s1", sectionId: "7a", gradeId: "g7" },
     ])
     vi.mocked(db.schoolAssignment.count)
       .mockResolvedValueOnce(2)

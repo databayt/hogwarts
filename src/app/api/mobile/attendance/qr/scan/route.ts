@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         schoolId: true,
-        classId: true,
         sectionId: true,
         isActive: true,
         expiresAt: true,
@@ -85,27 +84,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the student belongs to the section (or legacy class) this QR
-    // was issued for. Without this check, a student of section A could scan
-    // section B's QR and have a fake PRESENT row attached to section B.
-    const enrolled = session.sectionId
-      ? student.sectionId === session.sectionId
-      : !!(
-          session.classId &&
-          (await db.studentClass.findFirst({
-            where: { studentId: student.id, classId: session.classId },
-            select: { id: true },
-          }))
-        )
+    // Verify the student belongs to the section this QR was issued for.
+    // Without this check, a student of section A could scan section B's QR
+    // and have a fake PRESENT row attached to section B.
+    const enrolled =
+      !!session.sectionId && student.sectionId === session.sectionId
     if (!enrolled) {
       return NextResponse.json(
         { error: "Student is not in this section" },
         { status: 403 }
       )
     }
-    const dailyKey = session.sectionId
-      ? { sectionId: session.sectionId }
-      : { classId: session.classId }
+    const dailyKey = { sectionId: session.sectionId }
 
     // Check if student already scanned this session
     const scannedBy = session.scannedBy as string[]

@@ -351,9 +351,7 @@ export async function dispatchNotificationsToAudience(params: {
   actorId?: string
   channels?: NotificationChannel[]
   metadata?: Record<string, unknown>
-  /** `class` is legacy; new audiences are a grade or a section. */
-  targetScope?: "school" | "class" | "grade" | "section" | "role"
-  targetClassId?: string
+  targetScope?: "school" | "grade" | "section" | "role"
   targetGradeId?: string
   targetSectionId?: string
   targetRole?: string
@@ -403,7 +401,6 @@ export async function dispatchNotificationsToAudience(params: {
           params.schoolId,
           params.targetScope,
           {
-            classId: params.targetClassId,
             gradeId: params.targetGradeId,
             sectionId: params.targetSectionId,
           },
@@ -506,8 +503,8 @@ export async function dispatchNotificationsToAudience(params: {
  */
 async function resolveTargetUsers(
   schoolId: string,
-  scope: "school" | "class" | "grade" | "section" | "role",
-  target: { classId?: string; gradeId?: string; sectionId?: string },
+  scope: "school" | "grade" | "section" | "role",
+  target: { gradeId?: string; sectionId?: string },
   role?: string
 ): Promise<string[]> {
   switch (scope) {
@@ -518,16 +515,6 @@ async function resolveTargetUsers(
       })
       return users.map((u) => u.id)
     }
-    case "class": {
-      // Legacy: the class's students and its teacher — this school's class
-      // only (the old lookup went by id alone)
-      if (!target.classId) return []
-      return audienceUserIds(
-        schoolId,
-        { classId: target.classId, gradeId: null, sectionId: null },
-        { students: true, teachers: true }
-      )
-    }
     case "grade":
     case "section": {
       // The grade's (or section's) students, their guardians and teachers
@@ -536,7 +523,6 @@ async function resolveTargetUsers(
       return audienceUserIds(
         schoolId,
         {
-          classId: null,
           gradeId: target.gradeId ?? null,
           sectionId: sectionId ?? null,
         },

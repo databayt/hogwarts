@@ -56,7 +56,6 @@ export default async function AssignmentsContent({
       schoolId,
       ...titleFilter,
       ...(sp.type ? { type: sp.type } : {}),
-      ...(sp.classId ? { classId: sp.classId } : {}),
     }
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
@@ -70,13 +69,6 @@ export default async function AssignmentsContent({
         orderBy,
         skip,
         take,
-        include: {
-          class: {
-            select: {
-              name: true,
-            },
-          },
-        },
       }),
       assignmentModel.count({ where }),
     ])

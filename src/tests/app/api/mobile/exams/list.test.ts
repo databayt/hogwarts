@@ -56,11 +56,9 @@ beforeEach(() => {
       examType: "TEST",
       status: "PLANNED",
       instructions: null,
-      classId: null,
       gradeId: "g12",
       sectionId: "12b",
       subject: { id: "phys", name: "Physics" },
-      class: null,
       section: { name: "12-B" },
       grade: { name: "Grade 12" },
     },
@@ -69,11 +67,11 @@ beforeEach(() => {
 })
 
 describe("GET /api/mobile/exams", () => {
-  it("shows a student only the exams set for their section, grade or class", async () => {
+  it("shows a student only the exams set for their section or grade", async () => {
     await authAs("STUDENT")
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "stu-1", sectionId: "12b", gradeId: "g12", classIds: [] },
+      { studentId: "stu-1", sectionId: "12b", gradeId: "g12" },
     ])
 
     const res = await list()
@@ -88,7 +86,7 @@ describe("GET /api/mobile/exams", () => {
     expect(body.data[0]).toMatchObject({
       section_id: "12b",
       grade_id: "g12",
-      class_id: null,
+      class_id: "12b",
       class_name: "12-B",
     })
   })

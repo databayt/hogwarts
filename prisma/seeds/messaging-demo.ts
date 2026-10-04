@@ -428,12 +428,6 @@ function endsIncoming(script: Turn[]): boolean {
   return script[script.length - 1].from === "other"
 }
 
-/** Strip the "- الصف …" suffix so copy reads "مادة الفيزياء", not the class name. */
-function subjectOf(className: string | null | undefined): string {
-  if (!className) return "المادة"
-  return className.split(" - ")[0].trim()
-}
-
 /**
  * Timestamps for one thread: the whole dialogue lands `daysAgo` days back,
  * starting at `hour`, each turn `gap` minutes after the previous one.
@@ -730,10 +724,7 @@ async function teachersOfSection(
     where: { schoolId, sectionId, teacherId: { not: null } },
     select: {
       teacherId: true,
-      // Section-based slots carry `subjectId`; the legacy subject-class link
-      // is the fallback for schools still scheduled the old way.
       subject: { select: { name: true } },
-      class: { select: { name: true } },
       teacher: {
         select: { id: true, firstName: true, lastName: true, userId: true },
       },
@@ -748,7 +739,7 @@ async function teachersOfSection(
     byUser.set(teacher.userId, {
       userId: teacher.userId,
       name: `${teacher.firstName} ${teacher.lastName}`.trim(),
-      subject: slot.subject?.name ?? subjectOf(slot.class?.name),
+      subject: slot.subject?.name ?? "المادة",
     })
   }
 
@@ -1064,8 +1055,9 @@ async function seedTeacherInbox(
     daysAgo: dayPlan[i % dayPlan.length],
     hour: hourPlan[i % hourPlan.length],
     unreadTail:
-      endsIncoming(TEACHER_ACCOUNT_SCRIPTS[i % TEACHER_ACCOUNT_SCRIPTS.length]) &&
-      i < 4
+      endsIncoming(
+        TEACHER_ACCOUNT_SCRIPTS[i % TEACHER_ACCOUNT_SCRIPTS.length]
+      ) && i < 4
         ? 1
         : 0,
     pinned: i === 1,

@@ -32,8 +32,7 @@ model Announcement {
   creator   User?   @relation("AnnouncementCreator", fields: [createdBy], references: [id])
 
   // Scope targeting
-  classId   String? // Legacy (scope "class")
-  class     Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   gradeId   String? // scope "grade" (and the section's grade for scope "section")
   grade     AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   sectionId String? // scope "section"
@@ -64,7 +63,7 @@ model Announcement {
   // Optimized indexes for performance
   @@index([schoolId, scope])
   @@index([schoolId, published, createdAt])
-  @@index([schoolId, classId])
+
   @@index([schoolId, gradeId])
   @@index([schoolId, sectionId])
   @@index([schoolId, role])
@@ -146,7 +145,7 @@ model AnnouncementTemplate {
   // Preset configurations
   scope     AnnouncementScope    @default(school)
   priority  AnnouncementPriority @default(normal)
-  classId   String? // Legacy
+
   gradeId   String?
   sectionId String?
   role      UserRole?

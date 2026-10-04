@@ -25,7 +25,6 @@ async function main() {
           students: true,
           teachers: true,
           yearLevels: true,
-          classes: true,
         },
       },
     },
@@ -43,7 +42,6 @@ async function main() {
     console.log(`  Students:    ${school._count.students}`)
     console.log(`  Teachers:    ${school._count.teachers}`)
     console.log(`  Year Levels: ${school._count.yearLevels}`)
-    console.log(`  Classes:     ${school._count.classes}`)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
     console.log("✅ Port Sudan school is properly configured in the database.")

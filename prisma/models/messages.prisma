@@ -46,7 +46,7 @@ model Conversation {
   directParticipant2Id String?
 
   // Group/Class targeting (for type=class or department)
-  classId      String?
+
   departmentId String?
 
   // Settings
@@ -69,7 +69,7 @@ model Conversation {
   // Optimized indexes for performance
   @@index([schoolId, type, lastMessageAt(sort: Desc)]) // Main query pattern
   @@index([schoolId, isArchived, lastMessageAt(sort: Desc)]) // List default filter (isArchived=false)
-  @@index([schoolId, classId]) // Class conversations
+
   @@index([schoolId, departmentId]) // Department conversations
   @@index([directParticipant1Id, directParticipant2Id, type]) // Direct conversation lookup
   @@map("conversations")

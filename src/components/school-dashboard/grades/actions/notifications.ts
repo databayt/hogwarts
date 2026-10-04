@@ -59,7 +59,6 @@ export async function sendGradeNotification(input: {
         student: {
           select: { id: true, userId: true, firstName: true, lastName: true },
         },
-        class: { include: { subject: { select: { name: true } } } },
         subject: { select: { name: true } },
       },
     })
@@ -67,7 +66,7 @@ export async function sendGradeNotification(input: {
     if (!result) return { success: false, error: "Result not found" }
 
     const studentName = `${result.student.firstName} ${result.student.lastName}`
-    const subject = result.subject?.name ?? result.class?.subject?.name ?? ""
+    const subject = result.subject?.name ?? ""
     // Render whatever the school configured: "A", "85%", "85/100", etc.
     const grade = result.grade || `${result.score}/${result.maxScore}` || ""
 

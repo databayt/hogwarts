@@ -28,20 +28,18 @@ export async function getAssignmentInformation(
         subjectId: true,
         type: true,
         description: true,
-        class: { select: { gradeId: true, subjectId: true } },
       },
     })
 
     if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    // A legacy assignment opens on its class's grade and subject.
     return {
       success: true,
       data: {
         title: assignment.title,
-        gradeId: assignment.gradeId ?? assignment.class?.gradeId ?? "",
+        gradeId: assignment.gradeId ?? "",
         sectionId: assignment.sectionId,
-        subjectId: assignment.subjectId ?? assignment.class?.subjectId ?? "",
+        subjectId: assignment.subjectId ?? "",
         type: assignment.type,
         description: assignment.description ?? undefined,
       },
@@ -79,14 +77,12 @@ export async function updateAssignmentInformation(
     if (!resolved.ok) return actionError(resolved.code)
     const { scope } = resolved
 
-    // The scope replaces a legacy class.
     await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
       data: {
         title: parsed.data.title,
         type: parsed.data.type,
         description: parsed.data.description ?? null,
-        classId: null,
         gradeId: scope.gradeId,
         sectionId: scope.sectionId,
         subjectId: scope.subjectId,

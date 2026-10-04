@@ -42,8 +42,6 @@ interface Props {
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
-  classId?: string // Legacy prop - no longer needed
-  classIds?: string[] // All enrolled class IDs
 }
 
 // `termInfo` and `lunchAfterPeriod` still arrive via RoleRouter's `commonProps`

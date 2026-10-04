@@ -77,49 +77,36 @@ export async function getTeacherIdByUserId(
 /**
  * Resolve all catalog subject IDs a student should see in a school.
  *
- * The student's academic grade is the gate, not a fallback. A class row can
- * point at another grade's catalog subject — legacy rows predate the
- * curriculum-gated class seeding — and a student must never be shown those.
+ * The student's academic grade is the gate, not a fallback: a section's
+ * timetable can carry another grade's catalog subject, and a student must
+ * never be shown those.
  *
  * 1. The grade's active SubjectSelection rows, the curriculum the school chose
  *    for that grade, are always included.
- * 2. Subjects the student is attached to (class enrollments, section timetable)
- *    are added only when the catalog places them in the student's grade.
+ * 2. Subjects the student is attached to (their section's timetable) are added only when the catalog places them in the student's grade.
  * 3. With no grade on the student record, the attachments stand on their own.
  */
 export async function getSubjectIdsForStudent(
   schoolId: string,
   studentId: string
 ): Promise<Set<string>> {
-  const [studentClasses, student] = await Promise.all([
-    db.studentClass.findMany({
-      where: { schoolId, studentId },
-      select: { class: { select: { subjectId: true } } },
-    }),
-    db.student.findFirst({
-      where: { id: studentId, schoolId },
-      select: {
-        sectionId: true,
-        academicGradeId: true,
-        academicStreamId: true,
-        academicGrade: { select: { gradeNumber: true } },
-        section: {
-          select: { gradeId: true, grade: { select: { gradeNumber: true } } },
-        },
+  const student = await db.student.findFirst({
+    where: { id: studentId, schoolId },
+    select: {
+      sectionId: true,
+      academicGradeId: true,
+      academicStreamId: true,
+      academicGrade: { select: { gradeNumber: true } },
+      section: {
+        select: { gradeId: true, grade: { select: { gradeNumber: true } } },
       },
-    }),
-  ])
+    },
+  })
   // The section's grade wins over the grade the student was placed in
   const gradeId = student?.section?.gradeId ?? student?.academicGradeId
 
   // Subjects this student is directly attached to.
   const attached = new Set<string>()
-
-  for (const sc of studentClasses) {
-    if (sc.class?.subjectId) {
-      attached.add(sc.class.subjectId)
-    }
-  }
 
   if (student?.sectionId) {
     const timetableSlots = await db.timetable.findMany({
@@ -140,18 +127,6 @@ export async function getSubjectIdsForStudent(
 
   // Without a grade there is nothing to gate against.
   if (!student || !gradeId) return attached
-
-  // Nothing attached yet — fall back to every class registered for the grade.
-  if (attached.size === 0) {
-    const gradeClasses = await db.class.findMany({
-      where: { schoolId, gradeId },
-      select: { subjectId: true },
-      distinct: ["subjectId"],
-    })
-    for (const c of gradeClasses) {
-      if (c.subjectId) attached.add(c.subjectId)
-    }
-  }
 
   // The grade's subjects for the student's stream (all of them without one)
   const gradeSelections = await db.subjectSelection.findMany({
@@ -197,7 +172,6 @@ export async function getSubjectIdsForStudent(
  * 1. Subjects assigned to them in any section (SubjectTeacher)
  * 2. Timetable slots assigned (Timetable.teacherId)
  * 3. Teacher subject expertise (TeacherSubjectExpertise.teacherId)
- * 4. Legacy classes they led or co-taught (Class / ClassTeacher)
  */
 export async function getSubjectIdsForTeacher(
   schoolId: string,
@@ -205,40 +179,24 @@ export async function getSubjectIdsForTeacher(
 ): Promise<Set<string>> {
   const subjectIds = new Set<string>()
 
-  const [assigned, teacherClasses, coTaughtClasses, timetableSlots, expertise] =
-    await Promise.all([
-      db.subjectTeacher.findMany({
-        where: { schoolId, teacherId },
-        select: { subjectId: true },
-        distinct: ["subjectId"],
-      }),
-      db.class.findMany({
-        where: { schoolId, teacherId },
-        select: { subjectId: true },
-        distinct: ["subjectId"],
-      }),
-      db.classTeacher.findMany({
-        where: { schoolId, teacherId },
-        select: { class: { select: { subjectId: true } } },
-      }),
-      db.timetable.findMany({
-        where: { schoolId, teacherId, subjectId: { not: null } },
-        select: { subjectId: true },
-        distinct: ["subjectId"],
-      }),
-      db.teacherSubjectExpertise.findMany({
-        where: { schoolId, teacherId },
-        select: { subjectId: true },
-      }),
-    ])
+  const [assigned, timetableSlots, expertise] = await Promise.all([
+    db.subjectTeacher.findMany({
+      where: { schoolId, teacherId },
+      select: { subjectId: true },
+      distinct: ["subjectId"],
+    }),
+    db.timetable.findMany({
+      where: { schoolId, teacherId, subjectId: { not: null } },
+      select: { subjectId: true },
+      distinct: ["subjectId"],
+    }),
+    db.teacherSubjectExpertise.findMany({
+      where: { schoolId, teacherId },
+      select: { subjectId: true },
+    }),
+  ])
 
   for (const a of assigned) subjectIds.add(a.subjectId)
-  for (const c of teacherClasses) {
-    if (c.subjectId) subjectIds.add(c.subjectId)
-  }
-  for (const ct of coTaughtClasses) {
-    if (ct.class?.subjectId) subjectIds.add(ct.class.subjectId)
-  }
   for (const t of timetableSlots) {
     if (t.subjectId) subjectIds.add(t.subjectId)
   }

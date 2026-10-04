@@ -90,7 +90,7 @@ model SchoolExam {
   description  String?    @db.Text
   // Legacy: the class the exam was set for. New exams are scoped by
   // grade + (section | whole grade) + subject instead — classes are retired.
-  classId      String?
+
   subjectId    String
   // Scope (new exams): a grade, optionally one section of it (null = the
   // whole grade), the term, and who wrote it.
@@ -128,7 +128,7 @@ model SchoolExam {
   updatedAt DateTime @updatedAt
 
   school              School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class               Class?               @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   grade               AcademicGrade?       @relation(fields: [gradeId], references: [id], onDelete: SetNull)
   section             Section?             @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   term                Term?                @relation(fields: [termId], references: [id], onDelete: SetNull)
@@ -147,12 +147,12 @@ model SchoolExam {
   catalogExam    Exam?    @relation("CatalogExamMirror", fields: [catalogExamId], references: [id], onDelete: SetNull)
 
   @@index([schoolId, examDate])
-  @@index([schoolId, classId])
+
   @@index([schoolId, subjectId])
   @@index([schoolId, status])
   @@index([schoolId, examType])
   @@index([schoolId, examDate, status])
-  @@index([schoolId, classId, examDate])
+
   @@index([schoolId, gradeId])
   @@index([schoolId, sectionId])
   @@index([schoolId, termId])
@@ -675,7 +675,7 @@ model Result {
   studentId    String
   // Legacy: the class the score was earned in. New rows carry the scope
   // below instead — classes are retired.
-  classId      String?
+
   assignmentId String?
   examId       String?
   subjectId    String?
@@ -702,7 +702,7 @@ model Result {
 
   school     School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class      Class?            @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   section    Section?          @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   academicGrade AcademicGrade? @relation(fields: [academicGradeId], references: [id], onDelete: SetNull)
   term       Term?             @relation(fields: [termId], references: [id], onDelete: SetNull)
@@ -716,14 +716,14 @@ model Result {
   updatedAt DateTime @updatedAt
 
   @@index([schoolId, studentId])
-  @@index([schoolId, classId])
+
   @@index([schoolId, assignmentId])
   @@index([schoolId, examId])
   @@index([schoolId, subjectId])
   @@index([schoolId, gradedAt])
   @@index([schoolId, yearLevelId])
   @@index([schoolId, studentId, subjectId])
-  @@index([schoolId, classId, subjectId])
+
   @@index([schoolId, termId, studentId])
   @@index([schoolId, sectionId])
   @@index([schoolId, academicGradeId])

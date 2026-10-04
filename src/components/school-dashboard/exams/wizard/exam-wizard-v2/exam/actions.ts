@@ -56,8 +56,6 @@ export async function updateExamDetails(
       where: { id: genExam.examId, schoolId },
       data: {
         title: parsed.title,
-        // The scope replaces a legacy class.
-        classId: null,
         gradeId: scope.gradeId,
         sectionId: scope.sectionId,
         subjectId: scope.subjectId,

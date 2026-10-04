@@ -98,13 +98,6 @@ export const teacherDetailSelect = {
       image: true,
     },
   },
-  classes: {
-    select: {
-      id: true,
-      name: true,
-    },
-    take: 5,
-  },
 } as const
 
 // ============================================================================
@@ -219,24 +212,6 @@ export async function getTeacherDetail(schoolId: string, id: string) {
   return db.teacher.findFirst({
     where: { id, schoolId },
     select: teacherDetailSelect,
-  })
-}
-
-/**
- * Get teachers for a specific class
- */
-export async function getClassTeachers(schoolId: string, classId: string) {
-  return db.teacher.findMany({
-    where: {
-      schoolId,
-      classes: {
-        some: {
-          id: classId,
-        },
-      },
-    },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    select: teacherListSelect,
   })
 }
 

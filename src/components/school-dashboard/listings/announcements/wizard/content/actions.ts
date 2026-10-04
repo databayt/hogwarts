@@ -104,7 +104,6 @@ export async function updateAnnouncementContent(
         scope: parsed.scope,
         gradeId: audience.gradeId,
         sectionId: audience.sectionId,
-        classId: null,
         // Announcement.role is the UserRole enum; the form validates it as a
         // plain string, so the cast is what makes the write type-check.
         role:

@@ -274,54 +274,35 @@ async function teacherExamFilter(
   })
 }
 
-/** The teacher teaches this subject: a legacy class or an assignment. */
+/** The teacher is assigned this subject. */
 async function teacherTeachesSubject(
   context: PermissionContext,
   subjectId: string
 ): Promise<boolean> {
-  const [assigned, legacy] = await Promise.all([
-    db.subjectTeacher.findFirst({
-      where: {
-        schoolId: context.schoolId,
-        teacherId: context.teacherId!,
-        subjectId,
-      },
-      select: { id: true },
-    }),
-    db.class.findFirst({
-      where: {
-        schoolId: context.schoolId,
-        teacherId: context.teacherId!,
-        subjectId,
-      },
-      select: { id: true },
-    }),
-  ])
-  return !!(assigned || legacy)
+  const assigned = await db.subjectTeacher.findFirst({
+    where: {
+      schoolId: context.schoolId,
+      teacherId: context.teacherId!,
+      subjectId,
+    },
+    select: { id: true },
+  })
+  return !!assigned
 }
 
-/** The student is in a section the teacher teaches, or a legacy class of theirs. */
+/** The student is in a section the teacher teaches. */
 async function teacherTeachesStudent(
   context: PermissionContext,
   studentId: string
 ): Promise<boolean> {
   const pairs = await getTeacherPairs(context.schoolId, context.teacherId!)
   const sectionIds = [...new Set(pairs.map((p) => p.sectionId))]
+  if (sectionIds.length === 0) return false
   const student = await db.student.findFirst({
     where: {
       id: studentId,
       schoolId: context.schoolId,
-      OR: [
-        ...(sectionIds.length > 0 ? [{ sectionId: { in: sectionIds } }] : []),
-        {
-          studentClasses: {
-            some: {
-              schoolId: context.schoolId,
-              class: { teacherId: context.teacherId! },
-            },
-          },
-        },
-      ],
+      sectionId: { in: sectionIds },
     },
     select: { id: true },
   })
@@ -351,7 +332,7 @@ export async function canAccessExam(
   // Admins can access all exams in their school
   if (context.userRole === "ADMIN") return true
 
-  // Teachers: exams of a class they teach, exams they wrote, and exams for
+  // Teachers: exams they wrote, and exams for
   // a section or grade where they teach the subject.
   if (context.isTeacher && context.teacherId) {
     const covered = await db.schoolExam.findFirst({
@@ -431,7 +412,7 @@ export async function canAccessStudentResult(
   // Developers and Admins have full access
   if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
-  // Teachers: students of a class they teach or of a section they teach.
+  // Teachers: students of a section they teach.
   if (context.isTeacher && context.teacherId) {
     if (await teacherTeachesStudent(context, studentId)) return true
   }
@@ -491,16 +472,10 @@ export async function canAccessAnalytics(
       return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
     case "class":
-      // Teachers can see analytics for their classes
+      // Teachers can see analytics for a section they teach
       if (context.isTeacher && context.teacherId && resourceId) {
-        const teacherClass = await db.class.findFirst({
-          where: {
-            id: resourceId,
-            teacherId: context.teacherId,
-            schoolId: context.schoolId,
-          },
-        })
-        return !!teacherClass
+        const pairs = await getTeacherPairs(context.schoolId, context.teacherId)
+        return pairs.some((p) => p.sectionId === resourceId)
       }
       return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
@@ -564,17 +539,12 @@ export async function applyPermissionFilters(
     case "question":
       if (context.isTeacher && context.teacherId) {
         baseFilter.subject = {
-          OR: [
-            { classes: { some: { teacherId: context.teacherId } } },
-            {
-              subjectTeachers: {
-                some: {
-                  teacherId: context.teacherId,
-                  schoolId: context.schoolId,
-                },
-              },
+          subjectTeachers: {
+            some: {
+              teacherId: context.teacherId,
+              schoolId: context.schoolId,
             },
-          ],
+          },
         }
       }
       break

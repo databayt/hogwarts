@@ -27,12 +27,12 @@ const STATUSES = [
 /**
  * GET /api/mobile/assignments
  *
- *  - STUDENT: non-draft assignments of their classes, with their submission
+ *  - STUDENT: non-draft assignments for their section or grade, with their submission
  *  - GUARDIAN: the same for `?student_id=` (a linked child; required)
- *  - TEACHER: assignments of classes they lead or co-teach (drafts included)
+ *  - TEACHER: assignments they set or teach the subject of (drafts included)
  *  - ADMIN / DEVELOPER: every assignment in the school
  *
- * Query: page, per_page; staff lists also take class_id, status, search.
+ * Query: page, per_page; staff lists also take status, search.
  * Same queries as the web's /my-assignments and /assignments listings.
  */
 export async function GET(request: NextRequest) {
@@ -89,8 +89,6 @@ export async function GET(request: NextRequest) {
     }
 
     const filters: AssignmentListFilters = {}
-    const classId = url.searchParams.get("class_id")
-    if (classId) filters.classId = classId
     const search = url.searchParams.get("search")
     if (search) filters.search = search
     const status = url.searchParams.get("status")

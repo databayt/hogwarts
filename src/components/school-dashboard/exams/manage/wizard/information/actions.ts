@@ -28,15 +28,14 @@ export async function getExamInformation(
         sectionId: true,
         subjectId: true,
         examType: true,
-        class: { select: { gradeId: true } },
       },
     })
 
     if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
 
-    // A legacy exam opens on its class's grade; a fresh draft has no scope
-    // yet, and its placeholder subject is not a choice anyone made.
-    const gradeId = exam.gradeId ?? exam.class?.gradeId ?? ""
+    // A fresh draft has no scope yet, and its placeholder subject is not a
+    // choice anyone made.
+    const gradeId = exam.gradeId ?? ""
     return {
       success: true,
       data: {
@@ -81,15 +80,13 @@ export async function updateExamInformation(
     if (!resolved.ok) return actionError(resolved.code)
     const { scope } = resolved
 
-    // The scope replaces a legacy class: the exam now belongs to the grade
-    // (or section) chosen here.
+    // The exam belongs to the grade (or section) chosen here.
     await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         examType: parsed.data.examType,
-        classId: null,
         gradeId: scope.gradeId,
         sectionId: scope.sectionId,
         subjectId: scope.subjectId,

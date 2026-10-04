@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { studentExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
@@ -30,7 +31,6 @@ export async function getGradeSelection(
         assignmentId: true,
         examId: true,
         subjectId: true,
-        class: { select: { subjectId: true } },
       },
     })
 
@@ -40,8 +40,7 @@ export async function getGradeSelection(
       success: true,
       data: {
         studentId: result.studentId,
-        // A legacy row may only name its class.
-        subjectId: result.subjectId ?? result.class?.subjectId ?? "",
+        subjectId: result.subjectId ?? "",
         assignmentId: result.assignmentId ?? undefined,
         examId: result.examId ?? undefined,
       },
@@ -69,8 +68,8 @@ export async function updateGradeSelection(
     if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     const { studentId, subjectId, assignmentId, examId } = parsed.data
 
-    // The student studies the subject — in their grade, or a legacy class —
-    // and that decides the row's section, grade, term and class.
+    // The student studies the subject in their grade, and that decides the
+    // row's section, grade and term.
     const context = await resolveStudentSubjectContext(
       schoolId,
       studentId,
@@ -121,7 +120,7 @@ export async function getStudentsForGrade(): Promise<
   }
 }
 
-/** The subjects a student studies: their grade's, plus any legacy class's. */
+/** The subjects a student studies: their grade's. */
 export async function getSubjectsForStudent(
   studentId: string
 ): Promise<ActionResponse<{ id: string; name: string }[]>> {
@@ -132,7 +131,7 @@ export async function getSubjectsForStudent(
     const [scope] = await getStudentScopes(schoolId, [studentId])
     if (!scope) return { success: true, data: [] }
 
-    const [selections, classes, lang] = await Promise.all([
+    const [selections, lang] = await Promise.all([
       scope.gradeId
         ? db.subjectSelection.findMany({
             where: { schoolId, gradeId: scope.gradeId, isActive: true },
@@ -143,12 +142,6 @@ export async function getSubjectsForStudent(
             },
           })
         : Promise.resolve([]),
-      scope.classIds.length > 0
-        ? db.class.findMany({
-            where: { schoolId, id: { in: scope.classIds } },
-            select: { subject: { select: { id: true, name: true } } },
-          })
-        : Promise.resolve([]),
       getDisplayLang(),
     ])
 
@@ -156,11 +149,6 @@ export async function getSubjectsForStudent(
     for (const s of selections) {
       if (!byId.has(s.catalogSubjectId)) {
         byId.set(s.catalogSubjectId, s.customName || s.subject?.name || "")
-      }
-    }
-    for (const c of classes) {
-      if (c.subject && !byId.has(c.subject.id)) {
-        byId.set(c.subject.id, c.subject.name)
       }
     }
     const labels = await getLabels([...byId.values()], lang, schoolId)
@@ -179,7 +167,7 @@ export async function getSubjectsForStudent(
   }
 }
 
-/** Exams the student sits in this subject (their section, grade or class). */
+/** Exams the student sits in this subject (their section or grade). */
 export async function getExamsForStudent(
   studentId: string,
   subjectId: string
@@ -209,7 +197,7 @@ export async function getExamsForStudent(
   }
 }
 
-/** Assignments in this subject from the student's classes. */
+/** Assignments in this subject set for the student's section or grade. */
 export async function getAssignmentsForStudent(
   studentId: string,
   subjectId: string
@@ -219,15 +207,13 @@ export async function getAssignmentsForStudent(
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const [scope] = await getStudentScopes(schoolId, [studentId])
-    if (!scope || scope.classIds.length === 0) {
-      return { success: true, data: [] }
-    }
+    if (!scope) return { success: true, data: [] }
 
     const assignments = await db.schoolAssignment.findMany({
       where: {
         schoolId,
-        classId: { in: scope.classIds },
-        class: { subjectId },
+        subjectId,
+        ...studentAudienceWhere(scope),
       },
       select: { id: true, title: true },
       orderBy: { title: "asc" },

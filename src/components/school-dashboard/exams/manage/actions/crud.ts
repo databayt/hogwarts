@@ -128,11 +128,10 @@ export async function createExam(
         where: { id: schoolId },
         select: { preferredLanguage: true },
       }),
-      examAudienceUserIds(
-        schoolId,
-        { ...scope, classId: null },
-        { students: true, teachers: true }
-      ),
+      examAudienceUserIds(schoolId, scope, {
+        students: true,
+        teachers: true,
+      }),
     ])
     dispatchNotificationsToAudience({
       schoolId,
@@ -226,8 +225,7 @@ export async function updateExam(
     if (typeof rest.description !== "undefined")
       data.description = rest.description || null
 
-    // A new grade, section or subject moves the exam to that scope — and off
-    // a legacy class, if it had one.
+    // A new grade, section or subject moves the exam to that scope.
     const scopeChanged =
       rest.gradeId !== undefined ||
       rest.sectionId !== undefined ||
@@ -250,7 +248,6 @@ export async function updateExam(
       if (!resolved.ok) {
         return { success: false, error: resolved.code, code: resolved.code }
       }
-      data.classId = null
       data.gradeId = resolved.scope.gradeId
       data.sectionId = resolved.scope.sectionId
       data.subjectId = resolved.scope.subjectId
@@ -286,7 +283,6 @@ export async function updateExam(
               sectionId: data.sectionId as string | null,
             }
           : {
-              classId: examExists.classId,
               gradeId: examExists.gradeId,
               sectionId: examExists.sectionId,
             }),

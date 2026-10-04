@@ -7,7 +7,6 @@ export const resultBaseSchema = z
   .object({
     studentId: z.string().min(1, "Student is required"),
     assignmentId: z.string().min(1, "Assignment is required"),
-    classId: z.string().min(1, "Class is required"),
     score: z.number().min(0, "Score must be 0 or greater"),
     maxScore: z.number().min(0.01, "Max score must be greater than 0"),
     grade: z.string().min(1, "Grade is required"),
@@ -39,7 +38,6 @@ export const getResultsSchema = z.object({
   perPage: z.number().int().positive().max(200).default(20),
   studentId: z.string().optional().default(""),
   assignmentId: z.string().optional().default(""),
-  classId: z.string().optional().default(""),
   grade: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
   // Free-text search across student name / assignment / exam title.

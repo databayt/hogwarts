@@ -117,7 +117,6 @@ export async function updateReportCardComments(input: {
  */
 export async function getReportCards(input: {
   termId: string
-  classId?: string
 }): Promise<
   ActionResponse<
     Array<{

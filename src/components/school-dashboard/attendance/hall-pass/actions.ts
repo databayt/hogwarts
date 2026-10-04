@@ -130,9 +130,6 @@ export async function createHallPass(
         student: {
           select: { firstName: true, lastName: true },
         },
-        class: {
-          select: { name: true },
-        },
         section: {
           select: { name: true },
         },
@@ -146,7 +143,7 @@ export async function createHallPass(
       data: {
         id: hallPass.id,
         studentName: `${hallPass.student.firstName} ${hallPass.student.lastName}`,
-        className: hallPass.section?.name ?? hallPass.class?.name ?? "",
+        className: hallPass.section?.name ?? "",
         destination: hallPass.destination,
         expectedReturn: hallPass.expectedReturn,
         hasConflict: !!hallPass.conflictWith,
@@ -290,9 +287,6 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
             profilePhotoUrl: true,
           },
         },
-        class: {
-          select: { id: true, name: true },
-        },
         section: {
           select: { id: true, name: true },
         },
@@ -309,8 +303,8 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
           name: `${pass.student.firstName} ${pass.student.lastName}`,
           photoUrl: pass.student.profilePhotoUrl,
         },
-        // Where the student left from: their section, or a legacy class.
-        class: pass.section ?? pass.class ?? { id: "", name: "" },
+        // Where the student left from: their section.
+        class: pass.section ?? { id: "", name: "" },
         destination: pass.destination,
         destinationNote: pass.destinationNote,
         issuedAt: pass.issuedAt,
@@ -347,7 +341,6 @@ export async function getStudentHallPassHistory(
         studentId,
       },
       include: {
-        class: { select: { name: true } },
         section: { select: { name: true } },
       },
       orderBy: { issuedAt: "desc" },
@@ -358,7 +351,7 @@ export async function getStudentHallPassHistory(
       success: true,
       data: passes.map((pass) => ({
         id: pass.id,
-        className: pass.section?.name ?? pass.class?.name ?? "",
+        className: pass.section?.name ?? "",
         destination: pass.destination,
         issuedAt: pass.issuedAt,
         returnedAt: pass.returnedAt,

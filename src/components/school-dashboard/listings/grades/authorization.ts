@@ -30,7 +30,6 @@ export interface ResultContext {
   id?: string
   gradedBy?: string | null
   schoolId?: string
-  classId?: string
   studentId?: string
 }
 

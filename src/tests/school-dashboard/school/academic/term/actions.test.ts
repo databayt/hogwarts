@@ -35,9 +35,6 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
-    class: {
-      count: vi.fn(),
-    },
     timetable: {
       count: vi.fn(),
     },
@@ -211,7 +208,6 @@ describe("Term Actions", () => {
       vi.mocked(db.term.findFirst).mockResolvedValue({
         id: "term-1",
       } as any)
-      vi.mocked(db.class.count).mockResolvedValue(0)
       vi.mocked(db.timetable.count).mockResolvedValue(0)
       vi.mocked(db.subjectTeacher.count).mockResolvedValue(0)
       vi.mocked(db.term.deleteMany).mockResolvedValue({ count: 1 } as any)
@@ -224,13 +220,11 @@ describe("Term Actions", () => {
     it.each([
       ["timetable periods", "timetable"],
       ["teacher assignments", "subjectTeacher"],
-      ["legacy classes", "class"],
     ] as const)("keeps a term that holds %s", async (_, model) => {
       mockAdminContext()
       vi.mocked(db.term.findFirst).mockResolvedValue({
         id: "term-1",
       } as never)
-      vi.mocked(db.class.count).mockResolvedValue(0)
       vi.mocked(db.timetable.count).mockResolvedValue(0)
       vi.mocked(db.subjectTeacher.count).mockResolvedValue(0)
       vi.mocked(db[model].count).mockResolvedValue(5)

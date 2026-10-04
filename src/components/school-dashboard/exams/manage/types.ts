@@ -38,8 +38,6 @@ export type ExamDTO = {
   schoolId: string
   title: string
   description: string | null
-  /** Legacy exams only. */
-  classId: string | null
   gradeId: string | null
   sectionId: string | null
   subjectId: string
@@ -52,7 +50,6 @@ export type ExamDTO = {
   examType: "MIDTERM" | "FINAL" | "QUIZ" | "ASSIGNMENT" | "PROJECT"
   status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   instructions: string | null
-  class?: { id: string; name: string } | null
   subject?: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date

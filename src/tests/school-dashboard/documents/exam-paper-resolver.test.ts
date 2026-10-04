@@ -49,7 +49,8 @@ function examWith(questions: ReturnType<typeof row>[]) {
       endTime: "09:00",
       instructions: "",
       subject: { name: "Science" },
-      class: { name: "Grade 7" },
+      section: null,
+      grade: { name: "Grade 7" },
     },
     questions,
   } as never)

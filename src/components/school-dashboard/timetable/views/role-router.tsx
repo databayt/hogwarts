@@ -63,8 +63,6 @@ interface PersonalizedData {
   editable?: boolean
   filterData: {
     teacherId?: string
-    classId?: string
-    classIds?: string[]
     childrenIds?: string[]
   }
   termInfo: {
@@ -255,11 +253,7 @@ export default function RoleRouter({
       // StudentView renders the week grid unconditionally — a student has a
       // single schedule, so there is no Today/Full split to select.
       view = (
-        <StudentView
-          {...commonProps}
-          classId={viewData.filterData.classId}
-          classIds={viewData.filterData.classIds}
-        />
+        <StudentView {...commonProps} />
       )
   }
 

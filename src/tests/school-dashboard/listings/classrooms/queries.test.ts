@@ -8,7 +8,6 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   getGrades,
-  getRoomClasses,
   getRoomDetail,
   getRoomTimetable,
 } from "@/components/school-dashboard/listings/classrooms/actions"
@@ -23,7 +22,6 @@ vi.mock("@/lib/db", () => ({
     timetable: { findMany: vi.fn() },
     schoolWeekConfig: { findFirst: vi.fn() },
     period: { findMany: vi.fn() },
-    class: { findMany: vi.fn() },
   },
 }))
 
@@ -148,12 +146,12 @@ describe("getRoomTimetable", () => {
         id: "tt1",
         dayOfWeek: 1,
         periodId: "p1",
-        class: {
-          id: "c1",
-          name: "Math",
+        section: {
+          id: "7a",
+          name: "Grade 1 - A",
           grade: { id: "g1", name: "Grade 1" },
-          subject: { id: "sub1", name: "Math" },
         },
+        subject: { name: "Math" },
         teacher: { id: "t1", firstName: "Ada", lastName: "Lovelace" },
       },
     ] as any)
@@ -174,7 +172,10 @@ describe("getRoomTimetable", () => {
     expect(result.slots).toHaveLength(1)
     expect(result.slots[0]).toMatchObject({
       dayOfWeek: 1,
-      className: "Math",
+      className: "Grade 1 - A",
+      sectionId: "7a",
+      gradeName: "Grade 1",
+      subject: "Math",
       teacher: "Ada Lovelace",
     })
     expect(result.workingDays).toEqual([0, 1, 2, 3, 4])
@@ -211,37 +212,5 @@ describe("getRoomTimetable", () => {
     vi.mocked(db.period.findMany).mockResolvedValue([] as any)
     const result = await getRoomTimetable({ roomId: "r1", termId: "term-1" })
     expect(result.workingDays).toEqual([0, 1, 2, 3, 4])
-  })
-})
-
-describe("getRoomClasses", () => {
-  it("returns classes scoped to school + classroom", async () => {
-    vi.mocked(db.class.findMany).mockResolvedValue([
-      {
-        id: "c1",
-        name: "Math",
-        maxCapacity: 30,
-        grade: { id: "g1", name: "Grade 1" },
-        subject: { id: "s1", name: "Math" },
-        teacher: { id: "t1", firstName: "Ada", lastName: "Lovelace" },
-        _count: { studentClasses: 25 },
-      },
-    ] as any)
-
-    const result = await getRoomClasses({ roomId: "r1" })
-
-    expect(result).toHaveLength(1)
-    expect(vi.mocked(db.class.findMany).mock.calls[0][0]?.where).toEqual({
-      schoolId: SCHOOL,
-      classroomId: "r1",
-    })
-  })
-
-  it("returns [] when role is unauthorized", async () => {
-    vi.mocked(auth).mockResolvedValue({
-      user: { id: "u1", role: "STUDENT", schoolId: SCHOOL },
-    } as any)
-    expect(await getRoomClasses({ roomId: "r1" })).toEqual([])
-    expect(vi.mocked(db.class.findMany)).not.toHaveBeenCalled()
   })
 })

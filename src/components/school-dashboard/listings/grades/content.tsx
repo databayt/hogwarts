@@ -64,7 +64,6 @@ export default async function GradesContent({
         studentId: sp.studentId || undefined,
         studentIds,
         assignmentId: sp.assignmentId || undefined,
-        classId: sp.classId || undefined,
         grade: sp.grade || undefined,
         page: sp.page,
         perPage: sp.perPage,

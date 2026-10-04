@@ -490,9 +490,6 @@ export async function deleteStudent(input: {
     const studentModel = getModelOrThrow("student")
     await db.$transaction(async (tx) => {
       // Clean up non-critical bridge/tracking records
-      await tx.studentClass.deleteMany({
-        where: { studentId: id, schoolId },
-      })
       await tx.studentYearLevel.deleteMany({
         where: { studentId: id, schoolId },
       })
@@ -712,7 +709,6 @@ export async function exportStudentForPurge(input: { id: string }): Promise<
       feeAssignments,
       submissions,
       studentGuardians,
-      studentClasses,
       studentYearLevels,
       studentBatches,
       studentDocuments,
@@ -728,7 +724,6 @@ export async function exportStudentForPurge(input: { id: string }): Promise<
       db.feeAssignment.findMany({ where: { studentId: id, schoolId } }),
       db.assignmentSubmission.findMany({ where: { studentId: id, schoolId } }),
       db.studentGuardian.findMany({ where: { studentId: id, schoolId } }),
-      db.studentClass.findMany({ where: { studentId: id, schoolId } }),
       db.studentYearLevel.findMany({ where: { studentId: id, schoolId } }),
       db.studentBatch.findMany({ where: { studentId: id, schoolId } }),
       db.studentDocument.findMany({ where: { studentId: id, schoolId } }),
@@ -762,7 +757,6 @@ export async function exportStudentForPurge(input: { id: string }): Promise<
         feeAssignments,
         submissions,
         studentGuardians,
-        studentClasses,
         studentYearLevels,
         studentBatches,
         studentDocuments,
@@ -847,7 +841,6 @@ export async function purgeStudent(input: {
     const studentModel = getModelOrThrow("student")
     await db.$transaction(async (tx) => {
       // Bridge/tracking rows that don't cascade automatically
-      await tx.studentClass.deleteMany({ where: { studentId: id, schoolId } })
       await tx.studentYearLevel.deleteMany({
         where: { studentId: id, schoolId },
       })
@@ -1663,15 +1656,11 @@ export async function bulkDeleteStudents(input: {
 
     // Cascade validation: check for dependencies before bulk deletion
     const [
-      classCount,
       attendanceCount,
       examResultCount,
       feeAssignmentCount,
       submissionCount,
     ] = await Promise.all([
-      db.studentClass.count({
-        where: { studentId: { in: validIds }, schoolId },
-      }),
       db.attendance.count({
         where: { studentId: { in: validIds }, schoolId },
       }),
@@ -1687,7 +1676,6 @@ export async function bulkDeleteStudents(input: {
     ])
 
     const blockers: string[] = []
-    if (classCount > 0) blockers.push(`${classCount} class enrollment(s)`)
     if (attendanceCount > 0)
       blockers.push(`${attendanceCount} attendance record(s)`)
     if (examResultCount > 0) blockers.push(`${examResultCount} exam result(s)`)

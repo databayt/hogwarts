@@ -26,15 +26,13 @@ export async function getExamForWizard(
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
-        class: { select: { gradeId: true } },
         subject: { select: { id: true, name: true } },
       },
     })
 
     if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
 
-    // A legacy exam opens on its class's grade (see getExamInformation).
-    const gradeId = exam.gradeId ?? exam.class?.gradeId ?? ""
+    const gradeId = exam.gradeId ?? ""
     return {
       success: true,
       data: {
@@ -123,7 +121,7 @@ export async function completeExamWizard(
 
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
-      select: { title: true, classId: true, gradeId: true },
+      select: { title: true, gradeId: true },
     })
 
     if (!exam) {
@@ -137,8 +135,8 @@ export async function completeExamWizard(
       }
     }
 
-    // Without a grade (or a legacy class) the exam reaches no student.
-    if (!exam.gradeId && !exam.classId) {
+    // Without a grade the exam reaches no student.
+    if (!exam.gradeId) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 

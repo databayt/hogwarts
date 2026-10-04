@@ -18,7 +18,6 @@ vi.mock("@/lib/db", () => ({
   db: {
     student: { findFirst: vi.fn() },
     teacher: { findFirst: vi.fn() },
-    studentClass: { findMany: vi.fn() },
     timetable: { findMany: vi.fn() },
     school: { findUnique: vi.fn() },
   },
@@ -67,7 +66,6 @@ beforeEach(() => {
   vi.mocked(db.school.findUnique).mockResolvedValue({
     timezone: "UTC",
   } as never)
-  vi.mocked(db.studentClass.findMany).mockResolvedValue([] as never)
   vi.mocked(db.teacher.findFirst).mockResolvedValue(null as never)
 })
 
@@ -141,57 +139,28 @@ describe("GET /api/mobile/timetable/[userId] — access control", () => {
   })
 })
 
-describe("GET /api/mobile/timetable/[userId] — both slot axes", () => {
+describe("GET /api/mobile/timetable/[userId] — section axis", () => {
   beforeEach(() => {
     asStudent()
     vi.mocked(canAccessStudent).mockResolvedValue(true)
   })
 
-  it("reads a legacy student with classes but NO section", async () => {
+  it("reads the student's section slots", async () => {
     vi.mocked(db.student.findFirst).mockResolvedValue({
-      id: "stu-legacy",
-      sectionId: null,
-    } as never)
-    vi.mocked(db.studentClass.findMany).mockResolvedValue([
-      { classId: "cls-1" },
-      { classId: "cls-2" },
-    ] as never)
-
-    const res = await GET(req(), { params })
-
-    expect(res.status).toBe(200)
-    // Before the fix this student's week came back empty — no sectionId meant
-    // no query at all.
-    expect(db.timetable.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          OR: [{ classId: { in: ["cls-1", "cls-2"] } }],
-        }),
-      })
-    )
-  })
-
-  it("ORs both axes when the student has a section AND enrollments", async () => {
-    vi.mocked(db.student.findFirst).mockResolvedValue({
-      id: "stu-both",
+      id: "stu-1",
       sectionId: "sec-9",
     } as never)
-    vi.mocked(db.studentClass.findMany).mockResolvedValue([
-      { classId: "cls-1" },
-    ] as never)
 
     await GET(req(), { params })
 
     expect(db.timetable.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
-          OR: [{ sectionId: "sec-9" }, { classId: { in: ["cls-1"] } }],
-        }),
+        where: expect.objectContaining({ sectionId: "sec-9" }),
       })
     )
   })
 
-  it("returns empty when the student has neither axis", async () => {
+  it("returns empty when the student has no section", async () => {
     vi.mocked(db.student.findFirst).mockResolvedValue({
       id: "stu-empty",
       sectionId: null,

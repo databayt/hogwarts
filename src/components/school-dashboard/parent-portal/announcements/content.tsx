@@ -50,13 +50,6 @@ interface Announcement {
   updatedAt: Date
   /** The grade or section the notice is for. */
   audienceName: string | null
-  /** Legacy class notices. */
-  class: {
-    id: string
-    name: string
-    subject: string
-    teacher: string
-  } | null
   relevantStudents: string[]
 }
 
@@ -279,15 +272,6 @@ export function ParentAnnouncementsContent({
                                     {getScopeBadge(announcement.scope)}
                                     {announcement.audienceName && (
                                       <p>{announcement.audienceName}</p>
-                                    )}
-                                    {announcement.class && (
-                                      <p>
-                                        {announcement.class.subject} -{" "}
-                                        {announcement.class.name}
-                                        <span className="text-muted-foreground ms-2">
-                                          {t.by} {announcement.class.teacher}
-                                        </span>
-                                      </p>
                                     )}
                                     <small className="muted ms-auto">
                                       {format(

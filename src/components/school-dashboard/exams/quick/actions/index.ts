@@ -58,7 +58,7 @@ async function getAuthor(): Promise<{
 
 /**
  * The assessments a viewer may see: a student their audience's (section,
- * whole grade, or a legacy class), a guardian their children's; staff the
+ * or whole grade), a guardian their children's; staff the
  * school's.
  */
 async function viewerAudienceWhere(
@@ -239,7 +239,6 @@ export async function getQuickAssessments(filters?: {
       include: {
         section: { select: { name: true } },
         grade: { select: { name: true } },
-        class: { select: { name: true } },
         subject: true,
         _count: { select: { responses: true } },
       },
@@ -253,7 +252,7 @@ export async function getQuickAssessments(filters?: {
       status: a.status,
       gradeId: a.gradeId,
       sectionId: a.sectionId,
-      // The audience as people say it: section, whole grade or legacy class
+      // The audience as people say it: section or whole grade
       className: audienceLabel(a),
       subjectId: a.subjectId,
       name: a.subject.name || "",
@@ -278,7 +277,6 @@ export async function getQuickAssessment(id: string) {
       include: {
         section: { select: { name: true } },
         grade: { select: { name: true } },
-        class: { select: { name: true } },
         subject: true,
         _count: { select: { responses: true } },
       },
@@ -390,7 +388,6 @@ export async function submitQuickResponse(
           await upsertGradebookResult({
             schoolId,
             studentId,
-            classId: ctx.classId,
             sectionId: ctx.sectionId,
             academicGradeId: ctx.academicGradeId,
             termId: ctx.termId ?? assessment.termId,

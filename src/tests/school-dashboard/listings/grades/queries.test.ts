@@ -38,7 +38,6 @@ describe("buildResultWhere", () => {
   it("applies all id filters", () => {
     const where = buildResultWhere("s1", {
       studentId: "stu1",
-      classId: "cl1",
       assignmentId: "a1",
       examId: "ex1",
       subjectId: "sub1",
@@ -48,7 +47,6 @@ describe("buildResultWhere", () => {
     expect(where).toMatchObject({
       schoolId: "s1",
       studentId: "stu1",
-      classId: "cl1",
       assignmentId: "a1",
       examId: "ex1",
       subjectId: "sub1",
@@ -60,10 +58,8 @@ describe("buildResultWhere", () => {
   it("omits filters that are empty/undefined", () => {
     const where = buildResultWhere("s1", {
       studentId: "",
-      classId: undefined,
     })
     expect(where).not.toHaveProperty("studentId")
-    expect(where).not.toHaveProperty("classId")
   })
 
   it("builds OR clause for free-text search across student/assignment/exam", () => {
@@ -274,7 +270,7 @@ describe("formatResultRow", () => {
     grade: "A",
     createdAt: new Date("2026-01-15T12:00:00Z"),
     student: { firstName: "Ada", lastName: "Lovelace" },
-    class: { name: "Math 101" },
+    section: { id: "sec-1", name: "Grade 7 - A" },
     assignment: { title: "Homework 1" },
     exam: null,
   }
@@ -288,7 +284,7 @@ describe("formatResultRow", () => {
       id: "r1",
       studentName: "Ada Lovelace",
       assignmentTitle: "Homework 1",
-      className: "Math 101",
+      className: "Grade 7 - A",
       score: 85,
       maxScore: 100,
       percentage: 85,
@@ -315,20 +311,12 @@ describe("formatResultRow", () => {
     expect(row.assignmentTitle).toBe("Unknown")
   })
 
-  it("shows a dash when the row has neither section nor class", () => {
+  it("shows a dash when the row has no section", () => {
     const row = formatResultRow({
       ...baseRow,
-      class: null,
       section: null,
     } as unknown as Parameters<typeof formatResultRow>[0])
     expect(row.className).toBe("—")
   })
 
-  it("names the section ahead of a legacy class", () => {
-    const row = formatResultRow({
-      ...baseRow,
-      section: { id: "sec-1", name: "Grade 7 - A" },
-    } as unknown as Parameters<typeof formatResultRow>[0])
-    expect(row.className).toBe("Grade 7 - A")
-  })
 })

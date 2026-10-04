@@ -15,7 +15,6 @@ export const assignmentsSearchParams = createSearchParamsCache({
   // column filters (ids must match column ids)
   title: parseAsString.withDefault(""),
   type: parseAsString.withDefault(""),
-  classId: parseAsString.withDefault(""),
   sort: getSortingStateParser().withDefault([]),
 })
 

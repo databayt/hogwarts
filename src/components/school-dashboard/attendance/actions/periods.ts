@@ -799,12 +799,6 @@ export async function getStudentDayAttendance(input: {
       },
       include: {
         section: { select: { name: true } },
-        class: {
-          select: {
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
       },
       orderBy: [{ periodName: "asc" }, { markedAt: "asc" }],
     })
@@ -855,12 +849,9 @@ export async function getStudentDayAttendance(input: {
         periods: attendances.map((a) => ({
           periodId: a.periodId,
           periodName: a.periodName || "All Day",
-          // The section, or the class of a mark kept from before sections.
-          className: a.section?.name ?? a.class?.name ?? "",
+          className: a.section?.name ?? "",
           name:
-            (a.timetableId ? subjectBySlot.get(a.timetableId) : null) ??
-            a.class?.subject?.name ??
-            null,
+            (a.timetableId ? subjectBySlot.get(a.timetableId) : null) ?? null,
           status: a.status,
           checkInTime: a.checkInTime?.toISOString() || null,
           notes: a.notes,

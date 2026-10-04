@@ -29,7 +29,6 @@ interface ExportButtonProps {
   filters?: {
     title?: string
     type?: string
-    classId?: string
   }
   /** Button variant */
   variant?: "default" | "outline" | "ghost" | "secondary"

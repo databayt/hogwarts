@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         studentId: true,
-        classId: true,
         sectionId: true,
         destination: true,
         destinationNote: true,
@@ -84,7 +83,6 @@ export async function POST(request: NextRequest) {
       id: pass.id,
       student_id: pass.studentId,
       section_id: pass.sectionId,
-      class_id: pass.sectionId ?? pass.classId,
       destination: pass.destination,
       destination_note: pass.destinationNote,
       issued_by: pass.issuedBy,
@@ -122,7 +120,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         studentId: true,
-        classId: true,
         sectionId: true,
         destination: true,
         destinationNote: true,
@@ -143,7 +140,6 @@ export async function GET(request: NextRequest) {
       student_id: p.studentId,
       student_name: `${p.student.firstName} ${p.student.lastName}`,
       section_id: p.sectionId,
-      class_id: p.sectionId ?? p.classId,
       destination: p.destination,
       destination_note: p.destinationNote,
       issued_by: p.issuedBy,

@@ -12,7 +12,6 @@ import { POST } from "@/app/api/mobile/teacher/classes/[classId]/grades/route"
 vi.mock("@/lib/db", () => ({
   db: {
     section: { findFirst: vi.fn() },
-    class: { findFirst: vi.fn() },
     teacher: { findFirst: vi.fn() },
     schoolExam: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
     student: { findMany: vi.fn() },
@@ -70,7 +69,6 @@ beforeEach(() => {
     id: "7a",
     gradeId: "g7",
   } as never)
-  vi.mocked(db.class.findFirst).mockResolvedValue(null)
   vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
   vi.mocked(getTeacherSectionIds).mockResolvedValue(["7a"])
   vi.mocked(getTeacherPairs).mockResolvedValue([
@@ -114,7 +112,7 @@ describe("mobile teacher class routes — {classId} is a section", () => {
     expect(db.schoolExam.findMany).not.toHaveBeenCalled()
   })
 
-  it("404s an id that is neither this school's section nor class", async () => {
+  it("404s an id that is not this school's section", async () => {
     await authAs("ADMIN")
     vi.mocked(db.section.findFirst).mockResolvedValue(null)
 
@@ -128,7 +126,6 @@ describe("mobile teacher class routes — {classId} is a section", () => {
     vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
       id: "e1",
       totalMarks: 50,
-      classId: null,
       gradeId: "g7",
       sectionId: null,
     } as never)
@@ -157,7 +154,6 @@ describe("mobile teacher class routes — {classId} is a section", () => {
     vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
       id: "e1",
       totalMarks: 50,
-      classId: null,
       gradeId: "g7",
       sectionId: "7a",
     } as never)

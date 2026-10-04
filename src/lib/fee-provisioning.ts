@@ -209,7 +209,7 @@ export async function provisionSchoolFees(
         variantKey(sig.gradeId, sig.streamId ?? null, sig.studentType ?? null),
         row
       )
-    } else if (row.classId === null && row.gradeId === null) {
+    } else if (row.gradeId === null) {
       schoolWideExisting = row
     }
   }
@@ -413,8 +413,6 @@ function buildPayload(input: {
     name: input.name,
     academicYear: input.academicYear,
     gradeId: input.gradeId,
-    // A re-sync drops the class link the old provisioning made
-    classId: null,
     tuitionFee: components.tuitionFee,
     admissionFee: components.admissionFee ?? null,
     registrationFee: components.registrationFee ?? null,

@@ -6,9 +6,8 @@
 // nl-02: `startingSoon`'s body must say the ACTUAL minutes-to-start (passed
 // in by the cron), with correct Arabic plural-form selection — not a
 // hardcoded "10 minutes".
-// nl-04: the section audience must be resolved down BOTH enrollment axes —
-// Student.sectionId AND StudentClass membership in the session's timetable
-// slot class — deduped, with guardians following the same widened set.
+// nl-04: the section audience is every student placed in the section
+// (Student.sectionId), deduped, with guardians following the same set.
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -46,7 +45,6 @@ const BASE_SESSION = {
   scheduledStart: new Date("2026-06-01T10:00:00Z"),
   teacher: { firstName: "Ada", lastName: "Lovelace", userId: "teacher-user-1" },
   school: { preferredLanguage: "ar" },
-  timetable: { classId: "class-1" },
 }
 
 beforeEach(() => {
@@ -134,11 +132,8 @@ describe("notifyClass* — other kinds keep their fixed templates", () => {
   })
 })
 
-describe("loadSession audience — nl-04: OR across Student.sectionId AND StudentClass", () => {
-  it("includes a student reachable only through the legacy StudentClass axis", async () => {
-    // No student rows returned via the OR-clause mock below in this test —
-    // instead we assert the WHERE shape sent to db.student.findMany, since
-    // that's what determines whether such a student is found at all.
+describe("loadSession audience — nl-04: students placed in the section", () => {
+  it("scopes the student audience to the session's section", async () => {
     mockDb.student.findMany.mockResolvedValue([
       { id: "stu-1", userId: "student-user-1" },
     ] as never)
@@ -148,36 +143,17 @@ describe("loadSession audience — nl-04: OR across Student.sectionId AND Studen
     const where = mockDb.student.findMany.mock.calls[0][0].where as {
       schoolId: string
       userId: { not: null }
-      OR: Array<Record<string, unknown>>
+      sectionId: string
     }
     expect(where.schoolId).toBe("school-1")
-    expect(where.OR).toContainEqual({ sectionId: "sec-1" })
-    expect(where.OR).toContainEqual({
-      studentClasses: {
-        some: { schoolId: "school-1", classId: "class-1" },
-      },
-    })
+    expect(where.sectionId).toBe("sec-1")
+    expect(where).not.toHaveProperty("OR")
 
     const call = mockDispatch.mock.calls[0][0]
     expect(call.targetUserIds).toContain("student-user-1")
   })
 
-  it("OR's on sectionId alone when the session has no timetable slot (ad-hoc)", async () => {
-    mockDb.conference.findFirst.mockResolvedValue({
-      ...BASE_SESSION,
-      timetable: null,
-    } as never)
-    mockDb.student.findMany.mockResolvedValue([] as never)
-
-    await notifyClassScheduled("school-1", "lcs-1")
-
-    const where = mockDb.student.findMany.mock.calls[0][0].where as {
-      OR: Array<Record<string, unknown>>
-    }
-    expect(where.OR).toEqual([{ sectionId: "sec-1" }])
-  })
-
-  it("dedupes a student who matches BOTH axes into a single recipient", async () => {
+  it("dedupes a student into a single recipient", async () => {
     mockDb.student.findMany.mockResolvedValue([
       { id: "stu-1", userId: "student-user-1" },
     ] as never)
@@ -191,7 +167,7 @@ describe("loadSession audience — nl-04: OR across Student.sectionId AND Studen
     expect(occurrences).toHaveLength(1)
   })
 
-  it("resolves guardians from the SAME widened student set (by Student.id), not a fresh section-only query", async () => {
+  it("resolves guardians from the SAME student set (by Student.id)", async () => {
     mockDb.student.findMany.mockResolvedValue([
       { id: "stu-1", userId: "student-user-1" },
       { id: "stu-2", userId: "student-user-2" },
@@ -218,7 +194,7 @@ describe("loadSession audience — nl-04: OR across Student.sectionId AND Studen
     expect(call.targetUserIds).toContain("teacher-user-1")
   })
 
-  it("a school-wide (visibility=school) session notifies every school user, skipping the section OR entirely", async () => {
+  it("a school-wide (visibility=school) session notifies every school user, skipping the section read entirely", async () => {
     mockDb.conference.findFirst.mockResolvedValue({
       ...BASE_SESSION,
       visibility: "school",

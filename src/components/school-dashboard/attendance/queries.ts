@@ -201,7 +201,6 @@ export async function loadTodaysAttendanceDashboard(
       date: true,
       student: { select: { firstName: true, lastName: true } },
       section: { select: { name: true } },
-      class: { select: { name: true } },
     },
     orderBy: { date: "desc" },
   })
@@ -216,7 +215,7 @@ export async function loadTodaysAttendanceDashboard(
     if (!studentAbsences.has(key)) {
       studentAbsences.set(key, {
         name: `${absence.student.firstName} ${absence.student.lastName}`,
-        className: absence.section?.name ?? absence.class?.name ?? "",
+        className: absence.section?.name ?? "",
         dates: [],
       })
     }
@@ -274,14 +273,12 @@ export async function loadTodaysAttendanceDashboard(
       date: true,
       student: { select: { firstName: true, lastName: true } },
       section: { select: { name: true } },
-      class: { select: { name: true } },
     },
   })
   const recentActivity = recentRows.map((a) => ({
     id: a.id,
     studentName: `${a.student.firstName} ${a.student.lastName}`,
-    // The section, or the class of a mark kept from before sections.
-    className: a.section?.name ?? a.class?.name ?? "",
+    className: a.section?.name ?? "",
     status: a.status,
     time: a.markedAt.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -378,7 +375,6 @@ export async function loadAttendanceFollowUp(
       date: true,
       student: { select: { firstName: true, lastName: true } },
       section: { select: { name: true } },
-      class: { select: { name: true } },
     },
     orderBy: { date: "desc" },
   })
@@ -392,7 +388,7 @@ export async function loadAttendanceFollowUp(
     if (!studentAbsenceMap.has(absence.studentId)) {
       studentAbsenceMap.set(absence.studentId, {
         name: `${absence.student.firstName} ${absence.student.lastName}`,
-        className: absence.section?.name ?? absence.class?.name ?? "",
+        className: absence.section?.name ?? "",
         dates: [],
       })
     }
@@ -448,7 +444,6 @@ export async function loadAttendanceFollowUp(
           date: true,
           student: { select: { firstName: true, lastName: true } },
           section: { select: { name: true } },
-          class: { select: { name: true } },
         },
       },
     },
@@ -459,8 +454,7 @@ export async function loadAttendanceFollowUp(
     results.push({
       studentId: excuse.attendance.studentId,
       studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
-      className:
-        excuse.attendance.section?.name ?? excuse.attendance.class?.name ?? "",
+      className: excuse.attendance.section?.name ?? "",
       issue: "unexcused_pending",
       severity: "info",
       details: `Excuse pending review since ${formatDate(excuse.attendance.date, "ar")}`,

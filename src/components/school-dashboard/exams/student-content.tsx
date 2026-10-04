@@ -96,7 +96,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
         schoolId,
         wizardStep: null,
         ...studentExamsWhere(
-          scope ?? { sectionId: null, gradeId: null, classIds: [] }
+          scope ?? { sectionId: null, gradeId: null }
         ),
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },

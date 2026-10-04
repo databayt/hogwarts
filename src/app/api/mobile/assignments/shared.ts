@@ -52,7 +52,7 @@ export async function studentAssignmentDto(a: MyAssignment) {
     total_points: a.totalPoints,
     due_date: a.dueDate,
     is_overdue: a.dueDate < new Date(),
-    class_id: a.classId,
+    class_id: null,
     class_name: a.className,
     subject_name: a.subjectName,
     submission: await submissionDto(a.submission),
@@ -61,7 +61,6 @@ export async function studentAssignmentDto(a: MyAssignment) {
 
 export const assignmentDetailFields = {
   ...assignmentListSelect,
-  classId: true,
   description: true,
   instructions: true,
 } as const
@@ -76,13 +75,6 @@ type AssignmentRow = {
   dueDate: Date
   publishDate: Date | null
   createdAt: Date
-  /** Legacy: the class it was set for. */
-  class: {
-    id: string
-    name: string
-    teacher: { id: string; firstName: string; lastName: string } | null
-    subject: { id: string; name: string } | null
-  } | null
   gradeId: string | null
   sectionId: string | null
   subjectId: string | null
@@ -108,16 +100,14 @@ export function assignmentDto(a: AssignmentRow) {
     due_date: a.dueDate,
     publish_date: a.publishDate,
     is_overdue: a.dueDate < new Date(),
-    // Who it's for. class_* stays for app builds that still read it; for an
-    // assignment set for a grade or section it names that.
+    // Who it's for. class_* stays for app builds that still read it:
+    // class_id is null, class_name names the grade or section.
     grade_id: a.gradeId,
     section_id: a.sectionId,
-    class_id: a.class?.id ?? null,
+    class_id: null,
     class_name: audienceLabel(a) || null,
-    subject_name: a.subject?.name ?? a.class?.subject?.name ?? null,
-    teacher_name: a.class?.teacher
-      ? `${a.class.teacher.firstName} ${a.class.teacher.lastName}`.trim()
-      : null,
+    subject_name: a.subject?.name ?? null,
+    teacher_name: null,
     submissions_count: a._count.submissions,
     created_at: a.createdAt,
   }
@@ -127,12 +117,12 @@ export type AssignmentAccess =
   | {
       ok: true
       mode: "staff"
-      assignment: AssignmentRow & { classId: string | null }
+      assignment: AssignmentRow
     }
   | {
       ok: true
       mode: "student" | "guardian"
-      assignment: AssignmentRow & { classId: string | null }
+      assignment: AssignmentRow
       studentId: string
     }
   | { ok: false; response: NextResponse }
@@ -145,10 +135,10 @@ const deny = (status: number, error: string): AssignmentAccess => ({
 /**
  * Who may open an assignment:
  *  - ADMIN / DEVELOPER — any in their school
- *  - TEACHER — assignments they teach: a legacy class they lead or co-teach,
- *    ones they set, or a subject they're assigned in its section or grade
- *  - STUDENT — published (non-draft) assignments set for their section,
- *    grade or a legacy class of theirs
+ *  - TEACHER — assignments they teach: ones they set, or a subject they're
+ *    assigned in its section or grade
+ *  - STUDENT — published (non-draft) assignments set for their section or
+ *    grade
  *  - GUARDIAN — the same, for a linked child named by `studentId`
  * Another school's id is a 404, never a 403 (no existence oracle).
  */

@@ -4,7 +4,6 @@
 // Results Block Types
 
 import type {
-  Class,
   Exam,
   ExamResult,
   GradeBoundary,
@@ -180,7 +179,8 @@ export interface ResultExportOptions {
 // ========== Extended Types with Relations ==========
 
 export interface ExamWithResults extends Exam {
-  class: Class
+  section: { name: string } | null
+  grade: { name: string } | null
   subject: Subject
   examResults: (ExamResult & {
     student: Student

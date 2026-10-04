@@ -24,7 +24,6 @@ type Row = {
   scope: "school" | "class" | "grade" | "section" | "role"
   priority: string
   role: string | null
-  classId: string | null
   gradeId: string | null
   sectionId: string | null
   published: boolean
@@ -55,7 +54,6 @@ const row = (over: Partial<Row> & Pick<Row, "id">): Row => ({
   scope: "school",
   priority: "normal",
   role: null,
-  classId: null,
   gradeId: null,
   sectionId: null,
   published: true,
@@ -78,13 +76,11 @@ const TABLE: Row[] = [
   row({
     id: "ann-class-mine",
     scope: "class",
-    classId: "class-a",
     createdAt: at(3),
   }),
   row({
     id: "ann-class-other",
     scope: "class",
-    classId: "class-b",
     createdAt: at(2),
   }),
   row({
@@ -173,7 +169,6 @@ function query(args: {
     .map((r) => ({
       ...r,
       creator: null,
-      class: null,
       grade: null,
       section: null,
       _count: { readReceipts: 0 },
@@ -237,8 +232,8 @@ beforeEach(() => {
     { announcementId: "ann-school" },
   ] as never)
   vi.mocked(db.announcementRead.upsert).mockResolvedValue({} as never)
-  // The student sits in section 7-A of grade 7 (and, from before classes
-  // were retired, in class-a).
+  // The student sits in section 7-A of grade 7. Legacy class-scoped notices
+  // reach no student now that classes are retired.
   vi.mocked(db.student.findMany).mockResolvedValue([{ id: "stu-1" }] as never)
   vi.mocked(getStudentScopes).mockImplementation(async (_school, studentIds) =>
     studentIds.includes("stu-1")
@@ -247,7 +242,6 @@ beforeEach(() => {
             studentId: "stu-1",
             sectionId: "7a",
             gradeId: "g7",
-            classIds: ["class-a"],
           },
         ]
       : []
@@ -275,10 +269,10 @@ describe("GET /api/mobile/announcements", () => {
       "ann-pinned",
       "ann-school",
       "ann-students",
-      "ann-class-mine",
     ])
     expect(ids(body)).not.toContain("ann-staff")
-    expect(body.total).toBe(4)
+    expect(ids(body)).not.toContain("ann-class-mine")
+    expect(body.total).toBe(3)
   })
 
   it("student: their grade's and their section's notices — not another section's or grade's", async () => {
@@ -363,10 +357,10 @@ describe("GET /api/mobile/announcements/:id", () => {
     expect((await GET(req("/ann-school"), ctx("ann-school"))).status).toBe(401)
   })
 
-  it("student: 404 for a staff notice, a draft or another class; nothing marked read", async () => {
+  it("student: 404 for a staff notice, a draft or a legacy class notice; nothing marked read", async () => {
     await authAs("STUDENT")
     const { GET } = await import("@/app/api/mobile/announcements/[id]/route")
-    for (const id of ["ann-staff", "ann-draft", "ann-class-other"]) {
+    for (const id of ["ann-staff", "ann-draft", "ann-class-mine"]) {
       expect((await GET(req(`/${id}`), ctx(id))).status).toBe(404)
     }
     expect(db.announcementRead.upsert).not.toHaveBeenCalled()
@@ -383,14 +377,15 @@ describe("GET /api/mobile/announcements/:id", () => {
   it("student: opens their own notice and marks it read", async () => {
     await authAs("STUDENT")
     const { GET } = await import("@/app/api/mobile/announcements/[id]/route")
-    const res = await GET(req("/ann-class-mine?lang=ar"), ctx("ann-class-mine"))
+    const res = await GET(req("/ann-students?lang=ar"), ctx("ann-students"))
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body).toMatchObject({
-      id: "ann-class-mine",
-      title: "[ar] Notice ann-class-mine",
+      id: "ann-students",
+      title: "[ar] Notice ann-students",
       content: "Body text",
-      scope: "class",
+      scope: "role",
+      target_class: null,
       is_published: true,
       updated_at: at(2).toISOString(),
       lang: "en",

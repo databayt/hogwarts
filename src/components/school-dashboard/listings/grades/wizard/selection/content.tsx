@@ -27,7 +27,7 @@ export default function SelectionContent() {
     if (data) {
       setIsValid(
         data.studentId.trim().length >= 1 &&
-          (data.subjectId ?? data.class?.subjectId ?? "").length >= 1
+          (data.subjectId ?? "").length >= 1
       )
     }
   }, [data])
@@ -55,7 +55,7 @@ export default function SelectionContent() {
             data
               ? {
                   studentId: data.studentId,
-                  subjectId: data.subjectId ?? data.class?.subjectId ?? "",
+                  subjectId: data.subjectId ?? "",
                   assignmentId: data.assignmentId ?? undefined,
                   examId: data.examId ?? undefined,
                 }

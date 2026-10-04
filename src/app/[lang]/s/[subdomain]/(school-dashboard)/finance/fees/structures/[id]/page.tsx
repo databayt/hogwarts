@@ -45,7 +45,6 @@ export default async function FeeStructureDetailPage({ params }: Props) {
   const feeStructure = await db.feeStructure.findFirst({
     where: { id, schoolId },
     include: {
-      class: { select: { id: true, name: true } },
       _count: { select: { feeAssignments: true } },
     },
   })

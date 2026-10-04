@@ -57,7 +57,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
           lang: true,
           classroomType: { select: { id: true, name: true, lang: true } },
           grade: { select: { id: true, name: true, gradeNumber: true } },
-          _count: { select: { classes: true, timetables: true } },
+          _count: { select: { timetables: true } },
           createdAt: true,
         },
       }),
@@ -76,7 +76,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
         where: { schoolId },
         _sum: { capacity: true },
       }),
-      db.classroom.count({ where: { schoolId, classes: { some: {} } } }),
+      db.classroom.count({ where: { schoolId, timetables: { some: {} } } }),
     ])
     types = classroomTypes
     grades = academicGrades
@@ -102,7 +102,6 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
         gradeName: r.grade?.name ?? null,
         gradeNumber: r.grade?.gradeNumber ?? null,
         gradeId: r.gradeId,
-        classCount: r._count.classes,
         timetableCount: r._count.timetables,
         createdAt: (r.createdAt as Date).toISOString(),
       }

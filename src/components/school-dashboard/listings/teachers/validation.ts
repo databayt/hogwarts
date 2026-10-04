@@ -106,13 +106,6 @@ export const teacherUpdateSchema = informationSchema
     id: z.string().min(1, "Required"),
   })
 
-// Class teacher assignment schema (for co-teaching)
-export const classTeacherSchema = z.object({
-  classId: z.string().min(1, "Class is required"),
-  teacherId: z.string().min(1, "Teacher is required"),
-  role: z.enum(["PRIMARY", "CO_TEACHER", "ASSISTANT"]).default("PRIMARY"),
-})
-
 // Workload configuration schema
 export const workloadConfigSchema = z
   .object({

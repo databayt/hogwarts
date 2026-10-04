@@ -15,7 +15,6 @@ describe("Grades validation schemas", () => {
     const validInput = {
       studentId: "student-1",
       assignmentId: "assignment-1",
-      classId: "class-1",
       score: 85,
       maxScore: 100,
       grade: "A",
@@ -80,12 +79,6 @@ describe("Grades validation schemas", () => {
     it("rejects empty studentId", () => {
       expect(
         resultCreateSchema.safeParse({ ...validInput, studentId: "" }).success
-      ).toBe(false)
-    })
-
-    it("rejects empty classId", () => {
-      expect(
-        resultCreateSchema.safeParse({ ...validInput, classId: "" }).success
       ).toBe(false)
     })
 
@@ -170,12 +163,10 @@ describe("Grades validation schemas", () => {
         page: 2,
         perPage: 50,
         studentId: "s1",
-        classId: "c1",
         grade: "A",
         sort: [{ id: "gradedAt", desc: true }],
       })
       expect(parsed.studentId).toBe("s1")
-      expect(parsed.classId).toBe("c1")
       expect(parsed.grade).toBe("A")
       expect(parsed.sort).toHaveLength(1)
       expect(parsed.sort[0]).toMatchObject({ id: "gradedAt", desc: true })
@@ -185,7 +176,6 @@ describe("Grades validation schemas", () => {
       const parsed = getResultsSchema.parse({})
       expect(parsed.studentId).toBe("")
       expect(parsed.assignmentId).toBe("")
-      expect(parsed.classId).toBe("")
       expect(parsed.grade).toBe("")
     })
   })

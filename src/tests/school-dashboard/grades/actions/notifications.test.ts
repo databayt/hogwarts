@@ -70,7 +70,7 @@ describe("sendGradeNotification", () => {
         firstName: "John",
         lastName: "Smith",
       },
-      class: { subject: { name: "Math" } },
+      subject: { name: "Math" },
     } as never)
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
       { guardian: { userId: "user-g1" } },
@@ -99,7 +99,7 @@ describe("sendGradeNotification", () => {
       score: 90,
       maxScore: 100,
       student: { id: "stu-1", userId: null, firstName: "J", lastName: "S" },
-      class: { subject: { name: "Math" } },
+      subject: { name: "Math" },
     } as never)
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([] as never)
     vi.mocked(dispatchTemplated).mockResolvedValue("id" as never)

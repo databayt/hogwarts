@@ -263,7 +263,6 @@ class BackupService {
         }),
         students: await db.student.findMany(),
         teachers: await db.teacher.findMany(),
-        classes: await db.class.findMany(),
         attendances: await db.attendance.findMany(),
         announcements: await db.announcement.findMany(),
         timestamp: new Date().toISOString(),
@@ -308,7 +307,6 @@ class BackupService {
         students,
         teachers,
         attendances,
-        classes,
         announcements,
       ] = await Promise.all([
         db.school.count(),
@@ -316,7 +314,6 @@ class BackupService {
         db.student.count(),
         db.teacher.count(),
         db.attendance.count(),
-        db.class.count(),
         db.announcement.count(),
       ])
 
@@ -327,7 +324,6 @@ class BackupService {
         students +
         teachers +
         attendances +
-        classes +
         announcements
       return totalRecords * 1024 // Return size in bytes
     } catch (error) {
@@ -602,7 +598,6 @@ class BackupService {
         // Clear existing data (be very careful with this in production!)
         await tx.attendance.deleteMany()
         await tx.announcement.deleteMany()
-        await tx.class.deleteMany()
         await tx.teacher.deleteMany()
         await tx.student.deleteMany()
         await tx.user.deleteMany({ where: { role: { not: "DEVELOPER" } } })
@@ -616,8 +611,6 @@ class BackupService {
           await tx.student.createMany({ data: data.students })
         if (data.teachers?.length)
           await tx.teacher.createMany({ data: data.teachers })
-        if (data.classes?.length)
-          await tx.class.createMany({ data: data.classes })
         if (data.announcements?.length)
           await tx.announcement.createMany({ data: data.announcements })
         if (data.attendances?.length)
@@ -632,7 +625,6 @@ class BackupService {
           users: data.users?.length || 0,
           students: data.students?.length || 0,
           teachers: data.teachers?.length || 0,
-          classes: data.classes?.length || 0,
           announcements: data.announcements?.length || 0,
           attendances: data.attendances?.length || 0,
         },

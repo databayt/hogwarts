@@ -12,7 +12,7 @@ model Classroom {
   school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classroomType ClassroomType  @relation(fields: [typeId], references: [id])
   grade         AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
-  classes       Class[]
+
   sections      Section[]
   timetables    Timetable[]
 

@@ -260,7 +260,6 @@ export async function getProfileView(
               department: { select: { id: true, departmentName: true } },
             },
           },
-          _count: { select: { classes: true } },
         },
       },
       guardian: {
@@ -370,8 +369,7 @@ async function buildFromUser(
     if (classmates > 0)
       stats.push({ key: "classmates", value: Math.max(classmates - 1, 0) })
   } else if (role === "teacher" && user.teacher) {
-    // What the teacher teaches this term (SubjectTeacher), falling back to
-    // legacy classes for schools that still have them.
+    // What the teacher teaches this term (SubjectTeacher)
     const teacherId = user.teacher.id
     const { term } = await resolveActiveTerm(schoolId)
     const [pairs, sectionStudents] = term
@@ -391,17 +389,8 @@ async function buildFromUser(
           }),
         ])
       : [0, 0]
-    stats.push({
-      key: "classes",
-      value: pairs > 0 ? pairs : user.teacher._count.classes,
-    })
-    const students =
-      sectionStudents > 0
-        ? sectionStudents
-        : await db.studentClass.count({
-            where: { schoolId, class: { teacherId } },
-          })
-    stats.push({ key: "students", value: students })
+    stats.push({ key: "classes", value: pairs })
+    stats.push({ key: "students", value: sectionStudents })
   } else if (role === "parent" && user.guardian) {
     stats.push({
       key: "children",
@@ -564,10 +553,15 @@ async function buildFromOrphanEntity(
           department: { select: { departmentName: true } },
         },
       },
-      _count: { select: { classes: true } },
     },
   })
   if (teacher) {
+    const { term } = await resolveActiveTerm(schoolId)
+    const pairs = term
+      ? await db.subjectTeacher.count({
+          where: { schoolId, termId: term.id, teacherId: teacher.id },
+        })
+      : 0
     const departmentName =
       teacher.teacherDepartments.find((d) => d.isPrimary)?.department
         ?.departmentName ??
@@ -576,7 +570,7 @@ async function buildFromOrphanEntity(
     return make("teacher", teacher, {
       departmentName,
       joiningDate: teacher.joiningDate ?? null,
-      stats: [{ key: "classes", value: teacher._count.classes }],
+      stats: [{ key: "classes", value: pairs }],
     })
   }
 
@@ -872,8 +866,7 @@ async function fetchRoleDetail(
   }
 
   if (role === "teacher") {
-    // Subjects the teacher teaches in each section this term; legacy classes
-    // only when there are none.
+    // Subjects the teacher teaches in each section this term
     const { term } = await resolveActiveTerm(schoolId)
     const pairs = term
       ? await db.subjectTeacher.findMany({
@@ -888,31 +881,12 @@ async function fetchRoleDetail(
           },
         })
       : []
-    if (pairs.length > 0) {
-      return {
-        ...empty,
-        classes: pairs.map((p) => ({
-          id: `${p.sectionId}:${p.subjectId}`,
-          name: `${p.subject.name} · ${p.section.name}`,
-          subjectName: p.subject.name,
-        })),
-      }
-    }
-    const rows = await db.class.findMany({
-      where: { schoolId, teacherId: entityId },
-      take: 24,
-      select: {
-        id: true,
-        name: true,
-        subject: { select: { name: true } },
-      },
-    })
     return {
       ...empty,
-      classes: rows.map((c) => ({
-        id: c.id,
-        name: c.name,
-        subjectName: c.subject?.name ?? null,
+      classes: pairs.map((p) => ({
+        id: `${p.sectionId}:${p.subjectId}`,
+        name: `${p.subject.name} · ${p.section.name}`,
+        subjectName: p.subject.name,
       })),
     }
   }

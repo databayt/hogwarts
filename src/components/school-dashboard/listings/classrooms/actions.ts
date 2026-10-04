@@ -89,7 +89,7 @@ export async function getClassrooms(
         gradeId: true,
         classroomType: { select: { id: true, name: true } },
         grade: { select: { id: true, name: true, gradeNumber: true } },
-        _count: { select: { classes: true, timetables: true } },
+        _count: { select: { timetables: true } },
         createdAt: true,
       },
     }),
@@ -119,7 +119,6 @@ export async function getClassrooms(
       gradeName: r.grade?.name ?? null,
       gradeNumber: r.grade?.gradeNumber ?? null,
       gradeId: r.gradeId,
-      classCount: r._count.classes,
       timetableCount: r._count.timetables,
       createdAt: r.createdAt.toISOString(),
     })),
@@ -328,18 +327,11 @@ export async function deleteClassroom(input: {
     }
 
     // Check for references (parallel for performance)
-    const [refs, ttRefs, constraintRefs] = await Promise.all([
-      db.class.count({ where: { classroomId: input.id, schoolId } }),
+    const [ttRefs, constraintRefs] = await Promise.all([
       db.timetable.count({ where: { classroomId: input.id, schoolId } }),
       db.roomConstraint.count({ where: { classroomId: input.id, schoolId } }),
     ])
 
-    if (refs > 0) {
-      return actionError(
-        ACTION_ERRORS.HAS_DEPENDENCIES,
-        JSON.stringify({ kind: "classes", count: refs })
-      )
-    }
     if (ttRefs > 0) {
       return actionError(
         ACTION_ERRORS.HAS_DEPENDENCIES,
@@ -478,14 +470,14 @@ export async function getRoomTimetable(input: {
         id: true,
         dayOfWeek: true,
         periodId: true,
-        class: {
+        section: {
           select: {
             id: true,
             name: true,
             grade: { select: { id: true, name: true } },
-            subject: { select: { id: true, name: true } },
           },
         },
+        subject: { select: { name: true } },
         teacher: {
           select: {
             id: true,
@@ -511,11 +503,11 @@ export async function getRoomTimetable(input: {
       id: s.id,
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
-      className: s.class?.name ?? "",
-      classId: s.class?.id ?? "",
-      gradeName: s.class?.grade?.name ?? null,
-      gradeId: s.class?.grade?.id ?? null,
-      subject: s.class?.subject?.name ?? "",
+      className: s.section?.name ?? "",
+      sectionId: s.section?.id ?? "",
+      gradeName: s.section?.grade?.name ?? null,
+      gradeId: s.section?.grade?.id ?? null,
+      subject: s.subject?.name ?? "",
       teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacher?.id ?? "",
     })),
@@ -527,38 +519,4 @@ export async function getRoomTimetable(input: {
       endTime: p.endTime.toISOString(),
     })),
   }
-}
-
-export async function getRoomClasses(input: { roomId: string }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return []
-
-  const session = await auth()
-  const authContext = getAuthContext(session)
-  if (!authContext) return []
-  try {
-    assertClassroomPermission(authContext, "read", { schoolId })
-  } catch {
-    return []
-  }
-
-  return db.class.findMany({
-    where: { schoolId, classroomId: input.roomId },
-    select: {
-      id: true,
-      name: true,
-      maxCapacity: true,
-      grade: { select: { id: true, name: true } },
-      subject: { select: { id: true, name: true } },
-      teacher: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      _count: { select: { studentClasses: true } },
-    },
-    orderBy: { name: "asc" },
-  })
 }

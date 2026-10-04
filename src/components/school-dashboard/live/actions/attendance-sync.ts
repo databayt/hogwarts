@@ -133,16 +133,11 @@ export async function syncLiveAttendance(
       select: {
         periodId: true,
         period: { select: { name: true } },
-        classId: true,
       },
     })
     if (!slot?.periodId) return { marked: 0, updated: 0, skipped: "no_period" }
     const periodId = slot.periodId
     const periodName = slot.period?.name ?? null
-    // Legacy subject-class reference, when the slot has one — lets a
-    // student's own attendance view (records.ts) resolve a class name for a
-    // VIRTUAL row the same way it does for a manually-marked one.
-    const classId = slot.classId ?? null
 
     // Roster = every student placed in the section (id + userId for the
     // presence map). This is the authority for who should have attended.
@@ -319,7 +314,6 @@ export async function syncLiveAttendance(
           toCreate.push({
             schoolId,
             studentId: student.id,
-            classId,
             date: dateObj,
             status,
             method: "VIRTUAL",

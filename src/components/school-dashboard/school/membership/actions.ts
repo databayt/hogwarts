@@ -478,29 +478,17 @@ export async function removeMember(
     const deps: string[] = []
 
     if (targetUser.student) {
-      const [classCount, attendanceCount] = await Promise.all([
-        db.studentClass.count({
-          where: { studentId: targetUser.student.id, schoolId },
-        }),
-        db.attendance.count({
-          where: { studentId: targetUser.student.id, schoolId },
-        }),
-      ])
-      if (classCount > 0) deps.push(`enrolled in ${classCount} class(es)`)
+      const attendanceCount = await db.attendance.count({
+        where: { studentId: targetUser.student.id, schoolId },
+      })
       if (attendanceCount > 0)
         deps.push(`has ${attendanceCount} attendance record(s)`)
     }
 
     if (targetUser.teacher) {
-      const [classCount, timetableCount] = await Promise.all([
-        db.class.count({
-          where: { teacherId: targetUser.teacher.id, schoolId },
-        }),
-        db.timetable.count({
-          where: { teacherId: targetUser.teacher.id, schoolId },
-        }),
-      ])
-      if (classCount > 0) deps.push(`teaches ${classCount} class(es)`)
+      const timetableCount = await db.timetable.count({
+        where: { teacherId: targetUser.teacher.id, schoolId },
+      })
       if (timetableCount > 0)
         deps.push(`has ${timetableCount} timetable slot(s)`)
     }

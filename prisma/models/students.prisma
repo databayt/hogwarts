@@ -99,7 +99,7 @@ model Student {
 
   // Relations
   school            School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentClasses    StudentClass[]
+
   studentYearLevels StudentYearLevel[]
   studentGuardians  StudentGuardian[]
   accessCodes       StudentAccessCode[]

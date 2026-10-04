@@ -400,9 +400,9 @@ export function GroupsList({
                   </span>
                 </div>
 
-                {(group.sectionName || group.className) && (
+                {group.sectionName && (
                   <p className="text-muted-foreground text-xs">
-                    {group.sectionName || group.className}
+                    {group.sectionName}
                   </p>
                 )}
 

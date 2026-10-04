@@ -165,8 +165,7 @@ describe("GET /api/mobile/attendance/today", () => {
           studentId: "s7",
           date: daysAgo(1),
           student: student("Huda"),
-          section: null,
-          class: { name: "10B" },
+          section: { name: "10B" },
         },
       },
     ] as never)

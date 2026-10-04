@@ -13,7 +13,6 @@ export type ResultDTO = {
   schoolId: string
   studentId: string
   assignmentId: string
-  classId: string
   score: number
   maxScore: number
   percentage: number
@@ -23,7 +22,6 @@ export type ResultDTO = {
   gradedAt: Date | null
   student?: { id: string; firstName: string; lastName: string } | null
   assignment?: { id: string; title: string; totalPoints: number } | null
-  class?: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date
 }

@@ -68,7 +68,6 @@ interface Child {
   id: string
   name: string
   photoUrl: string | null
-  classId: string | undefined
   className: string | undefined
   gradeName?: string | null
   gradeNameAr?: string | null

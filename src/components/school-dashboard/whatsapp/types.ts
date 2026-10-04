@@ -33,11 +33,9 @@ export type WhatsAppGroupDTO = {
   description: string | null
   type: WhatsAppGroupType
   sectionId: string | null
-  classId: string | null
   isActive: boolean
   memberCount: number
   sectionName: string | null
-  className: string | null
   createdAt: string
 }
 

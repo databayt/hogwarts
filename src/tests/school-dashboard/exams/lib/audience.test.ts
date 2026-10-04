@@ -13,7 +13,7 @@ import {
 } from "@/components/school-dashboard/exams/lib/audience"
 
 const SCHOOL = "school-1"
-const none = { classId: null, gradeId: null, sectionId: null }
+const none = { gradeId: null, sectionId: null }
 
 describe("examRosterWhere", () => {
   it("a section exam is sat by that section", () => {
@@ -32,13 +32,6 @@ describe("examRosterWhere", () => {
     })
   })
 
-  it("a legacy exam is sat by its class's students", () => {
-    expect(examRosterWhere(SCHOOL, { ...none, classId: "c1" })).toEqual({
-      schoolId: SCHOOL,
-      studentClasses: { some: { schoolId: SCHOOL, classId: "c1" } },
-    })
-  })
-
   it("an exam with no audience reaches nobody", () => {
     expect(examRosterWhere(SCHOOL, none)).toEqual({
       schoolId: SCHOOL,
@@ -48,12 +41,9 @@ describe("examRosterWhere", () => {
 })
 
 describe("studentExamsWhere", () => {
-  it("covers the student's section, whole-grade exams, and legacy classes", () => {
-    expect(
-      studentExamsWhere({ sectionId: "7a", gradeId: "g7", classIds: ["c1"] })
-    ).toEqual({
+  it("covers the student's section and whole-grade exams", () => {
+    expect(studentExamsWhere({ sectionId: "7a", gradeId: "g7" })).toEqual({
       OR: [
-        { classId: { in: ["c1"] } },
         { sectionId: { in: ["7a"] } },
         { sectionId: null, gradeId: { in: ["g7"] } },
       ],
@@ -62,8 +52,8 @@ describe("studentExamsWhere", () => {
 
   it("merges a guardian's children", () => {
     const where = studentExamsWhere([
-      { sectionId: "7a", gradeId: "g7", classIds: [] },
-      { sectionId: "9b", gradeId: "g9", classIds: [] },
+      { sectionId: "7a", gradeId: "g7" },
+      { sectionId: "9b", gradeId: "g9" },
     ])
     expect(where).toEqual({
       OR: [
@@ -74,9 +64,9 @@ describe("studentExamsWhere", () => {
   })
 
   it("matches nothing for a student placed nowhere", () => {
-    expect(
-      studentExamsWhere({ sectionId: null, gradeId: null, classIds: [] })
-    ).toEqual({ id: { in: [] } })
+    expect(studentExamsWhere({ sectionId: null, gradeId: null })).toEqual({
+      id: { in: [] },
+    })
     expect(studentExamsWhere([])).toEqual({ id: { in: [] } })
   })
 })
@@ -97,20 +87,15 @@ describe("teacher exams", () => {
     ])
   })
 
-  it("adds legacy class exams and the teacher's own exams", () => {
+  it("adds the teacher's own exams", () => {
     const where = teacherExamsWhere({ teacherId: "t1", userId: "u1", pairs })
-    expect(where.OR).toEqual(
-      expect.arrayContaining([
-        { class: { teacherId: "t1" } },
-        { createdById: "u1" },
-      ])
-    )
-    expect(where.OR).toHaveLength(6)
+    expect(where.OR).toEqual(expect.arrayContaining([{ createdById: "u1" }]))
+    expect(where.OR).toHaveLength(5)
   })
 })
 
 describe("examAudienceLabel", () => {
-  it("names the section first, then the grade, then a legacy class", () => {
+  it("names the section first, then the grade", () => {
     expect(
       examAudienceLabel({
         ...none,
@@ -120,9 +105,6 @@ describe("examAudienceLabel", () => {
     ).toBe("السابع - أ")
     expect(examAudienceLabel({ ...none, grade: { name: "السابع" } })).toBe(
       "السابع"
-    )
-    expect(examAudienceLabel({ ...none, class: { name: "Math 7" } })).toBe(
-      "Math 7"
     )
     expect(examAudienceLabel(none)).toBe("")
   })

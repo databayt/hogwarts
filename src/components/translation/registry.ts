@@ -30,7 +30,6 @@ export const TRANSLATABLE = {
 
   // — Academic structure / catalog —
   Subject: ["name", "description"],
-  Class: ["name"],
   Section: ["name"],
   Lesson: ["name", "description"],
   Chapter: ["name", "description"],

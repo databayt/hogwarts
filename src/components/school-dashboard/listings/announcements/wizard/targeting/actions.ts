@@ -99,7 +99,6 @@ export async function updateAnnouncementTargeting(
         scope: parsed.scope,
         gradeId: audience.gradeId,
         sectionId: audience.sectionId,
-        classId: null,
         role:
           parsed.scope === "role" ? ((parsed.role as UserRole) ?? null) : null,
         published: parsed.published,

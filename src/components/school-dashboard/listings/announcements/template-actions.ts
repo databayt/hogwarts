@@ -183,9 +183,6 @@ export async function updateTemplate(
         priority: input.priority,
         gradeId: input.gradeId,
         sectionId: input.sectionId,
-        ...(input.gradeId !== undefined || input.sectionId !== undefined
-          ? { classId: null }
-          : {}),
         role: input.role,
       },
     })

@@ -101,7 +101,8 @@ export async function getSchoolMockExams(
           id: true,
           title: true,
           subject: { select: { name: true } },
-          class: { select: { name: true } },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
         },
       },
       template: { select: { name: true } },
@@ -115,7 +116,7 @@ export async function getSchoolMockExams(
     title: ge.exam.title,
     totalQuestions: ge.totalQuestions,
     name: ge.exam.subject?.name || "",
-    className: ge.exam.class?.name || "",
+    className: ge.exam.section?.name ?? ge.exam.grade?.name ?? "",
     templateName: ge.template?.name || null,
     createdAt: ge.createdAt.toISOString(),
   }))

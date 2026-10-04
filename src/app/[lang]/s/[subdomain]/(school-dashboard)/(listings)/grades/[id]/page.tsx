@@ -39,7 +39,6 @@ export default async function GradeDetailPage({ params }: Props) {
   const [history, classStats] = await Promise.all([
     getStudentGradeHistory(schoolId, grade.studentId),
     getClassGradeStats(schoolId, {
-      classId: grade.classId,
       sectionId: grade.sectionId,
       subjectId: grade.subjectId,
       assignmentId: grade.assignmentId,

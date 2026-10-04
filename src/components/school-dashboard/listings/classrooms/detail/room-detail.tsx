@@ -25,7 +25,7 @@ type SlotData = {
   dayOfWeek: number
   periodId: string
   className: string
-  classId: string
+  sectionId: string
   gradeName: string | null
   gradeId: string | null
   subject: string

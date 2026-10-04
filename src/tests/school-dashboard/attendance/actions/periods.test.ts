@@ -332,7 +332,6 @@ describe("period attendance actions", () => {
           markedBy: "marker-1",
           timetableId: null,
           section: { name: "7-A" },
-          class: null,
         },
       ] as any)
       vi.mocked(db.user.findMany).mockResolvedValue([

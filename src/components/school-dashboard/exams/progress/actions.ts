@@ -157,7 +157,6 @@ export async function getProgressSchedules(): Promise<
       include: {
         section: { select: { name: true } },
         grade: { select: { name: true } },
-        class: { select: { name: true } },
         _count: {
           select: { reports: true },
         },
@@ -200,7 +199,6 @@ export async function getProgressSchedule(id: string) {
       include: {
         section: { select: { name: true } },
         grade: { select: { name: true } },
-        class: { select: { name: true } },
         _count: {
           select: { reports: true },
         },
@@ -240,7 +238,7 @@ export async function updateProgressSchedule(
       }
     }
 
-    // A new scope replaces the old one, legacy class included
+    // A new scope replaces the old one
     if (gradeId !== undefined || sectionId !== undefined) {
       const scope = await resolveScheduleScope(schoolId, { gradeId, sectionId })
       if (!scope.ok) {
@@ -248,7 +246,6 @@ export async function updateProgressSchedule(
       }
       updateData.gradeId = scope.gradeId
       updateData.sectionId = scope.sectionId
-      updateData.classId = null
     }
 
     // Recalculate nextRunAt if frequency changed
@@ -326,12 +323,11 @@ export async function generateProgressReports(
       }
     }
 
-    // The scope's students: a section, a whole grade, a legacy class — or,
-    // with none, the whole school
+    // The scope's students: a section, a whole grade — or, with none, the
+    // whole school
     const scoped =
-      schedule.sectionId || schedule.gradeId || schedule.classId
+      schedule.sectionId || schedule.gradeId
         ? audienceRosterWhere(schoolId, {
-            classId: schedule.classId,
             gradeId: schedule.gradeId,
             sectionId: schedule.sectionId,
           })

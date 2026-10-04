@@ -216,7 +216,6 @@ export async function seedProfileActivity(
       schoolId: string
       studentId: string
       sectionId: string
-      classId: null
       date: Date
       status: "PRESENT" | "LATE" | "ABSENT"
       checkInTime: Date | null
@@ -279,7 +278,6 @@ export async function seedProfileActivity(
               schoolId,
               studentId: student.id,
               sectionId,
-              classId: null,
               date: day,
               status: p === 0 ? status : "PRESENT",
               checkInTime,
@@ -295,7 +293,6 @@ export async function seedProfileActivity(
             schoolId,
             studentId: student.id,
             sectionId,
-            classId: null,
             date: day,
             status,
             checkInTime,

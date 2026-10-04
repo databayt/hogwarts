@@ -22,13 +22,12 @@ interface Props {
   lang: Locale
 }
 
-/** The list's grade column: the exam's section, its grade, or a legacy class's grade. */
+/** The list's grade column: the exam's section, or its grade. */
 function gradeColumnOf(exam: {
   section?: { name: string } | null
   grade?: { name: string } | null
-  class?: { grade?: { name: string } | null } | null
 }): string {
-  return exam.section?.name ?? exam.grade?.name ?? exam.class?.grade?.name ?? ""
+  return exam.section?.name ?? exam.grade?.name ?? ""
 }
 
 export default async function ExamsContent({
@@ -47,7 +46,6 @@ export default async function ExamsContent({
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
-      ...(sp.classId ? { classId: sp.classId } : {}),
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
       ...(sp.examType ? { examType: sp.examType as ExamType } : {}),
       ...(sp.status ? { status: sp.status as ExamStatus } : {}),
@@ -68,13 +66,6 @@ export default async function ExamsContent({
         skip,
         take,
         include: {
-          class: {
-            select: {
-              name: true,
-              lang: true,
-              grade: { select: { name: true } },
-            },
-          },
           section: { select: { name: true } },
           grade: { select: { name: true } },
           subject: {

@@ -309,29 +309,6 @@ describe("dispatchNotificationsToAudience", () => {
     expect(userIds).not.toContain("u2")
   })
 
-  it("resolves a legacy class to this school's students and teacher", async () => {
-    vi.mocked(audienceUserIds).mockResolvedValue([
-      "student-user-1",
-      "student-user-2",
-      "teacher-user-1",
-    ])
-    mockDb.notificationPreference.findMany.mockResolvedValue([])
-    mockDb.notification.createMany.mockResolvedValue({ count: 3 })
-
-    const result = await dispatchNotificationsToAudience({
-      ...baseAudienceParams,
-      targetScope: "class",
-      targetClassId: "class-1",
-    })
-
-    expect(audienceUserIds).toHaveBeenCalledWith(
-      "school-1",
-      { classId: "class-1", gradeId: null, sectionId: null },
-      { students: true, teachers: true }
-    )
-    expect(result.created).toBe(3)
-  })
-
   it("resolves a section to its students, guardians and teachers", async () => {
     vi.mocked(audienceUserIds).mockResolvedValue(["s1", "g1"])
     mockDb.notificationPreference.findMany.mockResolvedValue([])
@@ -345,7 +322,7 @@ describe("dispatchNotificationsToAudience", () => {
 
     expect(audienceUserIds).toHaveBeenCalledWith(
       "school-1",
-      { classId: null, gradeId: null, sectionId: "7a" },
+      { gradeId: null, sectionId: "7a" },
       { students: true, guardians: true, teachers: true }
     )
     expect(result.created).toBe(2)
@@ -395,15 +372,6 @@ describe("dispatchNotificationsToAudience", () => {
 
     expect(result.created).toBe(0)
     consoleSpy.mockRestore()
-  })
-
-  it("returns 0 for class scope with missing classId", async () => {
-    const result = await dispatchNotificationsToAudience({
-      ...baseAudienceParams,
-      targetScope: "class",
-    })
-
-    expect(result.created).toBe(0)
   })
 
   it("returns 0 for role scope with missing role", async () => {

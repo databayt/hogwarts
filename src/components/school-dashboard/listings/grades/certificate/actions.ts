@@ -61,11 +61,6 @@ export async function generateGradeCertificate(
             email: true,
           },
         },
-        class: {
-          select: {
-            name: true,
-          },
-        },
         section: {
           select: {
             name: true,
@@ -131,7 +126,7 @@ export async function generateGradeCertificate(
     const certificateData: CertificateData = {
       studentName,
       studentId: grade.student?.studentId || undefined,
-      className: grade.section?.name || grade.class?.name || undefined,
+      className: grade.section?.name || undefined,
       title,
       type: itemType,
       subject: grade.subject?.name || undefined,

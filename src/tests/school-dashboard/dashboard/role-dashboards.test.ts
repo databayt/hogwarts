@@ -163,7 +163,7 @@ describe("student dashboard", () => {
       sectionId: "7a",
     } as never)
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "s1", sectionId: "7a", gradeId: "g7", classIds: [] },
+      { studentId: "s1", sectionId: "7a", gradeId: "g7" },
     ])
 
     await getStudentDashboardData()
@@ -203,7 +203,7 @@ describe("parent dashboard", () => {
       },
     ] as never)
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "s1", sectionId: "7a", gradeId: "g7", classIds: [] },
+      { studentId: "s1", sectionId: "7a", gradeId: "g7" },
     ])
 
     const data = await getParentDashboardData()

@@ -167,7 +167,6 @@ export type GeneratedExamDTO = GeneratedExam & {
   exam?: {
     id: string
     title: string
-    classId: string
     subjectId: string
   } | null
   template?: {

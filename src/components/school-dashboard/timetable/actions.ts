@@ -422,8 +422,6 @@ async function validateRoomConstraints(input: {
   schoolId: string
   termId: string
   classroomId: string
-  /** Legacy classId — used for student-count and subject-name when sectionId absent */
-  classId?: string
   /** Section-based path: count students from Section.students */
   sectionId?: string
   /** Subject name for allowedSubjectTypes check (section-based path) */
@@ -461,29 +459,15 @@ async function validateRoomConstraints(input: {
     }
   }
 
-  // Resolve student count and subject name — prefer section-based path
+  // Resolve student count from the section
   let studentCount = 0
-  let subjectNameResolved = input.subjectName ?? ""
+  const subjectNameResolved = input.subjectName ?? ""
 
   if (input.sectionId) {
     // Section-based: count students enrolled in this section
     studentCount = await db.student.count({
       where: { schoolId: input.schoolId, sectionId: input.sectionId },
     })
-    // subjectName already passed in from caller or resolved via subjectId lookup above
-  } else if (input.classId) {
-    // Legacy classId path — keep existing behaviour
-    const classInfo = await db.class.findFirst({
-      where: { id: input.classId, schoolId: input.schoolId },
-      select: {
-        name: true,
-        subject: { select: { name: true } },
-        _count: { select: { studentClasses: true } },
-      },
-    })
-    studentCount = classInfo?._count?.studentClasses ?? 0
-    if (!subjectNameResolved)
-      subjectNameResolved = classInfo?.subject?.name ?? ""
   }
 
   // Get room constraint
@@ -588,8 +572,6 @@ async function validateSlotConstraints(input: {
   // phantom conflicts.
   teacherId?: string
   classroomId: string
-  /** Legacy classId — optional when sectionId is present */
-  classId?: string
   /** Section-based path for room capacity check */
   sectionId?: string
   /** Subject name for allowedSubjectTypes check (section-based) */
@@ -625,7 +607,6 @@ async function validateSlotConstraints(input: {
       schoolId: input.schoolId,
       termId: input.termId,
       classroomId: input.classroomId,
-      classId: input.classId,
       sectionId: input.sectionId,
       subjectName: input.subjectName,
       dayOfWeek: input.dayOfWeek,
@@ -722,31 +703,25 @@ export async function detectTimetableConflicts(input?: unknown) {
 
     // Step 3: Batch-fetch details for ALL conflicting slots in 2 queries (not
     // N+M). Each group's slots are matched via a single OR clause, then grouped
-    // in memory. Cohort identity falls back section → class (section-based
-    // slots have classId = null, so `slot.class` is null and must NOT be
-    // dereferenced directly — doing so previously crashed the whole detector).
+    // in memory. Cohort identity is the slot's section.
     const conflictSlotSelect = {
       dayOfWeek: true,
       periodId: true,
-      classId: true,
       sectionId: true,
       teacherId: true,
       classroomId: true,
-      class: { select: { id: true, name: true } },
       section: { select: { id: true, name: true } },
       teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
     } as const
 
-    // Cohort identity for a slot — prefer class (legacy), else section.
+    // Cohort identity for a slot — its section.
     const cohortOf = (s: {
-      class?: { id: string; name: string } | null
       section?: { id: string; name: string } | null
-      classId?: string | null
       sectionId?: string | null
     }) => ({
-      id: s.class?.id ?? s.section?.id ?? s.classId ?? s.sectionId ?? "",
-      name: s.class?.name ?? s.section?.name ?? "",
+      id: s.section?.id ?? s.sectionId ?? "",
+      name: s.section?.name ?? "",
     })
 
     if (teacherConflicts.length > 0) {
@@ -828,75 +803,6 @@ export async function detectTimetableConflicts(input?: unknown) {
     }
 
     return { conflicts }
-  }
-
-  // Fallback: Legacy conflict detection using Class model (for backward compatibility)
-  const classModel = getModel("class")
-  const periodModel = getModel("period")
-  if (!classModel || !periodModel) return { conflicts: [] as Conflict[] }
-
-  const where: { schoolId: string; termId?: string } = { schoolId }
-  if (validatedInput?.termId) where.termId = validatedInput.termId
-
-  const classes = await classModel.findMany({
-    where,
-    select: {
-      id: true,
-      name: true,
-      teacherId: true,
-      classroomId: true,
-      startPeriodId: true,
-      endPeriodId: true,
-      teacher: { select: { id: true, firstName: true, lastName: true } },
-      classroom: { select: { id: true, roomName: true } },
-      startPeriod: { select: { startTime: true } },
-      endPeriod: { select: { endTime: true } },
-    },
-  })
-
-  type Row = (typeof classes)[number]
-  // Use the outer conflicts array (don't redeclare)
-
-  const overlaps = (a: Row, b: Row) => {
-    const aStart = new Date(a.startPeriod.startTime as Date).getTime()
-    const aEnd = new Date(a.endPeriod.endTime as Date).getTime()
-    const bStart = new Date(b.startPeriod.startTime as Date).getTime()
-    const bEnd = new Date(b.endPeriod.endTime as Date).getTime()
-    return Math.max(aStart, bStart) < Math.min(aEnd, bEnd)
-  }
-
-  for (let i = 0; i < classes.length; i++) {
-    for (let j = i + 1; j < classes.length; j++) {
-      const a = classes[i]
-      const b = classes[j]
-      if (!overlaps(a, b)) continue
-      if (a.teacherId && b.teacherId && a.teacherId === b.teacherId) {
-        conflicts.push({
-          type: "TEACHER",
-          classA: { id: a.id, name: a.name },
-          classB: { id: b.id, name: b.name },
-          teacher: {
-            id: a.teacherId,
-            name: [a.teacher?.firstName, a.teacher?.lastName]
-              .filter(Boolean)
-              .join(" "),
-          },
-          room: null,
-        })
-      }
-      if (a.classroomId && b.classroomId && a.classroomId === b.classroomId) {
-        conflicts.push({
-          type: "ROOM",
-          classA: { id: a.id, name: a.name },
-          classB: { id: b.id, name: b.name },
-          teacher: null,
-          room: {
-            id: a.classroomId,
-            name: a.classroom?.roomName ?? a.classroomId,
-          },
-        })
-      }
-    }
   }
 
   return { conflicts }
@@ -1054,7 +960,7 @@ export async function getSubjectsForSection(input: { gradeId: string }) {
 }
 
 export async function upsertTimetableSlot(input: unknown) {
-  // Validate input — section-first schema (sectionId + subjectId required; classId optional)
+  // Validate input — section-first schema (sectionId + subjectId required)
   const validatedInput = upsertTimetableSlotSchema.parse(input)
 
   // Admin access required
@@ -1108,7 +1014,7 @@ export async function upsertTimetableSlot(input: unknown) {
   const existing = validatedInput.id
     ? await db.timetable.findFirst({
         where: { id: validatedInput.id, schoolId },
-        select: { id: true, classId: true },
+        select: { id: true },
       })
     : await db.timetable.findFirst({
         where: {
@@ -1117,29 +1023,17 @@ export async function upsertTimetableSlot(input: unknown) {
           dayOfWeek: validatedInput.dayOfWeek,
           periodId: validatedInput.periodId,
           weekOffset: validatedInput.weekOffset,
-          OR: [
-            { sectionId: validatedInput.sectionId },
-            // Legacy: find a slot at this cell with a classId (non-null)
-            ...(validatedInput.classId
-              ? [
-                  {
-                    classId: validatedInput.classId,
-                  },
-                ]
-              : []),
-          ],
+          sectionId: validatedInput.sectionId,
         },
-        select: { id: true, classId: true },
+        select: { id: true },
       })
 
   // 5. Constraint validation (teacher availability + room capacity)
-  //    Pass sectionId; classId is optional (null → capacity from section student count)
   await validateSlotConstraints({
     schoolId,
     termId: validatedInput.termId,
     teacherId: validatedInput.teacherId,
     classroomId: validatedInput.classroomId,
-    classId: validatedInput.classId ?? "",
     sectionId: validatedInput.sectionId,
     dayOfWeek: validatedInput.dayOfWeek,
     periodId: validatedInput.periodId,
@@ -1153,7 +1047,7 @@ export async function upsertTimetableSlot(input: unknown) {
   let row: { id: string }
 
   if (existing) {
-    // UPDATE existing row — backfill sectionId/subjectId on legacy rows, keep classId intact
+    // UPDATE existing row
     row = await timetableModel.update({
       where: { id: existing.id },
       data: {
@@ -1161,7 +1055,6 @@ export async function upsertTimetableSlot(input: unknown) {
         subjectId: validatedInput.subjectId,
         teacherId: validatedInput.teacherId,
         classroomId: validatedInput.classroomId,
-        // Preserve existing classId (legacy exams/results history must not lose it)
       },
     })
   } else {
@@ -1177,8 +1070,6 @@ export async function upsertTimetableSlot(input: unknown) {
         teacherId: validatedInput.teacherId,
         classroomId: validatedInput.classroomId,
         weekOffset: validatedInput.weekOffset,
-        // Include classId only when explicitly provided (legacy callers)
-        ...(validatedInput.classId ? { classId: validatedInput.classId } : {}),
       },
     })
   }
@@ -1268,7 +1159,7 @@ export async function moveTimetableSlot(rawInput: {
   const existingSlot = await db.timetable.findFirst({
     where: { id: input.slotId, schoolId },
     include: {
-      class: { select: { id: true, name: true } },
+      section: { select: { id: true, name: true } },
       teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
     },
@@ -1281,14 +1172,13 @@ export async function moveTimetableSlot(rawInput: {
   const targetClassroomId = input.targetClassroomId ?? existingSlot.classroomId
 
   // Validate constraints at the new position. Pass sectionId so room-capacity
-  // checks can count the section's students (section-based slots have
-  // classId = null; without sectionId the room can be silently over-booked).
+  // checks can count the section's students (without sectionId the room can
+  // be silently over-booked).
   const validation = await validateSlotConstraints({
     schoolId,
     termId: existingSlot.termId,
     teacherId: existingSlot.teacherId ?? "",
     classroomId: targetClassroomId ?? "",
-    classId: existingSlot.classId ?? "",
     sectionId: existingSlot.sectionId ?? undefined,
     dayOfWeek: input.targetDayOfWeek,
     periodId: input.targetPeriodId,
@@ -1334,7 +1224,6 @@ export async function moveTimetableSlot(rawInput: {
             id: { not: input.slotId },
           },
           include: {
-            class: { select: { name: true } },
             section: { select: { name: true } },
             teacher: { select: { firstName: true, lastName: true } },
           },
@@ -1342,8 +1231,7 @@ export async function moveTimetableSlot(rawInput: {
       : null
 
   if (conflictingSlot) {
-    const cohortName =
-      conflictingSlot.class?.name ?? conflictingSlot.section?.name ?? ""
+    const cohortName = conflictingSlot.section?.name ?? ""
     if (
       existingSlot.teacherId &&
       conflictingSlot.teacherId === existingSlot.teacherId
@@ -1420,7 +1308,8 @@ export async function moveTimetableSlot(rawInput: {
       })
       const notifLang = schoolPref?.preferredLanguage ?? "ar"
       const cohort =
-        existingSlot.class?.name ?? (notifLang === "ar" ? "الحصة" : "the class")
+        existingSlot.section?.name ??
+        (notifLang === "ar" ? "الحصة" : "the class")
       dispatchNotification({
         schoolId,
         userId: teacherUser.userId,
@@ -1435,7 +1324,7 @@ export async function moveTimetableSlot(rawInput: {
         channels: ["in_app"],
         metadata: {
           slotId: input.slotId,
-          className: existingSlot.class?.name,
+          className: existingSlot.section?.name,
           url: "/timetable",
         },
       }).catch((err) =>
@@ -1505,7 +1394,7 @@ export async function suggestFreeSlots(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  if (!validatedInput.teacherId && !validatedInput.classId) {
+  if (!validatedInput.teacherId && !validatedInput.sectionId) {
     return {
       suggestions: [] as Array<{
         dayOfWeek: number
@@ -1533,7 +1422,7 @@ export async function suggestFreeSlots(input: unknown) {
 
   const where: any = { schoolId, termId: validatedInput.termId }
   if (validatedInput.teacherId) where.teacherId = validatedInput.teacherId
-  if (validatedInput.classId) where.classId = validatedInput.classId
+  if (validatedInput.sectionId) where.sectionId = validatedInput.sectionId
 
   const timetableModel = getModelOrThrow("timetable")
   const occupied = await timetableModel.findMany({
@@ -1668,12 +1557,11 @@ export async function getRoomsForSelection() {
 }
 
 /**
- * Internal helper: get timetable for multiple class IDs (student/guardian views)
+ * Internal helper: get timetable for a section (guardian view)
  */
-async function getTimetableByClassIds(input: {
+async function getTimetableBySection(input: {
   termId: string
-  classIds: string[]
-  sectionId?: string
+  sectionId: string
   weekOffset?: 0 | 1
 }) {
   const { schoolId } = await getTenantContext()
@@ -1699,9 +1587,6 @@ async function getTimetableByClassIds(input: {
     },
   })
 
-  const hasClassIds = input.classIds.length > 0
-  const hasSectionId = !!input.sectionId
-
   // Slots + today's live/scheduled Conference indicators load in parallel —
   // both are read-only and independent (see getLiveClassIndicators for the
   // tenant-scoped query it runs).
@@ -1711,25 +1596,11 @@ async function getTimetableByClassIds(input: {
         schoolId,
         termId: input.termId,
         weekOffset: input.weekOffset ?? 0,
-        ...(hasClassIds || hasSectionId
-          ? {
-              OR: [
-                ...(hasClassIds ? [{ classId: { in: input.classIds } }] : []),
-                ...(hasSectionId ? [{ sectionId: input.sectionId }] : []),
-              ],
-            }
-          : {}),
+        sectionId: input.sectionId,
       },
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true } },
         classroom: { select: { id: true, roomName: true } },
-        class: {
-          select: {
-            id: true,
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
         section: { select: { name: true } },
         subject: { select: { name: true } },
         period: {
@@ -1757,8 +1628,7 @@ async function getTimetableByClassIds(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.subject?.name || s.class?.subject?.name || s.class?.name || "",
-      classId: s.classId,
+      subject: s.subject?.name || "",
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
@@ -1788,7 +1658,7 @@ export async function getTimetableByStudentGrade(input: {
   const userId = session?.user?.id
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
-  // Get student record with their enrolled classes via StudentClass relation
+  // Get student record with their section placement
   const student = await db.student.findFirst({
     where: { userId, schoolId },
     select: {
@@ -1796,20 +1666,6 @@ export async function getTimetableByStudentGrade(input: {
       firstName: true,
       lastName: true,
       sectionId: true,
-      studentClasses: {
-        where: { schoolId },
-        select: {
-          classId: true,
-          class: {
-            select: {
-              id: true,
-              name: true,
-              termId: true,
-              subject: { select: { name: true } },
-            },
-          },
-        },
-      },
     },
   })
   if (!student) throw new Error("STUDENT_NOT_FOUND")
@@ -1825,43 +1681,6 @@ export async function getTimetableByStudentGrade(input: {
 
   const gradeName = studentYearLevel?.yearLevel?.levelName || "Unknown Grade"
   const gradeLang = studentYearLevel?.yearLevel?.lang
-
-  // Filter enrolled classes by the requested term
-  // StudentClass now directly gives us the classes the student is enrolled in
-  const enrolledClasses = student.studentClasses
-    .filter((sc) => sc.class.termId === input.termId)
-    .map((sc) => sc.class)
-
-  // If no direct enrollment found for this term, fall back to name pattern matching
-  // This maintains backward compatibility with existing data
-  let classIds: string[]
-  let subjectCount: number
-
-  if (enrolledClasses.length > 0) {
-    // Use StudentClass enrollment data (preferred)
-    classIds = enrolledClasses.map((c) => c.id)
-    subjectCount = enrolledClasses.length
-  } else if (gradeName && gradeName !== "Unknown Grade") {
-    // Fallback: Pattern match by grade name for backward compatibility
-    const gradeClasses = await db.class.findMany({
-      where: {
-        schoolId,
-        termId: input.termId,
-        name: { endsWith: ` - ${gradeName}` },
-      },
-      select: {
-        id: true,
-        name: true,
-        subject: { select: { name: true } },
-      },
-    })
-    classIds = gradeClasses.map((c) => c.id)
-    subjectCount = gradeClasses.length
-  } else {
-    // No classes found
-    classIds = []
-    subjectCount = 0
-  }
 
   // Get schedule config
   const { config } = await getScheduleConfig({ termId: input.termId })
@@ -1890,37 +1709,26 @@ export async function getTimetableByStudentGrade(input: {
     },
   })
 
-  const studentSectionId = student.sectionId ?? undefined
-  const hasClassIds = classIds.length > 0
-  const hasSectionId = !!studentSectionId
+  const studentSectionId = student.sectionId
 
-  // Get all timetable slots for all classes in this grade (and section-based
-  // slots), alongside today's live/scheduled Conference indicators — both
-  // read-only and independent, so they run in parallel.
+  // Get the student's section slots, alongside today's live/scheduled
+  // Conference indicators — both read-only and independent, so they run in
+  // parallel.
   const [slots, liveIndicators] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId,
         termId: input.termId,
         weekOffset: input.weekOffset ?? 0,
-        // A student with neither a section nor a class has no schedule yet —
-        // never the whole school's
-        OR: [
-          ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
-          ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
-          ...(!hasClassIds && !hasSectionId ? [{ id: { in: [] } }] : []),
-        ],
+        // A student with no section has no schedule yet — never the whole
+        // school's
+        ...(studentSectionId
+          ? { sectionId: studentSectionId }
+          : { id: { in: [] } }),
       },
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true } },
         classroom: { select: { id: true, roomName: true } },
-        class: {
-          select: {
-            id: true,
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
         section: { select: { name: true } },
         subject: { select: { name: true } },
         period: {
@@ -1931,13 +1739,10 @@ export async function getTimetableByStudentGrade(input: {
     getLiveClassIndicators(schoolId),
   ])
 
-  // A student is enrolled in one Class row per subject *per section*, so
-  // counting those rows reported 36 "subjects" for a grid holding nine. Count
-  // the distinct subjects the student is actually timetabled for, and keep the
-  // enrollment count only as a fallback for a term with no slots yet.
+  // Count the distinct subjects the student is actually timetabled for.
   const distinctSubjects = new Set(
     slots
-      .map((slot) => slot.subject?.name ?? slot.class?.subject?.name)
+      .map((slot) => slot.subject?.name)
       .filter((name): name is string => !!name)
   )
 
@@ -1949,7 +1754,7 @@ export async function getTimetableByStudentGrade(input: {
       gradeLang,
     },
     schoolName: school?.name || "",
-    subjectCount: distinctSubjects.size || subjectCount,
+    subjectCount: distinctSubjects.size,
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
       id: p.id,
@@ -1968,9 +1773,7 @@ export async function getTimetableByStudentGrade(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.subject?.name || s.class?.subject?.name || s.class?.name || "",
-      className: s.class?.name || "",
-      classId: s.classId,
+      subject: s.subject?.name || "",
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
@@ -2035,13 +1838,6 @@ export async function getTimetableByTeacher(input: {
         weekOffset: input.weekOffset ?? 0,
       },
       include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
         subject: { select: { id: true, name: true } },
         section: { select: { id: true, name: true } },
         classroom: { select: { id: true, roomName: true } },
@@ -2069,8 +1865,7 @@ export async function getTimetableByTeacher(input: {
   // Localize subject names to the app language (catalog names are stored in one
   // language; e.g. show "Geography" on /en and its Arabic on /ar). Batched.
   const lang = await getDisplayLang()
-  const rawSubject = (s: (typeof slots)[number]) =>
-    s.class?.subject?.name || s.subject?.name || s.class?.name || ""
+  const rawSubject = (s: (typeof slots)[number]) => s.subject?.name || ""
   const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
   const teacherDisplayName = teacherInfo
     ? (
@@ -2106,8 +1901,7 @@ export async function getTimetableByTeacher(input: {
         dayOfWeek: s.dayOfWeek,
         periodId: s.periodId,
         periodName: s.period.name,
-        className: s.class?.name || s.section?.name || "",
-        classId: s.classId,
+        className: s.section?.name || "",
         sectionId: s.sectionId,
         room: s.classroom?.roomName || "",
         roomId: s.classroomId,
@@ -2117,10 +1911,9 @@ export async function getTimetableByTeacher(input: {
     workload: {
       daysPerWeek: uniqueDays.size,
       periodsPerWeek: totalPeriods,
-      // A class taught is a section·subject (or a legacy class) — counting
-      // classId alone folded every section slot (classId null) into one
+      // A class taught is a section·subject
       classesTeaching: new Set(
-        slots.map((s) => s.classId ?? `${s.sectionId}|${s.subjectId}`)
+        slots.map((s) => `${s.sectionId}|${s.subjectId}`)
       ).size,
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
@@ -2183,13 +1976,6 @@ export async function getTimetableByRoom(input: {
         weekOffset: input.weekOffset ?? 0,
       },
       include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
         subject: { select: { id: true, name: true } },
         section: { select: { id: true, name: true } },
         teacher: { select: { id: true, firstName: true, lastName: true } },
@@ -2215,8 +2001,7 @@ export async function getTimetableByRoom(input: {
   // Localize teacher and subject names to the app language (stored names may be
   // Arabic; the grid must read e.g. "Mariam Ibrahim" / "Geography" on /en).
   const lang = await getDisplayLang()
-  const rawSubject = (s: (typeof slots)[number]) =>
-    s.class?.subject?.name || s.subject?.name || s.class?.name || ""
+  const rawSubject = (s: (typeof slots)[number]) => s.subject?.name || ""
   const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
   const teacherNames = await getNames(
     slots.filter((s) => s.teacher).map((s) => s.teacher!),
@@ -2250,8 +2035,7 @@ export async function getTimetableByRoom(input: {
         dayOfWeek: s.dayOfWeek,
         periodId: s.periodId,
         periodName: s.period.name,
-        className: s.class?.name || s.section?.name || "",
-        classId: s.classId,
+        className: s.section?.name || "",
         sectionId: s.sectionId,
         teacher: rawTeacher ? teacherNames.get(rawTeacher) || rawTeacher : "",
         teacherId: s.teacherId,
@@ -2300,28 +2084,17 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true, capacity: true } },
-      // Section-based slots carry subject/section directly and have class: null.
-      // Reading only `class` made every metric below collapse (subject
-      // distribution all "Unknown", class count 0) once generation moved to the
-      // section axis — the operational identity of a slot is section+subject.
+      // The operational identity of a slot is section+subject.
       subject: { select: { name: true } },
       section: { select: { id: true, name: true } },
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
-        },
-      },
     },
   })
 
   const t = await getTimetableDict()
-  // Cohort identity: section first, legacy class second — same fallback the
-  // conflict detector uses (see util.ts `detectConflicts`).
-  const cohortOf = (s: (typeof slots)[number]) => s.sectionId ?? s.classId
+  // Cohort identity: the section.
+  const cohortOf = (s: (typeof slots)[number]) => s.sectionId
   const subjectOf = (s: (typeof slots)[number]) =>
-    s.subject?.name || s.class?.subject?.name || s.class?.name || t.unknown
+    s.subject?.name || t.unknown
 
   // Teacher workload analysis
   const teacherWorkload = new Map<
@@ -2345,7 +2118,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
       existing.periods++
       const cohort = cohortOf(slot)
       if (cohort) existing.classes.add(cohort)
-      const subjectName = slot.subject?.name || slot.class?.subject?.name
+      const subjectName = slot.subject?.name
       if (subjectName) existing.subjects.add(subjectName)
       teacherWorkload.set(key, existing)
     }
@@ -2474,7 +2247,7 @@ export async function deleteTimetableSlot(rawInput: {
   termId?: string
   dayOfWeek?: number
   periodId?: string
-  classId?: string
+  sectionId?: string
   weekOffset?: 0 | 1
 }) {
   await requireAdminAccess()
@@ -2492,7 +2265,6 @@ export async function deleteTimetableSlot(rawInput: {
       firstName: string | null
       lastName: string | null
     } | null
-    class: { name: string } | null
     section: { name: string } | null
   } | null = null
 
@@ -2501,7 +2273,6 @@ export async function deleteTimetableSlot(rawInput: {
       where: { id: input.id, schoolId },
       include: {
         teacher: { select: { userId: true, firstName: true, lastName: true } },
-        class: { select: { name: true } },
         section: { select: { name: true } },
       },
     })
@@ -2509,7 +2280,7 @@ export async function deleteTimetableSlot(rawInput: {
     input.termId &&
     input.dayOfWeek !== undefined &&
     input.periodId &&
-    input.classId &&
+    input.sectionId &&
     input.weekOffset !== undefined
   ) {
     // Legacy composite-key lookup
@@ -2519,12 +2290,11 @@ export async function deleteTimetableSlot(rawInput: {
         termId: input.termId,
         dayOfWeek: input.dayOfWeek,
         periodId: input.periodId,
-        classId: input.classId,
+        sectionId: input.sectionId,
         weekOffset: input.weekOffset,
       },
       include: {
         teacher: { select: { userId: true, firstName: true, lastName: true } },
-        class: { select: { name: true } },
         section: { select: { name: true } },
       },
     })
@@ -2551,7 +2321,6 @@ export async function deleteTimetableSlot(rawInput: {
     const notifLang2 = schoolPref2?.preferredLanguage ?? "ar"
     const slotLabel =
       slotToDelete.section?.name ||
-      slotToDelete.class?.name ||
       (notifLang2 === "ar" ? "الحصة" : "the class")
     dispatchNotification({
       schoolId,
@@ -2844,8 +2613,6 @@ export async function getPersonalizedTimetable(input: {
     let editable = true
     let filterData: {
       teacherId?: string
-      classId?: string
-      classIds?: string[]
       childrenIds?: string[]
     } = {}
 
@@ -2869,8 +2636,8 @@ export async function getPersonalizedTimetable(input: {
       }
 
       case "STUDENT": {
-        // The student view resolves the student's section (and any legacy
-        // classes) server-side in getTimetableByStudentGrade
+        // The student view resolves the student's section server-side in
+        // getTimetableByStudentGrade
         viewType = "student"
         break
       }
@@ -3008,7 +2775,7 @@ export async function getGuardianChildren() {
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   // Get guardian record with linked students in a single query (fixes N+1)
-  // Include student classes and year levels for complete data
+  // Include sections and year levels for complete data
   const guardian = await db.guardian.findFirst({
     where: { userId, schoolId },
     select: {
@@ -3024,20 +2791,6 @@ export async function getGuardianChildren() {
               lastName: true,
               profilePhotoUrl: true,
               section: { select: { id: true, name: true } },
-              studentClasses: {
-                where: { schoolId },
-                orderBy: { createdAt: "desc" },
-                take: 1,
-                select: {
-                  class: {
-                    select: {
-                      id: true,
-                      name: true,
-                      subject: { select: { name: true } },
-                    },
-                  },
-                },
-              },
               studentYearLevels: {
                 where: { schoolId },
                 orderBy: { createdAt: "desc" },
@@ -3064,7 +2817,6 @@ export async function getGuardianChildren() {
 
   // Transform the data into the expected format
   const children = guardian.studentGuardians.map((sg) => {
-    const enrollment = sg.student.studentClasses[0]
     const yearLevel = sg.student.studentYearLevels[0]
 
     return {
@@ -3072,9 +2824,8 @@ export async function getGuardianChildren() {
       name: `${sg.student.firstName} ${sg.student.lastName}`,
       photoUrl: sg.student.profilePhotoUrl,
       sectionId: sg.student.section?.id,
-      // The child's section (Grade 7-A); a legacy class only without one
-      classId: enrollment?.class.id,
-      className: sg.student.section?.name ?? enrollment?.class.name,
+      // The child's section (Grade 7-A)
+      className: sg.student.section?.name,
       gradeName: yearLevel?.yearLevel?.levelName,
       gradeLang: yearLevel?.yearLevel?.lang,
       isPrimary: sg.isPrimary,
@@ -3129,22 +2880,13 @@ export async function getChildTimetable(input: {
     }
   }
 
-  // Get ALL student's enrolled classes (legacy axis) + section placement (primary)
-  const enrollments = await db.studentClass.findMany({
-    where: { studentId: input.childId, schoolId },
-    select: { classId: true },
-  })
-
   const student = await db.student.findFirst({
     where: { id: input.childId, schoolId },
     select: { id: true, firstName: true, lastName: true, sectionId: true },
   })
 
-  const classIds = enrollments.map((e) => e.classId)
-
-  // A child placed in a section but not yet enrolled in course classes still
-  // has a visible timetable — section-based slots cover them.
-  if (classIds.length === 0 && !student?.sectionId) {
+  // A child not yet placed in a section has no timetable yet.
+  if (!student?.sectionId) {
     return {
       studentInfo: null,
       slots: [],
@@ -3154,10 +2896,9 @@ export async function getChildTimetable(input: {
     }
   }
 
-  const timetableData = await getTimetableByClassIds({
+  const timetableData = await getTimetableBySection({
     termId: input.termId,
-    classIds,
-    sectionId: student?.sectionId ?? undefined,
+    sectionId: student.sectionId,
     weekOffset: input.weekOffset,
   })
 
@@ -3245,17 +2986,8 @@ export async function getChildTodaySchedule(input: {
 
   if (!student) return { schedule: [], dayOfWeek }
 
-  // Section-based slots (primary) + legacy class enrollments — same OR axis as
-  // the STUDENT branch of getTodaySchedule.
-  const enrollments = await db.studentClass.findMany({
-    where: { studentId: student.id, schoolId },
-    select: { classId: true },
-  })
-  const classIds = enrollments.map((e) => e.classId)
-  const orClauses: Array<Record<string, unknown>> = []
-  if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
-  if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
-  if (orClauses.length === 0) return { schedule: [], dayOfWeek }
+  // Section-based slots — same axis as the STUDENT branch of getTodaySchedule.
+  if (!student.sectionId) return { schedule: [], dayOfWeek }
 
   const slots = await db.timetable.findMany({
     where: {
@@ -3263,10 +2995,9 @@ export async function getChildTodaySchedule(input: {
       termId: term.id,
       dayOfWeek,
       weekOffset: 0,
-      OR: orClauses,
+      sectionId: student.sectionId,
     },
     include: {
-      class: { select: { name: true, subject: { select: { name: true } } } },
       section: { select: { name: true } },
       subject: { select: { name: true } },
       teacher: { select: { firstName: true, lastName: true } },
@@ -3292,9 +3023,8 @@ export async function getChildTodaySchedule(input: {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject:
-      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
-    className: slot.class?.name || slot.section?.name || "",
+    subject: slot.subject?.name || "",
+    className: slot.section?.name || "",
     teacher: (() => {
       const sub = subsBySlot.get(slot.id)
       if (sub) return `${sub.firstName} ${sub.lastName}`
@@ -4784,7 +4514,6 @@ export async function copyScheduleSettings(input: {
           endDate: exc.endDate,
           isAllDay: exc.isAllDay,
           affectsAllClasses: exc.affectsAllClasses,
-          affectedClassIds: exc.affectedClassIds,
           affectedTeacherIds: exc.affectedTeacherIds,
           isRecurring: exc.isRecurring,
           recurrenceRule: exc.recurrenceRule,
@@ -5018,12 +4747,8 @@ export async function getTeacherAbsences(input: {
                 period: {
                   select: { name: true, startTime: true, endTime: true },
                 },
-                class: {
-                  select: {
-                    name: true,
-                    subject: { select: { name: true } },
-                  },
-                },
+                section: { select: { name: true } },
+                subject: { select: { name: true } },
               },
             },
           },
@@ -5051,8 +4776,8 @@ export async function getTeacherAbsences(input: {
         substituteId: s.substituteTeacherId,
         substituteName: `${s.substituteTeacher.firstName} ${s.substituteTeacher.lastName}`,
         periodName: s.originalSlot.period.name,
-        className: s.originalSlot.class?.name,
-        name: s.originalSlot.class?.subject?.name,
+        className: s.originalSlot.section?.name,
+        name: s.originalSlot.subject?.name,
       })),
     })),
     total,
@@ -5198,9 +4923,8 @@ export async function assignSubstitute(input: {
     where: { id: input.originalSlotId, schoolId },
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
-      class: {
-        select: { name: true, subject: { select: { name: true } } },
-      },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
       period: { select: { name: true } },
     },
   })
@@ -5256,7 +4980,7 @@ export async function assignSubstitute(input: {
       substituteTeacher: `${substitute.firstName} ${substitute.lastName}`,
       slotDate: input.slotDate.toISOString(),
       periodName: originalSlot.period?.name,
-      className: originalSlot.class?.name,
+      className: originalSlot.section?.name,
     },
   })
 
@@ -5284,8 +5008,8 @@ export async function assignSubstitute(input: {
       title: notifLang3 === "ar" ? "تعيين بديل" : "Substitute assigned",
       body:
         notifLang3 === "ar"
-          ? `تم تعيينك كبديل لـ ${origTeacher} في ${originalSlot.class?.name} (${originalSlot.period?.name})`
-          : `You have been assigned as a substitute for ${origTeacher} in ${originalSlot.class?.name} (${originalSlot.period?.name})`,
+          ? `تم تعيينك كبديل لـ ${origTeacher} في ${originalSlot.section?.name} (${originalSlot.period?.name})`
+          : `You have been assigned as a substitute for ${origTeacher} in ${originalSlot.section?.name} (${originalSlot.period?.name})`,
       lang: notifLang3,
       priority: "high",
       channels: ["in_app", "email"],
@@ -5441,12 +5165,8 @@ export async function getSubstitutionRecords(rawInput: {
         originalSlot: {
           include: {
             period: { select: { name: true, startTime: true, endTime: true } },
-            class: {
-              select: {
-                name: true,
-                subject: { select: { name: true } },
-              },
-            },
+            section: { select: { name: true } },
+            subject: { select: { name: true } },
             classroom: { select: { roomName: true } },
           },
         },
@@ -5479,8 +5199,8 @@ export async function getSubstitutionRecords(rawInput: {
         dayOfWeek: r.originalSlot.dayOfWeek,
         periodName: r.originalSlot.period.name,
         periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
-        className: r.originalSlot.class?.name,
-        name: r.originalSlot.class?.subject?.name,
+        className: r.originalSlot.section?.name,
+        name: r.originalSlot.subject?.name,
         roomName: r.originalSlot.classroom?.roomName,
       },
       absence: {
@@ -5598,9 +5318,8 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
       originalSlot: {
         include: {
           period: { select: { name: true, startTime: true, endTime: true } },
-          class: {
-            select: { name: true, subject: { select: { name: true } } },
-          },
+          section: { select: { name: true } },
+          subject: { select: { name: true } },
           classroom: { select: { roomName: true } },
         },
       },
@@ -5615,8 +5334,8 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
       originalTeacher: `${r.originalTeacher.firstName} ${r.originalTeacher.lastName}`,
       periodName: r.originalSlot.period.name,
       periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
-      className: r.originalSlot.class?.name,
-      name: r.originalSlot.class?.subject?.name,
+      className: r.originalSlot.section?.name,
+      name: r.originalSlot.subject?.name,
       roomName: r.originalSlot.classroom?.roomName,
       dayOfWeek: r.originalSlot.dayOfWeek,
     })),
@@ -5659,13 +5378,8 @@ export async function getSlotsNeedingSubstitutes(input: {
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { id: true, name: true } },
-        },
-      },
+      section: { select: { name: true } },
+      subject: { select: { id: true, name: true } },
       classroom: { select: { id: true, roomName: true } },
     },
   })
@@ -5714,9 +5428,9 @@ export async function getSlotsNeedingSubstitutes(input: {
         dayOfWeek,
         periodId: slot.periodId,
         periodName: slot.period.name,
-        className: slot.class?.name,
-        subjectId: slot.class?.subject?.id,
-        name: slot.class?.subject?.name,
+        className: slot.section?.name,
+        subjectId: slot.subjectId ?? undefined,
+        name: slot.subject?.name,
         roomName: slot.classroom?.roomName,
         hasSubstitute: !!existing,
         substituteStatus: existing?.status || null,
@@ -5940,7 +5654,6 @@ export async function getSlotDetail(input: { timetableId: string }) {
       sectionId: true,
       subjectId: true,
       subject: { select: { name: true } },
-      class: { select: { name: true, subject: { select: { name: true } } } },
       section: {
         select: { name: true, grade: { select: { name: true } } },
       },
@@ -6052,7 +5765,7 @@ export async function getSlotDetail(input: { timetableId: string }) {
   return {
     id: slot.id,
     dayOfWeek: slot.dayOfWeek,
-    subject: slot.subject?.name ?? slot.class?.subject?.name ?? null,
+    subject: slot.subject?.name ?? null,
     teacher: teacherName,
     section: slot.section?.name ?? null,
     grade: slot.section?.grade?.name ?? null,

@@ -33,11 +33,9 @@ export async function getExam(input: { id: string }): Promise<{
         schoolId: true,
         title: true,
         description: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         subjectId: true,
-        class: { select: { gradeId: true } },
         examDate: true,
         startTime: true,
         endTime: true,
@@ -83,7 +81,6 @@ export async function getExams(
       ...(searchParams.title
         ? { title: { contains: searchParams.title, mode: "insensitive" } }
         : {}),
-      ...(searchParams.classId ? { classId: searchParams.classId } : {}),
       ...(searchParams.subjectId ? { subjectId: searchParams.subjectId } : {}),
       ...(searchParams.examType ? { examType: searchParams.examType } : {}),
       ...(searchParams.status ? { status: searchParams.status } : {}),
@@ -112,12 +109,6 @@ export async function getExams(
         skip,
         take,
         include: {
-          class: {
-            select: {
-              name: true,
-              grade: { select: { name: true } },
-            },
-          },
           section: { select: { name: true } },
           grade: { select: { name: true } },
           subject: {
@@ -137,7 +128,6 @@ export async function getExams(
       grade:
         exam.section?.name ||
         exam.grade?.name ||
-        exam.class?.grade?.name ||
         "—",
       subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),
@@ -164,10 +154,9 @@ export async function getExams(
 }
 
 /**
- * Get upcoming exams for a class or student
+ * Get upcoming exams for a student
  */
 export async function getUpcomingExams(input?: {
-  classId?: string
   studentId?: string
   limit?: number
 }): Promise<ActionResponse<ExamListRow[]>> {
@@ -194,12 +183,8 @@ export async function getUpcomingExams(input?: {
       },
     }
 
-    if (input?.classId) {
-      where.classId = input.classId
-    }
-
     if (input?.studentId) {
-      // The exams the student sits: their section, grade or legacy classes
+      // The exams the student sits: their section or grade
       const scopes = await getStudentScopes(schoolId, [input.studentId])
       Object.assign(where, studentExamsWhere(scopes))
     }
@@ -209,12 +194,6 @@ export async function getUpcomingExams(input?: {
       orderBy: [{ examDate: "asc" }, { startTime: "asc" }],
       take: input?.limit || 10,
       include: {
-        class: {
-          select: {
-            name: true,
-            grade: { select: { name: true } },
-          },
-        },
         section: { select: { name: true } },
         grade: { select: { name: true } },
         subject: {
@@ -229,7 +208,6 @@ export async function getUpcomingExams(input?: {
       grade:
         exam.section?.name ||
         exam.grade?.name ||
-        exam.class?.grade?.name ||
         "—",
       subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),

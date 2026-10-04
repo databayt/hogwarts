@@ -19,9 +19,7 @@ export interface MyAssignment {
   status: string
   totalPoints: number
   dueDate: Date
-  /** Legacy class, when the assignment was set for one. */
-  classId: string | null
-  /** Who it's for: the section, the whole grade, or a legacy class. */
+  /** Who it's for: the section, or the whole grade. */
   className: string
   subjectName: string | null
   submission: StudentSubmission | null
@@ -29,8 +27,7 @@ export interface MyAssignment {
 
 /**
  * The signed-in student's assignments: every non-draft assignment set for
- * their section, their whole grade, or a legacy class of theirs, with their
- * own submission (if any) alongside. Plain module
+ * their section or their whole grade, with their own submission (if any) alongside. Plain module
  * — takes a `userId`, so never re-export it from a `"use server"` file.
  */
 export async function getMyAssignments(
@@ -74,9 +71,6 @@ export async function getAssignmentsForStudent(
       status: true,
       totalPoints: true,
       dueDate: true,
-      class: {
-        select: { id: true, name: true, subject: { select: { name: true } } },
-      },
       section: { select: { name: true } },
       grade: { select: { name: true } },
       subject: { select: { name: true } },
@@ -99,9 +93,8 @@ export async function getAssignmentsForStudent(
       status: r.status,
       totalPoints: Number(r.totalPoints),
       dueDate: r.dueDate,
-      classId: r.class?.id ?? null,
       className: audienceLabel(r),
-      subjectName: r.subject?.name ?? r.class?.subject?.name ?? null,
+      subjectName: r.subject?.name ?? null,
       submission: s ? toOwnSubmission(s) : null,
     }
   })

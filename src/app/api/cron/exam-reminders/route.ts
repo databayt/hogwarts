@@ -15,8 +15,8 @@
  * 4. Return { remindersSent, examsProcessed }
  *
  * TARGETING:
- * - The students who sit the exam (its section, its whole grade, or — for
- *   legacy exams — its class) and the teachers who teach its subject there.
+ * - The students who sit the exam (its section, or its whole grade) and the
+ *   teachers who teach its subject there.
  *
  * IDEMPOTENCY:
  * - This cron runs once per day (0 7 * * *). The query window is exactly
@@ -57,7 +57,6 @@ export async function GET(request: Request) {
         id: true,
         schoolId: true,
         title: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         subjectId: true,
@@ -106,7 +105,6 @@ export async function GET(request: Request) {
           action: "exam_reminder_sent",
           examId: exam.id,
           schoolId: exam.schoolId,
-          classId: exam.classId,
           sectionId: exam.sectionId,
           gradeId: exam.gradeId,
           examDate: exam.examDate,

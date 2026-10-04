@@ -33,7 +33,7 @@ model Teacher {
   longitude      Float?
 
   school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classes            Class[]
+
   homeroomSections   Section[]            @relation("HomeroomTeacher")
   teacherDepartments TeacherDepartment[]
   phoneNumbers       TeacherPhoneNumber[]
@@ -44,7 +44,7 @@ model Teacher {
   qualifications   TeacherQualification[]
   experiences      TeacherExperience[]
   subjectExpertise TeacherSubjectExpertise[]
-  classTeachers    ClassTeacher[] // Co-teaching assignments
+
   subjectTeachers  SubjectTeacher[] // Subjects taught per section
 
   // Timetable constraint relations

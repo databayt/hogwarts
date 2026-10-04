@@ -124,8 +124,6 @@ export type GradebookSource = "exam" | "assignment" | "quiz" | "lms"
 export async function upsertGradebookResult(params: {
   schoolId: string
   studentId: string
-  /** Legacy class; new rows leave it null and carry the scope below. */
-  classId?: string | null
   /** The student's section and grade, and the term the score was earned in. */
   sectionId?: string | null
   academicGradeId?: string | null
@@ -187,7 +185,6 @@ export async function upsertGradebookResult(params: {
   // Only the scope fields the caller named — a re-run that knows the term
   // fills it in, one that doesn't leaves the row alone.
   const scope = {
-    ...(params.classId !== undefined ? { classId: params.classId } : {}),
     ...(params.sectionId !== undefined ? { sectionId: params.sectionId } : {}),
     ...(params.academicGradeId !== undefined
       ? { academicGradeId: params.academicGradeId }
@@ -218,8 +215,6 @@ export async function upsertGradebookResult(params: {
 }
 
 export interface StudentSubjectContext {
-  /** A legacy class the student is enrolled in for the subject, if any. */
-  classId: string | null
   sectionId: string | null
   academicGradeId: string | null
   /** The active term, when the school has one. */
@@ -228,10 +223,9 @@ export interface StudentSubjectContext {
 
 /**
  * Where a student studies a subject, for quiz/LMS surfaces that aren't
- * already scoped: their section, grade and the active term, plus a legacy
- * class when one exists. Returns null when the subject is neither taught in
- * the student's grade (an active SubjectSelection) nor in a class they're
- * enrolled in — the caller must then skip the gradebook write.
+ * already scoped: their section, grade and the active term. Returns null when
+ * the subject is not taught in the student's grade (an active
+ * SubjectSelection) — the caller must then skip the gradebook write.
  *
  * **The match is subject-strict, and that is load-bearing.** Until 2026-08-29
  * the class lookup fell back to `studentClass.findFirst({ schoolId, studentId })`
@@ -253,7 +247,7 @@ export async function resolveStudentSubjectContext(
 ): Promise<StudentSubjectContext | null> {
   if (!subjectId) return null
 
-  const [student, legacy, { term }] = await Promise.all([
+  const [student, { term }] = await Promise.all([
     db.student.findFirst({
       where: { id: studentId, schoolId },
       select: {
@@ -261,10 +255,6 @@ export async function resolveStudentSubjectContext(
         academicGradeId: true,
         section: { select: { gradeId: true } },
       },
-    }),
-    db.class.findFirst({
-      where: { schoolId, subjectId, studentClasses: { some: { studentId } } },
-      select: { id: true },
     }),
     resolveActiveTerm(schoolId),
   ])
@@ -282,10 +272,9 @@ export async function resolveStudentSubjectContext(
         select: { id: true },
       })
     : null
-  if (!taught && !legacy) return null
+  if (!taught) return null
 
   return {
-    classId: legacy?.id ?? null,
     sectionId: student.sectionId,
     academicGradeId,
     termId: term?.id ?? null,

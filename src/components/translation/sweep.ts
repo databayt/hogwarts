@@ -48,7 +48,6 @@ const MODEL_ORDER: TranslatableModel[] = [
   "Announcement",
   "Event",
   "Subject",
-  "Class",
   "Section",
   "Classroom",
   "ClassroomType",

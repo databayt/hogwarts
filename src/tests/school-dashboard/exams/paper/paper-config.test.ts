@@ -136,7 +136,6 @@ describe("Paper Config Actions — multi-tenant safety", () => {
         id: "ge-1",
         schoolId: SCHOOL_ID,
         exam: {
-          classId: null,
           gradeId: "grade-7",
           sectionId: "section-7a",
           subject: {},

@@ -31,7 +31,6 @@ export const EMPTY_STUDENT_DRAFT = {
   documents: { none: {} },
   feeAssignments: { none: {} },
   studentYearLevels: { none: {} },
-  studentClasses: { none: {} },
 } satisfies Prisma.StudentWhereInput
 
 export const EMPTY_TEACHER_DRAFT = {

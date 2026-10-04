@@ -23,7 +23,6 @@ export type ClassroomRow = {
   gradeName: string | null
   gradeNumber: number | null
   gradeId: string | null
-  classCount: number
   timetableCount: number
   createdAt: string
 }
@@ -97,10 +96,6 @@ export function getClassroomColumns(
       cell: ({ row }) => (
         <div className="text-center">{row.original.capacity}</div>
       ),
-    },
-    {
-      accessorKey: "classCount",
-      header: t.classes,
     },
     {
       id: "actions",

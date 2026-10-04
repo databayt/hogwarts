@@ -22,28 +22,14 @@ import {
 } from "./helpers"
 
 /**
- * Who reviews an absence: the section's teachers — or, for a mark kept from
- * before sections, the class's teachers. User ids, de-duplicated.
+ * Who reviews an absence: the section's teachers. User ids, de-duplicated.
  */
 async function absenceReviewerUserIds(
   schoolId: string,
-  attendance: { sectionId: string | null; classId: string | null }
+  attendance: { sectionId: string | null }
 ): Promise<string[]> {
-  if (attendance.sectionId) {
-    return sectionTeacherUserIds(schoolId, attendance.sectionId)
-  }
-  if (!attendance.classId) return []
-  const classTeachers = await db.classTeacher.findMany({
-    where: { schoolId, classId: attendance.classId },
-    select: { teacher: { select: { userId: true } } },
-  })
-  return [
-    ...new Set(
-      classTeachers
-        .map((ct) => ct.teacher.userId)
-        .filter((id): id is string => !!id)
-    ),
-  ]
+  if (!attendance.sectionId) return []
+  return sectionTeacherUserIds(schoolId, attendance.sectionId)
 }
 
 /**
@@ -242,9 +228,6 @@ export async function reviewExcuse(input: {
             section: {
               select: { name: true },
             },
-            class: {
-              select: { name: true },
-            },
           },
         },
       },
@@ -283,8 +266,7 @@ export async function reviewExcuse(input: {
 
     // Notify the guardian who submitted the excuse
     const studentName = `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`
-    const className =
-      excuse.attendance.section?.name ?? excuse.attendance.class?.name ?? ""
+    const className = excuse.attendance.section?.name ?? ""
     const statusTextAr =
       parsed.status === "APPROVED" ? "تمت الموافقة على" : "تم رفض"
 
@@ -406,9 +388,6 @@ export async function getExcusesForStudent(studentId: string): Promise<
             section: {
               select: { name: true },
             },
-            class: {
-              select: { name: true },
-            },
           },
         },
       },
@@ -422,8 +401,7 @@ export async function getExcusesForStudent(studentId: string): Promise<
           id: e.id,
           attendanceId: e.attendanceId,
           date: e.attendance.date.toISOString(),
-          className:
-            e.attendance.section?.name ?? e.attendance.class?.name ?? "",
+          className: e.attendance.section?.name ?? "",
           reason: e.reason,
           description: e.description,
           status: e.status,
@@ -518,9 +496,6 @@ export async function getPendingExcuses(input?: {
             section: {
               select: { name: true },
             },
-            class: {
-              select: { name: true },
-            },
           },
         },
       },
@@ -546,8 +521,7 @@ export async function getPendingExcuses(input?: {
           attendanceId: e.attendanceId,
           studentId: e.attendance.studentId,
           studentName: `${e.attendance.student.firstName} ${e.attendance.student.lastName}`,
-          className:
-            e.attendance.section?.name ?? e.attendance.class?.name ?? "",
+          className: e.attendance.section?.name ?? "",
           date: e.attendance.date.toISOString(),
           reason: e.reason,
           description: e.description,
@@ -622,9 +596,6 @@ export async function getExcuseById(excuseId: string): Promise<
             section: {
               select: { name: true },
             },
-            class: {
-              select: { name: true },
-            },
           },
         },
       },
@@ -668,10 +639,7 @@ export async function getExcuseById(excuseId: string): Promise<
           attendanceId: excuse.attendanceId,
           studentId: excuse.attendance.studentId,
           studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
-          className:
-            excuse.attendance.section?.name ??
-            excuse.attendance.class?.name ??
-            "",
+          className: excuse.attendance.section?.name ?? "",
           date: excuse.attendance.date.toISOString(),
           attendanceStatus: excuse.attendance.status,
           reason: excuse.reason,
@@ -791,9 +759,6 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
         section: {
           select: { name: true },
         },
-        class: {
-          select: { name: true },
-        },
       },
       orderBy: { date: "desc" },
       take: 50,
@@ -807,8 +772,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
           studentId: a.studentId,
           studentName: `${a.student.firstName} ${a.student.lastName}`,
           sectionId: a.sectionId,
-          // The section, or the class of a mark kept from before sections.
-          className: a.section?.name ?? a.class?.name ?? "",
+          className: a.section?.name ?? "",
           date: a.date.toISOString(),
           status: a.status,
         })),

@@ -54,14 +54,12 @@ async function generateUsageReport() {
     const [
       totalStudents,
       totalTeachers,
-      totalClasses,
       activeUsers,
       attendanceRecords,
       examsCount,
     ] = await Promise.all([
       prisma.student.count({ where: whereClause }),
       prisma.teacher.count({ where: whereClause }),
-      prisma.class.count({ where: whereClause }),
       prisma.user.count({
         where: {
           ...whereClause,
@@ -103,7 +101,6 @@ async function generateUsageReport() {
     console.log(`  Active (${options.period}): ${chalk.green(activeUsers)}`)
 
     console.log(chalk.white("\nContent:"))
-    console.log(`  Classes: ${chalk.green(totalClasses)}`)
     console.log(`  Exams (${options.period}): ${chalk.green(examsCount)}`)
     console.log(
       `  Attendance records (${options.period}): ${chalk.green(attendanceRecords)}`

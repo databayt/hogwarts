@@ -151,7 +151,7 @@ export async function getChildAssignments(input: { studentId: string }) {
     throw new Error("Unauthorized access to student data")
   }
 
-  // The assignments set for the child's section, grade or legacy classes
+  // The assignments set for the child's section or grade
   const scopes = await getStudentScopes(schoolId, [studentId])
   const assignments = await db.schoolAssignment.findMany({
     where: {
@@ -161,16 +161,6 @@ export async function getChildAssignments(input: { studentId: string }) {
       ...studentAudienceWhere(scopes),
     },
     include: {
-      class: {
-        select: {
-          name: true,
-          subject: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
       section: { select: { name: true } },
       grade: { select: { name: true } },
       subject: { select: { name: true } },
@@ -194,7 +184,7 @@ export async function getChildAssignments(input: { studentId: string }) {
       title: assignment.title,
       description: assignment.description,
       className: audienceLabel(assignment),
-      name: assignment.subject?.name ?? assignment.class?.subject.name ?? "",
+      name: assignment.subject?.name ?? "",
       publishDate: assignment.publishDate?.toISOString() || null,
       dueDate: assignment.dueDate.toISOString(),
       totalPoints: Number(assignment.totalPoints),
@@ -227,55 +217,25 @@ export async function getChildTimetable(input: { studentId: string }) {
     throw new Error("Unauthorized access to student data")
   }
 
-  // The child's week: their section's slots (and any legacy class's) in the
-  // active term. Reading classes only left every section-placed child —
-  // every child of a new school — with an empty week, and no term filter
-  // mixed in other terms' slots.
+  // The child's week: their section's slots in the active term.
   const [[scope], { term }] = await Promise.all([
     getStudentScopes(schoolId, [studentId]),
     resolveActiveTerm(schoolId),
   ])
-  const axes = [
-    ...(scope?.sectionId ? [{ sectionId: scope.sectionId }] : []),
-    ...(scope && scope.classIds.length > 0
-      ? [{ classId: { in: scope.classIds } }]
-      : []),
-  ]
-  if (!term || axes.length === 0) return { timetable: [] }
+  if (!term || !scope?.sectionId) return { timetable: [] }
 
   const timetableEntries = await db.timetable.findMany({
     where: {
       schoolId,
       termId: term.id,
       weekOffset: 0,
-      OR: axes,
+      sectionId: scope.sectionId,
     },
     include: {
       section: { select: { name: true } },
       subject: { select: { name: true } },
       teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
-      class: {
-        select: {
-          name: true,
-          subject: {
-            select: {
-              name: true,
-            },
-          },
-          teacher: {
-            select: {
-              firstName: true,
-              lastName: true,
-            },
-          },
-          classroom: {
-            select: {
-              roomName: true,
-            },
-          },
-        },
-      },
       period: {
         select: {
           name: true,
@@ -294,14 +254,12 @@ export async function getChildTimetable(input: { studentId: string }) {
       periodName: entry.period.name,
       startTime: entry.period.startTime.toISOString(),
       endTime: entry.period.endTime.toISOString(),
-      className: entry.section?.name ?? entry.class?.name ?? "",
-      name: entry.subject?.name ?? entry.class?.subject?.name ?? "",
-      teacherName: (() => {
-        const teacher = entry.teacher ?? entry.class?.teacher
-        return teacher ? `${teacher.firstName} ${teacher.lastName}` : ""
-      })(),
-      roomName:
-        entry.classroom?.roomName || entry.class?.classroom?.roomName || "TBA",
+      className: entry.section?.name ?? "",
+      name: entry.subject?.name ?? "",
+      teacherName: entry.teacher
+        ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
+        : "",
+      roomName: entry.classroom?.roomName || "TBA",
     })),
   }
 }

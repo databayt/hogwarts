@@ -160,9 +160,8 @@ model School {
   studentGuardians          StudentGuardian[]
   guardianPhoneNumbers      GuardianPhoneNumber[]
   studentYearLevels         StudentYearLevel[]
-  classes                   Class[]
-  studentClasses            StudentClass[]
-  classTeachers             ClassTeacher[]
+
+
   subjectTeachers           SubjectTeacher[]
   scoreRanges               ScoreRange[]
   schoolAssignments         SchoolAssignment[]
@@ -582,8 +581,7 @@ model Period {
 
   school         School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear     SchoolYear  @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  classesAsStart Class[]     @relation("ClassStartPeriod")
-  classesAsEnd   Class[]     @relation("ClassEndPeriod")
+
   timetables     Timetable[]
 
   createdAt DateTime @default(now())
@@ -604,7 +602,7 @@ model Term {
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear        SchoolYear         @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  classes           Class[]
+
   timetables        Timetable[]
   schoolWeekConfigs SchoolWeekConfig[]
   reportCards       ReportCard[]

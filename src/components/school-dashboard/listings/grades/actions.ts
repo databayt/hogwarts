@@ -44,7 +44,6 @@ type ResultSelectResult = {
   schoolId: string
   studentId: string
   assignmentId: string | null
-  classId: string | null
   score: number
   maxScore: number
   percentage: number
@@ -134,7 +133,6 @@ export async function createResult(
         schoolId,
         studentId: parsed.studentId,
         assignmentId: parsed.assignmentId || null,
-        classId: parsed.classId,
         score: parsed.score,
         maxScore: parsed.maxScore,
         percentage,
@@ -230,7 +228,6 @@ export async function updateResult(
     if (typeof rest.studentId !== "undefined") data.studentId = rest.studentId
     if (typeof rest.assignmentId !== "undefined")
       data.assignmentId = rest.assignmentId || null
-    if (typeof rest.classId !== "undefined") data.classId = rest.classId
     if (typeof rest.score !== "undefined") data.score = rest.score
     if (typeof rest.maxScore !== "undefined") data.maxScore = rest.maxScore
     if (typeof rest.grade !== "undefined") data.grade = rest.grade
@@ -455,7 +452,6 @@ export async function getResult(input: {
       schoolId: result.schoolId,
       studentId: result.studentId,
       assignmentId: result.assignmentId,
-      classId: result.classId,
       score: Number(result.score),
       maxScore: Number(result.maxScore),
       percentage: result.percentage,
@@ -556,7 +552,6 @@ export async function getResults(
       studentId: sp.studentId || undefined,
       studentIds,
       assignmentId: sp.assignmentId || undefined,
-      classId: sp.classId || undefined,
       grade: sp.grade || undefined,
       sort: sp.sort,
       search: sp.search || undefined,
@@ -667,7 +662,6 @@ export async function getResultsCSV(
       studentId: sp.studentId || undefined,
       studentIds,
       assignmentId: sp.assignmentId || undefined,
-      classId: sp.classId || undefined,
       grade: sp.grade || undefined,
     })
 
@@ -688,7 +682,7 @@ export async function getResultsCSV(
         r.id,
         `"${r.student ? `${r.student.firstName} ${r.student.lastName}` : "Unknown"}"`,
         `"${(r.assignment?.title || r.exam?.title || "").replace(/"/g, '""')}"`,
-        `"${(r.section?.name || r.class?.name || "").replace(/"/g, '""')}"`,
+        `"${(r.section?.name || "").replace(/"/g, '""')}"`,
         Number(r.score),
         Number(r.maxScore),
         r.percentage?.toFixed(1) || "0",

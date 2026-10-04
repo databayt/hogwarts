@@ -53,7 +53,6 @@ function happySession() {
   mockDb.timetable.findFirst.mockResolvedValue({
     periodId: "p1",
     period: { name: "Period 1" },
-    classId: null,
   })
   mockDb.student.findMany.mockResolvedValue([
     { id: "sA", userId: "uA" },
@@ -409,30 +408,14 @@ describe("syncLiveAttendance — Attendance.date is the SCHOOL-LOCAL day (attn-0
   })
 })
 
-describe("syncLiveAttendance — carries the slot's classId (attn-03)", () => {
-  it("sets classId on a created row from the timetable slot's legacy class link", async () => {
+describe("syncLiveAttendance — no legacy class link (attn-03)", () => {
+  it("never writes a classId on a created row (classes are retired)", async () => {
     happySession()
-    mockDb.timetable.findFirst.mockResolvedValue({
-      periodId: "p1",
-      period: { name: "Period 1" },
-      classId: "cls1",
-    })
-
-    await syncLiveAttendance("school1", "c1")
-
-    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
-      Record<string, unknown>
-    >
-    for (const r of rows) expect(r.classId).toBe("cls1")
-  })
-
-  it("writes classId: null when the slot has no legacy class link", async () => {
-    happySession() // default timetable mock has classId: null
     await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >
-    for (const r of rows) expect(r.classId).toBeNull()
+    for (const r of rows) expect(r).not.toHaveProperty("classId")
   })
 })
 

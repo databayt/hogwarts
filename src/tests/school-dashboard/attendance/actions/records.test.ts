@@ -108,9 +108,8 @@ describe("attendance records (self-service) actions", () => {
       expect(call?.where).toMatchObject({ deletedAt: null })
     })
 
-    // attn-03: a live-class-synced (VIRTUAL) row carries no classId, so
-    // `class` resolves to null — the view must still name the period.
-    it("falls back to periodName + section name when a VIRTUAL row has no class", async () => {
+    // attn-03: a live-class-synced (VIRTUAL) row must still name the period.
+    it("falls back to periodName + section name for a VIRTUAL row", async () => {
       mockAuth("STUDENT")
       vi.mocked(db.student.findFirst).mockResolvedValue({ id: "s1" } as any)
       vi.mocked(db.term.findFirst).mockResolvedValue(null)
@@ -119,21 +118,17 @@ describe("attendance records (self-service) actions", () => {
           id: "a1",
           date: new Date("2026-06-19"),
           status: "PRESENT",
-          classId: null,
           notes: null,
           periodName: "Period 1",
           section: { name: "Grade 7-A" },
-          class: null,
         },
         {
           id: "a2",
           date: new Date("2026-06-18"),
           status: "PRESENT",
-          classId: null,
           notes: null,
           periodName: "Period 2",
           section: null,
-          class: null,
         },
       ] as any)
 
@@ -146,7 +141,7 @@ describe("attendance records (self-service) actions", () => {
       expect(result.data.records[1].className).toBe("Period 2")
     })
 
-    it("prefers the class name over the period fallback when a class is present", async () => {
+    it("names a period mark as period - section", async () => {
       mockAuth("STUDENT")
       vi.mocked(db.student.findFirst).mockResolvedValue({ id: "s1" } as any)
       vi.mocked(db.term.findFirst).mockResolvedValue(null)
@@ -155,11 +150,10 @@ describe("attendance records (self-service) actions", () => {
           id: "a1",
           date: new Date("2026-06-19"),
           status: "PRESENT",
-          classId: "c1",
+          sectionId: "sec1",
           notes: null,
           periodName: "Period 1",
           section: { name: "Grade 7-A" },
-          class: { name: "7A", subject: { name: "Math" } },
         },
       ] as any)
 
@@ -167,7 +161,7 @@ describe("attendance records (self-service) actions", () => {
 
       expect(result.success).toBe(true)
       if (!result.success) return
-      expect(result.data.records[0].className).toBe("Math - 7A")
+      expect(result.data.records[0].className).toBe("Period 1 - Grade 7-A")
     })
 
     it("returns null className when neither class nor periodName is set", async () => {
@@ -179,11 +173,10 @@ describe("attendance records (self-service) actions", () => {
           id: "a1",
           date: new Date("2026-06-19"),
           status: "PRESENT",
-          classId: null,
+          sectionId: null,
           notes: null,
           periodName: null,
           section: null,
-          class: null,
         },
       ] as any)
 
@@ -236,7 +229,7 @@ describe("attendance records (self-service) actions", () => {
 
     // attn-03: same VIRTUAL-row fallback, on the guardian's read of a child's
     // attendance.
-    it("falls back to periodName + section name for a child's VIRTUAL row with no class", async () => {
+    it("falls back to periodName + section name for a child's VIRTUAL row", async () => {
       mockAuth("GUARDIAN")
       vi.mocked(db.guardian.findFirst).mockResolvedValue({
         studentGuardians: [
@@ -252,11 +245,9 @@ describe("attendance records (self-service) actions", () => {
                   id: "a1",
                   date: new Date("2026-06-19"),
                   status: "PRESENT",
-                  classId: null,
                   notes: null,
                   periodName: "Period 3",
                   section: { name: "Grade 5-B" },
-                  class: null,
                 },
               ],
             },

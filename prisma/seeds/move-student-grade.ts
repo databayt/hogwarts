@@ -9,7 +9,7 @@
  * any stream belongs to the old grade. This moves all of it together, then
  * drops the coursework anchored to the old grade — its section's attendance,
  * and gradebook results, submissions and exam results for work set for the old
- * grade (or a legacy class of it) — that would otherwise show the old grade's
+ * grade — that would otherwise show the old grade's
  * subjects on a report card for the new one.
  *
  * Dry-run by default; pass --apply to write.
@@ -75,14 +75,12 @@ export async function moveStudentToGrade(
     })) > 0
 
   // What belongs to the old grade: its section's marks, and work set for the
-  // old grade or one of its legacy classes.
-  const oldClass = oldGradeId ? [{ class: { gradeId: oldGradeId } }] : []
+  // old grade.
   const attendanceWhere: Prisma.AttendanceWhereInput = {
     schoolId,
     studentId: student.id,
     OR: [
       ...(student.sectionId ? [{ sectionId: student.sectionId }] : []),
-      ...oldClass,
       { id: { in: [] } },
     ],
   }
@@ -92,38 +90,27 @@ export async function moveStudentToGrade(
     OR: [
       ...(oldGradeId ? [{ academicGradeId: oldGradeId }] : []),
       ...(student.sectionId ? [{ sectionId: student.sectionId }] : []),
-      ...oldClass,
       { id: { in: [] } },
     ],
   }
-  const oldWork = {
-    OR: [...(oldGradeId ? [{ gradeId: oldGradeId }] : []), ...oldClass],
-  }
+  const oldWork = oldGradeId ? { gradeId: oldGradeId } : { id: { in: [] } }
   const submissionWhere: Prisma.AssignmentSubmissionWhereInput = {
     schoolId,
     studentId: student.id,
-    assignment: oldWork.OR.length > 0 ? oldWork : { id: { in: [] } },
+    assignment: oldWork,
   }
   const examResultWhere: Prisma.ExamResultWhereInput = {
     schoolId,
     studentId: student.id,
-    exam: oldWork.OR.length > 0 ? oldWork : { id: { in: [] } },
-  }
-  // Legacy class enrollments in the old grade go with it
-  const enrollmentWhere: Prisma.StudentClassWhereInput = {
-    schoolId,
-    studentId: student.id,
-    class: oldGradeId ? { gradeId: oldGradeId } : { id: { in: [] } },
+    exam: oldWork,
   }
 
-  const [attendance, results, submissions, examResults, enrollments] =
-    await Promise.all([
-      prisma.attendance.count({ where: attendanceWhere }),
-      prisma.result.count({ where: resultWhere }),
-      prisma.assignmentSubmission.count({ where: submissionWhere }),
-      prisma.examResult.count({ where: examResultWhere }),
-      prisma.studentClass.count({ where: enrollmentWhere }),
-    ])
+  const [attendance, results, submissions, examResults] = await Promise.all([
+    prisma.attendance.count({ where: attendanceWhere }),
+    prisma.result.count({ where: resultWhere }),
+    prisma.assignmentSubmission.count({ where: submissionWhere }),
+    prisma.examResult.count({ where: examResultWhere }),
+  ])
 
   console.log(
     `${apply ? "Moving" : "DRY RUN — would move"} ${email} to ${grade.name}` +
@@ -132,8 +119,7 @@ export async function moveStudentToGrade(
       `\n  attendance dropped ${attendance}` +
       `\n  results dropped    ${results}` +
       `\n  submissions dropped ${submissions}` +
-      `\n  exam results dropped ${examResults}` +
-      `\n  legacy enrollments dropped ${enrollments}`
+      `\n  exam results dropped ${examResults}`
   )
 
   if (!apply) return
@@ -143,7 +129,6 @@ export async function moveStudentToGrade(
     prisma.result.deleteMany({ where: resultWhere }),
     prisma.assignmentSubmission.deleteMany({ where: submissionWhere }),
     prisma.examResult.deleteMany({ where: examResultWhere }),
-    prisma.studentClass.deleteMany({ where: enrollmentWhere }),
     prisma.student.update({
       where: { id: student.id },
       data: {

@@ -42,7 +42,6 @@ const importResultsSchema = z.object({
 
 const exportAnalyticsSchema = z.object({
   examId: z.string().optional(),
-  classId: z.string().optional(),
   subjectId: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),

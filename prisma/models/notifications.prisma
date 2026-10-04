@@ -207,7 +207,7 @@ model NotificationBatch {
 
   // Targeting
   targetRole      UserRole? // Send to all users with this role
-  targetClassId   String? // Legacy: all students in this class
+
   targetGradeId   String? // All students of this grade (and their guardians)
   targetSectionId String? // All students of this section (and their guardians)
   targetUserIds   String[] // Specific user IDs

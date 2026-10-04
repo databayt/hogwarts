@@ -126,7 +126,6 @@ export async function getFeeStructures(
       where: buildFeeStructureWhere(ctx.schoolId, search ? { search } : {}),
       include: {
         grade: { select: { id: true, name: true } },
-        class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -337,7 +336,6 @@ export async function updateFeeStructure(
         name: formData.name as string,
         academicYear: formData.academicYear as string,
         gradeId,
-        classId: null,
         stream: (formData.stream as string) || null,
         description: (formData.description as string) || null,
         tuitionFee: parseFloat(formData.tuitionFee as string),

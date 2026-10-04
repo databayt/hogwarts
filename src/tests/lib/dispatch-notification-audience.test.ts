@@ -51,7 +51,7 @@ describe("dispatchNotificationsToAudience — grade and section", () => {
 
     expect(audienceUserIds).toHaveBeenCalledWith(
       SCHOOL,
-      { classId: null, gradeId: "g7", sectionId: "7a" },
+      { gradeId: "g7", sectionId: "7a" },
       { students: true, guardians: true, teachers: true }
     )
     expect(result.created).toBe(3)
@@ -73,7 +73,7 @@ describe("dispatchNotificationsToAudience — grade and section", () => {
 
     expect(audienceUserIds).toHaveBeenCalledWith(
       SCHOOL,
-      { classId: null, gradeId: "g7", sectionId: null },
+      { gradeId: "g7", sectionId: null },
       { students: true, guardians: true, teachers: true }
     )
   })
@@ -83,15 +83,5 @@ describe("dispatchNotificationsToAudience — grade and section", () => {
 
     expect(audienceUserIds).not.toHaveBeenCalled()
     expect(result.created).toBe(0)
-  })
-
-  it("keeps a legacy class to this school's class", async () => {
-    await send({ targetScope: "class", targetClassId: "c1" })
-
-    expect(audienceUserIds).toHaveBeenCalledWith(
-      SCHOOL,
-      { classId: "c1", gradeId: null, sectionId: null },
-      { students: true, teachers: true }
-    )
   })
 })

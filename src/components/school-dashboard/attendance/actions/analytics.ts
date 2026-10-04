@@ -762,9 +762,6 @@ export async function getRecentAttendance(input?: {
       section: {
         select: { name: true },
       },
-      class: {
-        select: { name: true },
-      },
     },
   })
 
@@ -774,8 +771,7 @@ export async function getRecentAttendance(input?: {
       studentId: r.studentId,
       studentName: `${r.student.firstName} ${r.student.lastName}`,
       sectionId: r.sectionId,
-      // The section, or the class of a mark kept from before sections.
-      className: r.section?.name ?? r.class?.name ?? "",
+      className: r.section?.name ?? "",
       date: r.date.toISOString(),
       status: r.status,
       method: r.method,

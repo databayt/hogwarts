@@ -26,7 +26,7 @@ model SchoolAssignment {
   schoolId     String
   // Legacy: the class it was set for. New assignments are scoped by grade +
   // (section | whole grade) + subject instead — classes are retired.
-  classId      String?
+
   // Scope (new assignments): a grade, optionally one section of it (null =
   // the whole grade), the subject, the term, and who set it.
   gradeId      String?
@@ -49,7 +49,7 @@ model SchoolAssignment {
   catalogAssignmentId String?
 
   school              School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class               Class?                 @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   grade               AcademicGrade?         @relation(fields: [gradeId], references: [id], onDelete: SetNull)
   section             Section?               @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   subject             Subject?               @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -66,8 +66,7 @@ model SchoolAssignment {
   updatedAt DateTime @updatedAt
 
   @@index([schoolId])
-  @@index([classId])
-  @@index([schoolId, classId])
+
   @@index([schoolId, gradeId])
   @@index([schoolId, sectionId])
   @@index([schoolId, subjectId])

@@ -60,9 +60,8 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
   today.setHours(0, 0, 0, 0)
 
   const [scope] = await getStudentScopes(schoolId, [student.id])
-  const classIds = scope?.classIds ?? []
 
-  // Work set for the student's section, their whole grade, or a legacy class
+  // Work set for the student's section or their whole grade
   const assignments = scope
     ? await db.schoolAssignment.findMany({
         where: {
@@ -71,7 +70,6 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
           status: "PUBLISHED",
         },
         include: {
-          class: { select: { subject: { select: { name: true } } } },
           subject: { select: { name: true } },
           submissions: {
             where: { studentId: student.id },
@@ -85,30 +83,28 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
 
   // Get next class
   const dayOfWeek = today.getDay()
-  // Section arm added — see getStudentDashboardData: generated slots have no
-  // classId, so a classId-only filter finds nothing for a section-placed student.
-  const nextOr: Array<Record<string, unknown>> = []
-  if (classIds.length > 0) nextOr.push({ classId: { in: classIds } })
-  if (student.sectionId) nextOr.push({ sectionId: student.sectionId })
-  const nextClass =
-    nextOr.length === 0
-      ? null
-      : await db.timetable.findFirst({
-          where: { schoolId, dayOfWeek, weekOffset: 0, OR: nextOr },
-          include: {
-            class: { select: { subject: { select: { name: true } } } },
-            subject: { select: { name: true } },
-            classroom: { select: { roomName: true } },
-            period: { select: { startTime: true } },
-          },
-          orderBy: { period: { startTime: "asc" } },
-        })
+  const nextClass = !student.sectionId
+    ? null
+    : await db.timetable.findFirst({
+        where: {
+          schoolId,
+          dayOfWeek,
+          weekOffset: 0,
+          sectionId: student.sectionId,
+        },
+        include: {
+          subject: { select: { name: true } },
+          classroom: { select: { roomName: true } },
+          period: { select: { startTime: true } },
+        },
+        orderBy: { period: { startTime: "asc" } },
+      })
 
   return {
     assignments: assignments.map((a) => ({
       id: a.id,
       title: a.title,
-      subject: a.subject?.name || a.class?.subject?.name || "Unknown",
+      subject: a.subject?.name || "Unknown",
       dueDate: a.dueDate < today ? "Overdue" : formatDate(a.dueDate, "ar"),
       isOverdue: a.dueDate < today,
       status: (a.submissions[0]?.status?.toLowerCase() || "not_submitted") as
@@ -118,10 +114,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
     })),
     nextClass: nextClass
       ? {
-          subject:
-            nextClass.subject?.name ||
-            nextClass.class?.subject?.name ||
-            "Unknown",
+          subject: nextClass.subject?.name || "Unknown",
           time: nextClass.period?.startTime
             ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -148,25 +141,15 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const dayOfWeek = today.getDay()
 
-  // Get today's classes — on the section axis too (see getTeacherDashboardData).
+  // Get today's classes
   const todaysClasses = await db.timetable.findMany({
     where: {
       schoolId,
       dayOfWeek,
       weekOffset: 0,
-      OR: [
-        { teacherId: teacher.id },
-        { class: { is: { teacherId: teacher.id } } },
-      ],
+      teacherId: teacher.id,
     },
     include: {
-      class: {
-        select: {
-          name: true,
-          subject: { select: { name: true } },
-          _count: { select: { studentClasses: true } },
-        },
-      },
       section: {
         select: { name: true, _count: { select: { students: true } } },
       },
@@ -218,11 +201,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   return {
     nextClass: nextClass
       ? {
-          subject:
-            nextClass.subject?.name ||
-            nextClass.class?.subject?.name ||
-            nextClass.class?.name ||
-            "Unknown",
+          subject: nextClass.subject?.name || "Unknown",
           time: nextClass.period?.startTime
             ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -230,10 +209,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
               })
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
-          students:
-            nextClass.section?._count.students ??
-            nextClass.class?._count?.studentClasses ??
-            0,
+          students: nextClass.section?._count.students ?? 0,
         }
       : undefined,
     pendingGrading,
@@ -274,7 +250,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
 
   const children = await Promise.all(
     studentGuardians.map(async (sg) => {
-      // Work set for the child's section, their whole grade, or a legacy class
+      // Work set for the child's section or their whole grade
       const scope = scopes.get(sg.student.id)
       const audience = scope ? studentAudienceWhere(scope) : { id: { in: [] } }
 

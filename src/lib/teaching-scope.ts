@@ -7,8 +7,6 @@
  * A teacher's work is their SubjectTeacher rows (section × subject, per
  * term). A student sits in a section, which belongs to a grade; a student
  * placed in a grade but not yet in a section still counts for that grade.
- * Legacy class enrollments are returned for history only — nothing new
- * writes one.
  *
  * Plain server module, deliberately NOT "use server": every export of a
  * "use server" file is a public endpoint, and these take a schoolId.
@@ -89,28 +87,17 @@ export async function getTeacherPairs(
   }))
 }
 
-/** Subjects a teacher teaches: assignments, plus any legacy classes. */
+/** Subjects a teacher teaches: their assignments. */
 export async function getTeacherSubjectIds(
   schoolId: string,
   teacherId: string
 ): Promise<string[]> {
-  const [assigned, classes] = await Promise.all([
-    db.subjectTeacher.findMany({
-      where: { schoolId, teacherId },
-      distinct: ["subjectId"],
-      select: { subjectId: true },
-    }),
-    db.class.findMany({
-      where: { schoolId, teacherId },
-      select: { subjectId: true },
-    }),
-  ])
-  return [
-    ...new Set([
-      ...assigned.map((a) => a.subjectId),
-      ...classes.map((c) => c.subjectId),
-    ]),
-  ]
+  const assigned = await db.subjectTeacher.findMany({
+    where: { schoolId, teacherId },
+    distinct: ["subjectId"],
+    select: { subjectId: true },
+  })
+  return assigned.map((a) => a.subjectId)
 }
 
 export interface StudentScope {
@@ -118,11 +105,9 @@ export interface StudentScope {
   sectionId: string | null
   /** The section's grade, else the grade the student was placed in. */
   gradeId: string | null
-  /** Legacy class enrollments (history). */
-  classIds: string[]
 }
 
-/** Section, grade and legacy classes for each of the given students. */
+/** Section and grade for each of the given students. */
 export async function getStudentScopes(
   schoolId: string,
   studentIds: readonly string[]
@@ -135,14 +120,12 @@ export async function getStudentScopes(
       sectionId: true,
       academicGradeId: true,
       section: { select: { gradeId: true } },
-      studentClasses: { where: { schoolId }, select: { classId: true } },
     },
   })
   return rows.map((r) => ({
     studentId: r.id,
     sectionId: r.sectionId,
     gradeId: r.section?.gradeId ?? r.academicGradeId,
-    classIds: r.studentClasses.map((c) => c.classId),
   }))
 }
 
@@ -190,8 +173,7 @@ export async function getStudentSubjects(
 /**
  * User ids for a piece of work's audience (an exam, an assignment, a
  * notice): the students it's for, optionally their guardians, and the
- * teachers who teach it — the legacy class's teacher; for work with a
- * subject, that subject's teachers in its section or grade (that term's,
+ * teachers who teach it — for work with a subject, that subject's teachers in its section or grade (that term's,
  * when the work names one); for a notice with no subject, the section's or
  * grade's homeroom and subject teachers this term.
  */
@@ -233,13 +215,7 @@ async function audienceTeacherUserIds(
   schoolId: string,
   work: Audience & { subjectId?: string | null; termId?: string | null }
 ): Promise<string[]> {
-  const [legacy, assigned, staffed] = await Promise.all([
-    work.classId
-      ? db.class.findFirst({
-          where: { id: work.classId, schoolId },
-          select: { teacher: { select: { userId: true } } },
-        })
-      : null,
+  const [assigned, staffed] = await Promise.all([
     work.subjectId && (work.sectionId || work.gradeId)
       ? db.subjectTeacher.findMany({
           where: {
@@ -258,7 +234,6 @@ async function audienceTeacherUserIds(
       : Promise.resolve([]),
   ])
   const ids = [...assigned.map((a) => a.teacher.userId), ...staffed]
-  if (legacy?.teacher?.userId) ids.push(legacy.teacher.userId)
   return [...new Set(ids.filter((id): id is string => !!id))]
 }
 

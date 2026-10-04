@@ -253,30 +253,31 @@ describe("getLiveClassReferenceData — catalog scoped to the grade", () => {
     expect(args.select).toMatchObject({ status: true })
   })
 
-  it("narrows exams by grade through Class.gradeId, keeping ungraded classes visible", async () => {
+  it("narrows exams by their gradeId, keeping ungraded exams visible", async () => {
     await getLiveClassReferenceData(SCHOOL, "sub-1", 7)
     const args = vi.mocked(db.schoolExam.findMany).mock.calls[0][0] as {
-      where: { class?: Record<string, unknown> }
+      where: { OR?: unknown }
     }
-    expect(args.where.class).toEqual({
-      OR: [{ grade: { gradeNumber: 7 } }, { gradeId: null }],
-    })
+    expect(args.where.OR).toEqual([
+      { grade: { gradeNumber: 7 } },
+      { gradeId: null },
+    ])
   })
 
   it("applies no grade filter to exams when the section's grade is unknown", async () => {
     await getLiveClassReferenceData(SCHOOL, "sub-1")
     const args = vi.mocked(db.schoolExam.findMany).mock.calls[0][0] as {
-      where: { class?: unknown }
+      where: { OR?: unknown }
     }
-    expect(args.where.class).toBeUndefined()
+    expect(args.where.OR).toBeUndefined()
   })
 
-  it("narrows assignments by grade through Class.gradeId, keeping ungraded classes visible", async () => {
+  it("narrows assignments by subject and gradeId, keeping ungraded assignments visible", async () => {
     await getLiveClassReferenceData(SCHOOL, "sub-1", 7)
     const args = vi.mocked(db.schoolAssignment.findMany).mock.calls[0][0] as {
-      where: { class: Record<string, unknown> }
+      where: Record<string, unknown>
     }
-    expect(args.where.class).toEqual({
+    expect(args.where).toMatchObject({
       subjectId: "sub-1",
       OR: [{ grade: { gradeNumber: 7 } }, { gradeId: null }],
     })

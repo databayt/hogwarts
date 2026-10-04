@@ -24,10 +24,10 @@ import {
   type ExamAudience,
 } from "./audience"
 
-export type ExamAudienceKeys = Pick<
-  ExamAudience,
-  "classId" | "gradeId" | "sectionId"
-> & { subjectId: string; termId?: string | null }
+export type ExamAudienceKeys = Pick<ExamAudience, "gradeId" | "sectionId"> & {
+  subjectId: string
+  termId?: string | null
+}
 
 /**
  * User ids for an exam's audience: the students who sit it, optionally their

@@ -183,7 +183,6 @@ export async function evaluatePromotionCandidates(input: {
     const students = await db.student.findMany({
       where: {
         ...audienceRosterWhere(schoolId, {
-          classId: null,
           gradeId: input.gradeId,
           sectionId: null,
         }),

@@ -81,8 +81,7 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
       form.reset({
         title: e.title ?? "",
         description: e.description ?? "",
-        // A legacy exam opens on its class's grade.
-        gradeId: e.gradeId ?? e.class?.gradeId ?? "",
+        gradeId: e.gradeId ?? "",
         sectionId: e.sectionId ?? null,
         subjectId: e.subjectId ?? "",
         examDate: e.examDate ? new Date(e.examDate) : new Date(),

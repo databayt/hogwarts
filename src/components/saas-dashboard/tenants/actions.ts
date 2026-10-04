@@ -505,7 +505,6 @@ export async function tenantDelete(input: {
       users: number
       students: number
       teachers: number
-      classes: number
     }
   }>
 > {
@@ -526,7 +525,6 @@ export async function tenantDelete(input: {
           select: {
             students: true,
             teachers: true,
-            classes: true,
           },
         },
       },
@@ -562,7 +560,6 @@ export async function tenantDelete(input: {
       users: userCount,
       students: school._count.students,
       teachers: school._count.teachers,
-      classes: school._count.classes,
     }
 
     // ========================================================
@@ -595,11 +592,6 @@ export async function tenantDelete(input: {
         await tx.roomConstraint.deleteMany({ where: { schoolId } })
         await tx.schoolWeekConfig.deleteMany({ where: { schoolId } })
         await tx.timetable.deleteMany({ where: { schoolId } })
-
-        // B2: Class chain
-        await tx.studentClass.deleteMany({ where: { schoolId } })
-        await tx.classTeacher.deleteMany({ where: { schoolId } })
-        await tx.class.deleteMany({ where: { schoolId } })
 
         // B3: Finance fee chain (explicit RESTRICT)
         await tx.refund.deleteMany({ where: { schoolId } })
@@ -686,7 +678,7 @@ export async function tenantDelete(input: {
       userId: operator.userId,
       schoolId: null,
       action: "TENANT_DELETED",
-      reason: `Deleted "${school.name}" (${school.domain}).${validated.reason ? ` Reason: ${validated.reason}.` : ""} Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes.`,
+      reason: `Deleted "${school.name}" (${school.domain}).${validated.reason ? ` Reason: ${validated.reason}.` : ""} Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers.`,
     })
 
     refreshPage("/tenants")

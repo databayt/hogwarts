@@ -195,7 +195,6 @@ export async function getLiveClasses(params: {
       page: q.page,
       perPage: q.perPage,
       sectionIds: scope === "all" ? undefined : scope.sectionIds,
-      classIds: scope === "all" ? undefined : scope.classIds,
     })
 
     return {
@@ -280,14 +279,12 @@ export async function getLiveClass(params: { id: string }): Promise<
       session.user.id,
       role
     )
-    const slotClassId = liveClass.timetable?.classId ?? null
     const inScope =
       scope === "all" ||
       (scope !== "none" &&
         (liveClass.visibility === "school" ||
           (!!liveClass.sectionId &&
-            scope.sectionIds.includes(liveClass.sectionId)) ||
-          (!!slotClassId && (scope.classIds ?? []).includes(slotClassId))))
+            scope.sectionIds.includes(liveClass.sectionId))))
     if (!inScope) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }

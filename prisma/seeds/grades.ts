@@ -131,8 +131,6 @@ export async function seedGradebookResults(
           totalPoints: true,
           subjectId: true,
           termId: true,
-          // Legacy class work still names its subject through the class
-          class: { select: { subjectId: true } },
         },
       },
       student: {
@@ -178,8 +176,7 @@ export async function seedGradebookResults(
       return {
         schoolId,
         studentId: s.studentId,
-        subjectId:
-          s.assignment.subjectId ?? s.assignment.class?.subjectId ?? null,
+        subjectId: s.assignment.subjectId ?? null,
         sectionId: s.student?.sectionId ?? null,
         academicGradeId:
           s.student?.section?.gradeId ?? s.student?.academicGradeId ?? null,

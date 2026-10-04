@@ -4,6 +4,7 @@
 import { QuestionType } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { audienceLabel } from "@/lib/teaching-audience"
 
 import {
   formatDate,
@@ -96,7 +97,8 @@ export async function resolveExamPaperData(
           endTime: true,
           instructions: true,
           subject: { select: { name: true } },
-          class: { select: { name: true } },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
         },
       },
       questions: {
@@ -191,7 +193,9 @@ export async function resolveExamPaperData(
   return {
     examTitle: gen.exam?.title ?? "",
     subject: gen.exam?.subject?.name ?? "",
-    className: gen.exam?.class?.name ?? "",
+    className: gen.exam
+      ? audienceLabel({ section: gen.exam.section, grade: gen.exam.grade })
+      : "",
     duration: gen.exam?.duration ?? "",
     totalMarks: gen.exam?.totalMarks ? Number(gen.exam.totalMarks) : "",
     startTime: gen.exam?.startTime ?? "",

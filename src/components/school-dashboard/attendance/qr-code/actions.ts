@@ -240,16 +240,9 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       )
     }
 
-    // Only the session's students: its section, or (legacy) its class.
-    const isMember = qrSession.sectionId
-      ? student.sectionId === qrSession.sectionId
-      : !!(
-          qrSession.classId &&
-          (await db.studentClass.findFirst({
-            where: { schoolId, studentId, classId: qrSession.classId },
-            select: { id: true },
-          }))
-        )
+    // Only the session's students: its section.
+    const isMember =
+      !!qrSession.sectionId && student.sectionId === qrSession.sectionId
     if (!isMember) {
       recordScanFailure(rateLimitId)
       throw new Error("This QR code is for another section")
@@ -269,8 +262,8 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     // CORRECTNESS: normalize the attendance date to midnight (matching manual
     // marking) so QR records collate with daily attendance and dashboards that
     // filter on the day boundary find them. Also idempotent on re-scan: if a
-    // daily record already exists for this student/class/day, update it instead
-    // of creating a duplicate row (the [schoolId,studentId,classId,date,periodId]
+    // daily record already exists for this student/section/day, update it instead
+    // of creating a duplicate row (the [schoolId,studentId,sectionId,date,periodId]
     // tuple is not DB-unique for NULL periodId in Postgres, so dedupe in code).
     const attendanceDate = new Date()
     attendanceDate.setHours(0, 0, 0, 0)
@@ -279,10 +272,8 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     // Upsert lookup must find soft-deleted rows too: the unique tuple still
     // reserves their key, so filtering `deletedAt: null` here would fall through
     // to create() and hit a unique-constraint error. Instead we revive on update.
-    // A section session keys the day on the section; a legacy one on its class.
-    const dailyKey = qrSession.sectionId
-      ? { sectionId: qrSession.sectionId }
-      : { classId: qrSession.classId }
+    // A session keys the day on its section.
+    const dailyKey = { sectionId: qrSession.sectionId }
     const existingDaily = await db.attendance.findFirst({
       where: {
         schoolId,
@@ -349,7 +340,6 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
         metadata: {
           qrSessionId: qrSession.id,
           sectionId: qrSession.sectionId,
-          classId: qrSession.classId,
           secureQR: !!secureData, // Track if secure QR was used
         },
         success: true,
@@ -367,7 +357,6 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       entityId: attendance.id,
       newValue: {
         sectionId: qrSession.sectionId,
-        classId: qrSession.classId,
         status: "PRESENT",
         method: "QR_CODE",
         qrSessionId: qrSession.id,

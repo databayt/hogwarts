@@ -36,7 +36,7 @@ export async function POST(
       )
     }
 
-    // `{classId}` is a section (a legacy class id still resolves)
+    // `{classId}` is a section
     const target = await resolveClassTarget(auth, classId)
     if (!target.ok) return target.response
 
@@ -46,7 +46,6 @@ export async function POST(
       select: {
         id: true,
         totalMarks: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
       },
@@ -59,8 +58,7 @@ export async function POST(
       )
     }
 
-    // Every student must sit the exam — in this section when `{classId}` is
-    // one. Ids are global CUIDs: anything else could write a mark for
+    // Every student must sit the exam — in this section. Ids are global CUIDs: anything else could write a mark for
     // another school's student.
     const studentIds = [
       ...new Set(
@@ -70,11 +68,10 @@ export async function POST(
     const onRoster = await db.student.findMany({
       where: {
         ...audienceRosterWhere(auth.schoolId, {
-          classId: exam.classId,
           gradeId: exam.gradeId,
           sectionId: exam.sectionId,
         }),
-        ...(target.sectionId ? { sectionId: target.sectionId } : {}),
+        sectionId: target.sectionId,
         id: { in: studentIds },
       },
       select: { id: true },

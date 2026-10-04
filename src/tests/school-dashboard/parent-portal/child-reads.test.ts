@@ -45,7 +45,7 @@ beforeEach(() => {
 describe("parent portal — a child's week", () => {
   it("reads the child's section in the active term", async () => {
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "s1", sectionId: "7a", gradeId: "g7", classIds: [] },
+      { studentId: "s1", sectionId: "7a", gradeId: "g7" },
     ])
     vi.mocked(db.timetable.findMany).mockResolvedValue([
       {
@@ -60,7 +60,6 @@ describe("parent portal — a child's week", () => {
         subject: { name: "Math" },
         teacher: { firstName: "Huda", lastName: "Salim" },
         classroom: { roomName: "R1" },
-        class: null,
       },
     ] as never)
 
@@ -70,7 +69,7 @@ describe("parent portal — a child's week", () => {
       schoolId: SCHOOL,
       termId: "term-1",
       weekOffset: 0,
-      OR: [{ sectionId: "7a" }],
+      sectionId: "7a",
     })
     expect(timetable[0]).toMatchObject({
       className: "7-A",
@@ -82,7 +81,7 @@ describe("parent portal — a child's week", () => {
 
   it("returns an empty week for an unplaced child", async () => {
     vi.mocked(getStudentScopes).mockResolvedValue([
-      { studentId: "s1", sectionId: null, gradeId: "g7", classIds: [] },
+      { studentId: "s1", sectionId: null, gradeId: "g7" },
     ])
 
     const { timetable } = await getChildTimetable({ studentId: "s1" })

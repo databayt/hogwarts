@@ -78,16 +78,9 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // What the teacher teaches: assigned (section, subject) pairs, and any
-  // legacy classes. Their exams are the ones they may open.
-  const [pairs, teacherClasses] = await Promise.all([
-    getTeacherPairs(schoolId, teacher.id),
-    db.class.findMany({
-      where: { schoolId, teacherId: teacher.id },
-      select: { id: true },
-    }),
-  ])
-  const classIds = teacherClasses.map((c) => c.id)
+  // What the teacher teaches: assigned (section, subject) pairs. Their exams
+  // are the ones they may open.
+  const pairs = await getTeacherPairs(schoolId, teacher.id)
   const sectionIds = [...new Set(pairs.map((p) => p.sectionId))]
   const myExams = teacherExamsWhere({ teacherId: teacher.id, userId, pairs })
 
@@ -137,10 +130,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     db.student.count({
       where: {
         schoolId,
-        OR: [
-          { sectionId: { in: sectionIds } },
-          { studentClasses: { some: { classId: { in: classIds } } } },
-        ],
+        sectionId: { in: sectionIds },
       },
     }),
     db.examResult.count({
@@ -156,7 +146,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
   const h = dictionary?.results?.examsHome
   const acrossClasses = (h?.acrossClasses ?? "{count}").replace(
     "{count}",
-    String(sectionIds.length + teacherClasses.length)
+    String(sectionIds.length)
   )
 
   const completionRate =

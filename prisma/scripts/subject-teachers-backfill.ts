@@ -6,7 +6,6 @@
  * rows for the active term, then line the timetable up with them.
  *
  *   --from-slots      the timetable already names teachers (demo)
- *   --from-classes    legacy grade-level classes (King Fahd)
  *   --from-expertise  qualified teachers for whatever is left
  *   (no source flag)  slots, then expertise
  *
@@ -17,7 +16,7 @@
  *
  * Usage:
  *   pnpm tsx prisma/scripts/subject-teachers-backfill.ts --domain demo --from-slots
- *   pnpm tsx prisma/scripts/subject-teachers-backfill.ts --domain kingfahd --from-classes --dry
+ *   pnpm tsx prisma/scripts/subject-teachers-backfill.ts --domain kingfahd --dry
  */
 
 // dotenv first — the @/lib/db singleton reads DATABASE_URL at import time.
@@ -27,7 +26,6 @@ import { PrismaClient } from "@prisma/client"
 
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
-  deriveFromClasses,
   deriveFromExpertise,
   deriveFromSlots,
   ensureAssignments,
@@ -53,7 +51,7 @@ async function main() {
     const { term } = await resolveActiveTerm(school.id)
     if (!term) throw new Error("No active term")
 
-    const [assignments, teacherSlots, classes] = await Promise.all([
+    const [assignments, teacherSlots] = await Promise.all([
       prisma.subjectTeacher.count({
         where: { schoolId: school.id, termId: term.id },
       }),
@@ -64,10 +62,9 @@ async function main() {
           teacherId: { not: null },
         },
       }),
-      prisma.class.count({ where: { schoolId: school.id } }),
     ])
     console.log(
-      `${school.name} (${domain}) term ${term.id}: ${assignments} assignments, ${teacherSlots} periods with a teacher, ${classes} legacy classes`
+      `${school.name} (${domain}) term ${term.id}: ${assignments} assignments, ${teacherSlots} periods with a teacher`
     )
     if (flag("dry")) {
       console.log("--dry: nothing written.")
@@ -76,11 +73,9 @@ async function main() {
 
     const result = flag("from-slots")
       ? await deriveFromSlots(prisma, school.id, term.id)
-      : flag("from-classes")
-        ? await deriveFromClasses(prisma, school.id, term.id)
-        : flag("from-expertise")
-          ? await deriveFromExpertise(prisma, school.id, term.id)
-          : await ensureAssignments(prisma, school.id, term.id)
+      : flag("from-expertise")
+        ? await deriveFromExpertise(prisma, school.id, term.id)
+        : await ensureAssignments(prisma, school.id, term.id)
     console.log("Result:", result)
   } finally {
     await prisma.$disconnect()

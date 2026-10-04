@@ -17,7 +17,7 @@ export const STEPS = {
 } as const
 
 export const STEP_FIELDS = {
-  1: ["studentId", "assignmentId", "classId"] as const,
+  1: ["studentId", "assignmentId"] as const,
   2: ["score", "maxScore", "grade", "feedback"] as const,
 } as const
 

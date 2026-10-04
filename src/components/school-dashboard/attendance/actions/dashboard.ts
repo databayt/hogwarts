@@ -280,7 +280,6 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
           orderBy: { date: "desc" },
           include: {
             section: { select: { name: true } },
-            class: { select: { name: true } },
             excuse: { select: { status: true } },
           },
         },
@@ -338,8 +337,7 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       .slice(0, 10)
       .map((a) => ({
         date: a.date.toISOString(),
-        // The section, or the class of a mark kept from before sections.
-        className: a.section?.name ?? a.class?.name ?? "",
+        className: a.section?.name ?? "",
         hasExcuse: !!a.excuse && a.excuse.status === "APPROVED",
       }))
 
@@ -641,7 +639,6 @@ export async function getParentAttendanceSummary(): Promise<
         },
         include: {
           section: { select: { name: true } },
-          class: { select: { name: true } },
         },
         orderBy: { date: "desc" },
       }),
@@ -694,8 +691,7 @@ export async function getParentAttendanceSummary(): Promise<
         list.push({
           date: a.date.toISOString().split("T")[0],
           status: a.status,
-          // The section, or the class of a mark kept from before sections.
-          className: a.section?.name ?? a.class?.name ?? "",
+          className: a.section?.name ?? "",
         })
       }
     }

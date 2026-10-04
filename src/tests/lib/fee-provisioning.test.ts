@@ -126,21 +126,20 @@ describe("provisionSchoolFees", () => {
     expect(data).toMatchObject({
       schoolId: SCHOOL_ID,
       gradeId: "g1",
-      classId: null,
     })
+    expect(data).not.toHaveProperty("classId")
   })
 
   it("updates unlocked auto-generated rows in recompute mode", async () => {
     setupSchool(6000)
     vi.mocked(db.academicGrade.findMany).mockResolvedValue([
-      { id: "g1", name: "Grade 1", gradeNumber: 1, classes: [] },
+      { id: "g1", name: "Grade 1", gradeNumber: 1 },
     ] as never)
     vi.mocked(db.feeStructure.findMany).mockResolvedValue([
       {
         id: "fs-g1",
         isLocked: false,
         isActive: true,
-        classId: null,
         sourceSignals: {
           gradeId: "g1",
           tuitionFee: 5000,
@@ -163,14 +162,13 @@ describe("provisionSchoolFees", () => {
   it("skips locked auto-generated rows in recompute mode", async () => {
     setupSchool()
     vi.mocked(db.academicGrade.findMany).mockResolvedValue([
-      { id: "g1", name: "Grade 1", gradeNumber: 1, classes: [] },
+      { id: "g1", name: "Grade 1", gradeNumber: 1 },
     ] as never)
     vi.mocked(db.feeStructure.findMany).mockResolvedValue([
       {
         id: "fs-g1",
         isLocked: true,
         isActive: true,
-        classId: null,
         sourceSignals: { gradeId: "g1", version: 1 },
       },
     ] as never)
@@ -185,14 +183,13 @@ describe("provisionSchoolFees", () => {
   it("does not touch rows when mode is new-scope and row already exists", async () => {
     setupSchool()
     vi.mocked(db.academicGrade.findMany).mockResolvedValue([
-      { id: "g1", name: "Grade 1", gradeNumber: 1, classes: [] },
+      { id: "g1", name: "Grade 1", gradeNumber: 1 },
     ] as never)
     vi.mocked(db.feeStructure.findMany).mockResolvedValue([
       {
         id: "fs-g1",
         isLocked: false,
         isActive: true,
-        classId: null,
         sourceSignals: { gradeId: "g1", version: 1 },
       },
     ] as never)
@@ -207,7 +204,7 @@ describe("provisionSchoolFees", () => {
   it("created structures have a quarterly paymentSchedule when tuitionFee > 0", async () => {
     setupSchool(4000)
     vi.mocked(db.academicGrade.findMany).mockResolvedValue([
-      { id: "g1", name: "Grade 1", gradeNumber: 1, classes: [] },
+      { id: "g1", name: "Grade 1", gradeNumber: 1 },
     ] as never)
 
     await provisionSchoolFees(SCHOOL_ID)

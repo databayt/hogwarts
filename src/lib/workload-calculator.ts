@@ -147,28 +147,19 @@ export async function calculateTeacherWorkload(
   // Get all timetable entries for this teacher
   const timetableEntries = await db.timetable.findMany({
     where: timetableWhere,
-    include: {
-      class: {
-        include: {
-          subject: true,
-        },
-      },
-    },
+    select: { sectionId: true, subjectId: true },
   })
 
   // Calculate metrics
   const totalPeriodsPerWeek = timetableEntries.length
-  // A teaching unit is a subject in a section (section-based slots) or a
-  // legacy class — classId alone counted every section slot as one null id.
+  // A teaching unit is a subject in a section.
   const uniqueClassIds = new Set(
-    timetableEntries.map((t) =>
-      t.sectionId ? `${t.sectionId}:${t.subjectId ?? ""}` : t.classId
-    )
+    timetableEntries
+      .filter((t) => t.sectionId)
+      .map((t) => `${t.sectionId}:${t.subjectId ?? ""}`)
   )
   const uniqueSubjectIds = new Set(
-    timetableEntries
-      .map((t) => t.subjectId ?? t.class?.subjectId)
-      .filter(Boolean)
+    timetableEntries.map((t) => t.subjectId).filter(Boolean)
   )
 
   // Get total periods in a week to calculate free periods

@@ -172,7 +172,6 @@ describe("Exam Status Actions — defense-in-depth", () => {
       vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
-        classId: null,
         gradeId: "grade-7",
         sectionId: "section-7a",
         _count: { examResults: 25 },

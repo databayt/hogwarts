@@ -28,7 +28,7 @@ export async function GET(
 
     const { classId } = await params
 
-    // `{classId}` is a section (a legacy class id still resolves)
+    // `{classId}` is a section
     const target = await resolveClassTarget(auth, classId)
     if (!target.ok) return target.response
 

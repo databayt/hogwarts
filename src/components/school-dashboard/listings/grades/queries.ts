@@ -25,7 +25,6 @@ import { search } from "@/components/translation/search"
 export type ResultListFilters = {
   studentId?: string
   studentIds?: string[] // Restrict to a set of student IDs (e.g. guardian's children)
-  classId?: string
   assignmentId?: string
   examId?: string
   subjectId?: string
@@ -59,7 +58,6 @@ export const resultListSelect = {
   id: true,
   schoolId: true,
   studentId: true,
-  classId: true,
   assignmentId: true,
   examId: true,
   subjectId: true,
@@ -75,13 +73,6 @@ export const resultListSelect = {
       id: true,
       firstName: true,
       lastName: true,
-      lang: true,
-    },
-  },
-  class: {
-    select: {
-      id: true,
-      name: true,
       lang: true,
     },
   },
@@ -118,7 +109,6 @@ export const resultDetailSelect = {
   id: true,
   schoolId: true,
   studentId: true,
-  classId: true,
   assignmentId: true,
   examId: true,
   subjectId: true,
@@ -141,12 +131,6 @@ export const resultDetailSelect = {
       lastName: true,
       email: true,
       studentId: true,
-    },
-  },
-  class: {
-    select: {
-      id: true,
-      name: true,
     },
   },
   section: {
@@ -216,10 +200,6 @@ export function buildResultWhere(
     }
   } else if (filters.studentId) {
     where.studentId = filters.studentId
-  }
-
-  if (filters.classId) {
-    where.classId = filters.classId
   }
 
   if (filters.assignmentId) {
@@ -417,23 +397,6 @@ export async function getStudentResults(schoolId: string, studentId: string) {
     where: {
       schoolId,
       studentId,
-    },
-    orderBy: buildResultOrderBy(),
-    select: resultListSelect,
-  })
-}
-
-/**
- * Get results for a specific class
- * @param schoolId - School ID
- * @param classId - Class ID
- * @returns Promise with class results
- */
-export async function getClassResults(schoolId: string, classId: string) {
-  return db.result.findMany({
-    where: {
-      schoolId,
-      classId,
     },
     orderBy: buildResultOrderBy(),
     select: resultListSelect,
@@ -691,15 +654,12 @@ export async function getStudentGradeHistory(
 /**
  * Get class grade statistics for comparison
  * @param schoolId - School ID
- * @param classId - Class ID
- * @param assignmentId - Optional assignment ID for specific assignment stats
- * @param examId - Optional exam ID for specific exam stats
+ * @param peers - The exam, assignment, or section + subject to compare within
  * @returns Promise with class statistics
  */
 export async function getClassGradeStats(
   schoolId: string,
   peers: {
-    classId?: string | null
     sectionId?: string | null
     subjectId?: string | null
     assignmentId?: string | null
@@ -707,12 +667,11 @@ export async function getClassGradeStats(
   }
 ) {
   // The student's peers for this score: everyone graded on the same exam or
-  // assignment, else the same legacy class, else the same section and
+  // assignment, else the same section and
   // subject. A row with none of those is compared with nobody.
   const where: Prisma.ResultWhereInput = { schoolId, wizardStep: null }
   if (peers.examId) where.examId = peers.examId
   else if (peers.assignmentId) where.assignmentId = peers.assignmentId
-  else if (peers.classId) where.classId = peers.classId
   else if (peers.sectionId && peers.subjectId) {
     where.sectionId = peers.sectionId
     where.subjectId = peers.subjectId
@@ -930,7 +889,7 @@ export function formatResultRow(
     studentName: formatStudentName(result),
     assignmentTitle:
       result.assignment?.title || result.exam?.title || "Unknown",
-    className: result.section?.name || result.class?.name || "—",
+    className: result.section?.name || "—",
     score: Number(result.score),
     maxScore: Number(result.maxScore),
     percentage: result.percentage,

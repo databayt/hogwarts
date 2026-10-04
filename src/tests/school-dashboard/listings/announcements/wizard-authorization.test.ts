@@ -231,7 +231,6 @@ describe("announcement wizard authorization", () => {
             scope: "section",
             sectionId: "7a",
             gradeId: "g7",
-            classId: null,
           }),
         })
       )

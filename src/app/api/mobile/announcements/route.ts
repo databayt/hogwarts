@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
         ...announcementListSelect,
         body: true,
         role: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         creator: { select: { username: true, image: true } },
@@ -90,11 +89,11 @@ export async function GET(request: NextRequest) {
       // Additive (2026-09): what the web card and reading page draw.
       scope: a.scope,
       target_role: a.role,
-      // Additive (2026-10): who a grade/section notice is for. class_id is
-      // legacy — null for every notice written since classes were retired.
+      // Additive (2026-10): who a grade/section notice is for. class_id stays
+      // null for app builds that still read it — classes are retired.
       grade_id: a.gradeId,
       section_id: a.sectionId,
-      class_id: a.classId,
+      class_id: null,
       is_published: a.published,
       is_pinned: a.pinned,
       is_featured: a.featured,

@@ -55,12 +55,10 @@ export async function GET(
         expiresAt: true,
         pinned: true,
         featured: true,
-        classId: true,
         role: true,
         createdAt: true,
         updatedAt: true,
         creator: { select: { username: true, image: true } },
-        class: { select: { id: true, name: true } },
         grade: { select: { id: true, name: true } },
         section: { select: { id: true, name: true } },
         _count: { select: { readReceipts: true } },
@@ -115,16 +113,14 @@ export async function GET(
       is_pinned: announcement.pinned,
       is_featured: announcement.featured,
       // Additive (2026-10): the grade or section a notice is for.
-      // target_class is legacy (scope "class" only).
+      // target_class stays null for app builds that still read it.
       target_grade: announcement.grade
         ? { id: announcement.grade.id, name: announcement.grade.name }
         : null,
       target_section: announcement.section
         ? { id: announcement.section.id, name: announcement.section.name }
         : null,
-      target_class: announcement.class
-        ? { id: announcement.class.id, name: announcement.class.name }
-        : null,
+      target_class: null,
       target_role: announcement.role,
       read_count: announcement._count.readReceipts,
       created_at: announcement.createdAt.toISOString(),

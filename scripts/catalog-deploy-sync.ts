@@ -39,7 +39,7 @@ interface StaleSubject {
   slug: string
   references: {
     selections: number
-    classes: number
+    subjectTeachers: number
     enrollments: number
     timetableSlots: number
   }
@@ -57,13 +57,13 @@ async function inventoryStale(): Promise<StaleSubject[]> {
   if (subjects.length === 0) return []
 
   const ids = subjects.map((s) => s.id)
-  const [selections, classes, enrollments, timetableSlots] = await Promise.all([
+  const [selections, subjectTeachers, enrollments, timetableSlots] = await Promise.all([
     prisma.subjectSelection.groupBy({
       by: ["catalogSubjectId"],
       where: { catalogSubjectId: { in: ids } },
       _count: true,
     }),
-    prisma.class.groupBy({
+    prisma.subjectTeacher.groupBy({
       by: ["subjectId"],
       where: { subjectId: { in: ids } },
       _count: true,
@@ -84,15 +84,15 @@ async function inventoryStale(): Promise<StaleSubject[]> {
   const ensure = (id: string) => {
     let c = counts.get(id)
     if (!c) {
-      c = { selections: 0, classes: 0, enrollments: 0, timetableSlots: 0 }
+      c = { selections: 0, subjectTeachers: 0, enrollments: 0, timetableSlots: 0 }
       counts.set(id, c)
     }
     return c
   }
   for (const row of selections)
     ensure(row.catalogSubjectId).selections = row._count
-  for (const row of classes)
-    if (row.subjectId) ensure(row.subjectId).classes = row._count
+  for (const row of subjectTeachers)
+    ensure(row.subjectId).subjectTeachers = row._count
   for (const row of enrollments)
     ensure(row.catalogSubjectId).enrollments = row._count
   for (const row of timetableSlots)
@@ -101,13 +101,13 @@ async function inventoryStale(): Promise<StaleSubject[]> {
   return subjects.map((s) => {
     const references = counts.get(s.id) ?? {
       selections: 0,
-      classes: 0,
+      subjectTeachers: 0,
       enrollments: 0,
       timetableSlots: 0,
     }
     const referenced =
       references.selections +
-        references.classes +
+        references.subjectTeachers +
         references.enrollments +
         references.timetableSlots >
       0
@@ -145,7 +145,7 @@ async function main() {
   )
   for (const s of blocked) {
     console.log(
-      `  KEEP ${s.slug}: selections=${s.references.selections} classes=${s.references.classes} enrollments=${s.references.enrollments} slots=${s.references.timetableSlots} — migrate manually before deleting`
+      `  KEEP ${s.slug}: selections=${s.references.selections} subjectTeachers=${s.references.subjectTeachers} enrollments=${s.references.enrollments} slots=${s.references.timetableSlots} — migrate manually before deleting`
     )
   }
 

@@ -67,7 +67,6 @@ describe("Exam Notification Actions", () => {
       vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_A,
-        class: { studentClasses: [] },
         subject: { name: "Math" },
       } as any)
 
@@ -114,7 +113,7 @@ describe("Exam Notification Actions", () => {
         schoolId: SCHOOL_A,
         title: "Midterm",
         subject: { name: "Science" },
-        class: { name: "Grade 10", studentClasses: [] },
+        grade: { name: "Grade 10" },
         examDate: new Date(),
         duration: 60,
         totalMarks: 100,
@@ -138,7 +137,7 @@ describe("Exam Notification Actions", () => {
         schoolId: SCHOOL_A,
         title: "Final",
         subject: { name: "English" },
-        class: { name: "Grade 11", studentClasses: [] },
+        grade: { name: "Grade 11" },
         examDate: new Date(),
       } as any)
       vi.mocked(db.notification.create).mockResolvedValue({} as any)
@@ -160,7 +159,7 @@ describe("Exam Notification Actions", () => {
         title: "Quiz 1",
         maxAttempts: 3,
         subject: { name: "Art" },
-        class: { name: "Grade 9", studentClasses: [] },
+        grade: { name: "Grade 9" },
       } as any)
       vi.mocked(db.examResult.findFirst).mockResolvedValue({
         percentage: 45,

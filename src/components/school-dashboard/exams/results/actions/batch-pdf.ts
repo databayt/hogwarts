@@ -58,8 +58,6 @@ const batchPDFSchema = z.object({
 
 const termReportCardSchema = z.object({
   termId: z.string().min(1, "Term ID is required"),
-  /** Legacy: one class's students. Prefer sectionId / gradeId. */
-  classId: z.string().optional(),
   sectionId: z.string().optional(),
   gradeId: z.string().optional(),
   studentIds: z.array(z.string()).optional(),
@@ -524,12 +522,6 @@ export async function generateBatchReportCards(
         { section: { gradeId: parsed.gradeId } },
         { sectionId: null, academicGradeId: parsed.gradeId },
       ]
-    } else if (parsed.classId) {
-      studentFilter.studentClasses = {
-        some: {
-          classId: parsed.classId,
-        },
-      }
     }
 
     // Get students

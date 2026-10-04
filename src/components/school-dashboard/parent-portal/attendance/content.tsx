@@ -57,15 +57,8 @@ export async function ParentAttendanceContent({
                   date: true,
                   status: true,
                   notes: true,
-                  // A period mark's subject comes from its timetable slot; a
-                  // legacy mark's from its class
+                  // A period mark's subject comes from its timetable slot
                   timetableId: true,
-                  class: {
-                    select: {
-                      subjectId: true,
-                      subject: { select: { name: true } },
-                    },
-                  },
                 },
               },
             },
@@ -143,10 +136,7 @@ export async function ParentAttendanceContent({
       ])
   )
   const markSubject = (a: (typeof children)[number]["attendances"][number]) =>
-    (a.timetableId ? slotSubject.get(a.timetableId) : undefined) ??
-    (a.class?.subjectId && a.class.subject
-      ? { id: a.class.subjectId, name: a.class.subject.name }
-      : null)
+    (a.timetableId ? slotSubject.get(a.timetableId) : undefined) ?? null
 
   const allTeachers = teachings.map((row) => row.teacher)
   const allLabels = [

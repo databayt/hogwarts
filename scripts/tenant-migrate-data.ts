@@ -18,7 +18,7 @@ const prisma = new PrismaClient()
 const program = new Command()
 program
   .requiredOption("-s, --school <domain>", "School domain")
-  .requiredOption("-t, --type <type>", "Data type: students|teachers|classes")
+  .requiredOption("-t, --type <type>", "Data type: students|teachers")
   .requiredOption("-f, --file <path>", "CSV or JSON file path")
   .option("--dry-run", "Preview without importing")
   .option("--validate-only", "Only validate data, don't import")
@@ -211,10 +211,6 @@ async function importData() {
 
       case "teachers":
         console.log(chalk.yellow("Teacher import not yet implemented"))
-        break
-
-      case "classes":
-        console.log(chalk.yellow("Class import not yet implemented"))
         break
 
       default:

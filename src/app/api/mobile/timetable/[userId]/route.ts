@@ -20,7 +20,7 @@ import { canAccessStudent } from "../../lib/student-access"
 /**
  * GET /api/mobile/timetable/:userId — timetable for a user
  *
- * For students: returns timetable for their section AND enrolled classes.
+ * For students: returns timetable for their section.
  * For teachers: returns their teaching schedule.
  * Query param: day (0-6, optional — defaults to all days)
  *
@@ -63,22 +63,8 @@ export async function GET(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 
-      // A slot reaches a student down EITHER axis: the section they are placed
-      // in, or a legacy per-subject Class they are enrolled in. Reading only
-      // `sectionId` returned an EMPTY week for every student whose data predates
-      // the section-first migration — the exact failure the block's "reads OR
-      // both axes" rule exists to prevent, which the web read already honours.
-      const enrollments = await db.studentClass.findMany({
-        where: { studentId: student.id, schoolId: auth.schoolId },
-        select: { classId: true },
-      })
-      const classIds = enrollments.map((e) => e.classId)
-
-      const axes: Array<Record<string, unknown>> = []
-      if (student.sectionId) axes.push({ sectionId: student.sectionId })
-      if (classIds.length > 0) axes.push({ classId: { in: classIds } })
-      if (axes.length === 0) return NextResponse.json({ data: [] })
-      where.OR = axes
+      if (!student.sectionId) return NextResponse.json({ data: [] })
+      where.sectionId = student.sectionId
     } else if (teacher) {
       // A teacher's week is their own to see; staff roles carry `view_all`.
       const isSelf = userId === auth.userId

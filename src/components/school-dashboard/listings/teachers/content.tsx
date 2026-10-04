@@ -4,9 +4,9 @@
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
-import { schoolNameFormat } from "@/lib/school-name-format"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameFormat } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -108,9 +108,10 @@ export default async function TeachersContent({
           subjectExpertise: {
             select: { id: true },
           },
-          // Get assigned classes
-          classes: {
-            select: { id: true },
+          // Sections they're assigned a subject in
+          subjectTeachers: {
+            where: { schoolId },
+            select: { sectionId: true },
           },
           // User account status
           user: {
@@ -159,7 +160,9 @@ export default async function TeachersContent({
           : null,
         departmentId: primaryDept?.id || null,
         subjectCount: t.subjectExpertise?.length || 0,
-        classCount: t.classes?.length || 0,
+        classCount: new Set(
+          (t.subjectTeachers ?? []).map((a: any) => a.sectionId)
+        ).size,
         employmentStatus: t.employmentStatus || "ACTIVE",
         employmentType: t.employmentType || "FULL_TIME",
         hasAccount: !!t.userId,

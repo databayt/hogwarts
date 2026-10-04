@@ -32,7 +32,6 @@ export async function getAssignmentForWizard(
         gradeId: true,
         sectionId: true,
         subjectId: true,
-        class: { select: { gradeId: true, subjectId: true } },
         title: true,
         description: true,
         type: true,
@@ -47,16 +46,14 @@ export async function getAssignmentForWizard(
 
     if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    // A legacy assignment opens on its class's grade and subject; a fresh
-    // draft has no scope yet.
-    const { class: legacyClass, ...row } = assignment
-    const gradeId = row.gradeId ?? legacyClass?.gradeId ?? ""
+    // A fresh draft has no scope yet.
+    const row = assignment
     return {
       success: true,
       data: {
         ...row,
-        gradeId,
-        subjectId: row.subjectId ?? legacyClass?.subjectId ?? "",
+        gradeId: row.gradeId ?? "",
+        subjectId: row.subjectId ?? "",
         totalPoints: Number(row.totalPoints),
         weight: Number(row.weight),
       },
@@ -131,7 +128,7 @@ export async function completeAssignmentWizard(
     // Validate required fields are present
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
-      select: { title: true, gradeId: true, classId: true },
+      select: { title: true, gradeId: true },
     })
 
     if (!assignment) {
@@ -142,8 +139,8 @@ export async function completeAssignmentWizard(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "title_required")
     }
 
-    // Without a grade (or a legacy class) it reaches no student.
-    if (!assignment.gradeId && !assignment.classId) {
+    // Without a grade it reaches no student.
+    if (!assignment.gradeId) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "scope_required")
     }
 

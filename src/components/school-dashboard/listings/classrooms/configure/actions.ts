@@ -88,7 +88,7 @@ export async function getGradeConfiguration(): Promise<
           name: true,
           gradeNumber: true,
           maxStudents: true,
-          _count: { select: { classes: true, sections: true } },
+          _count: { select: { sections: true } },
         },
       }),
       db.classroomType.findMany({

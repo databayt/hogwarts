@@ -627,19 +627,15 @@ export async function getActiveCompetitions(
             section: {
               select: { id: true, name: true, lang: true },
             },
-            class: {
-              select: { id: true, name: true, lang: true },
-            },
           },
           orderBy: { attendanceRate: "desc" },
         },
       },
     })
 
-    // Who an entry is: its section, or the class of an entry kept from
-    // before sections
+    // Who an entry is: its section
     const entrant = (e: (typeof competitions)[number]["entries"][number]) =>
-      e.section ?? e.class
+      e.section
 
     // Translate competition and entrant names — one batched, deduped
     // resolution across names/descriptions/entrant names (no per-row N+1).
@@ -711,16 +707,14 @@ export async function updateCompetitionStandings(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Update each entrant's stats: a section's days, or (an entry kept from
-    // before sections) its class's
+    // Update each entrant's stats: its section's days
     for (const entry of competition.entries) {
-      if (!entry.sectionId && !entry.classId) continue
+      if (!entry.sectionId) continue
       const attendances = await db.attendance.findMany({
         where: {
           schoolId,
-          ...(entry.sectionId
-            ? { sectionId: entry.sectionId, periodId: null }
-            : { classId: entry.classId }),
+          sectionId: entry.sectionId,
+          periodId: null,
           date: {
             gte: competition.startDate,
             lte: competition.endDate,

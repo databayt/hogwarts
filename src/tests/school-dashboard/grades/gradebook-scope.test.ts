@@ -13,7 +13,6 @@ import {
 vi.mock("@/lib/db", () => ({
   db: {
     student: { findFirst: vi.fn() },
-    class: { findFirst: vi.fn() },
     subjectSelection: { findFirst: vi.fn() },
     result: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   },
@@ -36,21 +35,19 @@ describe("resolveStudentSubjectContext", () => {
       academicGradeId: null,
       section: { gradeId: "g7" },
     } as never)
-    vi.mocked(db.class.findFirst).mockResolvedValue(null)
     vi.mocked(resolveActiveTerm).mockResolvedValue({
       term: { id: "term-1" },
       source: "explicit",
     } as never)
   })
 
-  it("scopes a subject the student's grade teaches, with no class", async () => {
+  it("scopes a subject the student's grade teaches", async () => {
     vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
       id: "sel-1",
     } as never)
 
     expect(await resolveStudentSubjectContext(SCHOOL, "stu-1", "math")).toEqual(
       {
-        classId: null,
         sectionId: "7a",
         academicGradeId: "g7",
         termId: "term-1",
@@ -66,15 +63,6 @@ describe("resolveStudentSubjectContext", () => {
         },
       })
     )
-  })
-
-  it("keeps a legacy class for the subject when there is one", async () => {
-    vi.mocked(db.subjectSelection.findFirst).mockResolvedValue(null)
-    vi.mocked(db.class.findFirst).mockResolvedValue({ id: "cl-1" } as never)
-
-    expect(
-      await resolveStudentSubjectContext(SCHOOL, "stu-1", "math")
-    ).toMatchObject({ classId: "cl-1", sectionId: "7a" })
   })
 
   it("refuses a subject the student doesn't study — never another subject's slot", async () => {
@@ -97,13 +85,12 @@ describe("resolveStudentSubjectContext", () => {
 describe("upsertGradebookResult", () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it("writes a class-less row with its section, grade and term", async () => {
+  it("writes a row with its section, grade and term", async () => {
     vi.mocked(db.result.findFirst).mockResolvedValue(null)
 
     await upsertGradebookResult({
       schoolId: SCHOOL,
       studentId: "stu-1",
-      classId: null,
       sectionId: "7a",
       academicGradeId: "g7",
       termId: "term-1",
@@ -118,7 +105,6 @@ describe("upsertGradebookResult", () => {
     expect(data).toMatchObject({
       schoolId: SCHOOL,
       studentId: "stu-1",
-      classId: null,
       sectionId: "7a",
       academicGradeId: "g7",
       termId: "term-1",
@@ -144,7 +130,6 @@ describe("upsertGradebookResult", () => {
 
     const data = vi.mocked(db.result.update).mock.calls[0][0].data
     expect(data).toMatchObject({ termId: "term-1" })
-    expect(data).not.toHaveProperty("classId")
     expect(data).not.toHaveProperty("sectionId")
   })
 })

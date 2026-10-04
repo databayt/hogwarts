@@ -316,7 +316,6 @@ export async function getAttendanceReport(
       include: {
         student: { select: { firstName: true, lastName: true } },
         section: { select: { name: true } },
-        class: { select: { name: true } },
       },
       orderBy: { date: "desc" },
       take: parsed.limit,
@@ -337,8 +336,7 @@ export async function getAttendanceReport(
       studentId: r.studentId,
       studentName: `${r.student.firstName} ${r.student.lastName}`,
       sectionId: r.sectionId,
-      // The section, or the class of a mark kept from before sections.
-      className: r.section?.name ?? r.class?.name ?? "",
+      className: r.section?.name ?? "",
       status: r.status,
       method: r.method,
       checkInTime: r.checkInTime?.toISOString(),
@@ -429,7 +427,6 @@ export async function getAttendanceReportCsv(input: {
     include: {
       student: { select: { firstName: true, lastName: true } },
       section: { select: { name: true } },
-      class: { select: { name: true } },
     },
   })
 
@@ -446,8 +443,8 @@ export async function getAttendanceReportCsv(input: {
         r.date.toISOString().split("T")[0],
         r.studentId,
         `${r.student.firstName} ${r.student.lastName}`,
-        r.sectionId ?? r.classId,
-        r.section?.name ?? r.class?.name ?? "",
+        r.sectionId ?? "",
+        r.section?.name ?? "",
         String(r.status),
         String(r.method),
         r.checkInTime?.toISOString() || "",

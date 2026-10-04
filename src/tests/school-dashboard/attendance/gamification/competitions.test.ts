@@ -92,7 +92,7 @@ describe("attendance competitions", () => {
       id: "comp-1",
       startDate: new Date("2026-10-01"),
       endDate: new Date("2026-10-31"),
-      entries: [{ id: "e1", sectionId: "7a", classId: null }],
+      entries: [{ id: "e1", sectionId: "7a" }],
     } as never)
     vi.mocked(db.attendance.findMany).mockResolvedValue([
       { status: "PRESENT" },
@@ -116,7 +116,7 @@ describe("attendance competitions", () => {
     })
   })
 
-  it("names an entry by its section, or a legacy entry by its class", async () => {
+  it("names an entry by its section", async () => {
     vi.mocked(db.attendanceCompetition.findMany).mockResolvedValue([
       {
         id: "comp-1",
@@ -131,21 +131,10 @@ describe("attendance competitions", () => {
             id: "e1",
             sectionId: "7a",
             section: { id: "7a", name: "7-A", lang: "ar" },
-            class: null,
             attendanceRate: 90,
             totalStudents: 20,
             presentDays: 18,
             absentDays: 2,
-          },
-          {
-            id: "e2",
-            sectionId: null,
-            section: null,
-            class: { id: "c1", name: "Arabic 7", lang: "ar" },
-            attendanceRate: 80,
-            totalStudents: 0,
-            presentDays: 0,
-            absentDays: 0,
           },
         ],
       },
@@ -157,6 +146,6 @@ describe("attendance competitions", () => {
     const entries = (
       result as { data: Array<{ entries: Array<{ sectionName: string }> }> }
     ).data[0].entries
-    expect(entries.map((e) => e.sectionName)).toEqual(["7-A", "Arabic 7"])
+    expect(entries.map((e) => e.sectionName)).toEqual(["7-A"])
   })
 })

@@ -43,6 +43,5 @@ export const getAssignmentsSchema = z.object({
   perPage: z.number().int().positive().max(200).default(20),
   title: z.string().optional().default(""),
   type: z.string().optional().default(""),
-  classId: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
 })

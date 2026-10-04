@@ -159,7 +159,7 @@ describe("studentWhere", () => {
     expect(where!.studentGuardians).toBeDefined()
   })
 
-  it("TEACHER narrows to the students of their sections (or legacy classes)", () => {
+  it("TEACHER narrows to the students of their sections", () => {
     const where = studentWhere(ctx("TEACHER"))
     expect(where).toBeTruthy()
     expect(where!.schoolId).toBe("school-A")

@@ -131,8 +131,7 @@ export function studentWhere(c: PredicateCtx): Prisma.StudentWhereInput | null {
 
 /**
  * Students a teacher teaches: their sections — homeroom, a subject assigned
- * to them there, or a timetable period with them — or a legacy class they
- * lead. (`base` carries the search as its own OR, so callers AND this in.)
+ * to them there, or a timetable period with them. (`base` carries the search as its own OR, so callers AND this in.)
  */
 function teachesStudent(userId: string): Prisma.StudentWhereInput {
   const mine = { userId }
@@ -141,7 +140,6 @@ function teachesStudent(userId: string): Prisma.StudentWhereInput {
       { section: { homeroomTeacher: mine } },
       { section: { subjectTeachers: { some: { teacher: mine } } } },
       { section: { timetables: { some: { teacher: mine } } } },
-      { studentClasses: { some: { class: { teacher: mine } } } },
     ],
   }
 }

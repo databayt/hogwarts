@@ -60,7 +60,7 @@ model Attendance {
   id           String           @id @default(cuid())
   schoolId     String
   studentId    String
-  classId      String? // Legacy: subject-class reference (nullable for section-based records)
+
   sectionId    String? // Section (Grade 1-A) — primary reference for new records
   date         DateTime         @db.Date
   status       AttendanceStatus
@@ -82,7 +82,7 @@ model Attendance {
 
   school  School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class?            @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   section Section?          @relation(fields: [sectionId], references: [id])
   excuse  AttendanceExcuse? // Optional excuse submission
 
@@ -92,11 +92,11 @@ model Attendance {
   // Section-based: one record per student per section per date per period
   @@unique([schoolId, studentId, sectionId, date, periodId])
   // Legacy class-based uniqueness (kept for existing data)
-  @@unique([schoolId, studentId, classId, date, periodId])
+
   @@index([date])
   @@index([status])
   @@index([studentId])
-  @@index([classId])
+
   @@index([sectionId])
   @@index([method])
   @@index([periodId])
@@ -104,7 +104,7 @@ model Attendance {
   @@index([schoolId, sectionId, date])
   // Hot path for daily class attendance: markAttendance, getAttendanceList,
   // getTodaysDashboard and bulk upload all filter by (schoolId, classId, date).
-  @@index([schoolId, classId, date])
+
   // Hot path for per-student analytics (getBulkAttendanceStats, percentages).
   @@index([schoolId, studentId, date])
   @@index([deletedAt])
@@ -145,7 +145,7 @@ model QRCodeSession {
   id            String    @id @default(cuid())
   schoolId      String
   // Legacy: the class it was generated for. New sessions name a section.
-  classId       String?
+
   sectionId     String?
   code          String    @unique
   payload       Json // Encrypted payload data
@@ -161,10 +161,9 @@ model QRCodeSession {
   invalidatedBy String?
 
   school  School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class   Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   section Section? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
-  @@index([classId])
   @@index([schoolId, sectionId])
   @@index([expiresAt])
   @@index([isActive])
@@ -334,7 +333,7 @@ model HallPass {
   schoolId         String
   studentId        String
   // Legacy: the class the student left. New passes name the section.
-  classId          String?
+
   sectionId        String?
   destination      HallPassDestination
   destinationNote  String? // Additional details for "OTHER" destination
@@ -354,7 +353,7 @@ model HallPass {
 
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   section Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
@@ -362,7 +361,7 @@ model HallPass {
 
   @@index([schoolId])
   @@index([studentId])
-  @@index([classId])
+
   @@index([schoolId, sectionId])
   @@index([status])
   @@index([issuedAt])
@@ -606,7 +605,7 @@ model ClassCompetitionEntry {
   schoolId      String
   competitionId String
   // Legacy: a class competing. New entries are sections.
-  classId       String?
+
   sectionId     String?
 
   // Tracked metrics
@@ -621,17 +620,16 @@ model ClassCompetitionEntry {
 
   school      School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   competition AttendanceCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  class       Class?                @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   section     Section?              @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([competitionId, classId])
   @@unique([competitionId, sectionId])
   @@index([schoolId])
   @@index([competitionId])
-  @@index([classId])
+
   @@index([schoolId, sectionId])
   @@index([attendanceRate])
   @@map("class_competition_entries")
@@ -751,8 +749,7 @@ model AttendanceSession {
   school        School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentId     String
   student       Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId       String?
-  class         Class?            @relation(fields: [classId], references: [id], onDelete: SetNull)
+
   date          DateTime          @db.Date
   checkIn       DateTime
   checkOut      DateTime?
@@ -770,7 +767,7 @@ model AttendanceSession {
 
   @@index([schoolId])
   @@index([studentId, date])
-  @@index([classId])
+
   @@index([deviceId])
   @@index([checkIn])
   @@index([method])

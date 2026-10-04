@@ -15,7 +15,6 @@ export const resultsSearchParams = createSearchParamsCache({
   // column filters (ids must match column ids)
   studentId: parseAsString.withDefault(""),
   assignmentId: parseAsString.withDefault(""),
-  classId: parseAsString.withDefault(""),
   grade: parseAsString.withDefault(""),
   sort: getSortingStateParser().withDefault([]),
 })

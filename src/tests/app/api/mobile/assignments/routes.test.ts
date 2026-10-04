@@ -48,7 +48,6 @@ vi.mock("@/lib/teaching-scope", () => ({
       studentId: "stu-1",
       sectionId: "sec-10a",
       gradeId: "g10",
-      classIds: ["class-1"],
     },
   ]),
 }))
@@ -96,7 +95,6 @@ const ctx = <T extends object>(p: T) => ({ params: Promise.resolve(p) })
 
 const assignmentRow = (extra: Record<string, unknown> = {}) => ({
   id: "a1",
-  classId: "class-1",
   title: "Essay",
   description: "Write",
   instructions: null,
@@ -107,12 +105,12 @@ const assignmentRow = (extra: Record<string, unknown> = {}) => ({
   dueDate: new Date("2030-01-01T00:00:00Z"),
   publishDate: null,
   createdAt: new Date("2026-09-01T00:00:00Z"),
-  class: {
-    id: "class-1",
-    name: "10A",
-    teacher: { id: "t1", firstName: "T", lastName: "One" },
-    subject: { id: "sub", name: "Arabic" },
-  },
+  gradeId: "g10",
+  sectionId: "sec-10a",
+  subjectId: "sub",
+  section: { id: "sec-10a", name: "10A" },
+  grade: { id: "g10", name: "Grade 10" },
+  subject: { id: "sub", name: "Arabic" },
   _count: { submissions: 3 },
   ...extra,
 })
@@ -143,7 +141,7 @@ describe("GET /api/mobile/assignments", () => {
     expect((await GET(req(""))).status).toBe(401)
   })
 
-  it("student: own class assignments with submission status, paginated", async () => {
+  it("student: own section's assignments with submission status, paginated", async () => {
     await authAs("STUDENT")
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
     h.getAssignmentsForStudent.mockResolvedValue([
@@ -156,7 +154,6 @@ describe("GET /api/mobile/assignments", () => {
         status: "PUBLISHED",
         totalPoints: 20,
         dueDate: new Date("2030-01-01T00:00:00Z"),
-        classId: "class-1",
         className: "10A",
         subjectName: "Arabic",
         submission,
@@ -211,7 +208,10 @@ describe("GET /api/mobile/assignments", () => {
     })
     expect(body.data[0]).toMatchObject({
       id: "a1",
-      teacher_name: "T One",
+      class_id: null,
+      class_name: "10A",
+      subject_name: "Arabic",
+      teacher_name: null,
       submissions_count: 3,
     })
   })
@@ -275,7 +275,7 @@ describe("GET /api/mobile/assignments/:id", () => {
     )
     expect((await GET(req("/a1"), ctx({ id: "a1" }))).status).toBe(404)
 
-    // Found, but not set for the student's section, grade or classes.
+    // Found, but not set for the student's section or grade.
     vi.mocked(db.schoolAssignment.findFirst)
       .mockResolvedValueOnce(assignmentRow() as never)
       .mockResolvedValueOnce(null)

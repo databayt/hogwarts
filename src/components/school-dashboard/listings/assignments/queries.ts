@@ -23,7 +23,6 @@ import { getTeacherPairs } from "@/lib/teaching-scope"
 
 export type AssignmentListFilters = {
   search?: string
-  classId?: string
   type?:
     | "HOMEWORK"
     | "QUIZ"
@@ -38,9 +37,9 @@ export type AssignmentListFilters = {
   dueDateFrom?: Date
   dueDateTo?: Date
   /**
-   * Only the assignments this Teacher (Teacher.id) teaches: a legacy class
-   * they lead or co-teach, plus — with the fields below — what they set and
-   * what a subject they're assigned covers (see `teacherAssignmentsWhere`).
+   * Only the assignments this Teacher (Teacher.id) teaches: with the fields
+   * below, what they set and what a subject they're assigned covers (see
+   * `teacherAssignmentsWhere`).
    */
   teacherId?: string
   teacherUserId?: string
@@ -81,26 +80,7 @@ export const assignmentListSelect = {
   dueDate: true,
   publishDate: true,
   createdAt: true,
-  class: {
-    select: {
-      id: true,
-      name: true,
-      teacher: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      subject: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  },
-  // Who it's for (assignments set since classes were retired)
+  // Who it's for
   gradeId: true,
   sectionId: true,
   subjectId: true,
@@ -119,7 +99,9 @@ export const assignmentListSelect = {
 export const assignmentDetailSelect = {
   id: true,
   schoolId: true,
-  classId: true,
+  gradeId: true,
+  sectionId: true,
+  subjectId: true,
   title: true,
   description: true,
   type: true,
@@ -131,26 +113,7 @@ export const assignmentDetailSelect = {
   instructions: true,
   createdAt: true,
   updatedAt: true,
-  class: {
-    select: {
-      id: true,
-      name: true,
-      teacher: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          emailAddress: true,
-        },
-      },
-      subject: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  },
+  subject: { select: { id: true, name: true } },
   submissions: {
     take: 50,
     include: {
@@ -186,7 +149,7 @@ export function buildAssignmentWhere(
     wizardStep: null,
   }
 
-  // Search by title, description, or class name
+  // Search by title or description
   if (filters.search) {
     where.OR = [
       {
@@ -201,20 +164,7 @@ export function buildAssignmentWhere(
           mode: Prisma.QueryMode.insensitive,
         },
       },
-      {
-        class: {
-          name: {
-            contains: filters.search,
-            mode: Prisma.QueryMode.insensitive,
-          },
-        },
-      },
     ]
-  }
-
-  // Class filter
-  if (filters.classId) {
-    where.classId = filters.classId
   }
 
   // Teacher filter — see teacherAssignmentsWhere. ANDed so it can't widen
@@ -253,16 +203,8 @@ export function buildAssignmentWhere(
   return where
 }
 
-/** A class the teacher leads or is attached to as a co-teacher/assistant. */
-export function teacherClassWhere(teacherId: string): Prisma.ClassWhereInput {
-  return {
-    OR: [{ teacherId }, { classTeachers: { some: { teacherId } } }],
-  }
-}
-
 /**
- * Assignments a teacher teaches: a legacy class they lead or co-teach, the
- * assignments they set, and assignments set for a section — or a whole grade —
+ * Assignments a teacher teaches: the assignments they set, and assignments set for a section — or a whole grade —
  * where they teach the assignment's subject (`pairs` from `getTeacherPairs`).
  */
 export function teacherAssignmentsWhere(teacher: {
@@ -276,9 +218,10 @@ export function teacherAssignmentsWhere(teacher: {
 }): Prisma.SchoolAssignmentWhereInput {
   return {
     OR: [
-      { class: teacherClassWhere(teacher.teacherId) },
       ...(teacher.userId ? [{ createdById: teacher.userId }] : []),
       ...pairAudienceWhere(teacher.pairs),
+      // No user id and no pairs: teaches nothing
+      { id: { in: [] } },
     ],
   }
 }
@@ -365,20 +308,6 @@ export async function getAssignmentDetail(schoolId: string, id: string) {
   return db.schoolAssignment.findFirst({
     where: { id, schoolId },
     select: assignmentDetailSelect,
-  })
-}
-
-/**
- * Get assignments for a specific class
- */
-export async function getClassAssignments(schoolId: string, classId: string) {
-  return db.schoolAssignment.findMany({
-    where: {
-      schoolId,
-      classId,
-    },
-    orderBy: [{ dueDate: "asc" }],
-    select: assignmentListSelect,
   })
 }
 

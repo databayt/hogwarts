@@ -133,7 +133,6 @@ type AnnouncementSelectResult = {
   lang: string
   scope: string
   priority: string
-  classId: string | null
   gradeId: string | null
   sectionId: string | null
   role: string | null
@@ -367,7 +366,6 @@ export async function updateAnnouncement(
       data.scope = scope
       data.gradeId = audience.gradeId
       data.sectionId = audience.sectionId
-      data.classId = null
     }
     if (typeof rest.role !== "undefined") data.role = rest.role || null
     if (typeof rest.published !== "undefined") {
@@ -537,7 +535,6 @@ export async function toggleAnnouncementPublish(input: {
         createdBy: true,
         schoolId: true,
         scope: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         role: true,
@@ -583,7 +580,6 @@ export async function toggleAnnouncementPublish(input: {
         // reader. A hardcoded English placeholder never would.
         title: existing.title!,
         scope: existing.scope as AnnouncementScopeValue,
-        classId: existing.classId ?? undefined,
         gradeId: existing.gradeId ?? undefined,
         sectionId: existing.sectionId ?? undefined,
         role: existing.role ?? undefined,
@@ -668,7 +664,6 @@ export async function getAnnouncement(input: {
         lang: true,
         scope: true,
         priority: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         role: true,
@@ -1126,7 +1121,6 @@ async function dispatchAnnouncementNotifications(
   params: {
     title: string
     scope: AnnouncementScopeValue
-    classId?: string
     gradeId?: string
     sectionId?: string
     role?: string
@@ -1145,8 +1139,8 @@ async function dispatchAnnouncementNotifications(
       announcementId,
       url: `/announcements/${announcementId}`,
     },
-    targetScope: params.scope,
-    targetClassId: params.classId,
+    // A legacy class-scoped announcement has no audience left to resolve
+    targetScope: params.scope === "class" ? undefined : params.scope,
     targetGradeId: params.gradeId,
     targetSectionId: params.sectionId,
     targetRole: params.role,

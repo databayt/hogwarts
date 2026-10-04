@@ -4,12 +4,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import {
   buildLiveClassWhere,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
-
-import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
@@ -66,9 +65,7 @@ export async function GET(request: NextRequest) {
 
     const where = buildLiveClassWhere(
       schoolId,
-      scope === "all"
-        ? {}
-        : { sectionIds: scope.sectionIds, classIds: scope.classIds }
+      scope === "all" ? {} : { sectionIds: scope.sectionIds }
     )
 
     // The three windows the landing page reads as: what is on now or later
@@ -106,7 +103,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("[mobile/live/sessions] GET failed:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
 }
 
@@ -129,7 +129,11 @@ const SESSION_SELECT = {
   visibility: true,
   subject: { select: { id: true, name: true, thumbnail: true, color: true } },
   section: {
-    select: { id: true, name: true, grade: { select: { id: true, name: true } } },
+    select: {
+      id: true,
+      name: true,
+      grade: { select: { id: true, name: true } },
+    },
   },
   teacher: {
     select: {
@@ -160,8 +164,17 @@ type SessionRow = {
   provider: string
   meetingUrl: string | null
   visibility: string
-  subject: { id: string; name: string; thumbnail: string | null; color: string | null } | null
-  section: { id: string; name: string; grade: { id: string; name: string } | null } | null
+  subject: {
+    id: string
+    name: string
+    thumbnail: string | null
+    color: string | null
+  } | null
+  section: {
+    id: string
+    name: string
+    grade: { id: string; name: string } | null
+  } | null
   teacher: {
     id: string
     firstName: string

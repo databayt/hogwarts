@@ -10,15 +10,12 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 /**
  * How a record names where it was taken: a period mark as "period -
- * section", a day's mark as the section, and a mark kept from before
- * sections as "subject - class".
+ * section", a day's mark as the section.
  */
 function recordLabel(r: {
   periodName: string | null
   section: { name: string } | null
-  class: { name: string; subject: { name: string } | null } | null
 }): string | null {
-  if (r.class) return `${r.class.subject?.name ?? ""} - ${r.class.name}`
   if (r.periodName) {
     return r.section ? `${r.periodName} - ${r.section.name}` : r.periodName
   }
@@ -94,12 +91,6 @@ export async function getStudentOwnAttendance(): Promise<
         notes: true,
         periodName: true,
         section: { select: { name: true } },
-        class: {
-          select: {
-            name: true,
-            subject: { select: { name: true } },
-          },
-        },
       },
     })
 
@@ -198,12 +189,6 @@ export async function getGuardianChildrenAttendance(): Promise<
                     notes: true,
                     periodName: true,
                     section: { select: { name: true } },
-                    class: {
-                      select: {
-                        name: true,
-                        subject: { select: { name: true } },
-                      },
-                    },
                   },
                 },
               },

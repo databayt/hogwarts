@@ -18,11 +18,8 @@
  * below reads the whole cohort in a fixed handful of queries and writes in
  * chunks, so cost scales with rows, not with students × classes.
  *
- * Scores are grouped by (student, SUBJECT). Legacy rows reach a subject
- * through their class; rows written since classes were retired carry the term
- * and the subject themselves (exams set for a grade or section). Grouping by
- * class used to emit one row per class, so a student enrolled in two classes
- * of one subject lost one of them to the (reportCard, subject) unique key.
+ * Scores are grouped by (student, SUBJECT). Rows carry the term and the
+ * subject themselves (exams set for a grade or section).
  *
  * NOTE: no `revalidatePath` here. The core runs outside a request scope (cron,
  * seed) where it would throw; the action wrapper revalidates.
@@ -92,8 +89,6 @@ export interface GenerateReportCardsInput {
   termId: string
   gradeId?: string
   sectionId?: string
-  /** Legacy: only the students of one class. */
-  classId?: string
 }
 
 export interface ComputedReportCard {
@@ -132,23 +127,8 @@ export async function computeReportCards(
     : DEFAULT_BOUNDARIES
 
   // ---- Scope --------------------------------------------------------
-  // Legacy classes carry the term; newer rows carry it themselves. A school
-  // with no classes simply has an empty legacy list.
-  const classes = await db.class.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      ...(input.classId ? { id: input.classId } : {}),
-    },
-    select: { id: true, subjectId: true, credits: true },
-  })
-  const classIds = classes.map((c) => c.id)
-  const classById = new Map(classes.map((c) => [c.id, c]))
-
   const studentWhere: Prisma.StudentWhereInput = { schoolId }
-  if (input.classId) {
-    studentWhere.studentClasses = { some: { classId: input.classId } }
-  } else if (input.sectionId) {
+  if (input.sectionId) {
     studentWhere.sectionId = input.sectionId
   } else if (input.gradeId) {
     studentWhere.OR = [
@@ -169,23 +149,12 @@ export async function computeReportCards(
   const studentIds = students.map((s) => s.id)
   // Only narrow by student when a filter is actually active — an unfiltered
   // run would otherwise ship every id in the school as an `IN` list.
-  const filtered = !!(input.classId || input.sectionId || input.gradeId)
+  const filtered = !!(input.sectionId || input.gradeId)
   const studentScope = filtered ? { studentId: { in: studentIds } } : {}
 
-  // A score counts for the term when its legacy class is in the term, or
-  // when the row (or its exam) names the term.
-  const inTermResult: Prisma.ResultWhereInput = {
-    OR: [
-      ...(classIds.length > 0 ? [{ classId: { in: classIds } }] : []),
-      { termId: input.termId },
-    ],
-  }
-  const inTermExam: Prisma.SchoolExamWhereInput = {
-    OR: [
-      ...(classIds.length > 0 ? [{ classId: { in: classIds } }] : []),
-      { termId: input.termId },
-    ],
-  }
+  // A score counts for the term when the row (or its exam) names the term.
+  const inTermResult: Prisma.ResultWhereInput = { termId: input.termId }
+  const inTermExam: Prisma.SchoolExamWhereInput = { termId: input.termId }
 
   // ---- Reads (one query per source, whole cohort) --------------------
   const [examResults, gradebookResults, attendance, academic] =
@@ -197,14 +166,13 @@ export async function computeReportCards(
           examId: true,
           marksObtained: true,
           totalMarks: true,
-          exam: { select: { classId: true, subjectId: true } },
+          exam: { select: { subjectId: true } },
         },
       }),
       db.result.findMany({
         where: { schoolId, ...inTermResult, ...studentScope },
         select: {
           studentId: true,
-          classId: true,
           subjectId: true,
           examId: true,
           score: true,
@@ -232,28 +200,6 @@ export async function computeReportCards(
   )
   const inCohort = new Set(studentIds)
 
-  /**
-   * A legacy row was earned in a class, so the class decides its subject —
-   * seeded rows carry a `subjectId` that disagrees with their class's.
-   * Rows without a class carry the subject themselves.
-   */
-  const subjectOf = (row: {
-    subjectId: string | null
-    classId: string | null
-  }): string | null =>
-    (row.classId ? classById.get(row.classId)?.subjectId : undefined) ??
-    row.subjectId
-
-  // Credits only exist on legacy classes; everything else weighs 1.
-  const creditsBySubject = new Map<string, number>()
-  for (const c of classes) {
-    if (c.subjectId && c.credits) {
-      creditsBySubject.set(
-        c.subjectId,
-        Math.max(creditsBySubject.get(c.subjectId) ?? 0, Number(c.credits))
-      )
-    }
-  }
 
   const key = (studentId: string, subjectId: string) =>
     `${studentId}:${subjectId}`
@@ -281,7 +227,7 @@ export async function computeReportCards(
 
   for (const r of gradebookResults) {
     if (!inCohort.has(r.studentId)) continue
-    const subjectId = subjectOf(r)
+    const subjectId = r.subjectId
     if (!subjectId) continue
     add(r.studentId, subjectId, {
       score: Number(r.score),
@@ -297,7 +243,7 @@ export async function computeReportCards(
 
   for (const er of examResults) {
     if (!inCohort.has(er.studentId) || !er.exam) continue
-    const subjectId = subjectOf(er.exam)
+    const subjectId = er.exam.subjectId
     if (!subjectId) continue
     if (coveredExams.get(key(er.studentId, subjectId))?.has(er.examId)) {
       continue
@@ -347,7 +293,9 @@ export async function computeReportCards(
         maxScore: totalMax,
         percentage: Math.round(pct * 100) / 100,
         grade,
-        credits: creditsBySubject.get(subjectId) ?? 1,
+        // Credits lived on classes; with classes retired every subject
+        // weighs the same.
+        credits: 1,
       })
     }
 

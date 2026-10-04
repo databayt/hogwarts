@@ -26,6 +26,10 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -67,7 +71,7 @@ export default async function Page({ params }: Props) {
   const exam = await db.schoolExam.findUnique({
     where: { id, schoolId },
     include: {
-      class: { select: { name: true } },
+      ...examAudienceInclude,
       subject: { select: { name: true } },
       _count: {
         select: {
@@ -256,7 +260,7 @@ export default async function Page({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">{exam.class?.name}</p>
+              <p className="text-lg font-semibold">{examAudienceLabel(exam)}</p>
             </CardContent>
           </Card>
 

@@ -33,9 +33,6 @@ vi.mock("@/lib/db", () => ({
     classroomType: {
       findMany: vi.fn(),
     },
-    class: {
-      count: vi.fn(),
-    },
     timetable: {
       count: vi.fn(),
     },
@@ -88,7 +85,7 @@ describe("Classroom Actions", () => {
           capacity: 30,
           typeId: "type-1",
           classroomType: { id: "type-1", name: "Laboratory" },
-          _count: { classes: 2, timetables: 5 },
+          _count: { timetables: 5 },
           createdAt: new Date("2025-01-01"),
         },
         {
@@ -97,7 +94,7 @@ describe("Classroom Actions", () => {
           capacity: 100,
           typeId: "type-2",
           classroomType: { id: "type-2", name: "Lecture Hall" },
-          _count: { classes: 0, timetables: 1 },
+          _count: { timetables: 1 },
           createdAt: new Date("2025-02-01"),
         },
       ]
@@ -137,7 +134,7 @@ describe("Classroom Actions", () => {
         capacity: 30,
         typeId: "type-1",
         classroomType: { id: "type-1", name: "Laboratory" },
-        _count: { classes: 3, timetables: 7 },
+        _count: { timetables: 7 },
         createdAt: new Date("2025-06-15"),
       }
 
@@ -152,7 +149,6 @@ describe("Classroom Actions", () => {
       expect(item.roomName).toBe("Lab A")
       expect(item.capacity).toBe(30)
       expect(item.typeName).toBe("Laboratory")
-      expect(item.classCount).toBe(3)
       expect(item.timetableCount).toBe(7)
       expect(item.createdAt).toBe(new Date("2025-06-15").toISOString())
     })
@@ -420,7 +416,6 @@ describe("Classroom Actions", () => {
 
   describe("deleteClassroom", () => {
     it("deletes classroom when no references exist", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(0)
       vi.mocked(db.timetable.count).mockResolvedValue(0)
       vi.mocked(db.roomConstraint.count).mockResolvedValue(0)
       vi.mocked(db.classroom.deleteMany).mockResolvedValue({ count: 1 })
@@ -430,9 +425,6 @@ describe("Classroom Actions", () => {
       expect(result.success).toBe(true)
 
       // Verify all reference checks use schoolId
-      expect(vi.mocked(db.class.count)).toHaveBeenCalledWith({
-        where: { classroomId: "room-1", schoolId: mockSchoolId },
-      })
       expect(vi.mocked(db.timetable.count)).toHaveBeenCalledWith({
         where: { classroomId: "room-1", schoolId: mockSchoolId },
       })
@@ -446,22 +438,7 @@ describe("Classroom Actions", () => {
       })
     })
 
-    it("blocks delete when classes reference the room", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(3)
-
-      const result = await deleteClassroom({ id: "room-1" })
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("HAS_DEPENDENCIES")
-      // Structured details so the client can render a translated message.
-      expect((result as any).details).toBe(
-        JSON.stringify({ kind: "classes", count: 3 })
-      )
-      expect(vi.mocked(db.classroom.deleteMany)).not.toHaveBeenCalled()
-    })
-
     it("blocks delete when timetable slots reference the room", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(0)
       vi.mocked(db.timetable.count).mockResolvedValue(5)
 
       const result = await deleteClassroom({ id: "room-1" })
@@ -475,7 +452,6 @@ describe("Classroom Actions", () => {
     })
 
     it("blocks delete when room constraints reference the room", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(0)
       vi.mocked(db.timetable.count).mockResolvedValue(0)
       vi.mocked(db.roomConstraint.count).mockResolvedValue(2)
 

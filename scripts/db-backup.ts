@@ -54,7 +54,6 @@ async function backupSchool(schoolId: string, schoolDomain: string) {
       where: { schoolId },
       include: {
         studentYearLevels: true,
-        studentClasses: true,
       },
     })
 
@@ -64,15 +63,6 @@ async function backupSchool(schoolId: string, schoolDomain: string) {
       where: { schoolId },
       include: {
         teacherDepartments: true,
-      },
-    })
-
-    // Backup classes
-    spinner.text = "Backing up classes..."
-    backup.data.classes = await prisma.class.findMany({
-      where: { schoolId },
-      include: {
-        studentClasses: true,
       },
     })
 
@@ -130,7 +120,6 @@ async function backupSchool(schoolId: string, schoolDomain: string) {
     const stats = {
       students: backup.data.students.length,
       teachers: backup.data.teachers.length,
-      classes: backup.data.classes.length,
       attendance: backup.data.attendance.length,
     }
 

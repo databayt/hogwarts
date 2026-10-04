@@ -3,12 +3,11 @@
 
 /**
  * Who a piece of work is set for — an exam, an assignment: a grade, one of its
- * sections or the whole grade (`sectionId` null), or — for work made before
- * classes were retired — a class. Every feature that sets work for students
+ * sections or the whole grade (`sectionId` null). Every feature that sets work for students
  * answers "who gets it" here, so the answer is the same everywhere.
  *
  * Pure (no database), and the conditions are plain objects that fit any model
- * carrying `classId` / `gradeId` / `sectionId` / `subjectId`.
+ * carrying `gradeId` / `sectionId` / `subjectId`.
  */
 
 import type { Prisma } from "@prisma/client"
@@ -30,15 +29,14 @@ export function offeredToStream(
 }
 
 export interface Audience {
-  classId: string | null
   gradeId: string | null
   sectionId: string | null
 }
 
 /**
  * Students the work is for. A section's students; a whole grade's students,
- * including those placed in the grade with no section yet; a legacy class's
- * enrollees. Work with no audience reaches nobody.
+ * including those placed in the grade with no section yet. Work with no
+ * audience reaches nobody.
  */
 export function audienceRosterWhere(
   schoolId: string,
@@ -54,12 +52,6 @@ export function audienceRosterWhere(
       ],
     }
   }
-  if (audience.classId) {
-    return {
-      schoolId,
-      studentClasses: { some: { schoolId, classId: audience.classId } },
-    }
-  }
   return { schoolId, id: { in: [] } }
 }
 
@@ -67,33 +59,27 @@ export function audienceRosterWhere(
 export interface StudentAudienceScope {
   sectionId: string | null
   gradeId: string | null
-  /** Legacy class enrollments. */
-  classIds: readonly string[]
 }
 
 type AudienceCondition =
-  | { classId: { in: string[] } }
   | { sectionId: { in: string[] } }
   | { sectionId: null; gradeId: { in: string[] } }
 
 /**
  * Work set for these students — one student, or a guardian's children: their
- * legacy classes, their sections, or their whole grades.
+ * sections, or their whole grades.
  */
 export function studentAudienceWhere(
   scopes: StudentAudienceScope | readonly StudentAudienceScope[]
 ): { OR: AudienceCondition[] } | { id: { in: string[] } } {
   const list = Array.isArray(scopes) ? scopes : [scopes as StudentAudienceScope]
-  const classIds = new Set<string>()
   const sectionIds = new Set<string>()
   const gradeIds = new Set<string>()
   for (const s of list) {
-    for (const id of s.classIds) classIds.add(id)
     if (s.sectionId) sectionIds.add(s.sectionId)
     if (s.gradeId) gradeIds.add(s.gradeId)
   }
   const or: AudienceCondition[] = []
-  if (classIds.size > 0) or.push({ classId: { in: [...classIds] } })
   if (sectionIds.size > 0) or.push({ sectionId: { in: [...sectionIds] } })
   if (gradeIds.size > 0) {
     or.push({ sectionId: null, gradeId: { in: [...gradeIds] } })
@@ -138,12 +124,11 @@ export function pairAudienceWhere(
 
 /**
  * The audience as people say it: the section ("الصف السابع - أ"), the whole
- * grade ("الصف السابع"), or a legacy class's name. Empty when unknown.
+ * grade ("الصف السابع"). Empty when unknown.
  */
 export function audienceLabel(work: {
-  class?: { name: string } | null
   section?: { name: string } | null
   grade?: { name: string } | null
 }): string {
-  return work.section?.name ?? work.grade?.name ?? work.class?.name ?? ""
+  return work.section?.name ?? work.grade?.name ?? ""
 }

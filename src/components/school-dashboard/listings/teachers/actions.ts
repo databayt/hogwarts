@@ -452,23 +452,11 @@ export async function deleteTeacher(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Legacy classes still block deletion (classes are being retired).
-    const classCount = await db.class.count({
-      where: { teacherId: id, schoolId },
-    })
-    if (classCount > 0) {
-      return actionError(
-        ACTION_ERRORS.HAS_DEPENDENCIES,
-        `classes:${classCount}`
-      )
-    }
-
     // Timetable periods no longer block deletion: they go back to "waiting
     // for a teacher" (and the teacher's assignments go) in the same
     // transaction — the timetable's teacher FK is RESTRICT.
     await db.$transaction(async (tx) => {
       await releaseTeacher({ schoolId, teacherId: id, allTerms: true }, tx)
-      await tx.classTeacher.deleteMany({ where: { teacherId: id, schoolId } })
       await tx.teacher.deleteMany({ where: { id, schoolId } })
     })
 
@@ -596,13 +584,6 @@ export async function getTeacher(input: {
                 lang: true,
               },
             },
-          },
-        },
-        classes: {
-          select: {
-            id: true,
-            className: true,
-            lang: true,
           },
         },
         user: {
@@ -1201,25 +1182,11 @@ export async function bulkDeleteTeachers(input: {
     })
     const validIds = existing.map((t: any) => t.id)
 
-    // Legacy classes still block deletion (classes are being retired);
-    // timetable periods are released to "waiting" instead.
-    const classCount = await db.class.count({
-      where: { teacherId: { in: validIds }, schoolId },
-    })
-    if (classCount > 0) {
-      return actionError(
-        ACTION_ERRORS.HAS_DEPENDENCIES,
-        `classes:${classCount}`
-      )
-    }
-
+    // Timetable periods are released to "waiting" instead of blocking.
     const result = await db.$transaction(async (tx) => {
       for (const teacherId of validIds as string[]) {
         await releaseTeacher({ schoolId, teacherId, allTerms: true }, tx)
       }
-      await tx.classTeacher.deleteMany({
-        where: { teacherId: { in: validIds }, schoolId },
-      })
       return tx.teacher.deleteMany({
         where: { id: { in: validIds }, schoolId },
       })

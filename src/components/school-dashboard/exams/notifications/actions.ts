@@ -53,7 +53,7 @@ export async function sendExamNotification(
 
   const exam = await db.schoolExam.findFirst({
     where: { id: data.examId, schoolId },
-    select: { id: true, classId: true, gradeId: true, sectionId: true },
+    select: { id: true, gradeId: true, sectionId: true },
   })
 
   if (!exam) {
@@ -365,7 +365,7 @@ export async function notifyAllResultsPublished(examId: string) {
 async function getDefaultRecipients(
   schoolId: string,
   type: ExamNotificationType,
-  exam: Pick<ExamAudience, "classId" | "gradeId" | "sectionId">
+  exam: Pick<ExamAudience, "gradeId" | "sectionId">
 ): Promise<{ userId: string; type: RecipientType }[]> {
   const withParents = [
     "EXAM_SCHEDULED",

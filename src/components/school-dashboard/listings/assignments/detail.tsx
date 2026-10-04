@@ -32,7 +32,6 @@ interface AssignmentDetailResult {
   schoolId: string
   title: string
   description: string | null
-  classId: string
   type: string
   totalPoints: number
   weight: number

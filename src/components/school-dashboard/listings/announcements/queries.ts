@@ -175,15 +175,14 @@ export function isAudienceOnlyRole(role: UserRole | null | undefined): boolean {
 
 /**
  * Where the viewer's students sit — a student's own, a guardian's children:
- * their sections, their grades (a section's, or the grade of a student not
- * yet in one) and any legacy class enrollments. Grade, section and legacy
- * class announcements are matched against these.
+ * their sections and their grades (a section's, or the grade of a student
+ * not yet in one). Grade and section announcements are matched against these.
  */
 export async function viewerAudienceScope(
   schoolId: string,
   userId: string,
   role: UserRole
-): Promise<{ sectionIds: string[]; gradeIds: string[]; classIds: string[] }> {
+): Promise<{ sectionIds: string[]; gradeIds: string[] }> {
   let studentIds: string[] = []
   if (role === "STUDENT") {
     const rows = await db.student.findMany({
@@ -205,14 +204,13 @@ export async function viewerAudienceScope(
   return {
     sectionIds: uniq(scopes.map((s) => s.sectionId)),
     gradeIds: uniq(scopes.map((s) => s.gradeId)),
-    classIds: uniq(scopes.flatMap((s) => s.classIds)),
   }
 }
 
 /**
  * Announcements this viewer is an audience for: published, complete, not
  * expired, and school-wide, addressed to their role, or to one of their
- * grades or sections (or a legacy class of theirs). Both OR groups sit under
+ * grades or sections. Both OR groups sit under
  * AND so neither overwrites the other.
  */
 export async function buildViewerAudienceWhere(
@@ -220,7 +218,7 @@ export async function buildViewerAudienceWhere(
   userId: string,
   role: UserRole
 ): Promise<Prisma.AnnouncementWhereInput> {
-  const { sectionIds, gradeIds, classIds } = await viewerAudienceScope(
+  const { sectionIds, gradeIds } = await viewerAudienceScope(
     schoolId,
     userId,
     role
@@ -236,7 +234,6 @@ export async function buildViewerAudienceWhere(
           { scope: "role", role },
           { scope: "grade", gradeId: { in: gradeIds } },
           { scope: "section", sectionId: { in: sectionIds } },
-          { scope: "class", classId: { in: classIds } },
         ],
       },
     ],

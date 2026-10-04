@@ -136,44 +136,6 @@ export async function deriveFromSlots(
   return saveAndReconcile(client, schoolId, termId, pairs)
 }
 
-/** A legacy grade-level class's teacher takes the subject in every section. */
-export async function deriveFromClasses(
-  client: PrismaClient,
-  schoolId: string,
-  termId: string
-): Promise<DeriveResult> {
-  const [classes, sections] = await Promise.all([
-    client.class.findMany({
-      where: {
-        schoolId,
-        gradeId: { not: null },
-        teacher: { employmentStatus: "ACTIVE" },
-      },
-      orderBy: { createdAt: "asc" },
-      select: { gradeId: true, subjectId: true, teacherId: true },
-    }),
-    client.section.findMany({
-      where: { schoolId },
-      select: { id: true, gradeId: true },
-    }),
-  ])
-  const sectionsOf = new Map<string, string[]>()
-  for (const s of sections) {
-    sectionsOf.set(s.gradeId, [...(sectionsOf.get(s.gradeId) ?? []), s.id])
-  }
-  const seen = new Set<string>()
-  const pairs: Pair[] = []
-  for (const c of classes) {
-    for (const sectionId of sectionsOf.get(c.gradeId!) ?? []) {
-      const key = cellKey(sectionId, c.subjectId)
-      if (seen.has(key)) continue // the oldest class for a pair wins
-      seen.add(key)
-      pairs.push({ sectionId, subjectId: c.subjectId, teacherId: c.teacherId })
-    }
-  }
-  return saveAndReconcile(client, schoolId, termId, pairs)
-}
-
 /**
  * Qualified teachers for every unassigned pair (suggest.ts). A priority
  * teacher (the seed's test teacher) first takes the subjects they're

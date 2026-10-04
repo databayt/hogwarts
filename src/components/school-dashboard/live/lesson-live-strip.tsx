@@ -43,7 +43,6 @@ export async function LessonLiveStrip({
     if (scope === "none") return null
     sessions = await getLiveSessionsForLesson(schoolId, catalogLessonId, {
       sectionIds: scope === "all" ? undefined : scope.sectionIds,
-      classIds: scope === "all" ? undefined : scope.classIds,
     })
   } catch {
     // Decoration only — a failed read must never take the lesson down.

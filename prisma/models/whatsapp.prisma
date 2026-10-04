@@ -78,7 +78,7 @@ model WhatsAppGroup {
   imageUrl    String?
   type        WhatsAppGroupType @default(section_parents)
   sectionId   String? // Link to academic section
-  classId     String? // Link to class/course
+
   isActive    Boolean           @default(true)
   memberCount Int               @default(0)
   metadata    Json?
@@ -86,7 +86,7 @@ model WhatsAppGroup {
   school   School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   session  WhatsAppSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   section  Section?              @relation(fields: [sectionId], references: [id], onDelete: SetNull)
-  class    Class?                @relation(fields: [classId], references: [id], onDelete: SetNull)
+
   members  WhatsAppGroupMember[]
   messages WhatsAppMessage[]
 
@@ -97,7 +97,7 @@ model WhatsAppGroup {
   @@index([schoolId])
   @@index([sessionId])
   @@index([sectionId])
-  @@index([classId])
+
   @@map("whatsapp_groups")
 }
 

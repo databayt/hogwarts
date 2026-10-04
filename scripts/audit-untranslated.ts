@@ -134,7 +134,6 @@ const DIR_MODELS: Record<string, (keyof typeof TRANSLATABLE)[]> = {
     "Lesson",
     "Material",
   ],
-  "src/components/school-dashboard/listings/classes": ["Class", "Section"],
   "src/components/school-dashboard/listings/classrooms": [
     "Classroom",
     "ClassroomType",

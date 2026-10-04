@@ -95,10 +95,11 @@ export async function GET(request: NextRequest) {
       status: e.status,
       instructions: e.instructions,
       subject_name: e.subject?.name || null,
-      // Who sits it. class_* stays for app builds that still read it.
+      // Who sits it. class_* stays for app builds that still read it; the
+      // app's "class" is a section.
       grade_id: e.gradeId,
       section_id: e.sectionId,
-      class_id: e.classId,
+      class_id: e.sectionId,
       class_name: examAudienceLabel(e) || null,
     }))
 

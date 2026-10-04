@@ -33,7 +33,6 @@ export async function getGeneratedExamForWizard(
             gradeId: true,
             sectionId: true,
             subjectId: true,
-            class: { select: { gradeId: true } },
             examDate: true,
             startTime: true,
             duration: true,
@@ -69,10 +68,9 @@ export async function getGeneratedExamForWizard(
 
     if (!genExam) return { success: false, error: "Generated exam not found" }
 
-    // A legacy exam opens on its class's grade; a fresh draft has no scope
-    // yet, and its placeholder subject is not a choice anyone made.
-    const examGradeId =
-      genExam.exam.gradeId ?? genExam.exam.class?.gradeId ?? ""
+    // A fresh draft has no scope yet, and its placeholder subject is not a
+    // choice anyone made.
+    const examGradeId = genExam.exam.gradeId ?? ""
 
     return {
       success: true,

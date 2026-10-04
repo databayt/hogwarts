@@ -28,9 +28,6 @@ export async function getGradeForWizard(
         student: {
           select: { id: true, firstName: true, lastName: true },
         },
-        class: {
-          select: { id: true, name: true, subjectId: true },
-        },
         assignment: {
           select: { id: true, title: true },
         },
@@ -51,13 +48,6 @@ export async function getGradeForWizard(
         ...result,
         score: Number(result.score),
         maxScore: Number(result.maxScore),
-        class: result.class
-          ? {
-              id: result.class.id,
-              name: result.class.name,
-              subjectId: result.class.subjectId,
-            }
-          : null,
       } as GradeWizardData,
     }
   } catch (error) {

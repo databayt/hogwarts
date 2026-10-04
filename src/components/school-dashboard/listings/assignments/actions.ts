@@ -9,8 +9,6 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { db } from "@/lib/db"
-import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { audienceLabel } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -30,7 +28,6 @@ type AssignmentSelectResult = {
   schoolId: string
   title: string
   description: string | null
-  classId: string
   type: string
   totalPoints: number
   weight: number
@@ -77,7 +74,6 @@ export async function createAssignment(
         schoolId,
         title: parsed.title,
         description: parsed.description || null,
-        classId: parsed.classId,
         type: parsed.type,
         totalPoints: parsed.totalPoints,
         weight: parsed.weight,
@@ -90,31 +86,6 @@ export async function createAssignment(
     // Pre-translate the other language OFF the response path so the first reader
     // hits the cache. Non-blocking and best-effort.
     after(() => prewarm("Assignment", row, { schoolId }))
-
-    // Notify students in the class about the new assignment (non-blocking)
-    const schoolPref = await db.school.findFirst({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
-    dispatchNotificationsToAudience({
-      schoolId,
-      type: "assignment_created",
-      title: `واجب جديد: ${parsed.title}`,
-      body: `تم إضافة واجب جديد "${parsed.title}" مع موعد تسليم ${new Date(parsed.dueDate).toLocaleDateString("ar-SA")}`,
-      lang: schoolPref?.preferredLanguage ?? "ar",
-      priority: "normal",
-      channels: ["in_app", "email"],
-      metadata: {
-        assignmentId: row.id,
-        classId: parsed.classId,
-        dueDate: parsed.dueDate.toISOString(),
-        url: `/assignments/${row.id}`,
-      },
-      targetScope: "class",
-      targetClassId: parsed.classId,
-    }).catch((err) =>
-      console.error("[createAssignment] Notification error:", err)
-    )
 
     revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: { id: row.id as string } }
@@ -166,7 +137,6 @@ export async function updateAssignment(
     if (typeof rest.title !== "undefined") data.title = rest.title
     if (typeof rest.description !== "undefined")
       data.description = rest.description || null
-    if (typeof rest.classId !== "undefined") data.classId = rest.classId
     if (typeof rest.type !== "undefined") data.type = rest.type
     if (typeof rest.totalPoints !== "undefined")
       data.totalPoints = rest.totalPoints
@@ -327,7 +297,6 @@ export async function getAssignment(input: {
         schoolId: true,
         title: true,
         description: true,
-        classId: true,
         type: true,
         totalPoints: true,
         weight: true,
@@ -379,7 +348,6 @@ export async function getAssignments(
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
       ...(sp.type ? { type: sp.type } : {}),
-      ...(sp.classId ? { classId: sp.classId } : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
@@ -395,13 +363,6 @@ export async function getAssignments(
         orderBy,
         skip,
         take,
-        include: {
-          class: {
-            select: {
-              name: true,
-            },
-          },
-        },
       }),
       assignmentModel.count({ where }),
     ])
@@ -459,7 +420,6 @@ export async function getAssignmentsCSV(
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
       ...(sp.type ? { type: sp.type } : {}),
-      ...(sp.classId ? { classId: sp.classId } : {}),
     }
 
     // Fetch ALL assignments matching filters (no pagination for export)
@@ -467,16 +427,6 @@ export async function getAssignmentsCSV(
       where,
       take: 10000,
       include: {
-        class: {
-          select: {
-            name: true,
-            subject: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
         section: { select: { name: true } },
         grade: { select: { name: true } },
         subject: { select: { name: true } },
@@ -495,8 +445,7 @@ export async function getAssignmentsCSV(
       title: assignment.title || "",
       description: assignment.description || "",
       class: audienceLabel(assignment) || "",
-      subject:
-        assignment.subject?.name || assignment.class?.subject?.name || "",
+      subject: assignment.subject?.name || "",
       type: assignment.type || "",
       totalPoints: assignment.totalPoints || 0,
       weight: assignment.weight || 0,
@@ -580,7 +529,6 @@ export async function getAssignmentsExportData(
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
       ...(sp.type ? { type: sp.type } : {}),
-      ...(sp.classId ? { classId: sp.classId } : {}),
     }
 
     // Fetch ALL assignments matching filters (no pagination for export)
@@ -588,22 +536,6 @@ export async function getAssignmentsExportData(
       where,
       take: 10000,
       include: {
-        class: {
-          select: {
-            name: true,
-            subject: {
-              select: {
-                name: true,
-              },
-            },
-            teacher: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
         section: { select: { name: true } },
         grade: { select: { name: true } },
         subject: { select: { name: true } },
@@ -627,13 +559,8 @@ export async function getAssignmentsExportData(
       title: assignment.title as string,
       description: assignment.description as string | null,
       className: audienceLabel(assignment) || null,
-      name:
-        (assignment.subject?.name as string) ||
-        (assignment.class?.subject?.name as string) ||
-        null,
-      teacherName: assignment.class?.teacher
-        ? `${assignment.class.teacher.firstName} ${assignment.class.teacher.lastName}`.trim()
-        : null,
+      name: (assignment.subject?.name as string) || null,
+      teacherName: null,
       dueDate: assignment.dueDate as Date | null,
       totalPoints: assignment.totalPoints as number | null,
       status: assignment.status as string,

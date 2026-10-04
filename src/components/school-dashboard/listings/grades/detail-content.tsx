@@ -339,9 +339,9 @@ export function GradeDetailContent({
                       {t.studentId}: {grade.student.studentId}
                     </p>
                   )}
-                  {(grade.section || grade.class) && (
+                  {grade.section && (
                     <p className="text-muted-foreground text-sm">
-                      {t.class}: {grade.section?.name ?? grade.class?.name}
+                      {t.class}: {grade.section.name}
                     </p>
                   )}
                   {grade.student?.email && (

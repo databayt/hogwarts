@@ -17,6 +17,10 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -50,7 +54,7 @@ export default async function PendingPage({ params }: Props) {
           examDate: { lt: today },
         },
         include: {
-          class: { select: { name: true } },
+          ...examAudienceInclude,
           subject: { select: { name: true } },
           _count: {
             select: {
@@ -98,7 +102,7 @@ export default async function PendingPage({ params }: Props) {
                 <CardContent className="space-y-3 max-md:space-y-2 max-md:px-4 max-md:pb-4">
                   <div className="flex items-center gap-2 text-sm max-md:flex-wrap max-md:gap-1.5 max-md:text-xs">
                     <Users className="h-4 w-4" />
-                    <span>{exam.class?.name}</span>
+                    <span>{examAudienceLabel(exam)}</span>
                     <span className="text-muted-foreground">•</span>
                     <span>{exam.subject?.name}</span>
                   </div>

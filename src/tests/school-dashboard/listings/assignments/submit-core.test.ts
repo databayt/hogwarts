@@ -26,7 +26,6 @@ vi.mock("@/lib/teaching-scope", () => ({
       studentId: "stu-1",
       sectionId: "sec-1",
       gradeId: "g-1",
-      classIds: ["class-1"],
     },
   ]),
 }))
@@ -52,7 +51,6 @@ beforeEach(() => {
   mStudent.mockResolvedValue({ id: "stu-1" })
   mAssignment.mockResolvedValue({
     id: "a1",
-    classId: "class-1",
     dueDate: DUE,
     status: "PUBLISHED",
   })
@@ -77,15 +75,14 @@ describe("submitAssignmentCore", () => {
 
     mAssignment.mockResolvedValueOnce({
       id: "a1",
-      classId: "class-1",
-      dueDate: DUE,
+        dueDate: DUE,
       status: "DRAFT",
     })
     expect(
       await submitAssignmentCore({ ...base, submittedAt: new Date() })
     ).toEqual({ status: "notOpen" })
 
-    // Published, but not set for the student's section, grade or classes.
+    // Published, but not set for the student's section or grade.
     mAssignment
       .mockResolvedValueOnce({ id: "a1", dueDate: DUE, status: "PUBLISHED" })
       .mockResolvedValueOnce(null)
@@ -98,7 +95,6 @@ describe("submitAssignmentCore", () => {
           id: "a1",
           schoolId: "school-1",
           OR: [
-            { classId: { in: ["class-1"] } },
             { sectionId: { in: ["sec-1"] } },
             { sectionId: null, gradeId: { in: ["g-1"] } },
           ],

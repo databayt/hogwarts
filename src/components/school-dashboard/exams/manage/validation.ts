@@ -150,7 +150,6 @@ export const getExamsSchema = z.object({
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(200).default(20),
   title: z.string().optional().default(""),
-  classId: z.string().optional().default(""),
   subjectId: z.string().optional().default(""),
   examType: z.string().optional().default(""),
   status: z.string().optional().default(""),

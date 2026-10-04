@@ -12,6 +12,10 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params
@@ -35,7 +39,7 @@ export default async function ExamAnalyticsPage({ params }: Props) {
   const exam = await db.schoolExam.findUnique({
     where: { id: examId, schoolId },
     include: {
-      class: { select: { name: true } },
+      ...examAudienceInclude,
       subject: { select: { name: true } },
       examResults: {
         select: {
@@ -73,7 +77,7 @@ export default async function ExamAnalyticsPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Analytics"
-          description={`${exam.class?.name} - ${exam.subject?.name}`}
+          description={`${examAudienceLabel(exam)} - ${exam.subject?.name}`}
         />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

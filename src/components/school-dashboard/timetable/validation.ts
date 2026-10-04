@@ -75,7 +75,7 @@ export const detectTimetableConflictsSchema = z
 
 export const suggestFreeSlotsSchema = z.object({
   termId: cuidSchema,
-  classId: cuidSchema.optional(),
+  sectionId: cuidSchema.optional(),
   teacherId: cuidSchema.optional(),
   preferredDays: z.array(dayOfWeekSchema).optional(),
   preferredPeriods: z.array(cuidSchema).optional(),
@@ -105,8 +105,6 @@ export const upsertTimetableSlotSchema = z.object({
   teacherId: cuidSchema.optional(),
   classroomId: cuidSchema,
   weekOffset: weekOffsetSchema,
-  // Legacy classId kept optional for backward round-trips (exams/results history)
-  classId: cuidSchema.optional(),
 })
 
 export const deleteTimetableSlotSchema = z.object({
@@ -116,7 +114,7 @@ export const deleteTimetableSlotSchema = z.object({
   termId: cuidSchema.optional(),
   dayOfWeek: dayOfWeekSchema.optional(),
   periodId: cuidSchema.optional(),
-  classId: cuidSchema.optional(),
+  sectionId: cuidSchema.optional(),
   weekOffset: weekOffsetSchema.optional(),
 })
 
@@ -248,7 +246,6 @@ export const exportTimetableSchema = z.object({
   includeMetadata: z.boolean().default(true),
   filters: z
     .object({
-      classIds: z.array(cuidSchema).optional(),
       teacherIds: z.array(cuidSchema).optional(),
       dayOfWeek: dayOfWeekSchema.optional(),
       weekOffset: weekOffsetSchema.optional(),

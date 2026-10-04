@@ -26,7 +26,6 @@ interface ExportButtonProps {
   /** Optional filters to apply to export data */
   filters?: {
     title?: string
-    classId?: string
     subjectId?: string
     examType?: string
     status?: string

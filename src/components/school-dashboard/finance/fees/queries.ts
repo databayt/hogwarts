@@ -76,12 +76,6 @@ export const feeStructureListSelect = {
       name: true,
     },
   },
-  class: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
   _count: {
     select: {
       feeAssignments: true,

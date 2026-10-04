@@ -46,7 +46,6 @@ export async function getWhatsAppGroups(
     where: { schoolId },
     include: {
       section: { select: { name: true } },
-      class: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },
   })
@@ -59,11 +58,9 @@ export async function getWhatsAppGroups(
     description: g.description,
     type: g.type,
     sectionId: g.sectionId,
-    classId: g.classId,
     isActive: g.isActive,
     memberCount: g.memberCount,
     sectionName: g.section?.name ?? null,
-    className: g.class?.name ?? null,
     createdAt: g.createdAt.toISOString(),
   }))
 }

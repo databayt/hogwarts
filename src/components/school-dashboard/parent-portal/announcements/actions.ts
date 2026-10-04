@@ -22,7 +22,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       }
     }
 
-    // The guardian and where each child sits (section, grade, legacy classes)
+    // The guardian and where each child sits (section, grade)
     const guardian = await db.guardian.findFirst({
       where: {
         userId: session.user.id,
@@ -60,7 +60,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
 
     // The notices a guardian is an audience for — the same rule as the
     // announcements page: school-wide, the guardian role, their children's
-    // grades and sections (or a legacy class), published and unexpired
+    // grades and sections, published and unexpired
     const audience = await buildViewerAudienceWhere(
       schoolId,
       session.user.id,
@@ -71,18 +71,6 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       include: {
         grade: { select: { name: true } },
         section: { select: { name: true } },
-        class: {
-          include: {
-            subject: true,
-            teacher: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
       },
       orderBy: {
         createdAt: "desc",
@@ -94,7 +82,6 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       scope: string
       gradeId: string | null
       sectionId: string | null
-      classId: string | null
     }) =>
       scopes
         .filter((sc) =>
@@ -102,9 +89,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
             ? sc.sectionId === a.sectionId
             : a.scope === "grade"
               ? sc.gradeId === a.gradeId
-              : a.scope === "class"
-                ? !!a.classId && sc.classIds.includes(a.classId)
-                : true
+              : a.scope !== "class"
         )
         .map((sc) => sc.studentId)
 
@@ -125,17 +110,6 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       // The grade or section it's for
       audienceName:
         announcement.section?.name ?? announcement.grade?.name ?? null,
-      // Legacy class notices
-      class: announcement.class
-        ? {
-            id: announcement.class.id,
-            name: announcement.class.name,
-            subject: announcement.class.subject.name,
-            teacher: announcement.class.teacher
-              ? `${announcement.class.teacher.firstName} ${announcement.class.teacher.lastName}`
-              : "N/A",
-          }
-        : null,
       // Mark which children this announcement is relevant for
       relevantStudents: relevantFor(announcement),
     }))

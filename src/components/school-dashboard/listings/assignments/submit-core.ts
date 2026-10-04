@@ -72,7 +72,7 @@ export async function submitAssignmentCore(input: {
   if (!assignment) return { status: "notFound" }
   if (assignment.status === "DRAFT") return { status: "notOpen" }
 
-  // Set for the student's section, whole grade, or a legacy class of theirs.
+  // Set for the student's section or whole grade.
   const scopes = await getStudentScopes(schoolId, [student.id])
   const reaches = await db.schoolAssignment.findFirst({
     where: { id: assignmentId, schoolId, ...studentAudienceWhere(scopes) },

@@ -88,7 +88,6 @@ export async function loadTodaySchedule(input: {
     dayOfWeek: number
     weekOffset: number
     teacherId?: string
-    classId?: string | { in: string[] }
     OR?: Array<Record<string, unknown>>
   } = {
     schoolId,
@@ -137,28 +136,16 @@ export async function loadTodaySchedule(input: {
       where.OR = [{ id: { in: [] } }]
     }
   } else if (role === "STUDENT") {
-    // Section-based slots (primary) + legacy class enrollments; a student
-    // with neither — or no student record — has no day yet, never the whole
-    // school's
-    const orClauses: Array<Record<string, unknown>> = []
-    if (student) {
-      const enrollments = await db.studentClass.findMany({
-        where: { studentId: student.id, schoolId },
-        select: { classId: true },
-      })
-      const classIds = enrollments.map((e) => e.classId)
-      if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
-      if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
-    }
-    where.OR = orClauses.length > 0 ? orClauses : [{ id: { in: [] } }]
+    // Section-based slots; a student with no section — or no student
+    // record — has no day yet, never the whole school's
+    where.OR = student?.sectionId
+      ? [{ sectionId: student.sectionId }]
+      : [{ id: { in: [] } }]
   }
 
   const slots = await db.timetable.findMany({
     where,
     include: {
-      class: {
-        select: { name: true, subject: { select: { name: true } } },
-      },
       section: { select: { name: true } },
       subject: { select: { name: true } },
       teacher: { select: { firstName: true, lastName: true } },
@@ -184,9 +171,8 @@ export async function loadTodaySchedule(input: {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject:
-      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
-    className: slot.class?.name || slot.section?.name || "",
+    subject: slot.subject?.name || "",
+    className: slot.section?.name || "",
     teacher: (() => {
       const sub = subsBySlot.get(slot.id)
       if (sub) return `${sub.firstName} ${sub.lastName}`

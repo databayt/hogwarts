@@ -188,7 +188,7 @@ describe("Quick Assessment Actions — multi-tenant safety", () => {
     it("lets only a student of the audience answer", async () => {
       vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
       vi.mocked(getStudentScopes).mockResolvedValue([
-        { studentId: "stu-1", sectionId: "7a", gradeId: "g7", classIds: [] },
+        { studentId: "stu-1", sectionId: "7a", gradeId: "g7" },
       ])
       vi.mocked(db.quickAssessment.findFirst).mockResolvedValue(null)
 
@@ -281,7 +281,7 @@ describe("Quick Assessment Actions — multi-tenant safety", () => {
         { id: "stu-1" },
       ] as never)
       vi.mocked(getStudentScopes).mockResolvedValue([
-        { studentId: "stu-1", sectionId: "7a", gradeId: "g7", classIds: [] },
+        { studentId: "stu-1", sectionId: "7a", gradeId: "g7" },
       ])
       vi.mocked(db.quickAssessment.findMany).mockResolvedValue([])
 

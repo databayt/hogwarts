@@ -29,13 +29,6 @@ vi.mock("@/lib/db", () => ({
     school: {
       findUnique: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
     },
-    class: {
-      count: vi.fn().mockResolvedValue(0),
-    },
-    classTeacher: {
-      count: vi.fn().mockResolvedValue(0),
-      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
-    },
     timetable: {
       count: vi.fn().mockResolvedValue(0),
       findMany: vi.fn().mockResolvedValue([]),
@@ -107,8 +100,6 @@ describe("Teacher Actions", () => {
     vi.mocked(db.school.findUnique).mockResolvedValue({
       preferredLanguage: "en",
     } as any)
-    vi.mocked(db.class.count).mockResolvedValue(0)
-    vi.mocked(db.classTeacher.count).mockResolvedValue(0)
     vi.mocked(db.timetable.count).mockResolvedValue(0)
   })
 
@@ -289,15 +280,6 @@ describe("Teacher Actions", () => {
       const deleteOrder = vi.mocked(db.teacher.deleteMany).mock
         .invocationCallOrder[0]
       expect(releaseOrder).toBeLessThan(deleteOrder)
-    })
-
-    it("still refuses while legacy classes reference the teacher", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(2)
-
-      const result = await deleteTeacher({ id: "teacher-1" })
-
-      expect(result).toMatchObject({ success: false, error: "HAS_DEPENDENCIES" })
-      expect(db.teacher.deleteMany).not.toHaveBeenCalled()
     })
 
     it("deletes teacher with schoolId scope", async () => {

@@ -32,7 +32,6 @@ interface AnnouncementDetailResult {
   lang: string
   scope: string
   priority: string
-  classId: string | null
   gradeId: string | null
   sectionId: string | null
   role: string | null

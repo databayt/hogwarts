@@ -36,7 +36,6 @@ export async function getExamsCSV(
       ...(searchParams.title
         ? { title: { contains: searchParams.title, mode: "insensitive" } }
         : {}),
-      ...(searchParams.classId ? { classId: searchParams.classId } : {}),
       ...(searchParams.subjectId ? { subjectId: searchParams.subjectId } : {}),
       ...(searchParams.examType ? { examType: searchParams.examType } : {}),
       ...(searchParams.status ? { status: searchParams.status } : {}),
@@ -222,7 +221,6 @@ export async function getExamResultsCSV(input: {
  */
 export async function getAnalyticsCSV(input: {
   examId?: string
-  classId?: string
   termId?: string
 }): Promise<ActionResponse<string>> {
   try {
@@ -243,10 +241,6 @@ export async function getAnalyticsCSV(input: {
 
     if (input.examId) {
       where.id = input.examId
-    }
-
-    if (input.classId) {
-      where.classId = input.classId
     }
 
     if (input.termId) {
@@ -379,7 +373,6 @@ export async function getExamsExportData(
       ...(searchParams.title
         ? { title: { contains: searchParams.title, mode: "insensitive" } }
         : {}),
-      ...(searchParams.classId ? { classId: searchParams.classId } : {}),
       ...(searchParams.subjectId ? { subjectId: searchParams.subjectId } : {}),
       ...(searchParams.examType ? { examType: searchParams.examType } : {}),
       ...(searchParams.status ? { status: searchParams.status } : {}),

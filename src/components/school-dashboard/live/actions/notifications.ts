@@ -6,8 +6,6 @@
 // NOT a "use server" action — invoked internally from sessions.ts and the
 // webhook handler. Best-effort: failures are logged but never thrown.
 
-import type { Prisma } from "@prisma/client"
-
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 
@@ -153,12 +151,6 @@ async function loadSession(
         select: { firstName: true, lastName: true, userId: true },
       },
       school: { select: { preferredLanguage: true } },
-      // A section-based Timetable slot keeps its legacy `classId` alongside
-      // `sectionId` (list-actions.ts updateLiveClass: "keep classId intact"),
-      // so a student not yet migrated onto `Student.sectionId` is still
-      // reachable through `StudentClass` enrollment in that class — see the
-      // OR below.
-      timetable: { select: { classId: true } },
     },
   })
   if (!session) return null
@@ -181,37 +173,18 @@ async function loadSession(
     })
     for (const u of users) userIds.add(u.id)
   } else if (session.sectionId) {
-    // Section audience, OR'd across both enrollment axes — the same shape
-    // the student timetable read uses (timetable/actions.ts): a
-    // student's own `sectionId` covers the modern path, and `StudentClass`
-    // membership in the slot's legacy class covers a student the section
-    // migration hasn't reached yet. Without the second arm, that student is
-    // invisible here even though they're enrolled in the class this session
-    // actually is.
-    const legacyClassId = session.timetable?.classId ?? null
-    const sectionOrClauses: Prisma.StudentWhereInput[] = [
-      { sectionId: session.sectionId },
-    ]
-    if (legacyClassId) {
-      sectionOrClauses.push({
-        studentClasses: { some: { schoolId, classId: legacyClassId } },
-      })
-    }
+    // Section audience: every student placed in the section.
     // `id` (Student.id) is kept alongside `userId` because the guardian
     // lookup below joins on StudentGuardian.studentId, which references
     // Student.id — NOT User.id.
     const students = await db.student.findMany({
-      where: { schoolId, userId: { not: null }, OR: sectionOrClauses },
+      where: { schoolId, userId: { not: null }, sectionId: session.sectionId },
       select: { id: true, userId: true },
     })
     for (const s of students) {
       if (s.userId) userIds.add(s.userId)
     }
-    // Guardians follow the SAME widened student set (by Student.id), not a
-    // fresh section-only re-query — the previous code computed this array
-    // from userId and then queried by section again without using it,
-    // silently dropping the OR'd-in legacy-enrolled students from the
-    // guardian audience even after they'd been added as students.
+    // Guardians follow the SAME student set (by Student.id).
     const studentIds = students.map((s) => s.id)
     if (studentIds.length > 0) {
       const sg = await db.studentGuardian.findMany({

@@ -75,7 +75,7 @@ export async function PUT(
       select: {
         id: true,
         studentId: true,
-        classId: true,
+        sectionId: true,
         destination: true,
         destinationNote: true,
         issuedBy: true,
@@ -101,7 +101,7 @@ export async function PUT(
       id: updated.id,
       student_id: updated.studentId,
       student_name: `${updated.student.firstName} ${updated.student.lastName}`,
-      class_id: updated.classId,
+      section_id: updated.sectionId,
       destination: updated.destination,
       destination_note: updated.destinationNote,
       issued_by: updated.issuedBy,

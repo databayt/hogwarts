@@ -9,7 +9,6 @@ import { assignmentCreateSchema } from "./validation"
 export type AssignmentDTO = {
   id: string
   schoolId: string
-  classId: string
   title: string
   description: string | null
   type:
@@ -28,7 +27,6 @@ export type AssignmentDTO = {
   dueDate: Date
   publishDate: Date | null
   instructions: string | null
-  class?: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date
 }

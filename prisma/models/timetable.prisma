@@ -6,7 +6,7 @@ model Timetable {
   termId      String
   dayOfWeek   Int // 0 = Sun ... 6 = Sat
   periodId    String
-  classId     String? // Legacy: subject-class reference (nullable for section-based slots)
+
   sectionId   String? // Section being scheduled (Grade 1-A)
   subjectId   String? // CatalogSubject taught in this slot
   teacherId   String?
@@ -23,7 +23,7 @@ model Timetable {
   school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   term      Term      @relation(fields: [termId], references: [id])
   period    Period    @relation(fields: [periodId], references: [id])
-  class     Class?    @relation(fields: [classId], references: [id])
+
   section   Section?  @relation(fields: [sectionId], references: [id])
   subject   Subject?  @relation(fields: [subjectId], references: [id])
   teacher   Teacher?  @relation(fields: [teacherId], references: [id])
@@ -41,7 +41,7 @@ model Timetable {
   // Section-based uniqueness: one slot per section per period per day
   @@unique([schoolId, termId, dayOfWeek, periodId, sectionId, weekOffset])
   // Legacy class-based uniqueness (kept for existing data)
-  @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
+
   // Room can't be double-booked
   @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
   // Teacher uniqueness only when assigned (NULL teacherId = unassigned slot)
@@ -51,13 +51,13 @@ model Timetable {
   @@index([schoolId, termId, periodId])
   @@index([schoolId, termId, weekOffset])
   @@index([schoolId, termId, teacherId])
-  @@index([schoolId, termId, classId])
+
   @@index([schoolId, termId, classroomId])
   @@index([schoolId, termId, sectionId])
   // Composite indexes for specific query patterns
   @@index([schoolId, termId, dayOfWeek, periodId])
   @@index([schoolId, termId, teacherId, dayOfWeek])
-  @@index([schoolId, termId, classId, dayOfWeek])
+
   @@index([schoolId, termId, sectionId, dayOfWeek])
   @@map("timetables")
 }
@@ -273,7 +273,7 @@ model ScheduleException {
 
   // Scope
   affectsAllClasses  Boolean  @default(true)
-  affectedClassIds   String[] @default([])
+
   affectedTeacherIds String[] @default([])
 
   // Replacement schedule (JSON: [{dayOfWeek, periodId, ...slotData}])

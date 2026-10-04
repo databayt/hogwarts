@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         schoolId: true,
-        classId: true,
         gradeId: true,
         sectionId: true,
         subjectId: true,
@@ -79,7 +78,7 @@ export async function GET(request: NextRequest) {
           })
         : "soon"
 
-      // The students it's for: its section, its whole grade, or its class.
+      // The students it's for: its section, or its whole grade.
       const targetUserIds = await audienceUserIds(
         assignment.schoolId,
         assignment,

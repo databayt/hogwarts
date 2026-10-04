@@ -74,7 +74,6 @@ export async function finalizeExamResults(
       select: {
         id: true,
         title: true,
-        classId: true,
         gradeId: true,
         termId: true,
         subjectId: true,
@@ -169,7 +168,6 @@ export async function finalizeExamResults(
       await upsertGradebookResult({
         schoolId,
         studentId,
-        classId: exam.classId,
         sectionId: scopeOf.get(studentId)?.sectionId ?? null,
         academicGradeId:
           exam.gradeId ?? scopeOf.get(studentId)?.gradeId ?? null,
@@ -246,7 +244,6 @@ export async function finalizeStudentExam(
       select: {
         id: true,
         title: true,
-        classId: true,
         gradeId: true,
         termId: true,
         subjectId: true,
@@ -318,7 +315,6 @@ export async function finalizeStudentExam(
     await upsertGradebookResult({
       schoolId,
       studentId,
-      classId: exam.classId,
       sectionId: scope?.sectionId ?? null,
       academicGradeId: exam.gradeId ?? scope?.gradeId ?? null,
       termId: exam.termId,

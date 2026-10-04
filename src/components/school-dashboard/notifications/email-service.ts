@@ -815,13 +815,11 @@ export async function processNotificationBatch(
       targetUserIds = [...targetUserIds, ...users.map((u) => u.id)]
     }
 
-    // The students of a section, a whole grade, or (a batch made before
-    // classes were retired) a class — those with a user account
-    if (batch.targetSectionId || batch.targetGradeId || batch.targetClassId) {
+    // The students of a section or a whole grade — those with a user account
+    if (batch.targetSectionId || batch.targetGradeId) {
       const studentUserIds = await audienceUserIds(
         schoolId,
         {
-          classId: batch.targetClassId,
           gradeId: batch.targetGradeId,
           sectionId: batch.targetSectionId,
         },

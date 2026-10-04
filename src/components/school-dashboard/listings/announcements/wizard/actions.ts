@@ -149,7 +149,6 @@ export async function submitAnnouncementWizard(
           ...fields,
           gradeId: audience.gradeId,
           sectionId: audience.sectionId,
-          classId: null,
         },
       })
 

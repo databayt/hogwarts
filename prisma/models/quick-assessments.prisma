@@ -26,7 +26,7 @@ model QuickAssessment {
   // Core fields
   // Legacy: the class it was for. New ones name an audience like exams: a
   // grade, optionally one section of it (null = the whole grade), the term.
-  classId   String?
+
   gradeId   String?
   sectionId String?
   termId    String?
@@ -47,7 +47,7 @@ model QuickAssessment {
 
   // Relations
   school    School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class     Class?                    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
   grade     AcademicGrade?            @relation(fields: [gradeId], references: [id], onDelete: SetNull)
   section   Section?                  @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   term      Term?                     @relation(fields: [termId], references: [id], onDelete: SetNull)
@@ -58,7 +58,7 @@ model QuickAssessment {
   updatedAt DateTime @updatedAt
 
   @@index([schoolId])
-  @@index([schoolId, classId])
+
   @@index([schoolId, gradeId])
   @@index([schoolId, sectionId])
   @@index([schoolId, status])

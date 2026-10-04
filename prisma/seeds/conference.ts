@@ -1318,11 +1318,7 @@ async function seedShowcase(
           where: {
             schoolId: ctx.schoolId,
             status: "PUBLISHED",
-            // Set for the subject itself, or (legacy) through a class
-            OR: [
-              { subjectId: focusSlot.subjectId },
-              { class: { subjectId: focusSlot.subjectId } },
-            ],
+            subjectId: focusSlot.subjectId,
           },
           orderBy: { createdAt: "desc" },
           select: { id: true },

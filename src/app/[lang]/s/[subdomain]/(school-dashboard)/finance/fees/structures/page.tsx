@@ -55,9 +55,9 @@ export default async function FeeStructuresPage({ params }: Props) {
   ])
 
   // Map to serializable row type with translation — one batched, deduped
-  // resolution for structure + class names (no per-row N+1)
+  // resolution for structure + grade names (no per-row N+1)
   const labels = await getLabels(
-    rows.flatMap((fs) => [fs.name, fs.class?.name]),
+    rows.flatMap((fs) => [fs.name, fs.grade?.name]),
     lang,
     schoolId
   )
@@ -65,8 +65,8 @@ export default async function FeeStructuresPage({ params }: Props) {
     id: fs.id,
     name: labels.get(fs.name) ?? fs.name,
     academicYear: fs.academicYear,
-    className: fs.class?.name
-      ? (labels.get(fs.class.name) ?? fs.class.name)
+    className: fs.grade?.name
+      ? (labels.get(fs.grade.name) ?? fs.grade.name)
       : null,
     totalAmount: Number(fs.totalAmount),
     installments: fs.installments,
