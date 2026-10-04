@@ -69,7 +69,11 @@ import { seedCatalogBooks } from "./catalog/books"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import { seedConference } from "./conference"
+import {
+  ensureSeedAssignments,
+  seedConference,
+  topUpExpertise,
+} from "./conference"
 import { SEED_IS_LITE, SEED_IS_MEDIUM } from "./constants"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
@@ -462,6 +466,15 @@ export async function seedMain(externalPrisma?: PrismaClient) {
         adminUsers
       )
     )
+
+    // Subject teachers BEFORE the timetable: generation keeps a subject in a
+    // section to its assigned teacher, so assigning first gives the demo a
+    // timetable where each subject in a section has one teacher (the old
+    // slot-by-slot backfill scattered it across several).
+    await measureDuration("Subject teachers", async () => {
+      const testTeacherId = await topUpExpertise(prisma, school.id)
+      await ensureSeedAssignments(prisma, school.id, term.id, testTeacherId)
+    })
 
     // Timetable comes from the PRODUCTION generator — the same path a real
     // school gets at onboarding — so the seed and onboarding share one source

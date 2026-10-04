@@ -72,6 +72,7 @@ import {
 } from "@/components/school-dashboard/live/day-window"
 import { refreshDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import { roomNameFor } from "@/components/school-dashboard/live/livekit/room-naming"
+import { ensureAssignments } from "@/components/school-dashboard/timetable/assignments/derive"
 
 import { logSuccess, logWarning } from "./utils"
 
@@ -83,8 +84,6 @@ import { logSuccess, logWarning } from "./utils"
 const TEST_TEACHER_EMAILS = ["teacher@balqalam.com", "teacher@databayt.org"]
 const TEST_STUDENT_EMAILS = ["student@balqalam.com", "student@databayt.org"]
 
-/** Mirrors the timetable generator's per-teacher weekly cap. */
-const MAX_PERIODS_PER_WEEK = 25
 /** Mirrors `seedTeacherSubjectExpertise`. */
 const TEACHERS_PER_SUBJECT = 3
 
@@ -157,7 +156,9 @@ export async function seedConference(
   // ── 1. Repairs ──────────────────────────────────────────────────────────
   await repairBreakPeriods(prisma, schoolId)
   const testTeacherId = await topUpExpertise(prisma, schoolId)
-  await backfillSlotTeachers(prisma, schoolId, term.id, testTeacherId)
+  // Teachers reach periods through subject assignments now, not slot by slot
+  // (that scattered one subject in a section across several teachers).
+  await ensureSeedAssignments(prisma, schoolId, term.id, testTeacherId)
 
   // ── 2. Policy ───────────────────────────────────────────────────────────
   const sections = await prisma.section.findMany({
@@ -455,7 +456,7 @@ async function repairBreakPeriods(prisma: PrismaClient, schoolId: string) {
  *
  * Returns the test teacher's id (or null) so the caller can route slots to it.
  */
-async function topUpExpertise(
+export async function topUpExpertise(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<string | null> {
@@ -565,111 +566,33 @@ async function topUpExpertise(
 }
 
 /**
- * Put a qualified, free, under-cap teacher on every teacherless slot of the
- * active term. Additive — existing assignments are never moved. The test
- * teacher's slots come first so they land on the test student's section.
+ * Make sure every subject in every section has a teacher where qualifications
+ * allow (SubjectTeacher), and line the timetable up with it: teachers already
+ * on the timetable keep their subjects, qualified teachers take the rest, the
+ * test teacher first in the test student's section. Additive and idempotent.
  */
-async function backfillSlotTeachers(
+export async function ensureSeedAssignments(
   prisma: PrismaClient,
   schoolId: string,
   termId: string,
   testTeacherId: string | null
 ) {
-  const [slots, expertise, testStudent] = await Promise.all([
-    prisma.timetable.findMany({
-      where: { schoolId, termId, weekOffset: 0 },
-      select: {
-        id: true,
-        dayOfWeek: true,
-        periodId: true,
-        sectionId: true,
-        subjectId: true,
-        teacherId: true,
-        section: { select: { name: true } },
-      },
-    }),
-    prisma.teacherSubjectExpertise.findMany({
-      where: { schoolId, teacher: { employmentStatus: "ACTIVE" } },
-      select: { teacherId: true, subjectId: true },
-      orderBy: [{ teacherId: "asc" }],
-    }),
-    prisma.student.findFirst({
-      where: { schoolId, user: { email: { in: TEST_STUDENT_EMAILS } } },
-      select: { sectionId: true },
-    }),
-  ])
-
-  const open = slots.filter((s) => !s.teacherId && s.subjectId && s.sectionId)
-  if (open.length === 0) return
-
-  const load = new Map<string, number>()
-  const busy = new Set<string>()
-  for (const s of slots) {
-    if (!s.teacherId) continue
-    load.set(s.teacherId, (load.get(s.teacherId) ?? 0) + 1)
-    busy.add(`${s.teacherId}:${s.dayOfWeek}:${s.periodId}`)
-  }
-  const qualified = new Map<string, string[]>()
-  for (const e of expertise) {
-    if (!qualified.has(e.subjectId)) qualified.set(e.subjectId, [])
-    qualified.get(e.subjectId)!.push(e.teacherId)
-  }
-  // Test teacher first in every candidate list they qualify for.
-  if (testTeacherId) {
-    for (const [, list] of qualified) {
-      const i = list.indexOf(testTeacherId)
-      if (i > 0) {
-        list.splice(i, 1)
-        list.unshift(testTeacherId)
-      }
-    }
-  }
-
-  const testSection = testStudent?.sectionId ?? null
-  open.sort((a, b) => {
-    const at = a.sectionId === testSection ? 0 : 1
-    const bt = b.sectionId === testSection ? 0 : 1
-    if (at !== bt) return at - bt
-    return (
-      (a.section?.name ?? "").localeCompare(b.section?.name ?? "") ||
-      a.dayOfWeek - b.dayOfWeek ||
-      a.periodId.localeCompare(b.periodId)
-    )
+  const testStudent = await prisma.student.findFirst({
+    where: { schoolId, user: { email: { in: TEST_STUDENT_EMAILS } } },
+    select: { sectionId: true },
   })
-
-  const byTeacher = new Map<string, string[]>()
-  let unfilled = 0
-  for (const s of open) {
-    const cands = qualified.get(s.subjectId!) ?? []
-    const pick = cands.find(
-      (t) =>
-        (load.get(t) ?? 0) < MAX_PERIODS_PER_WEEK &&
-        !busy.has(`${t}:${s.dayOfWeek}:${s.periodId}`)
-    )
-    if (!pick) {
-      unfilled++
-      continue
-    }
-    load.set(pick, (load.get(pick) ?? 0) + 1)
-    busy.add(`${pick}:${s.dayOfWeek}:${s.periodId}`)
-    if (!byTeacher.has(pick)) byTeacher.set(pick, [])
-    byTeacher.get(pick)!.push(s.id)
-  }
-
-  let filled = 0
-  for (const [teacherId, ids] of byTeacher) {
-    const { count } = await prisma.timetable.updateMany({
-      where: { id: { in: ids }, schoolId, teacherId: null },
-      data: { teacherId },
-    })
-    filled += count
-  }
+  const priority =
+    testTeacherId && testStudent?.sectionId
+      ? { teacherId: testTeacherId, sectionId: testStudent.sectionId }
+      : null
+  const result = await ensureAssignments(prisma, schoolId, termId, priority)
   logSuccess(
-    "Timetable teachers backfilled",
-    filled,
-    unfilled > 0
-      ? `${unfilled} slots still have no qualified free teacher`
-      : undefined
+    "Subject teachers",
+    result.created,
+    `${result.reconciled.assigned} periods taught, ${result.reconciled.moved} moved` +
+      (result.reconciled.residual > 0
+        ? `, ${result.reconciled.residual} still without a teacher`
+        : "")
   )
 }
 
@@ -1584,7 +1507,6 @@ async function attachCatalogLessons(
   return count
 }
 
-
 /**
  * Three sessions whose windows straddle the clock, so the landing card's phase
  * row can actually be SEEN.
@@ -1602,11 +1524,7 @@ async function seedClockShowcase(
 ): Promise<number> {
   const written = await refreshDemoClock(prisma, ctx)
   if (written > 0) {
-    logSuccess(
-      "Conference clock showcase",
-      written,
-      "started · ending · soon"
-    )
+    logSuccess("Conference clock showcase", written, "started · ending · soon")
   }
   return written
 }
