@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
@@ -24,30 +25,54 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [] })
     }
 
-    // Get unique sections from timetable
-    const timetableEntries = await db.timetable.findMany({
-      where: { schoolId: auth.schoolId, teacherId: teacher.id },
-      select: {
-        sectionId: true,
-        section: {
-          select: {
-            id: true,
-            name: true,
-            grade: { select: { id: true, name: true } },
-            _count: { select: { students: true } },
-          },
+    // What this teacher teaches: subject assignments (SubjectTeacher, the
+    // source of truth) plus any timetable periods they hold, one entry per
+    // (section, subject).
+    const { term } = await resolveActiveTerm(auth.schoolId)
+    const sectionSelect = {
+      id: true,
+      name: true,
+      grade: { select: { id: true, name: true } },
+      _count: { select: { students: true } },
+    } as const
+    const [assignments, timetableEntries] = await Promise.all([
+      term
+        ? db.subjectTeacher.findMany({
+            where: {
+              schoolId: auth.schoolId,
+              termId: term.id,
+              teacherId: teacher.id,
+            },
+            select: {
+              section: { select: sectionSelect },
+              subject: { select: { id: true, name: true } },
+            },
+          })
+        : Promise.resolve([]),
+      db.timetable.findMany({
+        where: { schoolId: auth.schoolId, teacherId: teacher.id },
+        select: {
+          section: { select: sectionSelect },
+          subject: { select: { id: true, name: true } },
         },
-        subject: { select: { id: true, name: true } },
-      },
-      distinct: ["sectionId", "subjectId"],
-    })
+        distinct: ["sectionId", "subjectId"],
+      }),
+    ])
 
-    const data = timetableEntries
-      .filter((e) => e.section)
+    const seen = new Set<string>()
+    const data = [...assignments, ...timetableEntries]
+      .filter((e) => {
+        if (!e.section) return false
+        const key = `${e.section.id}:${e.subject?.id ?? ""}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
       .map((e) => ({
         section_id: e.section!.id,
         section_name: e.section!.name,
         grade_name: e.section!.grade?.name || null,
+        subject_id: e.subject?.id || null,
         subject_name: e.subject?.name || null,
         student_count: e.section!._count.students,
       }))

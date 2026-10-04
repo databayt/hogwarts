@@ -158,9 +158,17 @@ export async function calculateTeacherWorkload(
 
   // Calculate metrics
   const totalPeriodsPerWeek = timetableEntries.length
-  const uniqueClassIds = new Set(timetableEntries.map((t) => t.classId))
+  // A teaching unit is a subject in a section (section-based slots) or a
+  // legacy class — classId alone counted every section slot as one null id.
+  const uniqueClassIds = new Set(
+    timetableEntries.map((t) =>
+      t.sectionId ? `${t.sectionId}:${t.subjectId ?? ""}` : t.classId
+    )
+  )
   const uniqueSubjectIds = new Set(
-    timetableEntries.map((t) => t.class?.subjectId).filter(Boolean)
+    timetableEntries
+      .map((t) => t.subjectId ?? t.class?.subjectId)
+      .filter(Boolean)
   )
 
   // Get total periods in a week to calculate free periods

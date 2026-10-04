@@ -685,9 +685,12 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
         .map((s) => s.sectionId)
         .filter((id): id is string => id !== null)
 
+      // Homeroom, a timetable period, or a subject assignment (which can
+      // exist before the term's timetable does).
       sectionFilter.OR = [
         { homeroomTeacherId: teacher.id },
         { id: { in: sectionIds } },
+        { subjectTeachers: { some: { schoolId, teacherId: teacher.id } } },
       ]
     }
 

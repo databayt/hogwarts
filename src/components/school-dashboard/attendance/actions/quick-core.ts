@@ -102,6 +102,9 @@ export async function submitQuickAttendanceCore(opts: {
             OR: [
               { homeroomTeacherId: teacher.id },
               { timetables: { some: { schoolId, teacherId: teacher.id } } },
+              {
+                subjectTeachers: { some: { schoolId, teacherId: teacher.id } },
+              },
             ],
           },
           select: { id: true },

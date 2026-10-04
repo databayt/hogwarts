@@ -19,6 +19,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import { getLabels } from "@/components/translation/person"
 
 import { getPermissionLevel } from "./detail/permissions"
@@ -370,10 +371,37 @@ async function buildFromUser(
     if (classmates > 0)
       stats.push({ key: "classmates", value: Math.max(classmates - 1, 0) })
   } else if (role === "teacher" && user.teacher) {
-    stats.push({ key: "classes", value: user.teacher._count.classes })
-    const students = await db.studentClass.count({
-      where: { schoolId, class: { teacherId: user.teacher.id } },
+    // What the teacher teaches this term (SubjectTeacher), falling back to
+    // legacy classes for schools that still have them.
+    const teacherId = user.teacher.id
+    const { term } = await resolveActiveTerm(schoolId)
+    const [pairs, sectionStudents] = term
+      ? await Promise.all([
+          db.subjectTeacher.count({
+            where: { schoolId, termId: term.id, teacherId },
+          }),
+          db.student.count({
+            where: {
+              schoolId,
+              section: {
+                subjectTeachers: {
+                  some: { schoolId, termId: term.id, teacherId },
+                },
+              },
+            },
+          }),
+        ])
+      : [0, 0]
+    stats.push({
+      key: "classes",
+      value: pairs > 0 ? pairs : user.teacher._count.classes,
     })
+    const students =
+      sectionStudents > 0
+        ? sectionStudents
+        : await db.studentClass.count({
+            where: { schoolId, class: { teacherId } },
+          })
     stats.push({ key: "students", value: students })
   } else if (role === "parent" && user.guardian) {
     stats.push({
@@ -849,6 +877,32 @@ async function fetchRoleDetail(
   }
 
   if (role === "teacher") {
+    // Subjects the teacher teaches in each section this term; legacy classes
+    // only when there are none.
+    const { term } = await resolveActiveTerm(schoolId)
+    const pairs = term
+      ? await db.subjectTeacher.findMany({
+          where: { schoolId, termId: term.id, teacherId: entityId },
+          take: 24,
+          orderBy: [{ section: { name: "asc" } }],
+          select: {
+            sectionId: true,
+            subjectId: true,
+            section: { select: { name: true } },
+            subject: { select: { name: true } },
+          },
+        })
+      : []
+    if (pairs.length > 0) {
+      return {
+        ...empty,
+        classes: pairs.map((p) => ({
+          id: `${p.sectionId}:${p.subjectId}`,
+          name: `${p.subject.name} · ${p.section.name}`,
+          subjectName: p.subject.name,
+        })),
+      }
+    }
     const rows = await db.class.findMany({
       where: { schoolId, teacherId: entityId },
       take: 24,

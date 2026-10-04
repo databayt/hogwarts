@@ -643,6 +643,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     attendanceDueCount,
     pendingAssignments,
     upcomingExams,
+    assignedStudents,
   ] = await Promise.all([
     // Section-based slots carry `teacherId` on the row itself and have no
     // `class`; the old `class: { teacherId }` filter was an implicit inner join
@@ -767,12 +768,29 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       orderBy: { examDate: "asc" },
       take: 5,
     }),
+    // Students in the sections this teacher teaches a subject in this term
+    // (SubjectTeacher). New schools have no classes, so the class-based count
+    // below read 0 for every teacher.
+    db.student.count({
+      where: {
+        schoolId,
+        section: {
+          subjectTeachers: {
+            some: {
+              schoolId,
+              teacherId: teacher.id,
+              ...(teacherTerm ? { termId: teacherTerm.id } : {}),
+            },
+          },
+        },
+      },
+    }),
   ])
 
-  const totalStudents = classes.reduce(
-    (sum, cls) => sum + cls._count.studentClasses,
-    0
-  )
+  const totalStudents =
+    assignedStudents > 0
+      ? assignedStudents
+      : classes.reduce((sum, cls) => sum + cls._count.studentClasses, 0)
 
   const classPerformance = classes.map((cls) => {
     const allResults = cls.schoolExams.flatMap((exam) => exam.results)

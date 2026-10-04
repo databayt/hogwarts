@@ -119,6 +119,7 @@ export async function getQuickMarkingContext(): Promise<
                       some: { schoolId, teacherId, sectionId: { not: null } },
                     },
                   },
+                  { subjectTeachers: { some: { schoolId, teacherId } } },
                 ],
               }
             : {}),
@@ -230,9 +231,9 @@ export async function getQuickMarkingContext(): Promise<
  * offline sync route can replay a mark made without a connection through the
  * same ownership check, roster intersection and markAttendance path.
  */
-export async function submitQuickAttendance(input: unknown): Promise<
-  ActionResponse<QuickSubmitSummary>
-> {
+export async function submitQuickAttendance(
+  input: unknown
+): Promise<ActionResponse<QuickSubmitSummary>> {
   try {
     const g = await guardAttendance("mark")
     if (!g.ok) return g.error
