@@ -2,9 +2,13 @@
 
 **Status:** SHIPPED (post-merge verification pending)
 **Completion:** 95% (deferrals listed below)
-**Last Updated:** 2026-05-28
-**Tracking issue:** [hogwarts#4](https://github.com/databayt/hogwarts/issues/4)
-**Source-of-truth epic:** [kun docs `aldar` §04](https://kun.databayt.org/en/docs/aldar)
+**Last Updated:** 2026-10-04
+
+> **2026-10-04:** a child's assignments are the ones set for their section,
+> grade or a legacy class (`studentAudienceWhere`), so a school without classes
+> shows them too. Attendance and announcements here still read classes (S8/S10).
+> **Tracking issue:** [hogwarts#4](https://github.com/databayt/hogwarts/issues/4)
+> **Source-of-truth epic:** [kun docs `aldar` §04](https://kun.databayt.org/en/docs/aldar)
 
 ---
 

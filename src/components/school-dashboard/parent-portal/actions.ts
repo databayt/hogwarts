@@ -7,6 +7,8 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { getPolicyContext, PolicyContextError } from "@/lib/rbac/context"
 import { POLICY_ERROR_CODES } from "@/lib/rbac/types"
+import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes } from "@/lib/teaching-scope"
 
 // Resolve the guardian's Guardian.id (not session.user.id) and the schoolId
 // for every parent-portal action. Before this helper, each action used
@@ -136,19 +138,14 @@ export async function getChildAssignments(input: { studentId: string }) {
     throw new Error("Unauthorized access to student data")
   }
 
-  // Get student's classes
-  const studentClasses = await db.studentClass.findMany({
-    where: { studentId, schoolId },
-    select: { classId: true },
-  })
-
-  const classIds = studentClasses.map((sc) => sc.classId)
-
-  // Get assignments for student's classes
+  // The assignments set for the child's section, grade or legacy classes
+  const scopes = await getStudentScopes(schoolId, [studentId])
   const assignments = await db.schoolAssignment.findMany({
     where: {
-      classId: { in: classIds },
       schoolId,
+      wizardStep: null,
+      status: { not: "DRAFT" },
+      ...studentAudienceWhere(scopes),
     },
     include: {
       class: {
@@ -161,6 +158,9 @@ export async function getChildAssignments(input: { studentId: string }) {
           },
         },
       },
+      section: { select: { name: true } },
+      grade: { select: { name: true } },
+      subject: { select: { name: true } },
       submissions: {
         where: { studentId },
         select: {
@@ -180,8 +180,8 @@ export async function getChildAssignments(input: { studentId: string }) {
       id: assignment.id,
       title: assignment.title,
       description: assignment.description,
-      className: assignment.class.name,
-      name: assignment.class.subject.name,
+      className: audienceLabel(assignment),
+      name: assignment.subject?.name ?? assignment.class?.subject.name ?? "",
       publishDate: assignment.publishDate?.toISOString() || null,
       dueDate: assignment.dueDate.toISOString(),
       totalPoints: Number(assignment.totalPoints),

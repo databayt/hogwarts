@@ -10,7 +10,7 @@ const h = vi.hoisted(() => ({
   canAccessStudent: vi.fn(),
   getAssignmentsForStudent: vi.fn(),
   getAssignmentList: vi.fn(),
-  teachesClass: vi.fn(),
+  teachesAssignment: vi.fn(),
   getStudentSubmission: vi.fn(),
   submitAssignmentCore: vi.fn(),
   gradeSubmissionCore: vi.fn(),
@@ -39,7 +39,18 @@ vi.mock(
 vi.mock("@/components/school-dashboard/listings/assignments/queries", () => ({
   assignmentListSelect: {},
   getAssignmentList: h.getAssignmentList,
-  teachesClass: h.teachesClass,
+  teachesAssignment: h.teachesAssignment,
+}))
+vi.mock("@/lib/teaching-scope", () => ({
+  getTeacherPairs: vi.fn().mockResolvedValue([]),
+  getStudentScopes: vi.fn().mockResolvedValue([
+    {
+      studentId: "stu-1",
+      sectionId: "sec-10a",
+      gradeId: "g10",
+      classIds: ["class-1"],
+    },
+  ]),
 }))
 vi.mock(
   "@/components/school-dashboard/listings/assignments/submit-core",
@@ -184,7 +195,7 @@ describe("GET /api/mobile/assignments", () => {
     expect(h.getAssignmentsForStudent).toHaveBeenCalledWith(SCHOOL, "stu-2")
   })
 
-  it("teacher: only classes they teach (teacherId filter)", async () => {
+  it("teacher: only assignments they teach (teacher filter)", async () => {
     await authAs("TEACHER")
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
     h.getAssignmentList.mockResolvedValue({ rows: [assignmentRow()], count: 1 })
@@ -193,6 +204,8 @@ describe("GET /api/mobile/assignments", () => {
     expect(h.getAssignmentList).toHaveBeenCalledWith(SCHOOL, {
       status: "PUBLISHED",
       teacherId: "t1",
+      teacherUserId: USER,
+      teacherPairs: [],
       page: 1,
       perPage: 20,
     })
@@ -236,19 +249,23 @@ describe("GET /api/mobile/assignments/:id", () => {
     )
   })
 
-  it("403 for a teacher who does not teach the class", async () => {
+  it("403 for a teacher who does not teach the assignment", async () => {
     await authAs("TEACHER")
     vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue(
       assignmentRow() as never
     )
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t2" } as never)
-    h.teachesClass.mockResolvedValue(false)
+    h.teachesAssignment.mockResolvedValue(false)
     const { GET } = await import("@/app/api/mobile/assignments/[id]/route")
     expect((await GET(req("/a1"), ctx({ id: "a1" }))).status).toBe(403)
-    expect(h.teachesClass).toHaveBeenCalledWith(SCHOOL, "t2", "class-1")
+    expect(h.teachesAssignment).toHaveBeenCalledWith(
+      SCHOOL,
+      { id: "t2", userId: USER },
+      "a1"
+    )
   })
 
-  it("student: 404 on a draft, 403 when not in the class", async () => {
+  it("student: 404 on a draft, 403 when it isn't set for them", async () => {
     await authAs("STUDENT")
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
     const { GET } = await import("@/app/api/mobile/assignments/[id]/route")
@@ -258,10 +275,10 @@ describe("GET /api/mobile/assignments/:id", () => {
     )
     expect((await GET(req("/a1"), ctx({ id: "a1" }))).status).toBe(404)
 
-    vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue(
-      assignmentRow() as never
-    )
-    vi.mocked(db.studentClass.findFirst).mockResolvedValue(null)
+    // Found, but not set for the student's section, grade or classes.
+    vi.mocked(db.schoolAssignment.findFirst)
+      .mockResolvedValueOnce(assignmentRow() as never)
+      .mockResolvedValueOnce(null)
     expect((await GET(req("/a1"), ctx({ id: "a1" }))).status).toBe(403)
   })
 
@@ -271,9 +288,6 @@ describe("GET /api/mobile/assignments/:id", () => {
     vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue(
       assignmentRow() as never
     )
-    vi.mocked(db.studentClass.findFirst).mockResolvedValue({
-      id: "sc",
-    } as never)
     h.getStudentSubmission.mockResolvedValue(submission)
     const { GET } = await import("@/app/api/mobile/assignments/[id]/route")
     const body = await (await GET(req("/a1"), ctx({ id: "a1" }))).json()
@@ -383,7 +397,7 @@ describe("GET /api/mobile/assignments/:id/submissions", () => {
       assignmentRow() as never
     )
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
-    h.teachesClass.mockResolvedValue(true)
+    h.teachesAssignment.mockResolvedValue(true)
     vi.mocked(db.assignmentSubmission.findMany).mockResolvedValue([
       {
         ...submission,
@@ -456,7 +470,7 @@ describe("PUT /api/mobile/assignments/:id/submissions/:submissionId", () => {
   it("grades through the shared core", async () => {
     await authAs("TEACHER")
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
-    h.teachesClass.mockResolvedValue(true)
+    h.teachesAssignment.mockResolvedValue(true)
     const gradedAt = new Date("2026-09-14T10:00:00Z")
     h.gradeSubmissionCore.mockResolvedValue({
       status: "graded",

@@ -12,6 +12,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { audienceLabel } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -476,6 +477,9 @@ export async function getAssignmentsCSV(
             },
           },
         },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        subject: { select: { name: true } },
         _count: {
           select: {
             assignmentSubmissions: true,
@@ -490,8 +494,9 @@ export async function getAssignmentsCSV(
       assignmentId: assignment.id,
       title: assignment.title || "",
       description: assignment.description || "",
-      class: assignment.class?.name || "",
-      subject: assignment.class?.subject?.name || "",
+      class: audienceLabel(assignment) || "",
+      subject:
+        assignment.subject?.name || assignment.class?.subject?.name || "",
       type: assignment.type || "",
       totalPoints: assignment.totalPoints || 0,
       weight: assignment.weight || 0,
@@ -599,6 +604,9 @@ export async function getAssignmentsExportData(
             },
           },
         },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        subject: { select: { name: true } },
         _count: {
           select: {
             assignmentSubmissions: true,
@@ -618,8 +626,11 @@ export async function getAssignmentsExportData(
       id: assignment.id as string,
       title: assignment.title as string,
       description: assignment.description as string | null,
-      className: (assignment.class?.name as string) || null,
-      name: (assignment.class?.subject?.name as string) || null,
+      className: audienceLabel(assignment) || null,
+      name:
+        (assignment.subject?.name as string) ||
+        (assignment.class?.subject?.name as string) ||
+        null,
       teacherName: assignment.class?.teacher
         ? `${assignment.class.teacher.firstName} ${assignment.class.teacher.lastName}`.trim()
         : null,

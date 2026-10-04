@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes } from "@/lib/teaching-scope"
 
 /**
  * A student handing in an assignment.
@@ -23,7 +25,7 @@ export type AssignmentSubmitOutcome =
   /** The caller has no student record in this school. */
   | { status: "notStudent" }
   | { status: "notFound" }
-  /** Student is not in the assignment's class. */
+  /** The assignment isn't set for the student's section, grade or class. */
   | { status: "notInClass" }
   /** Still a draft — not visible to students yet. */
   | { status: "notOpen" }
@@ -65,16 +67,18 @@ export async function submitAssignmentCore(input: {
 
   const assignment = await db.schoolAssignment.findFirst({
     where: { id: assignmentId, schoolId },
-    select: { id: true, classId: true, dueDate: true, status: true },
+    select: { id: true, dueDate: true, status: true },
   })
   if (!assignment) return { status: "notFound" }
   if (assignment.status === "DRAFT") return { status: "notOpen" }
 
-  const membership = await db.studentClass.findFirst({
-    where: { schoolId, studentId: student.id, classId: assignment.classId },
+  // Set for the student's section, whole grade, or a legacy class of theirs.
+  const scopes = await getStudentScopes(schoolId, [student.id])
+  const reaches = await db.schoolAssignment.findFirst({
+    where: { id: assignmentId, schoolId, ...studentAudienceWhere(scopes) },
     select: { id: true },
   })
-  if (!membership) return { status: "notInClass" }
+  if (!reaches) return { status: "notInClass" }
 
   const key = {
     schoolId_assignmentId_studentId: {

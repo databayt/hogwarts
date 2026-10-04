@@ -8,7 +8,11 @@ import { getAssignmentForWizard } from "./actions"
 export interface AssignmentWizardData {
   id: string
   schoolId: string
-  classId: string
+  /** "" until the information step picks a grade. */
+  gradeId: string
+  /** null = the whole grade. */
+  sectionId: string | null
+  subjectId: string
   title: string
   description: string | null
   type: string

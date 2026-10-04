@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { getTeacherPairs } from "@/lib/teaching-scope"
 import { getAssignmentsForStudent } from "@/components/school-dashboard/listings/assignments/my-assignments"
 import {
   getAssignmentList,
@@ -114,6 +115,8 @@ export async function GET(request: NextRequest) {
         })
       }
       filters.teacherId = teacher.id
+      filters.teacherUserId = auth.userId
+      filters.teacherPairs = await getTeacherPairs(auth.schoolId, teacher.id)
     }
 
     const { rows, count } = await getAssignmentList(auth.schoolId, {

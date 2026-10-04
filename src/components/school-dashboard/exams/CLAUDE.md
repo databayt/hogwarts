@@ -34,7 +34,8 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~85% complete. See [R
   student or a guardian's children sit), `teacherExamsWhere` (class teacher OR
   creator OR a SubjectTeacher row for the exam's subject in its section/grade),
   `examAudienceLabel` (section → grade → class name) — and `lib/roster.ts` for the
-  database side. New create paths take a scope from `TeachingScopePicker` and
+  database side. The rules themselves live in `@/lib/teaching-audience` (pure)
+  and `@/lib/teaching-scope` (database), shared with assignments. New create paths take a scope from `TeachingScopePicker` and
   validate it with `resolveTeachingScope` (grade is the school's, section is in the
   grade, subject is taught there). A draft exam has no grade until its first step,
   so it reaches nobody. Finalize writes the gradebook (`Result`) row for every

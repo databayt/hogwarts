@@ -10,10 +10,19 @@
  * answers for both, so callers never branch on which kind they hold.
  *
  * Pure (no database). Callers include `examAudienceSelect` in their exam
- * query and pass the row in.
+ * query and pass the row in. The rules live in `@/lib/teaching-audience`,
+ * shared with assignments; these are the exam-typed names.
  */
 
 import type { Prisma } from "@prisma/client"
+
+import {
+  audienceLabel,
+  audienceRosterWhere,
+  pairAudienceWhere,
+  studentAudienceWhere,
+  type StudentAudienceScope,
+} from "@/lib/teaching-audience"
 
 /** The relations `examAudienceLabel` reads; spread into an `include`. */
 export const examAudienceInclude = {
@@ -44,7 +53,7 @@ export interface ExamAudience {
  * grade ("الصف السابع"), or a legacy class's name. Empty when unknown.
  */
 export function examAudienceLabel(exam: ExamAudience): string {
-  return exam.section?.name ?? exam.grade?.name ?? exam.class?.name ?? ""
+  return audienceLabel(exam)
 }
 
 /** The audience as an id + name pair, the shape paper headers print. */
@@ -54,46 +63,19 @@ export function examAudienceRef(exam: ExamAudience): {
 } {
   return {
     id: exam.sectionId ?? exam.gradeId ?? exam.classId ?? "",
-    name: examAudienceLabel(exam),
+    name: audienceLabel(exam),
   }
 }
 
-/**
- * Students who sit the exam. Legacy: enrolled in its class. Section exam:
- * placed in that section. Whole-grade exam: placed in any section of the
- * grade, or placed in the grade with no section yet. An exam with no
- * audience at all matches nobody.
- */
+/** Students who sit the exam — see `audienceRosterWhere`. */
 export function examRosterWhere(
   schoolId: string,
   exam: Pick<ExamAudience, "classId" | "gradeId" | "sectionId">
 ): Prisma.StudentWhereInput {
-  if (exam.sectionId) return { schoolId, sectionId: exam.sectionId }
-  if (exam.gradeId) {
-    return {
-      schoolId,
-      OR: [
-        { section: { gradeId: exam.gradeId } },
-        { sectionId: null, academicGradeId: exam.gradeId },
-      ],
-    }
-  }
-  if (exam.classId) {
-    return {
-      schoolId,
-      studentClasses: { some: { schoolId, classId: exam.classId } },
-    }
-  }
-  return { schoolId, id: { in: [] } }
+  return audienceRosterWhere(schoolId, exam)
 }
 
-/** Where a student sits — see `getStudentScopes` in `@/lib/teaching-scope`. */
-export interface StudentAudienceScope {
-  sectionId: string | null
-  gradeId: string | null
-  /** Legacy class enrollments. */
-  classIds: readonly string[]
-}
+export type { StudentAudienceScope }
 
 /**
  * Exams the given students sit (one student, or a guardian's children):
@@ -102,22 +84,7 @@ export interface StudentAudienceScope {
 export function studentExamsWhere(
   scopes: StudentAudienceScope | readonly StudentAudienceScope[]
 ): Prisma.SchoolExamWhereInput {
-  const list = Array.isArray(scopes) ? scopes : [scopes as StudentAudienceScope]
-  const classIds = new Set<string>()
-  const sectionIds = new Set<string>()
-  const gradeIds = new Set<string>()
-  for (const s of list) {
-    for (const id of s.classIds) classIds.add(id)
-    if (s.sectionId) sectionIds.add(s.sectionId)
-    if (s.gradeId) gradeIds.add(s.gradeId)
-  }
-  const or: Prisma.SchoolExamWhereInput[] = []
-  if (classIds.size > 0) or.push({ classId: { in: [...classIds] } })
-  if (sectionIds.size > 0) or.push({ sectionId: { in: [...sectionIds] } })
-  if (gradeIds.size > 0) {
-    or.push({ sectionId: null, gradeId: { in: [...gradeIds] } })
-  }
-  return or.length > 0 ? { OR: or } : { id: { in: [] } }
+  return studentAudienceWhere(scopes)
 }
 
 /**
@@ -131,24 +98,7 @@ export function pairExamsWhere(
     gradeId: string
   }>
 ): Prisma.SchoolExamWhereInput[] {
-  const sectionsBySubject = new Map<string, Set<string>>()
-  const gradesBySubject = new Map<string, Set<string>>()
-  for (const p of pairs) {
-    const sections = sectionsBySubject.get(p.subjectId) ?? new Set<string>()
-    sections.add(p.sectionId)
-    sectionsBySubject.set(p.subjectId, sections)
-    const grades = gradesBySubject.get(p.subjectId) ?? new Set<string>()
-    grades.add(p.gradeId)
-    gradesBySubject.set(p.subjectId, grades)
-  }
-  const or: Prisma.SchoolExamWhereInput[] = []
-  for (const [subjectId, ids] of sectionsBySubject) {
-    or.push({ subjectId, sectionId: { in: [...ids] } })
-  }
-  for (const [subjectId, ids] of gradesBySubject) {
-    or.push({ subjectId, sectionId: null, gradeId: { in: [...ids] } })
-  }
-  return or
+  return pairAudienceWhere(pairs)
 }
 
 /**
@@ -169,7 +119,7 @@ export function teacherExamsWhere(teacher: {
     OR: [
       { class: { teacherId: teacher.teacherId } },
       { createdById: teacher.userId },
-      ...pairExamsWhere(teacher.pairs),
+      ...pairAudienceWhere(teacher.pairs),
     ],
   }
 }

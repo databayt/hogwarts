@@ -4,22 +4,24 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
-  useEffect,
+  useCallback,
   useImperativeHandle,
-  useState,
   useTransition,
 } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getAssignmentTypes } from "@/components/school-dashboard/listings/assignments/config"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
+import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
-import { getClassesForAssignment, updateAssignmentInformation } from "./actions"
+import { updateAssignmentInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
 
 interface InformationFormProps {
@@ -38,37 +40,40 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       | string
       | undefined
     const typeOptions = getAssignmentTypes(locale)
-    const [classOptions, setClassOptions] = useState<
-      { label: string; value: string }[]
-    >([])
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolver: zodResolver(informationSchema) as any,
       defaultValues: {
         title: initialData?.title || "",
-        classId: initialData?.classId || "",
+        gradeId: initialData?.gradeId || "",
+        sectionId: initialData?.sectionId ?? null,
+        subjectId: initialData?.subjectId || "",
         type: initialData?.type || "HOMEWORK",
         description: initialData?.description || "",
       },
     })
 
-    // Fetch class options
-    useEffect(() => {
-      getClassesForAssignment().then((result) => {
-        if (result.success && result.data) {
-          setClassOptions(result.data)
-        }
-      })
-    }, [])
-
     // Notify parent of validity changes
     const title = form.watch("title")
-    const classId = form.watch("classId")
+    const gradeId = form.watch("gradeId")
+    const sectionId = form.watch("sectionId")
+    const subjectId = form.watch("subjectId")
     React.useEffect(() => {
-      const isValid = title.trim().length >= 1 && classId.trim().length >= 1
+      const isValid =
+        title.trim().length >= 1 && gradeId.length >= 1 && subjectId.length >= 1
       onValidChange?.(isValid)
-    }, [title, classId, onValidChange])
+    }, [title, gradeId, subjectId, onValidChange])
+
+    const setScope = useCallback(
+      (scope: TeachingScopeValue) => {
+        const opts = { shouldValidate: true, shouldDirty: true }
+        form.setValue("gradeId", scope.gradeId, opts)
+        form.setValue("sectionId", scope.sectionId, opts)
+        form.setValue("subjectId", scope.subjectId, opts)
+      },
+      [form]
+    )
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -86,7 +91,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
                 data
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  actionErrorMessage(result.error, dictionary, "Failed to save")
+                )
                 reject(new Error(result.error))
                 return
               }
@@ -110,11 +117,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             required
             disabled={isPending}
           />
-          <SelectField
-            name="classId"
-            label={fd?.class || "Class"}
-            options={classOptions}
-            required
+          <TeachingScopePicker
+            value={{ gradeId, sectionId, subjectId }}
+            onChange={setScope}
             disabled={isPending}
           />
           <SelectField

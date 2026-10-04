@@ -17,15 +17,23 @@ vi.mock("@/lib/db", () => ({
   db: {
     student: { findFirst: vi.fn() },
     schoolAssignment: { findFirst: vi.fn() },
-    studentClass: { findFirst: vi.fn() },
     assignmentSubmission: { findUnique: vi.fn(), upsert: vi.fn() },
   },
+}))
+vi.mock("@/lib/teaching-scope", () => ({
+  getStudentScopes: vi.fn().mockResolvedValue([
+    {
+      studentId: "stu-1",
+      sectionId: "sec-1",
+      gradeId: "g-1",
+      classIds: ["class-1"],
+    },
+  ]),
 }))
 
 const m = <T>(fn: T) => fn as unknown as ReturnType<typeof vi.fn>
 const mStudent = m(db.student.findFirst)
 const mAssignment = m(db.schoolAssignment.findFirst)
-const mMember = m(db.studentClass.findFirst)
 const mExisting = m(db.assignmentSubmission.findUnique)
 const mUpsert = m(db.assignmentSubmission.upsert)
 
@@ -48,7 +56,6 @@ beforeEach(() => {
     dueDate: DUE,
     status: "PUBLISHED",
   })
-  mMember.mockResolvedValue({ id: "sc-1" })
   mExisting.mockResolvedValue(null)
   mUpsert.mockResolvedValue({ id: "sub-1" })
 })
@@ -78,10 +85,26 @@ describe("submitAssignmentCore", () => {
       await submitAssignmentCore({ ...base, submittedAt: new Date() })
     ).toEqual({ status: "notOpen" })
 
-    mMember.mockResolvedValueOnce(null)
+    // Published, but not set for the student's section, grade or classes.
+    mAssignment
+      .mockResolvedValueOnce({ id: "a1", dueDate: DUE, status: "PUBLISHED" })
+      .mockResolvedValueOnce(null)
     expect(
       await submitAssignmentCore({ ...base, submittedAt: new Date() })
     ).toEqual({ status: "notInClass" })
+    expect(mAssignment).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "a1",
+          schoolId: "school-1",
+          OR: [
+            { classId: { in: ["class-1"] } },
+            { sectionId: { in: ["sec-1"] } },
+            { sectionId: null, gradeId: { in: ["g-1"] } },
+          ],
+        }),
+      })
+    )
 
     expect(mUpsert).not.toHaveBeenCalled()
   })

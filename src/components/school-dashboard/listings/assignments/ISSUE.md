@@ -2,9 +2,32 @@
 
 **Status:** IN PROGRESS
 **Completion:** 80%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-10-04
 
 ---
+
+## 2026-10-04 — assignments without classes (LOCAL, not pushed)
+
+New schools have no `Class` rows, so "+" failed ("no_classes") and nothing could
+be set. An assignment is now set for a grade — one section or the whole grade —
+plus a subject (migration `20261004150000_assignment_scope`, **owed on prod**):
+
+- The wizard's information step uses `TeachingScopePicker`; drafts need no class
+  and reach nobody until the step saves (`resolveTeachingScope` checks it).
+- Students see, open and submit assignments set for their section, grade or a
+  legacy class (`my-assignments.ts`, `submit-core.ts`, mobile `shared.ts`) via
+  `studentAudienceWhere` in `@/lib/teaching-audience`.
+- Teachers: a legacy class they teach, assignments they set, or a subject they're
+  assigned in the section/grade (`teacherAssignmentsWhere`, `teachesAssignment`).
+- The due-date reminder cron and the parent portal read the audience; exports and
+  the mobile DTO name the section or grade (mobile keeps `class_*` alongside
+  `grade_id` / `section_id`).
+
+Open:
+
+- [ ] `form.tsx` / `information.tsx` (modal) and `createAssignment` still take a
+      class — no UI renders them (S15).
+- [ ] Dashboards that count a student's assignments via StudentClass (S14).
 
 ## MVP Checklist
 
@@ -13,7 +36,7 @@
 - [x] Nine assignment types (Homework, Quiz, Test, Midterm, Final Exam, Project, Lab Report, Essay, Presentation)
 - [x] Due date management with date picker
 - [x] Points and weight configuration
-- [x] Class targeting
+- [x] Targeting — a grade, one of its sections, or (legacy) a class
 - [x] Status management (DRAFT, PUBLISHED)
 - [x] Student view component (`student-view.tsx`)
 - [x] Student submission form (`submission-form.tsx`)

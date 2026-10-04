@@ -4,10 +4,12 @@
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import type { MyAssignment } from "@/components/school-dashboard/listings/assignments/my-assignments"
 import {
   assignmentListSelect,
-  teachesClass,
+  teachesAssignment,
 } from "@/components/school-dashboard/listings/assignments/queries"
 import type { StudentSubmission } from "@/components/school-dashboard/listings/assignments/submit-core"
 
@@ -74,12 +76,19 @@ type AssignmentRow = {
   dueDate: Date
   publishDate: Date | null
   createdAt: Date
+  /** Legacy: the class it was set for. */
   class: {
     id: string
     name: string
     teacher: { id: string; firstName: string; lastName: string } | null
     subject: { id: string; name: string } | null
-  }
+  } | null
+  gradeId: string | null
+  sectionId: string | null
+  subjectId: string | null
+  section: { id: string; name: string } | null
+  grade: { id: string; name: string } | null
+  subject: { id: string; name: string } | null
   _count: { submissions: number }
   description?: string | null
   instructions?: string | null
@@ -99,10 +108,14 @@ export function assignmentDto(a: AssignmentRow) {
     due_date: a.dueDate,
     publish_date: a.publishDate,
     is_overdue: a.dueDate < new Date(),
-    class_id: a.class.id,
-    class_name: a.class.name,
-    subject_name: a.class.subject?.name ?? null,
-    teacher_name: a.class.teacher
+    // Who it's for. class_* stays for app builds that still read it; for an
+    // assignment set for a grade or section it names that.
+    grade_id: a.gradeId,
+    section_id: a.sectionId,
+    class_id: a.class?.id ?? null,
+    class_name: audienceLabel(a) || null,
+    subject_name: a.subject?.name ?? a.class?.subject?.name ?? null,
+    teacher_name: a.class?.teacher
       ? `${a.class.teacher.firstName} ${a.class.teacher.lastName}`.trim()
       : null,
     submissions_count: a._count.submissions,
@@ -114,12 +127,12 @@ export type AssignmentAccess =
   | {
       ok: true
       mode: "staff"
-      assignment: AssignmentRow & { classId: string }
+      assignment: AssignmentRow & { classId: string | null }
     }
   | {
       ok: true
       mode: "student" | "guardian"
-      assignment: AssignmentRow & { classId: string }
+      assignment: AssignmentRow & { classId: string | null }
       studentId: string
     }
   | { ok: false; response: NextResponse }
@@ -132,8 +145,10 @@ const deny = (status: number, error: string): AssignmentAccess => ({
 /**
  * Who may open an assignment:
  *  - ADMIN / DEVELOPER — any in their school
- *  - TEACHER — assignments of classes they lead or co-teach
- *  - STUDENT — published (non-draft) assignments of their own classes
+ *  - TEACHER — assignments they teach: a legacy class they lead or co-teach,
+ *    ones they set, or a subject they're assigned in its section or grade
+ *  - STUDENT — published (non-draft) assignments set for their section,
+ *    grade or a legacy class of theirs
  *  - GUARDIAN — the same, for a linked child named by `studentId`
  * Another school's id is a 404, never a 403 (no existence oracle).
  */
@@ -159,7 +174,11 @@ export async function resolveAssignmentAccess(
     })
     if (
       !teacher ||
-      !(await teachesClass(auth.schoolId, teacher.id, assignment.classId))
+      !(await teachesAssignment(
+        auth.schoolId,
+        { id: teacher.id, userId: auth.userId },
+        assignment.id
+      ))
     ) {
       return deny(403, "Forbidden")
     }
@@ -184,15 +203,16 @@ export async function resolveAssignmentAccess(
     }
 
     if (assignment.status === "DRAFT") return deny(404, "Assignment not found")
-    const member = await db.studentClass.findFirst({
+    const scopes = await getStudentScopes(auth.schoolId, [studentId])
+    const reaches = await db.schoolAssignment.findFirst({
       where: {
+        id: assignment.id,
         schoolId: auth.schoolId,
-        studentId,
-        classId: assignment.classId,
+        ...studentAudienceWhere(scopes),
       },
       select: { id: true },
     })
-    if (!member) return deny(403, "Forbidden")
+    if (!reaches) return deny(403, "Forbidden")
 
     return {
       ok: true,

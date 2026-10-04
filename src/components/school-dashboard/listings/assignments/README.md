@@ -2,12 +2,12 @@
 
 ### Overview
 
-The Assignments feature enables teachers and administrators to create homework, quizzes, projects, and other assessments. It supports a two-step wizard (information, details/grading), nine assignment types, due date management, points/weight configuration, class targeting, student submission forms, teacher review interface, and CSV export. Built with full multi-tenant isolation, notification dispatch, and RBAC.
+The Assignments feature enables teachers and administrators to create homework, quizzes, projects, and other assessments. It supports a two-step wizard (information, details/grading), nine assignment types, due date management, points/weight configuration, targeting a grade or one of its sections (with a subject), student submission forms, teacher review interface, and CSV export. Built with full multi-tenant isolation, notification dispatch, and RBAC.
 
 ### Capabilities by Role
 
 - **Admin**: Full CRUD on all assignments across school, publish/unpublish, export to CSV, view all submissions
-- **Teacher**: Create assignments for their classes, set type/points/weight/due date, grade submissions, export grades
+- **Teacher**: Create assignments for a grade or section and subject, set type/points/weight/due date, grade submissions, export grades. A teacher sees the assignments of subjects they're assigned, the ones they set, and legacy class assignments.
 - **Student**: View assigned work, submit assignments, view grades and feedback
 - **Guardian**: View child's assignments, due dates, and grades
 
@@ -54,7 +54,7 @@ assignments/
     config.ts                   # Wizard config (2 steps: information, details)
     actions.ts                  # Wizard-level server actions
     use-assignment-wizard.ts    # Wizard state hook
-    information/                # Step 1: title, description, class
+    information/                # Step 1: title, description, grade → section → subject
       content.tsx, form.tsx, validation.ts, actions.ts
     details/                    # Step 2: type, points, weight, due date
       content.tsx, form.tsx, validation.ts, actions.ts

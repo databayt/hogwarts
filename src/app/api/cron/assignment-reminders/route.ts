@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { audienceUserIds } from "@/lib/teaching-scope"
 
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization")
@@ -53,6 +54,10 @@ export async function GET(request: NextRequest) {
         id: true,
         schoolId: true,
         classId: true,
+        gradeId: true,
+        sectionId: true,
+        subjectId: true,
+        termId: true,
         title: true,
         dueDate: true,
         school: {
@@ -73,6 +78,14 @@ export async function GET(request: NextRequest) {
           })
         : "soon"
 
+      // The students it's for: its section, its whole grade, or its class.
+      const targetUserIds = await audienceUserIds(
+        assignment.schoolId,
+        assignment,
+        { students: true }
+      )
+      if (targetUserIds.length === 0) continue
+
       const { created } = await dispatchNotificationsToAudience({
         schoolId: assignment.schoolId,
         type: "assignment_due",
@@ -85,8 +98,7 @@ export async function GET(request: NextRequest) {
           url: `/assignments/${assignment.id}`,
         },
         lang: assignment.school?.preferredLanguage ?? "ar",
-        targetScope: "class",
-        targetClassId: assignment.classId,
+        targetUserIds,
       })
       totalCreated += created
     }

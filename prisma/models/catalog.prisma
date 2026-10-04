@@ -215,6 +215,7 @@ model Subject {
   subjectTeachers        SubjectTeacher[]
   schoolClasses          Class[]
   schoolExams            SchoolExam[]
+  schoolAssignments      SchoolAssignment[]
   schoolExamTemplates    SchoolExamTemplate[]
   schoolQuestionBanks    QuestionBank[]
   schoolResults          Result[]

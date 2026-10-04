@@ -54,6 +54,7 @@ model Section {
   timetables      Timetable[]
   subjectTeachers SubjectTeacher[]
   schoolExams     SchoolExam[]
+  schoolAssignments SchoolAssignment[]
   results         Result[]
   attendances     Attendance[]
   whatsappGroups  WhatsAppGroup[]

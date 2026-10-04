@@ -29,7 +29,10 @@ export async function getAssignmentForWizard(
       select: {
         id: true,
         schoolId: true,
-        classId: true,
+        gradeId: true,
+        sectionId: true,
+        subjectId: true,
+        class: { select: { gradeId: true, subjectId: true } },
         title: true,
         description: true,
         type: true,
@@ -44,12 +47,18 @@ export async function getAssignmentForWizard(
 
     if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
+    // A legacy assignment opens on its class's grade and subject; a fresh
+    // draft has no scope yet.
+    const { class: legacyClass, ...row } = assignment
+    const gradeId = row.gradeId ?? legacyClass?.gradeId ?? ""
     return {
       success: true,
       data: {
-        ...assignment,
-        totalPoints: Number(assignment.totalPoints),
-        weight: Number(assignment.weight),
+        ...row,
+        gradeId,
+        subjectId: row.subjectId ?? legacyClass?.subjectId ?? "",
+        totalPoints: Number(row.totalPoints),
+        weight: Number(row.weight),
       },
     }
   } catch (error) {
@@ -75,24 +84,16 @@ export async function createDraftAssignment(): Promise<
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Find the first available class for this school
-    const firstClass = await db.class.findFirst({
-      where: { schoolId },
-      select: { id: true },
-    })
-
-    if (!firstClass) {
-      return actionError(ACTION_ERRORS.NOT_FOUND, "no_classes")
-    }
-
     // Default due date: 7 days from now
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + 7)
 
+    // No class needed: the information step sets the grade, section and
+    // subject. Until then the draft reaches nobody.
     const assignment = await db.schoolAssignment.create({
       data: {
         schoolId,
-        classId: firstClass.id,
+        createdById: session.user.id ?? null,
         title: "",
         type: "HOMEWORK",
         totalPoints: new Decimal(100),
@@ -130,7 +131,7 @@ export async function completeAssignmentWizard(
     // Validate required fields are present
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
-      select: { title: true },
+      select: { title: true, gradeId: true, classId: true },
     })
 
     if (!assignment) {
@@ -139,6 +140,11 @@ export async function completeAssignmentWizard(
 
     if (!assignment.title) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "title_required")
+    }
+
+    // Without a grade (or a legacy class) it reaches no student.
+    if (!assignment.gradeId && !assignment.classId) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "scope_required")
     }
 
     await db.schoolAssignment.updateMany({

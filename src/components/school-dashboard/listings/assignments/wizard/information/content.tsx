@@ -30,7 +30,9 @@ export default function InformationContent() {
   useEffect(() => {
     if (data) {
       setIsValid(
-        data.title.trim().length >= 1 && data.classId.trim().length >= 1
+        data.title.trim().length >= 1 &&
+          data.gradeId.length >= 1 &&
+          data.subjectId.length >= 1
       )
     }
   }, [data])
@@ -57,7 +59,9 @@ export default function InformationContent() {
             data
               ? {
                   title: data.title,
-                  classId: data.classId,
+                  gradeId: data.gradeId,
+                  sectionId: data.sectionId,
+                  subjectId: data.subjectId,
                   type: data.type as InformationFormData["type"],
                   description: data.description ?? undefined,
                 }

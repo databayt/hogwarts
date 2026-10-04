@@ -3,9 +3,11 @@
 
 import { z } from "zod"
 
+import { teachingScopeFields } from "@/components/school-dashboard/teaching-scope/validation"
+
 export const informationSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  classId: z.string().min(1, "Class is required"),
+  ...teachingScopeFields,
   type: z.enum([
     "HOMEWORK",
     "QUIZ",

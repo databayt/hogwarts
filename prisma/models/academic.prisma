@@ -55,6 +55,7 @@ model AcademicGrade {
   subjectSelections SubjectSelection[]
   classes           Class[]
   schoolExams       SchoolExam[]
+  schoolAssignments SchoolAssignment[]
   results           Result[]
   classrooms        Classroom[]
   sections          Section[]

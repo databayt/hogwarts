@@ -15,6 +15,7 @@
  */
 
 import { db } from "@/lib/db"
+import { audienceRosterWhere, type Audience } from "@/lib/teaching-audience"
 
 export interface TeachingPair {
   sectionId: string
@@ -108,4 +109,74 @@ export async function getStudentScopes(
     gradeId: r.section?.gradeId ?? r.academicGradeId,
     classIds: r.studentClasses.map((c) => c.classId),
   }))
+}
+
+/**
+ * User ids for a piece of work's audience (an exam, an assignment): the
+ * students it's for, optionally their guardians, and the teachers who teach
+ * it — the legacy class's teacher, or the subject's teachers in its section
+ * or grade (that term's, when the work names one).
+ */
+export async function audienceUserIds(
+  schoolId: string,
+  work: Audience & { subjectId?: string | null; termId?: string | null },
+  include: { students?: boolean; guardians?: boolean; teachers?: boolean }
+): Promise<string[]> {
+  const wantsStudents = include.students || include.guardians
+  const [students, teachers] = await Promise.all([
+    wantsStudents
+      ? db.student.findMany({
+          where: audienceRosterWhere(schoolId, work),
+          select: {
+            userId: true,
+            studentGuardians: {
+              where: { schoolId },
+              select: { guardian: { select: { userId: true } } },
+            },
+          },
+        })
+      : Promise.resolve([]),
+    include.teachers ? audienceTeacherUserIds(schoolId, work) : [],
+  ])
+
+  const ids = new Set<string>(teachers)
+  for (const s of students) {
+    if (include.students && s.userId) ids.add(s.userId)
+    if (include.guardians) {
+      for (const g of s.studentGuardians) {
+        if (g.guardian.userId) ids.add(g.guardian.userId)
+      }
+    }
+  }
+  return [...ids]
+}
+
+async function audienceTeacherUserIds(
+  schoolId: string,
+  work: Audience & { subjectId?: string | null; termId?: string | null }
+): Promise<string[]> {
+  const [legacy, assigned] = await Promise.all([
+    work.classId
+      ? db.class.findFirst({
+          where: { id: work.classId, schoolId },
+          select: { teacher: { select: { userId: true } } },
+        })
+      : null,
+    work.subjectId && (work.sectionId || work.gradeId)
+      ? db.subjectTeacher.findMany({
+          where: {
+            schoolId,
+            subjectId: work.subjectId,
+            ...(work.termId ? { termId: work.termId } : {}),
+            ...(work.sectionId
+              ? { sectionId: work.sectionId }
+              : { section: { gradeId: work.gradeId! } }),
+          },
+          select: { teacher: { select: { userId: true } } },
+        })
+      : Promise.resolve([]),
+  ])
+  const ids = assigned.map((a) => a.teacher.userId)
+  if (legacy?.teacher?.userId) ids.push(legacy.teacher.userId)
+  return [...new Set(ids.filter((id): id is string => !!id))]
 }

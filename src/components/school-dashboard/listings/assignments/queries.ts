@@ -14,6 +14,8 @@
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { pairAudienceWhere } from "@/lib/teaching-audience"
+import { getTeacherPairs } from "@/lib/teaching-scope"
 
 // ============================================================================
 // Types
@@ -35,8 +37,18 @@ export type AssignmentListFilters = {
   status?: "DRAFT" | "PUBLISHED" | "IN_PROGRESS" | "COMPLETED" | "GRADED"
   dueDateFrom?: Date
   dueDateTo?: Date
-  /** Only assignments of classes this Teacher (Teacher.id) teaches or co-teaches. */
+  /**
+   * Only the assignments this Teacher (Teacher.id) teaches: a legacy class
+   * they lead or co-teach, plus — with the fields below — what they set and
+   * what a subject they're assigned covers (see `teacherAssignmentsWhere`).
+   */
   teacherId?: string
+  teacherUserId?: string
+  teacherPairs?: ReadonlyArray<{
+    sectionId: string
+    subjectId: string
+    gradeId: string
+  }>
 }
 
 export type PaginationParams = {
@@ -88,6 +100,14 @@ export const assignmentListSelect = {
       },
     },
   },
+  // Who it's for (assignments set since classes were retired)
+  gradeId: true,
+  sectionId: true,
+  subjectId: true,
+  createdById: true,
+  section: { select: { id: true, name: true } },
+  grade: { select: { id: true, name: true } },
+  subject: { select: { id: true, name: true } },
   _count: {
     select: {
       submissions: true,
@@ -208,9 +228,16 @@ export function buildAssignmentWhere(
     where.classId = filters.classId
   }
 
-  // Teacher filter — lead teacher or any ClassTeacher row
+  // Teacher filter — see teacherAssignmentsWhere. ANDed so it can't widen
+  // the search's OR.
   if (filters.teacherId) {
-    where.class = teacherClassWhere(filters.teacherId)
+    where.AND = [
+      teacherAssignmentsWhere({
+        teacherId: filters.teacherId,
+        userId: filters.teacherUserId,
+        pairs: filters.teacherPairs ?? [],
+      }),
+    ]
   }
 
   // Type filter
@@ -245,15 +272,45 @@ export function teacherClassWhere(teacherId: string): Prisma.ClassWhereInput {
 }
 
 /**
- * Whether a Teacher (Teacher.id) teaches the class — lead or ClassTeacher.
+ * Assignments a teacher teaches: a legacy class they lead or co-teach, the
+ * assignments they set, and assignments set for a section — or a whole grade —
+ * where they teach the assignment's subject (`pairs` from `getTeacherPairs`).
  */
-export async function teachesClass(
+export function teacherAssignmentsWhere(teacher: {
+  teacherId: string
+  userId?: string
+  pairs: ReadonlyArray<{
+    sectionId: string
+    subjectId: string
+    gradeId: string
+  }>
+}): Prisma.SchoolAssignmentWhereInput {
+  return {
+    OR: [
+      { class: teacherClassWhere(teacher.teacherId) },
+      ...(teacher.userId ? [{ createdById: teacher.userId }] : []),
+      ...pairAudienceWhere(teacher.pairs),
+    ],
+  }
+}
+
+/** Whether a teacher teaches this assignment — see `teacherAssignmentsWhere`. */
+export async function teachesAssignment(
   schoolId: string,
-  teacherId: string,
-  classId: string
+  teacher: { id: string; userId: string },
+  assignmentId: string
 ): Promise<boolean> {
-  const row = await db.class.findFirst({
-    where: { id: classId, schoolId, ...teacherClassWhere(teacherId) },
+  const pairs = await getTeacherPairs(schoolId, teacher.id)
+  const row = await db.schoolAssignment.findFirst({
+    where: {
+      id: assignmentId,
+      schoolId,
+      ...teacherAssignmentsWhere({
+        teacherId: teacher.id,
+        userId: teacher.userId,
+        pairs,
+      }),
+    },
     select: { id: true },
   })
   return !!row
