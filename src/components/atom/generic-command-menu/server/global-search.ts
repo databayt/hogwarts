@@ -31,11 +31,13 @@ import {
   type PredicateCtx,
 } from "./rbac-predicates"
 
+// "class" is not searched: classes are being retired in favour of section +
+// subject, and its results linked to `/classes/:id`, a page that never
+// existed. The case below stays only so an explicit `kinds` request is safe.
 const ALL_KINDS: SpotlightGroupKind[] = [
   "student",
   "teacher",
   "guardian",
-  "class",
   "classroom",
   "subject",
   "vehicle",

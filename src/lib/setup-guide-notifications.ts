@@ -27,67 +27,54 @@ const SETUP_STEPS: SetupStep[] = [
       "Your school has been set up successfully. Follow the next steps to fully activate the system.",
     url: "/dashboard",
   },
+  // Onboarding already built the grades, their subjects, the sections and a
+  // weekly timetable for every section — subjects are placed and waiting for
+  // teachers. What's left is people: hire, give each teacher their subjects,
+  // place students. ("Generate classes" / "enroll into classes" steps are gone:
+  // classes are being retired in favour of section + subject.)
   {
     stepNumber: 1,
     titleAr: "الخطوة 1: إضافة المعلمين",
-    titleEn: "Step 1: Import Teachers",
+    titleEn: "Step 1: Add Teachers",
     bodyAr: "أضف المعلمين يدويًا أو عبر ملف CSV من صفحة المعلمين.",
     bodyEn: "Add teachers manually or via CSV from the Teachers page.",
     url: "/teachers",
   },
   {
     stepNumber: 2,
-    titleAr: "الخطوة 2: إضافة الطلاب",
-    titleEn: "Step 2: Import Students",
+    titleAr: "الخطوة 2: تحديد مواد كل معلم",
+    titleEn: "Step 2: Choose Each Teacher's Subjects",
+    bodyAr: "حدد المواد التي يدرّسها كل معلم، فتُسند إليه حصصها في الجدول.",
+    bodyEn:
+      "Choose the subjects each teacher teaches so their periods in the timetable get a teacher.",
+    url: "/teachers",
+  },
+  {
+    stepNumber: 3,
+    titleAr: "الخطوة 3: إضافة الطلاب",
+    titleEn: "Step 3: Add Students",
     bodyAr: "أضف الطلاب يدويًا أو عبر ملف CSV من صفحة الطلاب.",
     bodyEn: "Add students manually or via CSV from the Students page.",
     url: "/students",
   },
   {
-    stepNumber: 3,
-    titleAr: "الخطوة 3: تعيين المراحل للطلاب",
-    titleEn: "Step 3: Assign Grades to Students",
-    bodyAr: "حدد المرحلة الدراسية لكل طالب حتى يتم تسجيلهم في الفصول.",
+    stepNumber: 4,
+    titleAr: "الخطوة 4: توزيع الطلاب على الفصول",
+    titleEn: "Step 4: Place Students in Sections",
+    bodyAr: "ضع كل طالب في فصله ليظهر له جدوله وحضوره.",
     bodyEn:
-      "Assign an academic grade to each student so they can be enrolled in classes.",
+      "Place each student in their section so they get its timetable and attendance.",
     url: "/students",
   },
   {
-    stepNumber: 4,
-    titleAr: "الخطوة 4: إنشاء الفصول",
-    titleEn: "Step 4: Generate Classes",
-    bodyAr: "انتقل إلى الفصول الدراسية > إعداد لإنشاء فصول المواد تلقائيًا.",
-    bodyEn:
-      "Go to Classrooms > Configure to auto-generate subject classes for each grade.",
-    url: "/classrooms/configure",
-  },
-  {
     stepNumber: 5,
-    titleAr: "الخطوة 5: تسجيل الطلاب في الفصول",
-    titleEn: "Step 5: Enroll Students",
+    titleAr: "الخطوة 5: مراجعة الجدول المدرسي",
+    titleEn: "Step 5: Review the Timetable",
     bodyAr:
-      "انتقل إلى الفصول الدراسية > إعداد لتسجيل الطلاب في فصولهم تلقائيًا.",
+      "جدول كل فصل جاهز. الحصص التي لم يُسند لها معلم تظهر «بانتظار معلم».",
     bodyEn:
-      "Go to Classrooms > Configure to enroll students into their grade's classes.",
-    url: "/classrooms/configure",
-  },
-  {
-    stepNumber: 6,
-    titleAr: "الخطوة 6: تحديد تخصصات المعلمين",
-    titleEn: "Step 6: Set Teacher Expertise",
-    bodyAr: "حدد المواد التي يدرسها كل معلم حتى يتمكن نظام الجدول من توزيعهم.",
-    bodyEn:
-      "Set subject qualifications for each teacher so the timetable algorithm can assign them.",
-    url: "/teachers",
-  },
-  {
-    stepNumber: 7,
-    titleAr: "الخطوة 7: إنشاء الجدول المدرسي",
-    titleEn: "Step 7: Generate Timetable",
-    bodyAr: "انتقل إلى الجدول المدرسي > إنشاء لإنشاء الجدول الأسبوعي تلقائيًا.",
-    bodyEn:
-      "Go to Timetable > Generate to auto-generate the weekly school timetable.",
-    url: "/timetable/generate",
+      "Every section already has its weekly timetable. Periods without a teacher show “Needs teacher”.",
+    url: "/timetable",
   },
 ]
 

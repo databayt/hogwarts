@@ -2162,17 +2162,21 @@ export async function placeStudentInSection(params: {
       return actionError(ACTION_ERRORS.STUDENT_ALREADY_IN_SECTION)
     }
 
-    // Create StudentClass entries
-    let noClassesForGrade = false
-
-    if (sectionData.gradeId) {
-      const result = await enrollStudentInGradeClasses(
-        schoolId,
-        student.id,
-        sectionData.gradeId
-      )
-      noClassesForGrade = result.classIds.length === 0
-    }
+    // The section is the student's roster and timetable. Legacy grade
+    // classes (being retired) are still synced for schools that have them,
+    // but the warning only fires when the section has no timetable — "no
+    // classes" fired for every new school, which never has classes.
+    const [, sectionSlotCount] = await Promise.all([
+      sectionData.gradeId
+        ? enrollStudentInGradeClasses(
+            schoolId,
+            student.id,
+            sectionData.gradeId
+          )
+        : Promise.resolve(null),
+      db.timetable.count({ where: { schoolId, sectionId: params.sectionId } }),
+    ])
+    const noTimetable = sectionSlotCount === 0
 
     // Notify student about section placement (non-blocking)
     if (student.userId) {
@@ -2207,7 +2211,8 @@ export async function placeStudentInSection(params: {
     refreshPage("/students")
     refreshPage("/classrooms")
 
-    if (noClassesForGrade) {
+    // Code name predates sections; the message now says "no timetable".
+    if (noTimetable) {
       return {
         success: true,
         data: null,

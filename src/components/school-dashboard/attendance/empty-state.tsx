@@ -13,7 +13,6 @@ import {
   Plus,
   QrCode,
   School,
-  UserPlus,
   Users,
 } from "lucide-react"
 
@@ -196,12 +195,8 @@ export function NoStudentsEmptyState({
             "This section doesn't have any enrolled students yet. Add students to start tracking their attendance."}
         </p>
         <div className="flex gap-3">
-          <Link href={`${prefix}/students/enroll`}>
-            <Button variant="outline" size="sm">
-              <UserPlus className="me-2 h-4 w-4" />
-              {es?.enrollStudents || "Enroll Students"}
-            </Button>
-          </Link>
+          {/* A section's roster is whoever is placed in it — placement happens
+              on the students list, not in a class-enrollment screen. */}
           <Link href={`${prefix}/students`}>
             <Button size="sm">
               {es?.manageStudents || "Manage Students"}

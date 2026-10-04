@@ -18,14 +18,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 type SlotData = {
@@ -48,16 +40,6 @@ type PeriodData = {
   endTime: string
 }
 
-type ClassData = {
-  id: string
-  name: string
-  gradeName: string | null
-  subject: string
-  teacher: string
-  enrollment: number
-  maxCapacity: number
-}
-
 interface RoomDetailProps {
   lang: string
   subdomain: string
@@ -74,7 +56,6 @@ interface RoomDetailProps {
     workingDays: number[]
     periods: PeriodData[]
   }
-  classes: ClassData[]
   utilization: { usedSlots: number; totalSlots: number; rate: number }
   hasActiveTerm: boolean
 }
@@ -84,7 +65,6 @@ export function RoomDetail({
   subdomain,
   room,
   timetable,
-  classes,
   utilization,
   hasActiveTerm,
 }: RoomDetailProps) {
@@ -321,44 +301,6 @@ export function RoomDetail({
                   "No active term found. Schedule data unavailable."}
               </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Assigned Classes */}
-      {classes.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              {d?.assignedClasses || "Assigned Classes"} ({classes.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{d?.class || "Class"}</TableHead>
-                  <TableHead>{d?.grade || "Grade"}</TableHead>
-                  <TableHead>{d?.subject || "Subject"}</TableHead>
-                  <TableHead>{d?.teacher || "Teacher"}</TableHead>
-                  <TableHead>{d?.enrollment || "Enrollment"}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {classes.map((cls) => (
-                  <TableRow key={cls.id}>
-                    <TableCell className="font-medium">{cls.name}</TableCell>
-                    <TableCell>{cls.gradeName || "-"}</TableCell>
-                    <TableCell>{cls.subject || "-"}</TableCell>
-                    <TableCell>{cls.teacher || "-"}</TableCell>
-                    <TableCell>
-                      {cls.enrollment}/{cls.maxCapacity}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
       )}

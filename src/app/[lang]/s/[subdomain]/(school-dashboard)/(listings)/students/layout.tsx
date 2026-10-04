@@ -16,13 +16,10 @@ export default async function StudentsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.students
 
-  // Define students page navigation (6 links)
+  // Students page navigation. No "Enroll" tab: a student's roster is the
+  // section they're placed in, not a class enrollment.
   const studentsPages: PageNavItem[] = [
     { name: d?.navigation?.all || "All", href: `/${lang}/students` },
-    {
-      name: d?.navigation?.enroll || "Enroll",
-      href: `/${lang}/students/enroll`,
-    },
     {
       name: d?.navigation?.performance || "Performance",
       href: `/${lang}/students/performance`,

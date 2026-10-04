@@ -193,40 +193,45 @@ export async function updateStudentAcademic(
     const { schoolId } = authz
 
     const parsed = academicSchema.parse(input)
-    let noClassesWarning = false
+
+    // The section must be this school's — ids are global CUIDs, and the
+    // write below used to take whatever id the form sent.
+    const section = parsed.sectionId
+      ? await db.section.findFirst({
+          where: { id: parsed.sectionId, schoolId },
+          select: { id: true, gradeId: true },
+        })
+      : null
+    if (parsed.sectionId && !section) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    let noTimetableWarning = false
 
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
         academicGradeId: parsed.academicGradeId || null,
         academicStreamId: parsed.academicStreamId || null,
-        sectionId: parsed.sectionId || null,
+        sectionId: section?.id ?? null,
         previousSchoolName: parsed.previousSchoolName || null,
       },
     })
 
-    // Without enrollStudentInGradeClasses the student has empty timetables
-    // and does not appear in attendance rosters.
+    // The section is the student's roster and timetable. Legacy grade
+    // classes (being retired) are still synced for schools that have them.
+    // The warning only fires when the section really has no timetable —
+    // "no classes" fired for every new school, which never has classes.
     const enroll = async () => {
-      if (!parsed.sectionId) return
-      const section = await db.section.findFirst({
-        where: { id: parsed.sectionId, schoolId },
-        select: { gradeId: true },
-      })
-
-      const gradeId = section?.gradeId || parsed.academicGradeId
-      if (gradeId) {
-        const result = await enrollStudentInGradeClasses(
-          schoolId,
-          studentId,
-          gradeId
-        )
-        if (result.classIds.length === 0) {
-          // A code the client translates — the helper's own `warning` is
-          // English prose, and the form used to drop it on the floor anyway.
-          noClassesWarning = true
-        }
-      }
+      if (!section) return
+      const gradeId = section.gradeId || parsed.academicGradeId
+      const [, slotCount] = await Promise.all([
+        gradeId
+          ? enrollStudentInGradeClasses(schoolId, studentId, gradeId)
+          : Promise.resolve(null),
+        db.timetable.count({ where: { schoolId, sectionId: section.id } }),
+      ])
+      noTimetableWarning = slotCount === 0
     }
 
     // Founder contract: by the time this action returns, FeeAssignment rows
@@ -255,7 +260,8 @@ export async function updateStudentAcademic(
     // run them side by side instead of paying both latencies in a row.
     await Promise.all([enroll(), assignFees()])
 
-    return noClassesWarning
+    // Code name predates sections; the message now says "no timetable".
+    return noTimetableWarning
       ? { success: true, warning: ACTION_ERRORS.NO_CLASSES_FOR_GRADE }
       : { success: true }
   } catch (error) {

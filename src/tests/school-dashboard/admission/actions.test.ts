@@ -66,6 +66,10 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
     },
+    // placeStudentInSection warns when the section has no timetable yet.
+    timetable: {
+      count: vi.fn().mockResolvedValue(30),
+    },
     class: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -1581,6 +1585,35 @@ describe("Admission Actions", () => {
         where: { id: "student-1" },
         data: { sectionId: "sec-1" },
       })
+    })
+
+    it("does not warn about missing classes when the section has a timetable", async () => {
+      setupPlacementMocks()
+      vi.mocked(db.timetable.count).mockResolvedValueOnce(30)
+
+      const result = await placeStudentInSection({
+        applicationId: "a-1",
+        sectionId: "sec-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(result).not.toHaveProperty("warning")
+      expect(db.timetable.count).toHaveBeenCalledWith({
+        where: { schoolId: SCHOOL_ID, sectionId: "sec-1" },
+      })
+    })
+
+    it("warns when the section has no timetable yet", async () => {
+      setupPlacementMocks()
+      vi.mocked(db.timetable.count).mockResolvedValueOnce(0)
+
+      const result = await placeStudentInSection({
+        applicationId: "a-1",
+        sectionId: "sec-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(result).toMatchObject({ warning: "NO_CLASSES_FOR_GRADE" })
     })
 
     it("places a student directly by id — the students-list path shared by every intake channel", async () => {
