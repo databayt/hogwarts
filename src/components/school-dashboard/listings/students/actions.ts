@@ -1124,7 +1124,6 @@ export async function getStudents(
         include: {
           _count: {
             select: {
-              studentClasses: true,
               results: true,
               studentGuardians: true,
             },

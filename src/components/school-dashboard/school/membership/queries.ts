@@ -22,7 +22,6 @@ export async function getUnifiedMembers(
           academicGradeId: true,
           academicGrade: { select: { name: true } },
           section: { select: { name: true } },
-          _count: { select: { studentClasses: true } },
         },
       },
       teacher: {
@@ -37,7 +36,8 @@ export async function getUnifiedMembers(
             select: { department: { select: { departmentName: true } } },
             take: 1,
           },
-          _count: { select: { classes: true } },
+          // A class taught is a section·subject assignment now
+          _count: { select: { subjectTeachers: true } },
         },
       },
       staffMember: {
@@ -117,13 +117,11 @@ export async function getUnifiedMembers(
       if (user.student.section?.name) parts.push(user.student.section.name)
       else if (user.student.academicGrade?.name)
         parts.push(user.student.academicGrade.name)
-      if (user.student._count.studentClasses > 0)
-        parts.push(`${user.student._count.studentClasses} classes`)
       contextInfo = parts.length > 0 ? parts.join(" · ") : null
     } else if (user.teacher) {
       const parts: string[] = []
-      if (user.teacher._count.classes > 0)
-        parts.push(`${user.teacher._count.classes} classes`)
+      if (user.teacher._count.subjectTeachers > 0)
+        parts.push(`${user.teacher._count.subjectTeachers} classes`)
       const primaryDept = user.teacher.teacherDepartments[0]
       if (primaryDept) parts.push(primaryDept.department.departmentName)
       contextInfo = parts.length > 0 ? parts.join(" · ") : null

@@ -4,9 +4,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { audienceRosterWhere } from "@/lib/teaching-audience"
 
 import { authenticate, isAuthError } from "../../../../lib/authenticate"
 import { hasRole } from "../../../../lib/roles"
+import { resolveClassTarget } from "../target"
 
 /**
  * POST /api/mobile/teacher/classes/:classId/grades — submit grades for students
@@ -34,51 +36,55 @@ export async function POST(
       )
     }
 
-    // Verify teacher assignment for TEACHER role
-    if (auth.role === "TEACHER") {
-      const teacher = await db.teacher.findFirst({
-        where: { userId: auth.userId, schoolId: auth.schoolId },
-        select: { id: true },
-      })
+    // `{classId}` is a section (a legacy class id still resolves)
+    const target = await resolveClassTarget(auth, classId)
+    if (!target.ok) return target.response
 
-      if (!teacher) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
-
-      const assigned = await db.class.findFirst({
-        where: {
-          id: classId,
-          schoolId: auth.schoolId,
-          OR: [
-            { teacherId: teacher.id },
-            { classTeachers: { some: { teacherId: teacher.id } } },
-          ],
-        },
-        select: { id: true },
-      })
-
-      if (!assigned) {
-        return NextResponse.json(
-          { error: "Not assigned to this class" },
-          { status: 403 }
-        )
-      }
-    }
-
-    // Verify exam exists and belongs to this class
+    // The exam must be one the caller may work with here
     const exam = await db.schoolExam.findFirst({
-      where: {
-        id: exam_id,
-        classId,
-        schoolId: auth.schoolId,
+      where: { id: exam_id, schoolId: auth.schoolId, ...target.examWhere },
+      select: {
+        id: true,
+        totalMarks: true,
+        classId: true,
+        gradeId: true,
+        sectionId: true,
       },
-      select: { id: true, totalMarks: true },
     })
 
     if (!exam) {
       return NextResponse.json(
         { error: "Exam not found for this class" },
         { status: 404 }
+      )
+    }
+
+    // Every student must sit the exam — in this section when `{classId}` is
+    // one. Ids are global CUIDs: anything else could write a mark for
+    // another school's student.
+    const studentIds = [
+      ...new Set(
+        (gradeResults as Array<{ student_id: string }>).map((r) => r.student_id)
+      ),
+    ]
+    const onRoster = await db.student.findMany({
+      where: {
+        ...audienceRosterWhere(auth.schoolId, {
+          classId: exam.classId,
+          gradeId: exam.gradeId,
+          sectionId: exam.sectionId,
+        }),
+        ...(target.sectionId ? { sectionId: target.sectionId } : {}),
+        id: { in: studentIds },
+      },
+      select: { id: true },
+    })
+    const allowed = new Set(onRoster.map((s) => s.id))
+    const outside = studentIds.filter((id) => !allowed.has(id))
+    if (outside.length > 0) {
+      return NextResponse.json(
+        { error: "Student not in this class", student_ids: outside },
+        { status: 400 }
       )
     }
 

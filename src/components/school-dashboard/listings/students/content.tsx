@@ -165,7 +165,6 @@ export default async function StudentsContent({
         include: {
           _count: {
             select: {
-              studentClasses: true,
               results: true,
               studentGuardians: true,
             },

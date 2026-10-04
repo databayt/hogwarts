@@ -765,7 +765,8 @@ export async function getTenantDetail(tenantId: string): Promise<{
       }),
       db.student.count({ where: { schoolId: tenantId } }),
       db.teacher.count({ where: { schoolId: tenantId } }),
-      db.class.count({ where: { schoolId: tenantId } }),
+      // "Classes" are sections (Grade 7-A) — subject-courses are retired
+      db.section.count({ where: { schoolId: tenantId } }),
       db.school.findUnique({
         where: { id: tenantId },
         select: { planType: true },

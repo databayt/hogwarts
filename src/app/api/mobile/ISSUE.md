@@ -15,9 +15,24 @@ last_audited: 2026-09-22
 
 **Status:** IN PROGRESS
 **Completion:** 40%
-**Last Updated:** 2026-05-25
+**Last Updated:** 2026-10-04
 
 ---
+
+## 2026-10-04 — teacher class routes take a section
+
+`GET /api/mobile/teacher/classes` returns sections, so `{classId}` in its
+sub-routes is a section id (a legacy class id still resolves for one release,
+`teacher/classes/[classId]/target.ts`).
+
+- [x] `…/assessments` lists the section's exams and its grade's whole-grade
+      exams, a teacher's narrowed to what they teach; `?subject_id=` narrows
+      more. It used to need a Class row and listed nothing in a new school.
+- [x] **P0 — `…/grades` wrote a mark for any `student_id`**, including another
+      school's student, into this school's exam. Every student must now sit the
+      exam in that section (400 with the offending ids otherwise), and the exam
+      must be one the caller may work with there.
+- Tests: `src/tests/app/api/mobile/teacher/class-exams.test.ts`.
 
 ## MVP Checklist
 

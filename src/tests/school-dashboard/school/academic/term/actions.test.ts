@@ -38,6 +38,12 @@ vi.mock("@/lib/db", () => ({
     class: {
       count: vi.fn(),
     },
+    timetable: {
+      count: vi.fn(),
+    },
+    subjectTeacher: {
+      count: vi.fn(),
+    },
   },
 }))
 
@@ -206,6 +212,8 @@ describe("Term Actions", () => {
         id: "term-1",
       } as any)
       vi.mocked(db.class.count).mockResolvedValue(0)
+      vi.mocked(db.timetable.count).mockResolvedValue(0)
+      vi.mocked(db.subjectTeacher.count).mockResolvedValue(0)
       vi.mocked(db.term.deleteMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await deleteTerm({ id: "term-1" })
@@ -213,20 +221,25 @@ describe("Term Actions", () => {
       expect(result.success).toBe(true)
     })
 
-    it("blocks deletion when classes reference it", async () => {
+    it.each([
+      ["timetable periods", "timetable"],
+      ["teacher assignments", "subjectTeacher"],
+      ["legacy classes", "class"],
+    ] as const)("keeps a term that holds %s", async (_, model) => {
       mockAdminContext()
       vi.mocked(db.term.findFirst).mockResolvedValue({
         id: "term-1",
-      } as any)
-      vi.mocked(db.class.count).mockResolvedValue(5)
+      } as never)
+      vi.mocked(db.class.count).mockResolvedValue(0)
+      vi.mocked(db.timetable.count).mockResolvedValue(0)
+      vi.mocked(db.subjectTeacher.count).mockResolvedValue(0)
+      vi.mocked(db[model].count).mockResolvedValue(5)
 
       const result = await deleteTerm({ id: "term-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toContain("Cannot delete term")
-        expect(result.error).toContain("5 classes")
-      }
+      if (!result.success) expect(result.error).toBe("HAS_DEPENDENCIES")
+      expect(db.term.deleteMany).not.toHaveBeenCalled()
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {

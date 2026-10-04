@@ -48,6 +48,10 @@ function TermTableInner({
     search: lang === "ar" ? "بحث في الفصول الدراسية..." : "Search terms...",
     create: lang === "ar" ? "إضافة فصل" : "Add Term",
     deleteTerm: lang === "ar" ? "حذف الفصل الدراسي" : "Delete term",
+    inUse:
+      lang === "ar"
+        ? "لا يمكن حذف هذا الفصل الدراسي: فيه جدول حصص أو معلمون مكلّفون"
+        : "This term has a timetable or teacher assignments — it can't be deleted",
     setActiveSuccess:
       lang === "ar" ? "تم تعيين الفصل كنشط" : "Term set as active",
     reset: lang === "ar" ? "إعادة تعيين" : "Reset",
@@ -94,14 +98,18 @@ function TermTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(result.error || "Operation failed")
+          ErrorToast(
+            result.error === "HAS_DEPENDENCIES"
+              ? t.inUse
+              : result.error || "Operation failed"
+          )
         }
       } catch (e) {
         refresh()
         ErrorToast(e instanceof Error ? e.message : "Failed to delete")
       }
     },
-    [optimisticRemove, refresh, t.deleteTerm, lang]
+    [optimisticRemove, refresh, t.deleteTerm, t.inUse, lang]
   )
 
   // Handle set active

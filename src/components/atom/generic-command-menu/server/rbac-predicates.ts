@@ -118,10 +118,7 @@ export function studentWhere(c: PredicateCtx): Prisma.StudentWhereInput | null {
     }
   }
   if (c.role === "TEACHER") {
-    return {
-      ...base,
-      studentClasses: { some: { class: { teacher: { userId: c.userId } } } },
-    }
+    return { ...base, AND: [teachesStudent(c.userId)] }
   }
   if (
     ADMIN_ROLES.includes(c.role) ||
@@ -131,6 +128,23 @@ export function studentWhere(c: PredicateCtx): Prisma.StudentWhereInput | null {
     return base
   }
   return null
+}
+
+/**
+ * Students a teacher teaches: their sections — homeroom, a subject assigned
+ * to them there, or a timetable period with them — or a legacy class they
+ * lead. (`base` carries the search as its own OR, so callers AND this in.)
+ */
+function teachesStudent(userId: string): Prisma.StudentWhereInput {
+  const mine = { userId }
+  return {
+    OR: [
+      { section: { homeroomTeacher: mine } },
+      { section: { subjectTeachers: { some: { teacher: mine } } } },
+      { section: { timetables: { some: { teacher: mine } } } },
+      { studentClasses: { some: { class: { teacher: mine } } } },
+    ],
+  }
 }
 
 export function teacherWhere(c: PredicateCtx): Prisma.TeacherWhereInput | null {
@@ -191,15 +205,7 @@ export function guardianWhere(
   if (c.role === "TEACHER") {
     return {
       ...base,
-      studentGuardians: {
-        some: {
-          student: {
-            studentClasses: {
-              some: { class: { teacher: { userId: c.userId } } },
-            },
-          },
-        },
-      },
+      studentGuardians: { some: { student: teachesStudent(c.userId) } },
     }
   }
   return null

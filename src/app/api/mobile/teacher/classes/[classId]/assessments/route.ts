@@ -7,9 +7,12 @@ import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../../lib/authenticate"
 import { hasRole } from "../../../../lib/roles"
+import { resolveClassTarget } from "../target"
 
 /**
- * GET /api/mobile/teacher/classes/:classId/assessments — list exams for a class
+ * GET /api/mobile/teacher/classes/:classId/assessments — the exams of a
+ * section (`{classId}`): its own and its grade's whole-grade exams, a
+ * teacher's narrowed to the subjects they teach. `?subject_id=` narrows more.
  */
 export async function GET(
   request: NextRequest,
@@ -25,46 +28,21 @@ export async function GET(
 
     const { classId } = await params
 
-    // Verify teacher assignment for TEACHER role
-    if (auth.role === "TEACHER") {
-      const teacher = await db.teacher.findFirst({
-        where: { userId: auth.userId, schoolId: auth.schoolId },
-        select: { id: true },
-      })
-
-      if (!teacher) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
-
-      const assigned = await db.class.findFirst({
-        where: {
-          id: classId,
-          schoolId: auth.schoolId,
-          OR: [
-            { teacherId: teacher.id },
-            { classTeachers: { some: { teacherId: teacher.id } } },
-          ],
-        },
-        select: { id: true },
-      })
-
-      if (!assigned) {
-        return NextResponse.json(
-          { error: "Not assigned to this class" },
-          { status: 403 }
-        )
-      }
-    }
+    // `{classId}` is a section (a legacy class id still resolves)
+    const target = await resolveClassTarget(auth, classId)
+    if (!target.ok) return target.response
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status") || undefined
+    const subjectId = searchParams.get("subject_id") || undefined
     const page = parseInt(searchParams.get("page") || "1")
     const perPage = parseInt(searchParams.get("per_page") || "30")
     const skip = (page - 1) * perPage
 
     const where = {
-      classId,
       schoolId: auth.schoolId,
+      ...target.examWhere,
+      ...(subjectId ? { subjectId } : {}),
       ...(status
         ? {
             status: status as

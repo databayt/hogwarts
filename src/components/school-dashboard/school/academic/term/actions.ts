@@ -199,15 +199,16 @@ export async function deleteTerm(input: {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Check for dependent classes
-    const classCount = await db.class.count({
-      where: { termId: id, schoolId },
-    })
-    if (classCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete term: ${classCount} classes are assigned to it`,
-      }
+    // A term in use keeps its timetable and its teacher assignments: the
+    // assignments would cascade away with it, and the slots block the delete
+    // at the database. Legacy classes count too.
+    const [slots, assigned, classCount] = await Promise.all([
+      db.timetable.count({ where: { termId: id, schoolId } }),
+      db.subjectTeacher.count({ where: { termId: id, schoolId } }),
+      db.class.count({ where: { termId: id, schoolId } }),
+    ])
+    if (slots + assigned + classCount > 0) {
+      return actionError(ACTION_ERRORS.HAS_DEPENDENCIES)
     }
 
     await db.term.deleteMany({ where: { id, schoolId } })

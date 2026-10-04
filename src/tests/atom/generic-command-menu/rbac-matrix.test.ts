@@ -164,11 +164,30 @@ describe("studentWhere", () => {
     expect(where!.studentGuardians).toBeDefined()
   })
 
-  it("TEACHER narrows to students in own classes", () => {
+  it("TEACHER narrows to the students of their sections (or legacy classes)", () => {
     const where = studentWhere(ctx("TEACHER"))
     expect(where).toBeTruthy()
     expect(where!.schoolId).toBe("school-A")
-    expect(where!.studentClasses).toBeDefined()
+    // The search OR stays intact; the teaching scope is ANDed in
+    expect(where!.OR).toBeDefined()
+    const scope = (where!.AND as Array<{ OR: object[] }>)[0].OR
+    expect(scope).toEqual(
+      expect.arrayContaining([
+        { section: { homeroomTeacher: { userId: expect.any(String) } } },
+        {
+          section: {
+            subjectTeachers: {
+              some: { teacher: { userId: expect.any(String) } },
+            },
+          },
+        },
+        {
+          section: {
+            timetables: { some: { teacher: { userId: expect.any(String) } } },
+          },
+        },
+      ])
+    )
   })
 })
 
