@@ -308,26 +308,3 @@ export type RoomConstraintCheck = {
   roomId: string
   roomName: string
 }
-
-// ============================================================================
-// IMPORT/EXPORT TYPES (for server actions)
-// ============================================================================
-
-export interface ImportSlot {
-  dayOfWeek: number
-  periodId: string
-  classId: string
-  teacherId: string
-  classroomId: string
-  weekOffset?: number
-}
-
-export interface ImportResult {
-  success: boolean
-  totalRows: number
-  successCount: number
-  failedCount: number
-  skippedCount: number
-  errors: Array<{ row: number; message: string }>
-  warnings: Array<{ row: number; message: string }>
-}

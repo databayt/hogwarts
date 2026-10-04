@@ -182,7 +182,7 @@ async function loadSession(
     for (const u of users) userIds.add(u.id)
   } else if (session.sectionId) {
     // Section audience, OR'd across both enrollment axes — the same shape
-    // getWeeklyTimetable's STUDENT branch uses (timetable/actions.ts): a
+    // the student timetable read uses (timetable/actions.ts): a
     // student's own `sectionId` covers the modern path, and `StudentClass`
     // membership in the slot's legacy class covers a student the section
     // migration hasn't reached yet. Without the second arm, that student is

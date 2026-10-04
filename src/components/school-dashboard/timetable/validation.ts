@@ -61,17 +61,6 @@ export const workingDaysSchema = z
 // Query Schemas
 // ============================================================================
 
-export const getWeeklyTimetableSchema = z.object({
-  termId: cuidSchema,
-  weekOffset: weekOffsetSchema.optional(),
-  view: z
-    .object({
-      classId: cuidSchema.optional(),
-      teacherId: cuidSchema.optional(),
-    })
-    .optional(),
-})
-
 export const getScheduleConfigSchema = z
   .object({
     termId: cuidSchema.optional(),
@@ -91,12 +80,6 @@ export const suggestFreeSlotsSchema = z.object({
   preferredDays: z.array(dayOfWeekSchema).optional(),
   preferredPeriods: z.array(cuidSchema).optional(),
 })
-
-export const getClassesForSelectionSchema = z
-  .object({
-    termId: cuidSchema.optional(),
-  })
-  .optional()
 
 export const getTeachersForSelectionSchema = z
   .object({
@@ -188,20 +171,6 @@ export const moveTimetableSlotSchema = z.object({
   validateOnly: z.boolean().optional(),
 })
 
-export const createTemplateFromTermSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  sourceTermId: cuidSchema,
-})
-
-export const applyTemplateToTermSchema = z.object({
-  templateId: cuidSchema,
-  targetTermId: cuidSchema,
-  clearExisting: z.boolean().optional(),
-  teacherMapping: z.record(z.string(), cuidSchema).optional(),
-  roomMapping: z.record(z.string(), cuidSchema).optional(),
-})
-
 export const createPeriodSchema = z.object({
   yearId: cuidSchema,
   name: z.string().min(1).max(50),
@@ -267,24 +236,6 @@ export const applyGeneratedTimetableSchema = z.object({
   termId: cuidSchema,
   slots: z.array(generatedSlotSchema).max(5000),
   clearExisting: z.boolean().optional(),
-})
-
-export const importSlotSchema = z.object({
-  dayOfWeek: dayOfWeekSchema,
-  periodId: cuidSchema,
-  classId: cuidSchema,
-  teacherId: cuidSchema,
-  classroomId: cuidSchema,
-  weekOffset: weekOffsetSchema.optional(),
-})
-
-export const importTimetableSlotsSchema = z.object({
-  termId: cuidSchema,
-  slots: z.array(importSlotSchema).max(2000),
-  options: z.object({
-    overwrite: z.boolean(),
-    validateOnly: z.boolean(),
-  }),
 })
 
 // ============================================================================
@@ -376,7 +327,6 @@ export const getTimetableStatsSchema = z.object({
 // Type Exports
 // ============================================================================
 
-export type GetWeeklyTimetableInput = z.infer<typeof getWeeklyTimetableSchema>
 export type UpsertTimetableSlotInput = z.infer<typeof upsertTimetableSlotSchema>
 export type DeleteTimetableSlotInput = z.infer<typeof deleteTimetableSlotSchema>
 /** Section info shape returned by getSectionsForTimetable */

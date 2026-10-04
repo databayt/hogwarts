@@ -34,13 +34,14 @@ last_audited: 2026-10-04
 - [x] `getGuardianChildren` labels a child by their section (a legacy class
       only without one); `getPersonalizedTimetable`'s student branch dropped an
       unused StudentClass read.
-- Dead, no callers — delete in S15: the templates (`listTimetableTemplates`,
-  `createTemplateFromTerm`, `applyTemplateToTerm` and the timetable
-  `deleteTemplate` / `setDefaultTemplate` — class-only patterns),
-  `importTimetableSlots` (class-only), `getWeeklyTimetable`,
-  `getTimetableByGradeLevel`, `getTimetableByClass` + `getClassesForSelection`
-  (only the unrendered `TimetablePreview` and `/api/classes`), and
-  `filterTimetableByRole`.
+- [x] Deleted (S15, no callers): the templates (`listTimetableTemplates`,
+      `createTemplateFromTerm`, `applyTemplateToTerm`, `deleteTemplate`,
+      `setDefaultTemplate` — class-only patterns; the `TimetableTemplate` /
+      `TemplateApplication` tables stay until the schema pass),
+      `importTimetableSlots`, `getWeeklyTimetable`, `getTimetableByGradeLevel`,
+      `getGradeLevelsForSelection`, `getTimetableByClass`,
+      `getClassesForSelection`, the unrendered `TimetablePreview` view and
+      `filterTimetableByRole`, with their schemas and types.
 
 ## Log
 

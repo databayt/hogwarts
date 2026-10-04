@@ -1,5 +1,11 @@
 # Grades — Production Readiness Tracker
 
+## 2026-10-04 — the old "add result" form is gone
+
+`ResultCreateForm` (`form.tsx`) and its two steps (`student-assignment.tsx`,
+`grading.tsx`) plus `data-fetchers.ts` were rendered nowhere — the grade wizard
+replaced them — and picked a class first. Deleted with the rest of Class (S15).
+
 **Status:** 🟡 IN PROGRESS
 **Completion:** 75%
 **Last Updated:** 2026-09-14

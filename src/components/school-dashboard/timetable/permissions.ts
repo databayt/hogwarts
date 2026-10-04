@@ -8,7 +8,6 @@
 
 import { auth } from "@/auth"
 
-import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // Import what we need from config
@@ -101,89 +100,6 @@ export async function getPermissionContext() {
     canExport: canExportTimetable(role),
     canManageConflicts: canManageConflicts(role),
     canConfigureSettings: canConfigureSettings(role),
-  }
-}
-
-// ============================================================================
-// Data Filtering Functions
-// ============================================================================
-
-/**
- * Minimal shape a timetable row needs for role-based visibility filtering.
- * Typed (not `any`) so a rename of these fields in the Prisma model surfaces
- * as a compile error here instead of silently breaking the filter.
- */
-export interface TimetableRowMinimal {
-  teacherId?: string | null
-  classId?: string | null
-  sectionId?: string | null
-}
-
-/**
- * Filter timetable data based on user role
- * Used to restrict what data a user can see
- */
-export async function filterTimetableByRole<T extends TimetableRowMinimal>(
-  timetableData: T[],
-  options?: {
-    teacherId?: string
-    studentId?: string
-    classId?: string
-    childIds?: string[]
-  }
-): Promise<T[]> {
-  const { role } = await getPermissionContext()
-
-  switch (role) {
-    case "DEVELOPER":
-    case "ADMIN":
-    case "ACCOUNTANT":
-    case "STAFF":
-      // Can see all timetable data
-      return timetableData
-
-    case "TEACHER":
-      // Can see all, but UI might highlight their own
-      if (options?.teacherId) {
-        // Filter to show only teacher's classes
-        return timetableData.filter(
-          (item) => item.teacherId === options.teacherId
-        )
-      }
-      return timetableData
-
-    case "STUDENT":
-      // Can only see their class timetable
-      if (options?.classId) {
-        return timetableData.filter((item) => item.classId === options.classId)
-      }
-      return []
-
-    case "GUARDIAN":
-      // Can only see their children's timetables
-      // childIds are student IDs — resolve to class IDs via StudentClass
-      if (options?.childIds && options.childIds.length > 0) {
-        const { schoolId } = await getPermissionContext()
-        // Never run the cross-family query without a tenant filter — a null
-        // schoolId would match StudentClass rows across ALL schools.
-        if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
-        const enrollments = await db.studentClass.findMany({
-          where: {
-            studentId: { in: options.childIds },
-            schoolId,
-          },
-          select: { classId: true },
-        })
-        const childClassIds = new Set(enrollments.map((e) => e.classId))
-        return timetableData.filter(
-          (item) => item.classId != null && childClassIds.has(item.classId)
-        )
-      }
-      return []
-
-    default:
-      // No access
-      return []
   }
 }
 

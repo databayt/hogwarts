@@ -18,7 +18,6 @@ export { getExamWithStudents, enterMarks, bulkImportMarks } from "./marks-entry"
 // Analytics Operations
 export {
   getExamAnalytics,
-  getClassPerformance,
   getSubjectAnalytics,
 } from "./analytics"
 
