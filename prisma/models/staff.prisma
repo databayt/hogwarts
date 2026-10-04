@@ -9,7 +9,7 @@ model Teacher {
   lang         String  @default("ar")
   gender       String?
   nationality  String?
-  emailAddress String
+  emailAddress String?
 
   // New profile fields
   birthDate         DateTime?

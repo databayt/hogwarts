@@ -32,9 +32,9 @@ export async function getTeacherContact(
     return {
       success: true,
       data: {
-        emailAddress: teacher.emailAddress.endsWith("@draft.internal")
+        emailAddress: teacher.emailAddress?.endsWith("@draft.internal")
           ? ""
-          : teacher.emailAddress,
+          : (teacher.emailAddress ?? ""),
         phone1: teacher.phoneNumbers[0]?.phoneNumber || "",
         phone2: teacher.phoneNumbers[1]?.phoneNumber || "",
       },

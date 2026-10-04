@@ -95,7 +95,7 @@ export function transformStaffToRow(staff: {
   id: string
   firstName: string
   lastName: string
-  emailAddress: string
+  emailAddress: string | null
   position: string | null
   employmentStatus: string
   employmentType: string
@@ -107,7 +107,7 @@ export function transformStaffToRow(staff: {
     id: staff.id,
     userId: staff.userId,
     name: formatStaffName(staff),
-    emailAddress: staff.emailAddress,
+    emailAddress: staff.emailAddress ?? "",
     position: staff.position || "",
     departmentName: staff.department?.departmentName || "",
     employmentStatus: staff.employmentStatus,

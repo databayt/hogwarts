@@ -1,0 +1,56 @@
+// Bulk people import — one row per file run from /school/bulk.
+//
+// A batch keeps the mapped rows (`payload`) until it finishes, so a run that
+// a container restart cut short can resume where it stopped, and records what
+// it created or changed (ImportBatchRecord) so it can be undone and its
+// logins re-issued. Passwords are never stored: logins are minted fresh on
+// download for accounts that have not signed in yet.
+model ImportBatch {
+  id          String    @id @default(cuid())
+  schoolId    String
+  type        String // students | teachers | staff | guardians
+  fileName    String
+  status      String    @default("PENDING") // PENDING | RUNNING | DONE | FAILED | UNDONE
+  options     Json? // { updateExisting, createSections, notifyFamilies }
+  payload     Json? // mapped rows; cleared when the run ends
+  total       Int       @default(0)
+  processed   Int       @default(0)
+  created     Int       @default(0)
+  updated     Int       @default(0)
+  skipped     Int       @default(0)
+  failed      Int       @default(0)
+  issues      Json? // [{ row, code, params?, level: "error" | "warning" }]
+  createdById String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  undoneAt    DateTime?
+
+  school  School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  records ImportBatchRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, createdAt])
+  @@map("import_batches")
+}
+
+model ImportBatchRecord {
+  id       String  @id @default(cuid())
+  schoolId String
+  batchId  String
+  row      Int
+  entity   String // student | teacher | staff | guardian | section
+  entityId String
+  userId   String?
+  action   String // CREATED | UPDATED
+  before   Json? // previous values of the fields an UPDATED row changed
+
+  batch ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([batchId])
+  @@index([schoolId])
+  @@map("import_batch_records")
+}

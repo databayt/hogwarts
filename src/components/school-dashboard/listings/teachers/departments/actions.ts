@@ -79,7 +79,7 @@ export async function getDepartments(
         id: td.teacher.id,
         firstName: td.teacher.firstName,
         lastName: td.teacher.lastName,
-        emailAddress: td.teacher.emailAddress,
+        emailAddress: td.teacher.emailAddress ?? "",
         profilePhotoUrl: td.teacher.profilePhotoUrl,
         isPrimary: td.isPrimary,
         isDepartmentHead: td.isDepartmentHead,

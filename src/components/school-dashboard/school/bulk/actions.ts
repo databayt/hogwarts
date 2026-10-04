@@ -3,271 +3,347 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
+import { after } from "next/server"
+import { Prisma } from "@prisma/client"
+import { z } from "zod"
 
-import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-// ---------- DOCX-specific conversion (bulk only) ----------
-import {
-  escapeCSVValue,
-  fileToCSV,
-  parseCSVLine,
-  preprocessCSV,
-  type ImportType,
-} from "@/lib/import/csv-utils"
-import { refreshPage } from "@/lib/refresh-page"
-import {
-  importGuardians,
-  importStaff,
-  importStudents,
-  importTeachers,
-} from "@/components/file/import/csv-import"
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 import { requireSchoolRole } from "../require-school-admin"
-
-async function fileToCSVWithDocx(file: File): Promise<string> {
-  const name = file.name.toLowerCase()
-  if (name.endsWith(".docx") || name.endsWith(".doc")) {
-    return extractDocxToCSV(file)
-  }
-  return fileToCSV(file)
-}
-
-async function extractDocxToCSV(file: File): Promise<string> {
-  const mammoth = await import("mammoth")
-  const buffer = Buffer.from(await file.arrayBuffer())
-  const { value: html } = await mammoth.convertToHtml({ buffer })
-
-  const tableMatch = html.match(/<table[\s\S]*?<\/table>/i)
-  if (tableMatch) {
-    return htmlTableToCSV(tableMatch[0])
-  }
-
-  const { value: text } = await mammoth.extractRawText({ buffer })
-  const lines = text
-    .split("\n")
-    .map((l: string) => l.trim())
-    .filter(Boolean)
-  if (lines.length < 2) {
-    throw new Error(
-      "DOCX file must contain a table or tab-separated data with headers"
-    )
-  }
-
-  const firstLine = lines[0]
-  const delimiter = firstLine.includes("\t") ? "\t" : ","
-  return lines
-    .map((line: string) =>
-      line
-        .split(delimiter)
-        .map((v: string) => escapeCSVValue(v.trim()))
-        .join(",")
-    )
-    .join("\n")
-}
-
-function htmlTableToCSV(html: string): string {
-  const rows: string[][] = []
-  const trRegex = /<tr[\s>][\s\S]*?<\/tr>/gi
-  let trMatch
-  while ((trMatch = trRegex.exec(html)) !== null) {
-    const row: string[] = []
-    const cellRegex = /<(?:td|th)[\s>][\s\S]*?<\/(?:td|th)>/gi
-    let cellMatch
-    while ((cellMatch = cellRegex.exec(trMatch[0])) !== null) {
-      const text = cellMatch[0]
-        .replace(/<[^>]+>/g, "")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&nbsp;/g, " ")
-        .trim()
-      row.push(text)
-    }
-    if (row.length > 0) rows.push(row)
-  }
-
-  if (rows.length < 2) {
-    throw new Error(
-      "DOCX table must have at least a header row and one data row"
-    )
-  }
-
-  return rows
-    .map((row) => row.map((cell) => escapeCSVValue(cell)).join(","))
-    .join("\n")
-}
-
-// ---------- Two-Phase Import ----------
-
-const VALID_TYPES: ImportType[] = ["students", "teachers", "staff", "guardians"]
-
-interface ParseResult {
-  totalRows: number
-  validRows: number
-  invalidRows: Array<{ row: number; error: string }>
-  csvContent: string
-}
-
-interface SmartImportResult {
-  imported: number
-  failed: number
-  skipped: number
-  errors: Array<{ row: number; error: string; details?: string }>
-  // Non-fatal per-row notes — a skipped duplicate, an unmatched grade. These
-  // explain the gap between the row count and `imported`, so the caller must
-  // be able to show them.
-  warnings?: Array<{ row: number; warning: string }>
-  // Access codes generated for imported students (the "link parent" codes).
-  accessCodes?: Array<{ studentId: string; code: string; expiresAt: string }>
-  // Plaintext temp credentials minted for the imported users. Passwords are
-  // crypto-random + single-use (mustChangePassword), so this is the only place
-  // the admin can read them to distribute.
-  credentials?: Array<{
-    row: number
-    name: string
-    username: string
-    email: string | null
-    role: string
-    password: string
-  }>
-}
+import { planImport } from "./engine/plan"
+import {
+  pendingLoginCounts,
+  reissueLogins as reissue,
+  runBatch,
+  STALL_MS,
+  undoBatch as undo,
+} from "./engine/run"
+import type {
+  BatchDetail,
+  BatchStatus,
+  BatchSummary,
+  ImportOptions,
+  Issue,
+  PreviewResult,
+  ReissueResult,
+  UndoResult,
+} from "./engine/types"
+import {
+  detectBetterType,
+  IMPORT_TYPES,
+  missingRequired,
+  suggestMapping,
+  type ColumnMapping,
+  type ImportType,
+} from "./fields"
+import { FileReadError, MAX_ROWS, readTable, type Table } from "./read-file"
 
 /**
- * Phase 1: Fast parse + validate (no DB writes).
- * Returns row counts and pre-processed CSV for Phase 2.
+ * /school/bulk — upload → map → preview → run in the background → history.
+ * Every action returns `{ ok: false, code }` instead of throwing, so the
+ * dialog can show the reason in the admin's language.
  */
-export async function bulkParseAndValidate(
+
+type Result<T> = ({ ok: true } & T) | { ok: false; code: string }
+
+const typeSchema = z.enum(IMPORT_TYPES as [ImportType, ...ImportType[]])
+
+const tableSchema = z.object({
+  headers: z.array(z.string()).max(200),
+  rows: z.array(z.array(z.string())).max(MAX_ROWS),
+})
+
+const mappingSchema = z.record(z.string(), z.number().int().min(0).nullable())
+
+const optionsSchema = z.object({
+  updateExisting: z.boolean(),
+  createMissing: z.boolean(),
+  notifyFamilies: z.boolean(),
+})
+
+async function gate() {
+  try {
+    return await requireSchoolRole()
+  } catch {
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 1. Read the file
+// ---------------------------------------------------------------------------
+
+export interface AnalyzeResult {
+  fileName: string
+  table: Table
+  mapping: ColumnMapping
+  /** Required fields no column was found for. */
+  missing: string[]
+  /** The file looks like another type's file. */
+  betterType: ImportType | null
+}
+
+export async function analyzeImportFile(
   formData: FormData
-): Promise<ParseResult> {
-  await requireSchoolRole()
+): Promise<Result<AnalyzeResult>> {
+  if (!(await gate())) return { ok: false, code: "UNAUTHORIZED" }
+  const file = formData.get("file")
+  const type = typeSchema.safeParse(formData.get("type"))
+  if (!(file instanceof File) || !type.success)
+    return { ok: false, code: "UNREADABLE_FILE" }
 
-  const file = formData.get("file") as File | null
-  const type = formData.get("type") as string
-
-  if (!file) throw new Error("No file provided")
-  if (!type || !VALID_TYPES.includes(type as ImportType)) {
-    throw new Error("Invalid import type")
-  }
-
-  let csvContent = await fileToCSVWithDocx(file)
-  csvContent = preprocessCSV(csvContent, type as ImportType)
-
-  const lines = csvContent.split(/\r?\n/).filter((l) => l.trim())
-  const totalRows = Math.max(0, lines.length - 1)
-  const invalidRows: Array<{ row: number; error: string }> = []
-
-  if (totalRows > 0) {
-    const headers = parseCSVLine(lines[0])
-    const nameIdx = headers.indexOf("name")
-    const firstNameIdx = headers.indexOf("firstName")
-
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue
-      const values = parseCSVLine(lines[i])
-      const name = values[nameIdx]?.trim()
-      const firstName = values[firstNameIdx]?.trim()
-
-      if (!name && !firstName) {
-        invalidRows.push({ row: i + 1, error: "Missing name" })
-      }
+  try {
+    const table = await readTable(file)
+    const mapping = suggestMapping(type.data, table.headers)
+    return {
+      ok: true,
+      fileName: file.name,
+      table,
+      mapping,
+      missing: missingRequired(type.data, mapping),
+      betterType: detectBetterType(type.data, table.headers),
     }
+  } catch (error) {
+    if (error instanceof FileReadError) return { ok: false, code: error.code }
+    logger.error(
+      "bulk import: analyze failed",
+      error instanceof Error ? error : new Error(String(error)),
+      { action: "bulk_import_analyze" }
+    )
+    return { ok: false, code: "UNREADABLE_FILE" }
   }
+}
 
+// ---------------------------------------------------------------------------
+// 2. Preview
+// ---------------------------------------------------------------------------
+
+const planInput = z.object({
+  type: typeSchema,
+  table: tableSchema,
+  mapping: mappingSchema,
+  options: optionsSchema,
+})
+
+export async function previewImport(
+  input: z.infer<typeof planInput>
+): Promise<Result<PreviewResult>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const parsed = planInput.safeParse(input)
+  if (!parsed.success) return { ok: false, code: "INVALID_INPUT" }
+  const { type, table, mapping, options } = parsed.data
+  if (missingRequired(type, mapping).length)
+    return { ok: false, code: "MISSING_REQUIRED" }
+
+  const plan = await planImport(type, auth.schoolId, table, mapping, options)
   return {
-    totalRows,
-    validRows: totalRows - invalidRows.length,
-    invalidRows,
-    csvContent,
+    ok: true,
+    counts: plan.counts,
+    rows: plan.rows.map(({ row, action, name, summary, changes, issues }) => ({
+      row,
+      action,
+      name,
+      summary,
+      changes,
+      issues,
+    })),
   }
 }
 
-/**
- * Phase 2: Actual DB import.
- * Accepts pre-processed csvContent from bulkParseAndValidate.
- */
-export async function bulkSmartImport(
-  formData: FormData
-): Promise<SmartImportResult> {
-  // Mass account creation — admin-only, never mere tenant membership.
-  const { schoolId } = await requireSchoolRole()
+// ---------------------------------------------------------------------------
+// 3. Run
+// ---------------------------------------------------------------------------
 
-  const type = formData.get("type") as string
-  if (!type || !VALID_TYPES.includes(type as ImportType)) {
-    throw new Error("Invalid import type")
+const startInput = planInput.extend({
+  fileName: z.string().min(1).max(255),
+})
+
+export async function startImport(
+  input: z.infer<typeof startInput>
+): Promise<Result<{ batchId: string }>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const parsed = startInput.safeParse(input)
+  if (!parsed.success) return { ok: false, code: "INVALID_INPUT" }
+  const { type, table, mapping, options, fileName } = parsed.data
+  if (missingRequired(type, mapping).length)
+    return { ok: false, code: "MISSING_REQUIRED" }
+
+  // Re-plan on the server: the run executes what the database says now,
+  // not a preview that may have gone stale.
+  const plan = await planImport(type, auth.schoolId, table, mapping, options)
+  const actionable = plan.rows.filter(
+    (r) => r.action === "create" || r.action === "update"
+  )
+  const issues: Issue[] = plan.rows.flatMap((r) => r.issues)
+
+  const batch = await db.importBatch.create({
+    data: {
+      schoolId: auth.schoolId,
+      type,
+      fileName,
+      options: options as unknown as Prisma.InputJsonValue,
+      payload: actionable as unknown as Prisma.InputJsonValue,
+      total: actionable.length,
+      skipped: plan.counts.skip,
+      failed: plan.counts.error,
+      issues: issues as unknown as Prisma.InputJsonValue,
+      createdById: auth.userId,
+      status: actionable.length ? "PENDING" : "DONE",
+      finishedAt: actionable.length ? null : new Date(),
+    },
+    select: { id: true },
+  })
+
+  if (actionable.length) after(() => runBatch(batch.id))
+  return { ok: true, batchId: batch.id }
+}
+
+/** Pick up a run whose process died mid-way (deploy, restart). */
+export async function resumeImport(
+  batchId: string
+): Promise<Result<{ batchId: string }>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const batch = await db.importBatch.findFirst({
+    where: { id: batchId, schoolId: auth.schoolId },
+    select: { status: true, updatedAt: true },
+  })
+  if (!batch) return { ok: false, code: "NOT_FOUND" }
+  const stalled =
+    batch.status === "RUNNING" &&
+    Date.now() - batch.updatedAt.getTime() > STALL_MS
+  if (batch.status !== "PENDING" && !stalled)
+    return { ok: false, code: "NOT_RESUMABLE" }
+  after(() => runBatch(batchId))
+  return { ok: true, batchId }
+}
+
+// ---------------------------------------------------------------------------
+// 4. Status + history
+// ---------------------------------------------------------------------------
+
+const summarySelect = {
+  id: true,
+  type: true,
+  fileName: true,
+  status: true,
+  total: true,
+  processed: true,
+  created: true,
+  updated: true,
+  skipped: true,
+  failed: true,
+  createdAt: true,
+  updatedAt: true,
+  finishedAt: true,
+  undoneAt: true,
+} as const
+
+type BatchRow = Prisma.ImportBatchGetPayload<{ select: typeof summarySelect }>
+
+function toSummary(b: BatchRow, pendingLogins: number): BatchSummary {
+  return {
+    id: b.id,
+    type: b.type as ImportType,
+    fileName: b.fileName,
+    status: b.status as BatchStatus,
+    stalled:
+      (b.status === "RUNNING" || b.status === "PENDING") &&
+      Date.now() - b.updatedAt.getTime() > STALL_MS,
+    total: b.total,
+    processed: b.processed,
+    created: b.created,
+    updated: b.updated,
+    skipped: b.skipped,
+    failed: b.failed,
+    createdAt: b.createdAt.toISOString(),
+    finishedAt: b.finishedAt?.toISOString() ?? null,
+    undoneAt: b.undoneAt?.toISOString() ?? null,
+    pendingLogins,
   }
+}
 
-  let csvContent = formData.get("csvContent") as string | null
-  if (!csvContent) {
-    const file = formData.get("file") as File | null
-    if (!file) throw new Error("No file or csvContent provided")
-    csvContent = await fileToCSVWithDocx(file)
-    csvContent = preprocessCSV(csvContent, type as ImportType)
+export async function getImportBatch(
+  batchId: string
+): Promise<Result<{ batch: BatchDetail }>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const b = await db.importBatch.findFirst({
+    where: { id: batchId, schoolId: auth.schoolId },
+    select: { ...summarySelect, issues: true },
+  })
+  if (!b) return { ok: false, code: "NOT_FOUND" }
+  const pending =
+    b.status === "DONE"
+      ? ((await pendingLoginCounts(auth.schoolId, [b.id])).get(b.id) ?? 0)
+      : 0
+  return {
+    ok: true,
+    batch: {
+      ...toSummary(b, pending),
+      issues: (b.issues as unknown as Issue[] | null) ?? [],
+    },
   }
+}
 
-  // Opt-in, default off: unchecked keeps today's silent import.
-  const notifyFamilies = formData.get("notifyFamilies") === "true"
+export async function listImportBatches(): Promise<
+  Result<{ batches: BatchSummary[] }>
+> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const rows = await db.importBatch.findMany({
+    where: { schoolId: auth.schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+    select: summarySelect,
+  })
+  const pending = await pendingLoginCounts(
+    auth.schoolId,
+    rows.filter((r) => r.status === "DONE").map((r) => r.id)
+  )
+  return {
+    ok: true,
+    batches: rows.map((r) => toSummary(r, pending.get(r.id) ?? 0)),
+  }
+}
 
-  const result =
-    type === "students"
-      ? await importStudents(
-          csvContent,
-          schoolId,
-          "BULK_IMPORT",
-          notifyFamilies
-        )
-      : type === "teachers"
-        ? await importTeachers(csvContent, schoolId)
-        : type === "staff"
-          ? await importStaff(csvContent, schoolId)
-          : await importGuardians(csvContent, schoolId)
+// ---------------------------------------------------------------------------
+// 5. Logins + undo
+// ---------------------------------------------------------------------------
 
-  // File-system route patterns, not clean URLs: the listing pages live at
-  // `/[lang]/s/[subdomain]/<name>` (the `(listings)` route group is not part of
-  // the path). These used to be bare `/students` etc., which matched no cache
-  // tag at all — every bulk import left the listing it populated stale.
-  const pathMap: Record<string, string> = {
+export async function issueBatchLogins(
+  batchId: string
+): Promise<Result<ReissueResult>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const b = await db.importBatch.findFirst({
+    where: { id: batchId, schoolId: auth.schoolId },
+    select: { status: true },
+  })
+  if (!b) return { ok: false, code: "NOT_FOUND" }
+  if (b.status !== "DONE") return { ok: false, code: "NOT_FINISHED" }
+  return { ok: true, ...(await reissue(auth.schoolId, batchId)) }
+}
+
+export async function undoImport(batchId: string): Promise<Result<UndoResult>> {
+  const auth = await gate()
+  if (!auth) return { ok: false, code: "UNAUTHORIZED" }
+  const b = await db.importBatch.findFirst({
+    where: { id: batchId, schoolId: auth.schoolId },
+    select: { status: true, type: true },
+  })
+  if (!b) return { ok: false, code: "NOT_FOUND" }
+  if (b.status !== "DONE") return { ok: false, code: "NOT_FINISHED" }
+  const result = await undo(auth.schoolId, batchId)
+  const listing: Record<string, string> = {
     students: "students",
     teachers: "teachers",
     staff: "staff",
     guardians: "parents",
   }
-  revalidatePath(
-    `/[lang]/s/[subdomain]/${pathMap[type] ?? "school/bulk"}`,
-    "page"
-  )
-  // Every imported student is born from an Application (BULK_IMPORT channel)
-  // and the Applications tab lists every channel — keep it fresh too.
-  if (type === "students") {
-    revalidatePath("/[lang]/s/[subdomain]/admission/applications", "page")
-  }
-
-  return {
-    imported: result.imported,
-    failed: result.failed,
-    skipped: result.skipped,
-    errors: result.errors,
-    credentials: result.credentials,
-    // The engine computes these per row and this wrapper used to drop them on
-    // the floor: `warnings` is where a skipped duplicate or an unmatched grade
-    // is explained, and `accessCodes` is the only place the generated codes
-    // surface. Both were invisible to whoever ran the import.
-    warnings: result.warnings,
-    accessCodes: result.accessCodes,
-  }
-}
-
-export async function createDepartment(formData: FormData) {
-  await requireSchoolRole()
-
-  refreshPage("/school/bulk")
-  return { success: true, message: "Department creation coming soon" }
-}
-
-export async function createClassroom(formData: FormData) {
-  await requireSchoolRole()
-
-  refreshPage("/school/bulk")
-  return { success: true, message: "Classroom creation coming soon" }
+  revalidatePath(`/[lang]/s/[subdomain]/${listing[b.type]}`, "page")
+  return { ok: true, ...result }
 }

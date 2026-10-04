@@ -173,6 +173,7 @@ model School {
   announcementReads         AnnouncementRead[]
   announcementNotifications AnnouncementNotification[]
   domainRequests            DomainRequest[]
+  importBatches             ImportBatch[]
   subscriptions             Subscription[]
   invoices                  Invoice[]
   // Standalone invoice block relations

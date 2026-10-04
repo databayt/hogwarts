@@ -256,7 +256,7 @@ export async function seedTeachers(
       teachers.push({
         id: teacher.id,
         userId: user.id,
-        emailAddress: teacher.emailAddress,
+        emailAddress: teacher.emailAddress ?? "",
         firstName: teacher.firstName,
         lastName: teacher.lastName,
       })
@@ -272,7 +272,7 @@ export async function seedTeachers(
         teachers.push({
           id: existing.id,
           userId: user.id,
-          emailAddress: existing.emailAddress,
+          emailAddress: existing.emailAddress ?? "",
           firstName: existing.firstName,
           lastName: existing.lastName,
         })
