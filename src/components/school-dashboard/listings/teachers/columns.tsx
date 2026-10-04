@@ -54,6 +54,8 @@ export interface TeacherColumnCallbacks {
     teacherName: string,
     badge?: string
   ) => void
+  /** Open the Subjects & sections dialog for this teacher. */
+  onAssignSubjects?: (row: TeacherRow) => void
   permissions?: UIPermissions
 }
 
@@ -94,6 +96,9 @@ export const getTeacherColumns = (
     completeProfile: (dictionary as any)?.completeProfile || "Complete Profile",
     generateCredentials:
       (dictionary as any)?.generateCredentials || "Generate Credentials",
+    assignSubjects:
+      (dictionary as { subjectsEditor?: { action?: string } } | undefined)
+        ?.subjectsEditor?.action || "Assign subjects",
   }
 
   const getInitials = (name: string) => {
@@ -397,6 +402,18 @@ export const getTeacherColumns = (
                 {t.generateCredentials}
               </DropdownMenuItem>
             )}
+
+            {permissions.showEditAction &&
+              callbacks?.onAssignSubjects &&
+              !teacher.wizardStep && (
+                // No preventDefault: the menu should close. The dialog lives
+                // in a module store, so the table re-rendering can't close it.
+                <DropdownMenuItem
+                  onSelect={() => callbacks.onAssignSubjects?.(teacher)}
+                >
+                  {t.assignSubjects}
+                </DropdownMenuItem>
+              )}
 
             {permissions.showToggleStatus && (
               <>

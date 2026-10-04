@@ -46,6 +46,13 @@ export default async function TimetableLayout({ children, params }: Props) {
       hidden: !isAdmin,
     },
     {
+      name:
+        (d?.navigation as Record<string, string> | undefined)?.assignments ||
+        "Teachers",
+      href: `/${lang}/timetable/teachers`,
+      hidden: !isAdmin,
+    },
+    {
       name: d?.navigation?.analytics || "Analytics",
       href: `/${lang}/timetable/analytics`,
       hidden: !hasPermission(role, "view_analytics"),

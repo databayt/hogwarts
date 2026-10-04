@@ -25,8 +25,8 @@ import { logTimetableAction } from "../permissions"
 import { canModifyTimetable, type TimetableRole } from "../permissions-config"
 import { applyAssignment, unassignPairs, type AssignmentOutcome } from "./apply"
 import type { ResidualReason } from "./plan"
+import { cellKey } from "./keys"
 import {
-  cellKey,
   getAssignmentBoardData,
   getTeacherEditorData,
   type AssignmentBoardData,

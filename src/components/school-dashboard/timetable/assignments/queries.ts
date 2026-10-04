@@ -13,6 +13,8 @@ import { db } from "@/lib/db"
 import { getLabels, getNames } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
+import { cellKey } from "./keys"
+
 const DEFAULT_PER_WEEK = 25
 
 export interface AssignmentSubject {
@@ -24,6 +26,8 @@ export interface AssignmentSubject {
 export interface AssignmentSection {
   sectionId: string
   name: string
+  /** Short label for chips (أ, ب / A, B). */
+  letter: string
 }
 
 export interface AssignmentGrade {
@@ -65,8 +69,6 @@ export interface AssignmentBoardData {
   waitingPeriods: number
 }
 
-export const cellKey = (sectionId: string, subjectId: string) =>
-  `${sectionId}:${subjectId}`
 
 /**
  * Grades → sections + subjects, who teaches each pair, and every teacher's
@@ -90,7 +92,7 @@ export async function getAssignmentBoardData(params: {
           gradeNumber: true,
           sections: {
             orderBy: [{ letter: "asc" }, { name: "asc" }],
-            select: { id: true, name: true },
+            select: { id: true, name: true, letter: true },
           },
         },
       }),
@@ -206,6 +208,7 @@ export async function getAssignmentBoardData(params: {
       sections: g.sections.map((s) => ({
         sectionId: s.id,
         name: label(s.name),
+        letter: s.letter,
       })),
       subjects,
     }
@@ -237,6 +240,8 @@ export interface TeacherEditorData {
   grades: AssignmentGrade[]
   /** Keyed `${sectionId}:${subjectId}`: who teaches it now (null = nobody). */
   holders: Record<string, { teacherId: string; name: string } | null>
+  /** Keyed `${sectionId}:${subjectId}`: timetable periods per pair. */
+  cells: Record<string, AssignmentCell>
 }
 
 /** One teacher's view: every grade's subjects × sections and who holds each. */
@@ -289,5 +294,11 @@ export async function getTeacherEditorData(params: {
       : null
   }
 
-  return { termId: board.termId, teacher, grades: board.grades, holders }
+  return {
+    termId: board.termId,
+    teacher,
+    grades: board.grades,
+    holders,
+    cells: board.cells,
+  }
 }

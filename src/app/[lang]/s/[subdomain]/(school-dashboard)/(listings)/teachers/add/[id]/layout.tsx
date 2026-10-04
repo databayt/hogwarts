@@ -6,6 +6,7 @@ import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { TeacherSubjectsPrefetch } from "@/components/school-dashboard/listings/teachers/subjects/prefetch"
 import {
   discardEmptyTeacherDraft,
   updateTeacherWizardStep,
@@ -15,7 +16,6 @@ import { TEACHER_WIZARD_CONFIG } from "@/components/school-dashboard/listings/te
 import ContactContent from "@/components/school-dashboard/listings/teachers/wizard/contact/content"
 import EmploymentContent from "@/components/school-dashboard/listings/teachers/wizard/employment/content"
 import ExpertiseContent from "@/components/school-dashboard/listings/teachers/wizard/expertise/content"
-import { TeacherExpertiseResources } from "@/components/school-dashboard/listings/teachers/wizard/expertise/resources"
 import { finishTeacherWizard } from "@/components/school-dashboard/listings/teachers/wizard/finish"
 import InformationContent from "@/components/school-dashboard/listings/teachers/wizard/information/content"
 import LocationContent from "@/components/school-dashboard/listings/teachers/wizard/location/content"
@@ -42,26 +42,26 @@ export default function TeacherWizardLayout({
   const { dictionary } = useDictionary()
 
   return (
-    <TeacherExpertiseResources>
-    <WizardLayout
-      config={TEACHER_WIZARD_CONFIG}
-      dataProvider={TeacherWizardProvider}
-      loadHook={useTeacherWizard}
-      basePath="/teachers/add"
-      onStepChange={(entityId, step) =>
-        updateTeacherWizardStep(entityId, step)
-      }
-      steps={STEPS}
-      onClose={(entityId) => discardEmptyTeacherDraft(entityId)}
-      onComplete={async (entityId) => {
-        const ok = await finishTeacherWizard(entityId, dictionary)
-        if (!ok) throw new Error("WIZARD_INCOMPLETE")
-      }}
-      finalDestination="/teachers"
-      wizardStepField="wizardStep"
-    >
-      {children}
-    </WizardLayout>
-    </TeacherExpertiseResources>
+    <TeacherSubjectsPrefetch>
+      <WizardLayout
+        config={TEACHER_WIZARD_CONFIG}
+        dataProvider={TeacherWizardProvider}
+        loadHook={useTeacherWizard}
+        basePath="/teachers/add"
+        onStepChange={(entityId, step) =>
+          updateTeacherWizardStep(entityId, step)
+        }
+        steps={STEPS}
+        onClose={(entityId) => discardEmptyTeacherDraft(entityId)}
+        onComplete={async (entityId) => {
+          const ok = await finishTeacherWizard(entityId, dictionary)
+          if (!ok) throw new Error("WIZARD_INCOMPLETE")
+        }}
+        finalDestination="/teachers"
+        wizardStepField="wizardStep"
+      >
+        {children}
+      </WizardLayout>
+    </TeacherSubjectsPrefetch>
   )
 }

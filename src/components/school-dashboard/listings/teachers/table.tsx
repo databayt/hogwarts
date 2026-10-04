@@ -21,6 +21,7 @@ import {
   ErrorToast,
   SuccessToast,
 } from "@/components/atom/toast"
+import { useDraftLauncher } from "@/components/form/wizard"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -30,7 +31,6 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
-import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -42,6 +42,8 @@ import {
   updateTeacher,
 } from "./actions"
 import { getTeacherColumns, type TeacherRow } from "./columns"
+import { AssignSubjectsDialog } from "./subjects/dialog"
+import { openAssignSubjectsDialog } from "./subjects/store"
 import { createDraftTeacher } from "./wizard/actions"
 import { emptyTeacherDraft } from "./wizard/use-teacher-wizard"
 
@@ -76,6 +78,9 @@ function TeachersTableInner({
     },
     []
   )
+  const handleAssignSubjects = useCallback((row: TeacherRow) => {
+    openAssignSubjectsDialog(row.id, row.name)
+  }, [])
   // Translations with fallbacks
   const t = {
     fullName: dictionary?.fullName || "Name",
@@ -277,6 +282,7 @@ function TeachersTableInner({
         onDelete: handleDelete,
         onToggleStatus: handleToggleStatus,
         onGenerateCredentials: handleGenerateCredentials,
+        onAssignSubjects: handleAssignSubjects,
         permissions,
       }),
     [
@@ -286,6 +292,7 @@ function TeachersTableInner({
       handleDelete,
       handleToggleStatus,
       handleGenerateCredentials,
+      handleAssignSubjects,
       permissions,
     ]
   )
@@ -458,6 +465,7 @@ function TeachersTableInner({
         labels={credentialsLabels}
         onClosed={() => refresh()}
       />
+      <AssignSubjectsDialog />
     </>
   )
 }

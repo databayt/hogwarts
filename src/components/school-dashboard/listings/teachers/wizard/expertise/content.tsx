@@ -2,86 +2,52 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { Suspense, useRef, useState } from "react"
+
+// The wizard's "expertise" step (route slug kept) is now "Subjects &
+// sections": the admin picks what this teacher teaches and where, and saving
+// puts them on those periods in the timetable. Qualification-only expertise
+// (Primary/Secondary) is gone from the wizard — assigning a subject records
+// the qualification too.
+import React, { useRef } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { TeacherSubjectsEditor } from "../../subjects/editor"
 import { useTeacherWizard } from "../use-teacher-wizard"
-import { ExpertiseForm } from "./form"
-import { useTeacherExpertiseGrades } from "./resources"
 
 export default function ExpertiseContent() {
-  return (
-    <Suspense
-      fallback={
-        <FormLayout>
-          <div className="space-y-3">
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-4 w-72" />
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full rounded-md" />
-            <Skeleton className="h-12 w-full rounded-md" />
-          </div>
-        </FormLayout>
-      }
-    >
-      <ExpertiseStep />
-    </Suspense>
-  )
-}
-
-function ExpertiseStep() {
-  const grades = useTeacherExpertiseGrades()
   const params = useParams()
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
-  const { data, isLoading } = useTeacherWizard()
+  const { isLoading } = useTeacherWizard()
   const { dictionary } = useDictionary()
-  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
-    | Record<string, unknown>
-    | undefined
-  const wizard = teachers?.wizard as Record<string, unknown> | undefined
-  const t = wizard?.expertise as Record<string, string> | undefined
-  const [isValid, setIsValid] = useState(true) // optional step
+  const t = (
+    (dictionary?.school as Record<string, unknown> | undefined)?.teachers as
+      | Record<string, unknown>
+      | undefined
+  )?.subjectsEditor as Record<string, string> | undefined
 
   return (
     <WizardStep
       entityId={teacherId}
       nextStep={`/teachers/add/${teacherId}/contact`}
-      isValid={isValid}
+      isValid // optional step: saving nothing is fine
       formRef={formRef}
       isLoading={isLoading}
     >
       <FormLayout>
         <FormHeading
-          title={t?.title || "Subject Expertise"}
+          title={t?.title || "Subjects & sections"}
           description={
             t?.description ||
-            "Select the teacher's subject expertise areas. This step is optional."
+            "Pick the subjects this teacher teaches and in which sections. Those periods in the timetable get this teacher."
           }
         />
-        <ExpertiseForm
-          ref={formRef}
-          teacherId={teacherId}
-          grades={grades}
-          initialData={
-            data
-              ? {
-                  subjectExpertise: data.subjectExpertise.map((e) => ({
-                    subjectId: e.subjectId,
-                    expertiseLevel: e.expertiseLevel as "PRIMARY" | "SECONDARY",
-                  })),
-                }
-              : undefined
-          }
-          onValidChange={setIsValid}
-        />
+        <TeacherSubjectsEditor ref={formRef} teacherId={teacherId} />
       </FormLayout>
     </WizardStep>
   )

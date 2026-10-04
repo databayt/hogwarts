@@ -3516,6 +3516,41 @@
         "periodsPerWeek": "حصص في الأسبوع",
         "subjects": "المواد",
         "departments": "الأقسام"
+      },
+      "subjectsEditor": {
+        "title": "المواد والفصول",
+        "description": "اختر المواد التي يدرّسها المعلم وفي أي فصول. تُسند إليه حصصها في الجدول.",
+        "action": "إسناد المواد",
+        "grades": "الصفوف",
+        "gradesHint": "اختر الصفوف التي يدرّس فيها",
+        "perWeek": "{count} أسبوعياً",
+        "takenBy": "لدى {name}",
+        "load": "{load} من {cap} حصة أسبوعياً",
+        "noSubjects": "لم تختر المدرسة مواد صفوفها بعد.",
+        "noGrades": "اختر صفاً لعرض مواده.",
+        "saved": "تم الحفظ — أُسندت {assigned} حصة، ونُقلت {moved} لإفساح المجال.",
+        "savedNoChange": "تم الحفظ.",
+        "overCapTitle": "تجاوز الحد الأسبوعي",
+        "overCapBody": "بهذا يصبح لدى المعلم {load} حصة أسبوعياً والحد {cap}. هل تريد الإسناد رغم ذلك؟",
+        "assignAnyway": "أسند رغم ذلك",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "residualTitle": "تعذر وضع بعض الحصص",
+        "residualBody": "المعلم مشغول في هذه الأوقات ولم يتسع أي تبديل. انقلها من الجدول.",
+        "reasons": {
+          "FIXED_SESSION": "حصة مباشرة مجدولة",
+          "WEEKLY_CAP": "بلغ الحد الأسبوعي",
+          "NO_SWAP": "لا وقت متاح للتبديل"
+        },
+        "days": [
+          "الأحد",
+          "الاثنين",
+          "الثلاثاء",
+          "الأربعاء",
+          "الخميس",
+          "الجمعة",
+          "السبت"
+        ]
       }
     },
     "classes": {
@@ -4076,7 +4111,8 @@
         "byRoom": "حسب القاعة",
         "templates": "القوالب",
         "analytics": "التحليلات",
-        "settings": "الإعدادات"
+        "settings": "الإعدادات",
+        "assignments": "المعلمون"
       },
       "viewTimetable": "عرض الجدول",
       "createTimetable": "إنشاء جدول",
@@ -4968,7 +5004,29 @@
         "enter": "ادخل"
       },
       "needsTeacher": "بانتظار معلم",
-      "needsTeacherCount": "{count} حصة بانتظار معلم"
+      "needsTeacherCount": "{count} حصة بانتظار معلم",
+      "assignments": {
+        "title": "إسناد المعلمين",
+        "description": "كل خانة مادة في فصل. اختر من يدرّسها ويتبعها الجدول.",
+        "waitingPairs": "{count} مادة بانتظار معلم",
+        "waitingPeriods": "{count} حصة بلا معلم",
+        "allStaffed": "لكل مادة معلم.",
+        "unassigned": "بلا معلم",
+        "pickTeacher": "اختر معلماً",
+        "search": "ابحث عن معلم…",
+        "noMatch": "لا يوجد معلم.",
+        "qualified": "يدرّس هذه المادة",
+        "others": "معلمون آخرون",
+        "remove": "إزالة المعلم",
+        "allSections": "كل الفصول",
+        "allSectionsHint": "أسند هذه المادة في كل فصول الصف",
+        "partial": "{taught}/{scheduled} حصة",
+        "notScheduled": "ليست في الجدول",
+        "load": "نصاب المعلمين",
+        "noTeachers": "أضف المعلمين أولاً ثم أسند لهم المواد هنا.",
+        "noSections": "لا توجد فصول في المدرسة بعد.",
+        "unauthorized": "إسناد المعلمين متاح لإدارة المدرسة فقط."
+      }
     },
     "announcements": {
       "title": "الإعلانات",

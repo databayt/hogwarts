@@ -3516,6 +3516,33 @@
         "periodsPerWeek": "periods/week",
         "subjects": "Subjects",
         "departments": "Departments"
+      },
+      "subjectsEditor": {
+        "title": "Subjects & sections",
+        "description": "Pick the subjects this teacher teaches and in which sections. Those periods in the timetable get this teacher.",
+        "action": "Assign subjects",
+        "grades": "Grades",
+        "gradesHint": "Show the grades this teacher teaches in",
+        "perWeek": "{count}/wk",
+        "takenBy": "{name}",
+        "load": "{load} of {cap} periods a week",
+        "noSubjects": "This school hasn't chosen subjects for its grades yet.",
+        "noGrades": "Pick a grade to see its subjects.",
+        "saved": "Saved — {assigned} periods assigned, {moved} moved to make room.",
+        "savedNoChange": "Saved.",
+        "overCapTitle": "Over the weekly limit",
+        "overCapBody": "This gives the teacher {load} periods a week; the limit is {cap}. Assign anyway?",
+        "assignAnyway": "Assign anyway",
+        "cancel": "Cancel",
+        "save": "Save",
+        "residualTitle": "Some periods couldn't be placed",
+        "residualBody": "The teacher is busy at these times and no swap fit. Move them from the timetable.",
+        "reasons": {
+          "FIXED_SESSION": "an online class is scheduled",
+          "WEEKLY_CAP": "weekly limit reached",
+          "NO_SWAP": "no free time to swap"
+        },
+        "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
       }
     },
     "classes": {
@@ -4076,7 +4103,8 @@
         "byRoom": "By Room",
         "templates": "Templates",
         "analytics": "Analytics",
-        "settings": "Settings"
+        "settings": "Settings",
+        "assignments": "Teachers"
       },
       "viewTimetable": "View Timetable",
       "createTimetable": "Create Timetable",
@@ -4960,7 +4988,29 @@
         "enter": "Enter"
       },
       "needsTeacher": "Needs teacher",
-      "needsTeacherCount": "{count} periods need a teacher"
+      "needsTeacherCount": "{count} periods need a teacher",
+      "assignments": {
+        "title": "Assign teachers",
+        "description": "Each cell is a subject in a section. Choose who teaches it and the timetable follows.",
+        "waitingPairs": "{count} subjects waiting for a teacher",
+        "waitingPeriods": "{count} periods without a teacher",
+        "allStaffed": "Every subject has a teacher.",
+        "unassigned": "No teacher",
+        "pickTeacher": "Choose a teacher",
+        "search": "Search teachers…",
+        "noMatch": "No teacher found.",
+        "qualified": "Teaches this subject",
+        "others": "Other teachers",
+        "remove": "Remove teacher",
+        "allSections": "All sections",
+        "allSectionsHint": "Assign this subject in every section of the grade",
+        "partial": "{taught}/{scheduled} periods",
+        "notScheduled": "not in the timetable",
+        "load": "Teacher load",
+        "noTeachers": "Add teachers first, then assign them here.",
+        "noSections": "This school has no sections yet.",
+        "unauthorized": "Only school admins can assign teachers."
+      }
     },
     "announcements": {
       "title": "Announcements",
