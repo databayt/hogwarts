@@ -13,7 +13,7 @@
  *  - FAST PATH: when the demo is already fully seeded it skips the heavy seed
  *    entirely and only re-asserts the critical accounts — a couple of queries,
  *    a few seconds. "Fully seeded" is SEED_THRESHOLDS (./index.ts), which is
- *    PROFILE-AWARE: lite 30 students/5 classes, medium 250/50, full 500/100.
+ *    PROFILE-AWARE: lite 30 students/20 exams, medium 250/50, full 500/100.
  *    Don't hardcode the full-profile numbers here — prod demo runs lite, so it
  *    fast-paths at ~57 students, nowhere near 500.
  *  - SLOW PATH: an empty or partially-seeded demo runs `seedMain`, which is
@@ -96,7 +96,7 @@ async function main() {
       if (status.fullySeeded) {
         // ── FAST PATH ──────────────────────────────────────────────────
         console.log(
-          `✅ Demo already fully seeded: ${school.name} (${status.students} students, ${status.classes} classes)`
+          `✅ Demo already fully seeded: ${school.name} (${status.students} students, ${status.exams} exams)`
         )
         console.log(
           "⏭️  Skipping heavy seed — re-asserting critical accounts only"
@@ -109,7 +109,7 @@ async function main() {
       }
 
       console.log(
-        `⚠️ Demo partially seeded (${status.students} students, ${status.classes} classes) — running full seed to fill gaps`
+        `⚠️ Demo partially seeded (${status.students} students, ${status.exams} exams) — running full seed to fill gaps`
       )
     } else {
       console.log("⚠️ Demo school missing — running full seed")

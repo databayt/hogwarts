@@ -108,35 +108,36 @@ import { seedWallets } from "./wallet"
 // ============================================================================
 // SEED STATUS — the single source of truth for "is the demo fully seeded?"
 // Shared by the in-seed short-circuit (below) and ensure-demo.ts (prebuild).
-// Two metrics, not one: students prove Phase 2 (users) ran; classes prove the
-// run reached Phase 6. A partial seed (users but no classes) is NOT "full".
+// Two metrics, not one: students prove Phase 2 (users) ran; exams prove the
+// run reached the academic phases. A partial seed (users but no exams) is NOT
+// "full". (This counted classes until 2026-10-04 — classes are retired, and a
+// fresh class-free seed makes none, so every deploy would have re-seeded.)
 // ============================================================================
 
 // Lite/medium profiles lower the "fully seeded" bar to match their smaller
 // output so ensure-demo.ts takes the fast path instead of re-growing the demo
 // to full on every deploy. Each bound sits safely below what that profile
-// produces (lite ~52 students; medium ~380 students / ~156 classes).
-export const SEED_THRESHOLDS: { students: number; classes: number } =
+// produces (lite ~52 students; medium ~380; every profile ~400 exams).
+export const SEED_THRESHOLDS: { students: number; exams: number } =
   SEED_IS_LITE
-    ? { students: 30, classes: 5 }
+    ? { students: 30, exams: 20 }
     : SEED_IS_MEDIUM
-      ? { students: 250, classes: 50 }
-      : { students: 500, classes: 100 }
+      ? { students: 250, exams: 50 }
+      : { students: 500, exams: 100 }
 
 export async function getDemoSeedStatus(
   prisma: PrismaClient,
   schoolId: string
-): Promise<{ students: number; classes: number; fullySeeded: boolean }> {
-  const [students, classes] = await Promise.all([
+): Promise<{ students: number; exams: number; fullySeeded: boolean }> {
+  const [students, exams] = await Promise.all([
     prisma.user.count({ where: { schoolId, role: "STUDENT" } }),
-    prisma.class.count({ where: { schoolId } }),
+    prisma.schoolExam.count({ where: { schoolId } }),
   ])
   return {
     students,
-    classes,
+    exams,
     fullySeeded:
-      students >= SEED_THRESHOLDS.students &&
-      classes >= SEED_THRESHOLDS.classes,
+      students >= SEED_THRESHOLDS.students && exams >= SEED_THRESHOLDS.exams,
   }
 }
 
@@ -181,8 +182,8 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // seeded. prebuild (ensure-demo.ts) runs this against the PROD demo on
     // every Vercel deploy; the per-phase guards already prevent duplication,
     // but this two-metric check lets a healthy demo exit in seconds instead
-    // of re-walking ~30 phases. A PARTIAL seed (users created but classes
-    // never reached) fails the classes check, falls through, and the
+    // of re-walking ~30 phases. A PARTIAL seed (users created but exams
+    // never reached) fails the exams check, falls through, and the
     // idempotent phases resume only the missing work.
     // ========================================================================
     // SEED_FORCE=1 bypasses the short-circuit and re-walks every phase (which
@@ -191,7 +192,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     const seedStatus = await getDemoSeedStatus(prisma, school.id)
     if (process.env.SEED_FORCE !== "1" && seedStatus.fullySeeded) {
       console.log(
-        `\n⚡ Demo already fully seeded (${seedStatus.students} students, ${seedStatus.classes} classes).`
+        `\n⚡ Demo already fully seeded (${seedStatus.students} students, ${seedStatus.exams} exams).`
       )
       console.log(
         "   Running an idempotency pass on users + academic structure, then exiting early.\n"
@@ -213,7 +214,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
       )
       logSummary(startTime, {
         students: seedStatus.students,
-        classes: seedStatus.classes,
+        exams: seedStatus.exams,
       })
       return
     }

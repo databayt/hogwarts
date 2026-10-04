@@ -32,7 +32,7 @@ the next deploy. Set the env var in the target project's Vercel env, not in code
 Runs on every deploy against the **production** demo school. It is **build-safe** — every
 DB error is swallowed and the process exits 0, so a Neon hiccup never fails the build.
 
-- **Fast path** — when the demo is already fully seeded (`≥500 students AND ≥100 classes`,
+- **Fast path** — when the demo is already fully seeded (`≥500 students AND ≥100 exams` — classes until 2026-10-04,
   see `getDemoSeedStatus` in `index.ts`) it skips the heavy seed and only re-asserts the
   critical accounts (`admin@balqalam.com`, and the protected `dev@balqalam.com` DEVELOPER
   role per `.claude/rules/accounts.md`). A couple of queries, a few seconds.
