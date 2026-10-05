@@ -66,13 +66,7 @@ import {
 } from "@/lib/funnel/waves"
 
 import { twentyClient, type TwentyClient } from "../crm/twenty-rest"
-import {
-  argv,
-  DECK_URL,
-  emailOf,
-  flag,
-  loadEnv,
-} from "./lib"
+import { argv, DECK_URL, emailOf, flag, loadEnv } from "./lib"
 import { buildQueue, globToRe, type Company, type QueueRow } from "./queue"
 import { appendRows, loadAllLedgers, loadVariants } from "./store"
 
@@ -98,7 +92,6 @@ const fromFor = (lang: "ar" | "en") =>
     ? "Osman Abdout · Balqalam <contact@databayt.org>"
     : "عثمان عبدوت · بالقلم <contact@databayt.org>")
 const WORKFLOW_NAME = "School shortlisted → outreach"
-
 
 async function workflowIsActive(t: TwentyClient): Promise<boolean> {
   try {
@@ -247,8 +240,13 @@ async function main() {
       // card's wa.me link is built from a dialable number, not the raw import.
       // outreachMessage rides the same PATCH: the trigger fires on `stage`,
       // and the workflow's body reads `after.*`, so the card gets THIS text.
+      // outreachStatus is stamped explicitly: the queue reads empty as
+      // NOT_STARTED, but the workflow's trigger filter is `after.outreachStatus
+      // IS NOT_STARTED` and an empty value fails it — wave w1 (2026-10-05)
+      // flipped 10 schools that silently never got a card.
       await t.rest("PATCH", `companies/${r.id}`, {
         stage: "SHORTLISTED",
+        outreachStatus: "NOT_STARTED",
         schoolPhone: r.to,
         outreachWave: WAVE,
         outreachVariant: m.v.id,
