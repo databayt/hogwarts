@@ -18,10 +18,11 @@ import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 interface Props {
   params: Promise<{ lang: Locale }>
+  searchParams: Promise<{ callbackUrl?: string }>
 }
 
-const LoginPage = async ({ params }: Props) => {
-  const { lang } = await params
+const LoginPage = async ({ params, searchParams }: Props) => {
+  const [{ lang }, { callbackUrl }] = await Promise.all([params, searchParams])
   const dictionary = await getAuthDictionary(lang)
 
   // The showcase tenant swaps the credential fields for a role picker. Auth
@@ -34,7 +35,14 @@ const LoginPage = async ({ params }: Props) => {
       requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
     )
 
-  if (subdomain === DEMO_SUBDOMAIN) {
+  // Except for an applicant. The role picker is for visitors touring the
+  // product; someone the application gate sent here is the public applying
+  // for real, and needs their own account -- sign in or join -- to keep it.
+  const isApplying = /^\/[a-z]{2}\/application(\/|\?|$)/.test(
+    callbackUrl ?? ""
+  )
+
+  if (subdomain === DEMO_SUBDOMAIN && !isApplying) {
     const demoRoles = dictionary?.auth?.demoRoles
     const roles = DEMO_ROLE_KEYS.map((key) => ({
       key,
