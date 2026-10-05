@@ -349,6 +349,9 @@ interface UserMenuInlineProps {
   className?: string
   /** Fired when a link is followed, for a sheet that should close behind it. */
   onNavigate?: () => void
+  /** `sheet` (default): thumb-sized rows for a phone sheet. `menu`: the
+   *  dropdown's own sizes, for a desktop panel that stands in for it. */
+  size?: "sheet" | "menu"
 }
 
 /**
@@ -362,6 +365,7 @@ export function UserMenuInline({
   subdomain,
   className,
   onNavigate,
+  size = "sheet",
 }: UserMenuInlineProps) {
   const user = useCurrentUser()
   const params = useParams()
@@ -371,8 +375,10 @@ export function UserMenuInline({
     (dictionary?.userMenu as Record<string, string> | undefined)?.[key] ||
     fallback
 
-  const row =
-    "flex items-center gap-3 py-2 text-lg font-medium [&_svg]:size-5 [&_svg]:shrink-0"
+  const compact = size === "menu"
+  const row = compact
+    ? "hover:bg-accent flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm [&_svg]:size-4 [&_svg]:shrink-0"
+    : "flex items-center gap-3 py-2 text-lg font-medium [&_svg]:size-5 [&_svg]:shrink-0"
 
   if (!user) {
     const loginUrl = subdomain
@@ -404,20 +410,37 @@ export function UserMenuInline({
       data-slot="user-menu-inline"
       className={cn("flex flex-col", className)}
     >
-      <div className="flex items-center gap-3 pb-3">
-        <Avatar className="size-10">
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          compact ? "border-b px-2 pb-2 mb-1" : "pb-3"
+        )}
+      >
+        <Avatar className={compact ? "size-8" : "size-10"}>
           <AvatarImage src={user.image || ""} alt={displayName} />
           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
             {initials}
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="truncate text-base leading-tight font-medium">
+          {/* Divs, not <p>: the zenda scope's unlayered `p` rule would set
+              these in its serif on the school site. */}
+          <div
+            className={cn(
+              "truncate leading-tight font-medium",
+              compact ? "text-sm" : "text-base"
+            )}
+          >
             {displayName}
-          </p>
-          <p className="text-muted-foreground truncate text-sm leading-tight">
+          </div>
+          <div
+            className={cn(
+              "text-muted-foreground truncate leading-tight",
+              compact ? "text-xs" : "text-sm"
+            )}
+          >
             {displayEmail}
-          </p>
+          </div>
         </div>
       </div>
       {items.map(({ href, label, Icon }) => (
@@ -426,10 +449,12 @@ export function UserMenuInline({
           {label}
         </Link>
       ))}
-      <LogoutButton className={cn(row, "text-destructive cursor-pointer")}>
-        <ExitIcon />
-        {t("logout", "Logout")}
-      </LogoutButton>
+      <div className={cn(compact && "mt-1 border-t pt-1")}>
+        <LogoutButton className={cn(row, "text-destructive cursor-pointer")}>
+          <ExitIcon />
+          {t("logout", "Logout")}
+        </LogoutButton>
+      </div>
     </div>
   )
 }

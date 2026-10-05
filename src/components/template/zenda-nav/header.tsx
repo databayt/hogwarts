@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 import { BlurImage } from "@/components/atom/blur-image"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { TOOLBAR_BUTTON, TOOLBAR_ICON } from "@/components/atom/toolbar-size"
-import { UserButton, UserMenuInline } from "@/components/auth/user-button"
+import { UserMenuInline } from "@/components/auth/user-button"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { marketingConfig } from "@/components/template/site-header/config"
@@ -358,15 +358,21 @@ export function ZendaNav({
               hamburger opens, so the swap after hydration is never seen. */}
           {!isSheet && (
             <div
-              className={`nav_utility-wrap ${isActive ? "is-active" : ""} ${TOOLBAR_BUTTON}`}
+              className={`nav_utility-wrap ${isActive ? "is-active" : ""}`}
             >
-              <SearchMenu iconClassName={TOOLBAR_ICON} />
-              <LangSwitcher iconClassName={TOOLBAR_ICON} />
-              <ModeSwitcher iconClassName={TOOLBAR_ICON} />
-              <UserButton
+              <div className={cn("flex items-center gap-2", TOOLBAR_BUTTON)}>
+                <SearchMenu iconClassName={TOOLBAR_ICON} />
+                <LangSwitcher iconClassName={TOOLBAR_ICON} />
+                <ModeSwitcher iconClassName={TOOLBAR_ICON} />
+              </div>
+              {/* The avatar's dropdown, laid out flat in the same panel: the
+                  hamburger opens one menu, not a menu that opens another. */}
+              <UserMenuInline
                 variant="site"
+                size="menu"
                 subdomain={subdomain}
-                avatarClassName={TOOLBAR_ICON}
+                onNavigate={() => setIsActive(false)}
+                className="border-t pt-2"
               />
             </div>
           )}
