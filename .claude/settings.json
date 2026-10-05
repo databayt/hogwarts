@@ -48,7 +48,8 @@
     ],
     "ask": []
   },
-  "model": "claude-opus-5",
+  "model": "claude-opus-5-5",
+  "effortLevel": "medium",
   "enableAllProjectMcpServers": true,
   "includeCoAuthoredBy": true,
   "env": {
@@ -59,8 +60,8 @@
     "BMAD_ENABLED": "true",
     "AUTOMATION_LEVEL": "maximum",
     "TDD_ENFORCE": "true",
-    "ORCHESTRATOR_MODEL": "claude-opus-5",
-    "DEFAULT_MODEL": "claude-opus-5",
+    "ORCHESTRATOR_MODEL": "claude-opus-5-5",
+    "DEFAULT_MODEL": "claude-opus-5-5",
     "COVERAGE_TARGET": "95"
   },
   "hooks": {
@@ -70,11 +71,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|db push|accept-data-loss|DROP TABLE|TRUNCATE|ALTER TABLE.*DROP)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
+            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|db push|accept-data-loss|DROP TABLE|TRUNCATE|ALTER TABLE.*DROP)'; then echo '\ud83d\udeab BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
           },
           {
             "type": "command",
-            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE 'git[[:space:]]+(worktree|checkout|switch|stash|clean)([^a-z]|$)|git[[:space:]]+reset[[:space:]]+--hard|git[[:space:]]+branch[[:space:]]+[A-Za-z0-9]|git[[:space:]]+push[^\"]*(--force|--force-with-lease)|git[[:space:]]+push[^\"]*[[:space:]]-f([^a-z]|$)'; then echo '🚫 BLOCKED: main-only policy (CLAUDE.md Rule #9) — no branch switch / worktree / tree-wipe. Work directly on main and commit it. If you truly need this, run it yourself with the ! prefix.'; exit 2; fi; exit 0"
+            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE 'git[[:space:]]+(worktree|checkout|switch|stash|clean)([^a-z]|$)|git[[:space:]]+reset[[:space:]]+--hard|git[[:space:]]+branch[[:space:]]+[A-Za-z0-9]|git[[:space:]]+push[^\"]*(--force|--force-with-lease)|git[[:space:]]+push[^\"]*[[:space:]]-f([^a-z]|$)'; then echo '\ud83d\udeab BLOCKED: main-only policy (CLAUDE.md Rule #9) \u2014 no branch switch / worktree / tree-wipe. Work directly on main and commit it. If you truly need this, run it yourself with the ! prefix.'; exit 2; fi; exit 0"
           }
         ]
       },
@@ -83,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"; echo \"🔍 PRE-COMMIT BUILD VALIDATION\"; echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"; echo \"Branch: $BRANCH\"; echo \"\"; echo \"Step 1: TypeScript Compilation\"; pnpm tsc --noEmit > /tmp/tsc-output.txt 2>&1 || TSC_EXIT=$?; if [ ! -z \"$TSC_EXIT\" ]; then TSC_ERROR_COUNT=$(wc -l < /tmp/tsc-output.txt 2>/dev/null || echo 0); echo \"❌ TypeScript: $TSC_ERROR_COUNT errors found\"; head -n 10 /tmp/tsc-output.txt 2>/dev/null; echo \"\"; echo \"💡 Fix: Run 'pnpm tsc --noEmit' to see all errors\"; echo \"💡 Auto-fix: Many TypeScript errors can be auto-fixed\"; ERRORS_FOUND=1; else echo \"✅ TypeScript: 0 errors\"; fi; echo \"\"; echo \"Step 2: Prisma Client Sync\"; if git diff --cached --name-only | grep -q \"prisma/schema.prisma\\|prisma/models/\"; then echo \"🔍 Prisma schema changed, checking client sync...\"; if [ -f node_modules/.prisma/client/index.d.ts ]; then SCHEMA_TIME=$(stat -c %Y prisma/schema.prisma 2>/dev/null || stat -f %m prisma/schema.prisma 2>/dev/null || echo 0); CLIENT_TIME=$(stat -c %Y node_modules/.prisma/client/index.d.ts 2>/dev/null || stat -f %m node_modules/.prisma/client/index.d.ts 2>/dev/null || echo 0); if [ $SCHEMA_TIME -gt $CLIENT_TIME ]; then echo \"⚠️  Prisma: Client out of sync (schema modified after client generation)\"; echo \"💡 Fix: Run 'pnpm prisma generate' to regenerate client\"; ERRORS_FOUND=1; else echo \"✅ Prisma: Client up to date\"; fi; else echo \"⚠️  Prisma: Client not found\"; echo \"💡 Fix: Run 'pnpm prisma generate'\"; ERRORS_FOUND=1; fi; else echo \"✅ Prisma: No schema changes detected\"; fi; echo \"\"; echo \"Step 3: Linting\"; pnpm lint --quiet 2>&1 | head -n 10 || LINT_EXIT=$?; if [ ! -z \"$LINT_EXIT\" ]; then echo \"❌ ESLint: Errors found\"; echo \"💡 Fix: Run 'pnpm lint --fix' to auto-fix\"; ERRORS_FOUND=1; else echo \"✅ ESLint: No errors\"; fi; echo \"\"; echo \"Step 4: Running Tests (Changed Files)\"; pnpm test --changed --silent --run 2>&1 | grep -E \"(PASS|FAIL|Test Suites)\" || TEST_EXIT=$?; if [ ! -z \"$TEST_EXIT\" ]; then echo \"❌ Tests: Failed\"; ERRORS_FOUND=1; else echo \"✅ Tests: Passed\"; fi; echo \"\"; echo \"Step 5: Seed Safety Check\"; if git diff --cached --name-only | grep -q 'prisma/seeds/'; then if git diff --cached -- 'prisma/seeds/' | grep -qE '(deleteMany|\\.delete\\(|TRUNCATE|DROP|prisma\\.\\$executeRaw)'; then echo \"❌ Seed Safety: Destructive operation detected in seed files\"; echo \"💡 Review: deleteMany, .delete(), TRUNCATE, DROP, or \\$executeRaw found\"; ERRORS_FOUND=1; else echo \"✅ Seed Safety: No destructive operations\"; fi; else echo \"✅ Seed Safety: No seed files changed\"; fi; echo \"\"; echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"; if [ ! -z \"$ERRORS_FOUND\" ]; then echo \"❌ PRE-COMMIT VALIDATION FAILED\"; echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"; echo \"\"; echo \"Errors detected. Please fix before committing.\"; echo \"\"; echo \"Quick Fixes:\"; echo \"  - TypeScript errors: Fix manually or check for auto-fix patterns\"; echo \"  - Prisma sync: pnpm prisma generate\"; echo \"  - Linting: pnpm lint --fix\"; echo \"  - Tests: Fix failing tests\"; echo \"\"; echo \"Documentation: /docs/build\"; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then echo \"🚫 COMMIT BLOCKED on protected branch ($BRANCH)\"; exit 1; else echo \"⚠️  You can override with: git commit --no-verify\"; echo \"   (Not recommended - fix errors before merging to main)\"; exit 1; fi; else echo \"✅ ALL PRE-COMMIT CHECKS PASSED\"; echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"; echo \"\"; exit 0; fi"
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"; echo \"\ud83d\udd0d PRE-COMMIT BUILD VALIDATION\"; echo \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"; echo \"Branch: $BRANCH\"; echo \"\"; echo \"Step 1: TypeScript Compilation\"; pnpm tsc --noEmit > /tmp/tsc-output.txt 2>&1 || TSC_EXIT=$?; if [ ! -z \"$TSC_EXIT\" ]; then TSC_ERROR_COUNT=$(wc -l < /tmp/tsc-output.txt 2>/dev/null || echo 0); echo \"\u274c TypeScript: $TSC_ERROR_COUNT errors found\"; head -n 10 /tmp/tsc-output.txt 2>/dev/null; echo \"\"; echo \"\ud83d\udca1 Fix: Run 'pnpm tsc --noEmit' to see all errors\"; echo \"\ud83d\udca1 Auto-fix: Many TypeScript errors can be auto-fixed\"; ERRORS_FOUND=1; else echo \"\u2705 TypeScript: 0 errors\"; fi; echo \"\"; echo \"Step 2: Prisma Client Sync\"; if git diff --cached --name-only | grep -q \"prisma/schema.prisma\\|prisma/models/\"; then echo \"\ud83d\udd0d Prisma schema changed, checking client sync...\"; if [ -f node_modules/.prisma/client/index.d.ts ]; then SCHEMA_TIME=$(stat -c %Y prisma/schema.prisma 2>/dev/null || stat -f %m prisma/schema.prisma 2>/dev/null || echo 0); CLIENT_TIME=$(stat -c %Y node_modules/.prisma/client/index.d.ts 2>/dev/null || stat -f %m node_modules/.prisma/client/index.d.ts 2>/dev/null || echo 0); if [ $SCHEMA_TIME -gt $CLIENT_TIME ]; then echo \"\u26a0\ufe0f  Prisma: Client out of sync (schema modified after client generation)\"; echo \"\ud83d\udca1 Fix: Run 'pnpm prisma generate' to regenerate client\"; ERRORS_FOUND=1; else echo \"\u2705 Prisma: Client up to date\"; fi; else echo \"\u26a0\ufe0f  Prisma: Client not found\"; echo \"\ud83d\udca1 Fix: Run 'pnpm prisma generate'\"; ERRORS_FOUND=1; fi; else echo \"\u2705 Prisma: No schema changes detected\"; fi; echo \"\"; echo \"Step 3: Linting\"; pnpm lint --quiet 2>&1 | head -n 10 || LINT_EXIT=$?; if [ ! -z \"$LINT_EXIT\" ]; then echo \"\u274c ESLint: Errors found\"; echo \"\ud83d\udca1 Fix: Run 'pnpm lint --fix' to auto-fix\"; ERRORS_FOUND=1; else echo \"\u2705 ESLint: No errors\"; fi; echo \"\"; echo \"Step 4: Running Tests (Changed Files)\"; pnpm test --changed --silent --run 2>&1 | grep -E \"(PASS|FAIL|Test Suites)\" || TEST_EXIT=$?; if [ ! -z \"$TEST_EXIT\" ]; then echo \"\u274c Tests: Failed\"; ERRORS_FOUND=1; else echo \"\u2705 Tests: Passed\"; fi; echo \"\"; echo \"Step 5: Seed Safety Check\"; if git diff --cached --name-only | grep -q 'prisma/seeds/'; then if git diff --cached -- 'prisma/seeds/' | grep -qE '(deleteMany|\\.delete\\(|TRUNCATE|DROP|prisma\\.\\$executeRaw)'; then echo \"\u274c Seed Safety: Destructive operation detected in seed files\"; echo \"\ud83d\udca1 Review: deleteMany, .delete(), TRUNCATE, DROP, or \\$executeRaw found\"; ERRORS_FOUND=1; else echo \"\u2705 Seed Safety: No destructive operations\"; fi; else echo \"\u2705 Seed Safety: No seed files changed\"; fi; echo \"\"; echo \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"; if [ ! -z \"$ERRORS_FOUND\" ]; then echo \"\u274c PRE-COMMIT VALIDATION FAILED\"; echo \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"; echo \"\"; echo \"Errors detected. Please fix before committing.\"; echo \"\"; echo \"Quick Fixes:\"; echo \"  - TypeScript errors: Fix manually or check for auto-fix patterns\"; echo \"  - Prisma sync: pnpm prisma generate\"; echo \"  - Linting: pnpm lint --fix\"; echo \"  - Tests: Fix failing tests\"; echo \"\"; echo \"Documentation: /docs/build\"; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then echo \"\ud83d\udeab COMMIT BLOCKED on protected branch ($BRANCH)\"; exit 1; else echo \"\u26a0\ufe0f  You can override with: git commit --no-verify\"; echo \"   (Not recommended - fix errors before merging to main)\"; exit 1; fi; else echo \"\u2705 ALL PRE-COMMIT CHECKS PASSED\"; echo \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"; echo \"\"; exit 0; fi"
           }
         ]
       },
@@ -92,7 +93,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"🔍 Pre-Push Build Verification (Branch: $BRANCH)\"; echo \"\"; echo \"Running production build...\"; pnpm build 2>&1 | grep -v \"^$\" || BUILD_EXIT=$?; echo \"Checking Prettier formatting...\"; npx prettier --check \"src/**/*.{ts,tsx,js,jsx}\" --log-level error 2>&1 | grep -v \"^$\" || PRETTIER_EXIT=$?; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"❌ PUSH BLOCKED: Build or formatting checks failed on protected branch ($BRANCH)\"; echo \"Fix errors above before pushing to $BRANCH\"; exit 1; fi; else if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"⚠️  WARNING: Build or formatting checks failed on feature branch ($BRANCH)\"; echo \"Allowing push, but please fix errors before merging to main\"; fi; fi; echo \"✅ Pre-Push checks passed\"; exit 0"
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"\ud83d\udd0d Pre-Push Build Verification (Branch: $BRANCH)\"; echo \"\"; echo \"Running production build...\"; pnpm build 2>&1 | grep -v \"^$\" || BUILD_EXIT=$?; echo \"Checking Prettier formatting...\"; npx prettier --check \"src/**/*.{ts,tsx,js,jsx}\" --log-level error 2>&1 | grep -v \"^$\" || PRETTIER_EXIT=$?; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"\u274c PUSH BLOCKED: Build or formatting checks failed on protected branch ($BRANCH)\"; echo \"Fix errors above before pushing to $BRANCH\"; exit 1; fi; else if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"\u26a0\ufe0f  WARNING: Build or formatting checks failed on feature branch ($BRANCH)\"; echo \"Allowing push, but please fix errors before merging to main\"; fi; fi; echo \"\u2705 Pre-Push checks passed\"; exit 0"
           }
         ]
       },
@@ -101,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"🔄 Pre-Merge Validation\"; echo \"Running comprehensive checks before merge...\"; echo \"\"; echo \"1. Running all tests...\"; pnpm test --run 2>&1 | grep -E \"(PASS|FAIL|Test Suites)\" || TEST_EXIT=$?; echo \"\"; echo \"2. Checking build...\"; pnpm build 2>&1 | grep -E \"(✓|✗|error|Error)\" || BUILD_EXIT=$?; echo \"\"; echo \"3. Checking for merge conflicts...\"; git diff --check || CONFLICT_EXIT=$?; echo \"\"; if [ ! -z \"$TEST_EXIT\" ] || [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$CONFLICT_EXIT\" ]; then echo \"❌ MERGE BLOCKED: Pre-merge checks failed\"; echo \"Please fix all issues before merging\"; exit 1; fi; echo \"✅ All pre-merge checks passed\"; exit 0"
+            "command": "echo \"\ud83d\udd04 Pre-Merge Validation\"; echo \"Running comprehensive checks before merge...\"; echo \"\"; echo \"1. Running all tests...\"; pnpm test --run 2>&1 | grep -E \"(PASS|FAIL|Test Suites)\" || TEST_EXIT=$?; echo \"\"; echo \"2. Checking build...\"; pnpm build 2>&1 | grep -E \"(\u2713|\u2717|error|Error)\" || BUILD_EXIT=$?; echo \"\"; echo \"3. Checking for merge conflicts...\"; git diff --check || CONFLICT_EXIT=$?; echo \"\"; if [ ! -z \"$TEST_EXIT\" ] || [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$CONFLICT_EXIT\" ]; then echo \"\u274c MERGE BLOCKED: Pre-merge checks failed\"; echo \"Please fix all issues before merging\"; exit 1; fi; echo \"\u2705 All pre-merge checks passed\"; exit 0"
           }
         ]
       }
@@ -112,7 +113,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
+            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && [[ \"$CLAUDE_FILE_PATH\" != *\"/curriculum/\"* ]] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
           },
           {
             "type": "command",
@@ -137,7 +138,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
+            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && [[ \"$CLAUDE_FILE_PATH\" != *\"/curriculum/\"* ]] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
           },
           {
             "type": "command",
@@ -162,7 +163,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"📝 Post-Commit Actions\"; COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null); if [ ! -z \"$COMMIT_MSG\" ]; then if echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix|refactor|perf|docs|style|test|chore|build|ci)'; then echo \"✅ Commit message follows conventional format\"; if [ -f CHANGELOG.md ] && echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix)'; then echo \"💡 Consider updating CHANGELOG.md for this $(echo $COMMIT_MSG | cut -d: -f1) commit\"; fi; else echo \"💡 Consider using conventional commit format: feat|fix|refactor|perf|docs|style|test|chore|build|ci\"; fi; fi; echo \"Commit successful! Run 'git push' when ready to share your changes.\"; exit 0"
+            "command": "echo \"\ud83d\udcdd Post-Commit Actions\"; COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null); if [ ! -z \"$COMMIT_MSG\" ]; then if echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix|refactor|perf|docs|style|test|chore|build|ci)'; then echo \"\u2705 Commit message follows conventional format\"; if [ -f CHANGELOG.md ] && echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix)'; then echo \"\ud83d\udca1 Consider updating CHANGELOG.md for this $(echo $COMMIT_MSG | cut -d: -f1) commit\"; fi; else echo \"\ud83d\udca1 Consider using conventional commit format: feat|fix|refactor|perf|docs|style|test|chore|build|ci\"; fi; fi; echo \"Commit successful! Run 'git push' when ready to share your changes.\"; exit 0"
           }
         ]
       }
@@ -173,7 +174,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '🚀 HOGWARTS - MANUAL DEPLOY MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 16 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '📝 WORKFLOW:'; echo '  • Edits: Prettier auto-formats (no push)'; echo '  • When ready: Say \"push\" to deploy'; echo '  • Checklist → Commit → Push → Vercel'; echo ''; exit 0"
+            "command": "echo '\ud83d\ude80 HOGWARTS - MANUAL DEPLOY MODE'; echo '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501'; echo 'Stack: Next.js 16 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"\ud83d\udcca Branch: $BRANCH\"; echo ''; echo '\ud83d\udcdd WORKFLOW:'; echo '  \u2022 Edits: Prettier auto-formats (no push)'; echo '  \u2022 When ready: Say \"push\" to deploy'; echo '  \u2022 Checklist \u2192 Commit \u2192 Push \u2192 Vercel'; echo ''; exit 0"
           }
         ]
       }
@@ -184,7 +185,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION END'; echo '═══════════════════════════════════════'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"📝 $UNCOMMITTED uncommitted changes\"; echo '💡 Say \"push\" to deploy when ready'; else echo '✅ No uncommitted changes'; fi; ZOMBIES=$(pgrep -f 'playwright-mcp' 2>/dev/null | wc -l | tr -d ' '); if [ \"$ZOMBIES\" -gt 0 ]; then pkill -f 'playwright-mcp' 2>/dev/null; echo \"🧹 Cleaned $ZOMBIES Playwright MCP processes\"; fi; echo '═══════════════════════════════════════'; exit 0"
+            "command": "echo ''; echo '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550'; echo '\ud83d\udcca SESSION END'; echo '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"\ud83d\udcdd $UNCOMMITTED uncommitted changes\"; echo '\ud83d\udca1 Say \"push\" to deploy when ready'; else echo '\u2705 No uncommitted changes'; fi; ZOMBIES=$(pgrep -f 'playwright-mcp' 2>/dev/null | wc -l | tr -d ' '); if [ \"$ZOMBIES\" -gt 0 ]; then pkill -f 'playwright-mcp' 2>/dev/null; echo \"\ud83e\uddf9 Cleaned $ZOMBIES Playwright MCP processes\"; fi; echo '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550'; exit 0"
           }
         ]
       }
@@ -195,7 +196,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"💡 Common fixes:\"; echo \"  - TypeScript errors: Run 'pnpm tsc --noEmit' to see details\"; echo \"  - Missing dependencies: Run 'pnpm install'\"; echo \"  - Prisma errors: Run 'pnpm prisma generate'\"; echo \"  - Linting errors: Run 'pnpm lint --fix'\"; exit 0"
+            "command": "echo \"\ud83d\udca1 Common fixes:\"; echo \"  - TypeScript errors: Run 'pnpm tsc --noEmit' to see details\"; echo \"  - Missing dependencies: Run 'pnpm install'\"; echo \"  - Prisma errors: Run 'pnpm prisma generate'\"; echo \"  - Linting errors: Run 'pnpm lint --fix'\"; exit 0"
           }
         ]
       }
