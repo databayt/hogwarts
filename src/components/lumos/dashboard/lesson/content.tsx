@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { AR_ORDINALS } from "@/lib/grade/keys"
 import { enqueue } from "@/lib/offline/outbox"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -1299,22 +1300,8 @@ const GRADE_WORDS: Record<number, string> = {
   11: "Eleven",
   12: "Twelve",
 }
-const GRADE_WORDS_AR: Record<number, string> = {
-  1: "الأول",
-  2: "الثاني",
-  3: "الثالث",
-  4: "الرابع",
-  5: "الخامس",
-  6: "السادس",
-  7: "السابع",
-  8: "الثامن",
-  9: "التاسع",
-  10: "العاشر",
-  11: "الحادي عشر",
-  12: "الثاني عشر",
-}
 function gradeWord(n: number, lang?: string): string {
-  if (lang === "ar") return GRADE_WORDS_AR[n] ?? String(n)
+  if (lang === "ar") return AR_ORDINALS[n] ?? String(n)
   return GRADE_WORDS[n] ?? String(n)
 }
 

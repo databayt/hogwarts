@@ -11,6 +11,8 @@ import type {
   SlotType,
 } from "@prisma/client"
 
+import { gradeLabel } from "@/lib/grade"
+
 // ============================================
 // Application Form Types
 // ============================================
@@ -314,35 +316,19 @@ export const DEFAULT_GRADES: GradeMapping[] = [
   { grade: "الصف الثاني عشر", minAge: 16, maxAge: 17 },
 ]
 
-const GRADE_LABELS_EN: Record<string, string> = {
-  "روضة 1": "KG 1",
-  "روضة 2": "KG 2",
-  "الصف الأول": "Grade 1",
-  "الصف الثاني": "Grade 2",
-  "الصف الثالث": "Grade 3",
-  "الصف الرابع": "Grade 4",
-  "الصف الخامس": "Grade 5",
-  "الصف السادس": "Grade 6",
-  "الصف السابع": "Grade 7",
-  "الصف الثامن": "Grade 8",
-  "الصف التاسع": "Grade 9",
-  "الصف العاشر": "Grade 10",
-  "الصف الحادي عشر": "Grade 11",
-  "الصف الثاني عشر": "Grade 12",
-}
-
 /**
  * Localized grade options. The `value` stays the (Arabic) grade name that is
- * stored and matched on; only the shown label switches to English. Falls back
- * to the Arabic name for any grade without an English mapping.
+ * stored and matched on; the label comes from `@/lib/grade`, in the school's
+ * country naming when `country` is given.
  */
 export function getGradeOptions(
   lang: string,
-  gradeMapping: GradeMapping[] = DEFAULT_GRADES
+  gradeMapping: GradeMapping[] = DEFAULT_GRADES,
+  country?: string | null
 ): { value: string; label: string }[] {
   return gradeMapping.map((g) => ({
     value: g.grade,
-    label: lang === "en" ? (GRADE_LABELS_EN[g.grade] ?? g.grade) : g.grade,
+    label: gradeLabel(g.grade, { lang, country }),
   }))
 }
 

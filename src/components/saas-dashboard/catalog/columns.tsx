@@ -6,6 +6,7 @@ import Link from "next/link"
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
+import { gradeRangeLabel } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -67,11 +68,7 @@ export const catalogColumns: ColumnDef<SubjectRow>[] = [
       const grades = row.original.grades
       if (!grades.length)
         return <span className="text-muted-foreground">—</span>
-      const sorted = [...grades].sort((a, b) => a - b)
-      const label =
-        sorted.length === 1
-          ? `Grade ${sorted[0]}`
-          : `Grade ${sorted[0]}–${sorted[sorted.length - 1]}`
+      const label = gradeRangeLabel(grades, { lang: "en" })
       return (
         <Badge variant="secondary" className="text-xs">
           {label}

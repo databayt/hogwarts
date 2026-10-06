@@ -5,6 +5,7 @@ import { SearchParams } from "nuqs/server"
 
 import { withArchiveScope } from "@/lib/archive-scope"
 import { getGradeLabel } from "@/lib/grade-label"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { schoolNameFormat } from "@/lib/school-name-format"
@@ -206,10 +207,12 @@ export default async function StudentsContent({
       if (/^[A-Z]\d/.test(room)) roomCodes.push(room)
       else roomNames.push(room)
     }
-    const [nameTranslations, classroomTranslations] = await Promise.all([
-      getNames(rows as any[], nameOf, lang, effectiveSchoolId!),
-      getLabels(roomNames, lang, effectiveSchoolId!),
-    ])
+    const [nameTranslations, classroomTranslations, gradeCountry] =
+      await Promise.all([
+        getNames(rows as any[], nameOf, lang, effectiveSchoolId!),
+        getLabels(roomNames, lang, effectiveSchoolId!),
+        getSchoolGradeCountry(effectiveSchoolId!),
+      ])
     for (const code of roomCodes) {
       classroomTranslations.set(code, transliterateRoomCode(code, lang))
     }
@@ -218,7 +221,7 @@ export default async function StudentsContent({
     const gradeSet = new Set<string>()
     for (const s of rows as any[]) {
       if (s.academicGrade?.gradeNumber != null) {
-        gradeSet.add(getGradeLabel(s.academicGrade.gradeNumber, lang))
+        gradeSet.add(getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry))
       }
     }
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
@@ -234,7 +237,7 @@ export default async function StudentsContent({
 
       const gradeName =
         s.academicGrade?.gradeNumber != null
-          ? getGradeLabel(s.academicGrade.gradeNumber, lang)
+          ? getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry)
           : null
 
       return {

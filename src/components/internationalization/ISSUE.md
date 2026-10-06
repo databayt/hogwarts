@@ -92,3 +92,11 @@ last_audited: 2026-06-11
 - `get-dictionary-client.ts` drifted from `dictionaries.ts` because there were two namespace lists — the registry fixed the bug class; `dictionary-loader-sync.test.ts` guards the regression
 - CI ran `pnpm tests` (nonexistent script) — unit tests never actually ran in CI before 2026-06-10
 - Old `dev-i18n-sync --fix` wrote top-level pair fixes to the wrong path (dictionaries/ subdir)
+
+
+## Grade labels — global key + country presets (2026-10-06)
+
+- One module `src/lib/grade/` (keys, presets, `gradeLabel`, `gradeRangeLabel`, `parseGrade`); server lookup `getSchoolGradeCountry(schoolId)` in `src/lib/grade/school.ts`.
+- Global key `pre · kg1 · kg2 · g1…g12` (= `AcademicGrade.gradeNumber` -2, -1, 0, 1…12). Countries pick a naming preset; only **SD** is built: `الأول ابتدائي … الثالث ثانوي`, `روضة أولى / ثانية`, English stays `Grade n`. Everyone else uses `default` (`الصف السابع`).
+- `parseGrade` / `extractGradeNumber` read keys and SD stage names (`الأول متوسط` = 7, previously parsed as 1).
+- Open: `AcademicGrade.name` / `YearLevel.levelName` rows still hold the old prose (UI that reads `.name` shows it); admission still stores Arabic prose in `applyingForClass` (labels go through the module, values unchanged); presets for SA/EG/GB/CBSE not written; per-school override (`School.gradeLabels`) needs schema approval.

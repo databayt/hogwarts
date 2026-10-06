@@ -89,6 +89,7 @@ import { db } from "@/lib/db"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
@@ -1156,10 +1157,12 @@ export async function getStudents(
       if (/^[A-Z]\d/.test(room)) roomCodes.push(room)
       else roomNames.push(room)
     }
-    const [nameTranslations, classroomTranslations] = await Promise.all([
-      getNames(rows as Array<any>, nameOf, displayLang, schoolId),
-      getLabels(roomNames, displayLang, schoolId),
-    ])
+    const [nameTranslations, classroomTranslations, gradeCountry] =
+      await Promise.all([
+        getNames(rows as Array<any>, nameOf, displayLang, schoolId),
+        getLabels(roomNames, displayLang, schoolId),
+        getSchoolGradeCountry(schoolId),
+      ])
     for (const code of roomCodes) {
       classroomTranslations.set(code, transliterateRoomCode(code, displayLang))
     }
@@ -1168,7 +1171,7 @@ export async function getStudents(
     const mapped = (rows as Array<any>).map((s) => {
       const gradeName =
         s.academicGrade?.gradeNumber != null
-          ? getGradeLabel(s.academicGrade.gradeNumber, displayLang)
+          ? getGradeLabel(s.academicGrade.gradeNumber, displayLang, gradeCountry)
           : null
 
       const rawName = fullName(nameOf(s))

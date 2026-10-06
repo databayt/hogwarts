@@ -8,6 +8,7 @@ import Link from "next/link"
 import { BlurImage } from "@/components/atom/blur-image"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -18,8 +19,7 @@ import type { SubjectSummary } from "./catalog-detail"
 // ---------------------------------------------------------------------------
 
 function gradeLabel(g: number, lang: "en" | "ar"): string {
-  if (lang === "ar") return `\u0627\u0644\u0635\u0641 ${g.toLocaleString(lang)}`
-  return `Grade ${g}`
+  return formatGrade(g, { lang })
 }
 
 // ---------------------------------------------------------------------------

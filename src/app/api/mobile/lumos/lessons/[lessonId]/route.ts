@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { AR_ORDINALS } from "@/lib/grade/keys"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { readLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
 import { fetchLessonQuizQuestions, toClientQuestion } from "@/components/lumos/lib/lesson-quiz"
@@ -13,10 +14,6 @@ const FALLBACK_VIDEO_URL = `https://${
   process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
 }/hogwarts/media/story.mp4`
 
-const GRADE_WORDS_AR: Record<number, string> = {
-  1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس", 6: "السادس",
-  7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر", 11: "الحادي عشر", 12: "الثاني عشر",
-}
 const GRADE_WORDS: Record<number, string> = {
   1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven",
   8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve",
@@ -58,7 +55,7 @@ export async function GET(
     }
     const d = ((dictionary as { lumos?: { lesson?: Record<string, string> } }).lumos?.lesson ?? {}) as Record<string, string>
 
-    const gradeWord = (n: number) => (lang === "ar" ? GRADE_WORDS_AR[n] : GRADE_WORDS[n]) ?? String(n)
+    const gradeWord = (n: number) => (lang === "ar" ? AR_ORDINALS[n] : GRADE_WORDS[n]) ?? String(n)
     const course = lesson.chapter.course
     const gradeLabel = course.grades.length > 0
       ? `${d.grade || "Grade"} ${course.grades.map(gradeWord).join(" / ")}`

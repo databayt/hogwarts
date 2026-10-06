@@ -8,6 +8,7 @@ import Link from "next/link"
 import { BlurImage } from "@/components/atom/blur-image"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
+import { gradeRangeLabel } from "@/lib/grade"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -37,39 +38,29 @@ function levelLabel(level: string, lang: Locale): string {
   return labels[level]?.[lang] ?? level
 }
 
-const AR_ORDINALS: Record<number, string> = {
-  1: "الأول",
-  2: "الثاني",
-  3: "الثالث",
-  4: "الرابع",
-  5: "الخامس",
-  6: "السادس",
-  7: "السابع",
-  8: "الثامن",
-  9: "التاسع",
-  10: "العاشر",
-  11: "الحادي عشر",
-  12: "الثاني عشر",
-}
-
-function gradeLabel(grades: number[], lang: Locale): string | null {
+function gradesText(
+  grades: number[],
+  lang: Locale,
+  country?: string | null
+): string | null {
   if (grades.length === 0) return null
-  if (lang === "ar") {
-    if (grades.length === 1)
-      return `الصف ${AR_ORDINALS[grades[0]] ?? grades[0]}`
-    return `الصف ${AR_ORDINALS[grades[0]] ?? grades[0]} - ${AR_ORDINALS[grades[grades.length - 1]] ?? grades[grades.length - 1]}`
-  }
-  if (grades.length === 1) return `Grade ${grades[0]}`
-  return `Grade ${grades[0]}-${grades[grades.length - 1]}`
+  return gradeRangeLabel(grades, { lang, country })
 }
 
 interface Props {
   subjects: SubjectItem[]
   lang: Locale
   subdomain?: string
+  /** School country for grade naming (`@/lib/grade`). */
+  gradeCountry?: string | null
 }
 
-export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
+export function SubjectsGrid({
+  subjects,
+  lang,
+  subdomain,
+  gradeCountry,
+}: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>
@@ -130,7 +121,7 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
                       variant="outline"
                       className="px-1.5 py-0 text-[10px]"
                     >
-                      {gradeLabel(subject.grades, lang)}
+                      {gradesText(subject.grades, lang, gradeCountry)}
                     </Badge>
                   )}
                 </div>

@@ -40,12 +40,19 @@ const ENGLISH_ORDINALS: Record<string, number> = {
 
 /**
  * Extract a grade number from free-text input.
- * Handles: "Grade 5", "5th grade", "الصف الخامس", "grade-5", "5", "Year 5"
+ * Handles: "g5", "Grade 5", "5th grade", "الصف الخامس", "الأول متوسط", "grade-5", "5", "Year 5"
  */
 export function extractGradeNumber(text: string): number | null {
   if (!text) return null
 
   const normalized = text.trim().toLowerCase()
+
+  // Global grade key: "g5", "g12"
+  const keyMatch = normalized.match(/^g(\d{1,2})$/)
+  if (keyMatch) {
+    const num = parseInt(keyMatch[1], 10)
+    if (num >= 1 && num <= 12) return num
+  }
 
   // Direct number: "5", "10"
   const directNum = parseInt(normalized, 10)
@@ -73,8 +80,14 @@ export function extractGradeNumber(text: string): number | null {
   // (12) contains "الثاني" (2), and insertion order used to win — so every
   // Grade 12 applicant written in Arabic resolved to Grade 2 (wrong year
   // level at enrollment, wrong fee preview, wrong section list).
+  // Stage-relative names count within the stage (Sudan: "الأول متوسط" = 7,
+  // "الثالث ثانوي" = 12) — offset only in-stage ordinals (1–3), so
+  // "الصف العاشر الثانوي" stays 10.
   for (const [word, num] of ARABIC_ORDINALS_LONGEST_FIRST) {
-    if (text.includes(word)) return num
+    if (!text.includes(word)) continue
+    if (num <= 3 && /متوسط/.test(text)) return num + 6
+    if (num <= 3 && /ثانوي/.test(text)) return num + 9
+    return num
   }
 
   // English ordinals: "fifth grade" -> 5

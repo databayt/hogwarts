@@ -42,10 +42,11 @@ describe("CURRICULUM_ACADEMIC_CONFIG", () => {
       ])
     })
 
-    it("keeps the original Arabic grade names incl. the fallback", () => {
-      expect(sd.gradeName(1)).toBe("الصف الأول")
-      expect(sd.gradeName(6)).toBe("الصف السادس")
-      expect(sd.gradeName(12)).toBe("الصف الثاني عشر")
+    it("names grades the Sudanese way (2026-10-06) incl. the fallback", () => {
+      expect(sd.gradeName(1)).toBe("الأول ابتدائي")
+      expect(sd.gradeName(6)).toBe("السادس ابتدائي")
+      expect(sd.gradeName(7)).toBe("الأول متوسط")
+      expect(sd.gradeName(12)).toBe("الثالث ثانوي")
       // Out-of-range fallback preserved
       expect(sd.gradeName(13)).toBe("الصف 13")
     })
@@ -106,8 +107,14 @@ describe("CURRICULUM_ACADEMIC_CONFIG", () => {
     })
 
     it("Arab national systems share the Arabic 6+3+3 structure", () => {
+      const sd = CURRICULUM_ACADEMIC_CONFIG.SD
       for (const code of ["SA", "EG", "AE", "QA", "KW", "JO"]) {
-        expect(getAcademicConfig(code)).toBe(CURRICULUM_ACADEMIC_CONFIG.SD)
+        const cfg = getAcademicConfig(code)
+        expect(cfg).toBe(CURRICULUM_ACADEMIC_CONFIG.SA)
+        expect(cfg.levels).toEqual(sd.levels)
+        expect(cfg.streams).toEqual(sd.streams)
+        // Only SD has its own grade-name preset so far.
+        expect(cfg.gradeName(7)).toBe("الصف السابع")
       }
     })
 

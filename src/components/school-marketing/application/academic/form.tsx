@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { useAutoFillMerge } from "../use-auto-fill-merge"
@@ -54,6 +55,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const params = useParams()
     const subdomain = params.subdomain as string
+    const { locale } = useLocale()
     const { session, updateStepData } = useApplySession()
 
     const schema = useMemo(() => {
@@ -92,11 +94,16 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
     const [schoolGradeNumbers, setSchoolGradeNumbers] = React.useState<
       number[] | null
     >(null)
+    // School country names the grades ("الأول متوسط" in Sudan).
+    const [gradeCountry, setGradeCountry] = React.useState<string | null>(
+      null
+    )
     useEffect(() => {
       let cancelled = false
       getSchoolGradeNumbers().then((res) => {
         if (!cancelled && res.success && res.data) {
-          setSchoolGradeNumbers(res.data)
+          setSchoolGradeNumbers(res.data.numbers)
+          setGradeCountry(res.data.country)
         }
       })
       return () => {
@@ -104,8 +111,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
       }
     }, [])
     const allGradeOptions = useMemo(
-      () => getGradeOptions(optionsDict.grade || {}),
-      [optionsDict.grade]
+      () =>
+        getGradeOptions(optionsDict.grade || {}, {
+          lang: locale,
+          country: gradeCountry,
+        }),
+      [optionsDict.grade, locale, gradeCountry]
     )
     const applyingGradeOptions = useMemo(
       () => filterGradeOptionsBySchool(allGradeOptions, schoolGradeNumbers),
@@ -191,7 +202,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {getGradeOptions(optionsDict.grade || {}).map(
+                        {allGradeOptions.map(
                           (option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}

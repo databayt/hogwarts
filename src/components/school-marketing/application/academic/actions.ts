@@ -5,6 +5,7 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { academicSchema, type AcademicSchemaType } from "./validation"
@@ -16,15 +17,18 @@ import { academicSchema, type AcademicSchemaType } from "./validation"
  * set is visible on the public admissions page.
  */
 export async function getSchoolGradeNumbers(): Promise<
-  ActionResponse<number[]>
+  ActionResponse<{ numbers: number[]; country: string | null }>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    const grades = await db.academicGrade.findMany({
-      where: { schoolId },
-      select: { gradeNumber: true },
-    })
+    const [grades, country] = await Promise.all([
+      db.academicGrade.findMany({
+        where: { schoolId },
+        select: { gradeNumber: true },
+      }),
+      getSchoolGradeCountry(schoolId),
+    ])
     const numbers = [
       ...new Set(
         grades
@@ -32,7 +36,7 @@ export async function getSchoolGradeNumbers(): Promise<
           .filter((n): n is number => typeof n === "number")
       ),
     ]
-    return { success: true, data: numbers }
+    return { success: true, data: { numbers, country } }
   } catch (error) {
     return actionError(
       ACTION_ERRORS.LOAD_FAILED,

@@ -4,6 +4,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
@@ -57,6 +58,9 @@ export default async function SubjectsContent({
   teacherId: propTeacherId,
 }: Props) {
   const { schoolId, role } = await getTenantContext()
+  const gradeCountryPromise = schoolId
+    ? getSchoolGradeCountry(schoolId).catch(() => null)
+    : Promise.resolve(null)
   const session = await auth()
   const userId = session?.user?.id
   let subjects: SubjectItem[] = []
@@ -223,9 +227,15 @@ export default async function SubjectsContent({
     }
   }
 
+  const gradeCountry = await gradeCountryPromise
+
   return (
     <div className="space-y-6">
-      <SubjectsGrid subjects={subjects} lang={lang} />
+      <SubjectsGrid
+        subjects={subjects}
+        lang={lang}
+        gradeCountry={gradeCountry}
+      />
     </div>
   )
 }

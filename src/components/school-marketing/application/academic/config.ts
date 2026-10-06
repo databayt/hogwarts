@@ -3,6 +3,7 @@
 
 // Academic Step Configuration
 
+import { gradeLabel, type GradeLabelOptions } from "@/lib/grade"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
 export const ACADEMIC_STEP_CONFIG = {
@@ -17,7 +18,21 @@ export const ACADEMIC_STEP_CONFIG = {
 
 type OptionDict = Record<string, string>
 
-export const getGradeOptions = (d: OptionDict) => [
+/**
+ * The public picker's options. `value` is still the stored Arabic name
+ * (existing applications match on it); with `naming` the shown label comes
+ * from `@/lib/grade`, so a Sudanese school reads "الأول متوسط".
+ */
+export const getGradeOptions = (
+  d: OptionDict,
+  naming?: Pick<GradeLabelOptions, "lang" | "country">
+) => {
+  const options = baseGradeOptions(d)
+  if (!naming) return options
+  return options.map((o) => ({ ...o, label: gradeLabel(o.value, naming) }))
+}
+
+const baseGradeOptions = (d: OptionDict) => [
   { value: "روضة 1", label: d.kg1 || "KG 1" },
   { value: "روضة 2", label: d.kg2 || "KG 2" },
   { value: "الصف الأول", label: d.grade1 || "Grade 1" },

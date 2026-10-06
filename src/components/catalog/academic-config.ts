@@ -14,6 +14,8 @@
  * the YearLevel mapping in setup.ts matches on that slug shape.
  */
 
+import { gradeLabel } from "@/lib/grade"
+
 export interface AcademicLevelDef {
   name: string
   slug: string
@@ -269,11 +271,21 @@ const GENERIC_FALLBACK: CurriculumAcademicConfig = {
 // Registry — keyed by canonical curriculum code (see catalog registry.ts)
 // ---------------------------------------------------------------------------
 
+/**
+ * Sudan: the 6+3+3 structure with the country's own grade names
+ * ("الأول ابتدائي" … "الثالث ثانوي") from the `@/lib/grade` SD preset.
+ * Other Arab systems keep "الصف …" until their preset is written.
+ */
+const SD_6_3_3: CurriculumAcademicConfig = {
+  ...ARABIC_6_3_3,
+  gradeName: (grade) => gradeLabel(grade, { lang: "ar", country: "SD" }),
+}
+
 export const CURRICULUM_ACADEMIC_CONFIG: Record<
   string,
   CurriculumAcademicConfig
 > = {
-  SD: ARABIC_6_3_3,
+  SD: SD_6_3_3,
   // Arab national systems share the 6+3+3 Arabic structure with streams.
   SA: ARABIC_6_3_3,
   EG: ARABIC_6_3_3,
