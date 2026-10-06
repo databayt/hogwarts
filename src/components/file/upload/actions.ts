@@ -147,7 +147,10 @@ export async function uploadFile(
       metadata: {
         schoolId,
         userId,
-        originalName: file.name,
+        // S3 user metadata travels as an HTTP header — ASCII only. An Arabic
+        // file name ("صورة-أحمد.jpg", the norm on an Arabic Mac) failed every
+        // upload with "Invalid character in header content".
+        originalName: encodeURIComponent(file.name),
         category,
         type: options.type || "",
         ...options.metadata,

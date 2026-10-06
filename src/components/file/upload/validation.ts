@@ -60,7 +60,7 @@ import type {
 /**
  * Get allowed MIME types for a category
  */
-function getAllowedMimeTypes(category: FileCategory): string[] {
+export function getAllowedMimeTypes(category: FileCategory): string[] {
   if (category === "other") return []
   const mimeConfig = MIME_TYPES[category as keyof typeof MIME_TYPES]
   return mimeConfig ? Object.keys(mimeConfig) : []

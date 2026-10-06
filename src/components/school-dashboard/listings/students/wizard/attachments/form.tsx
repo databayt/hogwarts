@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { useUpload } from "@/components/file/upload/use-upload"
+import { getAllowedMimeTypes } from "@/components/file/upload/validation"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -29,6 +30,19 @@ import { updateStudentAttachments } from "./actions"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
 type AttachmentDict = Record<string, string> | undefined
+
+// Families photograph a birth certificate as often as they scan it to PDF, and
+// the card already previews images — so the slots take photos too.
+const DOCUMENT_IMAGE_TYPES: Record<string, string[]> = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+  "image/heic": [".heic"],
+}
+const DOCUMENT_ALLOWED_TYPES = [
+  ...getAllowedMimeTypes("document"),
+  ...Object.keys(DOCUMENT_IMAGE_TYPES),
+]
 
 const DOCUMENT_SLOT_KEYS = [
   {
@@ -100,6 +114,7 @@ function DocumentCard({
     getAcceptedTypes,
   } = useUpload({
     category: "document",
+    allowedTypes: DOCUMENT_ALLOWED_TYPES,
     folder: "student-documents",
     maxSize: 10 * 1024 * 1024,
     maxFiles: 1,
@@ -129,7 +144,7 @@ function DocumentCard({
         setRejectionError(invalidFileLabel)
       }
     },
-    accept: getAcceptedTypes(),
+    accept: { ...getAcceptedTypes(), ...DOCUMENT_IMAGE_TYPES },
     maxSize: 10 * 1024 * 1024,
     maxFiles: 1,
     disabled: disabled || isUploading,
