@@ -21,9 +21,16 @@ import { ReportIssueDialog } from "./dialog"
 
 export interface ReportIssueProps {
   variant?: "text" | "icon"
+  /** Icon variant only — match neighbouring toolbar icons (size + stroke). */
+  iconClassName?: string
+  iconStrokeWidth?: number
 }
 
-export function ReportIssue({ variant }: ReportIssueProps = {}) {
+export function ReportIssue({
+  variant,
+  iconClassName,
+  iconStrokeWidth,
+}: ReportIssueProps = {}) {
   const { status } = useSession()
   const pathname = usePathname()
   const lang = pathname?.startsWith("/ar") ? "ar" : "en"
@@ -32,6 +39,8 @@ export function ReportIssue({ variant }: ReportIssueProps = {}) {
   return (
     <ReportIssueDialog
       variant={variant}
+      iconClassName={iconClassName}
+      iconStrokeWidth={iconStrokeWidth}
       lang={lang}
       hasSession={hasSession}
       onSubmit={reportIssue}

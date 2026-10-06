@@ -195,62 +195,56 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-8">
-          {/* Previous Education */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <InputField
-                name="previousSchoolName"
-                label={tPrev?.schoolName || "Previous School"}
-                placeholder={
-                  tPrev?.schoolNamePlaceholder || "Enter previous school name"
-                }
-                disabled={isPending}
-              />
-            </div>
-          </div>
-
-          {/* Current Enrollment */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <SelectField
-                name="academicGradeId"
-                label={tEnrollment?.academicGradeId || "Grade"}
-                placeholder={tEnrollment?.selectGrade}
-                options={gradeOptions}
-                disabled={isPending}
-              />
-              {/* Streams only exist for the upper grades, and sections only
+          {/* Two rows of two: previous school + grade, then section + stream.
+              Section leads row two — every grade has sections, streams only
+              the upper grades. */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <InputField
+              name="previousSchoolName"
+              label={tPrev?.schoolName || "Previous School"}
+              placeholder={
+                tPrev?.schoolNamePlaceholder || "Enter previous school name"
+              }
+              disabled={isPending}
+            />
+            <SelectField
+              name="academicGradeId"
+              label={tEnrollment?.academicGradeId || "Grade"}
+              placeholder={tEnrollment?.selectGrade}
+              options={gradeOptions}
+              disabled={isPending}
+            />
+            <SelectField
+              name="sectionId"
+              label={tEnrollment?.sectionId || "Section"}
+              placeholder={
+                !selectedGradeId
+                  ? tEnrollment?.selectGradeFirst
+                  : sectionsLoading
+                    ? tRoot?.loading
+                    : sectionOptions.length === 0
+                      ? tEnrollment?.noSections
+                      : tEnrollment?.selectSection
+              }
+              options={sectionOptions}
+              disabled={isPending || !selectedGradeId}
+            />
+            {/* Streams only exist for the upper grades, and sections only
                   after a grade is chosen. Say WHY the control is inert instead
                   of prompting for a choice that cannot be made here. */}
-              <SelectField
-                name="academicStreamId"
-                label={tEnrollment?.academicStreamId || "Stream"}
-                placeholder={
-                  !selectedGradeId
-                    ? tEnrollment?.selectGradeFirst
-                    : !streamEnabled
-                      ? tEnrollment?.streamNotApplicable
-                      : tEnrollment?.selectStream
-                }
-                options={streamOptions}
-                disabled={isPending || !streamEnabled}
-              />
-              <SelectField
-                name="sectionId"
-                label={tEnrollment?.sectionId || "Section"}
-                placeholder={
-                  !selectedGradeId
-                    ? tEnrollment?.selectGradeFirst
-                    : sectionsLoading
-                      ? tRoot?.loading
-                      : sectionOptions.length === 0
-                        ? tEnrollment?.noSections
-                        : tEnrollment?.selectSection
-                }
-                options={sectionOptions}
-                disabled={isPending || !selectedGradeId}
-              />
-            </div>
+            <SelectField
+              name="academicStreamId"
+              label={tEnrollment?.academicStreamId || "Stream"}
+              placeholder={
+                !selectedGradeId
+                  ? tEnrollment?.selectGradeFirst
+                  : !streamEnabled
+                    ? tEnrollment?.streamNotApplicable
+                    : tEnrollment?.selectStream
+              }
+              options={streamOptions}
+              disabled={isPending || !streamEnabled}
+            />
           </div>
         </form>
       </Form>

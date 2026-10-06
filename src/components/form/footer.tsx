@@ -416,7 +416,11 @@ export function FormFooter({
           )}
           {showReport && (
             <div className="flex h-8 w-8 items-center justify-center">
-              <ReportIssue variant="icon" />
+              <ReportIssue
+                variant="icon"
+                iconClassName="h-6 w-6"
+                iconStrokeWidth={0.75}
+              />
             </div>
           )}
           {/* Save status indicator */}
