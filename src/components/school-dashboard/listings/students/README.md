@@ -53,6 +53,7 @@ src/components/school-dashboard/listings/students/
   wizard/authorize.ts  # The one auth+role guard every wizard action calls
   wizard/finish.ts     # The one wizard finisher (academic Next + footer Skip):
                        #   provision, toast warnings, open the credentials dialog
+                       #   (fee-structure / no-grade-fee notes stay silent)
   list-params.ts       # nuqs URL state (page, perPage, name, status, sort)
   queries.ts           # Read-only database queries
   table.tsx            # Client DataTable with useDataTable
