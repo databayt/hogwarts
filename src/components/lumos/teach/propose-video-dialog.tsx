@@ -10,7 +10,6 @@ import {
   useState,
   useTransition,
 } from "react"
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import {
@@ -34,6 +33,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { BlurImage } from "@/components/atom/blur-image"
 import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import { isValidVideoUrl } from "@/components/lumos/shared/url-validators"
 import {
@@ -614,15 +615,16 @@ export function ProposeVideoDialog({
     [dSearch.ungraded]
   )
 
+  // 0 is the "ungraded" bucket here (get-proposable-lessons), not KG2.
   const gradeLabel = useCallback(
     (grade: ProposableGrade) =>
       grade.gradeNumber === 0
         ? (dSearch.ungraded ?? "Ungraded")
-        : `${dSearch.grade ?? "Grade"} ${String(grade.gradeNumber).padStart(2, "0")}`,
+        : formatGrade(grade.gradeNumber, { lang }),
     // Primitives, not `dSearch`: the subtree is re-created (`d.search ?? {}`)
     // on every render when a caller passes a dictionary without it, and an
     // unstable label function would ripple into the search effect's deps.
-    [dSearch.grade, dSearch.ungraded]
+    [dSearch.ungraded, lang]
   )
 
   useEffect(() => {

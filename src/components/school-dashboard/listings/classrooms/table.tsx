@@ -39,6 +39,8 @@ interface ClassroomsTableProps {
   permissions?: UIPermissions
   types: { id: string; name: string }[]
   grades: { id: string; name: string }[]
+  /** School country for grade naming (`@/lib/grade`). */
+  gradeCountry?: string | null
 }
 
 function ClassroomsTableInner({
@@ -50,6 +52,7 @@ function ClassroomsTableInner({
   permissions = FULL_UI_PERMISSIONS,
   types,
   grades,
+  gradeCountry,
 }: ClassroomsTableProps) {
   const { openModal, modal } = useModal()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
@@ -124,9 +127,10 @@ function ClassroomsTableInner({
         lang,
         subdomain,
         { onEdit: handleEdit, onDelete: handleDelete, permissions },
-        d
+        d,
+        gradeCountry
       ),
-    [lang, subdomain, handleEdit, handleDelete, d, permissions]
+    [lang, subdomain, handleEdit, handleDelete, d, permissions, gradeCountry]
   )
 
   const { table } = useDataTable<ClassroomRow>({

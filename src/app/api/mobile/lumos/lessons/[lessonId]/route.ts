@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { AR_ORDINALS } from "@/lib/grade/keys"
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { readLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
 import { fetchLessonQuizQuestions, toClientQuestion } from "@/components/lumos/lib/lesson-quiz"
@@ -13,11 +13,6 @@ import { authenticate, isAuthError } from "../../../lib/authenticate"
 const FALLBACK_VIDEO_URL = `https://${
   process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
 }/hogwarts/media/story.mp4`
-
-const GRADE_WORDS: Record<number, string> = {
-  1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven",
-  8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve",
-}
 
 function formatDuration(minutes?: number | null, seconds?: number | null): string {
   const totalMin = minutes ?? (seconds ? Math.ceil(seconds / 60) : 0)
@@ -55,10 +50,9 @@ export async function GET(
     }
     const d = ((dictionary as { lumos?: { lesson?: Record<string, string> } }).lumos?.lesson ?? {}) as Record<string, string>
 
-    const gradeWord = (n: number) => (lang === "ar" ? AR_ORDINALS[n] : GRADE_WORDS[n]) ?? String(n)
     const course = lesson.chapter.course
     const gradeLabel = course.grades.length > 0
-      ? `${d.grade || "Grade"} ${course.grades.map(gradeWord).join(" / ")}`
+      ? course.grades.map((g) => formatGrade(g, { lang })).join(" / ")
       : null
     const meta = [gradeLabel, lesson.year ? String(lesson.year) : null, formatDuration(lesson.duration, lesson.videoDuration) || null]
       .filter((p): p is string => Boolean(p))

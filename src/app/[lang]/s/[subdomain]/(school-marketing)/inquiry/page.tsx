@@ -4,6 +4,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -41,6 +42,8 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
     notFound()
   }
 
+  const gradeCountry = await getSchoolGradeCountry(schoolResult.data.id)
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto max-w-2xl px-4">
@@ -49,6 +52,7 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
           dictionary={dictionary}
           lang={lang}
           subdomain={subdomain}
+          gradeCountry={gradeCountry}
         />
       </div>
     </div>

@@ -154,8 +154,13 @@ describe("Catalog Setup", () => {
     // createMany returns `{ count }` which becomes the result. The builder
     // reflects the source's own filtered array length back as the count.
     const makeDefaultsTx = (
-      existing = { yearLevel: 0, department: 0, scoreRange: 0 }
+      existing = { yearLevel: 0, department: 0, scoreRange: 0 },
+      school: { country: string | null; schoolType: string | null } = {
+        country: null,
+        schoolType: null,
+      }
     ) => ({
+      school: { findUnique: vi.fn().mockResolvedValue(school) },
       yearLevel: {
         count: vi.fn().mockResolvedValue(existing.yearLevel),
         createMany: vi
@@ -186,6 +191,32 @@ describe("Catalog Setup", () => {
       expect(result.yearLevels).toBe(14) // KG1, KG2, Grade 1-12
       expect(result.departments).toBe(6)
       expect(result.scoreRanges).toBe(9)
+    })
+
+    it("names a Sudanese school's year levels with the SD grade preset", async () => {
+      const tx = makeDefaultsTx(undefined, {
+        country: "SD",
+        schoolType: "private",
+      })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(tx))
+
+      await setupDefaultsForSchool(schoolId, "both")
+
+      const rows = tx.yearLevel.createMany.mock.calls[0][0].data
+      expect(rows[0]).toMatchObject({ levelName: "روضة أولى", lang: "ar" })
+      expect(rows[2]).toMatchObject({ levelName: "الأول ابتدائي", levelOrder: 3 })
+      expect(rows[8]).toMatchObject({ levelName: "الأول متوسط", levelOrder: 9 })
+      expect(rows[13]).toMatchObject({ levelName: "الثالث ثانوي" })
+    })
+
+    it("keeps English year levels for countries without a preset", async () => {
+      const tx = makeDefaultsTx(undefined, { country: "US", schoolType: null })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(tx))
+
+      await setupDefaultsForSchool(schoolId, "both")
+
+      const rows = tx.yearLevel.createMany.mock.calls[0][0].data
+      expect(rows[2]).toMatchObject({ levelName: "Grade 1", lang: "en" })
     })
 
     it("skips creation when all records already exist (idempotent)", async () => {

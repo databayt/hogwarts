@@ -20,9 +20,12 @@ import {
  */
 export function PlacementDialogHost({
   dictionary,
+  gradeCountry,
   onPlaced,
 }: {
   dictionary: Dictionary["school"]["admission"]
+  /** School grade-naming country; omit to show the grade name as stored. */
+  gradeCountry?: string | null
   onPlaced?: () => void
 }) {
   const { open, target, sections, isLoading, loaded } =
@@ -44,6 +47,7 @@ export function PlacementDialogHost({
       applicantName={target.name}
       applyingForClass={target.applyingForClass ?? undefined}
       gradeId={target.gradeId}
+      gradeCountry={gradeCountry}
       sections={sections}
       sectionsLoading={!loaded}
       open

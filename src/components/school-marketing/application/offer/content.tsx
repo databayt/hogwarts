@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { formatCurrency } from "@/lib/payment/currency"
 import type {
   BankDetails,
@@ -150,6 +151,8 @@ interface OfferContentProps {
   /** Value of the ?registration= query param: 'success' | 'cancelled' | undefined */
   registrationParam?: string
   accessToken: string
+  /** School grade-naming country ("SD") — labels the stored grade name. */
+  gradeCountry?: string | null
 }
 
 export default function OfferContent({
@@ -159,6 +162,7 @@ export default function OfferContent({
   cancelled,
   registrationParam,
   accessToken,
+  gradeCountry = null,
 }: OfferContentProps) {
   // Use the narrow OfferDict type — no any-cast needed.
   const t: OfferDict | undefined = (
@@ -807,7 +811,10 @@ export default function OfferContent({
                 {t?.class || "Class"}
               </span>
               <span className="font-medium">
-                {application.applyingForClass}
+                {gradeLabel(application.applyingForClass, {
+                  lang: locale,
+                  country: gradeCountry,
+                })}
               </span>
             </div>
             <div className="flex justify-between">

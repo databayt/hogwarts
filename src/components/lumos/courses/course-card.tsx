@@ -6,8 +6,9 @@ import { memo, useState } from "react"
 import Link from "next/link"
 import { Star } from "lucide-react"
 
-import { BlurImage } from "@/components/atom/blur-image"
+import { gradeLabel } from "@/lib/grade"
 import { cn } from "@/lib/utils"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 
 // Course type key based on chapter count
@@ -68,16 +69,9 @@ function CourseCardImpl({
   // grade said the same thing on every card and cost the card a third line —
   // so the card is now two lines, title and type, unless the grade is genuinely
   // telling the reader something (a list that spans grades: see `showGrade`).
-  // `search.gradeLabel` is the existing "Grade {n}" template, in both
-  // dictionaries.
   const grade = course._catalog?.grades?.[0]
   const eyebrow =
-    showGrade && grade != null
-      ? (dictionary?.search?.gradeLabel as string | undefined)?.replace(
-          "{n}",
-          String(grade)
-        ) || `Grade ${grade}`
-      : null
+    showGrade && grade != null ? gradeLabel(grade, { lang }) : null
   const catalogColor = course._catalog?.color
 
   return (

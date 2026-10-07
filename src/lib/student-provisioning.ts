@@ -25,6 +25,7 @@ import type { AdmissionChannel, Prisma } from "@prisma/client"
 import { mintTempPassword } from "@/lib/credentials"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
+import { parseGrade } from "@/lib/grade"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { createOrLinkGuardian } from "@/lib/guardian-utils"
 import { generateStudentUsername } from "@/lib/student-username"
@@ -467,8 +468,9 @@ export async function provisionStudent(
     }
 
     if (!yearLevel && applyingClass) {
-      const gradeNum = extractGradeNumber(applyingClass)
-      if (gradeNum) {
+      // parseGrade also reads KG ("روضة 1" → -1, "روضة 2" → 0) and keys ("g7").
+      const gradeNum = parseGrade(applyingClass)
+      if (gradeNum !== null) {
         // Match via AcademicGrade.gradeNumber (not levelOrder, which
         // includes KG levels and shifts the numbering).
         const academicGradeForLevel = await tx.academicGrade.findFirst({
@@ -481,7 +483,7 @@ export async function provisionStudent(
           })
         }
         // Fallback to levelOrder if no AcademicGrade match.
-        if (!yearLevel) {
+        if (!yearLevel && gradeNum > 0) {
           yearLevel = await tx.yearLevel.findFirst({
             where: { schoolId, levelOrder: gradeNum },
           })

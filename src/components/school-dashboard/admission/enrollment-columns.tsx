@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Clock, Ellipsis, ExternalLink, MapPin, X } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -311,7 +312,8 @@ function EnrollmentActionsCell({
 export const getEnrollmentColumns = (
   dictionary: AdmissionDictWithPendingKeys,
   locale: Locale,
-  role?: string | null
+  role?: string | null,
+  gradeCountry?: string | null
 ): ColumnDef<EnrollmentRow>[] => {
   const t = dictionary
 
@@ -366,6 +368,11 @@ export const getEnrollmentColumns = (
           title={t?.columns?.class || "Class"}
         />
       ),
+      cell: ({ getValue }) =>
+        gradeLabel(getValue<string>() ?? "", {
+          lang: locale,
+          country: gradeCountry,
+        }),
     },
     {
       id: "offerStatus",

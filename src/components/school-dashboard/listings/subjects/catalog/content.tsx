@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getTenantContext } from "@/lib/tenant-context"
 import { PageTitle } from "@/components/atom/page-title"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
@@ -28,8 +29,8 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Fetch all four independent queries in parallel
-  const [catalogSubjects, selections, grades, approvedProposals] =
+  // Fetch the independent queries in parallel
+  const [catalogSubjects, selections, grades, approvedProposals, gradeCountry] =
     await Promise.all([
       // Intentionally global — catalog Subject has no schoolId; schools browse
       // the shared PUBLISHED catalog and bridge via SubjectSelection.
@@ -80,6 +81,7 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
         },
       }),
       getApprovedSubjectProposals(schoolId),
+      getSchoolGradeCountry(schoolId).catch(() => null),
     ])
 
   // Build selected subject IDs set (subjects selected for any grade)
@@ -151,6 +153,7 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
         lang={lang}
         pinnedSubjectIds={pinnedSubjectIds}
         schoolId={schoolId}
+        gradeCountry={gradeCountry}
       />
     </>
   )

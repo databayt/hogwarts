@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { BookOpen } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import { gradeLabel } from "@/lib/grade"
 import { Card, CardContent } from "@/components/ui/card"
 import { SeeMore } from "@/components/atom/see-more"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
@@ -133,11 +134,9 @@ export function LumosCoursesContent({
   const showShelves = !search && shelves.length > 0
 
   const sh = dictionary?.courses?.shelves as Record<string, string> | undefined
-  // "الأول" / "First" … indexed by grade number. Derived from the NUMBER, never
-  // from `AcademicGrade.name`: school grade names are prose, translate
+  // Grade names derive from the NUMBER (`@/lib/grade`), never from
+  // `AcademicGrade.name`: school grade names are prose, translate
   // inconsistently, and do not sort.
-  const gradeOrdinals =
-    (dictionary?.courses?.gradeOrdinals as string[] | undefined) ?? []
 
   // ONE grade at a time. The page shows the grade badge that is active, and
   // opens on the viewer's own grade when they have one — a student's grade —
@@ -328,13 +327,14 @@ export function LumosCoursesContent({
           // — but a lone numeral is a poor label for the grade a reader is
           // actually in, and the ordinal is what a school calls it out loud.
           // Printing both was the number twice.
-          const ordinal = isActive ? gradeOrdinals[g - 1] : null
+          const name = gradeLabel(g, { lang })
+          const ordinal = isActive ? name : null
           return (
             <button
               key={g}
               onClick={() => handleGradeClick(String(g))}
               aria-current={isActive ? "true" : undefined}
-              aria-label={gradeOrdinals[g - 1] ?? String(g)}
+              aria-label={name}
               className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
@@ -362,6 +362,7 @@ export function LumosCoursesContent({
                   : (sh?.startHere ?? "Start here")
               }
               dictionary={dictionary}
+              lang={lang}
             />
           ) : null}
 

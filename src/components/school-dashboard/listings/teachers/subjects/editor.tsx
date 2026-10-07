@@ -24,6 +24,7 @@ import {
 } from "react"
 import { Check } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -37,6 +38,7 @@ import {
   SuccessToast,
 } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   getTeacherSubjects,
   saveTeacherSubjects,
@@ -78,6 +80,7 @@ export const TeacherSubjectsEditor = forwardRef<
   Props
 >(function TeacherSubjectsEditor({ teacherId, showSaveButton, onSaved }, ref) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const t = (
     (dictionary?.school as Record<string, unknown> | undefined)?.teachers as
       | Record<string, unknown>
@@ -298,7 +301,11 @@ export const TeacherSubjectsEditor = forwardRef<
                   : "bg-muted/50 hover:bg-muted border-border"
               )}
             >
-              {fill(t?.gradeShort ?? "G{n}", { n: g.gradeNumber })}
+              {gradeLabel(g.gradeNumber, {
+                lang: locale,
+                country: data.gradeCountry,
+                form: "short",
+              })}
               {hasWork && g.gradeId !== grade?.gradeId && (
                 <span className="bg-primary absolute -end-0.5 -top-0.5 size-2 rounded-full" />
               )}

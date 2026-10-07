@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 
 import { asset } from "@/lib/asset-url"
+import { gradeLabel } from "@/lib/grade"
 import type { Role } from "@/lib/rbac/types"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -32,6 +33,8 @@ interface ApplicationsTableProps {
   total: number
   dictionary: Dictionary["school"]["admission"]
   lang: Locale
+  /** School grade-naming country ("SD") — labels the stored grade name. */
+  gradeCountry?: string | null
   perPage?: number
   campaignId?: string
   /** Viewer's role — gates the row's status menu on the same permission
@@ -59,6 +62,7 @@ export function ApplicationsTable({
   total,
   dictionary,
   lang,
+  gradeCountry = null,
   perPage = 20,
   campaignId,
   role,
@@ -120,8 +124,8 @@ export function ApplicationsTable({
   })
 
   const columns = useMemo(
-    () => getApplicationColumns(t, lang, role),
-    [t, lang, role]
+    () => getApplicationColumns(t, lang, role, gradeCountry),
+    [t, lang, role, gradeCountry]
   )
 
   const { table } = useDataTable<ApplicationRow>({
@@ -245,7 +249,10 @@ export function ApplicationsTable({
                   key={application.id}
                   icon={asset("/icons/document.svg")}
                   title={application.applicantName}
-                  description={application.applyingForClass}
+                  description={gradeLabel(application.applyingForClass, {
+                    lang,
+                    country: gradeCountry,
+                  })}
                   subtitle={getStatusBadge(application.status).label}
                   onClick={() => handleView(application.id)}
                 />

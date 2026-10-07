@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { getGradePreset, gradeLabel } from "@/lib/grade"
 import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getReferenceWeeklyPeriods } from "@/lib/timetable-reference"
 import {
@@ -176,6 +177,32 @@ function inferCurriculum(country: string, schoolType?: string | null): string {
 
 // ============================================================================
 // setupDefaultsForSchool — YearLevels, Departments, ScoreRanges
+/** Grade number for a YEAR_LEVEL_DEFAULTS slug: kg1 → -1, kg2 → 0, grade-n → n. */
+function yearLevelGradeNumber(slug: string): number {
+  if (slug === "kg1") return -1
+  if (slug === "kg2") return 0
+  return parseInt(slug.replace("grade-", ""), 10)
+}
+
+/**
+ * Country naming for year levels, or null to keep the English defaults.
+ * Only countries with a grade preset (`@/lib/grade/presets.ts`, Sudan so
+ * far) get localized names; the rest provision "KG1", "Grade 1" as before.
+ */
+async function yearLevelNaming(
+  tx: Pick<typeof db, "school">,
+  schoolId: string
+): Promise<{ lang: "ar"; country: string } | null> {
+  const school = await tx.school.findUnique({
+    where: { id: schoolId },
+    select: { country: true, schoolType: true },
+  })
+  const country = school?.country?.trim().toUpperCase()
+  if (!country || school?.schoolType === "international") return null
+  if (getGradePreset(country).id !== country) return null
+  return { lang: "ar", country }
+}
+
 // ============================================================================
 
 /**
@@ -207,10 +234,14 @@ export async function setupDefaultsForSchool(
         const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
           yl.schoolLevels.includes(schoolLevel)
         )
+        const naming = await yearLevelNaming(tx, schoolId)
         const { count } = await tx.yearLevel.createMany({
           data: applicable.map((yl) => ({
             schoolId,
-            levelName: yl.name,
+            levelName: naming
+              ? gradeLabel(yearLevelGradeNumber(yl.slug), naming)
+              : yl.name,
+            lang: naming?.lang ?? "en",
             levelOrder: yl.levelOrder,
           })),
           skipDuplicates: true,

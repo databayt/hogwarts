@@ -6,6 +6,7 @@ import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -35,7 +36,9 @@ export function getClassroomColumns(
     onDelete?: (row: ClassroomRow) => void
     permissions?: UIPermissions
   },
-  dictionary?: Record<string, string>
+  dictionary?: Record<string, string>,
+  /** School country for grade naming (`@/lib/grade`). */
+  gradeCountry?: string | null
 ): ColumnDef<ClassroomRow>[] {
   const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
@@ -84,7 +87,12 @@ export function getClassroomColumns(
       ),
       cell: ({ row }) =>
         row.original.gradeNumber != null ? (
-          <span>{`${t.grade} ${row.original.gradeNumber}`}</span>
+          <span>
+            {gradeLabel(row.original.gradeNumber, {
+              lang,
+              country: gradeCountry,
+            })}
+          </span>
         ) : (
           <Badge variant="secondary">{t.shared}</Badge>
         ),

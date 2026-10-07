@@ -72,10 +72,9 @@ export type ProposableGrade = {
   /** AcademicGrade id for a school, `grade:<n>` for the platform catalog. */
   id: string
   /**
-   * The label is DERIVED, not stored: the dialog renders
-   * "Grade 01"/"الصف 01" from this number (0 = ungraded). School grade names
-   * are prose ("الصف الحادي عشر") and translate inconsistently — a uniform
-   * numbered label reads the same in both locales and sorts visually.
+   * The label is DERIVED, not stored: the dialog renders it from this number
+   * via `gradeLabel` (`@/lib/grade`); 0 = ungraded. School grade names are
+   * prose ("الصف الحادي عشر") and translate inconsistently.
    */
   gradeNumber: number
   subjects: ProposableSubject[]

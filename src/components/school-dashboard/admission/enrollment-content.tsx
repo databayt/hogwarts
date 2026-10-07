@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -29,6 +30,10 @@ export default async function EnrollmentContent({
   const sp = await enrollmentSearchParams.parse(await searchParams)
   const { schoolId, role } = await getTenantContext()
   const t = dictionary.admission
+  // School grade naming ("SD" → "الأول متوسط"), started beside the list.
+  const gradeCountryPromise = schoolId
+    ? getSchoolGradeCountry(schoolId).catch(() => null)
+    : Promise.resolve(null)
 
   let data: EnrollmentRow[] = []
   let total = 0
@@ -115,6 +120,8 @@ export default async function EnrollmentContent({
     }
   }
 
+  const gradeCountry = await gradeCountryPromise
+
   return (
     <div className="space-y-6">
       <EnrollmentTable
@@ -122,6 +129,7 @@ export default async function EnrollmentContent({
         total={total}
         dictionary={t}
         lang={lang}
+        gradeCountry={gradeCountry}
         perPage={sp.perPage}
         campaignId={sp.campaignId || undefined}
         stats={stats}

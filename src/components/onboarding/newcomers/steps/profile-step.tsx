@@ -5,6 +5,7 @@
 import * as React from "react"
 import { useFormContext } from "react-hook-form"
 
+import { gradeLabel } from "@/lib/grade"
 import {
   FormStepContainer,
   FormStepHeader,
@@ -13,6 +14,7 @@ import {
   TextareaField,
   TextField,
 } from "@/components/form"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { NEWCOMER_STEPS, RELATIONSHIP_TYPES, TEACHER_SUBJECTS } from "../config"
 import type { NewcomerFormData } from "../validation"
@@ -91,7 +93,19 @@ function TeacherFields() {
   )
 }
 
+// No school yet, so no country: default wording ("الصف السابع" / "Grade 7").
+const GRADE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
 function ParentFields() {
+  const { locale } = useLocale()
+  const gradeOptions = React.useMemo(
+    () =>
+      GRADE_NUMBERS.map((n) => ({
+        value: String(n),
+        label: gradeLabel(n, { lang: locale }),
+      })),
+    [locale]
+  )
   return (
     <>
       <SelectField
@@ -113,20 +127,7 @@ function ParentFields() {
         name="childGrade"
         label="Child's Grade Level"
         placeholder="Select grade"
-        options={[
-          { value: "1", label: "Grade 1" },
-          { value: "2", label: "Grade 2" },
-          { value: "3", label: "Grade 3" },
-          { value: "4", label: "Grade 4" },
-          { value: "5", label: "Grade 5" },
-          { value: "6", label: "Grade 6" },
-          { value: "7", label: "Grade 7" },
-          { value: "8", label: "Grade 8" },
-          { value: "9", label: "Grade 9" },
-          { value: "10", label: "Grade 10" },
-          { value: "11", label: "Grade 11" },
-          { value: "12", label: "Grade 12" },
-        ]}
+        options={gradeOptions}
       />
     </>
   )

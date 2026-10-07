@@ -956,12 +956,12 @@ export async function seedStudents(
   }
 
   // Move student@balqalam.com from initial level to Grade 10
-  // Grade 10 = "الصف العاشر" (order 12, Secondary) — 16 subjects for realistic simulation
+  // Grade 10 = order 12 (Secondary; "الأول ثانوي" under the SD preset) — 16 subjects for realistic simulation
   const primaryStudentUser = studentUsers.find(
     (u) => u.email === "student@balqalam.com"
   )
   if (primaryStudentUser) {
-    const grade10Level = yearLevels.find((yl) => yl.levelName === "الصف العاشر")
+    const grade10Level = yearLevels.find((yl) => yl.levelOrder === 12)
     if (grade10Level) {
       const primaryStudentIdx = students.findIndex(
         (s) => s.userId === primaryStudentUser.id

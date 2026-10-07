@@ -326,7 +326,9 @@ async function upsertStudent(schoolId: string, userId: string) {
     select: { id: true, yearName: true },
   })
   const yearLevel = await db.yearLevel.findFirst({
-    where: { schoolId, levelName: { contains: "7" } },
+    // Grade 7 by order (KG1=1, KG2=2, Grade 1=3 …), not by name — names follow
+    // the country preset ("الأول متوسط" carries no "7").
+    where: { schoolId, levelOrder: 9 },
     select: { id: true },
   })
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import { gradeLabel } from "@/lib/grade"
 import type { Role } from "@/lib/rbac/types"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -40,6 +41,8 @@ interface EnrollmentTableProps {
   total: number
   dictionary: Dictionary["school"]["admission"]
   lang: Locale
+  /** School grade-naming country ("SD") — labels the stored grade name. */
+  gradeCountry?: string | null
   perPage?: number
   campaignId?: string
   /** Viewer's role — gates row actions the server would reject (see
@@ -59,6 +62,7 @@ export function EnrollmentTable({
   total,
   dictionary,
   lang,
+  gradeCountry = null,
   perPage = 20,
   campaignId,
   stats,
@@ -118,8 +122,8 @@ export function EnrollmentTable({
   })
 
   const columns = useMemo(
-    () => getEnrollmentColumns(t, lang, role),
-    [t, lang, role]
+    () => getEnrollmentColumns(t, lang, role, gradeCountry),
+    [t, lang, role, gradeCountry]
   )
 
   const { table } = useDataTable<EnrollmentRow>({
@@ -329,7 +333,10 @@ export function EnrollmentTable({
                   key={enrollment.id}
                   icon={asset("/icons/document.svg")}
                   title={enrollment.applicantName}
-                  description={enrollment.applyingForClass}
+                  description={gradeLabel(enrollment.applyingForClass, {
+                    lang,
+                    country: gradeCountry,
+                  })}
                   subtitle={enrollment.campaignName}
                   onClick={() => handleView(enrollment.id)}
                 />
@@ -355,7 +362,11 @@ export function EnrollmentTable({
 
       {/* ONE placement dialog for the whole table, driven by a module store —
           see placement-store.ts for why a row-cell useState did not survive. */}
-      <PlacementDialogHost dictionary={t} onPlaced={() => refresh()} />
+      <PlacementDialogHost
+        dictionary={t}
+        gradeCountry={gradeCountry}
+        onPlaced={() => refresh()}
+      />
     </>
   )
 }

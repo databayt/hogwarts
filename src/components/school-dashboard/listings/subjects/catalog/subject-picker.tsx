@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
-import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import { Check, Loader2, Plus, Search, Star, X } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { blurFromColor, BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -65,6 +66,8 @@ interface Props {
   /** Requested-by-this-school subjects approved but not yet added (pinned). */
   pinnedSubjectIds?: string[]
   schoolId?: string
+  /** School country for grade naming (`@/lib/grade`). */
+  gradeCountry?: string | null
 }
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -99,6 +102,7 @@ export function SubjectPicker({
   lang,
   pinnedSubjectIds,
   schoolId,
+  gradeCountry,
 }: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
@@ -417,7 +421,7 @@ export function SubjectPicker({
 
         {/* Grade pills — pushed to end */}
         {visibleGrades.length > 0 && (
-          <div className="ms-auto flex items-center gap-1">
+          <div className="ms-auto flex flex-wrap items-center gap-1">
             {visibleGrades.map((g) => (
               <Button
                 key={g.id}
@@ -426,7 +430,11 @@ export function SubjectPicker({
                 className="h-8 min-w-8 px-2.5"
                 onClick={() => setSelectedGradeId(g.id)}
               >
-                {g.gradeNumber}
+                {gradeLabel(g.gradeNumber, {
+                  lang,
+                  country: gradeCountry,
+                  form: "short",
+                })}
               </Button>
             ))}
           </div>

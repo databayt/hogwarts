@@ -3,12 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowRight, ChevronDown, Search as SearchIcon, X } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 import { fetchCatalogCourses } from "@/components/lumos/lib/course-search-client"
 
@@ -383,7 +384,7 @@ export function SearchBar({
                     {course.title}
                   </p>
                   <p className="text-muted-foreground truncate text-[11px]">
-                    {courseMeta(course, dictionary)}
+                    {courseMeta(course, dictionary, lang)}
                   </p>
                 </Link>
               </motion.div>
@@ -733,17 +734,13 @@ function dedupeByTitle(
  */
 function courseMeta(
   course: CatalogCourseType,
-  dictionaryRoot: MetaDictionary | undefined
+  dictionaryRoot: MetaDictionary | undefined,
+  lang: string
 ): string | undefined {
   const parts: string[] = []
 
   const grade = course._catalog?.grades?.[0]
-  if (grade) {
-    const template = dictionaryRoot?.search?.gradeLabel
-    parts.push(
-      template ? template.replace("{n}", String(grade)) : `Grade ${grade}`
-    )
-  }
+  if (grade) parts.push(gradeLabel(grade, { lang }))
 
   const lessons = course._catalog?.totalLessons ?? 0
   const lessonsLabel = dictionaryRoot?.course?.lessons
@@ -881,7 +878,7 @@ function SuggestionList({
                 <div className="min-w-0 flex-1 text-start">
                   <p className="truncate text-sm font-medium">{course.title}</p>
                   <p className="text-muted-foreground truncate text-xs">
-                    {courseMeta(course, dictionaryRoot)}
+                    {courseMeta(course, dictionaryRoot, lang)}
                   </p>
                 </div>
               </Link>

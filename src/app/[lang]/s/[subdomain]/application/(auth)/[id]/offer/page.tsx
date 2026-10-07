@@ -4,6 +4,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getOfferDetails } from "@/components/school-marketing/application/offer/actions"
@@ -48,7 +49,10 @@ export default async function OfferPage({ params, searchParams }: Props) {
     notFound()
   }
 
-  const dictionary = await getDictionary(lang)
+  const [dictionary, gradeCountry] = await Promise.all([
+    getDictionary(lang),
+    getSchoolGradeCountry(result.data.school.id).catch(() => null),
+  ])
 
   return (
     <OfferContent
@@ -58,6 +62,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
       cancelled={cancelled === "true"}
       registrationParam={registration}
       accessToken={accessToken}
+      gradeCountry={gradeCountry}
     />
   )
 }

@@ -42,7 +42,7 @@ import type {
   TourBookingData,
   TourSlot,
 } from "../types"
-import { getGradeOptions } from "../types"
+import { DEFAULT_GRADES, getGradeOptions } from "../types"
 
 type Step = "date" | "time" | "info" | "confirm"
 
@@ -59,6 +59,8 @@ interface TourWizardProps {
   subdomain: string
   tourDaysOfWeek?: number[]
   schoolPeriods?: SchoolPeriod[]
+  /** School grade-naming country ("SD") — see `getSchoolGradeCountry`. */
+  gradeCountry?: string | null
 }
 
 function createBookingSchema(messages: Record<string, unknown>) {
@@ -90,6 +92,7 @@ export function TourWizard({
   subdomain,
   tourDaysOfWeek = [0, 1, 2, 3, 4],
   schoolPeriods = [],
+  gradeCountry = null,
 }: TourWizardProps) {
   const router = useRouter()
   const isRTL = lang === "ar"
@@ -323,6 +326,7 @@ export function TourWizard({
               selectedDate={selectedDate!}
               selectedSlot={selectedSlot!}
               isRTL={isRTL}
+              gradeCountry={gradeCountry}
             />
           )}
 
@@ -502,6 +506,7 @@ function InfoStep({
   selectedDate,
   selectedSlot,
   isRTL,
+  gradeCountry,
 }: {
   t: Record<string, string>
   form: ReturnType<typeof useForm<BookingFormData>>
@@ -510,6 +515,7 @@ function InfoStep({
   selectedDate: Date
   selectedSlot: TourSlot
   isRTL: boolean
+  gradeCountry: string | null
 }) {
   const dateLabel = format(selectedDate, "EEE, d MMM", {
     locale: isRTL ? ar : enUS,
@@ -610,7 +616,11 @@ function InfoStep({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {getGradeOptions(isRTL ? "ar" : "en").map((grade) => (
+                      {getGradeOptions(
+                        isRTL ? "ar" : "en",
+                        DEFAULT_GRADES,
+                        gradeCountry
+                      ).map((grade) => (
                         <SelectItem key={grade.value} value={grade.value}>
                           {grade.label}
                         </SelectItem>

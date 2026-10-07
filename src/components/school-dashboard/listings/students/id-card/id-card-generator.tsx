@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { gradeLabel } from "@/lib/grade"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -46,6 +47,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { Student } from "../registration/types"
 import { IDCardPreview } from "./id-card-preview"
@@ -73,6 +75,7 @@ export function IDCardGenerator({
   schoolInfo,
 }: IDCardGeneratorProps) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const t = dictionary?.messages?.toast
   const d = (dictionary?.school?.students as any)?.idCard?.generator
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
@@ -382,9 +385,11 @@ export function IDCardGenerator({
                     <SelectItem value="all">
                       {d?.allClasses || "All Classes"}
                     </SelectItem>
-                    <SelectItem value="grade-10">Grade 10</SelectItem>
-                    <SelectItem value="grade-11">Grade 11</SelectItem>
-                    <SelectItem value="grade-12">Grade 12</SelectItem>
+                    {[10, 11, 12].map((n) => (
+                      <SelectItem key={n} value={`grade-${n}`}>
+                        {gradeLabel(n, { lang: locale })}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>

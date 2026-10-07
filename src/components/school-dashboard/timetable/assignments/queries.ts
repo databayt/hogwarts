@@ -10,6 +10,7 @@
  */
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { getLabels, getNames } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
@@ -246,6 +247,8 @@ export interface TeacherEditorData {
   holders: Record<string, { teacherId: string; name: string } | null>
   /** Keyed `${sectionId}:${subjectId}`: timetable periods per pair. */
   cells: Record<string, AssignmentCell>
+  /** School country for grade naming (`@/lib/grade`). */
+  gradeCountry: string | null
 }
 
 /** One teacher's view: every grade's subjects × sections and who holds each. */
@@ -255,7 +258,10 @@ export async function getTeacherEditorData(params: {
   teacherId: string
   lang: Lang
 }): Promise<TeacherEditorData | null> {
-  const board = await getAssignmentBoardData(params)
+  const [board, gradeCountry] = await Promise.all([
+    getAssignmentBoardData(params),
+    getSchoolGradeCountry(params.schoolId).catch(() => null),
+  ])
   // The editor also opens for a teacher still in the add wizard (a draft),
   // whom the board leaves out.
   let teacher = board.teachers.find((t) => t.teacherId === params.teacherId)
@@ -304,5 +310,6 @@ export async function getTeacherEditorData(params: {
     grades: board.grades,
     holders,
     cells: board.cells,
+    gradeCountry,
   }
 }

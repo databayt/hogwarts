@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -47,7 +48,7 @@ export default async function TourPage({ params }: TourPageProps) {
   const schoolId = schoolResult.data.id
 
   // Fetch admission settings and school periods in parallel
-  const [settings, periods] = await Promise.all([
+  const [settings, periods, gradeCountry] = await Promise.all([
     db.admissionSettings.findUnique({
       where: { schoolId },
       select: { tourDaysOfWeek: true },
@@ -60,6 +61,7 @@ export default async function TourPage({ params }: TourPageProps) {
       orderBy: { startTime: "asc" },
       select: { name: true, startTime: true, endTime: true },
     }),
+    getSchoolGradeCountry(schoolId),
   ])
 
   const tourDaysOfWeek = (settings?.tourDaysOfWeek as number[] | null) ?? [
@@ -81,6 +83,7 @@ export default async function TourPage({ params }: TourPageProps) {
       subdomain={subdomain}
       tourDaysOfWeek={tourDaysOfWeek}
       schoolPeriods={schoolPeriods}
+      gradeCountry={gradeCountry}
     />
   )
 }

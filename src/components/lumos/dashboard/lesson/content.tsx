@@ -29,7 +29,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { AR_ORDINALS } from "@/lib/grade/keys"
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import { enqueue } from "@/lib/offline/outbox"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -458,9 +458,9 @@ export function LumosLessonContent({
   // there for the same reason, in `heroBlurb` below.
   const gradeLabel =
     lesson.chapter.course.grades.length > 0
-      ? `${d?.grade || "Grade"} ${lesson.chapter.course.grades
-          .map((g) => gradeWord(g, lang))
-          .join(" / ")}`
+      ? lesson.chapter.course.grades
+          .map((g) => formatGrade(g, { lang }))
+          .join(" / ")
       : null
   const heroMeta = [
     gradeLabel,
@@ -818,10 +818,7 @@ export function LumosLessonContent({
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.chapter.course.grades
-                              .map(
-                                (g) =>
-                                  `${d?.grade || "Grade"} ${gradeWord(g, lang)}`
-                              )
+                              .map((g) => formatGrade(g, { lang }))
                               .join(", ")}
                           </p>
                         </div>
@@ -1284,26 +1281,6 @@ export function LumosLessonContent({
       </div>
     </div>
   )
-}
-
-// Helper: number to word (1-12), locale-aware
-const GRADE_WORDS: Record<number, string> = {
-  1: "One",
-  2: "Two",
-  3: "Three",
-  4: "Four",
-  5: "Five",
-  6: "Six",
-  7: "Seven",
-  8: "Eight",
-  9: "Nine",
-  10: "Ten",
-  11: "Eleven",
-  12: "Twelve",
-}
-function gradeWord(n: number, lang?: string): string {
-  if (lang === "ar") return AR_ORDINALS[n] ?? String(n)
-  return GRADE_WORDS[n] ?? String(n)
 }
 
 // Helper: format duration from minutes or seconds

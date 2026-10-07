@@ -12,6 +12,7 @@ import type {
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import {
   getSchoolSubjectOptions,
   subjectOptionLabel,
@@ -103,14 +104,22 @@ export default async function QuestionBankContent({
 
   if (schoolId) {
     // Fetch subjects for filter dropdown (scoped for teacher/student/guardian)
-    const allSubjects = await getSchoolSubjectOptions(schoolId)
+    const [allSubjects, gradeCountry] = await Promise.all([
+      getSchoolSubjectOptions(schoolId),
+      getSchoolGradeCountry(schoolId).catch(() => null),
+    ])
     const rawSubjects = enrolledSubjectIds
       ? allSubjects.filter((s) => enrolledSubjectIds.includes(s.id))
       : allSubjects
     // Table filter uses subject name as value (matches row data), so its
     // VALUE must stay the bare name — only the label carries the grade.
     subjects = rawSubjects.map((s) => ({
-      label: subjectOptionLabel(s.name || s.id, s.gradeNumber, lang),
+      label: subjectOptionLabel(
+        s.name || s.id,
+        s.gradeNumber,
+        lang,
+        gradeCountry
+      ),
       value: s.name || s.id,
     }))
     // Form uses subject ID as value (for subjectId field). The grade belongs
@@ -118,7 +127,12 @@ export default async function QuestionBankContent({
     // below it, and 26 of this school's 123 subject names are duplicated
     // across grades — without the grade it is a coin flip.
     subjectOptions = rawSubjects.map((s) => ({
-      label: subjectOptionLabel(s.name || s.id, s.gradeNumber, lang),
+      label: subjectOptionLabel(
+        s.name || s.id,
+        s.gradeNumber,
+        lang,
+        gradeCountry
+      ),
       value: s.id,
     }))
 

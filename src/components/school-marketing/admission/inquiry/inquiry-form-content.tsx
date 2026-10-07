@@ -46,13 +46,19 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { School } from "../../types"
 import { submitInquiry } from "../actions"
 import type { InquiryFormData } from "../types"
-import { getGradeOptions, getInquirySourceOptions } from "../types"
+import {
+  DEFAULT_GRADES,
+  getGradeOptions,
+  getInquirySourceOptions,
+} from "../types"
 
 interface Props {
   school: School
   dictionary: Dictionary
   lang: Locale
   subdomain: string
+  /** School grade-naming country ("SD") — see `getSchoolGradeCountry`. */
+  gradeCountry?: string | null
 }
 
 function createInquirySchema(messages: Record<string, string>) {
@@ -76,6 +82,7 @@ export default function InquiryFormContent({
   dictionary,
   lang,
   subdomain,
+  gradeCountry = null,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -329,7 +336,11 @@ export default function InquiryFormContent({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {getGradeOptions(lang).map((grade) => (
+                          {getGradeOptions(
+                            lang,
+                            DEFAULT_GRADES,
+                            gradeCountry
+                          ).map((grade) => (
                             <SelectItem key={grade.value} value={grade.value}>
                               {grade.label}
                             </SelectItem>

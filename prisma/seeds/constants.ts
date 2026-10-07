@@ -312,20 +312,21 @@ export const SEED_PROFILE_COUNTS = {
 }
 
 // ============================================================================
-// YEAR LEVELS (K-12 Sudanese System)
+// YEAR LEVELS (K-12 Sudanese System) — names follow the SD grade preset
+// (`src/lib/grade/presets.ts`): روضة أولى … الأول متوسط … الثالث ثانوي
 // ============================================================================
 
 export const YEAR_LEVELS: YearLevelData[] = [
   // Kindergarten (الروضة)
   {
-    name: "الروضة الأولى",
+    name: "روضة أولى",
     order: 1,
     section: "KG",
     ageRange: [4, 5],
     studentsPerLevel: 50,
   },
   {
-    name: "الروضة الثانية",
+    name: "روضة ثانية",
     order: 2,
     section: "KG",
     ageRange: [5, 6],
@@ -334,42 +335,42 @@ export const YEAR_LEVELS: YearLevelData[] = [
 
   // Primary (الابتدائي)
   {
-    name: "الصف الأول",
+    name: "الأول ابتدائي",
     order: 3,
     section: "Primary",
     ageRange: [6, 7],
     studentsPerLevel: 80,
   },
   {
-    name: "الصف الثاني",
+    name: "الثاني ابتدائي",
     order: 4,
     section: "Primary",
     ageRange: [7, 8],
     studentsPerLevel: 80,
   },
   {
-    name: "الصف الثالث",
+    name: "الثالث ابتدائي",
     order: 5,
     section: "Primary",
     ageRange: [8, 9],
     studentsPerLevel: 80,
   },
   {
-    name: "الصف الرابع",
+    name: "الرابع ابتدائي",
     order: 6,
     section: "Primary",
     ageRange: [9, 10],
     studentsPerLevel: 80,
   },
   {
-    name: "الصف الخامس",
+    name: "الخامس ابتدائي",
     order: 7,
     section: "Primary",
     ageRange: [10, 11],
     studentsPerLevel: 80,
   },
   {
-    name: "الصف السادس",
+    name: "السادس ابتدائي",
     order: 8,
     section: "Primary",
     ageRange: [11, 12],
@@ -378,21 +379,21 @@ export const YEAR_LEVELS: YearLevelData[] = [
 
   // Intermediate (المتوسط)
   {
-    name: "الصف السابع",
+    name: "الأول متوسط",
     order: 9,
     section: "Intermediate",
     ageRange: [12, 13],
     studentsPerLevel: 70,
   },
   {
-    name: "الصف الثامن",
+    name: "الثاني متوسط",
     order: 10,
     section: "Intermediate",
     ageRange: [13, 14],
     studentsPerLevel: 70,
   },
   {
-    name: "الصف التاسع",
+    name: "الثالث متوسط",
     order: 11,
     section: "Intermediate",
     ageRange: [14, 15],
@@ -401,21 +402,21 @@ export const YEAR_LEVELS: YearLevelData[] = [
 
   // Secondary (الثانوي)
   {
-    name: "الصف العاشر",
+    name: "الأول ثانوي",
     order: 12,
     section: "Secondary",
     ageRange: [15, 16],
     studentsPerLevel: 60,
   },
   {
-    name: "الصف الحادي عشر",
+    name: "الثاني ثانوي",
     order: 13,
     section: "Secondary",
     ageRange: [16, 17],
     studentsPerLevel: 60,
   },
   {
-    name: "الصف الثاني عشر",
+    name: "الثالث ثانوي",
     order: 14,
     section: "Secondary",
     ageRange: [17, 18],

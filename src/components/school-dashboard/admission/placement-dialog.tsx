@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { MapPin, Users } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +20,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import {
   getAvailableSectionsForPlacement,
@@ -76,6 +78,9 @@ interface PlacementDialogProps {
   applyingForClass?: string
   /** Exact AcademicGrade — preferred for the section match when known. */
   gradeId?: string | null
+  /** School grade-naming country. When given, the header shows the school's
+   *  wording ("الأول متوسط"); omitted, the grade name renders as stored. */
+  gradeCountry?: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   dictionary: Dictionary["school"]["admission"]
@@ -96,6 +101,7 @@ export function PlacementDialog({
   applicantName,
   applyingForClass,
   gradeId,
+  gradeCountry,
   open,
   onOpenChange,
   dictionary,
@@ -105,6 +111,7 @@ export function PlacementDialog({
 }: PlacementDialogProps) {
   const t = dictionary
   const router = useRouter()
+  const { locale } = useLocale()
   const isControlled = controlledSections !== undefined
   const [ownSections, setOwnSections] = useState<SectionOption[]>([])
   const [selectedSection, setSelectedSection] = useState<string>("")
@@ -163,7 +170,14 @@ export function PlacementDialog({
           </DialogTitle>
           <DialogDescription>
             {applyingForClass
-              ? `${applicantName} — ${applyingForClass}`
+              ? `${applicantName} — ${
+                  gradeCountry !== undefined
+                    ? gradeLabel(applyingForClass, {
+                        lang: locale,
+                        country: gradeCountry,
+                      })
+                    : applyingForClass
+                }`
               : applicantName}
           </DialogDescription>
         </DialogHeader>

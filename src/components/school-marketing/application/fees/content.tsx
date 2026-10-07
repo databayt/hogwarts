@@ -8,6 +8,7 @@ import { BadgePercent } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 import type { FeePreview } from "@/lib/fee-preview"
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import { formatCurrency } from "@/lib/payment/currency"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -21,16 +22,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { getGradeOptions } from "../academic/config"
+import { getSchoolGradeNumbers } from "../academic/actions"
 import { useApplySession } from "../application-context"
 import { submitApplicationAction } from "../submit-action"
 import type { SubmitActionResult } from "../submit-action"
 import ApplicationSuccessModal from "../success-modal"
-import {
-  getApplyErrorDict,
-  getApplyOptionsDict,
-  getApplyStepDict,
-} from "../utils"
+import { getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { getStepValidationStatus } from "../validation-helpers"
 import { getApplicationFeePreview } from "./actions"
@@ -40,15 +37,14 @@ interface Props {
   dictionary?: Record<string, unknown>
 }
 
+/** The stored Arabic grade name → the school's wording ("الأول متوسط"). */
 function resolveGradeLabel(
   applyingForClass: string | undefined,
-  optionsDict: Record<string, string>,
+  naming: { lang: string; country: string | null },
   fallback: string
 ): string {
   if (!applyingForClass) return fallback
-  const options = getGradeOptions(optionsDict)
-  const match = options.find((o) => o.value === applyingForClass)
-  return match?.label ?? applyingForClass
+  return formatGrade(applyingForClass, naming)
 }
 
 function formatInstallmentList(counts: number[], locale: string): string {
@@ -84,7 +80,6 @@ export default function FeesContent({ dictionary }: Props) {
 
   const stepDict = getApplyStepDict(dictionary, "fees")
   const errorDict = getApplyErrorDict(dictionary)
-  const optionsDict = getApplyOptionsDict(dictionary)
   const feeDict = (
     (dictionary?.school as Record<string, unknown> | undefined)?.admission as
       | Record<string, unknown>
@@ -93,10 +88,24 @@ export default function FeesContent({ dictionary }: Props) {
   const feePreviewDict =
     (feeDict?.feePreview as Record<string, string> | undefined) ?? {}
 
+  // School country names the grades ("الأول متوسط" in Sudan).
+  const [gradeCountry, setGradeCountry] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    getSchoolGradeNumbers().then((res) => {
+      if (!cancelled && res.success && res.data) {
+        setGradeCountry(res.data.country)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const applyingForClass = session.formData.academic?.applyingForClass
   const gradeLabel = resolveGradeLabel(
     applyingForClass,
-    optionsDict.grade || {},
+    { lang: locale, country: gradeCountry },
     isRTL ? "الصف" : "grade"
   )
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
+import { gradeLabel } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -234,7 +235,8 @@ function ApplicationActionsCell({
 export const getApplicationColumns = (
   dictionary: Dictionary["school"]["admission"],
   locale: Locale,
-  role?: string | null
+  role?: string | null,
+  gradeCountry?: string | null
 ): ColumnDef<ApplicationRow>[] => {
   const t = dictionary
 
@@ -290,6 +292,12 @@ export const getApplicationColumns = (
           title={t?.columns?.class || "Class"}
         />
       ),
+      // Value stays the stored name (the text filter matches on it).
+      cell: ({ getValue }) =>
+        gradeLabel(getValue<string>() ?? "", {
+          lang: locale,
+          country: gradeCountry,
+        }),
       meta: { label: t?.columns?.class || "Class", variant: "text" },
     },
     {

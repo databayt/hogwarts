@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
@@ -34,6 +35,9 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
   // School-wide capacity stats (folded in from the former Capacity tab).
   let totalCapacity = 0
   let roomsWithClasses = 0
+  const gradeCountryPromise = schoolId
+    ? getSchoolGradeCountry(schoolId).catch(() => null)
+    : Promise.resolve(null)
 
   if (schoolId) {
     const [
@@ -85,7 +89,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
 
     const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
     // Room names via localize. Type label (roomTypes dict) and grade label
-    // ("Grade {n}" from gradeNumber) are resolved in the column — deterministic
+    // (`gradeLabel` from gradeNumber) are resolved in the column — deterministic
     // and locale-correct without depending on the translation API.
     const localizedRooms = await localize("Classroom", rows as any[], {
       schoolId,
@@ -108,6 +112,8 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
     })
     total = count
   }
+
+  const gradeCountry = await gradeCountryPromise
 
   const avgCapacity = total > 0 ? Math.round(totalCapacity / total) : 0
   const avgUtilization =
@@ -161,6 +167,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
         permissions={permissions}
         types={types}
         grades={grades}
+        gradeCountry={gradeCountry}
       />
     </div>
   )

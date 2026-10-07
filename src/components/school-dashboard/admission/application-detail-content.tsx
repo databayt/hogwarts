@@ -7,6 +7,8 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { gradeLabel, parseGrade } from "@/lib/grade"
+import { getSchoolGradeCountry } from "@/lib/grade/school"
 import type { Role } from "@/lib/rbac/types"
 import { normalizeUploadUrl } from "@/lib/upload-url"
 import { Badge } from "@/components/ui/badge"
@@ -142,6 +144,9 @@ export default async function ApplicationDetailContent({
     notFound()
   }
 
+  // School grade naming ("SD" → "الأول متوسط"), started beside the detail read.
+  const gradeCountryPromise = getSchoolGradeCountry(schoolId).catch(() => null)
+
   // Read-only roles (ACCOUNTANT) must not see mutating controls that the
   // server would reject anyway — drive the UI off the same role config the
   // permission layer defines.
@@ -238,6 +243,18 @@ export default async function ApplicationDetailContent({
     const raw = (application as Record<string, unknown>)[field]
     return typeof raw === "string" ? raw : null
   }
+
+  // Stored Arabic grade name → the school's wording; unparseable names keep
+  // the translated value.
+  const gradeCountry = await gradeCountryPromise
+  const applyingForClassLabel =
+    application.applyingForClass &&
+    parseGrade(application.applyingForClass) !== null
+      ? gradeLabel(application.applyingForClass, {
+          lang,
+          country: gradeCountry,
+        })
+      : d("applyingForClass")
 
   const fullName = [d("firstName"), d("middleName"), d("lastName")]
     .filter(Boolean)
@@ -405,9 +422,9 @@ export default async function ApplicationDetailContent({
                   ` (${application.campaign.academicYear})`}
               </>
             )}
-            {d("applyingForClass") && (
+            {applyingForClassLabel && (
               <>
-                {" · "} {d("applyingForClass")}
+                {" · "} {applyingForClassLabel}
               </>
             )}
             {application.submittedAt && (
@@ -534,7 +551,7 @@ export default async function ApplicationDetailContent({
               label={
                 t?.applicationDetail?.applyingForClass || "Applying for Class"
               }
-              value={d("applyingForClass")}
+              value={applyingForClassLabel}
             />
             <InfoRow
               label={

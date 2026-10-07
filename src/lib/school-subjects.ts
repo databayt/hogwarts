@@ -5,6 +5,7 @@ import { cache } from "react"
 import type { Subject } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { gradeLabel } from "@/lib/grade"
 
 /** Narrow select for most callers — avoids loading heavy text/array columns */
 const SUBJECT_CORE_SELECT = {
@@ -120,14 +121,18 @@ export const getSchoolSubjectOptions = cache(async (schoolId: string) => {
  * The grade label is DERIVED from the number, never from `AcademicGrade.name`
  * (Abdout, 2026-08-12): school grade names are prose ("الصف الحادي عشر"),
  * translate inconsistently, and don't sort visually. Zero-padded so the list
- * orders the way it reads. Same rule the Lumos upload picker follows.
+ * orders the way it reads. With a `country` (from `getSchoolGradeCountry`) the
+ * grade reads the school's own naming ("الأول متوسط · name") — sort such
+ * lists by `gradeNumber`, never by this label.
  */
 export function subjectOptionLabel(
   name: string,
   gradeNumber: number | null | undefined,
-  lang?: string
+  lang?: string,
+  country?: string | null
 ): string {
   if (gradeNumber == null || gradeNumber <= 0) return name
+  if (country) return `${gradeLabel(gradeNumber, { lang, country })} · ${name}`
   const n = String(gradeNumber).padStart(2, "0")
   return lang === "ar" ? `الصف ${n} · ${name}` : `Grade ${n} · ${name}`
 }

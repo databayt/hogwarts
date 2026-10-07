@@ -3,6 +3,7 @@
 // Server-composable: no hooks, no handlers, so it costs the page no hydration.
 import Link from "next/link"
 
+import { gradeLabel as formatGrade } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { BlurImage } from "@/components/atom/blur-image"
 import { blurFromColor } from "@/components/atom/blur-placeholder"
@@ -29,6 +30,7 @@ interface Props {
   /** The card's kicker: the section's own name, drawn inside the card. */
   title: string
   dictionary?: Record<string, any>
+  lang: string
 }
 
 /**
@@ -61,14 +63,9 @@ interface Props {
  * is teaching. A lesson with no reachable video has no instructor, and that
  * row is dropped rather than rendered empty, which is the live card's own rule.
  */
-export function ContinueLearningCard({ item, title, dictionary }: Props) {
-  const gradeTemplate = dictionary?.search?.gradeLabel as string | undefined
-
+export function ContinueLearningCard({ item, title, lang }: Props) {
   const gradeLabel =
-    item.grade != null
-      ? (gradeTemplate?.replace("{n}", String(item.grade)) ??
-        `Grade ${item.grade}`)
-      : null
+    item.grade != null ? formatGrade(item.grade, { lang }) : null
 
   return (
     <section>
