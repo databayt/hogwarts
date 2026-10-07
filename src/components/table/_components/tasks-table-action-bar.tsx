@@ -16,6 +16,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { SuccessToast } from "@/components/atom/toast"
 import {
   DataTableActionBar,
   DataTableActionBarAction,
@@ -60,7 +61,7 @@ export function TasksTableActionBar({ table }: TasksTableActionBarProps) {
           toast.error(error)
           return
         }
-        toast.success("Tasks updated")
+        SuccessToast("Tasks updated")
       })
     },
     [rows]

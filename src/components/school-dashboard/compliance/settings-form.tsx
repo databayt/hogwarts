@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateComplianceConfig } from "./actions"
@@ -66,7 +67,7 @@ export function SettingsForm({ dict, provider, initial }: SettingsFormProps) {
         sharedGroupId: initial?.sharedGroupId ?? null,
       })
       if (result.success) {
-        toast.success(dict.settings.saveSuccess)
+        SuccessToast(dict.settings.saveSuccess)
       } else {
         toast.error(resolveComplianceError(dict, result.errorCode))
       }

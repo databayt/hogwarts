@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { retryComplianceSubmission } from "./actions"
@@ -49,7 +50,7 @@ export function SubmissionsTable({ dict, submissions }: SubmissionsTableProps) {
     startTransition(async () => {
       const result = await retryComplianceSubmission({ submissionId })
       if (result.success) {
-        toast.success(dict.submissions.retry)
+        SuccessToast(dict.submissions.retry)
       } else {
         toast.error(resolveComplianceError(dict, result.errorCode))
       }

@@ -45,6 +45,8 @@ import { useCallback, useRef, useState } from "react"
 import type { FileCategory } from "@prisma/client"
 import { toast } from "sonner"
 
+import { SuccessToast } from "@/components/atom/toast"
+
 import { uploadFile as uploadFileBasic } from "./actions"
 import {
   completeChunkedUpload,
@@ -297,7 +299,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         if (completeResult.fileId) {
           onSuccess?.(completeResult.fileId)
         }
-        toast.success(`${filename} uploaded successfully`)
+        SuccessToast(`${filename} uploaded successfully`)
 
         return {
           success: true,

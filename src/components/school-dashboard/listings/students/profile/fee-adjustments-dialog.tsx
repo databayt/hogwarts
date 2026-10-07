@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import {
   applyFeeAdjustments,
@@ -181,7 +182,7 @@ export function FeeAdjustmentsDialog({
         overrideReason: hasOverride ? overrideReason.trim() : null,
       })
       if (res.success) {
-        toast.success(d.savedToast || "Fee adjustments saved.")
+        SuccessToast(d.savedToast || "Fee adjustments saved.")
         setOpen(false)
         onSaved?.()
       } else {

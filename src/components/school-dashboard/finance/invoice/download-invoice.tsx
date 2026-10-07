@@ -10,6 +10,7 @@ import { toast } from "sonner"
 
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { DownloadInvoiceButtonProps } from "./download-invoice-button"
@@ -70,7 +71,7 @@ export function SendInvoiceButton({
       const subject = `${subjectPrefix ?? "Invoice"} ${invoiceNo}`
       const res = await actions.sendInvoiceEmail(invoiceId, subject)
       if (res.success) {
-        toast.success(sentLabel ?? "Invoice sent")
+        SuccessToast(sentLabel ?? "Invoice sent")
       } else {
         toast.error(
           actionErrorMessage(
@@ -132,7 +133,7 @@ export function MarkInvoicePaidButton({
       const actions = await import("./actions")
       const res = await actions.markInvoicePaid(invoiceId)
       if (res.success) {
-        toast.success(paidLabel ?? "Invoice marked as paid")
+        SuccessToast(paidLabel ?? "Invoice marked as paid")
       } else {
         toast.error(
           actionErrorMessage(

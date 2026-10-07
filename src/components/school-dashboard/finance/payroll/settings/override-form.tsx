@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 
 interface Props {
   /** Current saved override (nulls = inheriting the country default). */
@@ -39,7 +40,7 @@ export function PayrollOverrideForm({ current, labels }: Props) {
         socialSecurityEmployerRate: String(fd.get("employerRate") ?? ""),
       })
       if (res.success) {
-        toast.success(labels?.saved || "Saved")
+        SuccessToast(labels?.saved || "Saved")
         router.refresh()
       } else {
         toast.error(labels?.saveFailed || "Could not save")

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { uploadVideo } from "@/components/lumos/video/video-actions"
@@ -157,7 +158,7 @@ export function TopicOverrides({ chapters, lang }: Props) {
         })
 
         if (result.status === "success") {
-          toast.success("Video uploaded. It'll appear on the lesson shortly.")
+          SuccessToast("Video uploaded. It'll appear on the lesson shortly.")
           setIsVideoOpen(false)
         } else {
           toast.error(result.message)

@@ -70,6 +70,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -239,7 +240,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
 
       const result = await createDepartment(formData)
       if (result.success) {
-        toast.success(result.message || "Department created successfully")
+        SuccessToast(result.message || "Department created successfully")
         setNewDepartmentName("")
         setNewDepartmentLang("")
         setIsCreateDialogOpen(false)
@@ -261,7 +262,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
 
       const result = await updateDepartment(formData)
       if (result.success) {
-        toast.success(result.message || "Department updated successfully")
+        SuccessToast(result.message || "Department updated successfully")
         setEditingDepartment(null)
         setNewDepartmentName("")
         setNewDepartmentLang("")
@@ -279,7 +280,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
 
       const result = await deleteDepartment(formData)
       if (result.success) {
-        toast.success(result.message || "Department deleted successfully")
+        DeleteToast(result.message || "Department deleted successfully")
         fetchDepartments()
       } else {
         toast.error(result.message || "Failed to delete department")
@@ -683,7 +684,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                                         departmentId: dept.id,
                                       })
                                       if (res.success) {
-                                        toast.success(res.message || "Updated")
+                                        SuccessToast(res.message || "Updated")
                                         fetchDepartments()
                                       } else {
                                         toast.error(res.message || "Failed")

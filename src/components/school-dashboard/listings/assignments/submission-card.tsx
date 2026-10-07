@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { submitAssignment } from "./submit-actions"
 import type { OwnSubmission } from "./submit-core"
@@ -75,7 +76,7 @@ export function StudentSubmissionCard({
         score: null,
         feedback: null,
       })
-      toast.success(t("submitted", "Submitted"))
+      SuccessToast(t("submitted", "Submitted"))
     })
   }
 

@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { generateReportCards } from "@/components/school-dashboard/grades/actions/report-cards"
 
@@ -61,7 +62,7 @@ export function GenerateButton({ termId, grades, copy }: GenerateButtonProps) {
       // Rich pipeline returns {created, updated, skipped}: created + updated
       // is the count of cards now in good shape (skipped = no grades).
       const generated = result.data.created + result.data.updated
-      toast.success(
+      SuccessToast(
         t.generated.replace("{count}", String(generated)),
         result.data.skipped > 0
           ? {

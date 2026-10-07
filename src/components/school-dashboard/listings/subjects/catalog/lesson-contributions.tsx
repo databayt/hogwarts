@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { uploadVideo } from "@/components/lumos/video/video-actions"
 
 import {
@@ -176,7 +177,7 @@ export function LessonContributionDialog({
           provider,
         })
         if (result.status === "success") {
-          toast.success("Video uploaded. It'll appear on the lesson shortly.")
+          SuccessToast("Video uploaded. It'll appear on the lesson shortly.")
           resetAll()
           onOpenChange(false)
         } else {
@@ -217,7 +218,7 @@ export function LessonContributionDialog({
           externalUrl: materialUrl.trim() || undefined,
         })
         if (result.success) {
-          toast.success("Material submitted for review")
+          SuccessToast("Material submitted for review")
           resetAll()
           onOpenChange(false)
         }
@@ -259,7 +260,7 @@ export function LessonContributionDialog({
           explanation: explanation.trim() || undefined,
         })
         if (result.success) {
-          toast.success("Question submitted for review")
+          SuccessToast("Question submitted for review")
           resetAll()
           onOpenChange(false)
         }
@@ -289,7 +290,7 @@ export function LessonContributionDialog({
             : undefined,
         })
         if (result.success) {
-          toast.success("Assignment submitted for review")
+          SuccessToast("Assignment submitted for review")
           resetAll()
           onOpenChange(false)
         }

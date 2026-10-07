@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 
 import {
   createAutoGroup,
@@ -124,7 +125,7 @@ export function GroupsList({
       })
 
       if (result.success) {
-        toast.success(d?.toast?.groupCreated || "Group created successfully")
+        SuccessToast(d?.toast?.groupCreated || "Group created successfully")
         setCreateDialogOpen(false)
         setGroupName("")
         setGroupDescription("")
@@ -144,7 +145,7 @@ export function GroupsList({
       })
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           d?.toast?.autoGroupCreated || "Auto group created successfully"
         )
         setAutoDialogOpen(false)
@@ -169,7 +170,7 @@ export function GroupsList({
       startTransition(async () => {
         const result = await deleteWhatsAppGroup(groupId)
         if (result.success) {
-          toast.success(d?.toast?.groupDeleted || "Group deleted")
+          DeleteToast(d?.toast?.groupDeleted || "Group deleted")
         } else {
           toast.error(d?.toast?.groupDeleteFailed || "Failed to delete group")
         }

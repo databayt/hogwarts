@@ -22,6 +22,11 @@ import { openCredentialsDialog } from "../../credentials"
 import { setCachedCredentials } from "../../credentials/store"
 import { completeStudentWizard } from "./actions"
 
+const SILENT_WARNINGS = new Set([
+  "NO_FEE_STRUCTURE_MATCH",
+  "FEES_SKIPPED_NO_GRADE",
+])
+
 export async function finishStudentWizard(
   studentId: string,
   /** The root dictionary from `useDictionary()` (any shape). */
@@ -54,10 +59,12 @@ export async function finishStudentWizard(
       return false
     }
 
-    // Non-fatal provisioning notes — no fee structure for the grade, no grade
-    // so no fees, a seat in a grade with no classes. Same translator the
-    // admission Confirm-Enrollment button uses.
+    // Non-fatal provisioning notes — e.g. a seat in a grade with no classes.
+    // Same translator the admission Confirm-Enrollment button uses. "No fee
+    // structure" / "no grade so no fees" are expected for a fresh student and
+    // only read as noise after a successful add, so they stay silent.
     for (const w of result.data.warnings ?? []) {
+      if (SILENT_WARNINGS.has(w.code)) continue
       const msg = admissionDict
         ? translateEnrollmentWarning(
             w as Parameters<typeof translateEnrollmentWarning>[0],

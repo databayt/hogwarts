@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import {
@@ -77,7 +78,7 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
         ? await updateParent({ id: currentId, ...values })
         : await createParent(values)
       if (res?.success) {
-        toast.success(
+        SuccessToast(
           currentId
             ? t?.success?.updated || "Parent updated"
             : t?.success?.created || "Parent created"

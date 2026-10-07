@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { NumberStepper } from "@/components/atom/number-stepper"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { resolveClassroomError } from "../errors"
@@ -136,7 +137,7 @@ export function ConfigureForm({
       })
 
       if (result.success && result.data) {
-        toast.success(
+        SuccessToast(
           t?.success?.created ||
             `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`
         )

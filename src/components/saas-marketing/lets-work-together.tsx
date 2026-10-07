@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -94,7 +95,7 @@ export default function LetsWorkTogether({
         lang: lang ?? "en",
       })
       if (result.success) {
-        toast.success(dict.successToast)
+        SuccessToast(dict.successToast)
         form.reset()
         setSubmitted(true)
       } else {

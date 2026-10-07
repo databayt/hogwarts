@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import { useI18nMessages } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -62,7 +63,7 @@ export default function BankActions(props: Props) {
     startTransition(async () => {
       const result = await syncBankData({ accountId: props.accountId })
       if (result.success) {
-        toast.success(ba?.syncSuccess || "Bank data synced successfully")
+        SuccessToast(ba?.syncSuccess || "Bank data synced successfully")
         router.refresh()
       } else {
         toast.error(translateError(result.error?.code, ba?.failedSyncBank))
@@ -74,7 +75,7 @@ export default function BankActions(props: Props) {
     startTransition(async () => {
       const result = await removeBank({ accountId: props.accountId })
       if (result.success) {
-        toast.success(ba?.removeSuccess || "Bank account removed successfully")
+        DeleteToast(ba?.removeSuccess || "Bank account removed successfully")
         router.refresh()
       } else {
         toast.error(translateError(result.error?.code, ba?.failedRemoveBank))

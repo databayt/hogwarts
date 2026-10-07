@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { assignFee, bulkAssignFees } from "./actions"
@@ -115,7 +116,7 @@ export function FeeAssignmentForm({
             )
             return
           }
-          toast.success(
+          SuccessToast(
             af?.feeAssignedSuccessfully || "Fee assigned successfully"
           )
         } else {
@@ -136,7 +137,7 @@ export function FeeAssignmentForm({
             )
             return
           }
-          toast.success(
+          SuccessToast(
             (
               af?.feesAssignedToStudents || "Fees assigned to {count} students"
             ).replace("{count}", String(selectedStudentIds.length))

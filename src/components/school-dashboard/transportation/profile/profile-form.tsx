@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { upsertTransportProfile } from "../actions/profile"
@@ -100,7 +101,7 @@ export function TransportProfileForm({
         specialNeeds: specialNeeds.trim() || undefined,
       })
       if (result.success) {
-        toast.success(t.toasts.profileSaved)
+        SuccessToast(t.toasts.profileSaved)
         router.refresh()
       } else {
         toast.error(

@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -209,7 +210,7 @@ export function OperatorLeadForm({
         const successMsg = isEditing
           ? (dictionary?.messages?.updateSuccess ?? "Lead updated successfully")
           : (dictionary?.messages?.createSuccess ?? "Lead created successfully")
-        toast.success(successMsg)
+        SuccessToast(successMsg)
         if (isEditing) {
           router.refresh()
         } else {

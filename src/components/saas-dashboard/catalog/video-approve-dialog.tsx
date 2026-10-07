@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { approveContent } from "./approval-actions"
 import type { PendingItem } from "./approval-content"
@@ -71,7 +72,7 @@ export function VideoApproveDialog({
       })
 
       if (result.success) {
-        toast.success("Video approved")
+        SuccessToast("Video approved")
         onOpenChange(false)
         onApproved?.()
       } else {

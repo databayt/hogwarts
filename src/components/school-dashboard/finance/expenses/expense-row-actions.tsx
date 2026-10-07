@@ -9,6 +9,7 @@ import { CheckCircle2, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 
 interface ExpenseRowActionsLabels {
   approve?: string
@@ -54,7 +55,7 @@ export function ExpenseRowActions({
         res = await actions.approveExpense(fd)
       }
       if (res?.success) {
-        toast.success(
+        SuccessToast(
           kind === "pay"
             ? (labels?.paid ?? "Expense marked paid")
             : kind === "approve"

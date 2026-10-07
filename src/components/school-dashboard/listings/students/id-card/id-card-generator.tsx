@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { Student } from "../registration/types"
@@ -255,7 +256,7 @@ export function IDCardGenerator({
 
       // Download PDF
       pdf.save(`student-id-cards-${format(new Date(), "yyyy-MM-dd")}.pdf`)
-      toast.success(
+      SuccessToast(
         t?.success?.saved ||
           `Generated ID cards for ${selectedStudents.size} students`
       )
@@ -270,7 +271,7 @@ export function IDCardGenerator({
   // Print cards
   const handlePrint = () => {
     window.print()
-    toast.success(t?.success?.saved || "Print dialog opened")
+    SuccessToast(t?.success?.saved || "Print dialog opened")
   }
 
   const previewData = getPreviewData()

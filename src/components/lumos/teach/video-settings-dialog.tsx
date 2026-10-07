@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 
 import {
   deleteOwnVideo,
@@ -112,7 +113,7 @@ export function VideoSettingsDialog({
     startTransition(async () => {
       const result = await removeVideoPaywall(video.id, paywallTarget)
       if (result.status === "success") {
-        toast.success(d.toastPaywallRemoved ?? result.message)
+        SuccessToast(d.toastPaywallRemoved ?? result.message)
         setVisibility(paywallTarget)
         onUpdate?.()
       } else {
@@ -137,9 +138,9 @@ export function VideoSettingsDialog({
       if (result.status === "success") {
         if (willResubmit) {
           setApprovalStatus("PENDING")
-          toast.success(d.toastResubmitted ?? result.message)
+          SuccessToast(d.toastResubmitted ?? result.message)
         } else {
-          toast.success(d.toastVisibility ?? result.message)
+          SuccessToast(d.toastVisibility ?? result.message)
         }
         onUpdate?.()
       } else {
@@ -153,7 +154,7 @@ export function VideoSettingsDialog({
     startTransition(async () => {
       const result = await revokeVideoAccess(video.id)
       if (result.status === "success") {
-        toast.success(d.toastRevoked ?? result.message)
+        SuccessToast(d.toastRevoked ?? result.message)
         setVisibility("PRIVATE")
         onUpdate?.()
       } else {
@@ -166,7 +167,7 @@ export function VideoSettingsDialog({
     startTransition(async () => {
       const result = await deleteOwnVideo(video.id)
       if (result.status === "success") {
-        toast.success(d.toastDeleted ?? result.message)
+        DeleteToast(d.toastDeleted ?? result.message)
         setOpen(false)
         onUpdate?.()
       } else {

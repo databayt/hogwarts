@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { createChapter, createLesson, createSubject } from "./actions"
 
@@ -215,7 +216,7 @@ export function CreateSubjectForm() {
           }
         }
 
-        toast.success("Subject created")
+        SuccessToast("Subject created")
         closeModal()
         resetForm()
         router.push(`/${lang}/catalog/${subjectId}`)

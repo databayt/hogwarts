@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { Shell as PageContainer } from "@/components/table/shell"
 
@@ -134,7 +135,7 @@ export function ContributeBookContent({ lang }: Props) {
             .filter(Boolean),
         })
         if (result.success) {
-          toast.success(t.success)
+          SuccessToast(t.success)
           router.back()
         } else {
           toast.error(result.error || "Failed")

@@ -12,6 +12,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
@@ -116,7 +117,7 @@ export function AnnouncementCreateForm({
       : await createAnnouncement(values)
 
     if (res?.success) {
-      toast.success(currentId ? t.announcementUpdated : t.announcementCreated)
+      SuccessToast(currentId ? t.announcementUpdated : t.announcementCreated)
       closeModal()
       if (onSuccess) {
         onSuccess()

@@ -14,6 +14,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -129,7 +130,7 @@ export function EventCreateForm({
         : await createEvent({ ...values, lang: langValue } as any)
 
       if (res?.success) {
-        toast.success(
+        SuccessToast(
           currentId
             ? t?.success?.updated || "Event updated"
             : t?.success?.created || "Event created"

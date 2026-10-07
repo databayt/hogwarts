@@ -68,6 +68,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { Batch, Student } from "../registration/types"
@@ -117,7 +118,7 @@ export function BatchTransfer({
     try {
       setIsSubmitting(true)
       await onTransferRequest(data)
-      toast.success(
+      SuccessToast(
         t?.success?.created || "Transfer request submitted successfully"
       )
       setShowTransferDialog(false)
@@ -133,7 +134,7 @@ export function BatchTransfer({
   const handleApprove = async (transferId: string) => {
     try {
       await onApproveTransfer(transferId)
-      toast.success(t?.success?.updated || "Transfer approved successfully")
+      SuccessToast(t?.success?.updated || "Transfer approved successfully")
     } catch (error) {
       toast.error(t?.error?.updateFailed || "Failed to approve transfer")
       console.error(error)
@@ -145,7 +146,7 @@ export function BatchTransfer({
 
     try {
       await onRejectTransfer(selectedTransfer.id, rejectionReason)
-      toast.success(t?.success?.updated || "Transfer rejected")
+      SuccessToast(t?.success?.updated || "Transfer rejected")
       setShowRejectDialog(false)
       setRejectionReason("")
       setSelectedTransfer(null)

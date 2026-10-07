@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { sendBroadcast, sendWhatsAppMessage } from "./actions"
 import type { WhatsAppGroupDTO, WhatsAppMessageDTO } from "./types"
@@ -104,7 +105,7 @@ export function MessageComposer({
         })
 
         if (result.success && result.data) {
-          toast.success(
+          SuccessToast(
             `${d?.toast?.broadcastSent || "Broadcast sent"}: ${result.data.sent} ${d?.toast?.succeeded || "succeeded"}, ${result.data.failed} ${d?.toast?.failed || "failed"}`
           )
           setContent("")
@@ -134,7 +135,7 @@ export function MessageComposer({
       })
 
       if (result.success) {
-        toast.success(d?.toast?.messageSent || "Message sent")
+        SuccessToast(d?.toast?.messageSent || "Message sent")
         setContent("")
         setPhone("")
       } else {

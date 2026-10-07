@@ -51,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -199,7 +200,7 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
         : await createVehicle(payload)
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           form.id ? t.toasts.vehicleUpdated : t.toasts.vehicleCreated
         )
         setOpen(false)
@@ -222,7 +223,7 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
     startTransition(async () => {
       const result = await deleteVehicle(id)
       if (result.success) {
-        toast.success(t.toasts.vehicleDeleted)
+        DeleteToast(t.toasts.vehicleDeleted)
         router.refresh()
       } else {
         toast.error(

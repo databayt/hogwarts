@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { phone } from "../shared/phone"
 
@@ -197,7 +198,7 @@ export function GeoLiveMap({
 
           if (message.type === "welcome" || message.type === "subscribed") {
             console.log("WebSocket:", message)
-            toast.success("Connected to live location updates")
+            SuccessToast("Connected to live location updates")
           } else if (message.channel?.startsWith("geo_location_")) {
             // Real-time location update
             const locationData = message.data

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
@@ -122,7 +123,7 @@ export function ContentFlagsDialog({
       })
 
       if (result.success) {
-        toast.success(m?.saved ?? "Saved")
+        SuccessToast(m?.saved ?? "Saved")
         onOpenChange(false)
         onSaved?.()
       } else {

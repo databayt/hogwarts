@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { confirmDeleteDialog } from "@/components/atom/toast"
+import { confirmDeleteDialog, DeleteToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -121,7 +121,7 @@ export function LeadDetailContent({
     if (!ok) return
     const res = await deleteOperatorLead(data.id)
     if (res.success) {
-      toast.success(t.deleted)
+      DeleteToast(t.deleted)
       router.push(`/${lang}/sales`)
     } else {
       toast.error(res.error || t.deleteFailed)

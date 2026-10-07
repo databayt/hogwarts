@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -77,7 +78,7 @@ function ProposalForm({ onSuccess }: { onSuccess: () => void }) {
       })
 
       if (res.success) {
-        toast.success("Subject proposal submitted for review")
+        SuccessToast("Subject proposal submitted for review")
         setName("")
         setDepartment("")
         setDescription("")

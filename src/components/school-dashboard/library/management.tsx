@@ -70,6 +70,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Book {
@@ -242,7 +243,7 @@ export function LibraryManagement({
     const dueDate = addDays(new Date(), 14) // 2 weeks loan period
     try {
       await onCheckout(bookId, currentUserId, dueDate)
-      toast.success(t?.success?.updated || "Book checked out successfully")
+      SuccessToast(t?.success?.updated || "Book checked out successfully")
       setCheckoutDialogOpen(false)
     } catch (error) {
       toast.error(t?.error?.updateFailed || "Failed to checkout book")
@@ -252,7 +253,7 @@ export function LibraryManagement({
   const handleReturn = async (transactionId: string) => {
     try {
       await onReturn(transactionId)
-      toast.success(t?.success?.updated || "Book returned successfully")
+      SuccessToast(t?.success?.updated || "Book returned successfully")
     } catch (error) {
       toast.error(t?.error?.updateFailed || "Failed to return book")
     }
@@ -265,7 +266,7 @@ export function LibraryManagement({
     const newDueDate = addDays(transaction.dueDate, 7) // Extend by 1 week
     try {
       await onRenew(transactionId, newDueDate)
-      toast.success(t?.success?.updated || "Book renewed successfully")
+      SuccessToast(t?.success?.updated || "Book renewed successfully")
     } catch (error) {
       toast.error(t?.error?.updateFailed || "Failed to renew book")
     }
@@ -274,7 +275,7 @@ export function LibraryManagement({
   const handleReserve = async (bookId: string) => {
     try {
       await onReserve(bookId, currentUserId)
-      toast.success(t?.success?.created || "Book reserved successfully")
+      SuccessToast(t?.success?.created || "Book reserved successfully")
     } catch (error) {
       toast.error(t?.error?.createFailed || "Failed to reserve book")
     }

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useModal } from "@/components/atom/modal/context"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createLead, updateLead } from "@/components/sales/actions"
 import { createLeadSchema } from "@/components/sales/validation"
@@ -209,7 +210,7 @@ export function Form({
         const successMsg = isEditing
           ? d?.leadUpdated || "Lead updated successfully"
           : d?.leadCreated || "Lead created successfully"
-        toast.success(successMsg)
+        SuccessToast(successMsg)
         onClose()
         if (onSuccess) {
           onSuccess()
@@ -646,7 +647,7 @@ export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
           : await createLead(values as Parameters<typeof createLead>[0])
 
       if (res?.success) {
-        toast.success(isEditing ? "Lead updated" : "Lead created")
+        SuccessToast(isEditing ? "Lead updated" : "Lead created")
         closeModal()
         if (onSuccess) {
           onSuccess()

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { markPaymentCleared, rejectPaymentProof } from "./actions"
 import { DownloadReceipt } from "./receipt-pdf"
@@ -83,7 +84,7 @@ export function PaymentDetailActions({
     startTransition(async () => {
       const result = await markPaymentCleared(paymentId)
       if (result.success) {
-        toast.success(dictionary?.cleared || "Payment cleared")
+        SuccessToast(dictionary?.cleared || "Payment cleared")
         router.refresh()
       } else {
         toast.error(dictionary?.clearFailed || "Failed to clear payment")
@@ -99,7 +100,7 @@ export function PaymentDetailActions({
         reason: reason.trim() || undefined,
       })
       if (result.success) {
-        toast.success(dictionary?.rejected || "Payment proof rejected")
+        SuccessToast(dictionary?.rejected || "Payment proof rejected")
         setRejectOpen(false)
         setReason("")
         router.refresh()

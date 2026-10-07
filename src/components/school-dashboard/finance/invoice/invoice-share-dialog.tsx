@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
   buildShareLink,
@@ -128,7 +129,7 @@ export function InvoiceShareDialog({
     if (!shareUrl) return
     await navigator.clipboard.writeText(shareUrl)
     setCopied(true)
-    toast.success(t.copied || "Link copied")
+    SuccessToast(t.copied || "Link copied")
     setTimeout(() => setCopied(false), 2000)
   }
 

@@ -19,6 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { updateTask } from "../_lib/actions"
 import { updateTaskSchema, type UpdateTaskSchema } from "../_lib/validations"
@@ -59,7 +60,7 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
 
       form.reset(input)
       props.onOpenChange?.(false)
-      toast.success("Task updated")
+      SuccessToast("Task updated")
     })
   }
 

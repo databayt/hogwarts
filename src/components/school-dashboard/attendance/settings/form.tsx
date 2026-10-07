@@ -18,6 +18,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { SuccessToast } from "@/components/atom/toast"
 
 import type { AttendanceSettings } from "../actions/policy"
 import { updateAttendanceSettings } from "../actions/policy"
@@ -92,7 +93,7 @@ export function AttendanceSettingsForm({
         maxDailyAbsences: alertsEnabled ? maxDailyAbsences : null,
       })
       if (result.success) {
-        toast.success(t.saved ?? "Attendance settings saved")
+        SuccessToast(t.saved ?? "Attendance settings saved")
       } else {
         toast.error(t.saveFailed ?? "Failed to save settings")
       }

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
@@ -77,7 +78,7 @@ export function TransportationApiTokensSection({ dictionary, tokens }: Props) {
       if (result.success) {
         setPlaintext(result.data.plaintext)
         setCopied(false)
-        toast.success(tk.created)
+        SuccessToast(tk.created)
         router.refresh()
       } else {
         toast.error(
@@ -95,7 +96,7 @@ export function TransportationApiTokensSection({ dictionary, tokens }: Props) {
     try {
       await navigator.clipboard.writeText(plaintext)
       setCopied(true)
-      toast.success(tk.copied)
+      SuccessToast(tk.copied)
     } catch {
       toast.error(t.errors.internalError)
     }
@@ -108,7 +109,7 @@ export function TransportationApiTokensSection({ dictionary, tokens }: Props) {
     startTransition(async () => {
       const result = await revokeApiToken(id)
       if (result.success) {
-        toast.success(tk.revoke)
+        SuccessToast(tk.revoke)
         router.refresh()
       } else {
         toast.error(

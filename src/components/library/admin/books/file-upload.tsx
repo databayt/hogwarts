@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { SuccessToast } from "@/components/atom/toast"
 import { uploadFile } from "@/components/file"
 
 // ============================================================================
@@ -95,7 +96,7 @@ export default function FileUpload({
           onChange(result.url)
           setShowUploader(false)
           setPreviewUrl(null)
-          toast.success("File uploaded successfully")
+          SuccessToast("File uploaded successfully")
         } else {
           const msg = result.error || "Upload failed"
           setError(msg)

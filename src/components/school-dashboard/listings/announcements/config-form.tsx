@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons, Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
@@ -101,7 +102,7 @@ export function AnnouncementConfigForm({
     startTransition(async () => {
       const result = await updateAnnouncementConfig(data)
       if (result.success) {
-        toast.success(cfg?.saved || "Settings saved successfully")
+        SuccessToast(cfg?.saved || "Settings saved successfully")
       } else {
         toast.error(
           resolveActionError(result.error ?? "", fullDictionary) ||

@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { SuccessToast } from "@/components/atom/toast"
 import {
   FormStepNavigation,
   FormStepProgress,
@@ -178,7 +179,7 @@ export function NewcomersModal({
         analytics.trackFlowComplete("newcomers", data)
         setIsComplete(true)
         setCurrentStep(4) // Move to welcome step
-        toast.success(d?.toast?.applicationSubmitted ?? "Application submitted")
+        SuccessToast(d?.toast?.applicationSubmitted ?? "Application submitted")
       } else {
         toast.error(
           NEWCOMER_ERROR_MAP[result.errorCode ?? ""] ??

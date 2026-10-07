@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -226,7 +227,7 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
         : await createDriver(payload)
 
       if (result.success) {
-        toast.success(form.id ? t.toasts.driverUpdated : t.toasts.driverCreated)
+        SuccessToast(form.id ? t.toasts.driverUpdated : t.toasts.driverCreated)
         setOpen(false)
         router.refresh()
       } else {
@@ -247,7 +248,7 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
     startTransition(async () => {
       const result = await deleteDriver(id)
       if (result.success) {
-        toast.success(t.toasts.driverDeleted)
+        DeleteToast(t.toasts.driverDeleted)
         router.refresh()
       } else {
         toast.error(

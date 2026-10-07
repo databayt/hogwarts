@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   VideoInput,
@@ -110,7 +111,7 @@ export function VideoManager({ lessonId, lessonName }: VideoManagerProps) {
           setVideoUrl(null)
           setVideoTitle("")
           setVideoMeta(null)
-          toast.success(t?.success?.created || "Video added")
+          SuccessToast(t?.success?.created || "Video added")
         }
       } catch {
         toast.error(t?.error?.createFailed || "Failed to add video")
@@ -123,7 +124,7 @@ export function VideoManager({ lessonId, lessonName }: VideoManagerProps) {
       try {
         await deleteVideo(videoId)
         setVideos((prev) => prev.filter((v) => v.id !== videoId))
-        toast.success(t?.success?.deleted || "Video deleted")
+        DeleteToast(t?.success?.deleted || "Video deleted")
       } catch {
         toast.error(t?.error?.deleteFailed || "Failed to delete video")
       }

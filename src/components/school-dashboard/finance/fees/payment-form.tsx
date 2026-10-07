@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -153,7 +154,7 @@ export default function PaymentForm({
       startTransition(async () => {
         const result = await recordPayment(formData)
         if (result.success) {
-          toast.success(
+          SuccessToast(
             pf?.paymentRecordedSuccessfully || "Payment recorded successfully"
           )
           router.push(`/${lang}/finance/fees/payments`)

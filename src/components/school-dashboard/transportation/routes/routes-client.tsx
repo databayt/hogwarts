@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -216,7 +217,7 @@ export function RoutesClient({
       })
 
       if (result.success) {
-        toast.success(t.toasts.routeCreated)
+        SuccessToast(t.toasts.routeCreated)
         setOpen(false)
         setForm(EMPTY_FORM)
         router.refresh()
@@ -238,7 +239,7 @@ export function RoutesClient({
     startTransition(async () => {
       const result = await deleteRoute(id)
       if (result.success) {
-        toast.success(t.toasts.routeDeleted)
+        DeleteToast(t.toasts.routeDeleted)
         router.refresh()
       } else {
         toast.error(

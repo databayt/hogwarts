@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -63,7 +64,7 @@ export function FineForm({ students, lang }: FineFormProps) {
     startTransition(async () => {
       const result = await issueFine(formData)
       if (result.success) {
-        toast.success(ff?.fineIssuedSuccessfully || "Fine issued successfully")
+        SuccessToast(ff?.fineIssuedSuccessfully || "Fine issued successfully")
         router.push(`/${lang}/finance/fees/fines`)
       } else {
         toast.error(

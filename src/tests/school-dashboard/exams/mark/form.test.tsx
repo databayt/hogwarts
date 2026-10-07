@@ -33,7 +33,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+  toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }))
 
 vi.mock("@/components/school-dashboard/exams/mark/actions", () => ({

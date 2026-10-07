@@ -15,6 +15,7 @@ import { toast } from "sonner"
 
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 import {
   ACCEPT_DOCUMENTS,
   ACCEPT_IMAGES,
@@ -50,7 +51,7 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     setUploadedFiles(files)
-    toast.success(
+    SuccessToast(
       rp?.fileUploaded || "File uploaded successfully! Ready to process."
     )
   }
@@ -79,7 +80,7 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
       const result = await uploadReceipt(formData)
 
       if (result.success && result.data) {
-        toast.success(
+        SuccessToast(
           rp?.receiptProcessed ||
             "Receipt processed successfully! AI extraction in progress..."
         )

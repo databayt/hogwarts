@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   updateUserName,
@@ -63,7 +64,7 @@ export function UserNameForm({ user }: UserNameFormProps) {
       } else {
         await update()
         setUpdated(false)
-        toast.success(t?.success?.updated || "Your name has been updated.")
+        SuccessToast(t?.success?.updated || "Your name has been updated.")
       }
     })
   })

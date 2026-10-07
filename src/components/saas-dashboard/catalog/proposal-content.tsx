@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -79,7 +80,7 @@ function ProposalReviewRow({
     startTransition(async () => {
       const res = await approveProposal(proposal.id, reviewNotes || undefined)
       if (res.success) {
-        toast.success(
+        SuccessToast(
           d?.approvedAndPublished ||
             "Proposal approved and published to catalog"
         )
@@ -100,7 +101,7 @@ function ProposalReviewRow({
     startTransition(async () => {
       const res = await rejectProposal(proposal.id, rejectionReason)
       if (res.success) {
-        toast.success(d?.proposalRejected || "Proposal rejected")
+        SuccessToast(d?.proposalRejected || "Proposal rejected")
         setShowReject(false)
         setRejectionReason("")
         onRefresh()

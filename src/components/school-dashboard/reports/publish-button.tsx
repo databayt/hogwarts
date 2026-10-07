@@ -8,6 +8,7 @@ import { Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { publishReportCards } from "./actions"
 
@@ -25,7 +26,7 @@ export function PublishButton({ reportCardIds }: PublishButtonProps) {
     const result = await publishReportCards({ reportCardIds })
 
     if (result.success) {
-      toast.success(
+      SuccessToast(
         `Published ${reportCardIds.length} report card${reportCardIds.length !== 1 ? "s" : ""}`
       )
       router.refresh()

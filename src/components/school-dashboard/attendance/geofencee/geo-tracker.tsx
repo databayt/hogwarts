@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { SuccessToast } from "@/components/atom/toast"
 
 // ============================================================================
 // TYPES
@@ -212,7 +213,7 @@ export function GeoTracker({
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      toast.success("Back online - syncing queued locations...")
+      SuccessToast("Back online - syncing queued locations...")
       syncOfflineQueue()
     }
 
@@ -260,7 +261,7 @@ export function GeoTracker({
       // Clear queue after successful sync
       await queue.clear()
       setQueueSize(0)
-      toast.success(`Synced ${locations.length} queued locations`)
+      SuccessToast(`Synced ${locations.length} queued locations`)
     } catch (error) {
       console.error("Error syncing offline queue:", error)
     }
@@ -403,7 +404,7 @@ export function GeoTracker({
       watchIdRef.current = watchId
       setIsTracking(true)
       setError(null)
-      toast.success("Location tracking started")
+      SuccessToast("Location tracking started")
 
       // Initialize offline queue
       await queueRef.current.init()

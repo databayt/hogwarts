@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -120,7 +121,7 @@ export function MarksEntryForm({ examId }: Props) {
         marks: data.marks,
       })
       if (result.success && result.data) {
-        toast.success(
+        SuccessToast(
           (t?.savedCount ?? "Saved marks for {count} students").replace(
             "{count}",
             String(result.data.count)

@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { updateContributionVisibility } from "./contribution-actions"
 
@@ -119,7 +120,7 @@ function VisibilityToggle({
       startTransition(async () => {
         try {
           await updateContributionVisibility(type, id, visibility)
-          toast.success("Visibility updated")
+          SuccessToast("Visibility updated")
         } catch (error) {
           toast.error(
             error instanceof Error

@@ -79,6 +79,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
@@ -303,7 +304,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           levels: subjectLevels,
           department: subjectDepartment,
         })
-        toast.success(t?.success?.updated || "Subject updated")
+        SuccessToast(t?.success?.updated || "Subject updated")
         setIsSubjectEditOpen(false)
       } catch {
         toast.error("Failed to update subject")
@@ -459,7 +460,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
-          toast.success(t?.success?.updated || "Chapter updated")
+          SuccessToast(t?.success?.updated || "Chapter updated")
         } else {
           formData.set("subjectId", subject.id)
           const result = await createChapter(formData)
@@ -483,7 +484,7 @@ export function CatalogDetail({ subject, lang }: Props) {
               lessons: [],
             },
           ])
-          toast.success(t?.success?.created || "Chapter created")
+          SuccessToast(t?.success?.created || "Chapter created")
         }
 
         setIsChapterDialogOpen(false)
@@ -498,7 +499,7 @@ export function CatalogDetail({ subject, lang }: Props) {
       try {
         await deleteChapter(chapterId)
         setChapters((prev) => prev.filter((c) => c.id !== chapterId))
-        toast.success(t?.success?.deleted || "Chapter deleted")
+        DeleteToast(t?.success?.deleted || "Chapter deleted")
       } catch {
         toast.error(t?.error?.deleteFailed || "Failed to delete chapter")
       }
@@ -598,7 +599,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
-          toast.success(t?.success?.updated || "Lesson updated")
+          SuccessToast(t?.success?.updated || "Lesson updated")
         } else {
           formData.set("chapterId", selectedChapterId)
           const result = await createLesson(formData)
@@ -647,7 +648,7 @@ export function CatalogDetail({ subject, lang }: Props) {
             }
           }
 
-          toast.success(t?.success?.created || "Lesson created")
+          SuccessToast(t?.success?.created || "Lesson created")
         }
 
         // For edited lessons, also create video if URL provided
@@ -658,7 +659,7 @@ export function CatalogDetail({ subject, lang }: Props) {
               title: lessonVideoTitle.trim() || lessonName.trim(),
               videoUrl: lessonVideoUrl.trim(),
             })
-            toast.success("Video added")
+            SuccessToast("Video added")
           } catch {
             toast.error("Lesson updated but video failed to save")
           }
@@ -686,7 +687,7 @@ export function CatalogDetail({ subject, lang }: Props) {
               : c
           )
         )
-        toast.success(t?.success?.deleted || "Lesson deleted")
+        DeleteToast(t?.success?.deleted || "Lesson deleted")
       } catch {
         toast.error(t?.error?.deleteFailed || "Failed to delete lesson")
       }

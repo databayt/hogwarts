@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { submitAssignment } from "./contribution-actions"
 
@@ -179,7 +180,7 @@ export function ContributeAssignmentForm({ catalogSubjects }: Props) {
         })
 
         if (result.success) {
-          toast.success("Assignment submitted for review")
+          SuccessToast("Assignment submitted for review")
           resetForm()
         }
       } catch (error) {

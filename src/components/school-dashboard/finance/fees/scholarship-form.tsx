@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -80,7 +81,7 @@ export function ScholarshipForm({ lang, initialData }: ScholarshipFormProps) {
         : await createScholarship(formData)
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           initialData
             ? sf?.scholarshipUpdated || "Scholarship updated"
             : sf?.scholarshipCreated || "Scholarship created"

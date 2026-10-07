@@ -48,6 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -206,7 +207,7 @@ export function AssignmentsClient({
         status: "ACTIVE",
       })
       if (result.success) {
-        toast.success(t.toasts.assignmentCreated)
+        SuccessToast(t.toasts.assignmentCreated)
         setOpen(false)
         setForm(EMPTY_FORM)
         router.refresh()
@@ -228,7 +229,7 @@ export function AssignmentsClient({
     startTransition(async () => {
       const result = await endAssignment({ id })
       if (result.success) {
-        toast.success(t.toasts.assignmentEnded)
+        SuccessToast(t.toasts.assignmentEnded)
         router.refresh()
       } else {
         toast.error(

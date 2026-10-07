@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { Icons } from "@/components/saas-marketing/pricing/shared/icons"
 import { SectionColumns } from "@/components/school-dashboard/dashboard/section-columns"
@@ -72,7 +73,7 @@ export function UserRoleForm({ user }: UserNameFormProps) {
       } else {
         await update()
         setUpdated(false)
-        toast.success(r?.updated || "Your role has been updated.")
+        SuccessToast(r?.updated || "Your role has been updated.")
       }
     })
   }

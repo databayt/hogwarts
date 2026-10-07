@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { createTask } from "../_lib/actions"
 import type { CreateTaskSchema } from "../_lib/validations"
@@ -44,7 +45,7 @@ export function CreateTaskSheet() {
 
       form.reset()
       setOpen(false)
-      toast.success("Task created")
+      SuccessToast("Task created")
     })
   }
 

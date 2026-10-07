@@ -36,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createSharedCredentialGroup } from "@/components/school-dashboard/compliance/actions"
 import { resolveComplianceError } from "@/components/school-dashboard/compliance/error-map"
@@ -88,7 +89,7 @@ export function SharedGroupsTable({ dict, groups }: SharedGroupsTableProps) {
         secretJson,
       })
       if (result.success) {
-        toast.success("Group created")
+        SuccessToast("Group created")
         setOpen(false)
         setName("")
         setSecretJson('{"username": "", "password": "", "esisLoginUrl": ""}')

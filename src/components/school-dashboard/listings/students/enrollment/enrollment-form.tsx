@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -117,7 +118,7 @@ export function EnrollmentForm({
     try {
       setIsSubmitting(true)
       await onSubmit(data)
-      toast.success(
+      SuccessToast(
         t?.success?.studentCreated || "Student enrolled successfully"
       )
     } catch (error) {

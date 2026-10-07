@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 
 import { deselectBook, selectBook } from "./actions"
@@ -140,7 +141,7 @@ export function BookPicker({
           setOptimisticSelected((prev) => new Set([...prev, bookId]))
           toast.error(result.error || "Failed to remove book")
         } else {
-          toast.success("Book removed from library")
+          DeleteToast("Book removed from library")
         }
       })
     } else {
@@ -174,7 +175,7 @@ export function BookPicker({
         })
         toast.error(result.error || "Failed to add book")
       } else {
-        toast.success("Book added to library")
+        SuccessToast("Book added to library")
       }
     })
   }

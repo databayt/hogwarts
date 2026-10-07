@@ -69,6 +69,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type {
   FinanceAction,
@@ -646,7 +647,7 @@ function EditPermissionsDialog({
               "Failed to grant some permissions"
           )
         } else {
-          toast.success(
+          SuccessToast(
             t?.success?.permissionGranted ||
               `Granted ${result.granted} permissions`
           )
@@ -661,7 +662,7 @@ function EditPermissionsDialog({
               "Failed to revoke some permissions"
           )
         } else {
-          toast.success(
+          SuccessToast(
             t?.success?.permissionRevoked ||
               `Revoked ${result.revoked} permissions`
           )
@@ -773,7 +774,7 @@ function CopyPermissionsDialog({
     try {
       const result = await copyPermissions(fromUser.userId, selectedUserId)
       if (result.success) {
-        toast.success(
+        SuccessToast(
           t?.success?.copied || `Copied ${result.copied} permissions`
         )
         onRefresh()

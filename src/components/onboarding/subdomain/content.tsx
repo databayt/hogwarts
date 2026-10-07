@@ -16,6 +16,7 @@ import { checkSubdomainAvailability } from "@/lib/subdomain-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SuccessToast } from "@/components/atom/toast"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
@@ -126,7 +127,7 @@ export default function SubdomainContent(props: Props) {
           await updateListingData({
             domain: normalizeSubdomain(subdomain),
           })
-          toast.success("Subdomain reserved successfully!")
+          SuccessToast("Subdomain reserved successfully!")
         } else {
           toast.error(result.error || "Failed to reserve subdomain")
         }

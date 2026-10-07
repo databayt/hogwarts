@@ -81,6 +81,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import {
   ACCEPT_ALL,
   FileUploader,
@@ -284,7 +285,7 @@ export function CommunicationHub({
       setNewChatDialogOpen(false)
       setSelectedParticipants([])
       setGroupName("")
-      toast.success(t?.success?.created || "Conversation created")
+      SuccessToast(t?.success?.created || "Conversation created")
     } catch (error) {
       toast.error(t?.error?.createFailed || "Failed to create conversation")
     }
@@ -293,7 +294,7 @@ export function CommunicationHub({
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     setAttachedFiles((prev) => [...prev, ...files])
     setShowFileUploader(false)
-    toast.success(t?.success?.saved || `${files.length} file(s) added`)
+    SuccessToast(t?.success?.saved || `${files.length} file(s) added`)
   }
 
   const handleUploadError = (error: string) => {

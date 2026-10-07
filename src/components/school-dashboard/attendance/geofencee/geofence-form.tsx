@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -111,7 +112,7 @@ export function GeofenceForm({ onSuccess, dictionary }: GeofenceFormProps) {
       const result = await createCircularGeofence(data)
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           (t?.success as Record<string, string> | undefined)?.geofenceCreated ||
             "Geofence created successfully"
         )
@@ -143,7 +144,7 @@ export function GeofenceForm({ onSuccess, dictionary }: GeofenceFormProps) {
         (position) => {
           form.setValue("centerLat", position.coords.latitude)
           form.setValue("centerLon", position.coords.longitude)
-          toast.success(
+          SuccessToast(
             formDict?.locationSetSuccess || "Location set to current position"
           )
         },

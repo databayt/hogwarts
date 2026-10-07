@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -101,7 +102,7 @@ export function QuestionForm({
         : await createQuestion(formData)
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           questionId
             ? dict.messages.questionUpdated
             : dict.messages.questionCreated

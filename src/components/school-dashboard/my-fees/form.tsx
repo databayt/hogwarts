@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { setPreferredPaymentMethod } from "./actions"
 
@@ -49,7 +50,7 @@ export function PreferredMethodPicker({
         next === "none" ? null : next
       )
       if (res.success) {
-        toast.success(dictionary.updatedToast || "Preferred method updated.")
+        SuccessToast(dictionary.updatedToast || "Preferred method updated.")
       } else {
         toast.error(dictionary.failedToast || "Failed to update method.")
         setValue(currentMethod ?? "none")

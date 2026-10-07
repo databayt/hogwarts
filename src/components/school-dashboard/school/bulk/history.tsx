@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 
 import { listImportBatches, resumeImport, undoImport } from "./actions"
@@ -112,7 +113,7 @@ function BatchRow({
       const res = await undoImport(b.id)
       if (!res.ok) toast.error(errorText(t, res.code))
       else
-        toast.success(
+        SuccessToast(
           fmt(t.undoDone, {
             removed: res.removed,
             restored: res.restored,

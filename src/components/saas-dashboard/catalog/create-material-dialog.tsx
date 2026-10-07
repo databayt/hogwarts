@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { createMaterial } from "./material-actions"
 
@@ -92,7 +93,7 @@ export function CreateMaterialDialog() {
 
         const result = await createMaterial(formData)
         if (result.success) {
-          toast.success("Material created")
+          SuccessToast("Material created")
           setOpen(false)
           resetForm()
         }

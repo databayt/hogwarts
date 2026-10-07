@@ -21,6 +21,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { SuccessToast } from "@/components/atom/toast"
 import { FormStepContainer, FormStepHeader } from "@/components/form"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -74,7 +75,7 @@ export function VerifyStep({ dictionary }: { dictionary?: Dictionary }) {
       if (result.success) {
         setCodeSent(true)
         setCountdown(60) // 60 second cooldown
-        toast.success(MSG.codeSent)
+        SuccessToast(MSG.codeSent)
       } else {
         toast.error(MSG.sendFailed)
       }
@@ -93,7 +94,7 @@ export function VerifyStep({ dictionary }: { dictionary?: Dictionary }) {
       const result = await resendVerificationCode(email)
       if (result.success) {
         setCountdown(60)
-        toast.success(MSG.newCodeSent)
+        SuccessToast(MSG.newCodeSent)
       } else {
         toast.error(MSG.resendFailed)
       }

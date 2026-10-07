@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import {
   createGuardianAndLink,
   unlinkGuardian,
@@ -140,7 +141,7 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success(d?.guardianAdded || "Guardian added successfully")
+        SuccessToast(d?.guardianAdded || "Guardian added successfully")
         setIsAddOpen(false)
         resetForm()
       } else {
@@ -162,7 +163,7 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success(d?.guardianUpdated || "Guardian updated successfully")
+        SuccessToast(d?.guardianUpdated || "Guardian updated successfully")
         setIsEditOpen(false)
         setSelectedGuardian(null)
         resetForm()
@@ -181,7 +182,7 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success(d?.guardianRemoved || "Guardian removed successfully")
+        DeleteToast(d?.guardianRemoved || "Guardian removed successfully")
         setIsDeleteOpen(false)
         setSelectedGuardian(null)
       } else {

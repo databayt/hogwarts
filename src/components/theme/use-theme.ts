@@ -41,6 +41,7 @@ import { useTheme as useNextTheme } from "next-themes"
 import { toast } from "sonner"
 
 import type { ThemeEditorState } from "@/types/theme-editor"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 
 import {
   activateUserTheme,
@@ -92,7 +93,7 @@ export function useThemeOperations() {
           return
         }
 
-        toast.success("Theme saved successfully")
+        SuccessToast("Theme saved successfully")
       })
     },
     [themeState]
@@ -110,7 +111,7 @@ export function useThemeOperations() {
         return
       }
 
-      toast.success("Theme activated")
+      SuccessToast("Theme activated")
     })
   }, [])
 
@@ -126,7 +127,7 @@ export function useThemeOperations() {
         return
       }
 
-      toast.success("Theme deleted")
+      DeleteToast("Theme deleted")
     })
   }, [])
 
@@ -222,7 +223,7 @@ export function useThemeImportExport() {
       linkElement.setAttribute("download", exportFileDefaultName)
       linkElement.click()
 
-      toast.success("Theme exported successfully")
+      SuccessToast("Theme exported successfully")
     } catch (error) {
       toast.error("Failed to export theme")
       console.error(error)
@@ -247,7 +248,7 @@ export function useThemeImportExport() {
           throw new Error("Invalid theme file format")
         }
 
-        toast.success("Theme imported successfully")
+        SuccessToast("Theme imported successfully")
         return themeState
       } catch (error) {
         toast.error("Failed to import theme")

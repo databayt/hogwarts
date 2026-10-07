@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { provisionTransportFees } from "@/components/school-dashboard/finance/fees/transport-provisioning"
 
@@ -46,7 +47,7 @@ export function FeesProvisionButton({ dictionary }: Props) {
         if (studentsProvisioned === 0 && invoicesCreated === 0) {
           toast.info(tp?.nothingNew || "Already provisioned — nothing new.")
         } else {
-          toast.success(
+          SuccessToast(
             (
               tp?.successSummary ||
               "Provisioned {students} students, {invoices} invoices created."

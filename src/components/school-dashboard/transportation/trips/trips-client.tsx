@@ -38,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -172,7 +173,7 @@ export function TripsClient({ locale, trips, routes, dictionary }: Props) {
         scheduledTime: form.scheduledTime,
       })
       if (result.success) {
-        toast.success(t.trips.toasts.scheduled)
+        SuccessToast(t.trips.toasts.scheduled)
         setOpen(false)
         setForm(EMPTY_FORM)
         router.refresh()

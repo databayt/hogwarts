@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -172,7 +173,7 @@ export function ImportLeadsContent({ dictionary, lang }: Props) {
         if (res.success) imported++
         else failed++
       }
-      toast.success(
+      SuccessToast(
         `${t.imported} ${imported} ${t.newLeads}, ${failed} ${t.failed}`
       )
       setParsed([])

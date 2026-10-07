@@ -32,6 +32,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { UploadProgress } from "./aggregate-progress"
 import { FilePreview, getFileIcon } from "./file-preview"
@@ -246,7 +247,7 @@ export function FileUploader({
             try {
               processedFile = await optimizeImage(file)
               optimized = true
-              toast.success(
+              SuccessToast(
                 `Optimized ${file.name} (${Math.round(((file.size - processedFile.size) / file.size) * 100)}% smaller)`
               )
             } catch (error) {
@@ -344,7 +345,7 @@ export function FileUploader({
         }))
 
       onUploadComplete?.(uploadedFiles)
-      toast.success(`Successfully uploaded ${successCount} file(s)`)
+      SuccessToast(`Successfully uploaded ${successCount} file(s)`)
 
       // Clear uploaded files
       setFiles([])

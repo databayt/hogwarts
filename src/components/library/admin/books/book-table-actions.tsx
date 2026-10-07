@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { deleteBook } from "../../actions"
 
@@ -36,7 +37,7 @@ export default function BookTableActions({
       const result = await deleteBook({ id: bookId, schoolId })
 
       if (result.success) {
-        toast.success(result.message)
+        SuccessToast(result.message)
         router.refresh()
       } else {
         toast.error(result.message || t.library.messages.bookNotFound)

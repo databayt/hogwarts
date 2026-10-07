@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { deleteReceipt, retryReceiptExtraction } from "./actions"
@@ -93,7 +94,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
     try {
       const result = await deleteReceipt(receipt.id)
       if (result.success) {
-        toast.success(rd?.receiptDeleted || "Receipt deleted successfully")
+        DeleteToast(rd?.receiptDeleted || "Receipt deleted successfully")
         router.push("..")
         router.refresh()
       } else {
@@ -117,7 +118,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
     try {
       const result = await retryReceiptExtraction(receipt.id)
       if (result.success) {
-        toast.success(
+        SuccessToast(
           rd?.retryStarted || "Extraction retry started. Please wait..."
         )
         router.refresh()

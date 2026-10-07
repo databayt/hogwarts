@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
@@ -50,7 +51,7 @@ export function TransportSkipControl({
         dateFrom: new Date(date),
       })
       if (result.success) {
-        toast.success(t.requested)
+        SuccessToast(t.requested)
         setDate("")
         router.refresh()
       } else {
@@ -63,7 +64,7 @@ export function TransportSkipControl({
     startTransition(async () => {
       const result = await cancelTransportSkip(id)
       if (result.success) {
-        toast.success(t.cancelled)
+        SuccessToast(t.cancelled)
         router.refresh()
       } else {
         toast.error(t.failed)

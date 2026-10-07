@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateSettings } from "../actions/settings"
@@ -47,7 +48,7 @@ export function TransportationSettingsForm({ dictionary, initial }: Props) {
     startTransition(async () => {
       const result = await updateSettings(values)
       if (result.success) {
-        toast.success(t.savedToast)
+        SuccessToast(t.savedToast)
       } else {
         toast.error(t.saveFailedToast)
       }

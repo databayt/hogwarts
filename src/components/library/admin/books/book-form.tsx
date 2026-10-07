@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { type Locale } from "@/components/internationalization/config"
 
 import { createBook } from "../../actions"
@@ -84,7 +85,7 @@ export default function BookForm({
       })
 
       if (result.success) {
-        toast.success(result.message)
+        SuccessToast(result.message)
         router.push("/library/admin/books")
         router.refresh()
       } else {

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -84,7 +85,7 @@ function ApprovalActions({ item }: { item: PendingItem }) {
     startTransition(async () => {
       const result = await approveContent(item.contentType, item.id)
       if (result.success) {
-        toast.success("Content approved")
+        SuccessToast("Content approved")
       } else {
         toast.error(catalogActionError(result.error))
       }
@@ -100,7 +101,7 @@ function ApprovalActions({ item }: { item: PendingItem }) {
         rejectionReason
       )
       if (result.success) {
-        toast.success("Content rejected")
+        SuccessToast("Content rejected")
         setRejectDialogOpen(false)
         setRejectionReason("")
       } else {

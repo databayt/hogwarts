@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { createQuestion } from "./question-actions"
 
@@ -122,7 +123,7 @@ export function CreateQuestionDialog() {
 
         const result = await createQuestion(formData)
         if (result.success) {
-          toast.success("Question created")
+          SuccessToast("Question created")
           setOpen(false)
           resetForm()
         }

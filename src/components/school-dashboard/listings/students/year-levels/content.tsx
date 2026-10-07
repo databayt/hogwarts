@@ -70,6 +70,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -224,7 +225,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await createYearLevel(formData)
       if (result.success) {
-        toast.success(d?.toast?.created || "Year level created successfully")
+        SuccessToast(d?.toast?.created || "Year level created successfully")
         setNewLevelName("")
         setNewLevelLang("ar")
         setNewLevelOrder("")
@@ -252,7 +253,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await updateYearLevel(formData)
       if (result.success) {
-        toast.success(d?.toast?.updated || "Year level updated successfully")
+        SuccessToast(d?.toast?.updated || "Year level updated successfully")
         setEditingLevel(null)
         setNewLevelName("")
         setNewLevelLang("ar")
@@ -275,7 +276,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await deleteYearLevel(formData)
       if (result.success) {
-        toast.success(d?.toast?.deleted || "Year level deleted successfully")
+        DeleteToast(d?.toast?.deleted || "Year level deleted successfully")
         fetchYearLevels()
       } else {
         toast.error(

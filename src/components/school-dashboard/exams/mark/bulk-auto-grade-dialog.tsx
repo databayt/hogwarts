@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { bulkAutoGradeAll } from "./actions/bulk-auto-grade-all"
@@ -52,7 +53,7 @@ export function BulkAutoGradeDialog({
       if (response.success) {
         if (response.data) {
           setResult(response.data)
-          toast.success(
+          SuccessToast(
             `Auto-graded ${response.data.graded} submissions${response.data.failed > 0 ? ` (${response.data.failed} failed)` : ""}`
           )
         }

@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "../shared/phone"
@@ -113,7 +114,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
     try {
       const result = await updateGeofenceStatus(geofence.id, !geofence.isActive)
       if (result.success) {
-        toast.success(
+        SuccessToast(
           t?.success?.geofenceCreated ??
             `Geofence ${geofence.isActive ? "deactivated" : "activated"}`
         )
@@ -137,9 +138,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
     try {
       const result = await deleteGeofence(selectedGeofence.id)
       if (result.success) {
-        toast.success(
-          t?.contextActions?.attendanceDeleted ?? "Geofence deleted"
-        )
+        DeleteToast(t?.contextActions?.attendanceDeleted ?? "Geofence deleted")
         onRefresh?.()
       } else {
         toast.error(

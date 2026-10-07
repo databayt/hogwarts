@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -103,7 +104,7 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
     startTransition(async () => {
       const result = await waiveFine(fine.id, reason)
       if (result.success) {
-        toast.success(ff?.fineWaived || "Fine waived successfully")
+        SuccessToast(ff?.fineWaived || "Fine waived successfully")
         setWaiveDialogOpen(false)
         router.refresh()
       } else {
@@ -127,7 +128,7 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
     startTransition(async () => {
       const result = await payFine(fine.id, amount, method)
       if (result.success) {
-        toast.success(ff?.finePaid || "Fine payment recorded")
+        SuccessToast(ff?.finePaid || "Fine payment recorded")
         setPayDialogOpen(false)
         router.refresh()
       } else {
@@ -146,7 +147,7 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
     startTransition(async () => {
       const result = await updateFine(fine.id, formData)
       if (result.success) {
-        toast.success(ff?.fineUpdated || "Fine updated")
+        SuccessToast(ff?.fineUpdated || "Fine updated")
         setEditMode(false)
         router.refresh()
       } else {

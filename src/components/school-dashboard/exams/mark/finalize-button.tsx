@@ -15,6 +15,7 @@ import { Award, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { finalizeExamResults } from "./actions/finalize"
 
@@ -44,7 +45,7 @@ export function FinalizeResultsButton({
         aiGradeSubjective: true,
       })
       if (res.success && res.data) {
-        toast.success(
+        SuccessToast(
           successTemplate.replace("{count}", String(res.data.studentsGraded))
         )
       } else {

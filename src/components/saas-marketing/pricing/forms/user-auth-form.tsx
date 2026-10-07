@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { userAuthSchema } from "../lib/validations/auth"
 import { Icons } from "../shared/icons"
@@ -53,7 +54,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
       })
     }
 
-    return toast.success("Check your email", {
+    return SuccessToast("Check your email", {
       description: "We sent you a login link. Be sure to check your spam too.",
     })
   }

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { cancelTrip, finishTrip, startTrip } from "../actions/trips"
@@ -26,7 +27,7 @@ export function TripBoardingControls({ tripId, status, dictionary }: Props) {
     startTransition(async () => {
       const result = await fn()
       if (result.success) {
-        toast.success(successMsg)
+        SuccessToast(successMsg)
         router.refresh()
       } else {
         toast.error(t.errors.internalError)

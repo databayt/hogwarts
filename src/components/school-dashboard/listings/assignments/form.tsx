@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import {
@@ -85,7 +86,7 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         ? await updateAssignment({ id: currentId, ...values })
         : await createAssignment(values)
       if (res?.success) {
-        toast.success(
+        SuccessToast(
           currentId
             ? t?.success?.assignmentUpdated || "Assignment updated"
             : t?.success?.assignmentCreated || "Assignment created"

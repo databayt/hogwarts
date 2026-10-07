@@ -29,6 +29,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { DeleteToast } from "@/components/atom/toast"
 import { useMediaQuery } from "@/components/table/use-media-query"
 
 import { deleteTasks } from "../_lib/actions"
@@ -62,7 +63,7 @@ export function DeleteTasksDialog({
       }
 
       props.onOpenChange?.(false)
-      toast.success("Tasks deleted")
+      DeleteToast("Tasks deleted")
       onSuccess?.()
     })
   }

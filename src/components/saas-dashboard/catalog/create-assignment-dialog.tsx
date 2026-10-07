@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 
 import { createAssignment } from "./assignment-actions"
 
@@ -105,7 +106,7 @@ export function CreateAssignmentDialog() {
 
         const result = await createAssignment(formData)
         if (result.success) {
-          toast.success("Assignment created")
+          SuccessToast("Assignment created")
           setOpen(false)
           resetForm()
         }

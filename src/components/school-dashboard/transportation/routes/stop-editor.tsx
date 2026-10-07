@@ -48,6 +48,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { optimizeRouteDefault } from "../actions/optimize"
@@ -132,7 +133,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         stopIds: nextOrder.map((s) => s.id),
       })
       if (result.success) {
-        toast.success(t.toasts.stopReordered)
+        SuccessToast(t.toasts.stopReordered)
         router.refresh()
       } else {
         toast.error(
@@ -173,7 +174,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         dropoffTime: form.dropoffTime || undefined,
       })
       if (result.success) {
-        toast.success(t.toasts.stopAdded)
+        SuccessToast(t.toasts.stopAdded)
         setOpen(false)
         setForm(EMPTY_FORM)
         router.refresh()
@@ -192,7 +193,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
     startTransition(async () => {
       const result = await optimizeRouteDefault(routeId)
       if (result.success) {
-        toast.success(t.optimize.optimized)
+        SuccessToast(t.optimize.optimized)
         router.refresh()
       } else {
         toast.error(t.optimize.failed)
@@ -207,7 +208,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
     startTransition(async () => {
       const result = await deleteStop(id)
       if (result.success) {
-        toast.success(t.toasts.stopDeleted)
+        DeleteToast(t.toasts.stopDeleted)
         router.refresh()
       } else {
         toast.error(

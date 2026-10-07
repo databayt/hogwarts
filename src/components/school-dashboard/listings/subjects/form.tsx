@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createSubject,
@@ -102,7 +103,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
         ? await updateSubject({ id: currentId, ...values })
         : await createSubject(values)
       if (res?.success) {
-        toast.success(
+        SuccessToast(
           currentId
             ? t?.success?.subjectUpdated || "Subject updated"
             : t?.success?.subjectCreated || "Subject added"

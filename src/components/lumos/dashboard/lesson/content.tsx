@@ -45,6 +45,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { SuccessToast } from "@/components/atom/toast"
 import type {
   AvailableVideo,
   LessonWithProgress,
@@ -291,7 +292,7 @@ export function LumosLessonContent({
             return
           }
           setIsCompleted(false)
-          toast.success(d?.markedIncomplete || "Marked as incomplete")
+          SuccessToast(d?.markedIncomplete || "Marked as incomplete")
         } else {
           const result = await markLessonComplete(
             lesson.id,
@@ -302,7 +303,7 @@ export function LumosLessonContent({
             return
           }
           setIsCompleted(true)
-          toast.success(d?.markedComplete || "Marked as complete!")
+          SuccessToast(d?.markedComplete || "Marked as complete!")
         }
       } catch {
         toast.error(d?.failedToUpdateProgress || "Failed to update progress")
@@ -369,7 +370,7 @@ export function LumosLessonContent({
           return
         }
         setIsCompleted(true)
-        toast.success(d?.lessonCompleted || "Lesson completed!")
+        SuccessToast(d?.lessonCompleted || "Lesson completed!")
       } catch {
         toast.error(d?.failedToComplete || "Failed to mark lesson as complete")
       }

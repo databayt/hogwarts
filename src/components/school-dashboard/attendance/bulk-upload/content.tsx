@@ -69,6 +69,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SkeletonList } from "@/components/atom/loading"
+import { SuccessToast } from "@/components/atom/toast"
 import {
   ACCEPT_DOCUMENTS,
   FileUploader,
@@ -255,7 +256,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
             setParseErrors(errors)
 
             if (records.length > 0) {
-              toast.success(
+              SuccessToast(
                 (
                   d?.toasts?.parsed ?? "Parsed {count} records from file"
                 ).replace("{count}", String(records.length))
@@ -342,7 +343,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         const uploadsResult = await getRecentBulkUploads(5)
         setRecentUploads(uploadsResult.uploads)
 
-        toast.success(
+        SuccessToast(
           (d?.toasts?.processed ?? "Processed {count} records").replace(
             "{count}",
             String(result.successful)

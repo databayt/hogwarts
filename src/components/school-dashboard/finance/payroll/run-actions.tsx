@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 
 type Kind = "generate" | "approve" | "reject" | "disburse"
 
@@ -89,7 +90,7 @@ export function PayrollRunActions({
               : kind === "reject"
                 ? labels?.runRejected
                 : labels?.runDisbursed
-        toast.success(msg || "")
+        SuccessToast(msg || "")
         router.refresh()
       } else {
         toast.error(labels?.actionFailed || res.error || "")

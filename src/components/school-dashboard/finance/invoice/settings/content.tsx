@@ -82,7 +82,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
       const url = files[0].cdnUrl || files[0].url
       setLogo(url)
       setShowLogoUploader(false)
-      toast.success(is?.logoUploaded || "Logo uploaded successfully")
+      SuccessToast(is?.logoUploaded || "Logo uploaded successfully")
     }
   }
 
@@ -99,7 +99,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
         image: url,
       }))
       setShowSignatureUploader(false)
-      toast.success(is?.signatureUploaded || "Signature uploaded successfully")
+      SuccessToast(is?.signatureUploaded || "Signature uploaded successfully")
     }
   }
 

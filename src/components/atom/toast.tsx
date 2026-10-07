@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { toast, type ExternalToast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,19 +32,25 @@ const CONFIG = {
 // ============================================
 // Toast Functions
 // ============================================
-export const SuccessToast = (message: string) => {
+type ToastMessage = Parameters<typeof toast>[0]
+
+// Success and delete are the app's two confirmation toasts — every
+// `toast.success` call goes through one of them so they look the same
+// everywhere. `options` passes through to sonner (description, id, action).
+export const SuccessToast = (message: ToastMessage, options?: ExternalToast) =>
   toast(message, {
     duration: CONFIG.duration.success,
     position: CONFIG.position,
+    ...options,
     style: {
       background: "var(--chart-2)",
       color: "white",
       border: "none",
       width: "220px",
       maxWidth: "220px",
+      ...options?.style,
     },
   })
-}
 
 export const ErrorToast = (message: string) => {
   toast.error(message, {
@@ -88,19 +94,23 @@ export const WarningToast = (message: string) => {
   })
 }
 
-export const DeleteToast = (message: string = "Deleted") => {
+export const DeleteToast = (
+  message: ToastMessage = "Deleted",
+  options?: ExternalToast
+) =>
   toast(message, {
     duration: CONFIG.duration.delete,
     position: CONFIG.position,
+    ...options,
     style: {
       background: "var(--destructive)",
       color: "var(--destructive-foreground)",
       border: "none",
       width: "220px",
       maxWidth: "220px",
+      ...options?.style,
     },
   })
-}
 
 // ============================================
 // Confirm Dialog (SSR-Safe Implementation)

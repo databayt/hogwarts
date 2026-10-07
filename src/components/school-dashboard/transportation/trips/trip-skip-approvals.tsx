@@ -11,6 +11,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { reviewTransportSkip } from "../actions/skips"
@@ -38,7 +39,7 @@ export function TripSkipApprovals({ skips, locale, dictionary }: Props) {
     startTransition(async () => {
       const result = await reviewTransportSkip({ id, decision })
       if (result.success) {
-        toast.success(decision === "APPROVED" ? t.approved : t.rejected)
+        SuccessToast(decision === "APPROVED" ? t.approved : t.rejected)
         router.refresh()
       } else {
         toast.error(t.failed)

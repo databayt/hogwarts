@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { regenerateTripPlan } from "../actions/optimize"
@@ -25,7 +26,7 @@ export function RegenerateTripPlanButton({ tripId, dictionary }: Props) {
     startTransition(async () => {
       const result = await regenerateTripPlan(tripId)
       if (result.success) {
-        toast.success(t.optimize.optimized)
+        SuccessToast(t.optimize.optimized)
         router.refresh()
       } else {
         toast.error(t.optimize.failed)

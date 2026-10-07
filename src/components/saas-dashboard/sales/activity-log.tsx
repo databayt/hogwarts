@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -111,7 +112,7 @@ export function LeadActivityLog({
         nextFollowUpAt: followUpDate,
       })
       if (res.success) {
-        toast.success(t.logSuccess)
+        SuccessToast(t.logSuccess)
         setDescription("")
         setNextFollowUp("")
         router.refresh()

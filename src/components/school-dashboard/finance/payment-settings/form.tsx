@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 
@@ -81,7 +82,7 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
   function onSubmit(values: PaymentSettingsFormData) {
     startTransition(async () => {
       const result = await updatePaymentSettings(values)
-      if (result.success) toast.success(t.success.saved())
+      if (result.success) SuccessToast(t.success.saved())
       else toast.error(t.error.saveFailed())
     })
   }

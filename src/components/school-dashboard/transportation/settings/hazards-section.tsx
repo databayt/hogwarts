@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
@@ -76,7 +77,7 @@ export function HazardsSection({ hazards, dictionary }: Props) {
         radiusMeters: radius,
       })
       if (res.success) {
-        toast.success(t.created)
+        SuccessToast(t.created)
         setName("")
         setLoc(null)
         setRadius(200)
@@ -92,7 +93,7 @@ export function HazardsSection({ hazards, dictionary }: Props) {
     startTransition(async () => {
       const res = await deleteRoadHazard(id)
       if (res.success) {
-        toast.success(t.removed)
+        DeleteToast(t.removed)
         router.refresh()
       } else {
         toast.error(t.failed)

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 
 import { deleteWhatsAppTemplate, saveWhatsAppTemplate } from "./actions"
 import type { WhatsAppTemplateDTO } from "./types"
@@ -110,7 +111,7 @@ export function TemplatesList({
       })
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           editingTemplate
             ? d?.toast?.templateUpdated || "Template updated"
             : d?.toast?.templateCreated || "Template created"
@@ -138,7 +139,7 @@ export function TemplatesList({
       startTransition(async () => {
         const result = await deleteWhatsAppTemplate(templateId)
         if (result.success) {
-          toast.success(d?.toast?.templateDeleted || "Template deleted")
+          DeleteToast(d?.toast?.templateDeleted || "Template deleted")
         } else {
           toast.error(
             d?.toast?.templateDeleteFailed || "Failed to delete template"

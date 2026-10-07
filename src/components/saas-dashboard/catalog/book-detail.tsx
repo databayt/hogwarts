@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
@@ -138,7 +139,7 @@ export function BookDetailView({ book, lang, dictionary }: Props) {
           toast.error(d?.failedToUpdate || "Failed to update book")
           return
         }
-        toast.success(d?.bookUpdated || "Book updated")
+        SuccessToast(d?.bookUpdated || "Book updated")
         setIsEditOpen(false)
       } catch {
         toast.error(d?.failedToUpdate || "Failed to update book")
@@ -150,7 +151,7 @@ export function BookDetailView({ book, lang, dictionary }: Props) {
     startTransition(async () => {
       try {
         await deleteBook(book.id)
-        toast.success(d?.bookDeleted || "Book deleted")
+        DeleteToast(d?.bookDeleted || "Book deleted")
         setIsDeleted(true)
       } catch {
         toast.error(d?.failedToDelete || "Failed to delete book")

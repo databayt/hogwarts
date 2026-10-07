@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { SuccessToast } from "@/components/atom/toast"
 
 import {
   connectWhatsApp,
@@ -63,7 +64,7 @@ export function ConnectCard({ session, dictionary }: ConnectCardProps) {
             setStatus(result.data.status)
             if (result.data.status === "connected") {
               setQrCode(null)
-              toast.success(
+              SuccessToast(
                 d?.toast?.connected || "WhatsApp connected successfully"
               )
             }
@@ -99,7 +100,7 @@ export function ConnectCard({ session, dictionary }: ConnectCardProps) {
       if (result.success) {
         setStatus("disconnected")
         setQrCode(null)
-        toast.success(d?.toast?.disconnected || "WhatsApp disconnected")
+        SuccessToast(d?.toast?.disconnected || "WhatsApp disconnected")
       } else {
         toast.error(d?.toast?.disconnectFailed || "Failed to disconnect")
       }
