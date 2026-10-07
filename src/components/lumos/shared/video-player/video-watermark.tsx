@@ -65,7 +65,7 @@ const POSITIONS = [
 
 /**
  * The forensic layer's opacity — MEASURED, not chosen (2026-09-14, harness in
- * `scripts/watermark/`: the real markup over `public/story.mp4`, captured as
+ * `scripts/watermark/`: the real markup over the story clip, captured as
  * stills and as a VP8 screen recording, then `reveal.py`):
  *
  * | alpha | Δ on screen (p95, of 255) | code from the compressed recording |

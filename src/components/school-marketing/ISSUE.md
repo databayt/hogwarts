@@ -373,6 +373,9 @@ Open, deliberately deferred:
       four files copied into `public/` (`images/hero/hero-poster.webp`,
       `videos/hero-3d.mp4`, `images/parents/img_1087.png`,
       `lottie/institutes.json`). A CDN change breaks the page.
+      (2026-10-07: the hero video moved to our own CDN at
+      `balqalam/media/hero/`, colour-tagged BT.709, via
+      `components/docs/media-manifest.json`; the poster stays in `public/images/`.)
 - [ ] **lottie-web logs 4 `<rect> transform: matrix(NaN…)` console errors** from
       `institutes.json`. The animation renders correctly; inherited from the
       source asset, not introduced here.

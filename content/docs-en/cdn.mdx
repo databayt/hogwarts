@@ -95,9 +95,16 @@ Feature illustrations are used by `feature-tabs.tsx` and `dream-section.tsx`.
 
 ## media/ (1)
 
-| Key         | Used by                    |
-| ----------- | -------------------------- |
-| `story.mp4` | story section, story video |
+| Key         | Used by                                          |
+| ----------- | ------------------------------------------------ |
+| `story.mp4` | lumos lesson-player fallback (`media/story.mp4`) |
+
+The marketing story section and the docs story video no longer read this
+object: since 2026-10-07 they play AV1 + H.264 encodes (4.6 MB / 5.7 MB, from
+20.5 MB) at `balqalam/media/story/`, listed with their codecs and poster in
+`src/components/docs/media-manifest.json`. The school homepage hero loop lives
+at `balqalam/media/hero/` the same way. Keys there carry a content hash, so a
+re-encode is a new URL and `immutable` never goes stale.
 
 ## Pre-existing CDN systems (do not touch)
 

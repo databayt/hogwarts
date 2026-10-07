@@ -4,18 +4,25 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Volume2, VolumeX } from "lucide-react"
 
-import { asset } from "@/lib/asset-url"
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
+import type { VideoMedia } from "@/components/docs/media"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface StorySectionProps {
+  /** The `story` entry of media-manifest.json, read by the server parent so
+   * the manifest stays out of this client bundle. */
+  video: VideoMedia
   dictionary?: Dictionary
   lang?: Locale
 }
 
-export default function StorySection({ dictionary, lang }: StorySectionProps) {
+export default function StorySection({
+  video,
+  dictionary,
+  lang,
+}: StorySectionProps) {
   const isRTL = lang === "ar"
   const {
     containerRef,
@@ -62,9 +69,12 @@ export default function StorySection({ dictionary, lang }: StorySectionProps) {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster={video.poster}
           >
-            <source src={asset("/media/story.mp4")} type="video/mp4" />
+            {video.sources.map((source) => (
+              <source key={source.src} src={source.src} type={source.type} />
+            ))}
             Your browser does not support the video tag.
           </video>
 

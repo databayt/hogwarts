@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getVideo } from "@/components/docs/media"
 import type { Locale } from "@/components/internationalization/config"
 // import { Gallery } from "@/components/landing/gallery";
 import type { getDictionary } from "@/components/internationalization/dictionaries"
@@ -34,7 +35,11 @@ export default function HomeContent(props: Props) {
       dir={isRTL ? "rtl" : "ltr"}
     >
       <Hero dictionary={dictionary} lang={lang} />
-      <StorySection dictionary={dictionary} lang={lang} />
+      <StorySection
+        video={getVideo("story")}
+        dictionary={dictionary}
+        lang={lang}
+      />
       <MissionCards dictionary={dictionary} lang={lang} />
       {/* <Gallery />
       <Stack />

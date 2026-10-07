@@ -12,6 +12,7 @@
 
 import Link from "next/link"
 
+import { getVideo } from "@/components/docs/media"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 // The intro animation is driven by GSAP in <HeroIntro/> (rendered on the home
@@ -25,6 +26,10 @@ export function Hero({
   lang?: string
   dictionary?: Dictionary
 }) {
+  // Served from the CDN (immutable, content-hashed) rather than public/. It is
+  // the above-the-fold autoplay, so it keeps preload="auto"; the poster stays a
+  // same-origin public/images file (edge-cached) since it is the first paint.
+  const heroVideo = getVideo("hero-3d")
   const applyLabel =
     dictionary?.marketing?.site?.home?.hero?.applyLabel ?? "Application"
 
@@ -90,13 +95,19 @@ export function Hero({
                     muted
                     playsInline
                     preload="auto"
-                    poster="/images/hero/hero-poster.webp"
+                    poster={heroVideo.poster}
                     style={{
-                      backgroundImage: 'url("/images/hero/hero-poster.webp")',
+                      backgroundImage: `url("${heroVideo.poster}")`,
                     }}
                     data-object-fit="cover"
                   >
-                    <source src="/videos/hero-3d.mp4" type="video/mp4" />
+                    {heroVideo.sources.map((source) => (
+                      <source
+                        key={source.src}
+                        src={source.src}
+                        type={source.type}
+                      />
+                    ))}
                   </video>
                 </div>
               </div>

@@ -261,13 +261,12 @@ export function useVideoScrollControl(
     cancelVolumeAnimation,
   ])
 
-  // Set video quality hints on mount
+  // Set playback hints on mount. `preload` is deliberately NOT forced here:
+  // each <video> declares its own (metadata / none) so an off-screen clip
+  // does not download in full; forcing "auto" overrode that on hydration.
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-
-    // Hint for higher quality playback
-    video.preload = "auto"
 
     // Request picture-in-picture if available for better rendering
     if ("playsInline" in video) {

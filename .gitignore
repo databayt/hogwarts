@@ -112,3 +112,6 @@ public/fonts/thmanyah/.manifest-version
 /performance/reports/**/*.log
 # raw per-run browser data (~1 MB a run); summary.json carries the medians
 /performance/reports/**/browser-*.json
+
+# Local screenshot captures (/shoot) — not served assets
+public/screenshot/

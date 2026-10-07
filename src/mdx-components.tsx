@@ -3,6 +3,7 @@
 
 // @ts-nocheck
 import type { ComponentProps } from "react"
+import Image, { type StaticImageData } from "next/image"
 
 import { cn } from "@/lib/utils"
 import {
@@ -92,12 +93,15 @@ import { CardGrid, DocCard } from "@/components/docs/doc-card"
 import { ListingStructure } from "@/components/docs/listing-structure"
 import { LiveStructure } from "@/components/docs/live-structure"
 import { LumosStructure } from "@/components/docs/lumos-structure"
+import { getVideo } from "@/components/docs/media"
 import { Mermaid } from "@/components/docs/mermaid"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
+import { Shot } from "@/components/docs/shot"
 import { StoryVideo } from "@/components/docs/story-video"
 import { Structure } from "@/components/docs/structure"
 import { TimetableStructure } from "@/components/docs/timetable-structure"
 import { TranslationStructure } from "@/components/docs/translation-structure"
+import { TutorialVideo } from "@/components/docs/tutorial-video"
 
 // This file is required to use MDX in `app` directory.
 
@@ -200,14 +204,53 @@ const mdxComponents = {
       {...props}
     />
   ),
+  // Markdown images arrive from fumadocs remarkImage already measured: a
+  // public/ or relative file as a static import (size inside `src`), a remote
+  // URL with width/height strings. Measured images go through next/image so
+  // they get a srcset and a reserved box; remote ones skip the optimiser,
+  // which answers 400 for any host missing from images.remotePatterns.
+  // Anything unmeasured stays a lazy <img>.
   img: ({
     className,
     alt,
+    src,
+    width,
+    height,
     ...props
-  }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={cn("rounded-md", className)} alt={alt} {...props} />
-  ),
+  }: Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> & {
+    src?: string | StaticImageData
+  }) => {
+    const imported = typeof src === "object" && src !== null
+    const w = Number(width)
+    const h = Number(height)
+    if (imported || (w > 0 && h > 0)) {
+      return (
+        <Image
+          src={src}
+          width={imported ? undefined : w}
+          height={imported ? undefined : h}
+          alt={alt ?? ""}
+          sizes="(min-width: 1024px) 896px, 100vw"
+          unoptimized={typeof src === "string" && /^(https?:)?\/\//.test(src)}
+          className={cn("rounded-md", className)}
+          {...props}
+        />
+      )
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className={cn("rounded-md", className)}
+        alt={alt}
+        src={src}
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+        {...props}
+      />
+    )
+  },
   hr: ({ ...props }) => <hr className="my-4 md:my-8" {...props} />,
   table: ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
     <div className="no-scrollbar my-6 w-full overflow-y-auto rounded-lg border">
@@ -431,7 +474,11 @@ const mdxComponents = {
   LabeledTextarea,
   CardForm,
   ButtonGroup,
-  StoryVideo,
+  // CDN media from components/docs/media-manifest.json. StoryVideo is a client
+  // component, so its entry is read here and handed over as a prop.
+  StoryVideo: () => <StoryVideo video={getVideo("story")} />,
+  TutorialVideo,
+  Shot,
   // Flow diagram components
   AuthFlowDiagram,
   PlatformLinkFlow,

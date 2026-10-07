@@ -1,0 +1,36 @@
+{
+  "story": {
+    "kind": "video",
+    "title": { "ar": "قصتنا", "en": "Our story" },
+    "poster": "https://cdn.databayt.org/balqalam/media/story/poster.5038a244.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 94.02,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/story/story.av1.b31ce14c.mp4",
+        "type": "video/mp4; codecs=\"av01.0.09M.10, mp4a.40.2\""
+      },
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/story/story.h264.721b10fc.mp4",
+        "type": "video/mp4; codecs=\"avc1.64002A, mp4a.40.2\""
+      }
+    ],
+    "tracks": []
+  },
+  "hero-3d": {
+    "kind": "video",
+    "title": { "ar": "حركة واجهة المدرسة", "en": "School homepage hero loop" },
+    "poster": "/images/hero/hero-poster.webp",
+    "width": 960,
+    "height": 720,
+    "duration": 8.37,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/hero/hero-3d.a5a7c1a1.mp4",
+        "type": "video/mp4; codecs=\"avc1.4D401F\""
+      }
+    ],
+    "tracks": []
+  }
+}

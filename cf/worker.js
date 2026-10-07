@@ -38,6 +38,7 @@ const EDGE_CACHEABLE = [
   /^\/_next\/image$/, // the image optimiser's output — 30 days, must-revalidate
   /^\/fonts\//, // self-hosted woff2 — immutable (next.config headers)
   /^\/(icon-\d+|apple-touch-icon)\.png$/, // PWA icons — a day (next.config headers)
+  /^\/images\//, // public/images — a day, then a week stale (next.config headers)
   /^\/favicon\.ico$/,
 ]
 

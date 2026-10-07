@@ -94,7 +94,6 @@ const nextConfig: NextConfig = {
       // Large static assets (served from CDN/S3, not serverless functions)
       "./public/anthropic/**",
       "./public/site/**",
-      "./public/story.mp4",
       "./public/courses/**",
       "./public/lumos/**",
       "./public/animations/**",
@@ -163,6 +162,20 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
       },
       {
+        // public/images: un-hashed names that do get replaced in place (the
+        // school-homepage hero poster, about/ and how-it-works/ art), so not
+        // immutable. A day fresh lets the Worker keep them at the edge
+        // (cf/worker.js EDGE_CACHEABLE); a week stale-while-revalidate means a
+        // browser holding an expired copy still paints it at once.
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
         // Lottie is NOT immutable — these filenames get replaced in place, the
         // way the modern-* tiles were on 2026-08-31. A week with revalidation
         // in the background, so a swap is picked up rather than pinned for a
@@ -181,7 +194,10 @@ const nextConfig: NextConfig = {
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ["image/webp", "image/avif"],
+    // AVIF first, as the docs prescribe. Note the order was never what picked
+    // the format: Next negotiates through @hapi/accept, which breaks equal-q
+    // ties alphabetically, so any browser listing both already got AVIF.
+    formats: ["image/avif", "image/webp"],
     qualities: [25, 50, 75, 100],
     minimumCacheTTL: 2592000, // 30 days — catalog images rarely change
     dangerouslyAllowSVG: true,

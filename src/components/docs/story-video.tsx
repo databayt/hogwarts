@@ -2,10 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { asset } from "@/lib/asset-url"
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 
-export function StoryVideo() {
+import type { VideoMedia } from "./media"
+
+// `video` is the manifest entry, read server-side in mdx-components.tsx so the
+// manifest itself stays out of this client bundle.
+export function StoryVideo({ video }: { video: VideoMedia }) {
   const { containerRef, videoRef } = useVideoScrollControl({
     playThreshold: 0.3,
     targetVolume: 0, // Keep muted for docs
@@ -24,8 +27,12 @@ export function StoryVideo() {
         loop
         muted
         playsInline
+        preload="none"
+        poster={video.poster}
       >
-        <source src={asset("/media/story.mp4")} type="video/mp4" />
+        {video.sources.map((source) => (
+          <source key={source.src} src={source.src} type={source.type} />
+        ))}
         Your browser does not support the video tag.
       </video>
 
