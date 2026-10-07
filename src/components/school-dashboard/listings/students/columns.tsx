@@ -170,7 +170,15 @@ export const getStudentColumns = (
                 </Link>
               </div>
               <span className="text-muted-foreground max-w-[180px] truncate text-xs">
-                {student.phone || t.noPhone}
+                {/* bdi, not dir on the span: the line stays start-aligned under
+                    the name while "+249…" keeps its plus in front in Arabic. */}
+                {student.phone ? (
+                  <bdi dir="ltr" className="tabular-nums">
+                    {student.phone}
+                  </bdi>
+                ) : (
+                  t.noPhone
+                )}
               </span>
             </div>
           </div>
@@ -301,6 +309,15 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.phone} />
       ),
+      cell: ({ getValue }) => {
+        const phone = getValue<string | null>()
+        if (!phone) return <span className="text-muted-foreground">-</span>
+        return (
+          <span className="text-sm tabular-nums" dir="ltr">
+            {phone}
+          </span>
+        )
+      },
       meta: { label: t.phone, variant: "text" },
       // Sorts on mobileNumber (see buildStudentOrderBy in list-params.ts) —
       // the displayed value falls back to alternatePhone, so a row showing an

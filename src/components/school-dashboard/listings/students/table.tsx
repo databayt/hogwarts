@@ -17,8 +17,9 @@ import { cn } from "@/lib/utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { SeeMore } from "@/components/atom/see-more"
 import { ErrorToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
@@ -27,9 +28,11 @@ import { canPerformAdmissionAction } from "@/components/school-dashboard/admissi
 import { PlacementDialogHost } from "@/components/school-dashboard/admission/placement-dialog-host"
 import { openPlacementDialog } from "@/components/school-dashboard/admission/placement-store"
 import {
-  GridCard,
-  GridContainer,
   GridEmptyState,
+  ItemCard,
+  ItemGrid,
+  ItemGridMore,
+  ListingViews,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
 import { useDraftLauncher } from "@/components/form/wizard"
@@ -110,7 +113,12 @@ function StudentsTableInner({
   }
 
   // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  // Phones open on the cards: the table's columns run off a 393px screen
+  // (only the name fits), while a card carries photo, name, grade and status.
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   // Search state (debounced)
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
@@ -334,13 +342,6 @@ function StudentsTableInner({
   )
 
   // Handle view
-  const handleView = useCallback(
-    (student: StudentRow) => {
-      router.push(`/${lang}/profile/${student.userId || student.id}`)
-    },
-    [router, lang]
-  )
-
   // Get status badge
   const getStatusBadge = (status: string) => {
     return status === "active"
@@ -387,6 +388,7 @@ function StudentsTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -433,69 +435,100 @@ function StudentsTableInner({
         }
       />
 
-      {view === "table" ? (
-        <DataTable
-          table={table}
-          paginationMode="load-more"
-          hasMore={hasMore}
-          isLoading={isLoading}
-          onLoadMore={loadMore}
-          translations={{
-            loadMore: t.loadMore,
-            loading: t.loading,
-            noResults: t.noResults,
-          }}
-        />
-      ) : (
-        <>
-          {data.length === 0 ? (
-            <GridEmptyState
-              title={t.allStudents}
-              description={t.addNewStudent}
-              icon={
-                <Image
-                  src={asset("/icons/users.svg")}
-                  alt=""
-                  width={48}
-                  height={48}
-                />
-              }
-            />
-          ) : (
-            <GridContainer columns={4} className="mt-4">
-              {data.map((student) => {
-                const initials = student.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                return (
-                  <GridCard
-                    key={student.id}
-                    avatar={{ fallback: initials }}
-                    title={student.name}
-                    description={student.classroom || undefined}
-                    subtitle={
-                      student.status === "active" ? t.active : t.inactive
-                    }
-                    onClick={() => handleView(student)}
-                  />
-                )
-              })}
-            </GridContainer>
-          )}
-
-          {/* Load more for grid view */}
-          <SeeMore
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
             hasMore={hasMore}
             isLoading={isLoading}
-            onClick={loadMore}
-            label={dictionary?.loadMore || "Load More"}
-            className="mt-4"
+            onLoadMore={loadMore}
+            translations={{
+              loadMore: t.loadMore,
+              loading: t.loading,
+              noResults: t.noResults,
+            }}
           />
-        </>
-      )}
+        }
+        grid={
+          <>
+            {data.length === 0 ? (
+              <GridEmptyState
+                title={t.allStudents}
+                description={t.addNewStudent}
+                icon={
+                  <Image
+                    src={asset("/icons/users.svg")}
+                    alt=""
+                    width={48}
+                    height={48}
+                  />
+                }
+              />
+            ) : (
+              <ItemGrid className="mt-2">
+                {data.map((student) => {
+                  const status = getStatusBadge(student.status)
+                  const initials = student.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                  return (
+                    <ItemCard
+                      key={student.id}
+                      href={`/${lang}/profile/${student.userId || student.id}`}
+                      art={
+                        <Avatar className="size-11">
+                          {student.profilePhotoUrl ? (
+                            <AvatarImage
+                              src={student.profilePhotoUrl}
+                              alt={student.name}
+                            />
+                          ) : null}
+                          <AvatarFallback className="bg-background text-xs">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      }
+                      title={student.name}
+                      badges={
+                        // On a grey card a quiet chip sits on the page's own white.
+                        <Badge
+                          variant={status.variant}
+                          className={
+                            status.variant === "outline"
+                              ? "bg-background"
+                              : undefined
+                          }
+                        >
+                          {status.label}
+                        </Badge>
+                      }
+                      meta={
+                        [student.gradeName, student.classroom]
+                          .filter(Boolean)
+                          .join(" · ") || undefined
+                      }
+                    />
+                  )
+                })}
+              </ItemGrid>
+            )}
+
+            {hasMore ? (
+              <ItemGridMore
+                onClick={loadMore}
+                loading={isLoading}
+                label={t.loadMore}
+                loadingLabel={t.loading}
+              />
+            ) : null}
+          </>
+        }
+      />
 
       <AccessCodeDialog />
 
