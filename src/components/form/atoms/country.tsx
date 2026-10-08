@@ -13,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { BaseFieldProps } from "../types"
 
@@ -41,6 +42,12 @@ export function CountryField({
   locale,
 }: CountryFieldProps) {
   const form = useFormContext()
+  // None of the three call sites passed a locale, so /ar listed, searched and
+  // showed English names ("سود" found nothing, "No country found." in English).
+  // The route's language is the default; an explicit prop still wins.
+  const { locale: routeLocale } = useLocale()
+  const lang = locale ?? routeLocale
+  const ar = lang === "ar"
 
   return (
     <FormField
@@ -58,10 +65,14 @@ export function CountryField({
             value={field.value}
             onChange={(isoCode) => field.onChange(isoCode)}
             placeholder={placeholder}
-            searchPlaceholder={searchPlaceholder}
-            emptyMessage={emptyMessage}
+            searchPlaceholder={
+              searchPlaceholder ?? (ar ? "ابحث عن دولة..." : "Search country...")
+            }
+            emptyMessage={
+              emptyMessage ?? (ar ? "لم يتم العثور على دولة." : "No country found.")
+            }
             disabled={disabled}
-            locale={locale}
+            locale={lang}
           />
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />

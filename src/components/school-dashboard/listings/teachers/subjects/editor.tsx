@@ -314,9 +314,12 @@ export const TeacherSubjectsEditor = forwardRef<
         })}
       </div>
 
-      {/* Subjects — one swipeable row of cards */}
+      {/* Subjects — one swipeable row of cards. contain:inline-size keeps the
+          row from reporting every card's width as its minimum: as a FormLayout
+          column (a shrink-0 flex item) that forced the column wider than its
+          48% and out past the page gutter. Now the row scrolls inside it. */}
       {grade && (
-        <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1">
+        <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [contain:inline-size]">
           {grade.subjects.map((sub) => {
             const keys = grade.sections.map((s) =>
               key(s.sectionId, sub.subjectId)

@@ -216,8 +216,10 @@ function TeachersTableInner({
   )
 
   // Handle create via wizard — opens at once; the draft INSERT runs behind it.
+  // Opens on the wizard's FIRST step (TEACHER_WIZARD_CONFIG: attachments), as
+  // students do — a link to /information skipped the photo and documents.
   const { launch: handleCreate } = useDraftLauncher({
-    firstStepHref: (id) => `/${lang}/teachers/add/${id}/information`,
+    firstStepHref: (id) => `/${lang}/teachers/add/${id}/attachments`,
     create: createDraftTeacher,
     seed: (id) => emptyTeacherDraft(id, nameFormat),
     disabled: !permissions.showAddButton,
