@@ -3706,7 +3706,9 @@
         "showAll": "Show all subjects",
         "counter": "{subjects} subjects · {sections} sections · {load}/{cap} periods",
         "freeSections": "{count} free"
-      }
+      },
+      "subjectsNotAssigned": "No subjects yet",
+      "sectionsCount": "{count} sections"
     },
     "classes": {
       "title": "Classrooms",

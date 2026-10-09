@@ -86,5 +86,11 @@ and a light counter:
 on a card marks the subject *name* across every grade (`subjects/families.ts`) and saves
 one `TeacherSubjectExpertise` row per grade's subject (`saveTeacherSubjects` →
 `specialtyIds`). Catalog `concept` is not used — it lumps Arabic with French and Islamic
-with Christian studies. A subject the teacher teaches stays a specialty. The list's
-Subjects column, the profile and the detail page count/show specialties by family.
+with Christian studies. A subject the teacher teaches stays a specialty. The profile and
+the detail page count/show specialties by family.
+
+**Subjects column** (list + mobile card): the subjects the teacher teaches in the active
+term, one chip per subject name (most sections first, two shown then `+N`), the full list
+and section count in the tooltip; "No subjects yet" when unassigned. Built by
+`subjects/taught.ts` from `SubjectTeacher` for both the first render (`content.tsx`) and
+search/load-more (`getTeachers`).

@@ -32,8 +32,10 @@ export type TeacherRow = {
   phone: string | null
   department: string | null
   departmentId: string | null
-  subjectCount: number
-  classCount: number
+  /** Subjects taught this term, one per family, most sections first. */
+  subjects: string[]
+  /** Sections they teach in this term. */
+  sectionCount: number
   employmentStatus: string
   employmentType: string
   hasAccount: boolean
@@ -74,6 +76,12 @@ export const getTeacherColumns = (
     department: dictionary?.department || "Department",
     subjects: dictionary?.subjects || "Subjects",
     classes: dictionary?.classes || "Classes",
+    notAssigned:
+      (dictionary as { subjectsNotAssigned?: string } | undefined)
+        ?.subjectsNotAssigned || "No subjects yet",
+    sectionsCount:
+      (dictionary as { sectionsCount?: string } | undefined)?.sectionsCount ||
+      "{count} sections",
     status: dictionary?.status || "Status",
     account: dictionary?.account || "Account",
     joined: dictionary?.joined || "Joined",
@@ -212,17 +220,43 @@ export const getTeacherColumns = (
       meta: { label: t.phone, variant: "text" },
     },
 
-    // Subjects & Classes Count
+    // Subjects taught this term — names, not a count
     {
       id: "workload",
       header: () => <span>{t.subjects}</span>,
       cell: ({ row }) => {
-        const { subjectCount, classCount } = row.original
+        const { subjects, sectionCount } = row.original
+        if (subjects.length === 0) {
+          return (
+            <span className="text-muted-foreground text-xs">
+              {t.notAssigned}
+            </span>
+          )
+        }
+        const shown = subjects.slice(0, 2)
+        const more = subjects.length - shown.length
         return (
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">{subjectCount}</span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-sm font-medium">{classCount}</span>
+          <div
+            className="flex max-w-56 items-center gap-1"
+            title={`${subjects.join(" · ")} — ${t.sectionsCount.replace(
+              "{count}",
+              String(sectionCount)
+            )}`}
+          >
+            {shown.map((name) => (
+              <Badge
+                key={name}
+                variant="secondary"
+                className="max-w-28 truncate font-normal"
+              >
+                {name}
+              </Badge>
+            ))}
+            {more > 0 && (
+              <span className="text-muted-foreground text-xs tabular-nums">
+                +{more}
+              </span>
+            )}
           </div>
         )
       },

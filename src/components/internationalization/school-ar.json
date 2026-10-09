@@ -3706,7 +3706,9 @@
         "showAll": "عرض كل المواد",
         "counter": "{subjects} مواد · {sections} شُعب · {load}/{cap} حصة",
         "freeSections": "{count} متاحة"
-      }
+      },
+      "subjectsNotAssigned": "لا مواد بعد",
+      "sectionsCount": "{count} شُعب"
     },
     "classes": {
       "title": "الفصول الدراسية",

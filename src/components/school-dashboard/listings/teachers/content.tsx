@@ -8,6 +8,7 @@ import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { schoolNameFormat } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type TeacherRow } from "@/components/school-dashboard/listings/teachers/columns"
@@ -19,7 +20,7 @@ import { getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
 import { hideEmptyTeacherDrafts } from "../empty-drafts"
-import { specialtyFamilies } from "./subjects/families"
+import { getTaughtSubjects } from "./subjects/taught"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -77,6 +78,9 @@ export default async function TeachersContent({
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
 
+    // The Subjects column shows what each teacher teaches THIS term.
+    const { term } = await resolveActiveTerm(schoolId)
+
     // Fetch teachers with related data for practical display
     const [rows, count] = await Promise.all([
       teacherModel.findMany({
@@ -105,14 +109,10 @@ export default async function TeachersContent({
               },
             },
           },
-          // Specialties, counted by subject family (subjects/families.ts)
-          subjectExpertise: {
-            select: { subjectId: true, subject: { select: { name: true } } },
-          },
-          // Sections they're assigned a subject in
+          // What they teach this term (subjects/taught.ts)
           subjectTeachers: {
-            where: { schoolId },
-            select: { sectionId: true },
+            where: { schoolId, termId: term?.id ?? "" },
+            select: { sectionId: true, subject: { select: { name: true } } },
           },
           // User account status
           user: {
@@ -131,9 +131,10 @@ export default async function TeachersContent({
     const departments = (rows as any[])
       .map((t: any) => t.teacherDepartments?.[0]?.department)
       .filter(Boolean)
-    const [nameTranslations, localizedDepartments] = await Promise.all([
+    const [nameTranslations, localizedDepartments, taught] = await Promise.all([
       getNames(rows as any[], (t: any) => t, lang, schoolId!),
       localize("Department", departments, { schoolId, lang }),
+      getTaughtSubjects(rows as any[], lang, schoolId!),
     ])
     const departmentNameById = new Map(
       localizedDepartments.map((d: any) => [d.id, d.departmentName])
@@ -160,10 +161,8 @@ export default async function TeachersContent({
             primaryDept.departmentName)
           : null,
         departmentId: primaryDept?.id || null,
-        subjectCount: specialtyFamilies(t.subjectExpertise).length,
-        classCount: new Set(
-          (t.subjectTeachers ?? []).map((a: any) => a.sectionId)
-        ).size,
+        subjects: taught.get(t.id)?.subjects ?? [],
+        sectionCount: taught.get(t.id)?.sectionCount ?? 0,
         employmentStatus: t.employmentStatus || "ACTIVE",
         employmentType: t.employmentType || "FULL_TIME",
         hasAccount: !!t.userId,

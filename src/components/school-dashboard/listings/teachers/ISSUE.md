@@ -28,7 +28,8 @@
 - [x] Filter row ★ Specialty / All subjects × All grades / G1…G12; smaller cards; light counter (subjects · sections · load/cap)
 - [x] List Subjects column, profile and detail count specialties by family, not per-grade rows
 - [ ] Not browser-verified yet (port 3000 was held by another app)
-- Open: the Subjects column header still reads only "Subjects" while its second number is sections
+- [x] Subjects column: the "3/4" ratio (specialty count / section count) is gone. It shows the subjects the teacher teaches THIS term as chips (two, then +N; all names + section count in the tooltip), or "No subjects yet" (`subjects/taught.ts`). The mobile card subtitle lists the same names
+- [x] Search / load-more rows (`getTeachers`) carry the same data — they used to have no counts at all and read 0/0
 
 ## Fixed 2026-10-03 (wizard, f29c39a22)
 

@@ -78,6 +78,7 @@ import { getModelOrThrow } from "@/lib/prisma-guards"
 import { refreshPage } from "@/lib/refresh-page"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import { arrayToCSV } from "@/components/file"
 import {
   getTeachersSchema,
@@ -91,6 +92,7 @@ import { search } from "@/components/translation/search"
 import { fullName } from "@/components/translation/util"
 
 import { assertTeacherPermission, getAuthContext } from "./authorization"
+import { getTaughtSubjects } from "./subjects/taught"
 
 // ============================================================================
 // Types
@@ -631,6 +633,8 @@ export async function getTeachers(
       name: string
       emailAddress: string
       status: string
+      subjects: string[]
+      sectionCount: number
       createdAt: string
     }>
     total: number
@@ -706,19 +710,30 @@ export async function getTeachers(
         : [{ createdAt: "desc" }]
 
     // Execute queries in parallel
+    const { term } = await resolveActiveTerm(schoolId)
     const [rows, count] = await Promise.all([
-      teacherModel.findMany({ where, orderBy, skip, take }),
+      teacherModel.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        // Same Subjects column as the first render (content.tsx).
+        include: {
+          subjectTeachers: {
+            where: { schoolId, termId: term?.id ?? "" },
+            select: { sectionId: true, subject: { select: { name: true } } },
+          },
+        },
+      }),
       teacherModel.count({ where }),
     ])
 
     // Translate teacher names via the canonical helper (script-detected + dedup +
     // transliterate fallback) — must match the initial render in content.tsx.
-    const nameTranslations = await getNames(
-      rows as Array<any>,
-      (t) => t,
-      displayLang,
-      schoolId
-    )
+    const [nameTranslations, taught] = await Promise.all([
+      getNames(rows as Array<any>, (t) => t, displayLang, schoolId),
+      getTaughtSubjects(rows as Array<any>, displayLang, schoolId),
+    ])
     const mapped = (rows as Array<any>).map((t) => {
       const rawName = fullName(t)
       return {
@@ -728,6 +743,8 @@ export async function getTeachers(
         lang: t.lang || "ar",
         emailAddress: t.emailAddress || "-",
         status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
+        subjects: taught.get(t.id)?.subjects ?? [],
+        sectionCount: taught.get(t.id)?.sectionCount ?? 0,
         createdAt: (t.createdAt as Date).toISOString(),
       }
     })

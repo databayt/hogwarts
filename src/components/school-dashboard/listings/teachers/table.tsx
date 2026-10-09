@@ -89,6 +89,9 @@ function TeachersTableInner({
     department: dictionary?.department || "Department",
     subjects: dictionary?.subjects || "Subjects",
     classes: dictionary?.classes || "Classes",
+    notAssigned:
+      (dictionary as { subjectsNotAssigned?: string } | undefined)
+        ?.subjectsNotAssigned || "No subjects yet",
     status: dictionary?.status || "Status",
     created: dictionary?.created || "Created",
     actions: dictionary?.actions || "Actions",
@@ -157,8 +160,8 @@ function TeachersTableInner({
         phone: r.phone || null,
         department: r.department || null,
         departmentId: r.departmentId || null,
-        subjectCount: r.subjectCount || 0,
-        classCount: r.classCount || 0,
+        subjects: r.subjects ?? [],
+        sectionCount: r.sectionCount ?? 0,
         employmentStatus: r.employmentStatus || "ACTIVE",
         employmentType: r.employmentType || "FULL_TIME",
         hasAccount: r.hasAccount ?? !!r.userId,
@@ -436,7 +439,11 @@ function TeachersTableInner({
                     }}
                     title={teacher.name}
                     description={teacher.department || t.noDepartment}
-                    subtitle={`${teacher.subjectCount} ${t.subjects} • ${teacher.classCount} ${t.classes}`}
+                    subtitle={
+                      teacher.subjects.length > 0
+                        ? teacher.subjects.join(" · ")
+                        : t.notAssigned
+                    }
                     onClick={() =>
                       router.push(
                         `/${lang}/profile/${teacher.userId || teacher.id}`

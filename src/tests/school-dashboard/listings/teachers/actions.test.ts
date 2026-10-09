@@ -51,6 +51,9 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
+vi.mock("@/lib/term-resolver", () => ({
+  resolveActiveTerm: vi.fn().mockResolvedValue({ term: { id: "term-1" } }),
+}))
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
@@ -76,6 +79,7 @@ vi.mock("@/components/translation/search", () => ({
 
 vi.mock("@/components/translation/person", () => ({
   getNames: vi.fn().mockResolvedValue(new Map()),
+  getLabels: vi.fn().mockResolvedValue(new Map()),
 }))
 
 vi.mock("@/lib/spotlight-cache", () => ({
