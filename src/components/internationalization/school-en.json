@@ -3695,7 +3695,17 @@
           "Thu",
           "Fri",
           "Sat"
-        ]
+        ],
+        "specialty": "Specialty",
+        "allSubjects": "All subjects",
+        "allGrades": "All grades",
+        "markSpecialty": "Mark as specialty",
+        "unmarkSpecialty": "Remove specialty",
+        "specialtyLocked": "Teaches this subject — it stays a specialty",
+        "noSpecialty": "No specialty yet. Open All subjects and star what this teacher can teach.",
+        "showAll": "Show all subjects",
+        "counter": "{subjects} subjects · {sections} sections · {load}/{cap} periods",
+        "freeSections": "{count} free"
       }
     },
     "classes": {
@@ -4874,7 +4884,11 @@
         "suggest": "Suggest",
         "saveSlot": "Save slot",
         "applyToAll": "All periods of this subject in this section",
-        "applyToAllHint": "The teacher takes the subject here; periods move if needed."
+        "applyToAllHint": "The teacher takes the subject here; periods move if needed.",
+        "specialists": "Specialists",
+        "otherTeachers": "Other teachers",
+        "busyNow": "Busy",
+        "loadOf": "{load}/{cap}"
       },
       "analyticsReports": {
         "totalSlots": "Total Slots",

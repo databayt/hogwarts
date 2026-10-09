@@ -24,6 +24,11 @@ export const saveTeacherSubjectsSchema = z.object({
   teacherId: id,
   /** The teacher's full set of subject-in-section pairs after the edit. */
   pairs: z.array(z.object({ subjectId: id, sectionId: id })).max(500),
+  /**
+   * The teacher's specialties (catalog subject ids) after the edit. Omitted =
+   * leave them alone. Subjects the teacher is assigned stay specialties.
+   */
+  specialtyIds: z.array(id).max(1000).optional(),
   overrideCap: z.boolean().optional(),
 })
 export type SaveTeacherSubjectsInput = z.infer<typeof saveTeacherSubjectsSchema>

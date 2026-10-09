@@ -2,7 +2,7 @@
 
 **Status:** 🟢 READY
 **Completion:** 85%
-**Last Updated:** 2026-10-03
+**Last Updated:** 2026-10-09
 
 ---
 
@@ -21,6 +21,14 @@
 - [x] Row actions (View, Edit, Delete)
 - [x] RBAC authorization checks
 - [ ] Loading skeletons and empty states
+
+## 2026-10-09 — assign-subjects dialog: specialties + smarter cards (LOCAL)
+
+- [x] Specialty is explicit: a ★ per card marks the subject family (same name, every grade) and saves with the assignments; before, expertise only appeared as a side effect of assigning and covered one grade's subject
+- [x] Filter row ★ Specialty / All subjects × All grades / G1…G12; smaller cards; light counter (subjects · sections · load/cap)
+- [x] List Subjects column, profile and detail count specialties by family, not per-grade rows
+- [ ] Not browser-verified yet (port 3000 was held by another app)
+- Open: the Subjects column header still reads only "Subjects" while its second number is sections
 
 ## Fixed 2026-10-03 (wizard, f29c39a22)
 

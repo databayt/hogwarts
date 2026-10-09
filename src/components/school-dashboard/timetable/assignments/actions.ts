@@ -240,6 +240,44 @@ async function projectLoad(
   return { load, cap, periodsOf }
 }
 
+/**
+ * Makes the teacher's specialties (TeacherSubjectExpertise) exactly
+ * `specialtyIds` plus every subject they are assigned in `pairs` — teaching a
+ * subject implies being qualified for it (apply.ts records that too). Ids are
+ * validated by the caller. Returns whether anything changed.
+ */
+async function syncSpecialties(
+  ctx: Ctx,
+  teacherId: string,
+  specialtyIds: string[],
+  pairs: Array<{ subjectId: string }>
+): Promise<boolean> {
+  const wanted = new Set([...specialtyIds, ...pairs.map((p) => p.subjectId)])
+  const current = await db.teacherSubjectExpertise.findMany({
+    where: { schoolId: ctx.schoolId, teacherId },
+    select: { subjectId: true },
+  })
+  const have = new Set(current.map((c) => c.subjectId))
+  const drop = [...have].filter((id) => !wanted.has(id))
+  const add = [...wanted].filter((id) => !have.has(id))
+  if (drop.length === 0 && add.length === 0) return false
+  await db.$transaction([
+    db.teacherSubjectExpertise.deleteMany({
+      where: { schoolId: ctx.schoolId, teacherId, subjectId: { in: drop } },
+    }),
+    db.teacherSubjectExpertise.createMany({
+      data: add.map((subjectId) => ({
+        schoolId: ctx.schoolId,
+        teacherId,
+        subjectId,
+        expertiseLevel: "PRIMARY",
+      })),
+      skipDuplicates: true,
+    }),
+  ])
+  return true
+}
+
 export async function getAssignmentBoard(): Promise<
   ActionResponse<AssignmentBoardData>
 > {
@@ -369,7 +407,7 @@ export async function saveTeacherSubjects(
     const { ctx } = authz
     const parsed = saveTeacherSubjectsSchema.safeParse(input)
     if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    const { teacherId, pairs, overrideCap } = parsed.data
+    const { teacherId, pairs, overrideCap, specialtyIds } = parsed.data
 
     const teacher = await db.teacher.findFirst({
       where: { id: teacherId, schoolId: ctx.schoolId },
@@ -397,6 +435,31 @@ export async function saveTeacherSubjects(
       for (const p of list)
         m.set(p.subjectId, [...(m.get(p.subjectId) ?? []), p.sectionId])
       return m
+    }
+
+    // Specialties must be subjects the school teaches (or ones the teacher
+    // already holds — a subject the school later switched off must not block
+    // the save). Checked before any write.
+    if (specialtyIds && specialtyIds.length > 0) {
+      const ids = [...new Set(specialtyIds)]
+      const [offered, held] = await Promise.all([
+        db.subjectSelection.findMany({
+          where: { schoolId: ctx.schoolId, catalogSubjectId: { in: ids } },
+          select: { catalogSubjectId: true },
+          distinct: ["catalogSubjectId"],
+        }),
+        db.teacherSubjectExpertise.findMany({
+          where: { schoolId: ctx.schoolId, teacherId, subjectId: { in: ids } },
+          select: { subjectId: true },
+        }),
+      ])
+      const known = new Set([
+        ...offered.map((o) => o.catalogSubjectId),
+        ...held.map((h) => h.subjectId),
+      ])
+      if (ids.some((sid) => !known.has(sid))) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
     }
 
     // Whole-edit cap check, before any write.
@@ -433,6 +496,13 @@ export async function saveTeacherSubjects(
       })
       if (!result.ok) return actionError(ACTION_ERRORS[result.code])
       outcomes.push(result)
+    }
+
+    const specialtiesChanged = specialtyIds
+      ? await syncSpecialties(ctx, teacherId, specialtyIds, pairs)
+      : false
+    if (specialtiesChanged && removed.length === 0 && added.length === 0) {
+      refresh()
     }
 
     if (removed.length > 0 || added.length > 0) {

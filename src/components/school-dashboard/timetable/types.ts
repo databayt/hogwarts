@@ -54,6 +54,12 @@ export interface TeacherInfo {
   subjects: string[]
   photoUrl?: string
   availability?: TeacherAvailability[]
+  /** Periods a week this term (slot editor). */
+  load?: number
+  /** Weekly cap (slot editor). */
+  cap?: number
+  /** `${dayOfWeek}:${periodId}:${slotId}` for every period they teach. */
+  busy?: string[]
 }
 
 export interface TeacherAvailability {

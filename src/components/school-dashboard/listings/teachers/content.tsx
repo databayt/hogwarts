@@ -19,6 +19,7 @@ import { getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
 import { hideEmptyTeacherDrafts } from "../empty-drafts"
+import { specialtyFamilies } from "./subjects/families"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -104,9 +105,9 @@ export default async function TeachersContent({
               },
             },
           },
-          // Get subject expertise count
+          // Specialties, counted by subject family (subjects/families.ts)
           subjectExpertise: {
-            select: { id: true },
+            select: { subjectId: true, subject: { select: { name: true } } },
           },
           // Sections they're assigned a subject in
           subjectTeachers: {
@@ -159,7 +160,7 @@ export default async function TeachersContent({
             primaryDept.departmentName)
           : null,
         departmentId: primaryDept?.id || null,
-        subjectCount: t.subjectExpertise?.length || 0,
+        subjectCount: specialtyFamilies(t.subjectExpertise).length,
         classCount: new Set(
           (t.subjectTeachers ?? []).map((a: any) => a.sectionId)
         ).size,

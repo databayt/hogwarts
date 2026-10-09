@@ -63,6 +63,8 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { formatName } from "@/components/translation/transliterate"
 
+import { specialtyFamilies } from "../subjects/families"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -564,25 +566,27 @@ export function TeacherDetailContent({
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {teacher.subjectExpertise.map((expertise) => (
-                        <Badge
-                          key={expertise.id}
-                          variant={
-                            expertise.expertiseLevel === "PRIMARY"
-                              ? "default"
-                              : "outline"
-                          }
-                          className="gap-1"
-                        >
-                          {expertise.expertiseLevel === "PRIMARY" && (
-                            <Star className="h-3 w-3" />
-                          )}
-                          {expertise.expertiseLevel === "CERTIFIED" && (
-                            <Award className="h-3 w-3" />
-                          )}
-                          {expertise.subject?.name}
-                        </Badge>
-                      ))}
+                      {specialtyFamilies(teacher.subjectExpertise).map(
+                        (expertise) => (
+                          <Badge
+                            key={expertise.id}
+                            variant={
+                              expertise.expertiseLevel === "PRIMARY"
+                                ? "default"
+                                : "outline"
+                            }
+                            className="gap-1"
+                          >
+                            {expertise.expertiseLevel === "PRIMARY" && (
+                              <Star className="h-3 w-3" />
+                            )}
+                            {expertise.expertiseLevel === "CERTIFIED" && (
+                              <Award className="h-3 w-3" />
+                            )}
+                            {expertise.subject?.name}
+                          </Badge>
+                        )
+                      )}
                     </div>
                   </CardContent>
                 </Card>

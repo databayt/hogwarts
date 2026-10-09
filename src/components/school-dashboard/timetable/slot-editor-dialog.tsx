@@ -30,7 +30,10 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -137,8 +140,6 @@ export function SlotEditorDialog({
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(
     null
   )
-  const [availableTeachers, setAvailableTeachers] =
-    useState<TeacherInfo[]>(teachers)
   const [availableRooms, setAvailableRooms] =
     useState<ClassroomInfo[]>(classrooms)
 
@@ -198,18 +199,36 @@ export function SlotEditorDialog({
     if (subjectId) {
       const subject = subjects.find((s) => s.id === subjectId)
       setSelectedSubject(subject || null)
-
-      // Filter teachers who can teach this subject
-      const qualifiedTeachers = teachers.filter((tt) =>
-        tt.subjects.includes(subjectId)
-      )
-      setAvailableTeachers(
-        qualifiedTeachers.length ? qualifiedTeachers : teachers
-      )
-    } else {
-      setAvailableTeachers(teachers)
     }
-  }, [form.watch("subjectId"), subjects, teachers])
+  }, [form.watch("subjectId"), subjects])
+
+  // Teacher picker: the subject's specialists first, most room first; then
+  // everyone else. A teacher already teaching at this day + period (another
+  // slot) can't be picked — that would double-book them.
+  const watchedSubjectId = form.watch("subjectId")
+  const teacherGroups = useMemo(() => {
+    const busyHere = (tt: TeacherInfo) =>
+      (tt.busy ?? []).some((b) => {
+        const [day, periodId, slotId] = b.split(":")
+        return (
+          Number(day) === resolvedDay &&
+          periodId === resolvedPeriodId &&
+          slotId !== slot?.id
+        )
+      })
+    const room = (tt: TeacherInfo) => (tt.cap ?? 0) - (tt.load ?? 0)
+    const rows = teachers.map((tt) => ({ teacher: tt, busy: busyHere(tt) }))
+    const byFit = (a: (typeof rows)[number], b: (typeof rows)[number]) =>
+      Number(a.busy) - Number(b.busy) || room(b.teacher) - room(a.teacher)
+    const specialists = watchedSubjectId
+      ? rows.filter((r) => r.teacher.subjects.includes(watchedSubjectId))
+      : []
+    const others = rows.filter((r) => !specialists.includes(r))
+    return {
+      specialists: specialists.sort(byFit),
+      others: others.sort(byFit),
+    }
+  }, [teachers, watchedSubjectId, resolvedDay, resolvedPeriodId, slot?.id])
 
   useEffect(() => {
     // Only relevant when the classroom is user-selectable (teacher view).
@@ -429,17 +448,49 @@ export function SlotEditorDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableTeachers.map((teacher) => (
-                        <SelectItem key={teacher.id} value={teacher.id}>
-                          {teacher.name ||
-                            `${teacher.firstName} ${teacher.lastName}`.trim()}
-                          {teacher.department ? (
-                            <span className="text-muted-foreground ms-2 text-xs">
-                              {teacher.department}
-                            </span>
-                          ) : null}
-                        </SelectItem>
-                      ))}
+                      {(
+                        [
+                          ["specialists", teacherGroups.specialists],
+                          ["others", teacherGroups.others],
+                        ] as const
+                      ).map(([group, rows], gi) =>
+                        rows.length === 0 ? null : (
+                          <SelectGroup key={group}>
+                            {gi > 0 && teacherGroups.specialists.length > 0 && (
+                              <SelectSeparator />
+                            )}
+                            {teacherGroups.specialists.length > 0 && (
+                              <SelectLabel>
+                                {group === "specialists"
+                                  ? (t?.specialists ?? "Specialists")
+                                  : (t?.otherTeachers ?? "Other teachers")}
+                              </SelectLabel>
+                            )}
+                            {rows.map(({ teacher, busy }) => (
+                              <SelectItem
+                                key={teacher.id}
+                                value={teacher.id}
+                                disabled={busy}
+                              >
+                                {teacher.name ||
+                                  `${teacher.firstName} ${teacher.lastName}`.trim()}
+                                <span className="text-muted-foreground ms-2 text-xs tabular-nums">
+                                  {busy
+                                    ? (t?.busyNow ?? "Busy")
+                                    : teacher.cap
+                                      ? (t?.loadOf ?? "{load}/{cap}")
+                                          .replace(
+                                            "{load}",
+                                            String(teacher.load ?? 0)
+                                          )
+                                          .replace("{cap}", String(teacher.cap))
+                                      : teacher.department}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

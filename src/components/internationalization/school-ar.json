@@ -3695,7 +3695,17 @@
           "الخميس",
           "الجمعة",
           "السبت"
-        ]
+        ],
+        "specialty": "التخصص",
+        "allSubjects": "كل المواد",
+        "allGrades": "كل الصفوف",
+        "markSpecialty": "ضمن تخصصه",
+        "unmarkSpecialty": "إزالة من التخصص",
+        "specialtyLocked": "يدرّس هذه المادة — تبقى ضمن تخصصه",
+        "noSpecialty": "لا تخصص بعد. افتح كل المواد وميّز بالنجمة ما يستطيع تدريسه.",
+        "showAll": "عرض كل المواد",
+        "counter": "{subjects} مواد · {sections} شُعب · {load}/{cap} حصة",
+        "freeSections": "{count} متاحة"
       }
     },
     "classes": {
@@ -4874,7 +4884,11 @@
         "suggest": "اقتراح",
         "saveSlot": "حفظ الحصة",
         "applyToAll": "كل حصص هذه المادة في هذا الفصل",
-        "applyToAllHint": "يتولى المعلم المادة في هذا الفصل، وتُنقل الحصص عند الحاجة."
+        "applyToAllHint": "يتولى المعلم المادة في هذا الفصل، وتُنقل الحصص عند الحاجة.",
+        "specialists": "المتخصصون",
+        "otherTeachers": "معلمون آخرون",
+        "busyNow": "مشغول",
+        "loadOf": "{load}/{cap}"
       },
       "analyticsReports": {
         "totalSlots": "إجمالي الحصص",

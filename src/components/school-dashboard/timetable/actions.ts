@@ -2093,8 +2093,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   const t = await getTimetableDict()
   // Cohort identity: the section.
   const cohortOf = (s: (typeof slots)[number]) => s.sectionId
-  const subjectOf = (s: (typeof slots)[number]) =>
-    s.subject?.name || t.unknown
+  const subjectOf = (s: (typeof slots)[number]) => s.subject?.name || t.unknown
 
   // Teacher workload analysis
   const teacherWorkload = new Map<
@@ -5554,26 +5553,57 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  const teachers = await db.teacher.findMany({
-    where: { schoolId, employmentStatus: "ACTIVE" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      _count: { select: { timetables: true } },
-      user: { select: { email: true, image: true } },
-      teacherDepartments: {
-        where: { isPrimary: true },
-        select: { department: { select: { departmentName: true } } },
-        take: 1,
+  const [teachers, termSlots, workload] = await Promise.all([
+    db.teacher.findMany({
+      where: { schoolId, employmentStatus: "ACTIVE" },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        _count: { select: { timetables: true } },
+        constraints: {
+          where: { schoolId, OR: [{ termId: input.termId }, { termId: null }] },
+          orderBy: { termId: "desc" },
+          take: 1,
+          select: { maxPeriodsPerWeek: true },
+        },
+        user: { select: { email: true, image: true } },
+        teacherDepartments: {
+          where: { isPrimary: true },
+          select: { department: { select: { departmentName: true } } },
+          take: 1,
+        },
+        subjectExpertise: {
+          where: { schoolId },
+          select: { subjectId: true },
+        },
       },
-      subjectExpertise: {
-        where: { schoolId },
-        select: { subjectId: true },
+      orderBy: { lastName: "asc" },
+    }),
+    // This term's periods per teacher: the picker shows each teacher's load
+    // and who is already teaching at the clicked day + period.
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        weekOffset: 0,
+        teacherId: { not: null },
       },
-    },
-    orderBy: { lastName: "asc" },
-  })
+      select: { id: true, teacherId: true, dayOfWeek: true, periodId: true },
+    }),
+    db.workloadConfig.findUnique({
+      where: { schoolId },
+      select: { maxPeriodsPerWeek: true },
+    }),
+  ])
+  const busyOf = new Map<string, string[]>()
+  for (const s of termSlots) {
+    if (!s.teacherId) continue
+    const list = busyOf.get(s.teacherId) ?? []
+    list.push(`${s.dayOfWeek}:${s.periodId}:${s.id}`)
+    busyOf.set(s.teacherId, list)
+  }
+  const defaultCap = workload?.maxPeriodsPerWeek ?? 25
 
   // Localize names to the app language (stored names may be Arabic; the picker
   // must read "Minerva McGonagall" on /en). Then dedupe by display name — the
@@ -5601,6 +5631,9 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     photoUrl?: string
     department?: string
     subjects: string[]
+    load: number
+    cap: number
+    busy: string[]
   }> = []
   for (const t of sorted) {
     const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
@@ -5616,6 +5649,9 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
       photoUrl: t.user?.image || undefined,
       department: t.teacherDepartments[0]?.department?.departmentName,
       subjects: t.subjectExpertise.map((e) => e.subjectId),
+      load: busyOf.get(t.id)?.length ?? 0,
+      cap: t.constraints[0]?.maxPeriodsPerWeek || defaultCap,
+      busy: busyOf.get(t.id) ?? [],
     })
   }
 

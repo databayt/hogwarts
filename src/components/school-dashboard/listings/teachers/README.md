@@ -66,9 +66,25 @@ src/components/school-dashboard/listings/teachers/
 
 Every row's ⋯ menu has **Assign subjects**, incomplete profiles included. It opens
 `subjects/dialog.tsx` titled "Teacher {name}" (`subjectsEditor.teacherTitle`). The
-shared `subjects/editor.tsx` (also the wizard's step) shows G1…G12 chips
-(`subjectsEditor.gradeShort`); you pick one grade at a time, and a dot marks grades that
-already have work. The grade's subjects show as one swipeable row of thumbnail cards
-(`no-scrollbar`), with the catalog thumbnail first and `subjects/image-map` as the fallback.
-Tapping a card takes every free section; the أ/ب chips hand over single sections. A dashed
-chip means another teacher holds that section.
+shared `subjects/editor.tsx` (also the wizard's step) is one filter row, one card row
+and a light counter:
+
+- **Filter row** — ★ Specialty / All subjects, then All grades / G1…G12 (a dot marks
+  grades with work; in the specialty view grades with nothing in it fade). A teacher
+  with specialties opens on Specialty × All grades; one without opens on All subjects
+  × their first grade.
+- **Cards** — small thumbnail cards (`w-28`, catalog thumbnail, `subjects/image-map`
+  fallback) in one swipeable `no-scrollbar` row, ordered by what the teacher teaches,
+  then specialty, then subjects with free sections (on the saved state, so cards don't
+  jump while clicked). Tapping a card takes every free section; the أ/ب chips hand over
+  single sections; a dashed chip means another teacher holds it. Non-specialty cards
+  are dimmed in the All view.
+- **Counter** — "{subjects} subjects · {sections} sections · {load}/{cap} periods" over
+  a 1px progress bar, red past the cap.
+
+**Specialty = subject family.** Catalog subjects are per grade (`sd-g4-math`), so the ★
+on a card marks the subject *name* across every grade (`subjects/families.ts`) and saves
+one `TeacherSubjectExpertise` row per grade's subject (`saveTeacherSubjects` →
+`specialtyIds`). Catalog `concept` is not used — it lumps Arabic with French and Islamic
+with Christian studies. A subject the teacher teaches stays a specialty. The list's
+Subjects column, the profile and the detail page count/show specialties by family.

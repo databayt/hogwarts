@@ -51,6 +51,13 @@ vi.mock("@/lib/db", () => ({
     teacherConstraint: { findFirst: vi.fn().mockResolvedValue(null) },
     workloadConfig: { findUnique: vi.fn().mockResolvedValue(null) },
     timetable: { count: vi.fn(), findMany: vi.fn() },
+    subjectSelection: { findMany: vi.fn().mockResolvedValue([]) },
+    teacherSubjectExpertise: {
+      findMany: vi.fn().mockResolvedValue([]),
+      deleteMany: vi.fn((args: unknown) => ({ op: "deleteMany", args })),
+      createMany: vi.fn((args: unknown) => ({ op: "createMany", args })),
+    },
+    $transaction: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -249,5 +256,75 @@ describe("saveTeacherSubjects", () => {
     vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
     const res = await saveTeacherSubjects({ teacherId: "x", pairs: [] })
     expect(res).toMatchObject({ success: false, error: "TEACHER_NOT_FOUND" })
+  })
+})
+
+describe("saveTeacherSubjects — specialties", () => {
+  beforeEach(() => {
+    as("ADMIN")
+    vi.mocked(db.subjectTeacher.findMany).mockResolvedValue([])
+  })
+
+  it("makes the teacher's specialties exactly the list plus assigned subjects", async () => {
+    vi.mocked(db.subjectSelection.findMany).mockResolvedValue([
+      { catalogSubjectId: "math-g1" },
+      { catalogSubjectId: "math-g2" },
+    ] as never)
+    vi.mocked(db.teacherSubjectExpertise.findMany)
+      .mockResolvedValueOnce([] as never) // validation: held
+      .mockResolvedValueOnce([
+        { subjectId: "math-g1" },
+        { subjectId: "art-g1" },
+      ] as never) // sync: current
+
+    const res = await saveTeacherSubjects({
+      teacherId: "t1",
+      pairs: [],
+      specialtyIds: ["math-g1", "math-g2"],
+    })
+
+    expect(res.success).toBe(true)
+    expect(db.teacherSubjectExpertise.deleteMany).toHaveBeenCalledWith({
+      where: {
+        schoolId: SCHOOL,
+        teacherId: "t1",
+        subjectId: { in: ["art-g1"] },
+      },
+    })
+    expect(db.teacherSubjectExpertise.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          schoolId: SCHOOL,
+          teacherId: "t1",
+          subjectId: "math-g2",
+          expertiseLevel: "PRIMARY",
+        },
+      ],
+      skipDuplicates: true,
+    })
+    expect(applyAssignment).not.toHaveBeenCalled()
+  })
+
+  it("refuses a specialty the school doesn't teach, before any write", async () => {
+    vi.mocked(db.subjectSelection.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.teacherSubjectExpertise.findMany).mockResolvedValue(
+      [] as never
+    )
+
+    const res = await saveTeacherSubjects({
+      teacherId: "t1",
+      pairs: [{ sectionId: "7A", subjectId: "math-g7" }],
+      specialtyIds: ["other-school-subject"],
+    })
+
+    expect(res).toMatchObject({ success: false, error: "VALIDATION_ERROR" })
+    expect(applyAssignment).not.toHaveBeenCalled()
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("leaves specialties alone when the list is omitted", async () => {
+    const res = await saveTeacherSubjects({ teacherId: "t1", pairs: [] })
+    expect(res.success).toBe(true)
+    expect(db.$transaction).not.toHaveBeenCalled()
   })
 })

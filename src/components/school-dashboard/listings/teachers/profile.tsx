@@ -42,6 +42,8 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { specialtyFamilies } from "./subjects/families"
+
 interface TeacherProfileProps {
   teacher: any // In production, use proper typed interface
   onEdit?: () => void
@@ -235,7 +237,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 {dictionary?.school?.teachers?.subjects || "Subjects"}
               </p>
               <p className="text-xl font-semibold">
-                {teacher.subjectExpertise?.length || 0}
+                {specialtyFamilies(teacher.subjectExpertise).length}
               </p>
             </div>
             <div className="space-y-1">
@@ -421,25 +423,27 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 {teacher.subjectExpertise &&
                 teacher.subjectExpertise.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {teacher.subjectExpertise.map((exp: any, index: number) => (
-                      <Badge
-                        key={index}
-                        variant={
-                          exp.expertiseLevel === "PRIMARY"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="gap-1"
-                      >
-                        {exp.expertiseLevel === "PRIMARY" && (
-                          <Star className="h-3 w-3" />
-                        )}
-                        {exp.expertiseLevel === "CERTIFIED" && (
-                          <Award className="h-3 w-3" />
-                        )}
-                        {exp.subject?.name || exp.subjectId}
-                      </Badge>
-                    ))}
+                    {specialtyFamilies(teacher.subjectExpertise).map(
+                      (exp: any, index: number) => (
+                        <Badge
+                          key={index}
+                          variant={
+                            exp.expertiseLevel === "PRIMARY"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="gap-1"
+                        >
+                          {exp.expertiseLevel === "PRIMARY" && (
+                            <Star className="h-3 w-3" />
+                          )}
+                          {exp.expertiseLevel === "CERTIFIED" && (
+                            <Award className="h-3 w-3" />
+                          )}
+                          {exp.subject?.name || exp.subjectId}
+                        </Badge>
+                      )
+                    )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-sm">

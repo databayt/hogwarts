@@ -4,14 +4,20 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Subjects & sections editor — one teacher's teaching assignments.
+ * Subjects & sections editor — one teacher's specialties and teaching
+ * assignments.
  *
  * Shared by the Add Teacher wizard step and the teachers row-action dialog.
- * Pick a grade, tick a subject (every free section of the grade is ticked
- * with it), adjust single sections. A section someone else teaches shows
- * their name and stays unticked unless clicked, which hands it over. Saving
- * writes the timetable: the teacher's periods fill in, moving others inside
- * the section when needed (timetable/assignments).
+ * A specialty is a subject FAMILY — every grade's subject of the same name.
+ * Catalog subjects are per grade (sd-g4-math), so starring Math qualifies the
+ * teacher for Math in every grade. (Catalog `concept` is too coarse for this:
+ * "language" holds Arabic and French, "faith" Islamic and Christian studies.) The filter shows the teacher's specialties (default)
+ * or all subjects, across all grades or one. Tick a card (every free section
+ * of that grade comes with it), adjust single sections. A section someone
+ * else teaches is dashed and stays unticked unless clicked, which hands it
+ * over. Saving writes the specialties and the timetable: the teacher's
+ * periods fill in, moving others inside the section when needed
+ * (timetable/assignments).
  */
 import {
   forwardRef,
@@ -19,10 +25,11 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react"
-import { Check } from "lucide-react"
+import { Check, Star } from "lucide-react"
 
 import { gradeLabel } from "@/lib/grade"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
@@ -57,6 +64,12 @@ type Labels = Record<string, string> & {
 const key = (sectionId: string, subjectId: string) =>
   `${sectionId}:${subjectId}`
 
+type Grade = TeacherEditorData["grades"][number]
+type Subject = Grade["subjects"][number]
+
+/** A teacher's specialty is the subject family: same name across grades. */
+const familyOf = (sub: Subject) => sub.name.trim()
+
 const fill = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce(
     (out, [k, v]) => out.replace(`{${k}}`, String(v)),
@@ -90,9 +103,15 @@ export const TeacherSubjectsEditor = forwardRef<
   const [data, setData] = useState<TeacherEditorData | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [activeGrade, setActiveGrade] = useState<string | null>(null)
+  /** Specialty families (see familyOf). */
+  const [families, setFamilies] = useState<Set<string>>(new Set())
+  /** "mine" = the teacher's specialties; "all" = every subject. */
+  const [scope, setScope] = useState<"mine" | "all">("mine")
+  /** null = all grades. */
+  const [gradeFilter, setGradeFilter] = useState<string | null>(null)
   const [residual, setResidual] = useState<AssignmentSummary["residual"]>([])
   const [isPending, startTransition] = useTransition()
+  const initialized = useRef(false)
 
   const takePrefetched = useTakePrefetchedSubjects()
   const load = useCallback(async () => {
@@ -109,23 +128,30 @@ export const TeacherSubjectsEditor = forwardRef<
         .filter(([, h]) => h?.teacherId === teacherId)
         .map(([k]) => k)
     )
-    // Open on the first grade the teacher teaches in, else one with a
-    // subject they're qualified for, else the first grade with subjects.
-    const teaches = (g: TeacherEditorData["grades"][number]) =>
-      g.sections.some((s) =>
-        g.subjects.some((sub) => mine.has(key(s.sectionId, sub.subjectId)))
-      )
-    const qualified = (g: TeacherEditorData["grades"][number]) =>
-      g.subjects.some((sub) => d.teacher.subjectIds.includes(sub.subjectId))
-    const first =
-      d.grades.find(teaches) ??
-      d.grades.find(qualified) ??
-      d.grades.find((g) => g.subjects.length > 0)
+    const fams = familiesOf(d, d.teacher.subjectIds)
     setData(d)
     setSelected(mine)
-    // A reload after saving keeps the grade the admin is on.
-    setActiveGrade((prev) => prev ?? first?.gradeId ?? null)
+    setFamilies(fams)
     setLoadError(null)
+    // A reload after saving keeps the admin's filter.
+    if (!initialized.current) {
+      initialized.current = true
+      if (fams.size > 0) {
+        setScope("mine")
+        setGradeFilter(null)
+      } else {
+        // No specialty yet: every subject, one grade at a time — the first
+        // grade the teacher teaches in, else the first with subjects.
+        setScope("all")
+        const teaches = (g: Grade) =>
+          g.sections.some((s) =>
+            g.subjects.some((sub) => mine.has(key(s.sectionId, sub.subjectId)))
+          )
+        const first =
+          d.grades.find(teaches) ?? d.grades.find((g) => g.subjects.length > 0)
+        setGradeFilter(first?.gradeId ?? null)
+      }
+    }
   }, [teacherId, dictionary, takePrefetched])
 
   useEffect(() => {
@@ -141,6 +167,30 @@ export const TeacherSubjectsEditor = forwardRef<
       ),
     [data, teacherId]
   )
+  const originalFamilies = useMemo(
+    () =>
+      data ? familiesOf(data, data.teacher.subjectIds) : new Set<string>(),
+    [data]
+  )
+
+  // Every subject the school teaches, by id.
+  const subjectById = useMemo(() => {
+    const byId = new Map<string, Subject>()
+    for (const g of data?.grades ?? []) {
+      for (const sub of g.subjects) byId.set(sub.subjectId, sub)
+    }
+    return byId
+  }, [data])
+
+  // Families the teacher teaches right now can't be un-starred.
+  const teachingFamilies = useMemo(() => {
+    const out = new Set<string>()
+    for (const k of selected) {
+      const sub = subjectById.get(k.split(":")[1])
+      if (sub) out.add(familyOf(sub))
+    }
+    return out
+  }, [selected, subjectById])
 
   // Projected weekly load: what the edit adds minus what it frees.
   const projected = useMemo(() => {
@@ -155,11 +205,75 @@ export const TeacherSubjectsEditor = forwardRef<
     return Math.max(0, load)
   }, [data, original, selected])
 
-  const toggleSubject = (sectionIds: string[], subjectId: string) => {
+  // The cards on show. Ordered on the SAVED state (what the teacher teaches,
+  // their specialties, where sections are still free) so a card doesn't jump
+  // while the admin clicks it.
+  const cards = useMemo(() => {
+    if (!data) return []
+    const grades = gradeFilter
+      ? data.grades.filter((g) => g.gradeId === gradeFilter)
+      : data.grades
+    const out: Array<{
+      grade: Grade
+      sub: Subject
+      keys: string[]
+      held: boolean
+      special: boolean
+      free: number
+    }> = []
+    for (const grade of grades) {
+      for (const sub of grade.subjects) {
+        const keys = grade.sections.map((s) => key(s.sectionId, sub.subjectId))
+        const fam = familyOf(sub)
+        const held = keys.some((k) => original.has(k))
+        const visible =
+          scope === "all" ||
+          families.has(fam) ||
+          keys.some((k) => selected.has(k))
+        if (!visible) continue
+        out.push({
+          grade,
+          sub,
+          keys,
+          held,
+          special: originalFamilies.has(fam),
+          free: keys.filter((k) => !data.holders[k]).length,
+        })
+      }
+    }
+    return out
+      .map((c, i) => ({ c, i }))
+      .sort(
+        (a, b) =>
+          Number(b.c.held) - Number(a.c.held) ||
+          Number(b.c.special) - Number(a.c.special) ||
+          Number(b.c.free > 0) - Number(a.c.free > 0) ||
+          a.i - b.i
+      )
+      .map(({ c }) => c)
+  }, [data, gradeFilter, scope, families, selected, original, originalFamilies])
+
+  const addFamily = (sub: Subject) =>
+    setFamilies((prev) =>
+      prev.has(familyOf(sub)) ? prev : new Set(prev).add(familyOf(sub))
+    )
+
+  const toggleFamily = (sub: Subject) => {
+    const fam = familyOf(sub)
+    if (teachingFamilies.has(fam)) return
+    setFamilies((prev) => {
+      const next = new Set(prev)
+      if (next.has(fam)) next.delete(fam)
+      else next.add(fam)
+      return next
+    })
+  }
+
+  const toggleSubject = (keys: string[], sub: Subject) => {
+    const anyOn = keys.some((k) => selected.has(k))
+    if (!anyOn) addFamily(sub)
     setSelected((prev) => {
       const next = new Set(prev)
-      const keys = sectionIds.map((s) => key(s, subjectId))
-      const anyOn = keys.some((k) => next.has(k))
       if (anyOn) {
         keys.forEach((k) => next.delete(k))
       } else {
@@ -174,22 +288,41 @@ export const TeacherSubjectsEditor = forwardRef<
     })
   }
 
-  const toggleSection = (k: string) =>
+  const toggleSection = (k: string, sub: Subject) => {
+    if (!selected.has(k)) addFamily(sub)
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(k)) next.delete(k)
       else next.add(k)
       return next
     })
+  }
+
+  /**
+   * Expertise rows to save: every subject of every starred family, plus
+   * expertise in subjects the school no longer offers (kept untouched).
+   */
+  const specialtyIds = useCallback(() => {
+    const ids = [...subjectById.values()]
+      .filter((sub) => families.has(familyOf(sub)))
+      .map((sub) => sub.subjectId)
+    const kept = (data?.teacher.subjectIds ?? []).filter(
+      (id) => !subjectById.has(id)
+    )
+    return [...ids, ...kept]
+  }, [subjectById, families, data])
 
   const save = useCallback(
     (overrideCap = false): Promise<void> =>
       new Promise((resolve, reject) => {
         // Nothing changed (e.g. Next in the wizard): no write, no toast.
-        if (
+        const sameAssignments =
           selected.size === original.size &&
           [...selected].every((k) => original.has(k))
-        ) {
+        const sameFamilies =
+          families.size === originalFamilies.size &&
+          [...families].every((f) => originalFamilies.has(f))
+        if (sameAssignments && sameFamilies) {
           resolve()
           return
         }
@@ -201,6 +334,7 @@ export const TeacherSubjectsEditor = forwardRef<
           const res = await saveTeacherSubjects({
             teacherId,
             pairs,
+            specialtyIds: specialtyIds(),
             overrideCap,
           })
           if (!res.success || !res.data) {
@@ -245,7 +379,18 @@ export const TeacherSubjectsEditor = forwardRef<
           resolve()
         })
       }),
-    [selected, original, teacherId, t, dictionary, onSaved, load]
+    [
+      selected,
+      original,
+      families,
+      originalFamilies,
+      specialtyIds,
+      teacherId,
+      t,
+      dictionary,
+      onSaved,
+      load,
+    ]
   )
 
   useImperativeHandle(ref, () => ({ saveAndNext: () => save() }), [save])
@@ -257,8 +402,12 @@ export const TeacherSubjectsEditor = forwardRef<
     return (
       <div className="space-y-3">
         <Skeleton className="h-7 w-64" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
+        <div className="flex gap-2.5">
+          <Skeleton className="h-36 w-28" />
+          <Skeleton className="h-36 w-28" />
+          <Skeleton className="h-36 w-28" />
+        </div>
+        <Skeleton className="h-4 w-48" />
       </div>
     )
   }
@@ -271,42 +420,91 @@ export const TeacherSubjectsEditor = forwardRef<
     )
   }
 
-  const grade =
-    data.grades.find((g) => g.gradeId === activeGrade) ?? data.grades[0]
   const cap = data.teacher.cap
   const over = projected > cap
   const days = t?.days ?? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const shortGrade = (g: Grade) =>
+    gradeLabel(g.gradeNumber, {
+      lang: locale,
+      country: data.gradeCountry,
+      form: "short",
+    })
+  const familyNames = [...families]
+  const subjectCount = new Set([...selected].map((k) => k.split(":")[1])).size
+  const sectionCount = new Set([...selected].map((k) => k.split(":")[0])).size
+
+  const chip = (active: boolean) =>
+    cn(
+      "relative shrink-0 rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition-colors",
+      active
+        ? "bg-primary text-primary-foreground border-primary"
+        : "bg-muted/50 hover:bg-muted border-border"
+    )
 
   return (
-    <div className="space-y-6">
-      {/* Grade picker — one grade at a time; a dot marks grades with work */}
-      <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-4">
+      {/* The teacher's specialties, in words */}
+      {familyNames.length > 0 && (
+        <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <Star className="fill-primary text-primary size-3.5 shrink-0" />
+          <span className="truncate">{familyNames.join(" · ")}</span>
+        </p>
+      )}
+
+      {/* Filters: specialty / all subjects, then all grades / one grade */}
+      <div className="no-scrollbar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 [contain:inline-size]">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setScope("mine")}
+          className={cn(chip(scope === "mine"), "flex items-center gap-1")}
+        >
+          <Star className={cn("size-3", scope === "mine" && "fill-current")} />
+          {t?.specialty ?? "Specialty"}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setScope("all")}
+          className={chip(scope === "all")}
+        >
+          {t?.allSubjects ?? "All subjects"}
+        </button>
+        <span className="bg-border mx-1 h-4 w-px shrink-0" />
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setGradeFilter(null)}
+          className={chip(gradeFilter === null)}
+        >
+          {t?.allGrades ?? "All grades"}
+        </button>
         {data.grades.map((g) => {
+          const active = g.gradeId === gradeFilter
           const hasWork = g.sections.some((s) =>
             g.subjects.some((sub) =>
               selected.has(key(s.sectionId, sub.subjectId))
             )
           )
+          // In the specialty view, grades with nothing in the specialty fade.
+          const relevant =
+            scope === "all" ||
+            g.subjects.some((sub) => families.has(familyOf(sub)))
           return (
             <button
               key={g.gradeId}
               type="button"
               title={g.name}
               disabled={isPending}
-              onClick={() => setActiveGrade(g.gradeId)}
+              onClick={() => setGradeFilter(active ? null : g.gradeId)}
               className={cn(
-                "relative min-w-10 rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition-colors",
-                g.gradeId === grade?.gradeId
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted/50 hover:bg-muted border-border"
+                chip(active),
+                "min-w-10",
+                !relevant && !active && "opacity-40"
               )}
             >
-              {gradeLabel(g.gradeNumber, {
-                lang: locale,
-                country: data.gradeCountry,
-                form: "short",
-              })}
-              {hasWork && g.gradeId !== grade?.gradeId && (
+              {shortGrade(g)}
+              {hasWork && !active && (
                 <span className="bg-primary absolute -end-0.5 -top-0.5 size-2 rounded-full" />
               )}
             </button>
@@ -314,44 +512,59 @@ export const TeacherSubjectsEditor = forwardRef<
         })}
       </div>
 
-      {/* Subjects — one swipeable row of cards. contain:inline-size keeps the
-          row from reporting every card's width as its minimum: as a FormLayout
-          column (a shrink-0 flex item) that forced the column wider than its
-          48% and out past the page gutter. Now the row scrolls inside it. */}
-      {grade && (
-        <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [contain:inline-size]">
-          {grade.subjects.map((sub) => {
-            const keys = grade.sections.map((s) =>
-              key(s.sectionId, sub.subjectId)
-            )
+      {/* Cards — one swipeable row. contain:inline-size keeps the row from
+          reporting every card's width as its minimum: as a FormLayout column
+          (a shrink-0 flex item) that forced the column wider than its 48% and
+          out past the page gutter. Now the row scrolls inside it. */}
+      {cards.length === 0 ? (
+        <div className="text-muted-foreground flex min-h-36 flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-center text-sm">
+          <p>
+            {scope === "mine"
+              ? (t?.noSpecialty ??
+                "No specialty yet. Open All subjects and star what this teacher can teach.")
+              : (t?.noGrades ?? "Pick a grade to see its subjects.")}
+          </p>
+          {scope === "mine" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setScope("all")}
+            >
+              {t?.showAll ?? "Show all subjects"}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="no-scrollbar -mx-1 flex snap-x gap-2.5 overflow-x-auto px-1 pb-1 [contain:inline-size]">
+          {cards.map(({ grade, sub, keys }) => {
             const on = keys.filter((k) => selected.has(k)).length
             const all = on > 0 && on === keys.length
+            const fam = familyOf(sub)
+            const special = families.has(fam)
+            const locked = teachingFamilies.has(fam)
             return (
               <div
-                key={sub.subjectId}
+                key={`${grade.gradeId}:${sub.subjectId}`}
                 className={cn(
-                  "bg-card w-36 shrink-0 snap-start overflow-hidden rounded-xl border transition-shadow",
+                  "bg-card relative w-28 shrink-0 snap-start overflow-hidden rounded-xl border transition-[box-shadow,opacity]",
                   all && "ring-primary ring-2",
-                  on > 0 && !all && "ring-primary/50 ring-2"
+                  on > 0 && !all && "ring-primary/50 ring-2",
+                  !special && on === 0 && "opacity-60 hover:opacity-100"
                 )}
               >
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() =>
-                    toggleSubject(
-                      grade.sections.map((s) => s.sectionId),
-                      sub.subjectId
-                    )
-                  }
+                  onClick={() => toggleSubject(keys, sub)}
                   className="block w-full text-start"
                 >
-                  <div className="bg-muted relative aspect-[4/3] overflow-hidden">
+                  <div className="bg-muted relative aspect-[3/2] overflow-hidden">
                     <BlurImage
                       src={sub.imageUrl ?? getSubjectImage(sub.name)}
                       alt={sub.name}
                       fill
-                      sizes="144px"
+                      sizes="112px"
                       className="object-cover"
                     />
                     {on > 0 && (
@@ -360,18 +573,50 @@ export const TeacherSubjectsEditor = forwardRef<
                       </span>
                     )}
                   </div>
-                  <div className="px-2.5 pt-2">
-                    <p className="truncate text-sm font-medium">{sub.name}</p>
-                    {sub.weeklyPeriods > 0 && (
-                      <p className="text-muted-foreground text-xs">
-                        {fill(t?.perWeek ?? "{count}/wk", {
-                          count: sub.weeklyPeriods,
-                        })}
-                      </p>
-                    )}
+                  <div className="px-2 pt-1.5">
+                    <p className="truncate text-xs font-medium">{sub.name}</p>
+                    <p className="text-muted-foreground truncate text-[11px] tabular-nums">
+                      {[
+                        gradeFilter === null ? shortGrade(grade) : null,
+                        sub.weeklyPeriods > 0
+                          ? fill(t?.perWeek ?? "{count}/wk", {
+                              count: sub.weeklyPeriods,
+                            })
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </div>
                 </button>
-                <div className="flex flex-wrap gap-1 px-2.5 pt-2 pb-2.5">
+
+                {/* Specialty star — a family, so it lights every grade's card */}
+                <button
+                  type="button"
+                  disabled={isPending}
+                  aria-pressed={special}
+                  title={
+                    locked
+                      ? (t?.specialtyLocked ??
+                        "Teaches this subject — it stays a specialty")
+                      : special
+                        ? (t?.unmarkSpecialty ?? "Remove specialty")
+                        : (t?.markSpecialty ?? "Mark as specialty")
+                  }
+                  onClick={() => toggleFamily(sub)}
+                  className="bg-background/80 absolute start-1.5 top-1.5 flex size-5 items-center justify-center rounded-full backdrop-blur"
+                >
+                  <Star
+                    className={cn(
+                      "size-3",
+                      special
+                        ? "fill-primary text-primary"
+                        : "text-muted-foreground"
+                    )}
+                  />
+                </button>
+
+                <div className="flex flex-wrap gap-1 px-2 pt-1.5 pb-2">
                   {grade.sections.map((s) => {
                     const k = key(s.sectionId, sub.subjectId)
                     const holder = data.holders[k]
@@ -388,9 +633,9 @@ export const TeacherSubjectsEditor = forwardRef<
                             : s.name
                         }
                         disabled={isPending}
-                        onClick={() => toggleSection(k)}
+                        onClick={() => toggleSection(k, sub)}
                         className={cn(
-                          "min-w-7 rounded-md border px-1.5 py-0.5 text-xs transition-colors",
+                          "min-w-6 rounded-md border px-1 text-[11px] leading-5 transition-colors",
                           isOn
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background hover:bg-muted border-border",
@@ -410,22 +655,28 @@ export const TeacherSubjectsEditor = forwardRef<
         </div>
       )}
 
-      {/* Weekly load */}
+      {/* Light counter: what the teacher teaches and the weekly load */}
       <div className="space-y-1.5">
-        <div
+        <p
           className={cn(
-            "text-sm",
+            "text-xs tabular-nums",
             over ? "text-destructive" : "text-muted-foreground"
           )}
         >
-          {fill(t?.load ?? "{load} of {cap} periods a week", {
-            load: projected,
-            cap,
-          })}
-        </div>
+          {fill(
+            t?.counter ??
+              "{subjects} subjects · {sections} sections · {load}/{cap} periods",
+            {
+              subjects: subjectCount,
+              sections: sectionCount,
+              load: projected,
+              cap,
+            }
+          )}
+        </p>
         <Progress
           value={Math.min(100, cap > 0 ? (projected / cap) * 100 : 0)}
-          className={cn("h-1.5", over && "[&>div]:bg-destructive")}
+          className={cn("h-1", over && "[&>div]:bg-destructive")}
         />
       </div>
 
@@ -461,3 +712,15 @@ export const TeacherSubjectsEditor = forwardRef<
     </div>
   )
 })
+
+/** The specialty families of a set of subject ids (ids the school no longer offers drop out). */
+function familiesOf(d: TeacherEditorData, subjectIds: string[]): Set<string> {
+  const ids = new Set(subjectIds)
+  const out = new Set<string>()
+  for (const g of d.grades) {
+    for (const sub of g.subjects) {
+      if (ids.has(sub.subjectId)) out.add(familyOf(sub))
+    }
+  }
+  return out
+}
