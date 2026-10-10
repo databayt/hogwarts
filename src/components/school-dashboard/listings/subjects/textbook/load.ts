@@ -4,6 +4,7 @@
 // reader's structure. Not a "use server" action.
 import "server-only"
 
+import { catalogSibling } from "@/components/catalog/catalog-key"
 import { getCloudFrontUrl } from "@/lib/cloudfront-url"
 
 import { fill, formatNumber, gradeLine, stageLine } from "./format"
@@ -83,12 +84,15 @@ export async function loadTextbook(
   labels: ReaderLabels,
   lang: string
 ): Promise<LoadedTextbook> {
-  const base = subject.pdfKey.replace(/\/[^/]+$/, "")
+  // Every textbook file is a sibling of the stored PDF key — the catalog's URL
+  // contract (catalog/<cur>/<grade>/<subject>/textbook.{pdf,md}), no URL fields.
   const pdfUrl = getCloudFrontUrl(subject.pdfKey)
-  const assetBaseUrl = getCloudFrontUrl(base)
-  const mdUrl = getCloudFrontUrl(`${base}/textbook.md`)
-  const pagesBaseUrl = getCloudFrontUrl(`${base}/pages`)
-  const structureUrl = getCloudFrontUrl(`${base}/structure.json`)
+  const assetBaseUrl = getCloudFrontUrl(catalogSibling(subject.pdfKey))
+  const mdUrl = getCloudFrontUrl(catalogSibling(subject.pdfKey, "textbook.md"))
+  const pagesBaseUrl = getCloudFrontUrl(catalogSibling(subject.pdfKey, "pages"))
+  const structureUrl = getCloudFrontUrl(
+    catalogSibling(subject.pdfKey, "structure.json")
+  )
 
   const [markdown, structure] = await Promise.all([
     fetchTwin(mdUrl),
