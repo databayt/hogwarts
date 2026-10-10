@@ -1560,5 +1560,92 @@
       "1600": "https://cdn.databayt.org/hogwarts/students/students-ar-1600.a0464924.webp",
       "2400": "https://cdn.databayt.org/hogwarts/students/students-ar-2400.87ff5f97.webp"
     }
+  },
+  "add-teacher/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إضافة معلم",
+      "en": "Add a teacher"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/teachers/add-teacher-ar.poster.2b9c196f.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 70.27,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/teachers/add-teacher-ar.av1.d33af6f0.mp4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/teachers/add-teacher-ar.af55f4e6.mp4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/teachers/add-teacher-ar.bd1cdee5.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "bulk-student/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إدخال الطلاب جماعيًا",
+      "en": "Bulk-import students"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-student-ar.poster.d3baafd3.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 51.03,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-student-ar.av1.db318eb1.mp4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-student-ar.ed3724f0.mp4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-student-ar.c6c4bb5f.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "bulk-teacher/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إدخال المعلمين جماعيًا",
+      "en": "Bulk-import teachers"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.poster.e4e3abb1.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 51.93,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.av1.05bc8a8a.mp4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.58ceb017.mp4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.5bb8529c.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
   }
 }
