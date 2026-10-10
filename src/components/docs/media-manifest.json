@@ -1160,5 +1160,87 @@
       "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-1600.f218d1ae.webp",
       "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-2400.c793f68f.webp"
     }
+  },
+  "add-student/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إضافة طالب",
+      "en": "Add a student"
+    },
+    "poster": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.poster.c7a8d23e.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 130.2,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.av1.33aa7482.mp4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.8bb3d639.mp4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.0eb20a7a.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "add-student/reel-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إضافة طالب",
+      "en": "Add a student"
+    },
+    "width": 1080,
+    "height": 1920,
+    "duration": 60.03,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.reel.0baf699a.mp4",
+        "type": "video/mp4; codecs=\"avc1.64002A\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-ar.0eb20a7a.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "add-student/details-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إضافة طالب",
+      "en": "Add a student"
+    },
+    "poster": "https://cdn.databayt.org/balqalam/media/add-student/add-student-details-ar.poster.ae4bbc7f.webp",
+    "width": 1920,
+    "height": 1080,
+    "duration": 17.47,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-details-ar.av1.551ef9fa.mp4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-details-ar.91b3f1e7.mp4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/balqalam/media/add-student/add-student-details-ar.fd99edc2.vtt",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
   }
 }
