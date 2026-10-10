@@ -19,8 +19,8 @@
  * Pure string logic — safe in both server and client components.
  */
 
-// The CloudFront domain that mistakenly fronted upload-bucket assets.
-const CDN_HOST = process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
+// CDN_HOST: the CloudFront domain that mistakenly fronted upload-bucket assets.
+import { CDN_HOST } from "@/lib/cdn"
 
 // The real upload bucket host. Derived from env on the server; falls back to
 // the known constant on the client (also hard-coded in next.config image

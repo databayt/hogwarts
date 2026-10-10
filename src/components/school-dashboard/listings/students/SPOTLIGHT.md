@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [registrar, principal, owner, teacher, parent]
 routes: [/ar/s/{school}/students, /ar/s/{school}/students/add, /ar/s/{school}/students/archived, /ar/s/{school}/students/year-levels]
-screenshots: [demo-students-ar.png]
+screenshots: [docs/evidence/demo-students-ar.png]
 readme: ./README.md
 docs: content/docs-en/students.mdx
 updated: 2026-09-27
@@ -43,7 +43,7 @@ The student register is a ledger in the office and a copy in someone's spreadshe
 
 ## Real screens to show
 
-- `demo-students-ar.png` — the Arabic students list with the page tabs (All, Enroll, Performance, Reports, Archive, Settings), search, grade and status filters, and "Draft" and "Active" badges. A "quick guide" welcome pop-up covers the middle of the table: re-capture without it, or crop to the left and right edges.
+- `docs/evidence/demo-students-ar.png` — the Arabic students list with the page tabs (All, Enroll, Performance, Reports, Archive, Settings), search, grade and status filters, and "Draft" and "Active" badges. A "quick guide" welcome pop-up covers the middle of the table: re-capture without it, or crop to the left and right edges.
 - To capture more (with /record, Arabic, as admin): `/ar/s/{school}/students` with the "Unplaced" filter on, the four-step add form at `/ar/s/{school}/students/add`, the Link Parent code dialog from a row's menu, and `/ar/s/{school}/students/archived`.
 
 ## What you can say
@@ -103,4 +103,4 @@ The student register is a ledger in the office and a copy in someone's spreadshe
 - content/docs-en/students.mdx
 - content/docs-en/listings.mdx
 - content/docs-en/marketing-brief.mdx
-- demo-students-ar.png
+- docs/evidence/demo-students-ar.png

@@ -20,10 +20,9 @@
 import { useEffect, useMemo, useState } from "react"
 import Lottie from "lottie-react"
 import { useReducedMotion } from "motion/react"
+import { cdn } from "@/lib/cdn"
 
-const ANIMATION_URL = `https://${
-  process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
-}/hogwarts/animations/hand-lock.json`
+const ANIMATION_URL = cdn("hogwarts/animations/hand-lock.json")
 
 // Module-level cache — one fetch per tab, shared across every dialog open.
 let cachedRaw: object | null = null

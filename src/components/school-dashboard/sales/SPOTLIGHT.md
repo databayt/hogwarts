@@ -41,7 +41,7 @@ All of this is how a software company tracks the schools it sells to. The data m
 
 None — and none should be captured. The route is `/ar/s/{school}/sales`.
 
-Note for other shots: the "Sales" item is visible in the admin side menu on finance screens such as `demo-finance-ar.png`. Crop it out or ask engineering to hide it before recording admin screens.
+Note for other shots: the "Sales" item is visible in the admin side menu on finance screens such as `docs/evidence/demo-finance-ar.png`. Crop it out or ask engineering to hide it before recording admin screens.
 
 ## What you can say
 
@@ -77,4 +77,4 @@ Do not post about this yet.
 - src/components/template/platform-sidebar/config.ts (Sales shown to ADMIN and DEVELOPER)
 - content/docs-en/sales.mdx (the company's own sales plan, not this page)
 - content/docs-en/marketing-brief.mdx
-- demo-finance-ar.png (Sales visible in the side menu)
+- docs/evidence/demo-finance-ar.png (Sales visible in the side menu)

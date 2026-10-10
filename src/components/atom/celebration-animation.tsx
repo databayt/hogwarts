@@ -17,12 +17,11 @@ import dynamic from "next/dynamic"
 import { useReducedMotion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { cdn } from "@/lib/cdn"
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false })
 
-const ANIMATION_URL = `https://${
-  process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
-}/hogwarts/animations/confetti.json`
+const ANIMATION_URL = cdn("hogwarts/animations/confetti.json")
 
 // Module-level cache — one fetch per tab, shared across every mount.
 let cached: object | null = null

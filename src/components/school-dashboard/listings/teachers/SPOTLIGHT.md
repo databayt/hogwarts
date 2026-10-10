@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [owner, principal, teacher]
 routes: [/ar/s/{school}/teachers, /ar/s/{school}/teachers/add, /ar/s/{school}/teachers/departments, /ar/s/{school}/teachers/schedule, /ar/s/{school}/teachers/performance]
-screenshots: [demo-teachers-ar.png]
+screenshots: [docs/evidence/demo-teachers-ar.png]
 readme: ./README.md
 docs: content/docs-en/teachers.mdx
 updated: 2026-09-27
@@ -42,7 +42,7 @@ The staff file is a cabinet of folders: CVs, degree copies and ID photocopies, s
 
 ## Real screens to show
 
-- `demo-teachers-ar.png` — the Arabic teachers list: names, emails, department (Science, Languages), subject counts and "active" status, with the tabs All / Departments / Schedule / Performance / Settings. One row shows the name "Minerva McGonagall" (a Harry Potter character from the old demo data). Crop or blur that row before posting.
+- `docs/evidence/demo-teachers-ar.png` — the Arabic teachers list: names, emails, department (Science, Languages), subject counts and "active" status, with the tabs All / Departments / Schedule / Performance / Settings. One row shows the name "Minerva McGonagall" (a Harry Potter character from the old demo data). Crop or blur that row before posting.
 - Routes to capture for more: the add form (`/ar/s/{school}/teachers/add`), the documents step, the credentials pop-up, Departments, and Schedule (workload). Before posting any capture, check it for photo avatars of real actors, Harry Potter names, the "quick guide" welcome pop-up and the red "N Issue" development badge in the corner. Crop or blur all of them.
 
 ## What you can say
@@ -95,4 +95,4 @@ The staff file is a cabinet of folders: CVs, degree copies and ID photocopies, s
 - src/routes.ts
 - content/docs-en/teachers.mdx (older: describes a 7-step form; code now uses 6 steps in 2 groups)
 - content/docs-en/marketing-brief.mdx
-- demo-teachers-ar.png
+- docs/evidence/demo-teachers-ar.png

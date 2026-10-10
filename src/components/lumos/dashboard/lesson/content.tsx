@@ -80,6 +80,7 @@ import {
   updateLessonProgress,
 } from "./catalog-actions"
 import { submitLessonQuiz } from "./quiz-actions"
+import { cdn } from "@/lib/cdn"
 
 interface LumosLessonContentProps {
   dictionary: Record<string, unknown>
@@ -112,15 +113,12 @@ interface LumosLessonContentProps {
 // this is a fallback, not a hard-wire, which is why it stays here rather than
 // replacing the resolution above.
 //
-// A full CDN URL rather than `asset()`: that helper flattens any path to its
-// bare file name (`/media/story.mp4` → `hogwarts/story.mp4`), and the flat key
-// is served `application/octet-stream` while this one is served `video/mp4`.
-// Chromium plays either; a `<video>` source is exactly where a wrong MIME type
-// is worth not betting on. `asset()`'s own docs call out grouped assets moving
-// to a full URL like this.
-const FALLBACK_VIDEO_URL = `https://${
-  process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
-}/hogwarts/media/story.mp4`
+// A hashed key rather than `asset()`'s flat `hogwarts/story.mp4`, which is
+// served `application/octet-stream`; a `<video>` source is exactly where a
+// wrong MIME type is worth not betting on.
+// The story video's H.264 source (media-manifest.json → "story"), hashed and
+// served video/mp4 + immutable from the homepage folder of the CDN.
+const FALLBACK_VIDEO_URL = cdn("hogwarts/story.721b10fc.mp4")
 
 export function LumosLessonContent({
   dictionary,

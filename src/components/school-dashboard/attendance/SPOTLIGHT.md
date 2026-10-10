@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [teacher, principal, registrar, parent, student]
 routes: [/ar/s/{school}/attendance, /ar/s/{school}/attendance/manual, /ar/s/{school}/attendance/excuses, /ar/s/{school}/attendance/early-warning, /ar/s/{school}/attendance/reports, /ar/s/{school}/attendance/records]
-screenshots: [quick-mobile-ar.png, quick-mobile-saved.png, attendance-overview-ar-after.png, attendance-excuses.png, attendance-manual-loaded.png, attendance-settings-ar-after.png]
+screenshots: [docs/evidence/quick-mobile-ar.png, docs/evidence/quick-mobile-saved.png, docs/evidence/attendance-overview-ar-after.png, docs/evidence/attendance-excuses.png, docs/evidence/attendance-manual-loaded.png, docs/evidence/attendance-settings-ar-after.png]
 readme: ./README.md
 docs: content/docs-en/attendance.mdx
 updated: 2026-09-27
@@ -44,19 +44,19 @@ Each teacher fills a paper register, a runner carries the sheets to the office, 
 
 ## Real screens to show
 
-- `quick-mobile-ar.png` — the teacher's quick register on a phone, in Arabic, with one student tapped absent (red "غائب" tag) and the Save button.
-- `quick-mobile-saved.png` — the confirmation after saving: 27 present, 2 absent, 1 late, "2 guardians notified", Message guardian buttons (English interface).
-- `attendance-overview-ar-after.png` — the principal's overview in Arabic: today's counts, "no school today" note, the needs-attention list, quick-access tiles.
-- `attendance-excuses.png` — pending excuse requests from parents with reason tags and a Review button (English interface, Arabic names).
-- `attendance-manual-loaded.png` — the desktop class register with All Present / All Absent / All Late buttons.
-- `attendance-settings-ar-after.png` — the school's attendance settings in Arabic.
+- `docs/evidence/quick-mobile-ar.png` — the teacher's quick register on a phone, in Arabic, with one student tapped absent (red "غائب" tag) and the Save button.
+- `docs/evidence/quick-mobile-saved.png` — the confirmation after saving: 27 present, 2 absent, 1 late, "2 guardians notified", Message guardian buttons (English interface).
+- `docs/evidence/attendance-overview-ar-after.png` — the principal's overview in Arabic: today's counts, "no school today" note, the needs-attention list, quick-access tiles.
+- `docs/evidence/attendance-excuses.png` — pending excuse requests from parents with reason tags and a Review button (English interface, Arabic names).
+- `docs/evidence/attendance-manual-loaded.png` — the desktop class register with All Present / All Absent / All Late buttons.
+- `docs/evidence/attendance-settings-ar-after.png` — the school's attendance settings in Arabic.
 - Note: most of these show a small red development badge ("1 Issue") in a corner — crop it out before posting.
 - To capture more (with /record, Arabic): `/ar/s/{school}/attendance` as a teacher on a phone, `/ar/s/{school}/attendance/early-warning`, `/ar/s/{school}/attendance/reports`, and the parent view at `/ar/s/{school}/attendance/records`.
 
 ## What you can say
 
 - Teachers only tap the absent and late students — everyone else is marked present with one Save. [quick/content.tsx, ISSUE.md "Quick Attendance"]
-- After saving, the teacher sees how many guardians were notified and can message each absent child's guardian directly. [ISSUE.md "Quick Attendance", quick-mobile-saved.png]
+- After saving, the teacher sees how many guardians were notified and can message each absent child's guardian directly. [ISSUE.md "Quick Attendance", docs/evidence/quick-mobile-saved.png]
 - The register opens on the class the teacher is teaching right now, based on the timetable. [README.md "Quick Attendance"]
 - Parents can send an excuse from their side; the school reviews it and an approved excuse marks the absence as excused. [docs-en/attendance.mdx "Parent engagement"]
 - The principal sees which classes have not been marked today. [README.md, ISSUE.md item 12]
@@ -104,4 +104,4 @@ Each teacher fills a paper register, a runner carries the sheets to the office, 
 - content/docs-en/attendance.mdx
 - content/docs-en/compliance.mdx
 - content/docs-en/marketing-brief.mdx
-- Repo-root screenshots: quick-mobile-ar.png, quick-mobile-saved.png, quick-attendance-teacher-mobile.png, attendance-overview-ar-after.png, attendance-excuses.png, attendance-manual-loaded.png
+- Repo-root screenshots: docs/evidence/quick-mobile-ar.png, docs/evidence/quick-mobile-saved.png, docs/evidence/quick-attendance-teacher-mobile.png, docs/evidence/attendance-overview-ar-after.png, docs/evidence/attendance-excuses.png, docs/evidence/attendance-manual-loaded.png

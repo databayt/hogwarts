@@ -1,7 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { ImageMedia, MediaLang, VideoMedia } from "./media"
+import {
+  flowStills,
+  type ImageMedia,
+  type MediaLang,
+  type VideoMedia,
+} from "./media"
 import manifest from "./media-manifest.json"
 import { Shot } from "./shot"
 import { TutorialVideo } from "./tutorial-video"
@@ -40,12 +45,8 @@ export function FlowMedia({ flow, lang = "ar", only, title }: FlowMediaProps) {
   const stillLang =
     only === "video"
       ? undefined
-      : langs.find((l) =>
-          Object.keys(media).some((id) => isStill(id, prefix, l))
-        )
-  const stills = stillLang
-    ? Object.keys(media).filter((id) => isStill(id, prefix, stillLang))
-    : []
+      : langs.find((l) => flowStills(flow, l).length > 0)
+  const stills = stillLang ? flowStills(flow, stillLang) : []
 
   if (!videoLang && !stills.length) return null
 
@@ -70,11 +71,4 @@ export function FlowMedia({ flow, lang = "ar", only, title }: FlowMediaProps) {
       ))}
     </div>
   )
-}
-
-/** A flat `<flow>/<step>-<lang>` still (not a device still, video or reel). */
-function isStill(id: string, prefix: string, lang: MediaLang) {
-  if (!id.startsWith(prefix) || !id.endsWith(`-${lang}`)) return false
-  const step = id.slice(prefix.length, -(lang.length + 1))
-  return !step.includes("/") && media[id]?.kind === "image"
 }

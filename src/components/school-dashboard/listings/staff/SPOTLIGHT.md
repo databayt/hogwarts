@@ -41,7 +41,7 @@ The office knows the teachers, but the accountant, the librarian, the guard and 
 
 - None yet — capture with /record.
 - Routes to capture: the Staff list (`/ar/s/{school}/staff`), the credentials pop-up opened from a staff row, and the Staff section of the bulk import page (`/ar/s/{school}/school/bulk`). Before posting any capture, check it for photo avatars of real actors, Harry Potter names, the "quick guide" welcome pop-up and the red "N Issue" development badge. Crop or blur all of them.
-- Do not use `payroll-runs-admin-ar.png` for this feature. It is the finance payroll screen.
+- Do not use `docs/evidence/payroll-runs-admin-ar.png` for this feature. It is the finance payroll screen.
 
 ## What you can say
 

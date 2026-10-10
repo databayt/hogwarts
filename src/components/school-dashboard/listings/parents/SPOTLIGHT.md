@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [registrar, owner, parent]
 routes: [/ar/s/{school}/parents, /ar/s/{school}/parents/add/{id}/information, /ar/s/{school}/parents/add/{id}/contact, /ar/s/{school}/students]
-screenshots: [linkparent-fixed.png, linkparent-menu-open.png]
+screenshots: [docs/evidence/linkparent-fixed.png, docs/evidence/linkparent-menu-open.png]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -41,15 +41,15 @@ Parent phone numbers live in the admission forms, in a class teacher's phone and
 
 ## Real screens to show
 
-- `linkparent-fixed.png` — the Arabic Students list with the "Link parent" pop-up open. It shows one child's one-time code, its expiry date, a copy button and a Print button. The red "1 Issue" development badge in the bottom corner must be cropped before posting.
-- `linkparent-menu-open.png` — the same list with a student's action menu open, showing "Generate credentials" and "Link parent" next to view grades, view attendance and view classes.
+- `docs/evidence/linkparent-fixed.png` — the Arabic Students list with the "Link parent" pop-up open. It shows one child's one-time code, its expiry date, a copy button and a Print button. The red "1 Issue" development badge in the bottom corner must be cropped before posting.
+- `docs/evidence/linkparent-menu-open.png` — the same list with a student's action menu open, showing "Generate credentials" and "Link parent" next to view grades, view attendance and view classes.
 - Routes to capture for more: the Parents list (`/ar/s/{school}/parents`), the two-step add form, and the credentials pop-up opened from a parent row. Before posting any capture, check it for photo avatars of real actors, Harry Potter names, the "quick guide" welcome pop-up and the red "N Issue" development badge. Crop or blur all of them.
 
 ## What you can say
 
 - The student registration form records the father's and mother's names, phone numbers and WhatsApp numbers, and links them to the child. [../students/wizard/personal/actions.ts]
 - Each parent can have several phone numbers (mobile, home, work, emergency), with one marked as primary. [wizard/contact/form.tsx]
-- The school can give a parent a one-time code for their child. It works once and expires after 90 days. [lib/student-access-code.ts, linkparent-fixed.png]
+- The school can give a parent a one-time code for their child. It works once and expires after 90 days. [lib/student-access-code.ts, docs/evidence/linkparent-fixed.png]
 - One click creates a parent's login and offers WhatsApp, SMS and email buttons to send it. [../credentials/README.md, table.tsx]
 - The parents list shows who has a login and who does not. [content.tsx, columns.tsx]
 - The whole parent list can be downloaded as a spreadsheet file (CSV). [actions.ts, table.tsx]
@@ -62,7 +62,7 @@ Parent phone numbers live in the admission forms, in a class teacher's phone and
 - Do not say every parent has a profile page. A parent without a login has no detail page yet. [app/.../parents/[id]/page.tsx]
 - Do not say Balqalam sends WhatsApp messages on its own here. The WhatsApp button opens the admin's own WhatsApp with the message ready to send.
 - This page is the school's list of parents. It is not the parent portal. For what parents see on their phones, use the parent portal's spotlight.
-- No hours saved, no percentages. Call the product Balqalam, never its retired codename. Do not use the Harry Potter demo names or actor photos (the parent profile screenshot `profile-parent-ar.png` shows one; do not use it).
+- No hours saved, no percentages. Call the product Balqalam, never its retired codename. Do not use the Harry Potter demo names or actor photos (the parent profile screenshot `docs/evidence/profile-parent-ar.png` shows one; do not use it).
 
 ## Post angles
 
@@ -94,4 +94,4 @@ Parent phone numbers live in the admission forms, in a class teacher's phone and
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/parents/ (page, layout, [id])
 - src/components/internationalization/school-en.json, school-ar.json (parents section)
 - content/docs-en/marketing-brief.mdx
-- linkparent-fixed.png, linkparent-menu-open.png, profile-parent-ar.png
+- docs/evidence/linkparent-fixed.png, docs/evidence/linkparent-menu-open.png, docs/evidence/profile-parent-ar.png

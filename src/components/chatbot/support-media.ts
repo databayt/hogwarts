@@ -12,7 +12,12 @@
  *
  * Server-only: importing the manifest client-side would ship all of it.
  */
-import type { ImageMedia, MediaLang, VideoMedia } from "@/components/docs/media"
+import {
+  flowStills,
+  type ImageMedia,
+  type MediaLang,
+  type VideoMedia,
+} from "@/components/docs/media"
 import manifest from "@/components/docs/media-manifest.json"
 
 import type { SupportTopic } from "./support"
@@ -23,25 +28,6 @@ type Manifest = Record<string, VideoMedia | ImageMedia>
 // Steps that only make sense inside the full walkthrough — the landing list
 // and the macOS file picker — are never picked as one of the few chat stills.
 const SKIP_STEP = /^(list|bulk|finder)(-|$)/
-
-/**
- * Still ids for one flow + language, in manifest (= shot) order. Only flat
- * `<flow>/<step>-<lang>` ids: device stills (`<flow>/iphone-16/…`) and the
- * video/reel/clip entries are excluded.
- */
-export function flowStills(
-  flow: string,
-  lang: MediaLang,
-  media: Manifest = manifest as Manifest
-): string[] {
-  const prefix = `${flow}/`
-  const suffix = `-${lang}`
-  return Object.keys(media).filter((id) => {
-    if (!id.startsWith(prefix) || !id.endsWith(suffix)) return false
-    const step = id.slice(prefix.length, -suffix.length)
-    return !step.includes("/") && media[id]?.kind === "image"
-  })
-}
 
 /** Three evenly spaced stills — the first real step, the middle, the result. */
 function pickStills(ids: string[], flow: string, lang: MediaLang): string[] {

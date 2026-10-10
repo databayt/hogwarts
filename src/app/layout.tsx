@@ -22,6 +22,7 @@ import "./globals.css"
 // showcase and the imported zenda sections.
 import "@/styles/apple-clone.css"
 import "@/styles/thmanyah-clone.css"
+import { CDN_ORIGIN } from "@/lib/cdn"
 
 export const metadata: Metadata = {
   // Resolves relative Open Graph image URLs. Without it a non-Vercel build
@@ -93,9 +94,7 @@ export default async function RootLayout({
 
   // Marketing images, illustrations, Lottie and lesson video all load straight
   // from the CDN — open the connection early, it matters on high-RTT links.
-  preconnect(
-    `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"}`
-  )
+  preconnect(CDN_ORIGIN)
 
   return (
     <html

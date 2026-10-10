@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [owner, teacher, student, parent, finance]
 routes: [/ar/s/{school}/dashboard, /ar/s/{school}/dashboard/settings]
-screenshots: [demo-dashboard-ar.png]
+screenshots: [docs/evidence/demo-dashboard-ar.png]
 readme: ./README.md
 docs: content/docs-en/dashboard.mdx
 updated: 2026-09-27
@@ -43,7 +43,7 @@ A teacher checks a printed timetable taped inside a cupboard door to find the ne
 
 ## Real screens to show
 
-- `demo-dashboard-ar.png` — the administrator view in Arabic, full page. **Out of date, do not post as-is:** it shows a "Quick Guide" pop-up that no longer opens, and an attendance overview (91%, 196 students) that was sample data and has since been removed from the product.
+- `docs/evidence/demo-dashboard-ar.png` — the administrator view in Arabic, full page. **Out of date, do not post as-is:** it shows a "Quick Guide" pop-up that no longer opens, and an attendance overview (91%, 196 students) that was sample data and has since been removed from the product.
 - Nothing yet shows the phone view (the date widget, the green next-action banner, today's classes). Capture with /record:
   - `/ar/s/{school}/dashboard` at phone width, signed in as teacher, parent and student (demo accounts at demo.balqalam.com, password in the marketing brief).
   - The same route at desktop width as teacher.
@@ -65,7 +65,7 @@ A teacher checks a printed timetable taped inside a cupboard door to find the ne
 - Any number shown on the "Upcoming" flip card on desktop — it shows the same sample text to every school ("Storage usage at 85%", "2 active issues", "Math Homework"). Crop it out of any screenshot. [ISSUE.md, README.md]
 - That staff get a personalised to-do list — the staff reminders are placeholder items today. [upcoming-queries.ts]
 - That the accountant dashboard shows money in the school's currency — it currently prints "$" for every school, and several accountant and admin labels are English only. [ISSUE.md]
-- Attendance percentages or student counts from `demo-dashboard-ar.png` — they were invented sample data.
+- Attendance percentages or student counts from `docs/evidence/demo-dashboard-ar.png` — they were invented sample data.
 - Global bans: hours saved, percentages, "works offline", "download our app", uptime, paying customers.
 
 ## Post angles
@@ -97,4 +97,4 @@ A teacher checks a printed timetable taped inside a cupboard door to find the ne
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/dashboard/page.tsx and settings/page.tsx
 - content/docs-en/dashboard.mdx
 - content/docs-en/marketing-brief.mdx
-- demo-dashboard-ar.png, demo-home-ar.png (the second is the public homepage, not the dashboard — excluded)
+- docs/evidence/demo-dashboard-ar.png, docs/evidence/demo-home-ar.png (the second is the public homepage, not the dashboard — excluded)

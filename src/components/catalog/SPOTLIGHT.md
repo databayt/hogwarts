@@ -5,7 +5,7 @@ status: partial
 pillar: product-proof
 personas: [principal, teacher, student, owner]
 routes: [/ar/s/{school}/subjects, /ar/s/{school}/subjects/catalog, /ar/s/{school}/subjects/{subject}, /ar/s/{school}/subjects/contributions]
-screenshots: [subject-materials.png, demo-subjects-ar.png]
+screenshots: [subject-materials.png, docs/evidence/demo-subjects-ar.png]
 readme: ./README.md
 docs: content/docs-en/catalog.mdx
 updated: 2026-09-27
@@ -44,7 +44,7 @@ Before any timetable, exam or online lesson can be set up, someone has to type i
 ## Real screens to show
 
 - `subject-materials.png` — a Biology subject page in Arabic: banner, chapter strip with artwork, study-material cards, a row of lesson videos and exam counts. Many material cards read "0 items" and there is a red development badge ("4 Issues") bottom-left; crop both before posting.
-- `demo-subjects-ar.png` — the Arabic Subjects page, a grid of subjects by grade with artwork and stage tabs. An onboarding "quick guide" pop-up covers the centre; recapture without it.
+- `docs/evidence/demo-subjects-ar.png` — the Arabic Subjects page, a grid of subjects by grade with artwork and stage tabs. An onboarding "quick guide" pop-up covers the centre; recapture without it.
 - Routes to capture (Arabic, admin login on demo.balqalam.com): `/ar/s/{school}/subjects`, `/ar/s/{school}/subjects/catalog` (adding subjects), and a subject page with a well-filled Sudanese subject.
 
 ## What you can say
@@ -95,4 +95,4 @@ Before any timetable, exam or online lesson can be set up, someone has to type i
 - content/docs-en/catalog.mdx
 - content/docs-en/mvp.mdx
 - content/docs-en/marketing-brief.mdx
-- subject-materials.png, demo-subjects-ar.png (repo root)
+- subject-materials.png, docs/evidence/demo-subjects-ar.png

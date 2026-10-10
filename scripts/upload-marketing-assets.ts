@@ -3,7 +3,7 @@
  * SaaS-marketing homepage asset publisher.
  *
  * Encodes the homepage's imagery to AVIF + WebP at the size it actually
- * renders, uploads it to the `databayt-cdn` bucket under `balqalam/home/`,
+ * renders, uploads it to the `databayt-cdn` bucket under `hogwarts/` (the CDN mirrors app routes; this is the homepage, `/`),
  * and writes the manifest the blocks import.
  *
  * Why this exists rather than serving from `public/`:
@@ -59,7 +59,7 @@ import sharp from "sharp"
 const BUCKET = "databayt-cdn"
 const REGION = process.env.AWS_REGION || "us-east-1"
 const CDN = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
-const PREFIX = "balqalam/home"
+const PREFIX = "hogwarts"
 const CACHE_CONTROL = "public, max-age=31536000, immutable"
 
 // Sources live OUTSIDE public/ on purpose. They are encoder input, not served

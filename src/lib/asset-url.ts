@@ -19,9 +19,9 @@
  * their call sites move to a full CDN URL; everything else defaults here.
  */
 
-const CDN = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim()
-  ? `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN.trim()}`
-  : ""
+import { CDN_ORIGIN } from "@/lib/cdn"
+
+const CDN = CDN_ORIGIN
 
 /** The default namespace for not-yet-grouped hogwarts assets. */
 const NS = "/hogwarts"

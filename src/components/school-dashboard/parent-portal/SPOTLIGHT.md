@@ -50,7 +50,7 @@ None yet — capture with /record. Sign in on the demo as parent@balqalam.com an
 - `/ar/s/{school}/parent/children/{id}/report-cards` — the published list with Download.
 - `/ar/s/{school}/parent/children/{id}/attendance` — the excuse form open, on a phone.
 
-Not suitable: `profile-parent-ar.png` and `profile-child-via-parent-ar.png` are profile pages, not the portal. The first uses a film-character photo and fantasy demo text, and both show a developer error badge in the corner. They also show the side-menu entry "Parent portal" in English on an Arabic screen — check that label before recording.
+Not suitable: `docs/evidence/profile-parent-ar.png` and `docs/evidence/profile-child-via-parent-ar.png` are profile pages, not the portal. The first uses a film-character photo and fantasy demo text, and both show a developer error badge in the corner. They also show the side-menu entry "Parent portal" in English on an Arabic screen — check that label before recording.
 
 ## What you can say
 
@@ -107,4 +107,4 @@ Not suitable: `profile-parent-ar.png` and `profile-child-via-parent-ar.png` are 
 - src/components/internationalization/dictionaries/{ar,en}/parentPortal.json
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/ (layout.tsx, page.tsx, children/[id]/\*, fees/page.tsx, messages/page.tsx)
 - content/docs-en/marketing-brief.mdx
-- profile-parent-ar.png, profile-child-via-parent-ar.png (reviewed, excluded)
+- docs/evidence/profile-parent-ar.png, docs/evidence/profile-child-via-parent-ar.png (reviewed, excluded)

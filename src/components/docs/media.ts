@@ -31,7 +31,8 @@ export interface CaptionTrack {
 export interface VideoMedia {
   kind: "video"
   title: Record<MediaLang, string>
-  poster: string
+  /** Absent on a 9:16 reel — the 16:9 poster would not fit it. */
+  poster?: string
   width: number
   height: number
   duration: number
@@ -45,7 +46,10 @@ export interface ImageMedia {
   width: number
   height: number
   alt: Record<MediaLang, string>
-  /** Keyed by pixel width, e.g. { "1600": url, "2400": url }. */
+  /** The still's NN in its flow (01-list → 1) — the docs list steps by it. */
+  order?: number
+  /** Keyed by pixel width, e.g. { "1600": url, "2400": url } — a phone
+   * still ships at its native width (e.g. { "1179": url }). */
   avif: Record<string, string>
   webp: Record<string, string>
 }
@@ -68,4 +72,33 @@ export function getImage(id: string): ImageMedia {
     throw new Error(`media-manifest.json has no image "${id}"`)
   }
   return entry
+}
+
+/**
+ * Still ids for one flow + language, in shot order (`order`, else manifest order). Only
+ * flat `<flow>/<step>-<lang>` ids: device stills (`<flow>/iphone-16/…`) and
+ * the video/reel/clip entries are excluded. Never throws — an unpublished
+ * flow simply has no stills.
+ */
+export function flowStills(
+  flow: string,
+  lang: MediaLang,
+  entries: Record<string, VideoMedia | ImageMedia> = media
+): string[] {
+  const prefix = `${flow}/`
+  const suffix = `-${lang}`
+  const order = (id: string) => {
+    const e = entries[id]
+    return e?.kind === "image" ? (e.order ?? Infinity) : Infinity
+  }
+  return (
+    Object.keys(entries)
+      .filter((id) => {
+        if (!id.startsWith(prefix) || !id.endsWith(suffix)) return false
+        const step = id.slice(prefix.length, -suffix.length)
+        return !step.includes("/") && entries[id]?.kind === "image"
+      })
+      // stable: stills without an order keep their manifest order
+      .sort((a, b) => (order(a) === order(b) ? 0 : order(a) - order(b)))
+  )
 }

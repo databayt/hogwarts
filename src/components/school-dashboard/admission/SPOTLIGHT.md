@@ -5,7 +5,7 @@ status: live
 pillar: school-operations
 personas: [owner, principal, registrar, finance, parent]
 routes: [/ar/s/{school}/admission, /ar/s/{school}/admission/applications, /ar/s/{school}/admission/merit, /ar/s/{school}/admission/enrollment, /ar/s/{school}/admission/leads, /ar/s/{school}/admission/settings, /ar/s/{school}/admissions, /ar/s/{school}/application, /ar/s/{school}/application/status]
-screenshots: [demo-admission-ar.png, merit-desktop.png, baseline-admission.jpeg]
+screenshots: [docs/evidence/demo-admission-ar.png, docs/evidence/merit-desktop.png, docs/evidence/baseline-admission.jpeg]
 readme: ./README.md
 docs: content/docs-en/admission.mdx
 updated: 2026-09-27
@@ -44,9 +44,9 @@ Every new season the front office hands out paper folders, then someone types ea
 
 ## Real screens to show
 
-- `demo-admission-ar.png` — Arabic Applications tab: application numbers, applicant names, grade, status badges (accepted, waitlisted, rejected, shortlisted, withdrawn) and merit rank.
-- `merit-desktop.png` — despite the name, the Arabic Applications tab on a phone-width screen. Crop the red development badge at the bottom left.
-- `baseline-admission.jpeg` — English Campaigns tab: two open campaigns with seats and application counts. Crop the red development badge.
+- `docs/evidence/demo-admission-ar.png` — Arabic Applications tab: application numbers, applicant names, grade, status badges (accepted, waitlisted, rejected, shortlisted, withdrawn) and merit rank.
+- `docs/evidence/merit-desktop.png` — despite the name, the Arabic Applications tab on a phone-width screen. Crop the red development badge at the bottom left.
+- `docs/evidence/baseline-admission.jpeg` — English Campaigns tab: two open campaigns with seats and application counts. Crop the red development badge.
 - More to capture with /record: the public admissions page (`/ar/s/{school}/admissions`), the application form on a phone (`/ar/s/{school}/application`), the status tracker (`/ar/s/{school}/application/status`), the merit tab (`/ar/s/{school}/admission/merit`), the enrollment tab with the placement dialog (`/ar/s/{school}/admission/enrollment`), and the Leads tab.
 
 ## What you can say
@@ -104,4 +104,4 @@ Every new season the front office hands out paper folders, then someone types ea
 - content/docs-en/admission.mdx
 - content/docs-en/admission-spotlight.mdx
 - content/docs-en/marketing-brief.mdx
-- demo-admission-ar.png, merit-desktop.png, baseline-admission.jpeg
+- docs/evidence/demo-admission-ar.png, docs/evidence/merit-desktop.png, docs/evidence/baseline-admission.jpeg

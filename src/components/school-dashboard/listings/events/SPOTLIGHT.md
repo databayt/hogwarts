@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [principal, teacher, parent, student]
 routes: [/ar/s/{school}/events, /ar/s/{school}/events/calendar, /ar/s/{school}/events/{id}, /ar/s/{school}/parent/events]
-screenshots: [demo-events-ar.png, events-calendar-ar.png]
+screenshots: [docs/evidence/demo-events-ar.png, docs/evidence/events-calendar-ar.png]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -42,8 +42,8 @@ The events of the year live in a printed circular, a notice board and a few What
 
 ## Real screens to show
 
-- `demo-events-ar.png` — the Arabic events list: holidays, exams, graduation, school trip, sports day, each with type badge, date, start time and status. Note: some seeded events appear twice in this capture; crop or recapture before posting.
-- `events-calendar-ar.png` — the Arabic monthly calendar (July 2026). The month shown is empty, so it proves the layout, not the content; recapture on a month with events.
+- `docs/evidence/demo-events-ar.png` — the Arabic events list: holidays, exams, graduation, school trip, sports day, each with type badge, date, start time and status. Note: some seeded events appear twice in this capture; crop or recapture before posting.
+- `docs/evidence/events-calendar-ar.png` — the Arabic monthly calendar (July 2026). The month shown is empty, so it proves the layout, not the content; recapture on a month with events.
 - Still to capture: an event detail page (`/ar/s/{school}/events/{id}`), the three-step create form, and the parent events page with a Register button (`/ar/s/{school}/parent/events`).
 
 ## What you can say
@@ -99,4 +99,4 @@ The events of the year live in a printed circular, a notice board and a few What
 - src/app/api/cron/event-reminders/route.ts, cf/crons.json
 - src/routes.ts
 - content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx
-- demo-events-ar.png, events-calendar-ar.png
+- docs/evidence/demo-events-ar.png, docs/evidence/events-calendar-ar.png

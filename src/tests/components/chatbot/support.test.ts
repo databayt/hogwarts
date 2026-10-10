@@ -8,7 +8,8 @@ import {
   normalize,
   SUPPORT_TOPICS,
 } from "@/components/chatbot/support"
-import { flowStills, resourcesFor } from "@/components/chatbot/support-media"
+import { resourcesFor } from "@/components/chatbot/support-media"
+import { flowStills } from "@/components/docs/media"
 import type { ImageMedia, VideoMedia } from "@/components/docs/media"
 
 const top = (...texts: string[]) => matchTopics(texts)[0]?.slug
@@ -130,6 +131,20 @@ describe("support media", () => {
     expect(flowStills("add-student", "ar", fixture)).toEqual(
       STEPS.map((s) => `add-student/${s}-ar`)
     )
+  })
+
+  it("orders stills by their shot number, not manifest position", () => {
+    // a step re-published later lands at the end of the manifest
+    const late = {
+      "add-student/created-ar": { ...image("created"), order: 3 },
+      "add-student/list-ar": { ...image("list"), order: 1 },
+      "add-student/documents-ar": { ...image("documents"), order: 2 },
+    }
+    expect(flowStills("add-student", "ar", late)).toEqual([
+      "add-student/list-ar",
+      "add-student/documents-ar",
+      "add-student/created-ar",
+    ])
   })
 
   it("attaches video, three spaced stills (no list/finder) and the guide", () => {

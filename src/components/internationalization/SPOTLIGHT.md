@@ -5,7 +5,7 @@ status: live
 pillar: product-proof
 personas: [owner, principal, registrar, teacher, parent, student]
 routes: [/ar/s/{school}/dashboard, /en/s/{school}/dashboard]
-screenshots: [attendance-overview-ar.png, attendance-overview-en.png]
+screenshots: [docs/evidence/attendance-overview-ar.png, docs/evidence/attendance-overview-en.png]
 readme: ./README.md
 docs: content/docs-en/internationalization.mdx
 updated: 2026-09-27
@@ -41,10 +41,10 @@ The school bought a system made for English. The menus are in English, the layou
 
 ## Real screens to show
 
-- `attendance-overview-ar.png` — the attendance overview in Arabic, menu on the right, right-to-left layout. Note: one tab ("Early Warning") and a line under each student still show English; crop or re-capture before posting.
-- `attendance-overview-en.png` — the same screen in English, mirrored left-to-right. Pair it with the Arabic one for a side-by-side.
+- `docs/evidence/attendance-overview-ar.png` — the attendance overview in Arabic, menu on the right, right-to-left layout. Note: one tab ("Early Warning") and a line under each student still show English; crop or re-capture before posting.
+- `docs/evidence/attendance-overview-en.png` — the same screen in English, mirrored left-to-right. Pair it with the Arabic one for a side-by-side.
 
-To capture more (with /record): the same page in Arabic and English at `/ar/s/{school}/dashboard` and `/en/s/{school}/dashboard`, and a printed Arabic report card. Avoid the student-profile screenshots in the repo root: they show a real face and film-character demo data.
+To capture more (with /record): the same page in Arabic and English at `/ar/s/{school}/dashboard` and `/en/s/{school}/dashboard`, and a printed Arabic report card. Avoid the student-profile screenshots in docs/evidence/: they show a real face and film-character demo data.
 
 ## What you can say
 
@@ -93,4 +93,4 @@ To capture more (with /record): the same page in Arabic and English at `/ar/s/{s
 - src/app/manifest.ts
 - content/docs-en/internationalization.mdx
 - content/docs-en/marketing-brief.mdx
-- attendance-overview-ar.png, attendance-overview-en.png, profile-student-ar.png (repo root)
+- docs/evidence/attendance-overview-ar.png, docs/evidence/attendance-overview-en.png, docs/evidence/profile-student-ar.png

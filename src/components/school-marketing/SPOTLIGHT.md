@@ -42,7 +42,7 @@ A parent who wants a place calls the office, or drives over to collect a paper f
 
 ## Real screens to show
 
-None yet — capture with /record. Do not use `demo-home-ar.png`: it shows an old homepage design that has since been removed.
+None yet — capture with /record. Do not use `docs/evidence/demo-home-ar.png`: it shows an old homepage design that has since been removed.
 Routes to capture (Arabic, on the demo school):
 
 - `/ar/s/{school}/admissions` — the admissions page (safest page to show)
@@ -103,4 +103,4 @@ Routes to capture (Arabic, on the demo school):
 - src/components/internationalization/en.json (marketing.site)
 - prisma/seeds/admission.ts (tour time slots exist only as seed data)
 - content/docs-en/pilot.mdx, content/docs-en/marketing-brief.mdx
-- demo-home-ar.png (checked: shows the retired design)
+- docs/evidence/demo-home-ar.png (checked: shows the retired design)

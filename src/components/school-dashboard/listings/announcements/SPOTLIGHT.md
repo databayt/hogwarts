@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [principal, teacher, parent, student]
 routes: [/ar/s/{school}/announcements, /ar/s/{school}/announcements/{id}, /ar/s/{school}/announcements/templates, /ar/s/{school}/parent/announcements]
-screenshots: [demo-announcements-ar.png]
+screenshots: [docs/evidence/demo-announcements-ar.png]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -42,7 +42,7 @@ A notice about winter uniform or exam dates is printed, sent home in bags, pinne
 
 ## Real screens to show
 
-- `demo-announcements-ar.png` — the Arabic announcements list: Quran competition, welcome to the 2025-2026 year, winter holiday dates, exam schedule, teacher's day, each with scope (school, class, role) and published or draft label.
+- `docs/evidence/demo-announcements-ar.png` — the Arabic announcements list: Quran competition, welcome to the 2025-2026 year, winter holiday dates, exam schedule, teacher's day, each with scope (school, class, role) and published or draft label.
 - Still to capture: the create form (`/ar/s/{school}/announcements`, plus button), a published announcement's reading page (`/ar/s/{school}/announcements/{id}`), the notification bell after publishing, and the parent view (`/ar/s/{school}/parent/announcements`) on a phone.
 
 ## What you can say
@@ -100,4 +100,4 @@ A notice about winter uniform or exam dates is printed, sent home in bags, pinne
 - src/app/api/cron/publish-announcements/route.ts, cf/crons.json
 - src/routes.ts
 - content/docs-en/messages.mdx, content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx
-- demo-announcements-ar.png
+- docs/evidence/demo-announcements-ar.png

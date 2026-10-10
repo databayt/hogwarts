@@ -336,7 +336,7 @@ thing on screen and the header is one short scroll up.
 ### Lesson video fallback (2026-09-09)
 
 Until real lesson videos are uploaded, every lesson plays the marketing story
-clip from the CDN: `https://<NEXT_PUBLIC_CDN_DOMAIN>/hogwarts/media/story.mp4`.
+clip from the CDN: the story video's H.264 source, `cdn("hogwarts/story.721b10fc.mp4")` (`src/lib/cdn.ts`).
 That is a FALLBACK, not a hard-wire — `dashboard/lesson/content.tsx` still
 resolves a lesson's own video first, so the day a real video row lands for a
 lesson, that lesson plays it and nothing here changes.

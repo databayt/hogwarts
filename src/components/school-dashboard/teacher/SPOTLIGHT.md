@@ -45,7 +45,7 @@ Write about that, using the Dashboard Spotlight.
 
 None — this screen is never shown to anyone. Do not capture it.
 
-For the teacher's real home screen, capture `/ar/s/{school}/dashboard` signed in as teacher@balqalam.com on the demo, at phone width (banner and today's classes) and at desktop width. `profile-teacher-ar.png` is the teacher's profile page, not the home screen, and `quick-attendance-teacher-mobile.png` belongs to Attendance.
+For the teacher's real home screen, capture `/ar/s/{school}/dashboard` signed in as teacher@balqalam.com on the demo, at phone width (banner and today's classes) and at desktop width. `docs/evidence/profile-teacher-ar.png` is the teacher's profile page, not the home screen, and `docs/evidence/quick-attendance-teacher-mobile.png` belongs to Attendance.
 
 ## What you can say
 

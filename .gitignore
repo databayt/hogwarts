@@ -113,5 +113,10 @@ public/fonts/thmanyah/.manifest-version
 # raw per-run browser data (~1 MB a run); summary.json carries the medians
 /performance/reports/**/browser-*.json
 
-# Local screenshot captures (/shoot) — not served assets
+# /shoot + /record deliverables live in ~/media/hogwarts/<flow>/ (outside the repo) and
+# reach users only through the CDN + media-manifest.json; nothing is captured into public/
 public/screenshot/
+# Loose captures never land at the root — evidence stills go in docs/evidence/
+/*.png
+/*.jpg
+/*.jpeg

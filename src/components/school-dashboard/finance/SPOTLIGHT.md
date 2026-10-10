@@ -5,7 +5,7 @@ status: partial
 pillar: school-operations
 personas: [owner, finance, principal, parent, teacher]
 routes: [/ar/s/{school}/finance, /ar/s/{school}/finance/fees, /ar/s/{school}/finance/fees/structures, /ar/s/{school}/finance/fees/payments, /ar/s/{school}/finance/fees/assignments/{id}, /ar/s/{school}/finance/invoice, /ar/s/{school}/finance/expenses, /ar/s/{school}/finance/budget, /ar/s/{school}/finance/payroll, /ar/s/{school}/finance/payroll/my, /ar/s/{school}/finance/banking, /ar/s/{school}/finance/reports, /ar/s/{school}/finance/permissions]
-screenshots: [invoice-ar-after-ddl.png]
+screenshots: [docs/evidence/invoice-ar-after-ddl.png]
 readme: ./README.md
 docs: content/docs-en/finance.mdx
 updated: 2026-09-27
@@ -59,9 +59,9 @@ Fees live in a notebook and a spreadsheet only the accountant understands. A fat
 
 ## Real screens to show
 
-- `invoice-ar-after-ddl.png` — the Arabic invoice list: invoice numbers, family names, amounts in Sudanese pounds, paid and unpaid badges. Demo data; the best finance shot we have.
+- `docs/evidence/invoice-ar-after-ddl.png` — the Arabic invoice list: invoice numbers, family names, amounts in Sudanese pounds, paid and unpaid badges. Demo data; the best finance shot we have.
 
-Not suitable: `demo-finance-ar.png` shows US dollars, a placeholder bank card with a staff name on it, and a "Sales" menu item. `payroll-runs-admin-ar.png` has a welcome pop-up over it and English buttons. `finance-ar-before.png` and `invoice-ar-before.png` are pre-fix captures.
+Not suitable: `docs/evidence/demo-finance-ar.png` shows US dollars, a placeholder bank card with a staff name on it, and a "Sales" menu item. `docs/evidence/payroll-runs-admin-ar.png` has a welcome pop-up over it and English buttons. `docs/evidence/finance-ar-before.png` and `docs/evidence/invoice-ar-before.png` are pre-fix captures.
 
 Capture with /record (sign in on the demo as the accountant):
 
@@ -118,4 +118,4 @@ Capture with /record (sign in on the demo as the accountant):
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/ (route tree, fees/my/page.tsx, fees/assignments/[id]/page.tsx)
 - content/docs-en/finance.mdx, fees.mdx, finance-{accounts,banking,budget,dashboard,expenses,payroll,permissions,receipt,reports,salary,timesheet,wallet}.mdx
 - content/docs-en/marketing-brief.mdx
-- invoice-ar-after-ddl.png, demo-finance-ar.png, payroll-runs-admin-ar.png (reviewed)
+- docs/evidence/invoice-ar-after-ddl.png, docs/evidence/demo-finance-ar.png, docs/evidence/payroll-runs-admin-ar.png (reviewed)

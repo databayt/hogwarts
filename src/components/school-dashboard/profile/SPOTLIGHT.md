@@ -5,7 +5,7 @@ status: partial
 pillar: product-proof
 personas: [student, teacher, parent, principal, registrar]
 routes: [/ar/s/{school}/profile, /ar/s/{school}/profile/{id}]
-screenshots: [profile-student-achievements-ar.png, profile-parent-ar.png, profile-admin-ar-bio-fixed.png, profile-teacher-ar.png, profile-student-ar.png, profile-child-via-parent-ar.png]
+screenshots: [docs/evidence/profile-student-achievements-ar.png, docs/evidence/profile-parent-ar.png, docs/evidence/profile-admin-ar-bio-fixed.png, docs/evidence/profile-teacher-ar.png, docs/evidence/profile-student-ar.png, docs/evidence/profile-child-via-parent-ar.png]
 readme: ./README.md
 docs: content/docs-en/profile.mdx
 updated: 2026-09-27
@@ -45,11 +45,11 @@ A student's story is spread across a class register, a marks sheet, a library ca
 
 Every profile screenshot in the repo uses the demo school, whose accounts carry fictional film characters' names and film-still photos of real actors. **None of these can be posted as they are.** Blur or replace the photo and the name first, or re-capture with a neutral demo account.
 
-- `profile-student-achievements-ar.png` — a student's Achievements tab in Arabic: six earned badges with gold and silver levels and dates. Photo, name and an English bio line must be removed.
-- `profile-parent-ar.png` — a parent's profile in Arabic with the activity calendar, a feed of parent meetings and messages with the teacher, and a Children tab. Photo, name and English bio must be removed; the side menu shows an untranslated "Parent portal" item.
-- `profile-admin-ar-bio-fixed.png` — a staff profile in Arabic with a well-filled activity calendar and a feed of application reviews. Photo and name must be removed.
-- `profile-teacher-ar.png` and `profile-student-ar.png` — teacher and student profiles, both half-covered by the "quick guide" welcome pop-up. Not usable.
-- `profile-child-via-parent-ar.png` — a child's profile opened by a parent, with no photo, but its calendar is empty and it reads "no activity recorded yet". Do not use it to show the calendar.
+- `docs/evidence/profile-student-achievements-ar.png` — a student's Achievements tab in Arabic: six earned badges with gold and silver levels and dates. Photo, name and an English bio line must be removed.
+- `docs/evidence/profile-parent-ar.png` — a parent's profile in Arabic with the activity calendar, a feed of parent meetings and messages with the teacher, and a Children tab. Photo, name and English bio must be removed; the side menu shows an untranslated "Parent portal" item.
+- `docs/evidence/profile-admin-ar-bio-fixed.png` — a staff profile in Arabic with a well-filled activity calendar and a feed of application reviews. Photo and name must be removed.
+- `docs/evidence/profile-teacher-ar.png` and `docs/evidence/profile-student-ar.png` — teacher and student profiles, both half-covered by the "quick guide" welcome pop-up. Not usable.
+- `docs/evidence/profile-child-via-parent-ar.png` — a child's profile opened by a parent, with no photo, but its calendar is empty and it reads "no activity recorded yet". Do not use it to show the calendar.
 - Most of these carry a small red development badge ("1 Issue", "2 Issues") in a corner — crop it out.
 - To capture more (with /record, Arabic, after the demo avatars are replaced): `/ar/s/{school}/profile` signed in as the demo student, teacher and parent, on a phone and on a desktop.
 
@@ -104,4 +104,4 @@ Every profile screenshot in the repo uses the demo school, whose accounts carry 
 - prisma/seeds/profile-extras.ts, prisma/seeds/profile-activity.ts (only callers of the badge engine)
 - content/docs-en/profile.mdx
 - content/docs-en/marketing-brief.mdx
-- profile-student-ar.png, profile-student-achievements-ar.png, profile-parent-ar.png, profile-teacher-ar.png, profile-admin-ar-bio-fixed.png, profile-child-via-parent-ar.png
+- docs/evidence/profile-student-ar.png, docs/evidence/profile-student-achievements-ar.png, docs/evidence/profile-parent-ar.png, docs/evidence/profile-teacher-ar.png, docs/evidence/profile-admin-ar-bio-fixed.png, docs/evidence/profile-child-via-parent-ar.png

@@ -44,7 +44,7 @@ A software bill arrives as an email attachment nobody forwards to the accountant
 
 None yet — and this screen is not ready to film. Its labels are English only, even on the Arabic site, and one card lists "Advanced analytics dashboard", a claim we are not allowed to make. The "add card" and "choose a payment method" buttons do not do anything yet.
 
-If a post needs pricing, use the pricing page instead: `ar-pricing.png`, `ar-pricing-compare.png` (repo root, owned by the pricing page, not this feature).
+If a post needs pricing, use the pricing page instead: `docs/evidence/ar-pricing.png`, `docs/evidence/ar-pricing-compare.png` (owned by the pricing page, not this feature).
 
 Route to capture once the screen is translated: `/ar/s/{school}/billing`.
 

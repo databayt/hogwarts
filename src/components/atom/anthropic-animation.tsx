@@ -31,6 +31,7 @@ import { useReducedMotion } from "motion/react"
 import { useTheme } from "next-themes"
 
 import { cn } from "@/lib/utils"
+import { cdn } from "@/lib/cdn"
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false })
 
@@ -38,8 +39,7 @@ const Lottie = dynamic(() => import("lottie-react"), { ssr: false })
 export type AnthropicAnimationName = "api" | "hero" | "claude-for-excel"
 
 function urlFor(name: AnthropicAnimationName): string {
-  const cdn = process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
-  return `https://${cdn}/anthropic/${name}.json`
+  return cdn(`anthropic/${name}.json`)
 }
 
 // One entry per asset — a Map, not a single slot, so two names never evict

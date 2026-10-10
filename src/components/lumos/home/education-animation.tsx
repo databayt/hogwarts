@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
+import { cdn } from "@/lib/cdn"
 
 // lottie-web is large (~hundreds of KB). It only renders below the hero CTA
 // and isn't LCP-critical, so defer its parse with a client-side dynamic import
@@ -18,9 +19,7 @@ export function EducationAnimation({ className }: EducationAnimationProps) {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch(
-      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/education.json`
-    )
+    fetch(cdn("hogwarts/animations/education.json"))
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

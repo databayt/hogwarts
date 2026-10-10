@@ -5,7 +5,7 @@ status: partial
 pillar: learning-science
 personas: [student, teacher, principal, parent]
 routes: [/ar/s/{school}/lumos, /ar/s/{school}/lumos/courses, /ar/s/{school}/lumos/courses/{course}, /ar/s/{school}/lumos/courses/{course}/{lesson}, /ar/s/{school}/lumos/courses/{course}/certificate, /ar/s/{school}/lumos/dashboard, /ar/s/{school}/lumos/videos, /ar/s/{school}/lumos/instructors]
-screenshots: [courses-ar-before.png, lesson-fullscreen.png]
+screenshots: [docs/evidence/courses-ar-before.png, lesson-fullscreen.png]
 readme: ./README.md
 docs: content/docs-en/lms.mdx
 updated: 2026-09-27
@@ -43,7 +43,7 @@ Lesson videos are scattered across YouTube links in class WhatsApp groups, and n
 
 ## Real screens to show
 
-- `courses-ar-before.png` — the Arabic course catalog with subject artwork (Mathematics, Arabic). An onboarding "quick guide" pop-up covers the middle and the heading button shows an old label; recapture before posting.
+- `docs/evidence/courses-ar-before.png` — the Arabic course catalog with subject artwork (Mathematics, Arabic). An onboarding "quick guide" pop-up covers the middle and the heading button shows an old label; recapture before posting.
 - `lesson-fullscreen.png` — the full-screen lesson player at the moment it loads, showing the faint viewer watermark (masked email and time). Useful only for a video-protection angle; crop the masked email.
 - Routes to capture (Arabic, student login on demo.balqalam.com, on a phone): `/ar/s/{school}/lumos`, `/ar/s/{school}/lumos/courses`, a course page, a lesson page with its practice quiz, and the certificate page. As a teacher: `/ar/s/{school}/lumos/videos` and the "Propose a video" dialog.
 
@@ -95,4 +95,4 @@ Lesson videos are scattered across YouTube links in class WhatsApp groups, and n
 - content/docs-en/lms.mdx
 - content/docs-en/mvp.mdx
 - content/docs-en/marketing-brief.mdx
-- courses-ar-before.png, lesson-fullscreen.png (repo root)
+- docs/evidence/courses-ar-before.png, lesson-fullscreen.png

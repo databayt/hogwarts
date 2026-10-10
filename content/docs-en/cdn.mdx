@@ -1,21 +1,50 @@
 ---
 title: CDN Assets
-description: Static assets served from S3 + CloudFront via the asset() helper, organized into 5 flat directories.
+description: Curated media on cdn.databayt.org — product media that mirrors the app's routes, plus app chrome through the asset() helper.
 ---
 
-All platform UI assets live on S3 + CloudFront. Reference them through `asset()`; the helper prepends the CDN domain and the response is cached `immutable` for one year. 155 assets across 5 directories.
+Every curated hogwarts asset lives under the `hogwarts/` namespace of `cdn.databayt.org` (hogwarts is the internal name; balqalam is only the public brand). There are two tiers:
+
+1. **Product media** — the stills and videos `/shoot` and `/record` produce. The folder **mirrors the app's routes**, the keys are content-hashed, and pages read them by id from `src/components/docs/media-manifest.json`, never by URL.
+2. **App chrome** — icons, illustrations, animations and photos, through `asset()` (flat, unhashed).
+
+Both are cached `immutable` for one year. One origin helper, `src/lib/cdn.ts` (`CDN_ORIGIN`, `cdn(key)`), builds every URL; nothing else hard-codes the domain.
 
 ## Infrastructure
 
 | Component        | Value                                                          |
 | ---------------- | -------------------------------------------------------------- |
-| S3 bucket        | `hogwarts-databayt` (`us-east-1`)                              |
+| S3 bucket        | `databayt-cdn` (`us-east-1`; user uploads stay in `hogwarts-databayt`) |
 | CloudFront CNAME | `cdn.databayt.org` (preferred)                                 |
 | CloudFront raw   | `d1dlwtcfl0db67.cloudfront.net` (still works — additive alias) |
 | Cache            | `public, max-age=31536000, immutable`                          |
-| Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time, set on Vercel)           |
+| Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time; read only by `src/lib/cdn.ts`) |
 
-## Usage
+## Product media — the CDN mirrors the routes
+
+```
+cdn.databayt.org/hogwarts/<route>/<flow>-<step>-<locale>-<width>.<hash>.avif   stills (+ .webp)
+cdn.databayt.org/hogwarts/<route>/<flow>[-<clip>]-<locale>.<hash>.mp4           videos (+ .av1, poster, .vtt)
+```
+
+| Route the flow films | CDN folder | Example |
+| -------------------- | ---------- | ------- |
+| `/students`          | `hogwarts/students/`    | `add-student-created-ar-1600.<hash>.avif`, `add-student-ar.<hash>.mp4` |
+| `/teachers`          | `hogwarts/teachers/`    | `add-teacher-created-ar-1600.<hash>.avif` |
+| `/school/bulk`       | `hogwarts/school/bulk/` | `bulk-student-review-ar-1600.<hash>.avif` |
+| `/` (homepage)       | `hogwarts/`             | `story.<hash>.mp4`, `hero-3d.<hash>.mp4`, `modern-02.<hash>.avif` |
+
+Render them by manifest id:
+
+```mdx
+<FlowMedia flow="add-student" />
+<Shot id="add-student/created-ar" />
+<TutorialVideo id="add-student/video-ar" />
+```
+
+`FlowMedia` lists stills by their `order` (the step number they were shot in). The sources stay outside the repo in `~/media/hogwarts/<flow>/`; see the kun `shoot` docs for the full grammar.
+
+## App chrome — `asset()`
 
 ```tsx
 import { asset } from "@/lib/asset-url"
@@ -26,11 +55,13 @@ import { asset } from "@/lib/asset-url"
 <source src={asset("/media/story.mp4")} />
 ```
 
-`asset("/icons/logo.png")` → `https://cdn.databayt.org/icons/logo.png`.
+`asset("/icons/logo.png")` → `https://cdn.databayt.org/hogwarts/logo.png` — only the file name is kept.
 
-## Directory layout
+## Chrome groups
 
-| Directory        | Purpose                                  |   Count |
+The chrome objects sit flat at `hogwarts/<file>`; the groups below are how they are catalogued, not folders.
+
+| Group            | Purpose                                  |   Count |
 | ---------------- | ---------------------------------------- | ------: |
 | `icons/`         | Small functional SVGs, logos, small PNGs |      42 |
 | `illustrations/` | Art, decorative, complex                 |      88 |
@@ -39,7 +70,6 @@ import { asset } from "@/lib/asset-url"
 | `media/`         | Video and audio                          |       1 |
 | **Total**        |                                          | **155** |
 
-Five flat directories, no nesting.
 
 ## Naming conventions
 
@@ -95,16 +125,13 @@ Feature illustrations are used by `feature-tabs.tsx` and `dream-section.tsx`.
 
 ## media/ (1)
 
-| Key         | Used by                                          |
-| ----------- | ------------------------------------------------ |
-| `story.mp4` | lumos lesson-player fallback (`media/story.mp4`) |
+| Key         | Used by |
+| ----------- | ------- |
+| `story.mp4` | legacy flat copy, served `application/octet-stream`; nothing reads it any more |
 
-The marketing story section and the docs story video no longer read this
-object: since 2026-10-07 they play AV1 + H.264 encodes (4.6 MB / 5.7 MB, from
-20.5 MB) at `balqalam/media/story/`, listed with their codecs and poster in
-`src/components/docs/media-manifest.json`. The school homepage hero loop lives
-at `balqalam/media/hero/` the same way. Keys there carry a content hash, so a
-re-encode is a new URL and `immutable` never goes stale.
+The story video and the school hero loop are product media now: `hogwarts/story.<hash>.mp4` and
+`hogwarts/hero-3d.<hash>.mp4` (route `/`), listed with their codecs and posters in
+`media-manifest.json`. The lumos lesson-player fallback plays the story's H.264 source.
 
 ## Pre-existing CDN systems (do not touch)
 
@@ -129,7 +156,11 @@ re-encode is a new URL and `immutable` never goes stale.
 
 ## Adding new assets
 
-1. Upload to the correct directory (`icons/`, `illustrations/`, `photos/`, `animations/`, `media/`).
+Product media (screens, flows, videos): shoot or record it, then `publish.mjs --flow <flow>` — never upload by hand.
+
+App chrome:
+
+1. Upload to `hogwarts/<file>`.
 2. kebab-case, lowercase filenames.
 3. Set `Content-Type` and `CacheControl: "public, max-age=31536000, immutable"`.
 4. Reference with `asset("/category/filename.ext")`.

@@ -9,10 +9,11 @@ import { readLessonWithProgress } from "@/components/lumos/data/catalog/get-less
 import { fetchLessonQuizQuestions, toClientQuestion } from "@/components/lumos/lib/lesson-quiz"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
+import { cdn } from "@/lib/cdn"
 
-const FALLBACK_VIDEO_URL = `https://${
-  process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
-}/hogwarts/media/story.mp4`
+// The story video's H.264 source (media-manifest.json → "story"), hashed and
+// served video/mp4 + immutable from the homepage folder of the CDN.
+const FALLBACK_VIDEO_URL = cdn("hogwarts/story.721b10fc.mp4")
 
 function formatDuration(minutes?: number | null, seconds?: number | null): string {
   const totalMin = minutes ?? (seconds ? Math.ceil(seconds / 60) : 0)

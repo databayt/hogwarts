@@ -4,9 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import Lottie from "lottie-react"
+import { cdn } from "@/lib/cdn"
 
 // Same animation as Claude API page — served from the unified asset CDN
-const ANIMATION_URL = `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/anthropic/api.json`
+const ANIMATION_URL = cdn("anthropic/api.json")
 
 // The shipped animation is painted in Anthropic clay (#d97757) over near-black.
 // The admissions page rides the zenda chrome, so the accent is remapped to

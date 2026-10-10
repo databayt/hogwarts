@@ -5,7 +5,7 @@ status: live
 pillar: learning-science
 personas: [principal, teacher, student]
 routes: [/ar/s/{school}/subjects, /ar/s/{school}/subjects/{subject}, /ar/s/{school}/subjects/{subject}/textbook, /ar/s/{school}/subjects/catalog, /ar/s/{school}/subjects/contribute, /ar/s/{school}/subjects/contributions]
-screenshots: [subject-materials.png, demo-subjects-ar.png, subjects-mobile-after.png, subjects-local-390.png]
+screenshots: [subject-materials.png, docs/evidence/demo-subjects-ar.png, subjects-mobile-after.png, subjects-local-390.png]
 readme: ./README.md
 docs: content/docs-en/catalog.mdx
 updated: 2026-09-27
@@ -42,7 +42,7 @@ At the start of the year someone types the subject list for every grade into a s
 ## Real screens to show
 
 - subject-materials.png — Arabic Biology subject page: banner, chapters row, teaching materials, videos, and exams. Crop the red development "Issues" badge (bottom left) and the photo avatar in the top bar before posting.
-- demo-subjects-ar.png — Arabic subject grid on desktop, with the stage tabs. The "quick guide" welcome pop-up covers the centre; recapture with it closed, or crop to an uncovered area.
+- docs/evidence/demo-subjects-ar.png — Arabic subject grid on desktop, with the stage tabs. The "quick guide" welcome pop-up covers the centre; recapture with it closed, or crop to an uncovered area.
 - subjects-mobile-after.png, subjects-local-390.png — the subject grid on a phone. Both show the quick guide pop-up and a development badge; recapture before posting.
   Routes to capture if more are needed: /ar/s/{school}/subjects/{subject}/textbook (the book reader), /ar/s/{school}/subjects/catalog (the admin's subject picker).
 
@@ -99,4 +99,4 @@ At the start of the year someone types the subject list for every grade into a s
 - content/docs-en/catalog.mdx
 - content/docs-en/listings.mdx
 - content/docs-en/marketing-brief.mdx
-- Repo-root screenshots: subject-materials.png, demo-subjects-ar.png, subjects-mobile-after.png, subjects-local-390.png
+- Repo-root screenshots: subject-materials.png, docs/evidence/demo-subjects-ar.png, subjects-mobile-after.png, subjects-local-390.png
