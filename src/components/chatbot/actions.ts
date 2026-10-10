@@ -11,6 +11,7 @@ import { extractIdentifiers } from "@/lib/funnel/identifiers"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
 
 import { captureFromChat } from "./capture"
 import {
@@ -20,7 +21,19 @@ import {
   type SchoolChatbotData,
   type SystemPromptType,
 } from "./prompts"
-import type { ChatbotDictionary, SchoolChatbotDisplay } from "./type"
+import {
+  isHelpIndexQuestion,
+  isSupportQuestion,
+  matchTopics,
+  SUPPORT_TOPICS,
+  type SupportTopic,
+} from "./support"
+import { resourcesFor } from "./support-media"
+import type {
+  ChatbotDictionary,
+  ChatResource,
+  SchoolChatbotDisplay,
+} from "./type"
 
 /**
  * Groq retired `llama-3.1-8b-instant` and every reply in prod became an
@@ -203,23 +216,31 @@ async function fetchSchoolData(
 async function resolveSystemPrompt(
   systemPromptType: SystemPromptType,
   subdomain: string | undefined,
-  locale: string
-): Promise<string> {
+  locale: string,
+  matched: SupportTopic[] = []
+): Promise<{ prompt: string; chatbot: ChatbotDictionary }> {
   const dictionary = await getDictionary(locale as Locale)
   const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
 
   if (systemPromptType === "schoolSite" && subdomain) {
     const schoolData = await fetchSchoolData(subdomain)
     if (schoolData) {
-      return buildSchoolSitePrompt(schoolData, locale, chatbot)
+      return {
+        prompt: buildSchoolSitePrompt(schoolData, locale, chatbot),
+        chatbot,
+      }
     }
   }
 
-  return buildSaasMarketingPrompt(
-    locale,
+  return {
+    prompt: buildSaasMarketingPrompt(
+      locale,
+      chatbot,
+      (await getExchangeRates()).rates,
+      matched
+    ),
     chatbot,
-    dictionary.marketing?.pricing
-  )
+  }
 }
 
 export async function sendMessage(
@@ -228,6 +249,10 @@ export async function sendMessage(
   subdomain?: string,
   locale: string = "en"
 ) {
+  // Hoisted so the catch below can still answer a support question with its
+  // guide cards instead of the sales fallback.
+  let support = false
+  let resources: ChatResource[] = []
   try {
     // Public, unauthenticated action → throttle before anything costs money.
     // Key: IP + truncated UA (shared school networks stay fair; spoofing only
@@ -276,11 +301,41 @@ export async function sendMessage(
       }
     }
 
-    const systemPrompt = await resolveSystemPrompt(
+    // Support topics are matched in code (keywords, ar + en) so the prompt
+    // carries only the guides this question needs, and the guide/video/
+    // screenshot cards are attached from the registry — never model output.
+    const isSaas = systemPromptType === "saasMarketing"
+    const texts = isSaas ? lastUserTexts(messages) : []
+    const helpIndex = isSaas && isHelpIndexQuestion(texts[0] ?? "")
+    const matched = helpIndex ? [] : matchTopics(texts)
+    support = helpIndex || isSupportQuestion(matched)
+
+    const { prompt: systemPrompt, chatbot } = await resolveSystemPrompt(
       systemPromptType,
       subdomain,
-      locale
+      locale,
+      matched
     )
+    resources = helpIndex
+      ? [
+          {
+            kind: "guide",
+            title: chatbot.ctaHelpCenter,
+            href: `/${locale}/docs/support`,
+          },
+        ]
+      : matched.slice(0, 1).flatMap((topic) =>
+          resourcesFor(topic, locale, {
+            video: chatbot.resourceVideo,
+            guide: chatbot.resourceGuide,
+          })
+        )
+
+    // "What can you help with?" has one right answer — the guide list. A
+    // 20B model asked for it still invents steps, so it is answered here.
+    if (helpIndex) {
+      return { success: true, content: helpIndexReply(locale), resources }
+    }
 
     const groq = createGroq({ apiKey })
 
@@ -293,31 +348,35 @@ export async function sendMessage(
     const result = await generateText({
       model: groq(CHAT_MODEL),
       messages: recentMessages,
-      system:
-        systemPromptType === "saasMarketing"
-          ? systemPrompt + askState(messages, locale)
-          : systemPrompt,
+      system: isSaas
+        ? systemPrompt + askState(messages, locale, support)
+        : systemPrompt,
       // Low temperature → factual, on-script answers (never invent prices).
       temperature: 0.3,
-      // Caps replies at ~2–3 sentences or a short list — tight and snappy.
-      // gpt-oss is a reasoning model and its reasoning tokens count against
-      // this cap, so effort stays "low" (~60 reasoning tokens measured).
-      maxOutputTokens: 400,
+      // Caps replies at a short answer or a ≤6-step how-to list. gpt-oss is a
+      // reasoning model and its reasoning tokens count against this cap, so
+      // effort stays "low" (~60 reasoning tokens measured); 600 leaves a
+      // numbered list room to finish.
+      maxOutputTokens: 600,
       providerOptions: { groq: { reasoningEffort: "low" } },
     })
 
     // A reasoning model can spend its whole cap thinking and return "" — an
     // empty bubble reads as a dead product. Fall back to the capture ask.
     if (!result.text.trim()) {
-      return { success: true, content: fallbackReply(systemPromptType, locale) }
+      return {
+        success: true,
+        content: fallbackReply(systemPromptType, locale, support),
+        resources,
+      }
     }
 
     return {
       success: true,
-      content:
-        systemPromptType === "saasMarketing"
-          ? dropRepeatAsk(result.text, messages)
-          : result.text,
+      content: plainText(
+        isSaas ? dropRepeatAsk(result.text, messages, support) : result.text
+      ),
+      resources,
     }
   } catch (error) {
     // Groq's free tier caps tokens per minute; during an outreach wave the
@@ -326,7 +385,8 @@ export async function sendMessage(
     console.error("Server Action Error:", error)
     return {
       success: true,
-      content: fallbackReply(systemPromptType, locale),
+      content: fallbackReply(systemPromptType, locale, support),
+      resources,
     }
   }
 }
@@ -354,10 +414,12 @@ function contactState(messages: Array<{ role: string; content: unknown }>) {
  */
 function dropRepeatAsk(
   reply: string,
-  messages: Array<{ role: string; content: unknown }>
+  messages: Array<{ role: string; content: unknown }>,
+  support = false
 ): string {
   const { gave, asked } = contactState(messages)
-  if (!gave && !asked) return reply
+  // A customer asking how to use the product is not a lead — no sales ask.
+  if (!gave && !asked && !support) return reply
   const kept = reply.split("\n").filter((l) => !ASK_RE.test(l))
   const out = kept.join("\n").trim()
   return out || reply
@@ -371,10 +433,15 @@ function dropRepeatAsk(
  */
 function askState(
   messages: Array<{ role: string; content: unknown }>,
-  locale: string
+  locale: string,
+  support = false
 ): string {
   const { gave, asked } = contactState(messages)
   const ar = locale === "ar"
+  if (support)
+    return ar
+      ? "\n\n## حالة المحادثة\nهذا سؤال دعم: الزائر يسأل كيف يستخدم «بالقلم». أجب بالخطوات من الدليل المطابق، ولا تطلب رقم واتساب أو بريدًا."
+      : "\n\n## Conversation state\nThis is a support question: the visitor is asking how to use Balqalam. Answer with the steps from the matching guide, and do NOT ask for a WhatsApp number or email."
   if (gave)
     return ar
       ? "\n\n## حالة المحادثة\nأعطى الزائر رقمه أو بريده بالفعل. لا تطلبه مجددًا أبدًا."
@@ -386,8 +453,16 @@ function askState(
   return ""
 }
 
-function fallbackReply(type: SystemPromptType, locale: string): string {
+function fallbackReply(
+  type: SystemPromptType,
+  locale: string,
+  support = false
+): string {
   const ar = locale === "ar"
+  if (support)
+    return ar
+      ? "عذرًا، لم أتمكن من الإجابة الآن. الدليل وفيديو الشرح مرفقان أدناه، أو راسلنا على contact@databayt.org."
+      : "Sorry, I couldn't answer just now. The guide and tutorial video are attached below, or email us at contact@databayt.org."
   if (type === "saasMarketing")
     return ar
       ? "عذرًا، لم أتمكن من الإجابة الآن. اترك رقم واتساب أو بريدًا إلكترونيًا وسيتواصل معك فريق «بالقلم» ويجهّز لمدرستك نسخة تجريبية مجانية لثلاثة أشهر."
@@ -395,4 +470,45 @@ function fallbackReply(type: SystemPromptType, locale: string): string {
   return ar
     ? "عذرًا، لم أتمكن من الإجابة الآن. حاول مجددًا بعد قليل، أو تواصل مع المدرسة مباشرة."
     : "Sorry, I couldn't answer just now. Please try again shortly, or contact the school directly."
+}
+
+/**
+ * The visitor's latest message, plus the one before it as context — so a
+ * follow-up like "and after that?" still lands on the guide being discussed.
+ * The latest message is listed first: `matchTopics` weights it higher.
+ */
+function lastUserTexts(
+  messages: Array<{ role: string; content: unknown }>
+): string[] {
+  return messages
+    .filter((m) => m.role === "user")
+    .slice(-2)
+    .reverse()
+    .map(textOf)
+}
+
+function helpIndexReply(locale: string): string {
+  const ar = locale === "ar"
+  const titles = SUPPORT_TOPICS.map((t) => `- ${t.title[ar ? "ar" : "en"]}`)
+  return [
+    ar
+      ? "أستطيع مساعدتك في استخدام «بالقلم» خطوة بخطوة. اسألني عن أيٍّ من هذه:"
+      : "I can walk you through Balqalam step by step. Ask me about any of these:",
+    ...titles,
+    ar
+      ? "مثال: «كيف أضيف طالبًا؟». وكل الأدلة مع فيديوهات الشرح في مركز المساعدة أدناه."
+      : 'For example: "How do I add a student?". Every guide, with its tutorial video, is in the help center below.',
+  ].join("\n")
+}
+
+/**
+ * The bubble renders text as-is, so markdown shows up as stray symbols.
+ * The prompt forbids it; a 20B model still slips — strip what it slips.
+ */
+function plainText(reply: string): string {
+  return reply
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[ \t]+$/gm, "")
 }

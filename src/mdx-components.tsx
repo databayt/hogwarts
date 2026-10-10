@@ -92,6 +92,7 @@ import { DirectoryStructure } from "@/components/docs/directory-structure"
 import { CardGrid, DocCard } from "@/components/docs/doc-card"
 import { ListingStructure } from "@/components/docs/listing-structure"
 import { LiveStructure } from "@/components/docs/live-structure"
+import { FlowMedia } from "@/components/docs/flow-media"
 import { LumosStructure } from "@/components/docs/lumos-structure"
 import { getVideo } from "@/components/docs/media"
 import { Mermaid } from "@/components/docs/mermaid"
@@ -479,6 +480,7 @@ const mdxComponents = {
   StoryVideo: () => <StoryVideo video={getVideo("story")} />,
   TutorialVideo,
   Shot,
+  FlowMedia,
   // Flow diagram components
   AuthFlowDiagram,
   PlatformLinkFlow,

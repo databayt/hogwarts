@@ -4,9 +4,15 @@
 
 Pricing and billing integration connecting the public pricing page to Stripe Checkout and Customer Portal. Handles the end-to-end flow: visitor discovers plans, selects a tier, authenticates, completes checkout, and manages their subscription. Webhooks persist subscription state to the database at both user and school levels.
 
-### Pricing model (2026-08-05)
+### Pricing model (2026-10-10)
 
-Per-student: **Free $0 (≤100 students) · Pro $1.50/student/mo ($30/mo minimum) · Enterprise $1.00/student/mo (custom-quoted, 1,000+ students)**; yearly billing is 20% off ($1.20/$0.80 units). `config.ts` is the single source of truth (`pricingData`, stable `id: PlanId`; the dictionary overlays display text only). `calculator.tsx` renders the interactive per-student estimator between the cards and the compare table, sharing `getMonthlyCost` with the card math. Stripe checkout still expects flat-fee price ids (env unset) — per-student Stripe wiring is tracked in the "Billing internals" follow-up issue.
+From the pricing rationale (6,000 SAR a year for 250 students), as one weight per student: **24 SAR per student per year, the first 100 students free on every plan** — annual price = (students − 100) × 24 SAR, so it moves by exactly 24 SAR per student with no bands. Paid **50% at signing, then 12.5% at months 3, 6, 9, 12**; prices before VAT (15% KSA); plus a 3-month free trial. Enterprise (1,000+) = same rate + dedicated contract.
+
+- `rates.ts` — the single source for every number (`quote`, `formatMoney`); the cards, the calculator and the chatbot all read it.
+- `exchange-rates.ts` — live SAR → USD/SDG/EGP from open.er-api.com, cached a day, pinned `FALLBACK_RATES` when it fails.
+- `currency.tsx` — one currency for the page (SAR · USD · SDG · EGP), remembered per browser via `useSyncExternalStore`.
+- `calculator.tsx` — slider steps by one student; annual, monthly, effective per-student cost and the instalment plan, live.
+- `config.ts` — what each plan *includes*; its `prices` are a derived legacy USD unit kept only for the Stripe subscription code, which this page no longer launches (CTAs go to `/onboarding` or the sales mailto).
 
 ### File Structure
 
@@ -16,8 +22,10 @@ src/components/saas-marketing/pricing/
 ├── card.tsx                        # Plan card component
 ├── pricing-header.tsx              # Page header
 ├── pricing-faqs.tsx                # Pricing FAQ (dictionary-driven)
-├── calculator.tsx                  # Per-student cost calculator (slider + yearly toggle)
-├── billing-toggle.tsx              # Monthly/annual toggle
+├── calculator.tsx                  # Per-student price calculator (live, multi-currency)
+├── rates.ts                        # 24 SAR/student/yr, free 100, instalments — single source
+├── exchange-rates.ts               # Live SAR → USD/SDG/EGP (daily cache + fallback)
+├── currency.tsx                    # Page-wide currency context + toggle
 ├── CheckoutLauncher.tsx            # Stripe checkout trigger
 ├── forms/
 │   ├── billing-form-button.tsx     # Calls generateUserStripe action

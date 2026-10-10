@@ -1,0 +1,13 @@
+{
+  "title": "Help center",
+  "pages": [
+    "index",
+    "get-started",
+    "add-student",
+    "add-teacher",
+    "bulk-student",
+    "bulk-teacher",
+    "pricing",
+    "faq"
+  ]
+}

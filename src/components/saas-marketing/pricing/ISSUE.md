@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 **Completion:** 70%
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-10-10
 
 ---
 
@@ -13,6 +13,8 @@
 - [x] Feature comparison table
 - [x] Per-student pricing model (2026-08-05): Free $0 ≤100 students / Pro $1.50/student/mo (min $30) / Enterprise $1.00/student/mo custom — competitor-grounded (category norm $2–$15/student/mo), tiers renamed Free/Pro/Enterprise, stable `id: PlanId` decouples CTA branching from localized titles (fixes silent /ar breakage)
 - [x] Per-student cost calculator (`calculator.tsx`) with slider + yearly toggle
+- [x] Per-student SAR model (2026-10-10): 24 SAR/student/yr beyond a free 100 (rationale: 6,000 SAR ÷ 250), 50% at signing + 4 × 12.5%, live multi-currency (SAR/USD/SDG/EGP) calculator; monthly/yearly toggle + Stripe CTAs removed from the page
+- [ ] Re-wire checkout for the annual SAR contract (new Stripe price ids or invoice flow) — the page currently routes to onboarding / sales
 - [x] CTA dead-ends fixed: anonymous cards → `/onboarding` (was nonexistent `/starter/dashboard/billing` → 404), Enterprise + unavailable-Stripe states → `contactHref` mailto (enterprise band's dead `/docs/community/support` link too)
 - [x] School-product dictionary copy EN+AR (template "Advanced animations / SEO optimization / One Project / Strategic Partner" junk removed; 6 real FAQs)
 - [x] Stripe Checkout Session creation for free-to-paid upgrade

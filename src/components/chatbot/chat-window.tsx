@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { CHAT_WINDOW_POSITIONS, CHAT_WINDOW_SIZE } from "./constant"
 import { InfoIcon, PriceIcon, SendIcon, ServicesIcon, TimeIcon } from "./icons"
+import { ResourceCards } from "./resource-cards"
 import type { ChatWindowProps, CtaChip } from "./type"
 
 export const ChatWindow = memo(function ChatWindow({
@@ -105,6 +106,11 @@ export const ChatWindow = memo(function ChatWindow({
         question: dictionary.saasGetStartedQuestion,
         icon: TimeIcon,
       },
+      {
+        label: dictionary.saasSupport,
+        question: dictionary.saasSupportQuestion,
+        icon: InfoIcon,
+      },
     ]
   }, [promptType, dictionary, schoolContext])
 
@@ -126,6 +132,7 @@ export const ChatWindow = memo(function ChatWindow({
         { label: dictionary.ctaTryFree, href: `/${locale}/onboarding` },
         { label: dictionary.ctaSeePricing, href: `/${locale}/pricing` },
         { label: dictionary.ctaViewFeatures, href: `/${locale}/features` },
+        { label: dictionary.ctaHelpCenter, href: `/${locale}/docs/support` },
       ]
     }
     const chips: CtaChip[] = []
@@ -429,6 +436,13 @@ export const ChatWindow = memo(function ChatWindow({
                         </p>
                       </div>
                     </div>
+                    {isAssistant && message.resources?.length ? (
+                      <ResourceCards
+                        resources={message.resources}
+                        dictionary={dictionary}
+                        onNavigate={onClose}
+                      />
+                    ) : null}
                     {isLastAssistant && ctaChips.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 ps-9">
                         {ctaChips.map((chip) => (

@@ -1,11 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Single source of truth for SaaS plan data. Per-student pricing:
-// Free ($0, ≤100 students) · Pro ($1.50/student/mo, $30/mo minimum) ·
-// Enterprise ($1.00/student/mo reference, custom-quoted for 1,000+).
-// Yearly unit prices are the 20%-off rates. The dictionary overlays
-// display text only — ids and numbers live here.
+// SaaS plan data: what each plan includes. What a student costs lives in
+// rates.ts — one rate (24 SAR a year) for every student beyond the free 100,
+// on every plan. The dictionary overlays display text only.
 
 import { env } from "@/env.mjs"
 import type {
@@ -13,6 +11,8 @@ import type {
   PlansRow,
   SubscriptionPlan,
 } from "@/components/saas-marketing/pricing/types"
+
+import { FALLBACK_RATES, RATE_SAR_PER_STUDENT_YEAR } from "./rates"
 
 // Type for the pricing section of the dictionary
 type PricingDict =
@@ -77,43 +77,17 @@ export const getCtaLabel = (id: PlanId, pricing?: PricingDict): string =>
   isEnterprisePlan(id)
     ? pricing?.enterprise?.talkToSales || "Talk to Sales"
     : isProPlan(id)
-      ? pricing?.constants?.getPro || "Get Pro"
+      ? pricing?.constants?.getPro || "Start 3-month free trial"
       : pricing?.constants?.startTrial || "Get started free"
 
-export const getPriceDisplay = (
-  offer: SubscriptionPlan,
-  isYearly: boolean,
-  pricing?: PricingDict
-): string => {
-  if (isEnterprisePlan(offer.id)) return pricing?.constants?.custom || "Custom"
-  // "$0" not "Free" — the card title already says Free; repeating it reads odd.
-  if (offer.prices.monthly === 0) return "$0"
-  const unit = isYearly ? offer.prices.yearly : offer.prices.monthly
-  return `$${unit.toFixed(2)}`
-}
+// Legacy USD unit for the Stripe subscription code (billing-form-button,
+// lib/subscription): one billable student per month at today's SAR peg.
+// The page, calculator and chatbot price from rates.ts, never from this.
+const PER_STUDENT_USD_MONTH =
+  Math.round(
+    ((RATE_SAR_PER_STUDENT_YEAR * FALLBACK_RATES.USD) / 12) * 10000
+  ) / 10000
 
-/** Per-student ANNUAL unit rate when billed yearly (e.g. Pro: $14.40). */
-export const getYearlyTotal = (offer: SubscriptionPlan): number => {
-  if (isFreePlan(offer.id) || isEnterprisePlan(offer.id)) return 0
-  return offer.prices.yearly * 12
-}
-
-/**
- * Monthly cost for a given student count — shared by the pricing card's
- * minimum-note math and the calculator. Applies the plan's monthly floor.
- */
-export const getMonthlyCost = (
-  offer: SubscriptionPlan,
-  studentCount: number,
-  isYearly: boolean
-): number => {
-  if (isFreePlan(offer.id)) return 0
-  const unit = isYearly ? offer.prices.yearly : offer.prices.monthly
-  const raw = unit * studentCount
-  return offer.minimumMonthly ? Math.max(raw, offer.minimumMonthly) : raw
-}
-
-// Default pricing data (fallback when no dictionary)
 export const pricingData: SubscriptionPlan[] = [
   {
     // lib/subscription.ts falls back to pricingData[0] — Free stays first.
@@ -141,21 +115,20 @@ export const pricingData: SubscriptionPlan[] = [
   {
     id: "pro",
     title: "Pro",
-    description: "For growing schools ready to scale",
+    description: "For growing schools — pay only for students beyond 100",
     benefits: [
-      "Unlimited students, billed per student",
+      "Unlimited students — the first 100 free, then 24 SAR per student a year",
       "Unlimited teachers",
-      "10 GB storage",
-      "Priority support",
+      "Hosting, support and updates included",
+      "Support by WhatsApp and email, Sunday to Thursday",
       "Custom branding",
       "Advanced analytics & parent push notifications",
     ],
     limitations: [],
     prices: {
-      monthly: 1.5,
-      yearly: 1.2,
+      monthly: PER_STUDENT_USD_MONTH,
+      yearly: PER_STUDENT_USD_MONTH,
     },
-    minimumMonthly: 30,
     stripeIds: {
       monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID ?? null,
       yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID ?? null,
@@ -179,8 +152,8 @@ export const pricingData: SubscriptionPlan[] = [
     ],
     limitations: [],
     prices: {
-      monthly: 1.0,
-      yearly: 0.8,
+      monthly: PER_STUDENT_USD_MONTH,
+      yearly: PER_STUDENT_USD_MONTH,
     },
     stripeIds: {
       monthly:
@@ -224,7 +197,7 @@ export const comparePlans: PlansRow[] = [
     pro: "Unlimited, billed per student",
     enterprise: "1,000+ (custom)",
     tooltip:
-      "Free is capped at 100 students. Pro and Enterprise bill per student with no hard cap.",
+      "Every school's first 100 students are free. Each student beyond that is 24 SAR a year, on every plan.",
   },
   {
     feature: "Teachers",
@@ -247,7 +220,7 @@ export const comparePlans: PlansRow[] = [
   {
     feature: "Support",
     free: "Community",
-    pro: "Priority",
+    pro: "WhatsApp & email",
     enterprise: "Dedicated account manager",
   },
   {
@@ -324,7 +297,7 @@ const compareValueKeys: Record<string, string> = {
   "1 GB": "oneGb",
   "10 GB": "tenGb",
   Community: "community",
-  Priority: "priority",
+  "WhatsApp & email": "priority",
   "Dedicated account manager": "dedicatedAm",
   Basic: "basic",
   Advanced: "advanced",

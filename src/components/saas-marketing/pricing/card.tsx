@@ -17,70 +17,57 @@ import {
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
-import { BillingFormButton } from "@/components/saas-marketing/pricing/forms/billing-form-button"
-import {
-  SubscriptionPlan,
-  UserSubscriptionPlan,
-} from "@/components/saas-marketing/pricing/types"
+import type { SubscriptionPlan } from "@/components/saas-marketing/pricing/types"
 
+import { useCurrency } from "./currency"
+import { getCtaLabel, getIncludesHeading, isEnterprisePlan } from "./config"
 import {
-  getCtaLabel,
-  getIncludesHeading,
-  getPriceDisplay,
-  getYearlyTotal,
-  isEnterprisePlan,
-  isFreePlan,
-  isProPlan,
-} from "./config"
+  ENTERPRISE_STUDENTS,
+  FREE_STUDENTS,
+  formatMoney,
+  quote,
+} from "./rates"
 
 interface PricingCardProps {
   offer: SubscriptionPlan
-  isYearly: boolean
-  userId?: string
-  subscriptionPlan?: UserSubscriptionPlan
-  userRole?: string
   lang?: Locale
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
-export function PricingCard({
-  offer,
-  isYearly,
-  userId,
-  subscriptionPlan,
-  userRole,
-  lang,
-  dictionary,
-}: PricingCardProps) {
+export function PricingCard({ offer, lang = "en", dictionary }: PricingCardProps) {
   const pricing = dictionary?.marketing?.pricing
-  const isFree = isFreePlan(offer.id)
-  const isPro = isProPlan(offer.id)
+  const constants = pricing?.constants as Record<string, string> | undefined
+  const { currency, rates } = useCurrency()
   const isEnterprise = isEnterprisePlan(offer.id)
-  const priceDisplay = getPriceDisplay(offer, isYearly, pricing)
+  const isFree = offer.prices.monthly === 0 && !isEnterprise
   const contactHref =
     pricing?.enterprise?.contactHref ||
     "mailto:contact@databayt.org?subject=Enterprise%20plan"
 
-  const priceSuffix =
-    !isEnterprise && offer.prices.monthly > 0
-      ? pricing?.constants?.perStudentPerMonth || "/ student / month"
-      : ""
-
-  const minimumNote =
-    isPro && offer.minimumMonthly
-      ? (pricing?.constants?.minimumNote || "${amount}/mo minimum").replace(
-          "{amount}",
-          String(offer.minimumMonthly)
-        )
-      : null
-
-  const yearlyNote =
-    isPro && isYearly
+  // One rate for every paid student (rates.ts) — the cards differ in what
+  // comes with it, not in what a student costs.
+  const { ratePerStudentYear } = quote(0, currency, rates)
+  const money = (n: number) => formatMoney(n, currency, lang)
+  const priceDisplay = isFree ? money(0) : money(ratePerStudentYear)
+  const priceSuffix = isFree
+    ? ""
+    : constants?.perStudentPerYear || "/ student / year"
+  const note = isFree
+    ? (constants?.freeNote || "Your first {free} students, forever").replace(
+        "{free}",
+        String(FREE_STUDENTS)
+      )
+    : isEnterprise
       ? (
-          pricing?.constants?.billedAnnuallyNote ||
-          "billed annually at ${amount}/student/year"
-        ).replace("{amount}", getYearlyTotal(offer).toFixed(2))
-      : null
+          constants?.enterpriseNote ||
+          "Same rate for {students}+ students, with a dedicated contract"
+        ).replace("{students}", ENTERPRISE_STUDENTS.toLocaleString("en-US"))
+      : (
+          constants?.perMonthNote ||
+          "≈ {amount} a month per student, beyond the first {free} free"
+        )
+          .replace("{amount}", money(ratePerStudentYear / 12))
+          .replace("{free}", String(FREE_STUDENTS))
 
   const ctaArea = isEnterprise ? (
     <Link
@@ -91,39 +78,20 @@ export function PricingCard({
     </Link>
   ) : (
     <>
-      {userId && subscriptionPlan ? (
-        isFree ? (
-          <Link
-            href={`/${lang}/dashboard`}
-            className={cn(buttonVariants({ variant: "default" }))}
-          >
-            {pricing?.constants?.startTrial || "Get started free"}
-          </Link>
-        ) : (
-          <BillingFormButton
-            year={isYearly}
-            offer={offer}
-            subscriptionPlan={subscriptionPlan}
-            userRole={userRole as any}
-            dictionary={dictionary}
-          />
-        )
-      ) : (
-        <Link
-          href={`/${lang}/onboarding`}
-          className={cn(
-            buttonVariants({
-              variant: "default",
-              size: "sm",
-            }),
-            "transition-transform hover:scale-[1.01]"
-          )}
-        >
-          {getCtaLabel(offer.id, pricing)}
-        </Link>
-      )}
-      {(!userId || !subscriptionPlan) && isPro && (
-        <a href="#more-info" className="ms-3">
+      <Link
+        href={`/${lang}/onboarding`}
+        className={cn(
+          buttonVariants({
+            variant: "default",
+            size: "sm",
+          }),
+          "transition-transform hover:scale-[1.01]"
+        )}
+      >
+        {getCtaLabel(offer.id, pricing)}
+      </Link>
+      {!isFree && (
+        <a href="#calculator" className="ms-3">
           <small className="muted">
             {pricing?.constants?.moreInfo || "More info"} ↗
           </small>
@@ -144,15 +112,11 @@ export function PricingCard({
       <CardHeader className="pb-4">
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight">
-          {priceDisplay}
+          <span className="tabular-nums">{priceDisplay}</span>
           {priceSuffix && <span className="muted ms-1">{priceSuffix}</span>}
         </CardTitle>
         <p className="muted">{offer.description}</p>
-        {(minimumNote || yearlyNote) && (
-          <p className="muted text-xs">
-            {[minimumNote, yearlyNote].filter(Boolean).join(" · ")}
-          </p>
-        )}
+        <p className="muted text-xs">{note}</p>
       </CardHeader>
       <div className="w-full px-6 py-2">
         <Separator />

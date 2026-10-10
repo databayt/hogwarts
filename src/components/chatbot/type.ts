@@ -8,6 +8,23 @@ export interface ChatMessage {
   role: "user" | "assistant" | "system"
   content: string
   timestamp?: Date
+  /** Guide, tutorial video and screenshots attached to a support answer. */
+  resources?: ChatResource[]
+}
+
+/**
+ * A help resource the server attaches to a support answer — resolved from
+ * the support registry + media-manifest.json, never from LLM output.
+ */
+export interface ChatResource {
+  kind: "guide" | "video" | "image"
+  title: string
+  /** Guide path (`/${locale}/docs/support/...`) or the full CDN image. */
+  href: string
+  /** Poster (video) or small still (image); absent for a guide. */
+  thumb?: string
+  /** Seconds — videos only. */
+  duration?: number
 }
 
 export interface ChatbotState {
@@ -77,13 +94,18 @@ export interface ChatbotDictionary {
   ctaContactSchool: string
   ctaViewScholarships: string
   ctaOpenDocs: string
+  ctaHelpCenter: string
+
+  // Support resources attached under an answer
+  resourceVideo: string
+  resourceGuide: string
 
   // Pricing-page proactive nudge
   pricingNudgeTitle: string
   pricingNudgeBody: string
 
   // System prompts (templates with placeholders)
-  saasPromptTemplate: string // {pricing}, {features}, {contactEmail}
+  saasPromptTemplate: string // {pricing}, {features}, {support}, {contactEmail}
   schoolPromptIntroTemplate: string // {schoolName}
   schoolPromptRules: string
 
@@ -137,6 +159,8 @@ export interface ChatbotDictionary {
   saasPricingQuestion: string
   saasGetStarted: string
   saasGetStartedQuestion: string
+  saasSupport: string
+  saasSupportQuestion: string
   schoolAdmission: string
   schoolAdmissionQuestion: string
   schoolFees: string

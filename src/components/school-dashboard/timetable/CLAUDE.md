@@ -240,8 +240,8 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   `commonProps` and are deliberately left undestructured. The grid is now
   rendered BARE — no `Card` wrapper — under an AdminView-shaped toolbar
   (`space-y-12` above the grid), so the two surfaces are visually identical.
-  The week/day control itself is the PRICING PAGE's billing toggle, reused
-  verbatim — `saas-marketing/pricing/billing-toggle.tsx`: a two-column
+  The week/day control itself is the pricing page's former billing toggle
+  (removed 2026-10-10 with per-student annual pricing), kept here: a two-column
   `ToggleGroup` with a `bg-muted` thumb absolutely positioned at `start-0
 w-1/2` and slid by `translate-x-full rtl:-translate-x-full`. Copy its
   classes exactly rather than approximating; two details are load-bearing.

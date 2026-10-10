@@ -300,6 +300,20 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // Every "Help" link (user menu, footers, hamburger menu) points at
+      // /help, which never existed. The help center lives in the docs on the
+      // marketing domain — absolute, because a school host rewrites /docs
+      // into its tenant tree.
+      {
+        source: "/:lang(ar|en)/help",
+        destination: "https://balqalam.com/:lang/docs/support",
+        permanent: false,
+      },
+      {
+        source: "/help",
+        destination: "https://balqalam.com/ar/docs/support",
+        permanent: false,
+      },
       {
         source: "/:lang/stream/admin",
         destination: "/:lang/lumos/dashboard",

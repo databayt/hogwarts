@@ -77,6 +77,7 @@ export function useChatbot({
         const assistantMessage: ChatMessage = {
           role: "assistant",
           content: result.content || "",
+          resources: result.resources,
           id: Date.now().toString() + "_ai",
           timestamp: new Date(),
         }

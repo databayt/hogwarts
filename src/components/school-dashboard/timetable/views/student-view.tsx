@@ -192,9 +192,9 @@ export default function StudentView({
 
       {/* Toolbar + grid. The grid is BARE — no Card wrapper — under
           `space-y-12`, matching AdminView's toolbar-over-grid layout. The
-          week/day control follows the pricing page's billing toggle
-          (`saas-marketing/pricing/billing-toggle.tsx`) exactly: a two-column
-          ToggleGroup with a `bg-muted` thumb sliding under the active half. */}
+          week/day control is the pricing page's former monthly/yearly
+          toggle, kept here: a two-column ToggleGroup with a `bg-muted` thumb
+          sliding under the active half. */}
       <div className="space-y-12">
         <div className="flex items-center gap-5 print:hidden">
           <ToggleGroup

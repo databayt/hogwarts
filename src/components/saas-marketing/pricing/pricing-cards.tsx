@@ -2,48 +2,29 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
-
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
-import { UserSubscriptionPlan } from "@/components/saas-marketing/pricing/types"
 
-import { BillingToggle } from "./billing-toggle"
 import { PricingCard } from "./card"
 import { getPricingData } from "./config"
+import { CurrencyToggle } from "./currency"
 
 interface PricingCardsProps {
-  userId?: string
-  subscriptionPlan?: UserSubscriptionPlan
-  userRole?: string
   lang?: Locale
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
-export function PricingCards({
-  userId,
-  subscriptionPlan,
-  userRole,
-  lang,
-  dictionary,
-}: PricingCardsProps) {
-  // Default to monthly on initial render
-  const [isYearly, setIsYearly] = useState<boolean>(false)
-
-  const toggleBilling = (next: boolean) => setIsYearly(next)
-
-  const plans = getPricingData(dictionary?.marketing?.pricing)
-
-  // Card UI broken into `./card` component
+export function PricingCards({ lang = "en", dictionary }: PricingCardsProps) {
+  const pricing = dictionary?.marketing?.pricing
+  const plans = getPricingData(pricing)
+  const calculator = pricing?.calculator as Record<string, string> | undefined
 
   return (
     <div className="flex w-full flex-col items-center text-center">
-      {/* <HeaderSection label="Pricing" title="Start at full speed !" /> */}
-
-      <BillingToggle
-        isYearly={isYearly}
-        onChange={toggleBilling}
-        dictionary={dictionary}
+      <CurrencyToggle
+        locale={lang}
+        label={calculator?.currencyLabel || "Currency"}
+        className="mt-10 mb-4"
       />
 
       <div className="grid w-full items-stretch gap-6 bg-inherit py-4 md:grid-cols-3 md:gap-8">
@@ -51,10 +32,6 @@ export function PricingCards({
           <PricingCard
             offer={offer}
             key={offer.id}
-            isYearly={isYearly}
-            userId={userId}
-            subscriptionPlan={subscriptionPlan}
-            userRole={userRole}
             lang={lang}
             dictionary={dictionary}
           />

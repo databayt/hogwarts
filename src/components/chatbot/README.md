@@ -40,9 +40,23 @@ chatbot/
 ## Knowledge base
 
 - **SaaS** (`buildSaasMarketingPrompt`): pulls **live** pricing from
-  `saas-marketing/pricing/config.ts` (`formatPricing`) and the 85-feature /
-  10-category catalogue from `saas-marketing/features/constants.ts`
+  `saas-marketing/pricing/rates.ts` at today's exchange rates (`formatPricing`
+  — the formula plus worked examples, since a 20B model computes badly) and the
+  85-feature / 10-category catalogue from `saas-marketing/features/constants.ts`
   (`formatFeatures`). Edit marketing config → the bot's facts update with it.
+- **Support** (2026-10-10, `support.ts` + `support-media.ts`): one
+  `SupportTopic` per help guide under `content/docs-{ar,en}/support/`. Each
+  turn, `matchTopics` (Arabic-normalised keyword scoring, latest message
+  weighted over the one before) picks ≤2 topics; the prompt's `{support}` block
+  carries every guide's title + the matched answers. The reply gets
+  **resource cards** (`resource-cards.tsx`) built in code, never by the model:
+  the guide link, the flow's tutorial video and 3 spaced screenshots, read from
+  `docs/media-manifest.json` by flow prefix — a flow /shoot publishes appears
+  in the chat with no code change. A how-to question turns the WhatsApp ask
+  off; the Support chip's "what can you help with?" is answered in code (the
+  guide list + help-center card) because the model invented steps for it.
+  **Add a topic:** write the guide MDX (ar + en), add the entry to
+  `SUPPORT_TOPICS`, set `flow` to the /shoot flow slug.
 - **School** (`buildSchoolSitePrompt`): pulls **live** school data via
   `fetchSchoolData(subdomain)` — admissions campaigns, fee structures,
   scholarships, events, announcements, academic levels, contact. All scoped to
@@ -130,9 +144,9 @@ files) — this block adds **zero** new violations.
 ## Known gaps / next
 
 - No `chatbot.mdx` docs page yet (user-facing — candidate for `content/docs-en/`).
-- Automated tests cover capture only (`capture.test.ts`, 8 units); prompt
-  assembly + mode selection remain the highest-value untested paths.
-- Live visual QA still pending: a hogwarts dev server on :3000 was unavailable
-  this session (port held by the reference codebase server).
+- Tests: `capture.test.ts` + `support.test.ts` (topic matching, help-index
+  detection, manifest → resource cards). Mode selection is still untested.
+- Topic matching is keywords, not embeddings: a phrasing no keyword covers
+  falls through to the general prompt — add the phrase to the topic.
 - Conversation is not persisted across reloads (`enablePersistence` is wired in
   config but the SaaS/school mounts don't use it).

@@ -53,13 +53,13 @@ Depth on any of these: <a href="/en/docs/mvp">what actually exists, feature by f
 
 ## What it costs
 
-| Plan           | Price                                                | For                                                            |
-| -------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| **Free**       | $0 forever                                           | Up to 100 students and 10 teachers. Real product, not a trial. |
-| **Pro**        | **$1.50 per student / month**, minimum **$30/month** | Unlimited students and teachers. 20% off if paid yearly.       |
-| **Enterprise** | $1.00 per student / month                            | 1,000+ students, custom quoted.                                |
+| Plan           | Price                                                        | For                                                                                                     |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Free**       | 0 SAR forever                                                | Up to 100 students and 10 teachers. Real product, not a trial.                                          |
+| **Pro**        | **24 SAR per student / year** beyond the first 100 (≈ $6.40) | Unlimited students and teachers. Hosting, WhatsApp + email support (Sun–Thu), updates, custom branding. |
+| **Enterprise** | 24 SAR per student / year — the same rate                    | 1,000+ students. Dedicated contract, account manager, 99.9% SLA, SSO, white-label.                      |
 
-There is also a **14-day trial** of Pro with no card required.
+The formula is **(students − 100) × 24 SAR a year**: 150 students → 1,200 SAR, 250 → 3,600, 300 → 4,800, 500 → 9,600, 1,000 → 21,600. One annual price, paid 50% at signing then 12.5% at months 3, 6, 9 and 12. No monthly minimum, no yearly discount. Prices exclude VAT (15% in Saudi Arabia). Every school also gets a **full 3-month free trial**. The pricing page quotes SAR and also shows USD, SDG and EGP at the live daily exchange rate.
 
 <Callout>
   **The MENA-10 pilot is a separate thing — never mix it with the price list.**
@@ -70,7 +70,7 @@ There is also a **14-day trial** of Pro with no card required.
 
 Two things to hold onto:
 
-- **The $30/month floor is real.** A 40-student school on Pro pays $30, not $60. This page is the only doc that says so — the number lives in the pricing code.
+- **The first 100 students are free, so a 40-student school pays nothing.** There is no floor and no jump: the bill moves by exactly 24 SAR for every student past 100. The numbers live in the pricing code (`rates.ts`).
 - **Self-serve online checkout is not open yet.** Every ad and every post must end in _book a demo_, _message us on WhatsApp_, or _apply for a pilot_. Never "buy now".
 
 ## Claims — read this before you write anything
@@ -188,7 +188,7 @@ These are the six Abobakar listed, ranked by what actually stops a sale. Change 
 
 | Rank  | The fear                                                   | What answers it                                                                                                                                                                                                 |
 | ----- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1** | **It costs too much / free alternatives exist**            | Free forever under 100 students. $30/month for a small school. Six months free on the pilot. And: free national platforms don't do fees, payroll or admissions.                                                 |
+| **1** | **It costs too much / free alternatives exist**            | The first 100 students are free forever; 250 students = 3,600 SAR a year (≈ $960). Six months free on the pilot. And: free national platforms don't do fees, payroll or admissions.                             |
 | **2** | **When and how do we start? We can't handle a migration.** | They send the Excel file they already have. We do everything else. Running the same day. Arabic column headers are fine. This is our strongest answer — it turns their biggest fear into our biggest advantage. |
 | **3** | **What if you disappear?**                                 | Every record exports to CSV or JSON at any moment. No lock-in, no hostage data.                                                                                                                                 |
 | 4     | Security and privacy                                       | Each school's data is separated. Worth knowing: a large US competitor leaked around 60 million student records in 2025 — schools are asking this now.                                                           |

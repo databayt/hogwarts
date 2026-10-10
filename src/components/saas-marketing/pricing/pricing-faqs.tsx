@@ -7,24 +7,24 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 // dictionary version is what renders in production.
 const defaultFaqs = [
   {
+    question: "How is the price calculated?",
+    answer:
+      "Every student weighs the same: 24 SAR a year. Your first 100 students are free, so a school of 300 pays for 200 students — 4,800 SAR a year.",
+  },
+  {
     question: 'What counts as a "student"?',
     answer:
-      "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count toward your plan's student count.",
+      "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count.",
   },
   {
-    question: "How does per-student billing work?",
+    question: "Is there a free trial?",
     answer:
-      "Pro is $1.50 per enrolled student per month (minimum $30/mo), billed monthly based on your active student count. Enterprise is $1.00 per student per month, custom-priced for networks of 1,000+ students.",
+      "Yes. Every school gets a full three-month free trial, and the first 100 students stay free forever after it.",
   },
   {
-    question: "Is the free plan really free?",
+    question: "How do I pay?",
     answer:
-      "Yes. Free is $0 forever for up to 100 students — no trial period, no credit card, no feature lock. Upgrade to Pro only when you outgrow it.",
-  },
-  {
-    question: "Can I cancel or export my data?",
-    answer:
-      "Cancel anytime from your billing settings — no exit fees. Every record exports to CSV or JSON whenever you want, so your data is never locked in.",
+      "One annual price: half at signing, the rest in four quarterly instalments of 12.5%. Prices exclude VAT.",
   },
 ]
 

@@ -18,7 +18,7 @@ export const WHY_CARDS: WhyCard[] = [
     id: "pricing",
     topic: "Pricing",
     headline: "Free to 100 students",
-    body: "Then $1.50 per student a month.",
+    body: "Then 24 SAR per student a year.",
     image: "/imported/zenda/why/tuition.webp",
     href: "/pricing",
   },

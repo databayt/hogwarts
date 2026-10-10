@@ -3,38 +3,68 @@ title: Business model
 description: SaaS subscription pricing, revenue streams, unit economics, and projections for Balqalam.
 ---
 
-Tiered SaaS subscription with per-student pricing. Designed to scale from a 50-student private school to a national network of public schools. Live in production at [balqalam.com](https://balqalam.com); piloted with [King Fahad Schools](https://kingfahd.balqalam.com) — the founding member of the [MENA-10 free pilot cohort](/docs/pilot). For commercial process see [Sales](/docs/sales); for the pilot motion see [Pilot](/docs/pilot); for the unified go-to-market see [GTM](/docs/gtm).
+Annual SaaS subscription at one flat per-student rate: **24 SAR per student per year, with every school's first 100 students free forever**. Designed to scale from a 50-student private school to a national network of public schools. Live in production at [balqalam.com](https://balqalam.com); piloted with [King Fahad Schools](https://kingfahd.balqalam.com) — the founding member of the [MENA-10 free pilot cohort](/docs/pilot). For commercial process see [Sales](/docs/sales); for the pilot motion see [Pilot](/docs/pilot); for the unified go-to-market see [GTM](/docs/gtm).
 
 ## Subscription tiers
 
-| Tier           | Price               | Best for                       | Limits                                                                                                         |
-| -------------- | ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| **FREE**       | $0                  | Small schools, evaluation      | 100 students, 1 GB storage, community support, core features                                                   |
-| **PRO**        | $1.50/student/month | Growing schools                | 10 GB storage, priority support, custom branding, API 1K req/hr, advanced analytics, parent push notifications |
-| **ENTERPRISE** | $1.00/student/month | Networks, government contracts | Unlimited storage and API, dedicated AM, 99.9% SLA, white-label, SSO (SAML/OAuth), custom integrations         |
+| Tier           | Price                                              | Best for                                            | Limits                                                                                                                                                             |
+| -------------- | -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **FREE**       | 0 SAR, forever                                     | Small schools, evaluation                           | Up to 100 students and 10 teachers, 1 GB storage, community support, core features                                                                                 |
+| **PRO**        | 24 SAR/student/year beyond the first 100 (≈ $6.40) | Growing schools                                     | Unlimited students and teachers, hosting, support by WhatsApp and email (Sunday–Thursday), updates, custom branding, advanced analytics, parent push notifications |
+| **ENTERPRISE** | 24 SAR/student/year — the same rate                | Over 1,000 students, networks, government contracts | Dedicated contract, dedicated AM, 99.9% SLA, SSO (SAML/OAuth), white-label, unlimited storage and API, custom integrations                                         |
 
-All paid tiers include a **14-day free trial** with full feature access; no credit card required.
+**Annual price = (students − 100) × 24 SAR.** No bands and no jumps: the price moves by exactly 24 SAR per student (≈ 2 SAR a month). Every school also gets a **full 3-month free trial**.
 
-## Billing options
+| Students | Billable | Annual price        | Per month (equivalent) |
+| -------- | -------- | ------------------- | ---------------------- |
+| 100      | 0        | 0 SAR (free)        | 0 SAR                  |
+| 150      | 50       | 1,200 SAR ($320)    | 100 SAR ($27)          |
+| 250      | 150      | 3,600 SAR ($960)    | 300 SAR ($80)          |
+| 300      | 200      | 4,800 SAR ($1,280)  | 400 SAR ($107)         |
+| 500      | 400      | 9,600 SAR ($2,560)  | 800 SAR ($213)         |
+| 1,000    | 900      | 21,600 SAR ($5,760) | 1,800 SAR ($480)       |
 
-| Option     | Discount | Billing                             |
-| ---------- | -------- | ----------------------------------- |
-| Monthly    | —        | Per-student, metered monthly        |
-| Annual     | 20% off  | Prepaid yearly commitment           |
-| Multi-year | Custom   | Negotiated for government contracts |
+Prices exclude VAT (15% in Saudi Arabia). They are quoted in SAR; the [pricing page](https://balqalam.com/en/pricing) also shows USD, SDG (Sudanese pound) and EGP at the live daily exchange rate. At the time of writing, 24 SAR ≈ 6.40 USD ≈ 3,265 SDG (official rate) ≈ 335 EGP. The single source for every number on the site is `src/components/saas-marketing/pricing/rates.ts`.
 
-**Payment methods**: Stripe Subscriptions (primary), bank transfer (enterprise / government), regional gateways (bankak, tap, mobile money) for MEA.
+### Why 24 SAR per student
+
+The anchor is **6,000 SAR a year for a 250-student school**. Spread evenly, that is 24 SAR per student per year. Flat bands made a 100-student school pay 60 SAR a head; a flat per-student weight instead makes the bill grow in exact proportion to enrolment, one student at a time.
+
+| Benchmark                     | Per student per year        |
+| ----------------------------- | --------------------------- |
+| Classe365                     | 24–60 SAR                   |
+| Europe, off-the-shelf systems | ~20–65 SAR                  |
+| India                         | ~2–27 SAR                   |
+| **Balqalam**                  | **24 SAR** (first 100 free) |
+
+24 SAR sits mid-market: at the floor of Classe365, the low end of Europe and the top of India's range. Infrastructure costs about **2.4–3.5% of the fee** without video. **Video LMS bandwidth is the main cost risk** — watch it on any school that leans on recorded lessons.
+
+## Billing and payment
+
+One annual price. There is no monthly plan, no monthly minimum, no monthly/yearly discount and no metered billing.
+
+| Instalment | When       | Share | 250 students | 500 students |
+| ---------- | ---------- | ----- | ------------ | ------------ |
+| 1          | At signing | 50%   | 1,800 SAR    | 4,800 SAR    |
+| 2          | Month 3    | 12.5% | 450 SAR      | 1,200 SAR    |
+| 3          | Month 6    | 12.5% | 450 SAR      | 1,200 SAR    |
+| 4          | Month 9    | 12.5% | 450 SAR      | 1,200 SAR    |
+| 5          | Month 12   | 12.5% | 450 SAR      | 1,200 SAR    |
+
+Multi-year terms are negotiated for government contracts.
+
+**Payment methods**: bank transfer (schools, enterprise and government), Stripe for card payments (no metered subscriptions), and regional gateways (bankak, tap, mobile money) for MEA.
 
 ## Revenue streams
 
-| Lumos                     | Share | Description                                         |
-| ------------------------- | ----- | --------------------------------------------------- |
-| Per-student subscriptions | ~85%  | Recurring revenue from monthly / annual plans       |
-| Enterprise contracts      | ~10%  | Multi-school + government deals with custom pricing |
-| API overage               | small | Usage-based billing above tier limits               |
-| White-label licensing     | small | Custom domain + complete rebranding fee             |
-| Professional services     | small | Implementation, migration, training                 |
-| Marketplace (future)      | —     | Commission on third-party integrations              |
+| Lumos                     | Share | Description                                            |
+| ------------------------- | ----- | ------------------------------------------------------ |
+| Per-student subscriptions | ~85%  | Recurring revenue from annual per-student contracts    |
+| Enterprise contracts      | ~10%  | Multi-school + government deals, same per-student rate |
+| API overage               | small | Usage-based billing above tier limits                  |
+| White-label licensing     | small | Custom domain + complete rebranding fee                |
+| Professional services     | small | Implementation, migration, training                    |
+| Marketplace (future)      | —     | Commission on third-party integrations                 |
 
 ## Unit economics
 
@@ -42,21 +72,23 @@ All paid tiers include a **14-day free trial** with full feature access; no cred
 
 | Metric                    | Value                                                              |
 | ------------------------- | ------------------------------------------------------------------ |
-| Monthly revenue           | $750                                                               |
-| Annual revenue            | $9,000 ($7,200 with 20% annual discount — $600/mo billed annually) |
+| Annual revenue            | 9,600 SAR ($2,560) — (500 − 100) × 24 SAR                          |
+| Monthly equivalent        | 800 SAR ($213)                                                     |
+| Cash at signing           | 4,800 SAR ($1,280), then 1,200 SAR ($320) at months 3, 6, 9 and 12 |
 | Customer acquisition cost | ~$500                                                              |
-| Payback period            | < 1 month                                                          |
-| Gross margin              | 80%+                                                               |
+| Payback period            | At signing — the 50% upfront covers CAC                            |
+| Gross margin              | 80%+ (infrastructure ≈ 2.4–3.5% of the fee without video)          |
 
 ### 5,000-student network (ENTERPRISE)
 
-| Metric                    | Value                                                                  |
-| ------------------------- | ---------------------------------------------------------------------- |
-| Monthly revenue           | $5,000                                                                 |
-| Annual revenue            | $60,000 ($48,000 with 20% annual discount — $4,000/mo billed annually) |
-| Customer acquisition cost | ~$3,000                                                                |
-| Payback period            | < 1 month                                                              |
-| Gross margin              | 85%+                                                                   |
+| Metric                    | Value                                                                   |
+| ------------------------- | ----------------------------------------------------------------------- |
+| Annual revenue            | 117,600 SAR ($31,360) — (5,000 − 100) × 24 SAR, priced as one contract  |
+| Monthly equivalent        | 9,800 SAR ($2,613)                                                      |
+| Cash at signing           | 58,800 SAR ($15,680), then 14,700 SAR ($3,920) at months 3, 6, 9 and 12 |
+| Customer acquisition cost | ~$3,000                                                                 |
+| Payback period            | At signing                                                              |
+| Gross margin              | 85%+                                                                    |
 
 ## Market opportunity (MEA)
 

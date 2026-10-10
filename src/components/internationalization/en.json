@@ -111,11 +111,13 @@
     "speechError": "Speech recognition error. Please try again.",
     "listening": "Listening...",
     "saasFeatures": "Features",
-    "saasFeaturesQuestion": "What features does Databayt offer?",
+    "saasFeaturesQuestion": "What features does Balqalam offer?",
     "saasPricing": "Pricing",
     "saasPricingQuestion": "What are the pricing plans?",
     "saasGetStarted": "Get Started",
-    "saasGetStartedQuestion": "How do I get started with Databayt?",
+    "saasGetStartedQuestion": "How do I get started with Balqalam?",
+    "saasSupport": "Support",
+    "saasSupportQuestion": "What can you help me with in using Balqalam?",
     "schoolAdmission": "Admission",
     "schoolAdmissionQuestion": "How do I apply to this school?",
     "schoolFees": "Fees",
@@ -140,9 +142,12 @@
     "ctaContactSchool": "Contact school",
     "ctaViewScholarships": "View scholarships",
     "ctaOpenDocs": "Read the docs",
+    "ctaHelpCenter": "Help center",
+    "resourceVideo": "Watch the tutorial",
+    "resourceGuide": "Open the guide",
     "pricingNudgeTitle": "Comparing plans?",
     "pricingNudgeBody": "I can help you pick the right plan in seconds.",
-    "saasPromptTemplate": "You are the Balqalam assistant on the marketing site. Balqalam (بالقلم) is a school-management platform built by Databayt. You help school owners, principals, and administrators decide whether it fits their school — and, when they are interested, you get them a trial copy under their school's own name. Always reply in English. Be concise and practical: 2–3 short sentences (under 50 words), or a tight bullet list when comparing plans or listing capabilities. Use ONLY the live data below; never invent prices, features, or numbers.\n\n## What Balqalam is\n- One platform for admissions and enrolment, students, attendance, timetables, grades, fees, invoices and payroll, messaging, and parent communication — plus a website for the school.\n- Bilingual out of the box — Arabic (RTL) and English (LTR).\n- Every school gets its own branded address (yourschool.balqalam.com). Open source; cloud-hosted by us, or self-hosted.\n\n## The offer\n- A full three-month free trial for any school — no fees and no commitment. Our team prepares a trial copy under the school's own name, ready to try.\n- After the trial: the Free plan covers up to 100 students; larger schools move to a paid plan below.\n\n## Live pricing — quote exactly, never round\n{pricing}\n\n## Capabilities (10 categories, 85+ features)\n{features}\n\n## How to answer\n1. Answer the actual question first in one line, then add at most one helpful detail.\n2. For pricing, name the plan, its price, and 1–2 things it unlocks — straight from the list above — and mention the three-month free trial.\n3. For \"can it do X\", say yes and name the feature when the list above covers it. The list is a summary, not everything: if it is not listed, never say no — say the team will confirm it, and offer the trial.\n4. The one ask: when the visitor shows interest (asks about price, a trial, a demo, or how to start) or from your second answer on, end your reply with ONE question — offer to prepare the trial copy under their school's name and ask for a WhatsApp number or an email to send it to. Ask it once per conversation: if any earlier reply of yours already asked for a number or email, do NOT ask again — just answer. If they ignore or decline it, never repeat it.\n5. When they give a number or email: thank them, say the team will contact them on it to prepare the trial copy, and — if not known yet — ask for the school's name. Then the number of students. If they already said the student count or school name anywhere above, do not ask for it again. One question per reply, never a form.\n6. If the data above doesn't cover it, say so plainly and point them to {contactEmail}. Never guess, and never promise a date or a price that is not listed above.\n7. No markdown links or HTML — the UI renders buttons separately.",
+    "saasPromptTemplate": "You are the Balqalam assistant on the marketing site. Balqalam (بالقلم) is a school-management platform built by Databayt. You help school owners, principals, and administrators decide whether it fits their school — and, when they are interested, you get them a trial copy under their school's own name. You are also its support desk: schools already using Balqalam ask you how to do things, and you answer from the help guides below. Always reply in English. Be concise and practical: 2–3 short sentences (under 50 words), or a tight bullet list when comparing plans or listing capabilities. Use ONLY the live data below; never invent prices, features, or numbers.\n\n## What Balqalam is\n- One platform for admissions and enrolment, students, attendance, timetables, grades, fees, invoices and payroll, messaging, and parent communication — plus a website for the school.\n- Bilingual out of the box — Arabic (RTL) and English (LTR).\n- Every school gets its own branded address (yourschool.balqalam.com). Open source; cloud-hosted by us, or self-hosted.\n\n## The offer\n- A full three-month free trial for any school — no fees and no commitment. Our team prepares a trial copy under the school's own name, ready to try.\n- After the trial: every school's first 100 students stay free forever; each student beyond them is priced per student (below), so the price grows exactly with enrolment.\n\n## Live pricing — quote exactly, never round; use the examples instead of computing\n{pricing}\n\n## Capabilities (10 categories, 85+ features)\n{features}\n\n## Help & how-to guides — answer support questions from here only\n{support}\n\n## How to answer\n1. Answer the actual question first in one line, then add at most one helpful detail.\n2. For pricing, name the plan, its price, and 1–2 things it unlocks — straight from the list above — and mention the three-month free trial.\n3. For \"can it do X\", say yes and name the feature when the list above covers it. The list is a summary, not everything: if it is not listed, never say no — say the team will confirm it, and offer the trial.\n4. The one ask (sales questions only — never on a how-to or support question): when the visitor shows interest (asks about price, a trial, a demo, or how to start) or from your second answer on, end your reply with ONE question — offer to prepare the trial copy under their school's name and ask for a WhatsApp number or an email to send it to. Ask it once per conversation: if any earlier reply of yours already asked for a number or email, do NOT ask again — just answer. If they ignore or decline it, never repeat it.\n5. When they give a number or email: thank them, say the team will contact them on it to prepare the trial copy, and — if not known yet — ask for the school's name. Then the number of students. If they already said the student count or school name anywhere above, do not ask for it again. One question per reply, never a form.\n6. If the data above doesn't cover it, say so plainly and point them to {contactEmail}. Never guess, and never promise a date or a price that is not listed above.\n7. Plain text only — no markdown (no **bold**, # headings or links) and no HTML; the chat shows symbols literally, and the UI renders buttons separately. Use \"1.\" or \"-\" for lists.\n8. For a how-to or support question, answer from the matching guide above: the steps as a short numbered list (at most 6), in the guide's words, then — only when a guide is listed under \"Guides matching this question\" — one line saying its guide and tutorial are attached below; with no matching guide, never mention attachments. If the visitor asks what you can help with, list the guide titles above. Never invent a menu, button or step that is not in a guide.\n9. For a problem the guides don't cover — an error, a locked account, missing data, a billing dispute — apologise in one line and point them to {contactEmail} with their school name and a screenshot.",
     "schoolPromptIntroTemplate": "You are the friendly virtual assistant for {schoolName}, helping prospective parents and students on the school's website. Always reply in English. Be warm, accurate, and concise: 2–3 short sentences (under 60 words), or a short bullet list for fees, dates, or programs. Use ONLY the school's real data below — never invent facts, names, dates, or amounts.",
     "schoolPromptRules": "## How to answer\n1. Answer the question first in one line, then add the single most useful detail.\n2. Use only the school's data above — never invent names, dates, fees, or seat counts.\n3. Admissions: state the current status (open / coming soon / closed); if open, give the deadline and note they can apply online. The UI shows the Apply button.\n4. Fees: give the amount and currency, mention installments if available, and point to any scholarships listed above.\n5. Surface upcoming events or announcements when they're relevant to the question.\n6. If the data above doesn't answer it, say so honestly and suggest contacting the school using the Contact details above.\n7. Programs or grades questions: reference the Academic Structure above.\n8. No markdown links or HTML — the UI renders action buttons separately.",
     "schoolHeaderAcademic": "Academic Structure",
@@ -637,13 +642,13 @@
     "pricing": {
       "badge": "Simple, per-student pricing",
       "title": "Pay for the students you teach.",
-      "subtitle": "One price per student, no per-module fees. Start free, upgrade only when you outgrow it.",
+      "subtitle": "Every student weighs the same: 24 SAR a year. Your first 100 students are free — you pay only for each student beyond them.",
       "plans": {
         "free": {
           "title": "Free",
           "description": "Great for small schools getting started",
           "benefits": [
-            "Up to 100 students",
+            "Up to 100 students, free forever",
             "Up to 10 teachers",
             "Core features — admissions, attendance, exams, fees, timetable",
             "1 GB storage",
@@ -652,12 +657,12 @@
         },
         "pro": {
           "title": "Pro",
-          "description": "For growing schools ready to scale",
+          "description": "For growing schools — pay only for students beyond 100",
           "benefits": [
-            "Unlimited students, billed per student",
+            "Unlimited students — the first 100 free, then 24 SAR per student a year",
             "Unlimited teachers",
-            "10 GB storage",
-            "Priority support",
+            "Hosting, support and updates included",
+            "Support by WhatsApp and email, Sunday to Thursday",
             "Custom branding",
             "Advanced analytics & parent push notifications"
           ]
@@ -682,19 +687,19 @@
         "everythingInFree": "Everything in Free, plus",
         "everythingInPro": "Everything in Pro, plus",
         "startTrial": "Get started free",
-        "getPro": "Get Pro",
-        "monthly": "Monthly",
-        "yearly": "Yearly (save 20%)",
+        "getPro": "Start 3-month free trial",
         "perMonth": "/mo",
         "perStudentPerMonth": "/ student / month",
-        "minimumNote": "${amount}/mo minimum",
-        "billedAnnuallyNote": "billed annually at ${amount}/student/year",
         "contactToUpgrade": "Contact us to upgrade",
         "moreInfo": "More info",
         "loading": "Loading...",
         "unavailable": "Unavailable",
         "manageSubscription": "Manage Subscription",
-        "getPlan": "Get plan"
+        "getPlan": "Get plan",
+        "perStudentPerYear": "/ student / year",
+        "freeNote": "Your first {free} students, forever",
+        "perMonthNote": "≈ {amount} a month per student, beyond the first {free} free",
+        "enterpriseNote": "Same rate for {students}+ students, with a dedicated contract"
       },
       "planNames": {
         "free": "Free",
@@ -704,7 +709,7 @@
       "enterprise": {
         "badge": "For networks",
         "title": "Running more than one school?",
-        "description": "Multi-campus networks and government contracts get a dedicated account manager, a 99.9% uptime SLA, white-label branding, and SSO — priced per student for 1,000+ students.",
+        "description": "Multi-campus networks and government contracts get a dedicated account manager, a 99.9% uptime SLA, white-label branding and SSO — at the same 24 SAR per student a year, for 1,000+ students.",
         "talkToSales": "Talk to Sales",
         "contactHref": "mailto:contact@databayt.org?subject=Enterprise%20plan"
       },
@@ -727,14 +732,14 @@
         },
         "values": {
           "upTo100": "Up to 100",
-          "unlimitedPerStudent": "Unlimited, billed per student",
+          "unlimitedPerStudent": "Unlimited — 24 SAR per student a year beyond 100",
           "students1000Plus": "1,000+ (custom)",
           "unlimited": "Unlimited",
           "upTo10": "Up to 10",
           "oneGb": "1 GB",
           "tenGb": "10 GB",
           "community": "Community",
-          "priority": "Priority",
+          "priority": "WhatsApp & email",
           "dedicatedAm": "Dedicated account manager",
           "basic": "Basic",
           "advanced": "Advanced",
@@ -744,7 +749,7 @@
           "whiteLabel": "Yes, white-label"
         },
         "tooltips": {
-          "students": "Free is capped at 100 students. Pro and Enterprise bill per student with no hard cap.",
+          "students": "Every school's first 100 students are free. Each student beyond that is 24 SAR a year, on every plan.",
           "apiAccess": "Free has no API access. Pro is rate-limited; Enterprise is unlimited.",
           "sso": "Single sign-on via SAML or OAuth — Enterprise only.",
           "sla": "Enterprise includes a contractual 99.9% uptime guarantee."
@@ -752,31 +757,31 @@
       },
       "faqs": {
         "title": "Frequently Asked Questions",
-        "subtitle": "Your guide to per-student pricing and plans with Databayt.",
+        "subtitle": "Your guide to per-student pricing with Balqalam.",
         "questions": [
           {
+            "question": "How is the price calculated?",
+            "answer": "Every student weighs the same: 24 SAR a year (6,000 SAR for 250 students, divided per student). Your first 100 students are free, so a school of 300 pays for 200 students — 4,800 SAR a year. Add or remove one student and the price moves by exactly 24 SAR, with no bands or jumps."
+          },
+          {
             "question": "What counts as a \"student\"?",
-            "answer": "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count toward your plan's student count."
+            "answer": "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count."
           },
           {
-            "question": "How does per-student billing work?",
-            "answer": "Pro is $1.50 per enrolled student per month (minimum $30/mo), billed monthly based on your active student count. Enterprise is $1.00 per student per month, custom-priced for networks of 1,000+ students."
+            "question": "Is there a free trial?",
+            "answer": "Yes. Every school gets a full three-month free trial — no fees, no commitment — and the first 100 students stay free forever after it."
           },
           {
-            "question": "Is the free plan really free?",
-            "answer": "Yes. Free is $0 forever for up to 100 students — no trial period, no credit card, no feature lock. Upgrade to Pro only when you outgrow it."
+            "question": "How do I pay?",
+            "answer": "One annual price, paid half at signing and the rest in four quarterly instalments of 12.5% (months 3, 6, 9 and 12). Prices are quoted in SAR and shown in USD, Sudanese and Egyptian pounds at today's exchange rate, before VAT (15% in Saudi Arabia). Hosting, support and updates are included — no separate invoices."
           },
           {
-            "question": "What payment methods do you accept?",
-            "answer": "Your Databayt subscription is billed in USD via Stripe. This is separate from how your school collects tuition from parents — that runs through Stripe, bankak, tap, cash, and bank transfer, whichever your school and parents use."
+            "question": "What support is included?",
+            "answer": "Support by WhatsApp and email, Sunday to Thursday during working hours. Platform faults are fixed at no cost, and new versions and security fixes are applied automatically."
           },
           {
             "question": "Can I cancel or export my data?",
-            "answer": "Cancel anytime from your billing settings — no exit fees. Every record exports to CSV or JSON whenever you want, so your data is never locked in."
-          },
-          {
-            "question": "How much do I save billing annually?",
-            "answer": "20% off. Pro drops to $1.20/student/month and Enterprise to $0.80/student/month when billed yearly."
+            "answer": "Yes. Your data is yours: lists export to CSV whenever you want, so it is never locked in."
           }
         ]
       },
@@ -786,17 +791,23 @@
         "poweredBy": "Powered by"
       },
       "calculator": {
-        "title": "Estimate your monthly cost",
-        "subtitle": "Drag the slider to your student count — see what you'd pay on Pro or Enterprise.",
+        "title": "Calculate your price",
+        "subtitle": "Every student weighs the same — {rate} a year. Your first {free} students are free.",
         "studentCountLabel": "Students",
-        "resultFree": "Free — $0/mo",
-        "resultPro": "Pro: ${amount}/mo",
-        "resultProYearly": "Pro: ${amount}/mo billed annually",
-        "resultEnterprise": "Enterprise — custom pricing",
-        "resultEnterpriseEstimate": "Estimated ~${amount}/mo — contact sales for a custom quote",
-        "minimumNote": "Pro has a ${amount}/mo minimum",
-        "example": "Example: 300 students on Pro is $450/mo.",
-        "talkToSales": "Talk to Sales"
+        "resultFree": "Free — your first {free} students cost nothing",
+        "talkToSales": "Talk to Sales",
+        "currencyLabel": "Currency",
+        "annualLabel": "Annual price",
+        "breakdown": "{billable} students × {rate} — the first {free} free",
+        "monthlyLabel": "Per month",
+        "perStudentLabel": "Per student, per year",
+        "scheduleTitle": "Payment plan",
+        "atSigning": "At signing (50%)",
+        "instalment": "Month {month} (12.5%)",
+        "enterpriseNote": "Over 1,000 students: the same rate, with a dedicated contract and account manager.",
+        "vatNote": "Prices exclude VAT (15% in Saudi Arabia). Hosting, support and updates included.",
+        "ratesNote": "Converted from SAR at the exchange rate of {date}.",
+        "ratesFallbackNote": "Converted from SAR at an approximate exchange rate."
       }
     },
     "logoCloud": {

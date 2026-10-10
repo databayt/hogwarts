@@ -67,6 +67,9 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   ctaContactSchool: "Contact school",
   ctaViewScholarships: "View scholarships",
   ctaOpenDocs: "Read the docs",
+  ctaHelpCenter: "Help center",
+  resourceVideo: "Watch the tutorial",
+  resourceGuide: "Open the guide",
 
   // Pricing nudge
   pricingNudgeTitle: "Comparing plans?",
@@ -120,11 +123,13 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
 
   // Quick-ask labels
   saasFeatures: "Features",
-  saasFeaturesQuestion: "What features does Databayt offer?",
+  saasFeaturesQuestion: "What features does Balqalam offer?",
   saasPricing: "Pricing",
   saasPricingQuestion: "What are the pricing plans?",
   saasGetStarted: "Get Started",
-  saasGetStartedQuestion: "How do I get started with Databayt?",
+  saasGetStartedQuestion: "How do I get started with Balqalam?",
+  saasSupport: "Support",
+  saasSupportQuestion: "What can you help me with in using Balqalam?",
   schoolAdmission: "Admission",
   schoolAdmissionQuestion: "How do I apply to this school?",
   schoolFees: "Fees",
