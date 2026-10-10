@@ -1,7 +1,10 @@
 {
   "story": {
     "kind": "video",
-    "title": { "ar": "قصتنا", "en": "Our story" },
+    "title": {
+      "ar": "قصتنا",
+      "en": "Our story"
+    },
     "poster": "https://cdn.databayt.org/balqalam/media/story/poster.5038a244.webp",
     "width": 1920,
     "height": 1080,
@@ -20,7 +23,10 @@
   },
   "hero-3d": {
     "kind": "video",
-    "title": { "ar": "حركة واجهة المدرسة", "en": "School homepage hero loop" },
+    "title": {
+      "ar": "حركة واجهة المدرسة",
+      "en": "School homepage hero loop"
+    },
     "poster": "/images/hero/hero-poster.webp",
     "width": 960,
     "height": 720,
@@ -32,5 +38,1127 @@
       }
     ],
     "tracks": []
+  },
+  "add-student/list-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة الطلاب قبل الإضافة",
+      "en": "The students list before adding"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/01-list-ar-1600.0ec177c7.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/01-list-ar-2400.c9c8eea6.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/01-list-ar-1600.387841d6.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/01-list-ar-2400.b56c7324.webp"
+    }
+  },
+  "add-student/list-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة الطلاب قبل الإضافة",
+      "en": "The students list before adding"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/01-list-en-1600.b12fd460.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/01-list-en-2400.ab9f3f01.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/01-list-en-1600.d8ded280.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/01-list-en-2400.767fc577.webp"
+    }
+  },
+  "add-student/documents-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة المستندات في معالج إضافة طالب",
+      "en": "The documents step of the add-student wizard"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-ar-1600.b6f05b2f.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-ar-2400.5b8901d9.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-ar-1600.80a55647.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-ar-2400.e7e44a64.webp"
+    }
+  },
+  "add-student/documents-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة المستندات في معالج إضافة طالب",
+      "en": "The documents step of the add-student wizard"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-en-1600.15bcdc92.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-en-2400.459ad2af.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-en-1600.24eaaedd.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/02-documents-en-2400.adc9921c.webp"
+    }
+  },
+  "add-student/finder-photo-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار صورة الطالب من نافذة الملفات",
+      "en": "Picking the student's photo in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-ar-1600.f9cf50b4.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-ar-2400.e4e76a9b.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-ar-1600.2c9f890c.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-ar-2400.c51e5295.webp"
+    }
+  },
+  "add-student/finder-photo-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار صورة الطالب من نافذة الملفات",
+      "en": "Picking the student's photo in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-en-1600.bb0a4d58.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-en-2400.2fa374f1.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-en-1600.fc94e71b.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/03-finder-photo-en-2400.ec6f93de.webp"
+    }
+  },
+  "add-student/photo-uploaded-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صورة الطالب بعد الرفع",
+      "en": "The student's photo uploaded"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-ar-1600.7102eee1.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-ar-2400.81113d0e.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-ar-1600.fea08d8a.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-ar-2400.4e0e665e.webp"
+    }
+  },
+  "add-student/photo-uploaded-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صورة الطالب بعد الرفع",
+      "en": "The student's photo uploaded"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-en-1600.a36a96d3.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-en-2400.46dbc315.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-en-1600.dea9526c.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/04-photo-uploaded-en-2400.984439bd.webp"
+    }
+  },
+  "add-student/finder-cv-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف الطالب من نافذة الملفات",
+      "en": "Picking the student file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-ar-1600.36c52707.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-ar-2400.2ea1e662.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-ar-1600.8d52e919.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-ar-2400.72420f82.webp"
+    }
+  },
+  "add-student/finder-cv-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف الطالب من نافذة الملفات",
+      "en": "Picking the student file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-en-1600.bcc42c75.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-en-2400.15c40128.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-en-1600.61180778.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/05-finder-cv-en-2400.f08b621a.webp"
+    }
+  },
+  "add-student/cv-uploaded-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "ملف الطالب بعد الرفع",
+      "en": "The student file uploaded"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-ar-1600.23298d16.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-ar-2400.0f1b4081.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-ar-1600.1ba2bcc0.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-ar-2400.95b2ad5e.webp"
+    }
+  },
+  "add-student/cv-uploaded-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "ملف الطالب بعد الرفع",
+      "en": "The student file uploaded"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-en-1600.a0d2ffe2.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-en-2400.73185803.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-en-1600.e07f0369.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/06-cv-uploaded-en-2400.e9ffd724.webp"
+    }
+  },
+  "add-student/personal-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة البيانات الشخصية",
+      "en": "The personal details step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-ar-1600.454fe8e3.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-ar-2400.af48b21a.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-ar-1600.c2242761.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-ar-2400.d4a387f5.webp"
+    }
+  },
+  "add-student/personal-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة البيانات الشخصية",
+      "en": "The personal details step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-en-1600.ceb75e17.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-en-2400.bc8ae42b.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-en-1600.8fadf896.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/07-personal-en-2400.c0c8dac0.webp"
+    }
+  },
+  "add-student/personal-filled-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "البيانات الشخصية بعد التعبئة",
+      "en": "Personal details filled in"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-ar-1600.ff0ebc95.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-ar-2400.8c1743f2.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-ar-1600.0f50ddb8.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-ar-2400.5e9e4b76.webp"
+    }
+  },
+  "add-student/personal-filled-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "البيانات الشخصية بعد التعبئة",
+      "en": "Personal details filled in"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-en-1600.90e3a129.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-en-2400.01a1eeb1.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-en-1600.2e80ac66.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/08-personal-filled-en-2400.b8db7169.webp"
+    }
+  },
+  "add-student/father-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات ولي الأمر",
+      "en": "The father's details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/09-father-ar-1600.4bede086.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/09-father-ar-2400.44f6bd8a.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/09-father-ar-1600.6ed54a58.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/09-father-ar-2400.88b3ed9d.webp"
+    }
+  },
+  "add-student/father-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات ولي الأمر",
+      "en": "The father's details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/09-father-en-1600.6f4513f5.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/09-father-en-2400.f5f4780a.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/09-father-en-1600.f70c9d30.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/09-father-en-2400.e930f69b.webp"
+    }
+  },
+  "add-student/address-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة العنوان",
+      "en": "The address step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/10-address-ar-1600.c78c89ed.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/10-address-ar-2400.f7187977.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/10-address-ar-1600.93af82f9.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/10-address-ar-2400.fae4c11e.webp"
+    }
+  },
+  "add-student/address-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة العنوان",
+      "en": "The address step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/10-address-en-1600.18b15295.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/10-address-en-2400.83a09ba2.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/10-address-en-1600.3cdc7446.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/10-address-en-2400.0465ce53.webp"
+    }
+  },
+  "add-student/academic-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الصف والشعبة",
+      "en": "Grade and section"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-ar-1600.8b257818.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-ar-2400.a5fa0d9c.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-ar-1600.c45dcbcb.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-ar-2400.4d191c73.webp"
+    }
+  },
+  "add-student/academic-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الصف والشعبة",
+      "en": "Grade and section"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-en-1600.bb588141.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-en-2400.3c951deb.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-en-1600.4ea8c9e9.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/11-academic-en-2400.317e861d.webp"
+    }
+  },
+  "add-student/created-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تم إنشاء الطالب مع بيانات الدخول",
+      "en": "The student created, with their login"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/12-created-ar-1600.303aed35.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/12-created-ar-2400.e65b3d98.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/12-created-ar-1600.013bfad6.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/12-created-ar-2400.0d420c3e.webp"
+    }
+  },
+  "add-student/created-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تم إنشاء الطالب مع بيانات الدخول",
+      "en": "The student created, with their login"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/12-created-en-1600.7d158a5b.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/12-created-en-2400.e81793ad.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-student/12-created-en-1600.2b034730.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-student/12-created-en-2400.66da7939.webp"
+    }
+  },
+  "add-teacher/list-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة المعلمين قبل الإضافة",
+      "en": "The teachers list before adding"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-ar-1600.66b4042e.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-ar-2400.58b88e9c.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-ar-1600.b9deb3cf.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-ar-2400.f092dbfd.webp"
+    }
+  },
+  "add-teacher/information-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة المعلومات الأساسية",
+      "en": "The basic information step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-ar-1600.7d7f18d7.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-ar-2400.48700804.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-ar-1600.fedfd43e.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-ar-2400.05885f2f.webp"
+    }
+  },
+  "add-teacher/information-filled-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المعلومات الأساسية بعد التعبئة",
+      "en": "Basic information filled in"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-ar-1600.acb2f84c.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-ar-2400.0be643ed.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-ar-1600.5cac1661.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-ar-2400.67035081.webp"
+    }
+  },
+  "add-teacher/expertise-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة التخصص والمواد",
+      "en": "The expertise and subjects step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-ar-1600.1429fd4b.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-ar-2400.2760bc27.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-ar-1600.555a8bc1.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-ar-2400.9f6dc515.webp"
+    }
+  },
+  "add-teacher/expertise-picked-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المواد والشعب المختارة",
+      "en": "Subjects and sections picked"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-ar-1600.9f8d215b.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-ar-2400.39421cd8.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-ar-1600.673c7901.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-ar-2400.c9370397.webp"
+    }
+  },
+  "add-teacher/contact-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات التواصل",
+      "en": "Contact details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-ar-1600.97b68fcf.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-ar-2400.1e9dd292.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-ar-1600.be3d90f7.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-ar-2400.cac2ed87.webp"
+    }
+  },
+  "add-teacher/address-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة العنوان",
+      "en": "The address step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-ar-1600.d8270138.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-ar-2400.2a61fdda.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-ar-1600.799dfd42.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-ar-2400.e04bd49a.webp"
+    }
+  },
+  "add-teacher/employment-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات التوظيف",
+      "en": "Employment details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-ar-1600.f5473665.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-ar-2400.d2c37473.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-ar-1600.a940a539.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-ar-2400.33670207.webp"
+    }
+  },
+  "add-teacher/created-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تم إنشاء المعلم مع بيانات الدخول",
+      "en": "The teacher created, with their login"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-ar-1600.ec260855.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-ar-2400.66320c0e.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-ar-1600.1cdd6679.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-ar-2400.8884624d.webp"
+    }
+  },
+  "bulk-student/bulk-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الإدخال الجماعي",
+      "en": "The bulk import page"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-ar-1600.689c9b4f.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-ar-2400.c0e79a58.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-ar-1600.0e647a02.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-ar-2400.60b59bde.webp"
+    }
+  },
+  "bulk-student/bulk-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الإدخال الجماعي",
+      "en": "The bulk import page"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-en-1600.b5818b42.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-en-2400.c03b45fa.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-en-1600.1e86e27d.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/01-bulk-en-2400.02cd14ce.webp"
+    }
+  },
+  "bulk-student/finder-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف الطلاب من نافذة الملفات",
+      "en": "Picking the students file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-ar-1600.4cc98102.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-ar-2400.96863d9e.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-ar-1600.f4266cea.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-ar-2400.55e3dc0a.webp"
+    }
+  },
+  "bulk-student/finder-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف الطلاب من نافذة الملفات",
+      "en": "Picking the students file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-en-1600.5cd50bbb.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-en-2400.d8bba66f.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-en-1600.43c73773.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/02-finder-en-2400.c5a4c9f9.webp"
+    }
+  },
+  "bulk-student/map-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مطابقة أعمدة ملف الطلاب تلقائيًا",
+      "en": "Students file columns matched automatically"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-ar-1600.c7ff6f73.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-ar-2400.8b2ba043.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-ar-1600.1774a26a.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-ar-2400.aa53f7a4.webp"
+    }
+  },
+  "bulk-student/map-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مطابقة أعمدة ملف الطلاب تلقائيًا",
+      "en": "Students file columns matched automatically"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-en-1600.59b400e1.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-en-2400.57ff6455.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-en-1600.564091dc.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/03-map-en-2400.8e731694.webp"
+    }
+  },
+  "bulk-student/review-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مراجعة ستة طلاب جدد قبل الحفظ",
+      "en": "Reviewing six new students before saving"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-ar-1600.ea7fbb91.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-ar-2400.097fbfbd.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-ar-1600.cfbd8b8b.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-ar-2400.d63db8e1.webp"
+    }
+  },
+  "bulk-student/review-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مراجعة ستة طلاب جدد قبل الحفظ",
+      "en": "Reviewing six new students before saving"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-en-1600.2b79071d.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-en-2400.709224a6.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-en-1600.1bcb82c5.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/04-review-en-2400.8b28760a.webp"
+    }
+  },
+  "bulk-student/done-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اكتمل استيراد الطلاب مع بيانات الدخول",
+      "en": "Students imported, with their logins"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-ar-1600.2a120dfa.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-ar-2400.7cd1ecb4.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-ar-1600.6e5f0ee6.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-ar-2400.3802a2f9.webp"
+    }
+  },
+  "bulk-student/done-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اكتمل استيراد الطلاب مع بيانات الدخول",
+      "en": "Students imported, with their logins"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-en-1600.564e36d0.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-en-2400.932e76ec.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-en-1600.7c209737.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/05-done-en-2400.b2b40bd8.webp"
+    }
+  },
+  "bulk-student/history-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الاستيراد مع التنزيل والتراجع",
+      "en": "Import history with logins and undo"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-ar-1600.223b611f.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-ar-2400.f877cec7.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-ar-1600.73010aae.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-ar-2400.81204972.webp"
+    }
+  },
+  "bulk-student/history-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الاستيراد مع التنزيل والتراجع",
+      "en": "Import history with logins and undo"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-en-1600.8bd04529.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-en-2400.0372dbae.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-en-1600.7ed60f65.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-student/06-history-en-2400.46302691.webp"
+    }
+  },
+  "bulk-teacher/bulk-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الإدخال الجماعي",
+      "en": "The bulk import page"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-ar-1600.689c9b4f.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-ar-2400.c0e79a58.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-ar-1600.0e647a02.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-ar-2400.60b59bde.webp"
+    }
+  },
+  "bulk-teacher/bulk-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الإدخال الجماعي",
+      "en": "The bulk import page"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-en-1600.b5818b42.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-en-2400.c03b45fa.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-en-1600.1e86e27d.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/01-bulk-en-2400.02cd14ce.webp"
+    }
+  },
+  "bulk-teacher/finder-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف المعلمين من نافذة الملفات",
+      "en": "Picking the teachers file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-ar-1600.8aaef632.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-ar-2400.adf07836.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-ar-1600.88ff3c55.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-ar-2400.b47f8142.webp"
+    }
+  },
+  "bulk-teacher/finder-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار ملف المعلمين من نافذة الملفات",
+      "en": "Picking the teachers file in Finder"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-en-1600.97343219.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-en-2400.c401c199.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-en-1600.dedcf3d2.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/02-finder-en-2400.1ef068d3.webp"
+    }
+  },
+  "bulk-teacher/map-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مطابقة أعمدة ملف المعلمين تلقائيًا",
+      "en": "Teachers file columns matched automatically"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-ar-1600.43aadc67.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-ar-2400.bb0f1b4c.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-ar-1600.5ec3bf4d.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-ar-2400.0de231b0.webp"
+    }
+  },
+  "bulk-teacher/map-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مطابقة أعمدة ملف المعلمين تلقائيًا",
+      "en": "Teachers file columns matched automatically"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-en-1600.e1788124.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-en-2400.3b20d512.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-en-1600.6d8a8c73.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/03-map-en-2400.a581c024.webp"
+    }
+  },
+  "bulk-teacher/review-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مراجعة أربعة معلمين جدد قبل الحفظ",
+      "en": "Reviewing four new teachers before saving"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-ar-1600.d2110653.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-ar-2400.c626157c.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-ar-1600.9984cf77.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-ar-2400.a8e8c219.webp"
+    }
+  },
+  "bulk-teacher/review-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "مراجعة أربعة معلمين جدد قبل الحفظ",
+      "en": "Reviewing four new teachers before saving"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-en-1600.8a4eb364.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-en-2400.4a824b28.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-en-1600.e8a648c0.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/04-review-en-2400.70d2c855.webp"
+    }
+  },
+  "bulk-teacher/done-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اكتمل استيراد المعلمين مع بيانات الدخول",
+      "en": "Teachers imported, with their logins"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-ar-1600.5cca348a.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-ar-2400.80618451.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-ar-1600.a6af3346.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-ar-2400.e08ed862.webp"
+    }
+  },
+  "bulk-teacher/done-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اكتمل استيراد المعلمين مع بيانات الدخول",
+      "en": "Teachers imported, with their logins"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-en-1600.6c58baf3.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-en-2400.7283e1bf.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-en-1600.e5d98a39.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/05-done-en-2400.050a9317.webp"
+    }
+  },
+  "bulk-teacher/history-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الاستيراد مع التنزيل والتراجع",
+      "en": "Import history with logins and undo"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-ar-1600.d524792c.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-ar-2400.01ac0cfc.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-ar-1600.630d7c08.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-ar-2400.bd56a11c.webp"
+    }
+  },
+  "bulk-teacher/history-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الاستيراد مع التنزيل والتراجع",
+      "en": "Import history with logins and undo"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-en-1600.b9271bfb.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-en-2400.bedd7f23.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-en-1600.a23cdad4.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/bulk-teacher/06-history-en-2400.f54ab348.webp"
+    }
+  },
+  "add-teacher/list-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة المعلمين قبل الإضافة",
+      "en": "The teachers list before adding"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-en-1600.672eb562.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-en-2400.8c52b33f.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-en-1600.cdaf3848.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/01-list-en-2400.6b4b6dab.webp"
+    }
+  },
+  "add-teacher/information-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة المعلومات الأساسية",
+      "en": "The basic information step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-en-1600.7ca58695.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-en-2400.ba184b2f.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-en-1600.566ea024.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/02-information-en-2400.ddcaf631.webp"
+    }
+  },
+  "add-teacher/information-filled-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المعلومات الأساسية بعد التعبئة",
+      "en": "Basic information filled in"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-en-1600.aa7b4b14.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-en-2400.2ed6f81f.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-en-1600.6f98772a.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/03-information-filled-en-2400.e620b259.webp"
+    }
+  },
+  "add-teacher/expertise-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة التخصص والمواد",
+      "en": "The expertise and subjects step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-en-1600.c505a13c.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-en-2400.d76d34d6.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-en-1600.086edb8f.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/04-expertise-en-2400.4479a8d8.webp"
+    }
+  },
+  "add-teacher/expertise-picked-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المواد والشعب المختارة",
+      "en": "Subjects and sections picked"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-en-1600.a611ec62.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-en-2400.592e324f.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-en-1600.53bcec85.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/05-expertise-picked-en-2400.56f0498d.webp"
+    }
+  },
+  "add-teacher/contact-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات التواصل",
+      "en": "Contact details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-en-1600.28c03853.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-en-2400.e742e061.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-en-1600.83838170.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/06-contact-en-2400.30e3d838.webp"
+    }
+  },
+  "add-teacher/address-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوة العنوان",
+      "en": "The address step"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-en-1600.9202d445.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-en-2400.60dccede.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-en-1600.a2e3cae9.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/07-address-en-2400.fda1a91a.webp"
+    }
+  },
+  "add-teacher/employment-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "بيانات التوظيف",
+      "en": "Employment details"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-en-1600.8e4c4f87.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-en-2400.7e0d3f09.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-en-1600.e8f571d4.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/08-employment-en-2400.cb717600.webp"
+    }
+  },
+  "add-teacher/created-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تم إنشاء المعلم مع بيانات الدخول",
+      "en": "The teacher created, with their login"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-1600.e41f6c2b.avif",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-2400.33e569bf.avif"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-1600.f218d1ae.webp",
+      "2400": "https://cdn.databayt.org/balqalam/media/add-teacher/09-created-en-2400.c793f68f.webp"
+    }
   }
 }
