@@ -32,3 +32,41 @@ export const DOCS_LINKS = [
 ] as const
 
 export type DocsLink = (typeof DOCS_LINKS)[number]
+
+// The phone menu's first section: the help center and the guides people ask
+// for most. The full role-grouped list lives in the desktop docs sidebar.
+export const HELP_LINKS = [
+  { href: "/docs/support", en: "Help center", ar: "مركز المساعدة" },
+  {
+    href: "/docs/support/get-started",
+    en: "Getting started",
+    ar: "البدء مع بالقلم",
+  },
+  { href: "/docs/support/add-student", en: "Add a student", ar: "إضافة طالب" },
+  { href: "/docs/support/add-teacher", en: "Add a teacher", ar: "إضافة معلم" },
+  { href: "/docs/support/attendance", en: "Attendance", ar: "الحضور والغياب" },
+  {
+    href: "/docs/support/fees",
+    en: "Fees and invoices",
+    ar: "الرسوم والفواتير",
+  },
+  { href: "/docs/support/login", en: "Signing in", ar: "الدخول وكلمة المرور" },
+  { href: "/docs/support/faq", en: "Common questions", ar: "أسئلة شائعة" },
+  {
+    href: "/docs/support/contact",
+    en: "Contact support",
+    ar: "التواصل مع الدعم",
+  },
+] as const
+
+export function helpSection(locale: string) {
+  const lang = locale === "ar" ? "ar" : "en"
+  return {
+    title: HELP_LINKS[0][lang],
+    items: HELP_LINKS.map((link) => ({
+      title: link[lang],
+      href: link.href,
+      disabled: false,
+    })),
+  }
+}

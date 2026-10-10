@@ -81,7 +81,7 @@ describe("formatSupport", () => {
 
     const matched = formatSupport("ar", matchTopics(["كيف أضيف طالب"]))
     expect(matched).toContain("### إضافة طالب")
-    expect(matched).toContain("«إنشاء»")
+    expect(matched).toContain("**إنشاء**")
   })
 })
 
@@ -185,5 +185,16 @@ describe("isHelpIndexQuestion", () => {
       isHelpIndexQuestion("What can you help me with in using Balqalam?")
     ).toBe(true)
     expect(isHelpIndexQuestion("how do I add a student?")).toBe(false)
+  })
+})
+
+describe("SUPPORT_TOPICS (generated from the help guides)", () => {
+  it("links every topic to its own guide page, never an FAQ anchor", () => {
+    for (const t of SUPPORT_TOPICS) {
+      expect(t.guide).not.toContain("#")
+      if (t.slug !== "pricing") expect(t.guide).toBe(`/docs/support/${t.slug}`)
+      expect(t.answer.ar && t.answer.en).toBeTruthy()
+      expect(t.roles?.length).toBeGreaterThan(0)
+    }
   })
 })

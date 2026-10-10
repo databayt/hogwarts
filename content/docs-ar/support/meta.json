@@ -2,12 +2,22 @@
   "title": "مركز المساعدة",
   "pages": [
     "index",
+    "faq",
     "get-started",
     "add-student",
     "add-teacher",
     "bulk-student",
     "bulk-teacher",
     "pricing",
-    "faq"
+    "roles",
+    "fees",
+    "academics",
+    "attendance",
+    "parents",
+    "login",
+    "language",
+    "mobile",
+    "security",
+    "contact"
   ]
 }

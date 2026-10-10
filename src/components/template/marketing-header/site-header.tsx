@@ -3,7 +3,7 @@
 
 import { Separator } from "@/components/ui/separator"
 import { UserButton } from "@/components/auth/user-button"
-import { DOCS_LINKS } from "@/components/docs/docs-config"
+import { DOCS_LINKS, helpSection } from "@/components/docs/docs-config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { MobileNav } from "@/components/template/mobile-nav"
 
@@ -33,6 +33,7 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
 
   // Contextual sections for docs - uses same DOCS_LINKS as desktop sidebar
   const sections = [
+    helpSection(locale),
     {
       title: dictionary?.navigation?.documentation || "Documentation",
       items: DOCS_LINKS.map(({ key, href, fallback }) => ({

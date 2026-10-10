@@ -1,0 +1,603 @@
+[
+  {
+    "slug": "get-started",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "البدء مع بالقلم",
+      "en": "Getting started"
+    },
+    "summary": {
+      "ar": "تسجيل المدرسة وإعدادها وعنوانها الخاص",
+      "en": "Signing a school up, setting it up, its own web address"
+    },
+    "answer": {
+      "ar": "1. اضغط **ابدأ الآن** على balqalam.com، ثم سجّل الدخول أو أنشئ حسابًا إن لم يكن لديك واحد.\n2. **المعلومات الأساسية**: اسم المدرسة ووصف قصير وموقعها.\n3. **الإعداد**: السعة، والهوية والشعار. ويمكنك هنا استيراد طلابك من ملف CSV أو Excel إن رغبت، أو لاحقًا من الإدخال الجماعي.\n4. **العمل**: الظهور، والسعر، والشروط، وعنوان مدرستك، مثل `yourschool.balqalam.com`.\n5. وافق على الشروط، فتُفعَّل المدرسة وتصبح صفوفها وأقسامها وفصولها الدراسية وأدوارها الافتراضية جاهزة.\n\n- يستغرق الإعداد عادةً بين 10 و30 دقيقة.\n- تحصل كل مدرسة على **تجربة مجانية كاملة لثلاثة أشهر**، بلا رسوم وبلا التزام، ويبقى أول 100 طالب مجانًا إلى الأبد بعدها.",
+      "en": "1. On balqalam.com, click **Get Started**. Sign in, or create an account if you don't have one.\n2. **Basic information**: your school's name, a short description and its location.\n3. **Setup**: capacity, branding and logo. If you like, import your students from a CSV or Excel file now, or later from bulk import.\n4. **Business**: visibility, price, terms, and your school's web address, for example `yourschool.balqalam.com`.\n5. Accept the terms. The school is activated, with its default grades, departments, terms and roles ready to use.\n\n- Setup usually takes 10–30 minutes.\n- Every school gets a full **three-month free trial**, with no fees and no commitment. After it, the first 100 students stay free forever."
+    },
+    "keywords": [
+      "ابدا",
+      "سجل مدرس",
+      "انشئ مدرس",
+      "انشاء مدرس",
+      "اعداد المدرس",
+      "عنوان المدرس",
+      "نطاق",
+      "get started",
+      "sign up",
+      "signup",
+      "register school",
+      "create school",
+      "onboard",
+      "subdomain",
+      "domain",
+      "set up",
+      "setup"
+    ],
+    "guide": "/docs/support/get-started",
+    "sales": true
+  },
+  {
+    "slug": "add-student",
+    "flow": "add-student",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إضافة طالب",
+      "en": "Add a student"
+    },
+    "summary": {
+      "ar": "معالج إضافة طالب واحد مع بيانات دخوله",
+      "en": "The add-student wizard, with the student's login"
+    },
+    "answer": {
+      "ar": "1. افتح **الطلاب** من القائمة الجانبية، ثم اضغط الزر الدائري **+** (إنشاء).\n2. **المستندات**: ارفع صورة الطالب وملفاته، مثل الهوية أو الشهادة، وستُملأ بعض الحقول منها تلقائيًا.\n3. **البيانات الشخصية**: اسم الطالب، وبيانات ولي الأمر في تبويبَي **الأب** و**الأم**.\n4. **العنوان**: مكان سكن الطالب.\n5. **الأكاديمي**: الصف والمسار والشعبة، ثم اضغط **إنشاء**.\n6. تظهر **بيانات دخول** الطالب، أي اسم المستخدم وكلمة المرور، فانسخها أو أرسلها عبر واتساب أو رسالة نصية أو البريد.\n\n- المطلوب فقط اسم الطالب وولي أمر واحد، والباقي يمكن إكماله لاحقًا.\n- يحفظ المعالج ولي الأمر كجهة اتصال. ولإعطائه دخولًا خاصًا به، استخدم **إنشاء بيانات الدخول**، أو أدخل أولياء الأمور جماعيًا.\n- لإضافة فصل كامل، الإدخال الجماعي أسرع.",
+      "en": "1. Open **Students** from the sidebar, then click the round **+** (Create) button.\n2. **Documents**: upload the student's photo and files, such as an ID or transcript. Some fields fill in from them automatically.\n3. **Personal details**: the student's name, and the guardian's details in the **Father** and **Mother** tabs.\n4. **Address**: where the student lives.\n5. **Academic**: grade, stream and section. Click **Create**.\n6. The student's **login** appears: a username and password. Copy it, or send it by WhatsApp, SMS or email.\n\n- Only the student's name and one parent are required. You can fill in the rest later.\n- The wizard saves the parent as a contact. To give the parent their own login, use **Generate Credentials** on the student, or import guardians in bulk.\n- Adding a whole class? Bulk import is faster."
+    },
+    "keywords": [
+      "ضيف طالب",
+      "ضيف طلاب",
+      "ضاف طالب",
+      "ضاف طلاب",
+      "ضيف الطالب",
+      "ضاف الطالب",
+      "طالب جديد",
+      "سجل طالب",
+      "تسجيل طالب",
+      "دخل طالب",
+      "ادخال طالب",
+      "انشئ طالب",
+      "انشاء طالب",
+      "add student",
+      "add a student",
+      "new student",
+      "create student",
+      "create a student",
+      "register student",
+      "register a student",
+      "enrol",
+      "enroll"
+    ],
+    "guide": "/docs/support/add-student"
+  },
+  {
+    "slug": "add-teacher",
+    "flow": "add-teacher",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إضافة معلم",
+      "en": "Add a teacher"
+    },
+    "summary": {
+      "ar": "معالج إضافة معلم مع مواده وشعبه",
+      "en": "The add-teacher wizard, with subjects and sections"
+    },
+    "answer": {
+      "ar": "1. افتح **المعلمين** من القائمة الجانبية، ثم اضغط الزر الدائري **+** (إنشاء).\n2. **المستندات**: ارفع صورة المعلم وسيرته الذاتية إن وُجدت.\n3. **المعلومات الأساسية**: الاسم والبيانات الشخصية.\n4. **التخصص**: اختر المواد والشعب التي يدرّسها.\n5. **التواصل**: البريد الإلكتروني مطلوب. ثم املأ **العنوان** و**بيانات التوظيف**، واضغط **إنشاء**.\n6. لإعطاء المعلم بيانات دخول، افتح إجراءات صفّه في قائمة المعلمين واختر **إنشاء بيانات الدخول**.\n\n- لإدخال جميع معلميك دفعة واحدة، أدخلهم جماعيًا من ملف واحد.",
+      "en": "1. Open **Teachers** from the sidebar, then click the round **+** (Create) button.\n2. **Documents**: upload the teacher's photo and CV if you have them.\n3. **Basic information**: name and personal details.\n4. **Expertise**: pick the subjects and sections they teach.\n5. **Contact**: an email is required. Then fill in **Address** and **Employment** details, and click **Create**.\n6. To give the teacher a login, open the row's actions in the teachers list and choose **Generate Credentials**.\n\n- Bringing in your whole staff? Bulk-import teachers from one file instead."
+    },
+    "keywords": [
+      "ضيف معلم",
+      "ضاف معلم",
+      "ضيف مدرس",
+      "ضاف مدرس",
+      "ضيف استاذ",
+      "معلم جديد",
+      "مدرس جديد",
+      "سجل معلم",
+      "تسجيل معلم",
+      "انشاء معلم",
+      "ضيف المعلم",
+      "add teacher",
+      "add a teacher",
+      "new teacher",
+      "create teacher",
+      "create a teacher",
+      "register teacher"
+    ],
+    "guide": "/docs/support/add-teacher"
+  },
+  {
+    "slug": "bulk-student",
+    "flow": "bulk-student",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إدخال الطلاب جماعيًا",
+      "en": "Bulk-import students"
+    },
+    "summary": {
+      "ar": "استيراد الطلاب من ملف Excel أو CSV مع بيانات دخولهم",
+      "en": "Importing students from an Excel or CSV file, with their logins"
+    },
+    "answer": {
+      "ar": "1. افتح **المدرسة ← إدخال جماعي**. هذه الصفحة للمدير فقط.\n2. في بطاقة **الطلاب**، نزّل **القالب** إن أردت ملفًا جاهزًا، ثم اختر ملفك: Excel أو CSV أو JSON أو Word أو نص، حتى 10 ميغابايت و5,000 صف.\n3. **مطابقة الأعمدة**: تُطابَق أعمدة ملفك تلقائيًا بالعربية أو الإنجليزية. راجعها وصحّح الخاطئ منها.\n4. **المراجعة**: يظهر كل صف **جديدًا** أو **تحديثًا** أو **تخطيًا** أو **خطأً**، ولا يُحفظ شيء قبل الاستيراد.\n5. اضغط **استيراد**، ثم **تنزيل بيانات الدخول** لتحصل على ملف، أو **طباعة بطاقات الدخول** لبطاقات عليها رمز QR.\n\n- يختار كل مستخدم كلمة مروره عند أول دخول.\n- استوردت الملف الخطأ؟ اضغط **تراجع** بجانبه في **سجل الاستيراد**، فيُحذف من أنشأهم ذلك الاستيراد، عدا من سجّل دخوله بالفعل.",
+      "en": "1. Open **School → Bulk**. This page is for admins only.\n2. On the **Students** card, download the **Template** if you want a ready-made file. Then choose your file: Excel, CSV, JSON, Word or text, up to 10 MB and 5,000 rows.\n3. **Match columns**: your columns are matched automatically, in Arabic or English. Check them, and fix any that are wrong.\n4. **Review**: every row shows as **New**, **Update**, **Skip** or **Error**. Nothing is saved until you import.\n5. Click **Import**. Then use **Download logins** for a file, or **Print login slips** for slips with QR codes.\n\n- Each user chooses their own password the first time they sign in.\n- Imported the wrong file? Find it in **Import history** and click **Undo**. This removes the people that import created, except anyone who has already signed in."
+    },
+    "keywords": [
+      "استيراد طلاب",
+      "استيراد الطلاب",
+      "جماعي طلاب",
+      "جماعي الطلاب",
+      "طلاب اكسل",
+      "طلاب excel",
+      "طلاب ملف",
+      "الطلاب من ملف",
+      "دفعه طلاب",
+      "كل الطلاب",
+      "اكسل",
+      "استيراد",
+      "جماعي",
+      "import student",
+      "bulk student",
+      "students excel",
+      "students from excel",
+      "students csv",
+      "students from a file",
+      "upload students",
+      "many students",
+      "all students",
+      "excel",
+      "csv",
+      "bulk",
+      "import"
+    ],
+    "guide": "/docs/support/bulk-student"
+  },
+  {
+    "slug": "bulk-teacher",
+    "flow": "bulk-teacher",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إدخال المعلمين جماعيًا",
+      "en": "Bulk-import teachers"
+    },
+    "summary": {
+      "ar": "استيراد المعلمين من ملف مع أقسامهم ومواده وبيانات دخولهم",
+      "en": "Importing teachers from a file, with departments, subjects and logins"
+    },
+    "answer": {
+      "ar": "1. افتح **المدرسة ← إدخال جماعي**. هذه الصفحة للمدير فقط.\n2. في بطاقة **المعلمين**، نزّل **القالب** إن أردت، ثم اختر ملفك: Excel أو CSV أو غيرهما، حتى 10 ميغابايت و5,000 صف.\n3. **مطابقة الأعمدة**: يُطابَق الاسم والبريد والقسم والمواد تلقائيًا. راجعها.\n4. **المراجعة**: تأكد أن كل صف **جديد**، فلا يُحفظ شيء قبل الاستيراد.\n5. اضغط **استيراد** فتُنشأ حسابات المعلمين، ثم **تنزيل بيانات الدخول** أو **طباعة بطاقات الدخول**.\n\n- لإلغاء استيراد، اضغط **تراجع** بجانبه في **سجل الاستيراد**، ويبقى من سجّل دخوله بالفعل.",
+      "en": "1. Open **School → Bulk**. This page is for admins only.\n2. On the **Teachers** card, download the **Template** if you like, then choose your file: Excel, CSV and more, up to 10 MB and 5,000 rows.\n3. **Match columns**: name, email, department and subjects are matched automatically. Check them.\n4. **Review**: check that every row is **New**. Nothing is saved until you import.\n5. Click **Import**. Teacher accounts are created. Then use **Download logins** or **Print login slips**.\n\n- To remove an import, click **Undo** next to it in **Import history**. People who have already signed in are kept."
+    },
+    "keywords": [
+      "استيراد معلم",
+      "استيراد المعلم",
+      "جماعي معلم",
+      "جماعي المعلم",
+      "معلمين اكسل",
+      "المعلمين من ملف",
+      "معلمين ملف",
+      "كل المعلمين",
+      "import teacher",
+      "bulk teacher",
+      "teachers excel",
+      "teachers from excel",
+      "teachers csv",
+      "teachers from a file",
+      "upload teachers",
+      "all teachers"
+    ],
+    "guide": "/docs/support/bulk-teacher"
+  },
+  {
+    "slug": "pricing",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "الأسعار والدفع",
+      "en": "Pricing and payment"
+    },
+    "summary": {
+      "ar": "السعر لكل طالب، الحاسبة، وخطة الدفع",
+      "en": "The per-student price, the calculator, the payment plan"
+    },
+    "answer": {
+      "ar": "استخدم قسم «الأسعار المباشرة» أعلاه، ووجّه الزائر إلى حاسبة الأسعار المرفقة ليرى سعر مدرسته بعملته.",
+      "en": "Answer from the live pricing section above, and point the visitor to the attached price calculator to see their school's price in their currency."
+    },
+    "keywords": [
+      "سعر",
+      "اسعار",
+      "تكلف",
+      "بكم",
+      "عرض سعر",
+      "price",
+      "pricing",
+      "cost",
+      "how much",
+      "quote",
+      "plan"
+    ],
+    "guide": "/pricing",
+    "sales": true
+  },
+  {
+    "slug": "roles",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "الأدوار والصلاحيات",
+      "en": "Roles and permissions"
+    },
+    "summary": {
+      "ar": "ما يراه المدير والمعلم والطالب وولي الأمر والمحاسب والموظف",
+      "en": "What admins, teachers, students, parents, accountants and staff see"
+    },
+    "answer": {
+      "ar": "- **المدير**: كل شيء: المدرسة، والطلاب، والمعلمون، والقبول، والمالية، والإعدادات.\n- **المعلم**: الطلاب، والفصول، والاختبارات، والحضور، والجدول، والدرجات.\n- **الطالب**: حضوره، واختباراته، ودرجاته، وجدوله، وواجباته.\n- **ولي الأمر**: بوابة ولي الأمر، والدرجات، والاختبارات، والحضور.\n- **المحاسب**: المالية، والقبول، ورسوم النقل.\n- **الموظف**: الطلاب، والمعلمون، وأولياء الأمور، والقبول.\n- **الجميع** يرون أيضًا النظرة العامة، والإعلانات، والمكتبة، والملف الشخصي، والإعدادات.\n\n- كل مستخدم يرى ما يسمح به دوره فقط.\n- أعطِ المعلمين وأولياء الأمور دخولًا عبر **إنشاء بيانات الدخول**، أو وزّع بيانات الدخول بعد الإدخال الجماعي.",
+      "en": "- **Admin**: everything: school, students, teachers, admission, finance and settings.\n- **Teacher**: students, classrooms, exams, attendance, timetable and grades.\n- **Student**: their own attendance, exams, grades, timetable and assignments.\n- **Parent**: the parent portal, grades, exams and attendance.\n- **Accountant**: finance, admission and transport fees.\n- **Staff**: students, teachers, parents and admission.\n- **Everyone** also sees the overview, announcements, library, profile and settings.\n\n- Every user sees only what their role allows.\n- Give teachers and parents a login with **Generate Credentials**, or hand out logins after a bulk import."
+    },
+    "keywords": [
+      "صلاحي",
+      "ادوار",
+      "الدور",
+      "محاسب",
+      "موظف",
+      "من يرى",
+      "role",
+      "permission",
+      "access",
+      "accountant",
+      "staff",
+      "who can see"
+    ],
+    "guide": "/docs/support/roles"
+  },
+  {
+    "slug": "fees",
+    "roles": [
+      "admin",
+      "parent"
+    ],
+    "title": {
+      "ar": "الرسوم والفواتير",
+      "en": "Fees and invoices"
+    },
+    "summary": {
+      "ar": "إعداد الرسوم وتحصيلها وإصدار الفواتير",
+      "en": "Setting up fees, collecting them and invoicing"
+    },
+    "answer": {
+      "ar": "1. افتح **المالية ← الرسوم ← هياكل الرسوم**، وأنشئ رسمًا: المبلغ، والفئة، والصف، وعدد الأقساط، ورسوم التأخير.\n2. اربطه بالطلاب فرديًا أو جماعيًا. والطالب الذي يُوضع في صف يأخذ رسوم ذلك الصف تلقائيًا.\n3. تُنشأ الفواتير تلقائيًا من الرسوم. ولإنشاء فاتورة يدويًا، افتح **الفواتير**.\n4. شارك الفاتورة برابط أو بملف PDF أو بالبريد.\n\n- يدفع أولياء الأمور بالبطاقة (Stripe)، أو نقدًا، أو بالتحويل البنكي، أو بمحافظ الجوال (بنكك/mBOK).\n- يُرسَل تذكير يومي بالرسوم المتأخرة.\n- يرى أولياء الأمور رسوم أبنائهم في بوابة ولي الأمر.",
+      "en": "1. Open **Finance → Fees → Fee Structures** and create a fee: amount, category, grade, number of instalments and late fee.\n2. Assign it to students one by one or in bulk. A student placed in a grade gets that grade's fees automatically.\n3. Invoices are created automatically from fees. To make one by hand, open **Invoice**.\n4. Share an invoice by link, PDF or email.\n\n- Parents can pay by card (Stripe), cash, bank transfer or mobile wallet (Bankak/mBOK).\n- A daily reminder goes out for overdue fees.\n- Parents see their children's fees in the parent portal."
+    },
+    "keywords": [
+      "رسوم",
+      "حصل رسوم",
+      "تحصيل",
+      "فاتور",
+      "فواتير",
+      "مصروفات",
+      "اقساط",
+      "قسط",
+      "دفع",
+      "مالي",
+      "fee",
+      "invoice",
+      "payment",
+      "tuition",
+      "instalment",
+      "installment",
+      "finance",
+      "billing"
+    ],
+    "guide": "/docs/support/fees"
+  },
+  {
+    "slug": "academics",
+    "roles": [
+      "admin",
+      "teacher"
+    ],
+    "title": {
+      "ar": "الجدول والاختبارات والدرجات",
+      "en": "Timetable, exams and grades"
+    },
+    "summary": {
+      "ar": "الجدول الأسبوعي، الاختبارات، الشهادات والدرجات",
+      "en": "The weekly timetable, exams, report cards and grades"
+    },
+    "answer": {
+      "ar": "- **الجدول**: أعدّ جدولًا أسبوعيًا لكل شعبة يدويًا، أو ولّده تلقائيًا. تُكشف التعارضات لك، ويمكنك تصديره بصيغة PDF.\n- **الاختبارات**: استخدم بنك الأسئلة، وولّد أوراق الاختبار، وأجرِ اختبارات إلكترونية بتصحيح تلقائي، وأصدر الشهادات.\n- **الدرجات**: أصدر الشهادات وكشوف الدرجات، ورقِّ الطلاب، وصمّم قوالب الشهادات.\n\n- يرى الطلاب وأولياء الأمور الدرجات والاختبارات في صفحاتهم الخاصة.\n- يرى المعلم الجدول والاختبارات والحضور والدرجات.",
+      "en": "- **Timetable**: build a weekly schedule for each section by hand, or generate it automatically. Conflicts are checked for you, and you can export it to PDF.\n- **Exams**: use the question bank, generate exam papers, run online exams with automatic marking, and issue certificates.\n- **Grades**: produce report cards and transcripts, promote students, and design report-card templates.\n\n- Students and parents see grades and exams in their own views.\n- Teachers see the timetable, exams, attendance and grades."
+    },
+    "keywords": [
+      "جدول",
+      "حصص",
+      "اختبار",
+      "امتحان",
+      "درجات",
+      "نتائج",
+      "شهاد",
+      "timetable",
+      "schedule",
+      "exam",
+      "test",
+      "grade",
+      "report card",
+      "result",
+      "marks"
+    ],
+    "guide": "/docs/support/academics"
+  },
+  {
+    "slug": "attendance",
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "الحضور والغياب",
+      "en": "Attendance"
+    },
+    "summary": {
+      "ar": "تحضير الطلاب وطرق الحضور",
+      "en": "Taking attendance and the ways to do it"
+    },
+    "answer": {
+      "ar": "1. افتح **الحضور**، فتجد **التحضير السريع** حيث يبدأ الجميع حاضرين.\n2. اضغط على الطلاب الغائبين فقط.\n3. احفظ.\n\n- يُبلَّغ أولياء أمور الغائبين تلقائيًا، ويمكنهم تقديم عذر.\n- طرق أخرى: يدويًا، أو برمز QR، أو بالباركود، أو بالكشك، أو برفع ملف CSV، أو بالسياج الجغرافي.\n- التحضير السريع يعمل دون إنترنت، ويتزامن عند عودة الاتصال.",
+      "en": "1. Open **Attendance**. You land on **Quick Attendance**, where everyone starts as present.\n2. Tap only the students who are absent.\n3. Save.\n\n- Parents of absent students are notified automatically, and can submit an excuse.\n- Other methods: manual, QR code, barcode, kiosk, CSV upload and geofence.\n- Quick Attendance works offline and syncs when the connection returns."
+    },
+    "keywords": [
+      "حضور",
+      "غياب",
+      "تحضير",
+      "غائب",
+      "attendance",
+      "absent",
+      "absence",
+      "roll call",
+      "qr"
+    ],
+    "guide": "/docs/support/attendance"
+  },
+  {
+    "slug": "parents",
+    "roles": [
+      "parent",
+      "admin"
+    ],
+    "title": {
+      "ar": "أولياء الأمور",
+      "en": "Parents"
+    },
+    "summary": {
+      "ar": "دخول أولياء الأمور وما يرونه",
+      "en": "Parent logins and what parents see"
+    },
+    "answer": {
+      "ar": "1. أضف الطالب، فيحفظ المعالج ولي الأمر كجهة اتصال.\n2. أعطِ ولي الأمر دخولًا: استخدم **إنشاء بيانات الدخول**، أو أدخل أولياء الأمور جماعيًا، أو اربطه برمز وصول.\n3. يسجّل ولي الأمر دخوله ويفتح **بوابة ولي الأمر**.\n\n- تعرض بوابة ولي الأمر الأبناء، والرسوم، والإعلانات، والفعاليات، والرسائل، إضافة إلى حضور الأبناء ودرجاتهم واختباراتهم.\n- يُبلَّغ ولي الأمر تلقائيًا عند غياب ابنه، ويمكنه تقديم عذر.",
+      "en": "1. Add the student. The wizard saves the parent as a contact.\n2. Give the parent a login: use **Generate Credentials**, import guardians in bulk, or link them with an access code.\n3. The parent signs in and opens the **parent portal**.\n\n- The parent portal shows their children, fees, announcements, events and messages, plus the children's attendance, grades and exams.\n- Parents are notified automatically when their child is absent, and can submit an excuse."
+    },
+    "keywords": [
+      "ولي الامر",
+      "اولياء الامور",
+      "بوابه ولي",
+      "الوالدين",
+      "parent",
+      "guardian",
+      "father",
+      "mother"
+    ],
+    "guide": "/docs/support/parents"
+  },
+  {
+    "slug": "login",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الدخول ونسيان كلمة المرور",
+      "en": "Signing in and passwords"
+    },
+    "summary": {
+      "ar": "تسجيل الدخول واستعادة كلمة المرور",
+      "en": "Signing in and resetting a password"
+    },
+    "answer": {
+      "ar": "1. افتح صفحة الدخول على عنوان مدرستك، وأدخل بريدك الإلكتروني أو اسم المستخدم وكلمة المرور.\n2. اضغط **دخول**.\n3. نسيت كلمة المرور؟ اضغط **نسيت كلمة المرور؟** وأدخل بريدك الإلكتروني.\n4. افتح الرابط الذي يصلك على بريدك، وعيّن كلمة مرور جديدة.\n\n- الاستعادة بالبريد فقط. إن كنت تدخل باسم مستخدم دون بريد، فاطلب من مدير المدرسة **إنشاء بيانات الدخول** من جديد.\n- من أُضيف بالإدخال الجماعي يختار كلمة مروره بنفسه عند أول دخول.",
+      "en": "1. Open your school's login page and enter your email or username and your password.\n2. Click **Login**.\n3. Forgot your password? Click **Forgot Password?** and enter your email.\n4. Open the link we email you and set a new password.\n\n- Password reset works by email only. If you sign in with a username and have no email, ask your school admin to **Generate Credentials** again.\n- People added by a bulk import choose their own password the first time they sign in."
+    },
+    "keywords": [
+      "كلمه المرور",
+      "كلمه السر",
+      "نسيت",
+      "تسجيل الدخول",
+      "لا استطيع الدخول",
+      "ما قادر ادخل",
+      "اسم المستخدم",
+      "بيانات الدخول",
+      "password",
+      "forgot",
+      "log in",
+      "login",
+      "sign in",
+      "signin",
+      "username",
+      "credentials",
+      "locked out"
+    ],
+    "guide": "/docs/support/login"
+  },
+  {
+    "slug": "language",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "العربية والإنجليزية",
+      "en": "Arabic and English"
+    },
+    "summary": {
+      "ar": "تبديل لغة المنصة",
+      "en": "Switching the platform's language"
+    },
+    "answer": {
+      "ar": "1. اضغط أيقونة اللغات في الشريط العلوي (**تبديل اللغة**).\n2. تتبدّل المنصة بين العربية والإنجليزية.\n\n- العربية هي اللغة الافتراضية، وتُكتب من اليمين إلى اليسار.\n- يُحفظ اختيارك لمدة سنة.",
+      "en": "1. Click the languages icon in the top bar (**Switch language**).\n2. The platform switches between Arabic and English.\n\n- Arabic is the default, written right to left.\n- Your choice is remembered for a year."
+    },
+    "keywords": [
+      "لغه",
+      "انجليزي",
+      "انقليزي",
+      "عربي",
+      "language",
+      "english",
+      "arabic",
+      "translate",
+      "rtl"
+    ],
+    "guide": "/docs/support/language"
+  },
+  {
+    "slug": "mobile",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الجوال والعمل دون إنترنت",
+      "en": "Mobile and offline"
+    },
+    "summary": {
+      "ar": "تثبيت التطبيق على الجوال والعمل دون اتصال",
+      "en": "Installing the app on a phone, working offline"
+    },
+    "answer": {
+      "ar": "1. **أندرويد (كروم)**: افتح عنوان مدرستك واضغط **متابعة** للتثبيت.\n2. **آيفون (سفاري)**: افتح عنوان مدرستك، واضغط **مشاركة**، ثم **إضافة إلى الشاشة الرئيسية**.\n\n- يُثبَّت «بالقلم» كتطبيق باسم مدرستك وألوانها.\n- التحضير السريع ودروس «لومُس» تعمل دون إنترنت وتتزامن لاحقًا، أما باقي الصفحات فتحتاج اتصالًا.",
+      "en": "1. **Android (Chrome)**: open your school's address and tap **Continue** to install.\n2. **iPhone (Safari)**: open your school's address, tap **Share**, then **Add to Home Screen**.\n\n- Balqalam installs as an app, with your school's name and colours.\n- Quick Attendance and Lumos lessons keep working offline and sync later. Other pages need a connection."
+    },
+    "keywords": [
+      "جوال",
+      "موبايل",
+      "هاتف",
+      "تطبيق",
+      "ايفون",
+      "اندرويد",
+      "بدون انترنت",
+      "دون انترنت",
+      "اوفلاين",
+      "mobile",
+      "phone",
+      "app",
+      "iphone",
+      "android",
+      "install",
+      "offline",
+      "internet"
+    ],
+    "guide": "/docs/support/mobile"
+  },
+  {
+    "slug": "security",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "أمان البيانات وخصوصيتها",
+      "en": "Data security and privacy"
+    },
+    "summary": {
+      "ar": "فصل بيانات كل مدرسة، التشفير، والتصدير",
+      "en": "Each school's data kept apart, encryption, export"
+    },
+    "answer": {
+      "ar": "- بيانات كل مدرسة منفصلة: كل سجل مرتبط بمدرسته، ولكل مدرسة عنوانها الخاص.\n- كل مستخدم يرى ما يسمح به دوره فقط.\n- البيانات الحساسة مشفّرة بمعيار AES-256.\n- لتصدير قائمة، اضغط **تصدير CSV**.\n\n- لأسئلة الاستضافة أو النسخ الاحتياطي أو العقود، راسل **contact@databayt.org** ليؤكدها لك الفريق.",
+      "en": "- Each school's data is kept apart: every record belongs to its school, and each school has its own address.\n- Every user sees only what their role allows.\n- Sensitive data is encrypted with AES-256.\n- To export a list, click **Export CSV**.\n\n- For hosting, backup or contract questions, email **contact@databayt.org** and the team will confirm them for you."
+    },
+    "keywords": [
+      "امان",
+      "حمايه",
+      "خصوصي",
+      "تشفير",
+      "بياناتي",
+      "نسخ احتياطي",
+      "تصدير",
+      "security",
+      "secure",
+      "privacy",
+      "encrypt",
+      "backup",
+      "gdpr",
+      "export",
+      "safe",
+      "my data"
+    ],
+    "guide": "/docs/support/security"
+  },
+  {
+    "slug": "contact",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "التواصل مع الدعم",
+      "en": "Contacting support"
+    },
+    "summary": {
+      "ar": "متى وكيف تراسل فريق بالقلم",
+      "en": "When and how to reach the Balqalam team"
+    },
+    "answer": {
+      "ar": "1. راسلنا على **contact@databayt.org**.\n2. اذكر اسم مدرستك، ووصف ما حدث، وأرفق لقطة شاشة.\n3. ويفيدنا أن تذكر الصفحة التي كنت فيها، وما ضغطته، ونص رسالة الخطأ إن ظهرت.\n\n- الدعم عبر واتساب والبريد، من الأحد إلى الخميس خلال ساعات العمل.\n- اطّلع أولًا على الأسئلة الشائعة، فقد تجد الإجابة هناك.",
+      "en": "1. Email **contact@databayt.org**.\n2. Include your school's name, what went wrong and a screenshot.\n3. It also helps to tell us the page you were on, what you clicked, and any error message.\n\n- Support runs by WhatsApp and email, Sunday to Thursday during working hours.\n- Check the common questions first. The answer may already be there."
+    },
+    "keywords": [
+      "تواصل",
+      "دعم فني",
+      "مشكله",
+      "خطا",
+      "عطل",
+      "لا يعمل",
+      "ما شغال",
+      "بلاغ",
+      "contact",
+      "support",
+      "help desk",
+      "bug",
+      "error",
+      "not working",
+      "broken",
+      "problem",
+      "issue"
+    ],
+    "guide": "/docs/support/contact"
+  }
+]

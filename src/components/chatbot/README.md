@@ -45,7 +45,11 @@ chatbot/
   85-feature / 10-category catalogue from `saas-marketing/features/constants.ts`
   (`formatFeatures`). Edit marketing config → the bot's facts update with it.
 - **Support** (2026-10-10, `support.ts` + `support-media.ts`): one
-  `SupportTopic` per help guide under `content/docs-{ar,en}/support/`. Each
+  `SupportTopic` per help guide under `content/docs-{ar,en}/support/`,
+  **generated from the guides** into `support-index.json` by
+  `scripts/build-support-index.mjs` (predev writes it, prebuild `--check`s it):
+  frontmatter `summary`/`keywords`/`roles`/`flow` + the guide's Steps and Good
+  to know sections are the answer — the MDX is the only source. Each
   turn, `matchTopics` (Arabic-normalised keyword scoring, latest message
   weighted over the one before) picks ≤2 topics; the prompt's `{support}` block
   carries every guide's title + the matched answers. The reply gets
@@ -55,8 +59,11 @@ chatbot/
   in the chat with no code change. A how-to question turns the WhatsApp ask
   off; the Support chip's "what can you help with?" is answered in code (the
   guide list + help-center card) because the model invented steps for it.
-  **Add a topic:** write the guide MDX (ar + en), add the entry to
-  `SUPPORT_TOPICS`, set `flow` to the /shoot flow slug.
+  **Add a topic:** write the guide MDX (ar + en) with `summary`, `keywords`,
+  `roles` frontmatter and a `## Steps` / `## الخطوات` section, list it in
+  `support/meta.json`, set `flow` to the /shoot flow slug, run
+  `node scripts/build-support-index.mjs`. `roles` also files the guide under
+  the docs sidebar's Admins / Teachers / Parents groups.
 - **School** (`buildSchoolSitePrompt`): pulls **live** school data via
   `fetchSchoolData(subdomain)` — admissions campaigns, fee structures,
   scholarships, events, announcements, academic levels, contact. All scoped to
