@@ -255,9 +255,11 @@ export const getTeacherColumns = (
               <Badge
                 key={name}
                 variant="secondary"
-                className="max-w-28 truncate font-normal"
+                className="max-w-28 font-normal"
               >
-                {name}
+                {/* Badge is a centered flex box: truncate the text, not the
+                    box, or long names lose both ends instead of getting an … */}
+                <span className="min-w-0 truncate">{name}</span>
               </Badge>
             ))}
             {more > 0 && (
