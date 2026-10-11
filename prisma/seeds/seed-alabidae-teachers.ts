@@ -20,7 +20,8 @@
  * - "تالت ثانوي" → grade 12. "إشراف الصف خامس" → homeroom of grade 5.
  * - افراح (KG supervisor) and مشاعر (no subjects given) get a Teacher row and
  *   login only — the tenant has no KG grades.
- * - سناء (administrative supervisor) is staff, not a teacher.
+ * - سناء (administrative supervisor, no subjects) is on the list as a teacher,
+ *   so she is one — the list is the school's roster.
  * - سهام's message carried ريم's email; it is ريم's, so سهام has none.
  *   عائشة's "gmai.com" is read as gmail.com.
  *
@@ -212,16 +213,15 @@ const TEACHERS: TeacherSeed[] = [
       { grade: 6, subject: GEO },
     ],
   },
+  {
+    employeeId: "ABD-T-014",
+    name: "سناء عمر الطيب",
+    gender: "female",
+    email: "sonaomer12@gmail.com",
+    phone: "+249916194731",
+    teaches: [],
+  },
 ]
-
-const STAFF = {
-  employeeId: "ABD-S-004",
-  name: "سناء عمر الطيب",
-  gender: "female",
-  email: "sonaomer12@gmail.com",
-  phone: "+249916194731",
-  position: "مشرفة إدارية — المرحلة الابتدائية",
-}
 
 const splitName = (name: string) => {
   const [first, ...rest] = name.trim().split(/\s+/)
@@ -243,7 +243,7 @@ async function upsertLogin(
   schoolId: string,
   username: string,
   email: string | null,
-  role: "TEACHER" | "STAFF"
+  role: "TEACHER"
 ): Promise<{ id: string; password: string | null }> {
   const existing = await db.user.findFirst({
     where: {
@@ -346,7 +346,6 @@ async function main() {
     if (t.homeroomGrades)
       console.log(`   رائدة الصف ${t.homeroomGrades.join("، ")}`)
   }
-  console.log(`\n${STAFF.employeeId} ${STAFF.name} — ${STAFF.position}`)
   if (DRY) return
 
   const credentials: Credential[] = []
@@ -456,40 +455,6 @@ async function main() {
     }
     console.log(`  ✅ ${t.employeeId} ${t.name}`)
   }
-
-  // Staff member (no teaching load).
-  const staffUsername = STAFF.employeeId.toLowerCase()
-  const staffLogin = await upsertLogin(
-    schoolId,
-    staffUsername,
-    STAFF.email,
-    "STAFF"
-  )
-  credentials.push({
-    name: STAFF.name,
-    username: staffUsername,
-    email: STAFF.email,
-    password: staffLogin.password,
-  })
-  const staffName = splitName(STAFF.name)
-  await db.staffMember.upsert({
-    where: { schoolId_emailAddress: { schoolId, emailAddress: STAFF.email } },
-    update: { position: STAFF.position, userId: staffLogin.id },
-    create: {
-      schoolId,
-      userId: staffLogin.id,
-      employeeId: STAFF.employeeId,
-      ...staffName,
-      emailAddress: STAFF.email,
-      position: STAFF.position,
-      gender: STAFF.gender,
-      joiningDate: JOINING_DATE,
-      city: "الخرطوم",
-      state: "الخرطوم",
-      country: "SD",
-    },
-  })
-  console.log(`  ✅ ${STAFF.employeeId} ${STAFF.name}`)
 
   // Assignments through the same pipeline the board uses: upserts the pairs
   // (the school's list wins over earlier test rows) and puts each teacher on
