@@ -9,7 +9,7 @@
  *
  * Per teacher: a Teacher row, a TEACHER login (username = employee id, temp
  * password minted once, mustChangePassword — the bulk-import convention),
- * phone, subject expertise, and SubjectTeacher pairs for the active term
+ * phone, subject expertise, departments (most sections = primary), and SubjectTeacher pairs for the active term
  * applied through the assignment pipeline so the timetable shows them.
  *
  * Reading the list:
@@ -72,6 +72,26 @@ const SCI = "العلوم"
 const HIST = "التاريخ"
 const GEO = "الجغرافيا"
 const ICT = "تكنولوجيا المعلومات والاتصالات"
+
+/**
+ * Subject → the school's department (Department.departmentName). The catalog
+ * subject's own `department` field reads "Elementary" for most primary
+ * subjects, so it can't place a teacher. Math sits in Sciences — the school
+ * has no math department.
+ */
+const DEPARTMENT_OF: Record<string, string> = {
+  [AR]: "Languages",
+  [EN]: "Languages",
+  [MATH]: "Sciences",
+  [SCI]: "Sciences",
+  "العلوم الطبيعية": "Sciences",
+  [HIST]: "Humanities",
+  [GEO]: "Humanities",
+  [ISL]: "Religion",
+  [ICT]: "ICT",
+  "تكنولوجيا المعلومات": "ICT",
+  "الفنون والتصميم": "الفنون والرياضة",
+}
 
 const TEACHERS: TeacherSeed[] = [
   {
@@ -285,7 +305,7 @@ async function main() {
   const { term } = await resolveActiveTerm(schoolId)
   if (!term) throw new Error("No active term")
 
-  const [sections, selections] = await Promise.all([
+  const [sections, selections, departments] = await Promise.all([
     db.section.findMany({
       where: { schoolId },
       select: {
@@ -304,7 +324,12 @@ async function main() {
         subject: { select: { name: true } },
       },
     }),
+    db.department.findMany({
+      where: { schoolId },
+      select: { id: true, departmentName: true },
+    }),
   ])
+  const departmentId = new Map(departments.map((d) => [d.departmentName, d.id]))
 
   const sectionsOf = (grade: number, only?: Section[]) =>
     sections.filter(
@@ -337,6 +362,21 @@ async function main() {
       }
     }),
   }))
+  const departmentsOf = (t: (typeof plan)[number]) => {
+    const load = new Map<string, number>()
+    for (const r of t.resolved) {
+      const name = DEPARTMENT_OF[r.subject]
+      const id = name && departmentId.get(name)
+      if (!id) throw new Error(`${t.name}: no department for "${r.subject}"`)
+      load.set(id, (load.get(id) ?? 0) + r.sectionIds.length)
+    }
+    // Stable sort: ties keep the list's order, so the first subject named wins.
+    return [...load.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id)
+  }
+  const teacherDepartments = new Map(plan.map((t) => [t, departmentsOf(t)]))
+  const departmentName = new Map(
+    departments.map((d) => [d.id, d.departmentName])
+  )
 
   console.log(`🏫 ${school.name} · term ${term.id}${DRY ? " · DRY RUN" : ""}`)
   for (const t of plan) {
@@ -345,6 +385,11 @@ async function main() {
       console.log(`   ${r.subject} → ${r.sectionNames.join("، ")}`)
     if (t.homeroomGrades)
       console.log(`   رائدة الصف ${t.homeroomGrades.join("، ")}`)
+    const depts = teacherDepartments.get(t)!
+    if (depts.length > 0)
+      console.log(
+        `   ⌂ ${depts.map((id) => departmentName.get(id)).join(" · ")}`
+      )
   }
   if (DRY) return
 
@@ -438,6 +483,34 @@ async function main() {
         },
       })
     }
+
+    // Departments: the one with the most sections is primary (the list shows it).
+    const depts = teacherDepartments.get(t)!
+    for (const [i, departmentId] of depts.entries()) {
+      await db.teacherDepartment.upsert({
+        where: {
+          schoolId_teacherId_departmentId: {
+            schoolId,
+            teacherId: teacher.id,
+            departmentId,
+          },
+        },
+        update: { isPrimary: i === 0 },
+        create: {
+          schoolId,
+          teacherId: teacher.id,
+          departmentId,
+          isPrimary: i === 0,
+        },
+      })
+    }
+    await db.teacherDepartment.deleteMany({
+      where: {
+        schoolId,
+        teacherId: teacher.id,
+        departmentId: { notIn: depts },
+      },
+    })
 
     for (const r of t.resolved) {
       requests.push({
