@@ -66,8 +66,8 @@ src/components/school-dashboard/listings/teachers/
 
 The Name cell's second line is the teacher's **email** or **phone**, picked per school at
 School → Configuration → "Contact under name" (`/school/configuration/name-contact`,
-`School.nameContact`, default `"email"`). `content.tsx` reads it with `schoolNameContact()`
-(`lib/school-name-format.ts`) and passes it through `TeachersTable` → `getTeacherColumns`. When
+`School.teacherNameContact`, default `"email"`). `content.tsx` reads it with `schoolNameContact(schoolId, "teacher")`
+(`lib/school-name-format.ts`) and passes it through `TeachersTable` → `getTeacherColumns` → the shared `NameContactLine`. When
 the picked value is empty the other one shows, so the line is only blank when both are.
 
 ### Assign subjects (row menu → dialog)

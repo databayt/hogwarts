@@ -4,6 +4,11 @@
 import type { Metadata } from "next"
 
 import { db } from "@/lib/db"
+import {
+  NAME_CONTACT_DEFAULTS,
+  type NameContact,
+  type NameContactListing,
+} from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -23,6 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+function asNameContact(
+  value: string | null | undefined,
+  listing: NameContactListing
+): NameContact {
+  return value === "email" || value === "phone"
+    ? value
+    : NAME_CONTACT_DEFAULTS[listing]
+}
+
 export default async function NameContactPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
@@ -32,7 +46,7 @@ export default async function NameContactPage({ params }: Props) {
     ? await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { nameContact: true },
+          select: { teacherNameContact: true, studentNameContact: true },
         })
         .catch(() => null)
     : null
@@ -40,7 +54,10 @@ export default async function NameContactPage({ params }: Props) {
   return (
     <ConfigNameContactForm
       schoolId={schoolId || ""}
-      initialNameContact={school?.nameContact === "phone" ? "phone" : "email"}
+      initial={{
+        teacher: asNameContact(school?.teacherNameContact, "teacher"),
+        student: asNameContact(school?.studentNameContact, "student"),
+      }}
       dictionary={dictionary}
     />
   )

@@ -76,7 +76,9 @@
       },
       "nameContact": {
         "title": "Contact Under Name",
-        "description": "Choose what the listings show under each person's name",
+        "description": "Choose what the teachers and students listings show under each name",
+        "teachersHeading": "Teachers",
+        "studentsHeading": "Students",
         "emailLabel": "Email",
         "emailDescription": "Show the email address under the name",
         "phoneLabel": "Phone",
@@ -672,7 +674,7 @@
         },
         "name-contact": {
           "title": "Contact Under Name",
-          "description": "Show email or phone under names in the listings"
+          "description": "Show email or phone under names in the teachers and students listings"
         },
         "join": {
           "title": "Enrollment",
@@ -712,8 +714,10 @@
         "modulesEnabled": "modules enabled",
         "fullName": "Full Name (single field)",
         "splitName": "Split (First + Last)",
-        "showEmail": "Email under the name",
-        "showPhone": "Phone under the name",
+        "contactEmail": "email",
+        "contactPhone": "phone",
+        "teachersLabel": "Teachers",
+        "studentsLabel": "Students",
         "noCustomDomain": "No custom domain",
         "pending": "Pending",
         "active": "Active",

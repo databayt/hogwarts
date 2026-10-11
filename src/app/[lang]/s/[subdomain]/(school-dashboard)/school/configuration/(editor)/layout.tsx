@@ -45,7 +45,8 @@ export default async function EditorLayout({ children, params }: Props) {
               nameEn: true,
               preferredLanguage: true,
               nameFormat: true,
-              nameContact: true,
+              teacherNameContact: true,
+              studentNameContact: true,
               schoolType: true,
               schoolLevel: true,
               city: true,
@@ -274,10 +275,13 @@ export default async function EditorLayout({ children, params }: Props) {
         return school.nameFormat === "full"
           ? ((cs?.fullName as string) ?? "Full Name (single field)")
           : ((cs?.splitName as string) ?? "Split (First + Last)")
-      case "name-contact":
-        return school.nameContact === "phone"
-          ? ((cs?.showPhone as string) ?? "Phone under the name")
-          : ((cs?.showEmail as string) ?? "Email under the name")
+      case "name-contact": {
+        const label = (v: string) =>
+          v === "phone"
+            ? ((cs?.contactPhone as string) ?? "phone")
+            : ((cs?.contactEmail as string) ?? "email")
+        return `${(cs?.teachersLabel as string) ?? "Teachers"}: ${label(school.teacherNameContact)} · ${(cs?.studentsLabel as string) ?? "Students"}: ${label(school.studentNameContact)}`
+      }
       case "domain": {
         if (pendingDomainRequest) {
           const status =

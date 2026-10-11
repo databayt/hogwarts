@@ -4,7 +4,11 @@
 import "server-only"
 
 import { db } from "@/lib/db"
-import type { NameContact } from "@/lib/name-utils"
+import {
+  NAME_CONTACT_DEFAULTS,
+  type NameContact,
+  type NameContactListing,
+} from "@/lib/name-utils"
 
 /**
  * The school's name layout ("full" or split first/last). The listing pages
@@ -28,20 +32,26 @@ export async function schoolNameFormat(
 }
 
 /**
- * What the listings show under a name: "email" or "phone". Never throws —
- * "email" is the schema default.
+ * What a listing shows under a name: "email" or "phone", per listing. Never
+ * throws — falls back to the listing's default (teachers email, students phone).
  */
 export async function schoolNameContact(
-  schoolId: string | null | undefined
+  schoolId: string | null | undefined,
+  listing: NameContactListing
 ): Promise<NameContact> {
-  if (!schoolId) return "email"
+  const fallback = NAME_CONTACT_DEFAULTS[listing]
+  if (!schoolId) return fallback
   try {
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { nameContact: true },
+      select: { teacherNameContact: true, studentNameContact: true },
     })
-    return school?.nameContact === "phone" ? "phone" : "email"
+    const value =
+      listing === "teacher"
+        ? school?.teacherNameContact
+        : school?.studentNameContact
+    return value === "email" || value === "phone" ? value : fallback
   } catch {
-    return "email"
+    return fallback
   }
 }

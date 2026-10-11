@@ -90,6 +90,15 @@ Arabic-seeded school never gets an English twin row.
 **Completion:** 95% | **Blockers:** None (see ISSUE.md 2026-09-05 for the
 "graded but unbilled" gap)
 
+### Contact under the name (school setting)
+
+The Name cell's second line is the student's **phone** (default) or **email**, picked per school at
+School → Configuration → "Contact under name" (`/school/configuration/name-contact`,
+`School.studentNameContact`). `content.tsx` reads it with `schoolNameContact(schoolId, "student")`
+and the column renders the shared `NameContactLine`
+(`school-dashboard/shared/name-contact-line.tsx`). When the picked value is empty the other one
+shows; "No phone" appears only when both are missing.
+
 ### Integration Points
 
 - **Lumos**: placement enrols the student in their grade's subjects (`syncStudentSubjectEnrollments`, `src/lib/enrollment-sync.ts`)

@@ -8,7 +8,7 @@ import { getGradeLabel } from "@/lib/grade-label"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameFormat } from "@/lib/school-name-format"
+import { schoolNameContact, schoolNameFormat } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -117,6 +117,8 @@ export default async function StudentsContent({
   // The add wizard opens on a browser-side seed and needs the school's name
   // layout for it. Started now, awaited last — it overlaps the list queries.
   const nameFormatPromise = schoolNameFormat(schoolId)
+  // What the Name cell shows under the name — a school setting.
+  const nameContactPromise = schoolNameContact(schoolId, "student")
   const permissions = getUIConfigForRole(role as Role | null | undefined)
 
   const effectiveSchoolId = school?.id || schoolId
@@ -221,7 +223,9 @@ export default async function StudentsContent({
     const gradeSet = new Set<string>()
     for (const s of rows as any[]) {
       if (s.academicGrade?.gradeNumber != null) {
-        gradeSet.add(getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry))
+        gradeSet.add(
+          getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry)
+        )
       }
     }
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
@@ -250,6 +254,7 @@ export default async function StudentsContent({
         status: deriveDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
         phone: s.mobileNumber || s.alternatePhone || null,
+        email: s.email || null,
         dateOfBirth: s.dateOfBirth
           ? (s.dateOfBirth as Date).toISOString()
           : null,
@@ -265,7 +270,10 @@ export default async function StudentsContent({
     })
     total = count as number
   }
-  const nameFormat = await nameFormatPromise
+  const [nameFormat, nameContact] = await Promise.all([
+    nameFormatPromise,
+    nameContactPromise,
+  ])
 
   return (
     <StudentsTable
@@ -280,6 +288,7 @@ export default async function StudentsContent({
       permissions={permissions}
       role={role ?? null}
       nameFormat={nameFormat}
+      nameContact={nameContact}
     />
   )
 }

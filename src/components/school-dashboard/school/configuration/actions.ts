@@ -689,6 +689,7 @@ export async function updateSchoolNameFormat(
 
 // Schema for the contact line shown under names
 const nameContactSchema = z.object({
+  listing: z.enum(["teacher", "student"]),
   nameContact: z.enum(["email", "phone"]),
 })
 
@@ -712,12 +713,15 @@ export async function updateSchoolNameContact(
 
     await db.school.update({
       where: { id: schoolId },
-      data: { nameContact: validatedData.nameContact },
+      data:
+        validatedData.listing === "teacher"
+          ? { teacherNameContact: validatedData.nameContact }
+          : { studentNameContact: validatedData.nameContact },
     })
 
     refreshPage("/school/configuration")
     refreshPage("/school/configuration/name-contact")
-    refreshPage("/teachers")
+    refreshPage(validatedData.listing === "teacher" ? "/teachers" : "/students")
 
     return { success: true }
   } catch (error) {

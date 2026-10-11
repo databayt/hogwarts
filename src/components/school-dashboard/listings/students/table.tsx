@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { asset } from "@/lib/asset-url"
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -21,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ErrorToast } from "@/components/atom/toast"
+import { useDraftLauncher } from "@/components/form/wizard"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -35,7 +37,6 @@ import {
   ListingViews,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
-import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -65,6 +66,8 @@ interface StudentsTableProps {
   role?: string | null
   /** School name layout — seeds the add wizard */
   nameFormat?: string
+  /** What the Name cell shows under the name (school setting) */
+  nameContact?: NameContact
 }
 
 function StudentsTableInner({
@@ -79,6 +82,7 @@ function StudentsTableInner({
   permissions = FULL_UI_PERMISSIONS,
   role = null,
   nameFormat = "full",
+  nameContact = "phone",
 }: StudentsTableProps) {
   const router = useRouter()
 
@@ -233,6 +237,7 @@ function StudentsTableInner({
         gradeOptions,
         scope,
         permissions,
+        nameContact,
       }),
     [
       dictionary,
@@ -247,6 +252,7 @@ function StudentsTableInner({
       gradeOptions,
       scope,
       permissions,
+      nameContact,
     ]
   )
 

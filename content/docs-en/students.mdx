@@ -120,3 +120,10 @@ Guardian types are matched **by role, not by spelling**. The demo seed stores th
 - [Admission](/docs/admission) — the portal channel in detail, the enrollment transaction, placement, the journey audits
 - [Application](/docs/application) — the family-facing wizard
 - [Fees](/docs/fees) · [Invoice](/docs/invoice) — what the core assigns and what the crons chase
+
+## Contact under the name
+
+The listing's Name cell shows the student's phone or email under the name. Each school picks which
+at **School → Configuration → Contact under name** (`/school/configuration/name-contact`), stored as
+`School.studentNameContact` (`"phone"` default, or `"email"`). If the chosen value is missing for a
+student, the other one is shown.

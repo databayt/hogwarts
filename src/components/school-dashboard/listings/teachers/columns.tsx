@@ -21,6 +21,7 @@ import {
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { NameContactLine } from "@/components/school-dashboard/shared/name-contact-line"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 // Enhanced TeacherRow with practical fields
@@ -62,30 +63,6 @@ export interface TeacherColumnCallbacks {
   permissions?: UIPermissions
   /** What shows under the name: the email (default) or the phone. */
   nameContact?: NameContact
-}
-
-/**
- * The line under a teacher's name — the school picks email or phone; when the
- * picked one is empty the other fills in, so the line is never blank needlessly.
- */
-function NameContactLine({
-  email,
-  phone,
-  prefer,
-}: {
-  email: string | null
-  phone: string | null
-  prefer: NameContact
-}) {
-  const showPhone = prefer === "phone" ? !!phone : !email && !!phone
-  if (showPhone) {
-    return (
-      <bdi dir="ltr" className="text-muted-foreground text-xs tabular-nums">
-        {phone}
-      </bdi>
-    )
-  }
-  return <span className="text-muted-foreground text-xs">{email ?? ""}</span>
 }
 
 export const getTeacherColumns = (

@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { formatDate } from "@/lib/i18n-format"
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -32,6 +33,7 @@ import {
   restoreStudent,
 } from "@/components/school-dashboard/listings/students/actions"
 import { normalizeWizardStep } from "@/components/school-dashboard/listings/students/wizard/config"
+import { NameContactLine } from "@/components/school-dashboard/shared/name-contact-line"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type StudentRow = {
@@ -44,6 +46,7 @@ export type StudentRow = {
   status: string
   createdAt: string
   phone: string | null
+  email: string | null
   dateOfBirth: string | null
   enrollmentDate: string | null
   wizardStep: string | null
@@ -75,6 +78,8 @@ interface ColumnOptions {
   gradeOptions?: Array<{ label: string; value: string }>
   scope?: ArchiveScope
   permissions?: UIPermissions
+  /** What shows under the name: the phone (default) or the email. */
+  nameContact?: NameContact
 }
 
 export const getStudentColumns = (
@@ -169,17 +174,13 @@ export const getStudentColumns = (
                   {student.name}
                 </Link>
               </div>
-              <span className="text-muted-foreground max-w-[180px] truncate text-xs">
-                {/* bdi, not dir on the span: the line stays start-aligned under
-                    the name while "+249…" keeps its plus in front in Arabic. */}
-                {student.phone ? (
-                  <bdi dir="ltr" className="tabular-nums">
-                    {student.phone}
-                  </bdi>
-                ) : (
-                  t.noPhone
-                )}
-              </span>
+              <NameContactLine
+                email={student.email}
+                phone={student.phone}
+                prefer={options?.nameContact ?? "phone"}
+                empty={t.noPhone}
+                className="max-w-[180px] truncate"
+              />
             </div>
           </div>
         )

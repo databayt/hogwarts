@@ -1009,6 +1009,7 @@ export async function getStudents(
       status: string
       createdAt: string
       phone: string | null
+      email: string | null
       dateOfBirth: string | null
       enrollmentDate: string | null
       wizardStep: string | null
@@ -1171,7 +1172,11 @@ export async function getStudents(
     const mapped = (rows as Array<any>).map((s) => {
       const gradeName =
         s.academicGrade?.gradeNumber != null
-          ? getGradeLabel(s.academicGrade.gradeNumber, displayLang, gradeCountry)
+          ? getGradeLabel(
+              s.academicGrade.gradeNumber,
+              displayLang,
+              gradeCountry
+            )
           : null
 
       const rawName = fullName(nameOf(s))
@@ -1196,6 +1201,7 @@ export async function getStudents(
           (s.mobileNumber as string | null) ||
           (s.alternatePhone as string | null) ||
           null,
+        email: (s.email as string | null) || null,
         dateOfBirth: s.dateOfBirth
           ? (s.dateOfBirth as Date).toISOString()
           : null,

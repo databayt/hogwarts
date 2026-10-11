@@ -39,7 +39,7 @@ export default async function TeachersContent({
   // layout for it. Started now, awaited last — it overlaps the list queries.
   const nameFormatPromise = schoolNameFormat(schoolId)
   // What the Name cell shows under the name — a school setting.
-  const nameContactPromise = schoolNameContact(schoolId)
+  const nameContactPromise = schoolNameContact(schoolId, "teacher")
   const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: TeacherRow[] = []
   let total = 0
