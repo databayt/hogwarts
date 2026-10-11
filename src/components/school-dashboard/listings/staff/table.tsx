@@ -5,6 +5,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -17,7 +18,6 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import { deleteStaff } from "./actions"
 import { getStaffColumns } from "./columns"
-import { formatStaffName } from "./queries"
 import { type StaffRow } from "./types"
 
 interface StaffTableProps {
@@ -25,6 +25,8 @@ interface StaffTableProps {
   pageCount: number
   locale: string
   permissions?: UIPermissions
+  /** What the Name cell shows under the name (school setting) */
+  nameContact?: NameContact
 }
 
 export function StaffTable({
@@ -32,6 +34,7 @@ export function StaffTable({
   pageCount,
   locale,
   permissions = FULL_UI_PERMISSIONS,
+  nameContact = "email",
 }: StaffTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
@@ -65,11 +68,12 @@ export function StaffTable({
           onGenerateCredentials: (id, name, badge) =>
             openCredentialsDialog("staff", id, name, badge),
           permissions,
+          nameContact,
         },
         locale,
         d
       ),
-    [router, openModal, locale, d, tbl, permissions]
+    [router, openModal, locale, d, tbl, permissions, nameContact]
   )
 
   const { table } = useDataTable({
@@ -88,31 +92,4 @@ export function StaffTable({
       />
     </>
   )
-}
-
-// Transform database row to table row
-export function transformStaffToRow(staff: {
-  id: string
-  firstName: string
-  lastName: string
-  emailAddress: string | null
-  position: string | null
-  employmentStatus: string
-  employmentType: string
-  userId: string | null
-  createdAt: Date
-  department?: { departmentName: string } | null
-}): StaffRow {
-  return {
-    id: staff.id,
-    userId: staff.userId,
-    name: formatStaffName(staff),
-    emailAddress: staff.emailAddress ?? "",
-    position: staff.position || "",
-    departmentName: staff.department?.departmentName || "",
-    employmentStatus: staff.employmentStatus,
-    employmentType: staff.employmentType,
-    status: staff.userId ? "active" : "inactive",
-    createdAt: staff.createdAt.toISOString(),
-  }
 }

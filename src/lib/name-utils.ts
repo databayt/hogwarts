@@ -6,13 +6,14 @@ export type NameFormat = "split" | "full"
 
 // What the listings show under a person's name.
 export type NameContact = "email" | "phone"
-export type NameContactListing = "teacher" | "student" | "guardian"
+export type NameContactListing = "teacher" | "student" | "guardian" | "staff"
 
 /** Today's line per listing — what a school sees until it picks one. */
 export const NAME_CONTACT_DEFAULTS: Record<NameContactListing, NameContact> = {
   teacher: "email",
   student: "phone",
   guardian: "phone",
+  staff: "email",
 }
 
 /**

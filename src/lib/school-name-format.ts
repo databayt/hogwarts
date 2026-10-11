@@ -33,7 +33,7 @@ export async function schoolNameFormat(
 
 /**
  * What a listing shows under a name: "email" or "phone", per listing. Never
- * throws — falls back to the listing's default (teachers email, students and parents phone).
+ * throws — falls back to the listing's default (teachers and staff email, students and parents phone).
  */
 export async function schoolNameContact(
   schoolId: string | null | undefined,
@@ -48,12 +48,14 @@ export async function schoolNameContact(
         teacherNameContact: true,
         studentNameContact: true,
         guardianNameContact: true,
+        staffNameContact: true,
       },
     })
     const value = {
       teacher: school?.teacherNameContact,
       student: school?.studentNameContact,
       guardian: school?.guardianNameContact,
+      staff: school?.staffNameContact,
     }[listing]
     return value === "email" || value === "phone" ? value : fallback
   } catch {

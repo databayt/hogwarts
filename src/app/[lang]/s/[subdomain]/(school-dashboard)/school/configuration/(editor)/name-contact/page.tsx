@@ -50,6 +50,7 @@ export default async function NameContactPage({ params }: Props) {
             teacherNameContact: true,
             studentNameContact: true,
             guardianNameContact: true,
+            staffNameContact: true,
           },
         })
         .catch(() => null)
@@ -62,6 +63,7 @@ export default async function NameContactPage({ params }: Props) {
         teacher: asNameContact(school?.teacherNameContact, "teacher"),
         student: asNameContact(school?.studentNameContact, "student"),
         guardian: asNameContact(school?.guardianNameContact, "guardian"),
+        staff: asNameContact(school?.staffNameContact, "staff"),
       }}
       dictionary={dictionary}
     />

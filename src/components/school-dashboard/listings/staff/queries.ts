@@ -15,6 +15,8 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
+import type { StaffRow } from "./types"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -52,8 +54,9 @@ export const staffListSelect = {
   employeeId: true,
   firstName: true,
   lastName: true,
-  lang: true,
   emailAddress: true,
+  phoneNumber: true,
+  alternatePhone: true,
   gender: true,
   position: true,
   employmentStatus: true,
@@ -387,4 +390,37 @@ export function getStaffInitials(staff: {
   lastName: string
 }): string {
   return `${staff.firstName.charAt(0)}${staff.lastName.charAt(0)}`.toUpperCase()
+}
+
+/**
+ * Transform a list row into the table row. Lives here, not in the client
+ * table, because the server content calls it.
+ */
+export function transformStaffToRow(staff: {
+  id: string
+  firstName: string
+  lastName: string
+  emailAddress: string | null
+  phoneNumber?: string | null
+  alternatePhone?: string | null
+  position: string | null
+  employmentStatus: string
+  employmentType: string
+  userId: string | null
+  createdAt: Date
+  department?: { departmentName: string } | null
+}): StaffRow {
+  return {
+    id: staff.id,
+    userId: staff.userId,
+    name: formatStaffName(staff),
+    emailAddress: staff.emailAddress ?? "",
+    phone: staff.phoneNumber || staff.alternatePhone || null,
+    position: staff.position || "",
+    departmentName: staff.department?.departmentName || "",
+    employmentStatus: staff.employmentStatus,
+    employmentType: staff.employmentType,
+    status: staff.userId ? "active" : "inactive",
+    createdAt: staff.createdAt.toISOString(),
+  }
 }

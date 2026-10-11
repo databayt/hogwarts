@@ -3,14 +3,15 @@
 
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameContact } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getLabels } from "@/components/translation/person"
 
 import { getUIConfigForRole } from "./permissions"
-import { getStaffList } from "./queries"
-import { StaffTable, transformStaffToRow } from "./table"
+import { getStaffList, transformStaffToRow } from "./queries"
+import { StaffTable } from "./table"
 
 interface StaffContentProps {
   locale: Locale
@@ -56,6 +57,9 @@ export async function StaffContent({
     )
   }
 
+  // What the Name cell shows under the name — a school setting, read
+  // alongside the list.
+  const nameContactPromise = schoolNameContact(schoolId, "staff")
   const { rows, count } = await getStaffList(schoolId, {
     page,
     perPage,
@@ -86,6 +90,7 @@ export async function StaffContent({
   }))
 
   const pageCount = Math.ceil(count / perPage)
+  const nameContact = await nameContactPromise
 
   return (
     <StaffTable
@@ -93,6 +98,7 @@ export async function StaffContent({
       pageCount={pageCount}
       locale={locale}
       permissions={permissions}
+      nameContact={nameContact}
     />
   )
 }

@@ -29,6 +29,7 @@ export type StaffRow = {
   userId: string | null
   name: string
   emailAddress: string
+  phone: string | null
   position: string
   departmentName: string
   employmentStatus: string

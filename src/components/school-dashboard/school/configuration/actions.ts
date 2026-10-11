@@ -689,7 +689,7 @@ export async function updateSchoolNameFormat(
 
 // Schema for the contact line shown under names
 const nameContactSchema = z.object({
-  listing: z.enum(["teacher", "student", "guardian"]),
+  listing: z.enum(["teacher", "student", "guardian", "staff"]),
   nameContact: z.enum(["email", "phone"]),
 })
 
@@ -717,7 +717,10 @@ export async function updateSchoolNameContact(
         [`${validatedData.listing}NameContact`]: validatedData.nameContact,
       } as Pick<
         Prisma.SchoolUpdateInput,
-        "teacherNameContact" | "studentNameContact" | "guardianNameContact"
+        | "teacherNameContact"
+        | "studentNameContact"
+        | "guardianNameContact"
+        | "staffNameContact"
       >,
     })
 
@@ -728,6 +731,7 @@ export async function updateSchoolNameContact(
         teacher: "/teachers",
         student: "/students",
         guardian: "/parents",
+        staff: "/staff",
       }[validatedData.listing]
     )
 

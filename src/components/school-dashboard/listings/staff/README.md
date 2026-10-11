@@ -36,6 +36,15 @@ staff/
 
 **Completion:** 80% | **Blockers:** None
 
+
+### Contact under the name (school setting)
+
+The Name cell's second line is the staff member's **email** (default) or **phone**
+(`phoneNumber`, else `alternatePhone`), picked per school at School → Configuration → "Contact under
+name" (`/school/configuration/name-contact`, `School.staffNameContact`). `content.tsx` reads it with
+`schoolNameContact(schoolId, "staff")`; the column renders the shared `NameContactLine`, which falls
+back to the other value when the picked one is empty. `transformStaffToRow` lives in `queries.ts`
+because the server content calls it (it sat in the client `table.tsx`, and `/staff` errored).
 ### Integration Points
 
 - Departments (via `departmentId` relation)

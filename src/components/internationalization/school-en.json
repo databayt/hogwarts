@@ -76,10 +76,11 @@
       },
       "nameContact": {
         "title": "Contact Under Name",
-        "description": "Choose what the teachers, students and parents listings show under each name",
+        "description": "Choose what the teachers, students, parents and staff listings show under each name",
         "teachersHeading": "Teachers",
         "studentsHeading": "Students",
         "parentsHeading": "Parents",
+        "staffHeading": "Staff",
         "emailLabel": "Email",
         "emailDescription": "Show the email address under the name",
         "phoneLabel": "Phone",
@@ -675,7 +676,7 @@
         },
         "name-contact": {
           "title": "Contact Under Name",
-          "description": "Show email or phone under names in the teachers, students and parents listings"
+          "description": "Show email or phone under names in the teachers, students, parents and staff listings"
         },
         "join": {
           "title": "Enrollment",
@@ -720,6 +721,7 @@
         "teachersLabel": "Teachers",
         "studentsLabel": "Students",
         "parentsLabel": "Parents",
+        "staffLabel": "Staff",
         "noCustomDomain": "No custom domain",
         "pending": "Pending",
         "active": "Active",

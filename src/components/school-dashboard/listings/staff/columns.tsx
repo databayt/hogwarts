@@ -5,6 +5,7 @@
 import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
+import { NameContactLine } from "@/components/school-dashboard/shared/name-contact-line"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import {
@@ -36,6 +38,8 @@ export type StaffColumnActions = {
     badge?: string
   ) => void
   permissions?: UIPermissions
+  /** What shows under the name: the email (default) or the phone. */
+  nameContact?: NameContact
 }
 
 export function getStaffColumns(
@@ -112,9 +116,12 @@ export function getStaffColumns(
             ) : (
               <span className="font-medium">{staff.name}</span>
             )}
-            <span className="text-muted-foreground text-sm">
-              {staff.emailAddress}
-            </span>
+            <NameContactLine
+              email={staff.emailAddress || null}
+              phone={staff.phone}
+              prefer={actions?.nameContact ?? "email"}
+              className="text-sm"
+            />
           </div>
         )
       },
