@@ -68,6 +68,8 @@ const publicRoutes = [
   // src/routes.ts.
   "/licenses",
   "/licenses-en",
+  // Public marketing survey (lead-gen) — anyone can answer it.
+  "/survey",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 

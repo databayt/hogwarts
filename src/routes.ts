@@ -29,6 +29,8 @@ export const publicRoutes = [
   // they are on the page this homepage mirrors.
   "/licenses",
   "/licenses-en",
+  // Public marketing survey (lead-gen) — anyone can answer it.
+  "/survey",
   // NOTE: /onboarding is removed from public routes
   // Auth is now handled client-side in OnboardingContent for better UX
   // This allows the component to redirect with callback URL

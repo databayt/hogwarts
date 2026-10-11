@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "title": "The State of Digital Transformation in Schools",
+    "description": "A short survey on digital systems in schools: current use, the biggest challenges, and future needs."
+  },
+  "welcome": {
+    "title": "The State of Digital Transformation in Schools",
+    "body": "As digital solutions evolve fast, systems and platforms have become a core part of running a school. This survey looks at how schools use them today, the biggest challenges, and what they need next — from the point of view of the people who work in schools.",
+    "duration": "Takes about 3 minutes",
+    "privacy": "Results are used for research and product development.",
+    "start": "Start"
+  },
+  "sections": {
+    "school": "Part 1 | About the school",
+    "systems": "Part 2 | Systems and platforms",
+    "needs": "Part 3 | What the school needs",
+    "future": "Part 4 | The future",
+    "golden": "The golden question",
+    "end": "Finally"
+  },
+  "nav": {
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "submitting": "Sending…",
+    "pressEnter": "press Enter ↵",
+    "multiHint": "Choose all that apply",
+    "optional": "Optional — you can leave this blank.",
+    "otherPlaceholder": "Type here…",
+    "textPlaceholder": "Type your answer…",
+    "emailPlaceholder": "name@school.com",
+    "counter": "{n} of {total}",
+    "shiftEnter": "Shift + Enter for a new line"
+  },
+  "errors": {
+    "required": "Pick an answer to continue",
+    "other": "Type your answer in the “Other” box",
+    "email": "Enter a valid email address",
+    "rateLimited": "Too many tries — wait a minute",
+    "captcha": "Verification failed — refresh and try again",
+    "generic": "Couldn't send — try again"
+  },
+  "thanks": {
+    "title": "Thank you for taking part",
+    "body": "Your answers are in, and they help us understand where schools stand on digital transformation.",
+    "bodyEmail": "We'll email you the results when the survey closes.",
+    "home": "Back to home"
+  },
+  "questions": {
+    "institution": {
+      "title": "What type of institution is it?",
+      "options": {
+        "private": "Private school",
+        "international": "International school",
+        "public": "Public school",
+        "group": "Group of schools",
+        "other": "Other"
+      }
+    },
+    "students": {
+      "title": "Roughly how many students?",
+      "options": {
+        "lt300": "Under 300",
+        "300to700": "300–700",
+        "701to1500": "701–1500",
+        "1501to3000": "1501–3000",
+        "gt3000": "Over 3000"
+      }
+    },
+    "role": {
+      "title": "What is your role at the school?",
+      "options": {
+        "executive": "Senior leadership",
+        "principal": "Principal",
+        "operations": "Operations & administration",
+        "it": "IT",
+        "finance": "Finance",
+        "hr": "Human resources",
+        "admissions": "Admissions & registration",
+        "marketing": "Marketing & communications",
+        "academic": "Academic",
+        "other": "Other"
+      }
+    },
+    "systems": {
+      "title": "Which digital systems does the school rely on today?",
+      "options": {
+        "sis": "School management system",
+        "crm": "CRM",
+        "admissions": "Admissions & registration",
+        "finance": "Finance & accounting",
+        "hr": "Human resources",
+        "attendance": "Attendance",
+        "lms": "E-learning platform",
+        "parentComms": "Parent communication platform",
+        "other": "Other systems"
+      }
+    },
+    "integration": {
+      "title": "Are the systems connected to each other?",
+      "options": {
+        "full": "Yes, fully",
+        "partial": "Yes, partly",
+        "separate": "Each system works on its own",
+        "unsure": "Not sure"
+      }
+    },
+    "satisfaction": {
+      "title": "How would you rate the school's experience with its current systems?",
+      "low": "Very unsatisfying",
+      "high": "Excellent"
+    },
+    "challenges": {
+      "title": "What are the biggest challenges you face with digital systems?",
+      "options": {
+        "usability": "Hard to use",
+        "support": "Weak technical support",
+        "integration": "Systems don't integrate",
+        "cost": "High cost",
+        "reporting": "Weak reports and analytics",
+        "training": "Staff need training",
+        "flexibility": "Not flexible or customizable",
+        "parentComms": "Weak parent communication",
+        "technical": "Recurring technical problems",
+        "none": "No major challenges",
+        "other": "Other"
+      }
+    },
+    "needs": {
+      "title": "Which functions need the most improvement?",
+      "options": {
+        "studentData": "Student data management",
+        "admissions": "Admissions & registration",
+        "parentComms": "Parent communication",
+        "crm": "CRM & lead follow-up",
+        "fees": "Fees & collection",
+        "attendance": "Attendance",
+        "hr": "Human resources",
+        "dashboards": "Reports & dashboards",
+        "academic": "Academic performance tracking",
+        "branches": "Branch management",
+        "marketing": "Marketing & student recruitment"
+      }
+    },
+    "factors": {
+      "title": "When considering a new system or upgrading the current one, what matters most?",
+      "options": {
+        "usability": "Ease of use",
+        "cost": "Cost",
+        "support": "Technical support",
+        "integration": "Integration between systems",
+        "reporting": "Reports & analytics",
+        "mobile": "Mobile app",
+        "security": "Security & data protection",
+        "customization": "Customization",
+        "ai": "Artificial intelligence",
+        "branches": "Branch management",
+        "parentExperience": "Parent experience"
+      }
+    },
+    "change": {
+      "title": "Do you think the school may need to upgrade or replace some of its systems in the next 12 months?",
+      "options": {
+        "yes": "Yes",
+        "maybe": "Maybe",
+        "no": "No",
+        "undecided": "Not decided yet"
+      }
+    },
+    "aiImportance": {
+      "title": "How important is AI to you in school management systems?",
+      "low": "Not important",
+      "high": "Very important"
+    },
+    "aiValue": {
+      "title": "Where could AI bring the most value to the school?",
+      "options": {
+        "analytics": "Data analysis",
+        "parentService": "Parent service",
+        "marketing": "Marketing & admissions",
+        "reports": "Administrative reports",
+        "students": "Student follow-up",
+        "hr": "Human resources",
+        "teaching": "Teaching assistance",
+        "automation": "Automation & less manual work",
+        "other": "Other"
+      }
+    },
+    "wish": {
+      "title": "What service or feature do you wish your current system had?"
+    },
+    "currentSystem": {
+      "title": "If you're happy to share, what is the name of the main system or platform the school uses today?"
+    },
+    "wantsResults": {
+      "title": "Would you like to see the survey results when it's complete?",
+      "options": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    "email": {
+      "title": "Email",
+      "hint": "We'll only use it to send you the results."
+    }
+  }
+}

@@ -97,3 +97,8 @@ None
 ---
 
 **Last Review:** 2026-08-30
+
+## Survey (2026-10-11)
+- [ ] Apply `20261011120000_survey_responses` to the prod DB — submissions fail until the table exists.
+- [ ] Results view / CSV export in the operator console.
+- [ ] Run `scripts/survey/google-form.gs` under the databayt Google account; share the forms.gle link.

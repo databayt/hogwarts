@@ -206,3 +206,17 @@ English.
 - `agent:revenue` — proposals, contracts, pricing
 - `skill:/proposal` — client proposal generator
 - `skill:/pricing` — tier + comparison
+
+## Survey — `/survey` (واقع التحول الرقمي في المدارس)
+
+Public, no login, full screen (`src/app/[lang]/(survey)/survey`). One question per
+screen; answering flips to the next (`motion/react`, vertical so RTL/LTR read the same).
+Keys: Enter/↓ next · ↑ back · A–K pick · 1–5 rate. Progress survives a reload (sessionStorage).
+
+- `survey/config.ts` — the single source: question ids, types, options, `showIf`.
+- Words: `internationalization/dictionaries/{ar,en}/survey.json` (loaded alone, not via namespaces.ts).
+- `survey/actions.ts` → `SurveyResponse` row; an email also upserts a `Prospect` (source `survey`) + sales notify.
+  Honeypot + IP rate limit + Turnstile when `NEXT_PUBLIC_TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` are set.
+- Google Form twin: `node scripts/survey/build-gform.mjs` → `scripts/survey/google-form.gs`
+  (paste into script.google.com, run `createSurveyForm`). Separate answers — no sync.
+- Table: `prisma/migrations/20261011120000_survey_responses` (additive, applied out-of-band).

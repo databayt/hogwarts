@@ -212,3 +212,24 @@ model Prospect {
   @@index([source])
   @@map("prospects")
 }
+
+// ============================================================================
+// SURVEY RESPONSES - public marketing surveys (/survey). Global, not tenant-bound.
+// ============================================================================
+//
+// One row per completed survey. `answers` is keyed by the question ids in
+// src/components/saas-marketing/survey/config.ts. A respondent who leaves an
+// email also becomes an inbound Prospect (source "survey"), linked here.
+
+model SurveyResponse {
+  id         String   @id @default(cuid())
+  survey     String // "digital-transformation-2026"
+  locale     String
+  answers    Json
+  email      String?
+  prospectId String?
+  createdAt  DateTime @default(now())
+
+  @@index([survey, createdAt])
+  @@map("survey_responses")
+}
