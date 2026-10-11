@@ -686,3 +686,48 @@ export async function updateSchoolNameFormat(
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
+
+// Schema for the contact line shown under names
+const nameContactSchema = z.object({
+  nameContact: z.enum(["email", "phone"]),
+})
+
+export async function updateSchoolNameContact(
+  schoolId: string,
+  data: z.infer<typeof nameContactSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = nameContactSchema.parse(data)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: { nameContact: validatedData.nameContact },
+    })
+
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/name-contact")
+    refreshPage("/teachers")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating name contact:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}

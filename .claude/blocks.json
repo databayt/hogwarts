@@ -652,6 +652,7 @@
         "/school/configuration/location",
         "/school/configuration/modules",
         "/school/configuration/name-format",
+        "/school/configuration/name-contact",
         "/school/configuration/plan",
         "/school/configuration/price",
         "/school/configuration/schedule",

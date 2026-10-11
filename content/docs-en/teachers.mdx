@@ -167,6 +167,13 @@ Main list filters `wizardStep: null` by default. Toggle "Show Incomplete" or use
 buildTeacherWhere(schoolId, { includeDrafts: true })
 ```
 
+## Contact under the name
+
+The listing's Name cell shows the teacher's email or phone under the name. Each school picks
+which at **School → Configuration → Contact under name** (`/school/configuration/name-contact`),
+stored as `School.nameContact` (`"email"` default, or `"phone"`). If the chosen value is missing
+for a teacher, the other one is shown. The separate Phone column is unchanged.
+
 ## Config constants
 
 | Constant                     | Values                                     |

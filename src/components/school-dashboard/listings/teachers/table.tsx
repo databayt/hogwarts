@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -56,6 +57,8 @@ interface TeachersTableProps {
   permissions?: UIPermissions
   /** School name layout — seeds the add wizard */
   nameFormat?: string
+  /** What the Name cell shows under the name (school setting) */
+  nameContact?: NameContact
 }
 
 function TeachersTableInner({
@@ -66,6 +69,7 @@ function TeachersTableInner({
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
   nameFormat = "full",
+  nameContact = "email",
 }: TeachersTableProps) {
   const router = useRouter()
   const { dictionary: fullDict } = useDictionary()
@@ -289,6 +293,7 @@ function TeachersTableInner({
         onGenerateCredentials: handleGenerateCredentials,
         onAssignSubjects: handleAssignSubjects,
         permissions,
+        nameContact,
       }),
     [
       dictionary,
@@ -299,6 +304,7 @@ function TeachersTableInner({
       handleGenerateCredentials,
       handleAssignSubjects,
       permissions,
+      nameContact,
     ]
   )
 

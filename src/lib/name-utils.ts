@@ -4,6 +4,9 @@
 
 export type NameFormat = "split" | "full"
 
+// What the listings show under a person's name.
+export type NameContact = "email" | "phone"
+
 /**
  * Parse a full name string into first/middle/last parts.
  * First word → firstName, last word → lastName, everything in between → middleName.

@@ -6,7 +6,7 @@ import { SearchParams } from "nuqs/server"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameFormat } from "@/lib/school-name-format"
+import { schoolNameContact, schoolNameFormat } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import type { Locale } from "@/components/internationalization/config"
@@ -38,6 +38,8 @@ export default async function TeachersContent({
   // The add wizard opens on a browser-side seed and needs the school's name
   // layout for it. Started now, awaited last — it overlaps the list queries.
   const nameFormatPromise = schoolNameFormat(schoolId)
+  // What the Name cell shows under the name — a school setting.
+  const nameContactPromise = schoolNameContact(schoolId)
   const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: TeacherRow[] = []
   let total = 0
@@ -178,7 +180,10 @@ export default async function TeachersContent({
     total = count as number
   }
 
-  const nameFormat = await nameFormatPromise
+  const [nameFormat, nameContact] = await Promise.all([
+    nameFormatPromise,
+    nameContactPromise,
+  ])
 
   return (
     <div className="space-y-6">
@@ -190,6 +195,7 @@ export default async function TeachersContent({
         perPage={sp.perPage}
         permissions={permissions}
         nameFormat={nameFormat}
+        nameContact={nameContact}
       />
     </div>
   )

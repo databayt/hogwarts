@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { CheckCircle } from "lucide-react"
 
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -59,6 +60,32 @@ export interface TeacherColumnCallbacks {
   /** Open the Subjects & sections dialog for this teacher. */
   onAssignSubjects?: (row: TeacherRow) => void
   permissions?: UIPermissions
+  /** What shows under the name: the email (default) or the phone. */
+  nameContact?: NameContact
+}
+
+/**
+ * The line under a teacher's name — the school picks email or phone; when the
+ * picked one is empty the other fills in, so the line is never blank needlessly.
+ */
+function NameContactLine({
+  email,
+  phone,
+  prefer,
+}: {
+  email: string | null
+  phone: string | null
+  prefer: NameContact
+}) {
+  const showPhone = prefer === "phone" ? !!phone : !email && !!phone
+  if (showPhone) {
+    return (
+      <bdi dir="ltr" className="text-muted-foreground text-xs tabular-nums">
+        {phone}
+      </bdi>
+    )
+  }
+  return <span className="text-muted-foreground text-xs">{email ?? ""}</span>
 }
 
 export const getTeacherColumns = (
@@ -165,9 +192,13 @@ export const getTeacherColumns = (
                   {teacher.name}
                 </Link>
               </div>
-              <span className="text-muted-foreground text-xs">
-                {teacher.emailAddress !== "-" ? teacher.emailAddress : ""}
-              </span>
+              <NameContactLine
+                email={
+                  teacher.emailAddress !== "-" ? teacher.emailAddress : null
+                }
+                phone={teacher.phone}
+                prefer={callbacks?.nameContact ?? "email"}
+              />
             </div>
           </div>
         )

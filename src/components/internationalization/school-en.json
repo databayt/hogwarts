@@ -73,6 +73,17 @@
         "fullName": "Full Name",
         "updateSuccess": "Name format updated",
         "updateError": "Failed to update"
+      },
+      "nameContact": {
+        "title": "Contact Under Name",
+        "description": "Choose what the listings show under each person's name",
+        "emailLabel": "Email",
+        "emailDescription": "Show the email address under the name",
+        "phoneLabel": "Phone",
+        "phoneDescription": "Show the phone number under the name",
+        "sampleName": "Full Name",
+        "updateSuccess": "Contact line updated",
+        "updateError": "Failed to update"
       }
     },
     "dashboard": {
@@ -659,6 +670,10 @@
           "title": "Name Format",
           "description": "How student and staff names are displayed"
         },
+        "name-contact": {
+          "title": "Contact Under Name",
+          "description": "Show email or phone under names in the listings"
+        },
         "join": {
           "title": "Enrollment",
           "description": "How students join your school"
@@ -697,6 +712,8 @@
         "modulesEnabled": "modules enabled",
         "fullName": "Full Name (single field)",
         "splitName": "Split (First + Last)",
+        "showEmail": "Email under the name",
+        "showPhone": "Phone under the name",
         "noCustomDomain": "No custom domain",
         "pending": "Pending",
         "active": "Active",
@@ -3687,15 +3704,7 @@
           "WEEKLY_CAP": "weekly limit reached",
           "NO_SWAP": "no free time to swap"
         },
-        "days": [
-          "Sun",
-          "Mon",
-          "Tue",
-          "Wed",
-          "Thu",
-          "Fri",
-          "Sat"
-        ],
+        "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         "specialty": "Specialty",
         "allSubjects": "All subjects",
         "allGrades": "All grades",
@@ -4545,15 +4554,7 @@
         "saveSettings": "Save Settings"
       },
       "lunchBreak": "Lunch Break",
-      "days": [
-        "Sun",
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat"
-      ],
+      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       "exceptionTypes": {
         "holiday": "Holiday",
         "event": "Event",
@@ -6523,15 +6524,7 @@
           "noExamsDate": "No exams scheduled for this date",
           "scheduleNewExam": "Schedule New Exam",
           "roomTBD": "Room TBD",
-          "weekDays": [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat"
-          ]
+          "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         },
         "analytics": {
           "gradeDistribution": "Grade Distribution",

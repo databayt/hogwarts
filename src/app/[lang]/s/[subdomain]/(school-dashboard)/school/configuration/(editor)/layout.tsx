@@ -45,6 +45,7 @@ export default async function EditorLayout({ children, params }: Props) {
               nameEn: true,
               preferredLanguage: true,
               nameFormat: true,
+              nameContact: true,
               schoolType: true,
               schoolLevel: true,
               city: true,
@@ -109,6 +110,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "branding",
     "hero",
     "name-format",
+    "name-contact",
     "join",
     "visibility",
     "modules",
@@ -272,6 +274,10 @@ export default async function EditorLayout({ children, params }: Props) {
         return school.nameFormat === "full"
           ? ((cs?.fullName as string) ?? "Full Name (single field)")
           : ((cs?.splitName as string) ?? "Split (First + Last)")
+      case "name-contact":
+        return school.nameContact === "phone"
+          ? ((cs?.showPhone as string) ?? "Phone under the name")
+          : ((cs?.showEmail as string) ?? "Email under the name")
       case "domain": {
         if (pendingDomainRequest) {
           const status =
