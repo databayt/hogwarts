@@ -15,6 +15,7 @@ import {
   OcticonBook,
   OcticonOrganization,
   OcticonPackage,
+  OcticonPeople,
   OcticonRepo,
   OcticonTable,
 } from "@/components/atom/icons"
@@ -23,6 +24,7 @@ import type { Locale } from "@/components/internationalization/config"
 import AchievementsGrid from "./achievements"
 import ContributionActivity from "./activity"
 import ContributionGraph from "./graph"
+import StudentGuardians from "./guardians"
 import ParentDashboard from "./parent"
 import PinnedItems from "./pinned"
 import type { ProfileViewData } from "./queries"
@@ -51,6 +53,10 @@ function buildTabs(data: ProfileViewData): TabDef[] {
       tabs.push({
         id: "subjects",
         icon: <OcticonRepo className="size-4" />,
+      })
+      tabs.push({
+        id: "guardians",
+        icon: <OcticonPeople className="size-4" />,
       })
       tabs.push({
         id: "achievements",
@@ -102,6 +108,8 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
   const tabs = buildTabs(data)
 
   const tabContent = (tabId: string) => {
+    if (tabId === "guardians")
+      return <StudentGuardians data={data} dictionary={p} lang={lang} />
     if (tabId === "achievements")
       return (
         <AchievementsGrid badges={data.badges} dictionary={p} lang={lang} />

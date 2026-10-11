@@ -8408,6 +8408,7 @@
       "tabs": {
         "overview": "Overview",
         "subjects": "Subjects",
+        "guardians": "Guardians",
         "achievements": "Achievements",
         "classes": "Classes",
         "children": "Children",
@@ -8491,6 +8492,12 @@
         "subjects": "Subjects",
         "subjectsDescription": "Subjects you're enrolled in.",
         "noSubjects": "No subjects yet."
+      },
+      "guardians": {
+        "title": "Guardians",
+        "description": "Parents and guardians linked to this student.",
+        "empty": "No guardians linked yet.",
+        "primary": "Primary"
       },
       "teacher": {
         "editTitle": "Edit Your Information",

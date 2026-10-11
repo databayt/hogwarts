@@ -97,10 +97,24 @@ export interface ProfileChildView {
   photoUrl: string | null
 }
 
+export interface ProfileGuardianView {
+  id: string
+  /** Profile route id — the guardian's User when it has one, else the entity. */
+  profileId: string
+  name: string
+  relation: string | null
+  isPrimary: boolean
+  photoUrl: string | null
+  /** Contact is null for viewers who may not see it (same gate as email). */
+  email: string | null
+  phone: string | null
+}
+
 export interface ProfileRoleDetail {
   subjects: ProfileSubjectView[] // student
   classes: ProfileClassView[] // teacher
   children: ProfileChildView[] // parent
+  guardians: ProfileGuardianView[] // student
 }
 
 export interface ProfileViewData {
@@ -225,6 +239,8 @@ export async function getProfileView(
           grNumber: true,
           city: true,
           email: true,
+          mobileNumber: true,
+          alternatePhone: true,
           enrollmentDate: true,
           // Every student is born from an Application (see
           // `src/lib/student-provisioning.ts`), whichever AdmissionChannel they
@@ -252,6 +268,11 @@ export async function getProfileView(
           profilePhotoUrl: true,
           employeeId: true,
           emailAddress: true,
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
           joiningDate: true,
           teacherDepartments: {
             where: { schoolId },
@@ -268,6 +289,11 @@ export async function getProfileView(
           firstName: true,
           lastName: true,
           emailAddress: true,
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
           _count: { select: { studentGuardians: true } },
         },
       },
@@ -279,6 +305,8 @@ export async function getProfileView(
           profilePhotoUrl: true,
           employeeId: true,
           emailAddress: true,
+          phoneNumber: true,
+          alternatePhone: true,
           joiningDate: true,
           city: true,
         },
@@ -341,6 +369,16 @@ async function buildFromUser(
       user.staffMember?.emailAddress ??
       user.email ??
       null)
+    : null
+
+  const phone: string | null = privileged
+    ? user.student?.mobileNumber ||
+      user.student?.alternatePhone ||
+      user.teacher?.phoneNumbers?.[0]?.phoneNumber ||
+      user.guardian?.phoneNumbers?.[0]?.phoneNumber ||
+      user.staffMember?.phoneNumber ||
+      user.staffMember?.alternatePhone ||
+      null
     : null
 
   const departmentName: string | null =
@@ -410,6 +448,7 @@ async function buildFromUser(
     bio: user.bio ?? null,
     photoUrl,
     email,
+    phone,
     city: user.student?.city ?? user.staffMember?.city ?? null,
     sectionName,
     departmentName,
@@ -459,6 +498,8 @@ async function buildFromOrphanEntity(
       grNumber: true,
       city: true,
       email: true,
+      mobileNumber: true,
+      alternatePhone: true,
       enrollmentDate: true,
       createdAt: true,
       application: {
@@ -500,6 +541,12 @@ async function buildFromOrphanEntity(
       bio: null,
       photoUrl: e.profilePhotoUrl ?? null,
       email: privileged ? (e.email ?? e.emailAddress ?? null) : null,
+      phone: privileged
+        ? e.mobileNumber ||
+          e.alternatePhone ||
+          e.phoneNumbers?.[0]?.phoneNumber ||
+          null
+        : null,
       city: e.city ?? null,
       createdAt: e.createdAt,
       handleSeed: e.grNumber || e.employeeId || e.id,
@@ -544,6 +591,11 @@ async function buildFromOrphanEntity(
       profilePhotoUrl: true,
       employeeId: true,
       emailAddress: true,
+      phoneNumbers: {
+        orderBy: { isPrimary: "desc" },
+        take: 1,
+        select: { phoneNumber: true },
+      },
       joiningDate: true,
       createdAt: true,
       teacherDepartments: {
@@ -593,6 +645,8 @@ interface AssembleArgs {
   bio: string | null
   photoUrl: string | null
   email: string | null
+  /** Same gate as email: null for viewers who may not see contact details. */
+  phone?: string | null
   city?: string | null
   sectionName?: string | null
   departmentName?: string | null
@@ -666,7 +720,12 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   }))
 
   // ---- role-detail lists (real, for the role tab) -------------------------
-  const roleDetail = await fetchRoleDetail(role, args.entityId, schoolId)
+  const roleDetail = await fetchRoleDetail(
+    role,
+    args.entityId,
+    schoolId,
+    args.privileged
+  )
 
   // The sidebar "subjects" stat should match the subjects tab: distinct
   // subjects, not class enrollments (a student can have several classes of
@@ -726,6 +785,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     ...roleDetail.subjects.map((s) => s.name),
     ...roleDetail.classes.flatMap((c) => [c.name, c.subjectName ?? ""]),
     ...roleDetail.children.flatMap((c) => [c.name, c.sectionName ?? ""]),
+    ...roleDetail.guardians.flatMap((g) => [g.name, g.relation ?? ""]),
   ].filter(Boolean)
   if (toTranslate.length) {
     const map = await getLabels(toTranslate, displayLang, schoolId)
@@ -773,6 +833,10 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
       c.name = tr(c.name) ?? c.name
       c.sectionName = tr(c.sectionName)
     })
+    roleDetail.guardians.forEach((g) => {
+      g.name = tr(g.name) ?? g.name
+      g.relation = tr(g.relation)
+    })
   }
 
   const displayName = `${firstName} ${lastName}`.trim() || firstName
@@ -781,6 +845,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   if (departmentName) info.push({ icon: "org", value: departmentName })
   if (sectionName) info.push({ icon: "org", value: sectionName })
   if (args.email) info.push({ icon: "mail", value: args.email })
+  if (args.phone) info.push({ icon: "phone", value: args.phone })
   if (city) info.push({ icon: "location", value: city })
 
   return {
@@ -853,16 +918,59 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
 async function fetchRoleDetail(
   role: ProfileRole,
   entityId: string,
-  schoolId: string
+  schoolId: string,
+  privileged: boolean
 ): Promise<ProfileRoleDetail> {
-  const empty: ProfileRoleDetail = { subjects: [], classes: [], children: [] }
+  const empty: ProfileRoleDetail = {
+    subjects: [],
+    classes: [],
+    children: [],
+    guardians: [],
+  }
 
   if (role === "student") {
     // The grade's subjects (stream-filtered) — class enrollments are retired
-    const subjects: ProfileSubjectView[] = (
-      await getStudentSubjects(schoolId, entityId)
-    ).slice(0, 24)
-    return { ...empty, subjects }
+    const [subjectRows, guardianRows] = await Promise.all([
+      getStudentSubjects(schoolId, entityId),
+      db.studentGuardian.findMany({
+        where: { schoolId, studentId: entityId },
+        take: 12,
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        select: {
+          isPrimary: true,
+          guardianType: { select: { name: true } },
+          guardian: {
+            select: {
+              id: true,
+              userId: true,
+              firstName: true,
+              lastName: true,
+              profilePhotoUrl: true,
+              emailAddress: true,
+              phoneNumbers: {
+                orderBy: { isPrimary: "desc" },
+                take: 1,
+                select: { phoneNumber: true },
+              },
+            },
+          },
+        },
+      }),
+    ])
+    const subjects: ProfileSubjectView[] = subjectRows.slice(0, 24)
+    const guardians: ProfileGuardianView[] = guardianRows.map((r) => ({
+      id: r.guardian.id,
+      profileId: r.guardian.userId ?? r.guardian.id,
+      name: `${r.guardian.firstName ?? ""} ${r.guardian.lastName ?? ""}`.trim(),
+      relation: r.guardianType?.name ?? null,
+      isPrimary: r.isPrimary,
+      photoUrl: r.guardian.profilePhotoUrl ?? null,
+      email: privileged ? (r.guardian.emailAddress ?? null) : null,
+      phone: privileged
+        ? (r.guardian.phoneNumbers[0]?.phoneNumber ?? null)
+        : null,
+    }))
+    return { ...empty, subjects, guardians }
   }
 
   if (role === "teacher") {

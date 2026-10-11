@@ -8424,6 +8424,7 @@
       "tabs": {
         "overview": "نظرة عامة",
         "subjects": "المواد",
+        "guardians": "أولياء الأمور",
         "achievements": "الإنجازات",
         "classes": "الفصول",
         "children": "الأبناء",
@@ -8507,6 +8508,12 @@
         "subjects": "المواد",
         "subjectsDescription": "المواد المسجّل بها.",
         "noSubjects": "لا توجد مواد بعد."
+      },
+      "guardians": {
+        "title": "أولياء الأمور",
+        "description": "أولياء الأمور المرتبطون بهذا الطالب.",
+        "empty": "لا يوجد أولياء أمور مرتبطون بعد.",
+        "primary": "أساسي"
       },
       "teacher": {
         "editTitle": "تعديل معلوماتك",

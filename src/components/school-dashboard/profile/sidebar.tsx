@@ -394,7 +394,20 @@ export default function ProfileSidebar({
                     <span className="text-muted-foreground/70">
                       {INFO_ICONS[item.icon] ?? INFO_ICONS.org}
                     </span>
-                    <span className="truncate">{item.value}</span>
+                    {item.icon === "phone" || item.icon === "mail" ? (
+                      <bdi
+                        dir="ltr"
+                        className={
+                          item.icon === "phone"
+                            ? "truncate tabular-nums"
+                            : "truncate"
+                        }
+                      >
+                        {item.value}
+                      </bdi>
+                    ) : (
+                      <span className="truncate">{item.value}</span>
+                    )}
                   </div>
                 ))}
                 {data.website && (

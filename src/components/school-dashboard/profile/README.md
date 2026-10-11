@@ -96,6 +96,18 @@ what each capture actually says.
 
 **Completion:** ~98% | **Blockers:** none
 
+### Contact details (email + phone)
+
+Profiles show **both** email and phone; the listings show one line per a school setting
+(School → Configuration → "Contact under name"), the profile does not. Both are gated the same way:
+`queries.ts` nulls them unless the viewer's permission is in `PRIVILEGED`.
+
+- **Sidebar:** `info` carries `mail` and `phone` items (phone = student `mobileNumber`/`alternatePhone`,
+  teacher/guardian primary phone number, staff `phoneNumber`/`alternatePhone`), rendered in `<bdi dir="ltr">`.
+- **Student → Guardians tab** (`guardians.tsx`): every linked guardian (`StudentGuardian`, primary
+  first) with relation, a Primary badge, email and primary phone; the name links to the guardian's
+  profile (`userId` when it has one, else the entity id).
+
 ### Integration Points
 
 - **Auth/session** — identity, role, schoolId, viewer permission
