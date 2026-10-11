@@ -34,6 +34,7 @@
     "db:seed:alwafi": "tsx prisma/seeds/seed-alwafi.ts",
     "db:seed:london": "tsx prisma/seeds/seed-london.ts",
     "db:seed:alabidae": "tsx prisma/seeds/seed-alabidae.ts",
+    "db:seed:alabidae:teachers": "tsx prisma/seeds/seed-alabidae-teachers.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
     "db:reset-test-applicant": "tsx prisma/seeds/reset-test-applicant.ts",
     "seed:videos": "tsx scripts/seed-s3-videos.ts",
