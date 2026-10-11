@@ -33,7 +33,7 @@ export async function schoolNameFormat(
 
 /**
  * What a listing shows under a name: "email" or "phone", per listing. Never
- * throws — falls back to the listing's default (teachers email, students phone).
+ * throws — falls back to the listing's default (teachers email, students and parents phone).
  */
 export async function schoolNameContact(
   schoolId: string | null | undefined,
@@ -44,12 +44,17 @@ export async function schoolNameContact(
   try {
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { teacherNameContact: true, studentNameContact: true },
+      select: {
+        teacherNameContact: true,
+        studentNameContact: true,
+        guardianNameContact: true,
+      },
     })
-    const value =
-      listing === "teacher"
-        ? school?.teacherNameContact
-        : school?.studentNameContact
+    const value = {
+      teacher: school?.teacherNameContact,
+      student: school?.studentNameContact,
+      guardian: school?.guardianNameContact,
+    }[listing]
     return value === "email" || value === "phone" ? value : fallback
   } catch {
     return fallback

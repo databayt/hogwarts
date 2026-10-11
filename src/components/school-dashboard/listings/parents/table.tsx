@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Link2, Mail, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -23,6 +24,7 @@ import {
   DeleteToast,
   ErrorToast,
 } from "@/components/atom/toast"
+import { useDraftLauncher } from "@/components/form/wizard"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -32,7 +34,6 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
-import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -50,6 +51,8 @@ interface ParentsTableProps {
   lang: Locale
   perPage?: number
   permissions?: UIPermissions
+  /** What the Name cell shows under the name (school setting) */
+  nameContact?: NameContact
 }
 
 function ParentsTableInner({
@@ -59,6 +62,7 @@ function ParentsTableInner({
   lang,
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
+  nameContact = "phone",
 }: ParentsTableProps) {
   const router = useRouter()
   const { dictionary: fullDict } = useDictionary()
@@ -171,8 +175,16 @@ function ParentsTableInner({
         onDelete: handleDelete,
         onGenerateCredentials: handleGenerateCredentials,
         permissions,
+        nameContact,
       }),
-    [dictionary, lang, handleDelete, handleGenerateCredentials, permissions]
+    [
+      dictionary,
+      lang,
+      handleDelete,
+      handleGenerateCredentials,
+      permissions,
+      nameContact,
+    ]
   )
 
   // Table instance

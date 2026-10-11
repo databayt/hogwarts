@@ -56,6 +56,14 @@ parents/
 
 **Completion:** 85% | **Blockers:** Vitest import alias resolution (`@/lib/db` not resolving)
 
+### Contact under the name (school setting)
+
+The Name cell's second line is the parent's **phone** (default, the primary `GuardianPhoneNumber`) or
+**email**, picked per school at School → Configuration → "Contact under name"
+(`/school/configuration/name-contact`, `School.guardianNameContact`). `content.tsx` reads it with
+`schoolNameContact(schoolId, "guardian")` and the column renders the shared `NameContactLine`. When
+the picked value is empty the other one shows.
+
 ### Integration Points
 
 - Student records via `link-child-actions.ts` (access code redemption)

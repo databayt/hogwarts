@@ -122,6 +122,7 @@ type ParentListResult = {
   userId: string | null
   name: string
   emailAddress: string
+  phone: string | null
   status: string
   createdAt: string
 }
@@ -483,7 +484,19 @@ export async function getParents(
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
-      guardianModel.findMany({ where, orderBy, skip, take }),
+      guardianModel.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        include: {
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
+        },
+      }),
       guardianModel.count({ where }),
     ])
 
@@ -493,6 +506,7 @@ export async function getParents(
       userId: p.userId as string | null,
       name: [p.firstName, p.lastName].filter(Boolean).join(" "),
       emailAddress: p.emailAddress || "-",
+      phone: (p.phoneNumbers?.[0]?.phoneNumber as string | undefined) || null,
       status: p.userId ? "active" : "inactive",
       createdAt: (p.createdAt as Date).toISOString(),
     }))

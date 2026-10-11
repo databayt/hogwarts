@@ -5,6 +5,7 @@ import { SearchParams } from "nuqs/server"
 
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameContact } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -28,6 +29,9 @@ export default async function ParentsContent({
   const sp = await parentsSearchParams.parse(await searchParams)
   const { schoolId, role } = await getTenantContext()
   const permissions = getUIConfigForRole(role as Role | null | undefined)
+  // What the Name cell shows under the name — a school setting. Started now,
+  // awaited last, so it overlaps the list queries.
+  const nameContactPromise = schoolNameContact(schoolId, "guardian")
   let data: ParentRow[] = []
   let total = 0
   const guardianModel = getModel("guardian")
@@ -60,7 +64,19 @@ export default async function ParentsContent({
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
-      guardianModel.findMany({ where, orderBy, skip, take }),
+      guardianModel.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        include: {
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
+        },
+      }),
       guardianModel.count({ where }),
     ])
     data = await Promise.all(
@@ -69,12 +85,14 @@ export default async function ParentsContent({
         userId: p.userId || null,
         name: await getName(p, lang, schoolId!),
         emailAddress: p.emailAddress || "-",
+        phone: p.phoneNumbers?.[0]?.phoneNumber || null,
         status: p.userId ? "active" : "inactive",
         createdAt: (p.createdAt as Date).toISOString(),
       }))
     )
     total = count as number
   }
+  const nameContact = await nameContactPromise
   return (
     <div className="space-y-6">
       <ParentsTable
@@ -84,6 +102,7 @@ export default async function ParentsContent({
         lang={lang}
         perPage={sp.perPage}
         permissions={permissions}
+        nameContact={nameContact}
       />
     </div>
   )

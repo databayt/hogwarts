@@ -46,7 +46,11 @@ export default async function NameContactPage({ params }: Props) {
     ? await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { teacherNameContact: true, studentNameContact: true },
+          select: {
+            teacherNameContact: true,
+            studentNameContact: true,
+            guardianNameContact: true,
+          },
         })
         .catch(() => null)
     : null
@@ -57,6 +61,7 @@ export default async function NameContactPage({ params }: Props) {
       initial={{
         teacher: asNameContact(school?.teacherNameContact, "teacher"),
         student: asNameContact(school?.studentNameContact, "student"),
+        guardian: asNameContact(school?.guardianNameContact, "guardian"),
       }}
       dictionary={dictionary}
     />

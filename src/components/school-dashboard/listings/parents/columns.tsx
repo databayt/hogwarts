@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
 
+import type { NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -16,6 +17,7 @@ import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { NameContactLine } from "@/components/school-dashboard/shared/name-contact-line"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type ParentRow = {
@@ -23,6 +25,7 @@ export type ParentRow = {
   userId: string | null
   name: string
   emailAddress: string
+  phone: string | null
   status: string
   createdAt: string
 }
@@ -35,6 +38,8 @@ export interface ParentColumnCallbacks {
     badge?: string
   ) => void
   permissions?: UIPermissions
+  /** What shows under the name: the phone (default) or the email. */
+  nameContact?: NameContact
 }
 
 export const getParentColumns = (
@@ -65,6 +70,19 @@ export const getParentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.name} />
       ),
+      cell: ({ row }) => {
+        const parent = row.original
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{parent.name}</span>
+            <NameContactLine
+              email={parent.emailAddress !== "-" ? parent.emailAddress : null}
+              phone={parent.phone}
+              prefer={callbacks?.nameContact ?? "phone"}
+            />
+          </div>
+        )
+      },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
     },

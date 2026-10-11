@@ -17,6 +17,7 @@ model School {
   nameFormat        String   @default("full") // "full" (single full name field) | "split" (first+last fields)
   teacherNameContact String  @default("email") // "email" | "phone" — the line under a teacher's name in the listing
   studentNameContact String  @default("phone") // "email" | "phone" — the line under a student's name in the listing
+  guardianNameContact String @default("phone") // "email" | "phone" — the line under a parent's name in the listing
 
   // School classification
   schoolType         String? // private, public, international, technical, special

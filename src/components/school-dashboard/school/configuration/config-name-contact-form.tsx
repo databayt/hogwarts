@@ -37,7 +37,7 @@ export function ConfigNameContactForm({
         </h3>
         <p className="text-muted-foreground text-sm">
           {t?.description ??
-            "Choose what the teachers and students listings show under each name"}
+            "Choose what the teachers, students and parents listings show under each name"}
         </p>
       </div>
       <ListingChoice
@@ -52,6 +52,13 @@ export function ConfigNameContactForm({
         listing="student"
         heading={t?.studentsHeading ?? "Students"}
         initialValue={initial.student}
+        t={t}
+      />
+      <ListingChoice
+        schoolId={schoolId}
+        listing="guardian"
+        heading={t?.parentsHeading ?? "Parents"}
+        initialValue={initial.guardian}
         t={t}
       />
     </div>

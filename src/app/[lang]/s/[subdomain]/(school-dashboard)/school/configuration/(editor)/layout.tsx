@@ -47,6 +47,7 @@ export default async function EditorLayout({ children, params }: Props) {
               nameFormat: true,
               teacherNameContact: true,
               studentNameContact: true,
+              guardianNameContact: true,
               schoolType: true,
               schoolLevel: true,
               city: true,
@@ -280,7 +281,11 @@ export default async function EditorLayout({ children, params }: Props) {
           v === "phone"
             ? ((cs?.contactPhone as string) ?? "phone")
             : ((cs?.contactEmail as string) ?? "email")
-        return `${(cs?.teachersLabel as string) ?? "Teachers"}: ${label(school.teacherNameContact)} · ${(cs?.studentsLabel as string) ?? "Students"}: ${label(school.studentNameContact)}`
+        return [
+          `${(cs?.teachersLabel as string) ?? "Teachers"}: ${label(school.teacherNameContact)}`,
+          `${(cs?.studentsLabel as string) ?? "Students"}: ${label(school.studentNameContact)}`,
+          `${(cs?.parentsLabel as string) ?? "Parents"}: ${label(school.guardianNameContact)}`,
+        ].join(" · ")
       }
       case "domain": {
         if (pendingDomainRequest) {
