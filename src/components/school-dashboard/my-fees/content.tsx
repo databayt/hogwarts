@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -121,6 +123,8 @@ export default async function MyFeesContent({ lang, dictionary }: Props) {
     }),
   ])
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
+
   if (students.length === 0) {
     return (
       <div className="space-y-4">
@@ -184,7 +188,7 @@ export default async function MyFeesContent({ lang, dictionary }: Props) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle className="text-base">
-                    {student.firstName} {student.lastName}
+                    <bdi dir="auto">{displayName(student, nameDisplay)}</bdi>
                   </CardTitle>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {t.preferredMethodLabel || "Preferred payment method"}

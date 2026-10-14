@@ -14,6 +14,12 @@
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  nameInitials,
+  type NameDisplay,
+} from "@/lib/name-utils"
 
 // ============================================================================
 // Types
@@ -271,26 +277,25 @@ export async function verifyParentOwnership(
 // ============================================================================
 
 /**
- * Format parent full name
+ * A parent's name: the school's short display (first + second or
+ * first + last) by default, every part with "full".
  */
-export function formatParentName(parent: {
+export function formatParentName(
+  parent: { firstName: string; middleName?: string | null; lastName: string },
+  mode: NameDisplay | "full" = NAME_DISPLAY_DEFAULT
+): string {
+  return displayName(parent, mode)
+}
+
+/**
+ * Get parent initials for avatar — names, not words (عبد الله → ع).
+ */
+export function getParentInitials(parent: {
   firstName: string
   middleName?: string | null
   lastName: string
 }): string {
-  return [parent.firstName, parent.middleName, parent.lastName]
-    .filter(Boolean)
-    .join(" ")
-}
-
-/**
- * Get parent initials for avatar
- */
-export function getParentInitials(parent: {
-  firstName: string
-  lastName: string
-}): string {
-  return `${parent.firstName.charAt(0)}${parent.lastName.charAt(0)}`.toUpperCase()
+  return nameInitials(parent)
 }
 
 /**

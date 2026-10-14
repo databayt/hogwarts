@@ -22,6 +22,7 @@ import {
   schoolCache,
 } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   examAudienceInclude,
@@ -306,9 +307,7 @@ async function processBatchPDFGeneration(
         continue
       }
 
-      const studentName = `${examResult.student.firstName} ${
-        examResult.student.middleName || ""
-      } ${examResult.student.lastName}`.trim()
+      const studentName = displayName(examResult.student, "full")
 
       // Find grade boundary for GPA
       const boundary = boundaries?.find(
@@ -656,9 +655,7 @@ async function processReportCardGeneration(
         })
       }
 
-      const studentName = `${student.firstName} ${student.middleName || ""} ${
-        student.lastName
-      }`.trim()
+      const studentName = displayName(student, "full")
 
       // Generate report card PDF (mock)
       const pdfBuffer = Buffer.from(
@@ -680,7 +677,7 @@ async function processReportCardGeneration(
     } catch (error) {
       result.files.push({
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, "full"),
         filename: "",
         error: `Failed: ${error}`,
       })

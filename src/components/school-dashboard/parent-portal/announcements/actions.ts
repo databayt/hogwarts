@@ -7,6 +7,8 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
 import { localize } from "@/components/translation/localize"
@@ -121,12 +123,13 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       announcementCount: mappedAnnouncements.length,
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     return {
       success: true,
       announcements: mappedAnnouncements,
       students: children.map((c) => ({
         id: c.id,
-        name: `${c.firstName}${c.middleName ? ` ${c.middleName}` : ""} ${c.lastName}`,
+        name: displayName(c, nameDisplay),
       })),
     }
   } catch (error) {

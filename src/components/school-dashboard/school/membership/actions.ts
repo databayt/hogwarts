@@ -20,6 +20,7 @@ import {
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
 import type { ProvisionStudentResult } from "@/lib/student-provisioning"
@@ -1180,10 +1181,18 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
         role: true,
         isSuspended: true,
         createdAt: true,
-        student: { select: { firstName: true, lastName: true } },
-        teacher: { select: { firstName: true, lastName: true } },
-        staffMember: { select: { firstName: true, lastName: true } },
-        guardian: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
+        teacher: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
+        staffMember: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
+        guardian: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
       },
       orderBy: { createdAt: "desc" },
     })
@@ -1192,9 +1201,7 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
     const rows = users.map((u) => {
       const profile = u.student || u.teacher || u.staffMember || u.guardian
       const name = profile
-        ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
-          u.username ||
-          ""
+        ? displayName(profile, "full") || u.username || ""
         : u.username || ""
       const status = u.isSuspended ? "Suspended" : "Active"
       return `"${name}","${u.email || ""}","${u.role}","${status}","${u.createdAt.toISOString()}"`

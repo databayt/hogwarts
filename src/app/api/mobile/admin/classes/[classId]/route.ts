@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 import { hasRole } from "../../../lib/roles"
@@ -39,6 +41,7 @@ export async function GET(
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             emailAddress: true,
             profilePhotoUrl: true,
@@ -82,12 +85,10 @@ export async function GET(
       homeroom_teacher: section.homeroomTeacher
         ? {
             id: section.homeroomTeacher.id,
-            name: [
-              section.homeroomTeacher.firstName,
-              section.homeroomTeacher.lastName,
-            ]
-              .filter(Boolean)
-              .join(" "),
+            name: displayName(
+              section.homeroomTeacher,
+              await schoolNameDisplay(auth.schoolId)
+            ),
             email: section.homeroomTeacher.emailAddress,
             photo_url: section.homeroomTeacher.profilePhotoUrl,
           }

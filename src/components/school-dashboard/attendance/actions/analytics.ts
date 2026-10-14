@@ -6,6 +6,8 @@ import { auth } from "@/auth"
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { canViewSchoolAnalytics } from "@/components/school-dashboard/attendance/authorization"
 
@@ -693,6 +695,7 @@ export async function getStudentsAtRisk(input?: {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       attendances: {
         where,
@@ -701,6 +704,7 @@ export async function getStudentsAtRisk(input?: {
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const atRisk = students
     .map((student) => {
       const total = student.attendances.length
@@ -711,7 +715,7 @@ export async function getStudentsAtRisk(input?: {
 
       return {
         studentId: student.id,
-        name: `${student.firstName} ${student.lastName}`,
+        name: displayName(student, nameDisplay),
         totalDays: total,
         presentDays: present,
         absentDays: total - present,
@@ -757,19 +761,20 @@ export async function getRecentAttendance(input?: {
     take: limit,
     include: {
       student: {
-        select: { firstName: true, lastName: true },
+        select: { firstName: true, middleName: true, lastName: true },
       },
       section: {
         select: { name: true },
       },
     },
   })
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return {
     records: records.map((r) => ({
       id: r.id,
       studentId: r.studentId,
-      studentName: `${r.student.firstName} ${r.student.lastName}`,
+      studentName: displayName(r.student, nameDisplay),
       sectionId: r.sectionId,
       className: r.section?.name ?? "",
       date: r.date.toISOString(),

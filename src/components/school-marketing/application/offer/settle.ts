@@ -20,6 +20,7 @@
 import "server-only"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { MANUAL_GATEWAYS } from "@/lib/payment/types"
 
 export interface SettleRegistrationFeeInput {
@@ -111,6 +112,7 @@ export async function settleRegistrationFee(
         userId: true,
         email: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         applicationNumber: true,
         lang: true,
@@ -165,14 +167,11 @@ export async function settleRegistrationFee(
       body: t(
         (MANUAL_GATEWAYS as readonly string[]).includes(method)
           ? COPY.schoolBodyManual(
-              `${app.firstName} ${app.lastName}`.trim(),
+              displayName(app, "full"),
               app.applicationNumber,
               t(METHOD_LABEL[method] ?? { ar: method, en: method }, lang)
             )
-          : COPY.schoolBody(
-              `${app.firstName} ${app.lastName}`.trim(),
-              app.applicationNumber
-            ),
+          : COPY.schoolBody(displayName(app, "full"), app.applicationNumber),
         lang
       ),
       lang,

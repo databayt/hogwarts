@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { DeleteToast, SuccessToast } from "@/components/atom/toast"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 import {
   createGuardianAndLink,
   unlinkGuardian,
@@ -64,6 +66,7 @@ interface GuardianTabProps {
 
 export function GuardianTab({ student, dictionary }: GuardianTabProps) {
   const d = dictionary
+  const nameDisplay = useNameDisplay()
   const [isPending, startTransition] = useTransition()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -91,10 +94,6 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
   })
 
   const guardians = student.studentGuardians || []
-
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase()
-  }
 
   const getPhoneIcon = (type: string) => {
     switch (type) {
@@ -226,7 +225,7 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
         const guardian = guardianRel.guardian
         const guardianType =
           guardianRel.guardianType?.name || guardianRel.relation
-        const fullName = `${guardian.firstName} ${guardian.lastName}`
+        const fullName = displayName(guardian, nameDisplay)
 
         return (
           <Card
@@ -239,12 +238,12 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={guardian.profileUrl} alt={fullName} />
                     <AvatarFallback>
-                      {getInitials(guardian.firstName, guardian.lastName)}
+                      {nameInitials(guardian, nameDisplay)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      {fullName}
+                      <bdi dir="auto">{fullName}</bdi>
                       {guardianRel.isPrimary && (
                         <Badge variant="default" className="text-xs">
                           {d?.primary || "Primary"}
@@ -591,7 +590,7 @@ export function GuardianTab({ student, dictionary }: GuardianTabProps) {
           <div className="space-y-4">
             <div className="bg-muted rounded-lg p-3">
               <p className="font-medium">
-                {formData.firstName} {formData.lastName}
+                <bdi dir="auto">{displayName(formData, "full")}</bdi>
               </p>
               <p className="text-muted-foreground text-sm">
                 {formData.emailAddress || d?.noEmail || "No email"}

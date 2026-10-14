@@ -6,6 +6,7 @@ import "server-only"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
 import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
 import {
   filterConfiguredManualRails,
@@ -13,6 +14,7 @@ import {
 } from "@/lib/payment/manual-rail-settings"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
 import type { PaymentGateway } from "@/lib/payment/types"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { schoolCalendarDayOf, schoolWallTimeToUtc } from "@/lib/timezone"
 import type { Locale } from "@/components/internationalization/config"
@@ -77,22 +79,34 @@ export async function loadFamilyMoney({
   // by name or email.
   const studentIds: string[] = []
   const studentNames: Record<string, string> = {}
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   if (role === "STUDENT") {
     const student = await db.student.findFirst({
       where: { userId, schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
     })
     if (!student) return null
     studentIds.push(student.id)
-    studentNames[student.id] = await getName(student, lang, schoolId)
+    studentNames[student.id] = await getName(
+      shortNameParts(student, nameDisplay),
+      lang,
+      schoolId
+    )
   } else {
     const guardian = await db.guardian.findFirst({
       where: { userId, schoolId },
       select: {
         studentGuardians: {
           select: {
-            student: { select: { id: true, firstName: true, lastName: true } },
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
           },
         },
       },
@@ -100,9 +114,14 @@ export async function loadFamilyMoney({
     if (!guardian?.studentGuardians?.length) return null
     const links = guardian.studentGuardians
     studentIds.push(...links.map((l) => l.student.id))
-    const names = await getNames(links, (l) => l.student, lang, schoolId)
+    const names = await getNames(
+      links,
+      (l) => shortNameParts(l.student, nameDisplay),
+      lang,
+      schoolId
+    )
     for (const link of links) {
-      const raw = fullName(link.student)
+      const raw = fullName(shortNameParts(link.student, nameDisplay))
       studentNames[link.student.id] = names.get(raw) ?? raw
     }
   }

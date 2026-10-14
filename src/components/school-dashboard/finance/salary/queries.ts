@@ -60,6 +60,7 @@ export const salaryStructureListSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       employeeId: true,
     },

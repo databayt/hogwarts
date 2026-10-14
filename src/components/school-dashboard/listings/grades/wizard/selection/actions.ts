@@ -99,7 +99,14 @@ export async function updateGradeSelection(
 
 /** Get students for the grade selection dropdown */
 export async function getStudentsForGrade(): Promise<
-  ActionResponse<{ id: string; firstName: string; lastName: string }[]>
+  ActionResponse<
+    {
+      id: string
+      firstName: string
+      middleName: string | null
+      lastName: string
+    }[]
+  >
 > {
   try {
     const { schoolId } = await getTenantContext()
@@ -107,7 +114,7 @@ export async function getStudentsForGrade(): Promise<
 
     const students = await db.student.findMany({
       where: { schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
       orderBy: { firstName: "asc" },
     })
 

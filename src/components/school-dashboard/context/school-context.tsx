@@ -10,7 +10,7 @@ interface SchoolContextValue {
   school: School
 }
 
-const SchoolContext = createContext<SchoolContextValue | undefined>(undefined)
+export const SchoolContext = createContext<SchoolContextValue | undefined>(undefined)
 
 interface SchoolProviderProps {
   children: ReactNode

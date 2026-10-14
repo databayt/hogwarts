@@ -10,7 +10,9 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
@@ -189,6 +191,7 @@ export async function getLiveClasses(params: {
       return { success: true, data: { rows: [], total: 0 } }
     }
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const { rows, count } = await getLiveClassesList(schoolId, {
       title: q.title,
       status: q.status,
@@ -205,8 +208,7 @@ export async function getLiveClasses(params: {
           title: r.title,
           lang: r.lang,
           teacherId: r.teacherId,
-          teacherName:
-            `${r.teacher?.firstName ?? ""} ${r.teacher?.lastName ?? ""}`.trim(),
+          teacherName: displayName(r.teacher, nameDisplay),
           subjectId: r.subjectId,
           subjectName: r.subject?.name ?? null,
           sectionId: r.sectionId,

@@ -15,13 +15,12 @@ import type { Prisma, UserRole } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import {
-  getOwnedStudentIds,
-  sectionTeacherUserIds,
-} from "../actions/helpers"
+import { getOwnedStudentIds, sectionTeacherUserIds } from "../actions/helpers"
 import { isStaffRole } from "../authorization"
 import {
   filterIntentionsSchema,
@@ -303,7 +302,7 @@ export async function getAbsenceIntentions(
         where,
         include: {
           student: {
-            select: { firstName: true, lastName: true },
+            select: { firstName: true, middleName: true, lastName: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -311,6 +310,7 @@ export async function getAbsenceIntentions(
       }),
       db.absenceIntention.count({ where }),
     ])
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       success: true,
@@ -318,7 +318,7 @@ export async function getAbsenceIntentions(
         intentions: intentions.map((i) => ({
           id: i.id,
           studentId: i.studentId,
-          studentName: `${i.student.firstName} ${i.student.lastName}`,
+          studentName: displayName(i.student, nameDisplay),
           dateFrom: i.dateFrom,
           dateTo: i.dateTo,
           daysCount: i.daysCount,
@@ -541,6 +541,7 @@ async function notifyIntentionSubmission(
         student: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
             sectionId: true,
           },
@@ -550,7 +551,10 @@ async function notifyIntentionSubmission(
 
     if (!intention) return
 
-    const studentName = `${intention.student.firstName} ${intention.student.lastName}`
+    const studentName = displayName(
+      intention.student,
+      await schoolNameDisplay(schoolId)
+    )
     const dateFrom = intention.dateFrom.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -604,13 +608,18 @@ async function notifyIntentionDecision(
     const intention = await db.absenceIntention.findFirst({
       where: { id: intentionId, schoolId },
       include: {
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
       },
     })
 
     if (!intention) return
 
-    const studentName = `${intention.student.firstName} ${intention.student.lastName}`
+    const studentName = displayName(
+      intention.student,
+      await schoolNameDisplay(schoolId)
+    )
     const dateFrom = intention.dateFrom.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",

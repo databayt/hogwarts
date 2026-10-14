@@ -20,7 +20,9 @@ import type { HallPassDestination, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { CreateHallPassInput, ReturnHallPassInput } from "./validation"
@@ -128,7 +130,7 @@ export async function createHallPass(
       },
       include: {
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
         section: {
           select: { name: true },
@@ -142,7 +144,10 @@ export async function createHallPass(
       success: true,
       data: {
         id: hallPass.id,
-        studentName: `${hallPass.student.firstName} ${hallPass.student.lastName}`,
+        studentName: displayName(
+          hallPass.student,
+          await schoolNameDisplay(schoolId)
+        ),
         className: hallPass.section?.name ?? "",
         destination: hallPass.destination,
         expectedReturn: hallPass.expectedReturn,
@@ -283,6 +288,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             profilePhotoUrl: true,
           },
@@ -293,6 +299,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
       },
       orderBy: { issuedAt: "desc" },
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       success: true,
@@ -300,7 +307,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
         id: pass.id,
         student: {
           id: pass.student.id,
-          name: `${pass.student.firstName} ${pass.student.lastName}`,
+          name: displayName(pass.student, nameDisplay),
           photoUrl: pass.student.profilePhotoUrl,
         },
         // Where the student left from: their section.

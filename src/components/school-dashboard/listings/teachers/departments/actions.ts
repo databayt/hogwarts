@@ -45,6 +45,7 @@ export async function getDepartments(
               select: {
                 id: true,
                 firstName: true,
+                middleName: true,
                 lastName: true,
                 emailAddress: true,
                 profilePhotoUrl: true,
@@ -78,6 +79,7 @@ export async function getDepartments(
       teachers: dept.teacherDepartments.map((td) => ({
         id: td.teacher.id,
         firstName: td.teacher.firstName,
+        middleName: td.teacher.middleName,
         lastName: td.teacher.lastName,
         emailAddress: td.teacher.emailAddress ?? "",
         profilePhotoUrl: td.teacher.profilePhotoUrl,

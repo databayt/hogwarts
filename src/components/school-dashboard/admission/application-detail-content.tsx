@@ -9,6 +9,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { gradeLabel, parseGrade } from "@/lib/grade"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { initialsOf } from "@/lib/name-utils"
 import type { Role } from "@/lib/rbac/types"
 import { normalizeUploadUrl } from "@/lib/upload-url"
 import { Badge } from "@/components/ui/badge"
@@ -350,7 +351,7 @@ export default async function ApplicationDetailContent({
             />
           ) : (
             <div className="bg-muted text-muted-foreground flex h-52 w-52 items-center justify-center rounded-full border text-4xl font-semibold">
-              {(application.firstName?.[0] || "?").toUpperCase()}
+              {initialsOf(application.firstName) || "?"}
             </div>
           )}
         </div>
@@ -358,7 +359,9 @@ export default async function ApplicationDetailContent({
         {/* Info */}
         <div className="space-y-1 text-sm">
           <div className="space-y-1">
-            <h1 className="text-lg font-semibold">{fullName}</h1>
+            <h1 className="text-lg font-semibold">
+              <bdi dir="auto">{fullName}</bdi>
+            </h1>
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant={getStatusVariant(application.status)}>
                 {statusLabel}

@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 // ============================================================================
 // Types
@@ -52,6 +54,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 interface TeacherScheduleData {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null
@@ -89,10 +92,6 @@ interface Props {
 // Helper Functions
 // ============================================================================
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
 function getWorkloadColor(status: string): string {
   switch (status) {
     case "UNDERUTILIZED":
@@ -129,6 +128,7 @@ export function TeacherScheduleContent({
   dictionary,
   lang,
 }: Props) {
+  const nameDisplay = useNameDisplay()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [workloadFilter, setWorkloadFilter] = useState<string>("all")
@@ -362,12 +362,14 @@ export function TeacherScheduleContent({
                             src={teacher.profilePhotoUrl || undefined}
                           />
                           <AvatarFallback className="text-xs">
-                            {getInitials(teacher.firstName, teacher.lastName)}
+                            {nameInitials(teacher, nameDisplay)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">
-                            {teacher.firstName} {teacher.lastName}
+                            <bdi dir="auto">
+                              {displayName(teacher, nameDisplay)}
+                            </bdi>
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {teacher.emailAddress}

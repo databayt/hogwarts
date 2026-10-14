@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
 import type { PaymentGateway } from "@/lib/payment/types"
 
@@ -83,7 +84,9 @@ export async function createFeeCheckoutCore(input: {
   const assignment = await db.feeAssignment.findFirst({
     where: { id: feeAssignmentId, schoolId },
     include: {
-      student: { select: { id: true, firstName: true, lastName: true } },
+      student: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       feeStructure: { select: { name: true } },
       payments: { where: { status: "SUCCESS" }, select: { amount: true } },
     },
@@ -204,7 +207,7 @@ export async function createFeeCheckoutCore(input: {
     lineItems: [
       {
         name: assignment.feeStructure?.name || "School Fee",
-        description: `${[assignment.student?.firstName, assignment.student?.lastName].filter(Boolean).join(" ")} — ${assignment.academicYear}`,
+        description: `${displayName(assignment.student, "full")} — ${assignment.academicYear}`,
         quantity: 1,
         // Stripe needs the charge in the smallest currency unit. The adapter
         // uses this verbatim when lineItems are present (it does NOT fall back

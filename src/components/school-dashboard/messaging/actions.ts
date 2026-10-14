@@ -78,9 +78,8 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { after } from "next/server"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
-import { z } from "zod"
-
 import type { UserRole } from "@prisma/client"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -88,6 +87,7 @@ import {
   checkMessageSendRateLimit,
   createRateLimitErrorMessage,
 } from "@/lib/rate-limit"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -715,9 +715,7 @@ export async function sendMessage(
         senderName,
         parsed.content,
         conversation.title || undefined
-      ).catch((err) =>
-        console.error("[sendMessage] Notification error:", err)
-      )
+      ).catch((err) => console.error("[sendMessage] Notification error:", err))
     )
 
     // 2. Check for and notify mentioned users
@@ -798,7 +796,10 @@ export async function sendMessage(
     )
 
     const { serializeMessage } = await import("./serialization")
-    const serialized = serializeMessage(fullMessage)
+    const serialized = serializeMessage(
+      fullMessage,
+      await schoolNameDisplay(schoolId)
+    )
 
     // 6. Broadcast via Socket.IO for real-time delivery to other clients (non-blocking)
     emitSocketEvent(parsed.conversationId, "message:new", {
@@ -1600,7 +1601,10 @@ export async function loadMoreMessages(input: {
     })
 
     // Serialize dates for client components
-    const serialized = serializeMessagesPaginated(result)
+    const serialized = serializeMessagesPaginated(
+      result,
+      await schoolNameDisplay(schoolId)
+    )
 
     return { success: true, data: serialized }
   } catch (error) {
@@ -2055,8 +2059,9 @@ export async function fetchConversationData(input: {
 
     const messages = conversation.messages.slice(0, take)
 
-    const serializedConv = serializeConversation(conversation)
-    const serializedMsgs = serializeMessages(messages).reverse()
+    const nameDisplay = await schoolNameDisplay(schoolId)
+    const serializedConv = serializeConversation(conversation, nameDisplay)
+    const serializedMsgs = serializeMessages(messages, nameDisplay).reverse()
 
     // Localize names in ONE batched call if locale is provided
     if (input.locale && serializedConv) {
@@ -2153,7 +2158,12 @@ export async function pollNewMessages(input: {
         take: 50,
         select: messageListSelect,
       })
-      return { success: true, data: { items: serializeMessages(fresh) } }
+      return {
+        success: true,
+        data: {
+          items: serializeMessages(fresh, await schoolNameDisplay(schoolId)),
+        },
+      }
     }
 
     // Single query per poll tick (this runs every 10s for every open chat):
@@ -2180,7 +2190,12 @@ export async function pollNewMessages(input: {
 
     return {
       success: true,
-      data: { items: serializeMessages(newMessages) },
+      data: {
+        items: serializeMessages(
+          newMessages,
+          await schoolNameDisplay(schoolId)
+        ),
+      },
     }
   } catch (error) {
     console.error("[pollNewMessages] Error:", error)
@@ -2248,7 +2263,10 @@ export async function pollConversationUpdates(input?: {
       return {
         success: true,
         data: {
-          conversations: serializeConversations(rows),
+          conversations: serializeConversations(
+            rows,
+            await schoolNameDisplay(schoolId)
+          ),
           unreadCounts,
           serverTime,
           full: true,
@@ -2276,7 +2294,10 @@ export async function pollConversationUpdates(input?: {
     return {
       success: true,
       data: {
-        conversations: serializeConversations(rows),
+        conversations: serializeConversations(
+          rows,
+          await schoolNameDisplay(schoolId)
+        ),
         unreadCounts,
         serverTime,
         full: false,

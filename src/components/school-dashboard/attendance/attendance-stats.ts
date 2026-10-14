@@ -6,6 +6,8 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { guardAttendance } from "./actions/helpers"
 
@@ -198,9 +200,10 @@ export async function getBulkAttendanceStats(input: {
     }),
     db.student.findMany({
       where: { schoolId, id: { in: input.studentIds } },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
     }),
   ])
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const byStudent = new Map<string, Array<{ status: string; date: Date }>>()
   for (const id of input.studentIds) byStudent.set(id, [])
@@ -209,10 +212,7 @@ export async function getBulkAttendanceStats(input: {
   }
 
   const studentMap = new Map(
-    students.map((s) => [
-      s.id,
-      `${s.firstName || ""} ${s.lastName || ""}`.trim(),
-    ])
+    students.map((s) => [s.id, displayName(s, nameDisplay)])
   )
 
   return input.studentIds.map((studentId) => ({

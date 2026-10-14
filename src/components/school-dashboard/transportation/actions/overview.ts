@@ -127,7 +127,14 @@ export async function getRecentAssignments(limit = 10) {
     const items = await db.routeAssignment.findMany({
       where: { schoolId, deletedAt: null },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         route: { select: { id: true, name: true } },
         stop: { select: { id: true, name: true } },
       },

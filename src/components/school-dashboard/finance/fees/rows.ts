@@ -15,6 +15,8 @@
 
 import "server-only"
 
+import { shortNameParts, type NameDisplay } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getLabels, getNames } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 import { fullName } from "@/components/translation/util"
@@ -27,11 +29,21 @@ import type { ScholarshipRow } from "./scholarship-columns"
 const iso = (d: unknown): string =>
   d instanceof Date ? d.toISOString() : String(d)
 
-type Person = { firstName?: string | null; lastName?: string | null } | null
+type Person = {
+  firstName?: string | null
+  middleName?: string | null
+  lastName?: string | null
+} | null
 
-const nameOf = (names: Map<string, string>, person: Person | undefined) => {
+// Lists show the school's short name (first + second / first + last); the
+// translation map is keyed by that same short composition.
+const nameOf = (
+  names: Map<string, string>,
+  person: Person | undefined,
+  nameDisplay: NameDisplay
+) => {
   if (!person) return ""
-  const raw = fullName(person)
+  const raw = fullName(shortNameParts(person, nameDisplay))
   return names.get(raw) ?? raw
 }
 
@@ -40,8 +52,14 @@ export async function toAssignmentRows(
   lang: Lang,
   schoolId: string
 ): Promise<FeeAssignmentRow[]> {
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const [names, labels] = await Promise.all([
-    getNames(rows, (fa) => fa.student ?? {}, lang, schoolId),
+    getNames(
+      rows,
+      (fa) => shortNameParts(fa.student ?? {}, nameDisplay),
+      lang,
+      schoolId
+    ),
     getLabels(
       rows.map((fa) => fa.feeStructure?.name),
       lang,
@@ -52,7 +70,7 @@ export async function toAssignmentRows(
     const structure = fa.feeStructure?.name
     return {
       id: fa.id,
-      studentName: nameOf(names, fa.student),
+      studentName: nameOf(names, fa.student, nameDisplay),
       studentId: fa.studentId ?? fa.student?.id,
       feeStructureName: structure ? (labels.get(structure) ?? structure) : "-",
       academicYear: fa.academicYear,
@@ -72,8 +90,14 @@ export async function toPaymentRows(
   lang: Lang,
   schoolId: string
 ): Promise<PaymentRow[]> {
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const [names, labels] = await Promise.all([
-    getNames(rows, (p) => p.student ?? {}, lang, schoolId),
+    getNames(
+      rows,
+      (p) => shortNameParts(p.student ?? {}, nameDisplay),
+      lang,
+      schoolId
+    ),
     getLabels(
       rows.map((p) => p.feeAssignment?.feeStructure?.name),
       lang,
@@ -85,7 +109,7 @@ export async function toPaymentRows(
     return {
       id: p.id,
       paymentNumber: p.paymentNumber,
-      studentName: nameOf(names, p.student),
+      studentName: nameOf(names, p.student, nameDisplay),
       feeStructureName: structure ? (labels.get(structure) ?? structure) : "-",
       amount: Number(p.amount),
       paymentDate: iso(p.paymentDate),
@@ -102,8 +126,14 @@ export async function toFineRows(
   lang: Lang,
   schoolId: string
 ): Promise<FineRow[]> {
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const [names, labels] = await Promise.all([
-    getNames(rows, (f) => f.student ?? {}, lang, schoolId),
+    getNames(
+      rows,
+      (f) => shortNameParts(f.student ?? {}, nameDisplay),
+      lang,
+      schoolId
+    ),
     getLabels(
       rows.map((f) => f.reason),
       lang,
@@ -112,7 +142,7 @@ export async function toFineRows(
   ])
   return rows.map((f) => ({
     id: f.id,
-    studentName: nameOf(names, f.student),
+    studentName: nameOf(names, f.student, nameDisplay),
     studentId: f.studentId ?? f.student?.id,
     fineType: f.fineType,
     amount: Number(f.amount),

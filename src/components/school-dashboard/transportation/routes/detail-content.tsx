@@ -3,6 +3,8 @@
 
 import Link from "next/link"
 
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,7 +65,11 @@ export async function RouteDetailContent({
     dropoffTime: s.dropoffTime,
   }))
   const driverName = route.driver
-    ? await getName(route.driver, locale, schoolId!)
+    ? await getName(
+        shortNameParts(route.driver, await schoolNameDisplay(schoolId)),
+        locale,
+        schoolId!
+      )
     : "—"
 
   return (

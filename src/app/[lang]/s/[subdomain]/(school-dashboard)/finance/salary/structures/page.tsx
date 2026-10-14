@@ -3,6 +3,8 @@
 
 import type { Metadata } from "next"
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
@@ -46,9 +48,9 @@ export default async function SalaryStructuresPage({ params }: Props) {
   })
 
   // One batched, deduped resolution for teacher names (no per-row N+1)
-  const teacherNames = rows.map((s: any) =>
-    [s.teacher?.firstName, s.teacher?.lastName].filter(Boolean).join(" ")
-  )
+  // Listing label — the school's short name display.
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const teacherNames = rows.map((s: any) => displayName(s.teacher, nameDisplay))
   const labels = await getLabels(teacherNames, lang, schoolId)
   const data: SalaryStructureRow[] = rows.map((s: any, i: number) => ({
     id: s.id,

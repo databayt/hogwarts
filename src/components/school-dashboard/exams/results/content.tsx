@@ -9,6 +9,8 @@ import { type SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,17 +78,18 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
   if (isStudentOrGuardian && schoolId) {
     const scope = await getStudentScope(role, session?.user?.id, schoolId)
     if (!scope) return null
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     // For guardians, fetch children names for grouping
     let children: { id: string; name: string }[] = []
     if (role === "GUARDIAN" && scope.studentIds.length > 1) {
       const students = await db.student.findMany({
         where: { id: { in: scope.studentIds }, schoolId },
-        select: { id: true, firstName: true, lastName: true },
+        select: { id: true, firstName: true, middleName: true, lastName: true },
       })
       children = students.map((s) => ({
         id: s.id,
-        name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
+        name: displayName(s, nameDisplay),
       }))
     }
 
@@ -96,7 +99,14 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
         studentId: { in: scope.studentIds },
       },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         exam: {
           select: {
             title: true,
@@ -143,8 +153,14 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             <div className="min-w-0">
               <p className="font-medium">{examTitle}</p>
               <p className="text-muted-foreground text-sm">
-                {role === "GUARDIAN" &&
-                  `${result.student.firstName} ${result.student.lastName} - `}
+                {role === "GUARDIAN" && (
+                  <>
+                    <bdi dir="auto">
+                      {displayName(result.student, nameDisplay)}
+                    </bdi>
+                    {" - "}
+                  </>
+                )}
                 {name} -{" "}
                 {formatDate(result.exam.examDate, lang, {
                   day: "numeric",

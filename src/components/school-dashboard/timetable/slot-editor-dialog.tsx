@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
+import { displayName } from "@/lib/name-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -38,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { DAYS_OF_WEEK } from "./config"
 import {
@@ -132,6 +134,7 @@ export function SlotEditorDialog({
 }: SlotEditorDialogProps) {
   const { dictionary: dict } = useDictionary()
   const t = dict?.school?.timetable?.slotEditor
+  const nameDisplay = useNameDisplay()
   const [isLoading, setIsLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   // On by default: picking a teacher here usually means "this teacher teaches
@@ -472,8 +475,10 @@ export function SlotEditorDialog({
                                 value={teacher.id}
                                 disabled={busy}
                               >
-                                {teacher.name ||
-                                  `${teacher.firstName} ${teacher.lastName}`.trim()}
+                                <bdi dir="auto">
+                                  {teacher.name ||
+                                    displayName(teacher, nameDisplay)}
+                                </bdi>
                                 <span className="text-muted-foreground ms-2 text-xs tabular-nums">
                                   {busy
                                     ? (t?.busyNow ?? "Busy")

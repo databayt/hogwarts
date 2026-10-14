@@ -12,7 +12,7 @@ import {
   createOrLinkGuardian,
   splitGuardianName,
 } from "@/lib/guardian-utils"
-import type { NameFormat } from "@/lib/name-utils"
+import { displayName, type NameFormat } from "@/lib/name-utils"
 
 import { authorizeWizardAction } from "../authorize"
 import {
@@ -175,17 +175,14 @@ export async function getStudentPersonalGuardians(
       const phones = sg.guardian.phoneNumbers
       const primary = phones.find((p) => p.phoneType !== "whatsapp")
       const whatsapp = phones.find((p) => p.phoneType === "whatsapp")
-      const displayName = [sg.guardian.firstName, sg.guardian.lastName]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
+      const fullName = displayName(sg.guardian, "full")
 
       if (typeName === "father") {
-        result.fatherName = displayName
+        result.fatherName = fullName
         result.fatherPhone = primary?.phoneNumber || ""
         result.fatherWhatsapp = whatsapp?.phoneNumber || ""
       } else if (typeName === "mother") {
-        result.motherName = displayName
+        result.motherName = fullName
         result.motherPhone = primary?.phoneNumber || ""
         result.motherWhatsapp = whatsapp?.phoneNumber || ""
       }

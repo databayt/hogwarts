@@ -7,12 +7,14 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
 import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
 import {
   filterConfiguredManualRails,
   getSchoolPaymentSettings,
 } from "@/lib/payment/manual-rail-settings"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -109,7 +111,9 @@ export default async function AssignmentDetailPage({
     db.feeAssignment.findFirst({
       where: { id, schoolId },
       include: {
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
         feeStructure: {
           select: {
             name: true,
@@ -139,6 +143,7 @@ export default async function AssignmentDetailPage({
     }),
     getSchoolPaymentSettings(schoolId),
   ])
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   if (!assignment) notFound()
 
@@ -157,12 +162,7 @@ export default async function AssignmentDetailPage({
   // isConfigured() is env-level and can't know about per-school accounts.
   const methods = filterConfiguredManualRails(resolvedMethods, paymentSettings)
 
-  const studentName = [
-    assignment.student?.firstName,
-    assignment.student?.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ")
+  const studentName = displayName(assignment.student, nameDisplay)
   const finalAmount = Number(assignment.finalAmount)
   const totalDiscount = Number(assignment.totalDiscount)
   const totalPaid = assignment.payments
@@ -208,7 +208,9 @@ export default async function AssignmentDetailPage({
           <h1 className="text-2xl font-semibold">
             {d?.fees?.assignment?.title || "Fee Assignment"}
           </h1>
-          <p className="text-muted-foreground">{studentName}</p>
+          <p className="text-muted-foreground">
+            <bdi dir="auto">{studentName}</bdi>
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>

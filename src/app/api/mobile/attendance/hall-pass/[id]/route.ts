@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type { HallPassStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 import { hasRole } from "../../../lib/roles"
@@ -85,7 +87,7 @@ export async function PUT(
         returnedAt: true,
         status: true,
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
     })
@@ -100,7 +102,10 @@ export async function PUT(
     return NextResponse.json({
       id: updated.id,
       student_id: updated.studentId,
-      student_name: `${updated.student.firstName} ${updated.student.lastName}`,
+      student_name: displayName(
+        updated.student,
+        await schoolNameDisplay(auth.schoolId)
+      ),
       section_id: updated.sectionId,
       destination: updated.destination,
       destination_note: updated.destinationNote,

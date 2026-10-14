@@ -37,7 +37,12 @@ export default async function NewFinePage({ params }: Props) {
 
   const students = await db.student.findMany({
     where: { schoolId },
-    select: { id: true, firstName: true, lastName: true },
+    select: {
+      id: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+    },
     orderBy: { firstName: "asc" },
   })
 

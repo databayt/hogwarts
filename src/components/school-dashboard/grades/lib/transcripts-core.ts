@@ -21,6 +21,7 @@ import crypto from "crypto"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 export interface TranscriptYearData {
   yearName: string
@@ -83,7 +84,7 @@ export async function generateTranscriptCore(
   try {
     const student = await db.student.findFirst({
       where: { id: input.studentId, schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
     })
     if (!student) return { success: false, error: "Student not found" }
 
@@ -93,7 +94,7 @@ export async function generateTranscriptCore(
     })
     const lang = school?.preferredLanguage === "en" ? "en" : "ar"
 
-    const studentName = `${student.firstName} ${student.lastName}`
+    const studentName = displayName(student, "full")
 
     const reportCards = await db.reportCard.findMany({
       where: { schoolId, studentId: input.studentId },

@@ -7,6 +7,8 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 export interface SubjectTrend {
@@ -268,6 +270,7 @@ export async function getGuardianChildren(): Promise<
   const { schoolId } = await getTenantContext()
 
   if (!schoolId || session?.user?.role !== "GUARDIAN") return []
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const guardian = await db.guardian.findFirst({
     where: { userId: session.user.id, schoolId },
@@ -279,13 +282,13 @@ export async function getGuardianChildren(): Promise<
     where: { guardianId: guardian.id, schoolId },
     select: {
       student: {
-        select: { id: true, firstName: true, lastName: true },
+        select: { id: true, firstName: true, middleName: true, lastName: true },
       },
     },
   })
 
   return sgs.map((sg) => ({
     id: sg.student.id,
-    name: `${sg.student.firstName || ""} ${sg.student.lastName || ""}`.trim(),
+    name: displayName(sg.student, nameDisplay),
   }))
 }

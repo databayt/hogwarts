@@ -15,6 +15,8 @@ import { subDays } from "date-fns"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
@@ -228,6 +230,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
         },
       },
@@ -235,6 +238,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
   })
 
   if (studentGuardians.length === 0) return null
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -287,7 +291,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
 
       return {
         id: sg.student.id,
-        name: `${sg.student.firstName} ${sg.student.lastName}`.trim(),
+        name: displayName(sg.student, nameDisplay),
         pendingAssignments,
         overdueAssignments,
       }

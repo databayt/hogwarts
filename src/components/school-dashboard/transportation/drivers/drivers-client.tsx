@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +54,7 @@ import {
 import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { createDriver, deleteDriver, updateDriver } from "../actions/drivers"
 import { TransportationEmptyState } from "../empty-state"
@@ -97,6 +99,7 @@ function isExpiringSoon(date: Date | string) {
 
 export function DriversClient({ drivers, dictionary, locale }: Props) {
   const t = dictionary.transportation
+  const nameDisplay = useNameDisplay()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
@@ -113,7 +116,7 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
             className="hover:underline"
             href={`/${locale}/transportation/drivers/${row.original.id}`}
           >
-            {row.original.firstName} {row.original.lastName}
+            <bdi dir="auto">{displayName(row.original, nameDisplay)}</bdi>
           </Link>
         ),
       },
@@ -179,7 +182,7 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, locale]
+    [t, locale, nameDisplay]
   )
 
   const table = useReactTable({

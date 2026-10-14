@@ -64,6 +64,8 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -504,6 +506,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           createdAt: true,
         },
@@ -542,10 +545,11 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
       }),
     ])
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const activities: ActivityItem[] = [
     ...recentStudents.map((s) => ({
       type: "enrollment" as const,
-      action: `New student enrolled: ${s.firstName} ${s.lastName}`,
+      action: `New student enrolled: ${displayName(s, nameDisplay)}`,
       timestamp: s.createdAt,
       user: "Admin",
     })),
@@ -933,7 +937,9 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         include: {
           section: { select: { name: true } },
           subject: { select: { name: true } },
-          teacher: { select: { firstName: true, lastName: true } },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
           classroom: { select: { roomName: true } },
           period: { select: { startTime: true, endTime: true } },
         },
@@ -1014,6 +1020,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   })
   const attendancePercentage =
     totalDays > 0 ? (presentDays / totalDays) * 100 : 0
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return {
     todaysTimetable: todaysTimetable.map((entry) => {
@@ -1023,8 +1030,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         subject: entry.subject?.name || "Unknown Subject",
         className: entry.section?.name || "Unknown Class",
         teacher: teacher
-          ? `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() ||
-            "Unknown Teacher"
+          ? displayName(teacher, nameDisplay) || "Unknown Teacher"
           : "Unknown Teacher",
         room: entry.classroom?.roomName || "TBA",
         startTime:
@@ -1110,10 +1116,11 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const children = studentGuardians.map((sg) => ({
     id: sg.student.id,
     studentId: sg.student.studentId,
-    name: `${sg.student.firstName} ${sg.student.middleName || ""} ${sg.student.lastName}`.trim(),
+    name: displayName(sg.student, nameDisplay),
   }))
 
   const firstChild = children[0]
@@ -1623,6 +1630,7 @@ export async function getStaffEvaluationsDue() {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       teacherDepartments: {
         where: { isPrimary: true },
@@ -1632,8 +1640,10 @@ export async function getStaffEvaluationsDue() {
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
+
   return teachers.map((teacher, index) => ({
-    teacher: `${teacher.firstName} ${teacher.lastName}`,
+    teacher: displayName(teacher, nameDisplay),
     department:
       teacher.teacherDepartments[0]?.department?.departmentName || "General",
     dueDate: new Date(
@@ -1995,7 +2005,7 @@ export async function getRecentTransactions(limit: number = 10) {
         take: limit,
         include: {
           student: {
-            select: { firstName: true, lastName: true },
+            select: { firstName: true, middleName: true, lastName: true },
           },
         },
       }),
@@ -2012,10 +2022,11 @@ export async function getRecentTransactions(limit: number = 10) {
     ])
 
     // Combine and format transactions
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const paymentTransactions = payments.map((payment) => ({
       id: payment.id,
       type: "fee_payment" as const,
-      studentName: `${payment.student.firstName} ${payment.student.lastName}`,
+      studentName: displayName(payment.student, nameDisplay),
       amount: Number(payment.amount),
       status:
         payment.status === "SUCCESS"
@@ -2076,6 +2087,7 @@ export async function getFeeDefaulters(limit: number = 10) {
             id: true,
             studentId: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             studentYearLevels: {
               select: { yearLevel: { select: { levelName: true } } },
@@ -2095,6 +2107,7 @@ export async function getFeeDefaulters(limit: number = 10) {
     // If we have real data, format and return it
     if (overdueAssignments.length > 0) {
       const now = new Date()
+      const nameDisplay = await schoolNameDisplay(schoolId)
       return overdueAssignments.map((assignment) => {
         // Calculate total paid
         const totalPaid = assignment.payments.reduce(
@@ -2115,7 +2128,7 @@ export async function getFeeDefaulters(limit: number = 10) {
         return {
           id: assignment.student.id,
           studentId: assignment.student.studentId,
-          name: `${assignment.student.firstName} ${assignment.student.lastName}`,
+          name: displayName(assignment.student, nameDisplay),
           class:
             assignment.student.studentYearLevels?.[0]?.yearLevel?.levelName ||
             "N/A",
@@ -2263,7 +2276,7 @@ export async function recordPayment(data: {
     success: true,
     transactionId: `TXN-${Date.now()}`,
     amount: data.amount,
-    studentName: `${student.firstName} ${student.lastName}`,
+    studentName: displayName(student, "full"),
     timestamp: new Date(),
     reference: data.reference || `PAY-${Date.now()}`,
   }
@@ -2991,6 +3004,7 @@ async function getParentFinancialOverview(
       student: {
         select: {
           firstName: true,
+          middleName: true,
           lastName: true,
           userId: true,
         },
@@ -2998,11 +3012,12 @@ async function getParentFinancialOverview(
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const childrenFeeStatus = await Promise.all(
     children.map(async (c) => {
       if (!c.student.userId) {
         return {
-          childName: `${c.student.firstName} ${c.student.lastName}`,
+          childName: displayName(c.student, nameDisplay),
           total: 0,
           paid: 0,
           pending: 0,
@@ -3020,7 +3035,7 @@ async function getParentFinancialOverview(
         .reduce((sum, inv) => sum + Number(inv.total), 0)
 
       return {
-        childName: `${c.student.firstName} ${c.student.lastName}`,
+        childName: displayName(c.student, nameDisplay),
         total,
         paid,
         pending: total - paid,

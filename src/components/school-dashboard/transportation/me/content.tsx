@@ -3,6 +3,9 @@
 
 import { Bus } from "lucide-react"
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
+import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -45,6 +48,8 @@ export async function MyTransportationContent({
   const t = dictionary.transportation
   const result = await getMyTransportationView(locale)
   const skipsResult = await getMyTransportSkips()
+  const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const skipsByStudent = new Map<string, MyTransportSkip[]>()
   if (skipsResult.success) {
     for (const s of skipsResult.data) {
@@ -97,7 +102,7 @@ export async function MyTransportationContent({
           >
             <CardHeader className="max-md:px-0 max-md:pt-0">
               <CardTitle className="text-base max-md:text-lg max-md:font-semibold">
-                {child.firstName} {child.lastName}
+                <bdi dir="auto">{displayName(child, nameDisplay)}</bdi>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 max-md:space-y-8 max-md:px-0">
@@ -134,7 +139,10 @@ export async function MyTransportationContent({
                               ) : null}
                               {a.driver ? (
                                 <span>
-                                  {a.driver.firstName} {a.driver.lastName} ·{" "}
+                                  <bdi dir="auto">
+                                    {displayName(a.driver, nameDisplay)}
+                                  </bdi>{" "}
+                                  ·{" "}
                                   <bdi className="tabular-nums">
                                     {a.driver.phone}
                                   </bdi>
@@ -175,8 +183,11 @@ export async function MyTransportationContent({
                           ) : null}
                           {a.driver ? (
                             <p className="text-muted-foreground text-xs">
-                              {t.me.driver}: {a.driver.firstName}{" "}
-                              {a.driver.lastName} · {a.driver.phone}
+                              {t.me.driver}:{" "}
+                              <bdi dir="auto">
+                                {displayName(a.driver, nameDisplay)}
+                              </bdi>{" "}
+                              · {a.driver.phone}
                             </p>
                           ) : null}
                         </CardContent>

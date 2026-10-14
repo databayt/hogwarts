@@ -6,6 +6,7 @@
  * No imports from other translation files - these are standalone helpers.
  */
 
+import { composeFullName } from "@/lib/name-utils"
 import type { Locale } from "@/components/internationalization/config"
 
 import type { Lang } from "./types"
@@ -105,8 +106,5 @@ export function fullName(person: {
   middleName?: string | null
   lastName?: string | null
 }): string {
-  return [person.firstName, person.middleName, person.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim()
+  return composeFullName(person.firstName, person.middleName, person.lastName)
 }

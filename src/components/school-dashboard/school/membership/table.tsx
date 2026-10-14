@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Ban, Download, ShieldCheck } from "lucide-react"
 
+import { initialsOf } from "@/lib/name-utils"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { SuccessToast } from "@/components/atom/toast"
@@ -293,13 +294,7 @@ export function MembershipTable({
                 key={member.id}
                 avatar={{
                   src: member.image,
-                  fallback: member.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase(),
+                  fallback: initialsOf(member.name),
                 }}
                 title={member.name}
                 description={member.role}

@@ -3,6 +3,8 @@
 
 import Link from "next/link"
 
+import { displayName, shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,8 +56,13 @@ export async function DriverDetailContent({
 
   const d = result.data
   const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const staffName = d.staffMember
-    ? await getName(d.staffMember, locale, schoolId!)
+    ? await getName(
+        shortNameParts(d.staffMember, nameDisplay),
+        locale,
+        schoolId!
+      )
     : "—"
 
   return (
@@ -63,7 +70,7 @@ export async function DriverDetailContent({
       <header className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold">
-            {d.firstName} {d.lastName}
+            <bdi dir="auto">{displayName(d, nameDisplay)}</bdi>
           </h2>
           <p className="text-muted-foreground text-sm">
             {t.drivers.statuses[d.status as keyof typeof t.drivers.statuses] ??

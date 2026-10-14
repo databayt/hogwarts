@@ -13,6 +13,8 @@
  */
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
@@ -148,7 +150,9 @@ export async function loadTodaySchedule(input: {
     include: {
       section: { select: { name: true } },
       subject: { select: { name: true } },
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { roomName: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
@@ -166,6 +170,7 @@ export async function loadTodaySchedule(input: {
     slots.map((s) => s.id)
   )
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
@@ -175,10 +180,8 @@ export async function loadTodaySchedule(input: {
     className: slot.section?.name || "",
     teacher: (() => {
       const sub = subsBySlot.get(slot.id)
-      if (sub) return `${sub.firstName} ${sub.lastName}`
-      return slot.teacher
-        ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
-        : ""
+      if (sub) return displayName(sub, nameDisplay)
+      return slot.teacher ? displayName(slot.teacher, nameDisplay) : ""
     })(),
     room: slot.classroom?.roomName || "",
     // Anchors for live-class matching (section-based slots carry these).
@@ -242,8 +245,16 @@ export async function substitutesForSlots(
   timeZone: string,
   date: Date,
   slotIds: string[]
-): Promise<Map<string, { firstName: string; lastName: string }>> {
-  const out = new Map<string, { firstName: string; lastName: string }>()
+): Promise<
+  Map<
+    string,
+    { firstName: string; middleName: string | null; lastName: string }
+  >
+> {
+  const out = new Map<
+    string,
+    { firstName: string; middleName: string | null; lastName: string }
+  >()
   if (slotIds.length === 0) return out
   const { start, end } = schoolDayWindow(timeZone, date)
   const rows = await db.substitutionRecord.findMany({
@@ -255,7 +266,9 @@ export async function substitutesForSlots(
     },
     select: {
       originalSlotId: true,
-      substituteTeacher: { select: { firstName: true, lastName: true } },
+      substituteTeacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
   })
   for (const r of rows) out.set(r.originalSlotId, r.substituteTeacher)

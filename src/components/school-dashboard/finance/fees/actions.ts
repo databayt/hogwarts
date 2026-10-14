@@ -21,6 +21,7 @@ import {
   dispatchNotification,
   dispatchNotificationsToAudience,
 } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
 import {
   filterConfiguredManualRails,
@@ -30,6 +31,7 @@ import {
 import { resolveAvailableMethods } from "@/lib/payment/provider"
 import type { PaymentGateway, WalletDetails } from "@/lib/payment/types"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -704,7 +706,12 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     ).toLocaleString()
     const student = await db.student.findFirst({
       where: { id: formData.studentId as string, schoolId: ctx.schoolId },
-      select: { userId: true, firstName: true, lastName: true },
+      select: {
+        userId: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+      },
     })
     if (student?.userId) {
       dispatchNotification({
@@ -730,7 +737,10 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     }
 
     if (student) {
-      const studentName = `${student.firstName} ${student.lastName}`
+      const studentName = displayName(
+        student,
+        await schoolNameDisplay(ctx.schoolId)
+      )
       const guardianLinks = await db.studentGuardian.findMany({
         where: {
           studentId: formData.studentId as string,
@@ -888,12 +898,14 @@ export async function bulkAssignFees(
         | Record<string, string>
         | undefined
 
+      const nameDisplay = await schoolNameDisplay(ctx.schoolId)
       for (const studentId of studentIds) {
         const student = await db.student.findUnique({
           where: { id: studentId },
           select: {
             userId: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             studentGuardians: {
               select: {
@@ -906,9 +918,7 @@ export async function bulkAssignFees(
         })
         if (!student?.userId) continue
 
-        const studentName = [student.firstName, student.lastName]
-          .filter(Boolean)
-          .join(" ")
+        const studentName = displayName(student, nameDisplay)
 
         // Find this student's actual final amount from assignmentData
         const studentData = assignmentData.find(

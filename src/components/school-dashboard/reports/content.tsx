@@ -6,6 +6,8 @@ import { auth } from "@/auth"
 import { Download, Eye, FileText, GraduationCap, Send } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -72,6 +74,7 @@ export async function ReportCardsContent({
       student: {
         select: {
           firstName: true,
+          middleName: true,
           lastName: true,
           studentId: true,
         },
@@ -82,6 +85,8 @@ export async function ReportCardsContent({
     },
     orderBy: { student: { firstName: "asc" } },
   })
+
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Stats
   const total = reportCards.length
@@ -233,7 +238,9 @@ export async function ReportCardsContent({
                 {reportCards.map((rc) => (
                   <TableRow key={rc.id}>
                     <TableCell className="font-medium">
-                      {rc.student.firstName} {rc.student.lastName}
+                      <bdi dir="auto">
+                        {displayName(rc.student, nameDisplay)}
+                      </bdi>
                     </TableCell>
                     <TableCell>{rc.student.studentId ?? "—"}</TableCell>
                     <TableCell>{rc.grades.length}</TableCell>

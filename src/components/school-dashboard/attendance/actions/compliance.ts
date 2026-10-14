@@ -5,6 +5,8 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { isAdminRole } from "@/components/school-dashboard/attendance/authorization"
 
@@ -168,16 +170,17 @@ export async function getComplianceDashboard(): Promise<
       where: { schoolId },
       include: {
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
       orderBy: { createdAt: "desc" },
       take: 5,
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     const recentPolicyTriggers = recentTriggers.map((trigger) => ({
       id: trigger.id,
-      studentName: `${trigger.student.firstName} ${trigger.student.lastName}`,
+      studentName: displayName(trigger.student, nameDisplay),
       tier: trigger.tier,
       absenceCount: trigger.absenceCount,
       action: trigger.action,
@@ -346,11 +349,11 @@ export async function getComplianceReport(input?: {
     const atRiskStudentIds = absencesByStudent.map((a) => a.studentId)
     const students = await db.student.findMany({
       where: { id: { in: atRiskStudentIds }, schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
     })
 
     const studentMap = new Map(
-      students.map((s) => [s.id, `${s.firstName} ${s.lastName}`])
+      students.map((s) => [s.id, displayName(s, "full")])
     )
 
     // Get total attendance per at-risk student

@@ -5,7 +5,9 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   examAudienceLabel,
@@ -62,14 +64,13 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
     })
 
     // Map students with their existing results
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const students: ExamStudent[] = roster.map((student) => {
       const result = exam.examResults.find((r) => r.studentId === student.id)
       return {
         id: student.id,
         studentId: student.studentId,
-        name: `${student.firstName} ${student.middleName || ""} ${
-          student.lastName
-        }`.trim(),
+        name: displayName(student, nameDisplay),
         marksObtained: result?.marksObtained ?? null,
         isAbsent: result?.isAbsent ?? false,
         resultId: result?.id ?? null,

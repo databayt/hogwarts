@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type { InterventionStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 import { hasRole } from "../../lib/roles"
@@ -66,17 +68,18 @@ export async function GET(request: NextRequest) {
           tags: true,
           createdAt: true,
           student: {
-            select: { firstName: true, lastName: true },
+            select: { firstName: true, middleName: true, lastName: true },
           },
         },
       }),
       db.attendanceIntervention.count({ where }),
     ])
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = interventions.map((i) => ({
       id: i.id,
       student_id: i.studentId,
-      student_name: `${i.student.firstName} ${i.student.lastName}`,
+      student_name: displayName(i.student, nameDisplay),
       type: i.type,
       title: i.title,
       description: i.description,

@@ -3,6 +3,8 @@
 
 import Link from "next/link"
 
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,7 +58,12 @@ export async function AssignmentDetailContent({
 
   const a = result.data
   const { schoolId } = await getTenantContext()
-  const studentName = await getName(a.student, locale, schoolId!)
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const studentName = await getName(
+    shortNameParts(a.student, nameDisplay),
+    locale,
+    schoolId!
+  )
   const profileRes = await getTransportProfile(a.student.id)
   const initialProfile =
     profileRes.success && "data" in profileRes ? profileRes.data : null
@@ -65,7 +72,9 @@ export async function AssignmentDetailContent({
     <div className="flex flex-col gap-6 p-6">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">{studentName}</h2>
+          <h2 className="text-2xl font-semibold">
+            <bdi dir="auto">{studentName}</bdi>
+          </h2>
           <p className="text-muted-foreground text-sm">
             {t.assignments.statuses[
               a.status as keyof typeof t.assignments.statuses

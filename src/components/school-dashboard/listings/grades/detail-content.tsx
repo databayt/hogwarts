@@ -34,6 +34,7 @@ import {
   YAxis,
 } from "recharts"
 
+import { displayName, initialsOf } from "@/lib/name-utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,8 +55,8 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 import { deleteResult } from "@/components/school-dashboard/listings/grades/actions"
-import { fullName } from "@/components/translation/util"
 
 import { generateGradeCertificate } from "./certificate/actions"
 import type {
@@ -123,6 +124,7 @@ export function GradeDetailContent({
   lang,
 }: GradeDetailContentProps) {
   const router = useRouter()
+  const nameDisplay = useNameDisplay()
   const t = dictionary.school.grades
   const [isDownloading, setIsDownloading] = useState<
     "certificate" | "print" | null
@@ -130,16 +132,11 @@ export function GradeDetailContent({
 
   // Format student name
   const studentName = grade.student
-    ? fullName(grade.student)
+    ? displayName(grade.student, nameDisplay)
     : t.unknown || "Unknown"
 
   // Get initials for avatar
-  const initials = studentName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase()
+  const initials = initialsOf(studentName)
 
   // Get assignment/exam title
   const itemTitle =
@@ -333,7 +330,9 @@ export function GradeDetailContent({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-1">
-                  <p className="text-lg font-semibold">{studentName}</p>
+                  <p className="text-lg font-semibold">
+                    <bdi dir="auto">{studentName}</bdi>
+                  </p>
                   {grade.student?.studentId && (
                     <p className="text-muted-foreground text-sm">
                       {t.studentId}: {grade.student.studentId}

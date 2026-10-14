@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
   DEFAULT_SCHOOL_TZ,
@@ -91,7 +93,14 @@ export async function GET(
         id: true,
         dayOfWeek: true,
         subject: { select: { id: true, name: true } },
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         section: {
           select: { id: true, name: true, grade: { select: { name: true } } },
         },
@@ -159,15 +168,14 @@ export async function GET(
       console.error("Mobile timetable live-class resolution failed:", err)
     }
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = slots.map((s) => {
       const lc = live.get(s.id) ?? null
       return {
         id: s.id,
         day_of_week: s.dayOfWeek,
         subject_name: s.subject?.name || null,
-        teacher_name: s.teacher
-          ? [s.teacher.firstName, s.teacher.lastName].filter(Boolean).join(" ")
-          : null,
+        teacher_name: s.teacher ? displayName(s.teacher, nameDisplay) : null,
         section_name: s.section?.name || null,
         grade_name: s.section?.grade?.name || null,
         classroom: s.classroom?.roomName || null,

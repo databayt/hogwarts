@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Download } from "lucide-react"
 
+import { displayName } from "@/lib/name-utils"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -41,7 +42,7 @@ export function FeesExportButton({ fees, dictionary }: Props) {
       t.routes.fields.monthlyFee,
     ]
     const rows = fees.map((f) => [
-      `${f.firstName} ${f.lastName}`.trim(),
+      displayName(f, "full"),
       f.routes.map((r) => r.routeName).join(" | "),
       String(f.monthlyTotal),
     ])

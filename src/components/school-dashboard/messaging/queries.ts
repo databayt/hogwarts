@@ -43,10 +43,18 @@ export const conversationListSelect = {
           id: true,
           username: true,
           email: true,
-          student: { select: { firstName: true, lastName: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-          guardian: { select: { firstName: true, lastName: true } },
-          staffMember: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          guardian: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          staffMember: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },
@@ -62,10 +70,18 @@ export const conversationListSelect = {
       username: true,
       email: true,
       image: true,
-      student: { select: { firstName: true, lastName: true } },
-      teacher: { select: { firstName: true, lastName: true } },
-      guardian: { select: { firstName: true, lastName: true } },
-      staffMember: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      guardian: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      staffMember: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
   },
   createdAt: true,
@@ -87,10 +103,18 @@ export const conversationListSelect = {
           email: true,
           image: true,
           role: true,
-          student: { select: { firstName: true, lastName: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-          guardian: { select: { firstName: true, lastName: true } },
-          staffMember: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          guardian: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          staffMember: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },
@@ -113,10 +137,18 @@ export const messageListSelect = {
       username: true,
       email: true,
       image: true,
-      student: { select: { firstName: true, lastName: true } },
-      teacher: { select: { firstName: true, lastName: true } },
-      guardian: { select: { firstName: true, lastName: true } },
-      staffMember: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      guardian: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      staffMember: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
   },
   content: true,
@@ -133,10 +165,18 @@ export const messageListSelect = {
         select: {
           id: true,
           username: true,
-          student: { select: { firstName: true, lastName: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-          guardian: { select: { firstName: true, lastName: true } },
-          staffMember: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          guardian: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          staffMember: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },
@@ -230,10 +270,18 @@ export const conversationSendSelect = {
         select: {
           id: true,
           username: true,
-          student: { select: { firstName: true, lastName: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-          guardian: { select: { firstName: true, lastName: true } },
-          staffMember: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          guardian: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          staffMember: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },
@@ -871,10 +919,18 @@ export async function getConversationParticipants(
           email: true,
           image: true,
           role: true,
-          student: { select: { firstName: true, lastName: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-          guardian: { select: { firstName: true, lastName: true } },
-          staffMember: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          guardian: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
+          staffMember: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },

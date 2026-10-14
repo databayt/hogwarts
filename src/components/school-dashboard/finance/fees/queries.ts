@@ -96,6 +96,7 @@ export const feeAssignmentListSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
     },
   },
@@ -145,6 +146,7 @@ export const paymentListSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
     },
   },
@@ -201,6 +203,7 @@ export const fineListSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
     },
   },

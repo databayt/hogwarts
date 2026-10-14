@@ -15,6 +15,8 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -57,6 +59,7 @@ export default async function GuardianExamsContent({
   const userId = session?.user?.id
 
   if (!schoolId || !userId) return null
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Get guardian record
   const guardian = await db.guardian.findFirst({
@@ -90,6 +93,7 @@ export default async function GuardianExamsContent({
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           user: { select: { username: true } },
         },
@@ -148,7 +152,9 @@ export default async function GuardianExamsContent({
         studentId: { in: childIds },
       },
       include: {
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
         exam: {
           select: {
             title: true,
@@ -219,7 +225,7 @@ export default async function GuardianExamsContent({
               const avg = averageOf(child.id)
               return {
                 key: child.id,
-                label: `${child.firstName} ${child.lastName}`,
+                label: displayName(child, nameDisplay),
                 value: avg === null ? "—" : `${avg}%`,
                 hint: t.avg,
                 tone:
@@ -331,7 +337,7 @@ export default async function GuardianExamsContent({
                   key={result.id}
                   title={result.exam.title}
                   description={[
-                    `${result.student.firstName} ${result.student.lastName}`,
+                    displayName(result.student, nameDisplay),
                     subjectOf(result.exam.subject?.name),
                   ]
                     .filter(Boolean)
@@ -470,7 +476,9 @@ export default async function GuardianExamsContent({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">
-                          {child.firstName} {child.lastName}
+                          <bdi dir="auto">
+                            {displayName(child, nameDisplay)}
+                          </bdi>
                         </p>
                         <p className="text-muted-foreground text-sm">
                           {(h?.resultsCount ?? "{count}").replace(
@@ -626,7 +634,9 @@ export default async function GuardianExamsContent({
                         <div>
                           <p className="font-medium">{result.exam.title}</p>
                           <p className="text-muted-foreground text-sm">
-                            {result.student.firstName} {result.student.lastName}{" "}
+                            <bdi dir="auto">
+                              {displayName(result.student, nameDisplay)}
+                            </bdi>{" "}
                             - {name} -{" "}
                             {formatDate(result.exam.examDate, lang, {
                               month: "short",

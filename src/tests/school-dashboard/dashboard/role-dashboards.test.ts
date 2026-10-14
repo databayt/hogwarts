@@ -216,7 +216,7 @@ describe("parent dashboard", () => {
       vi.mocked(db.studentGuardian.findMany).mock.calls[0][0]!.where
     ).toEqual({ guardianId: "guardian-9", schoolId: SCHOOL })
     expect(data.children).toEqual([
-      { id: "s1", studentId: "26030001", name: "Khadija  Alnoor" },
+      { id: "s1", studentId: "26030001", name: "Khadija Alnoor" },
     ])
     expect(buildViewerAudienceWhere).toHaveBeenCalledWith(
       SCHOOL,

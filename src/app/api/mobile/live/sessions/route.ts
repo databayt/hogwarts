@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName, type NameDisplay } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import {
   buildLiveClassWhere,
@@ -95,8 +97,9 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     return NextResponse.json({
-      data: rows.map(toSessionDto),
+      data: rows.map((row) => toSessionDto(row, nameDisplay)),
       total,
       page,
       per_page: perPage,
@@ -139,6 +142,7 @@ const SESSION_SELECT = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profilePhotoUrl: true,
     },
@@ -178,13 +182,14 @@ type SessionRow = {
   teacher: {
     id: string
     firstName: string
+    middleName: string | null
     lastName: string
     profilePhotoUrl: string | null
   } | null
   recordings: { id: string }[]
 }
 
-function toSessionDto(session: SessionRow) {
+function toSessionDto(session: SessionRow, nameDisplay: NameDisplay) {
   return {
     id: session.id,
     title: session.title,
@@ -212,9 +217,7 @@ function toSessionDto(session: SessionRow) {
     },
     teacher: session.teacher && {
       id: session.teacher.id,
-      name: [session.teacher.firstName, session.teacher.lastName]
-        .filter(Boolean)
-        .join(" "),
+      name: displayName(session.teacher, nameDisplay),
       photo_url: session.teacher.profilePhotoUrl,
     },
     has_recording: session.recordings.length > 0,

@@ -42,6 +42,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -72,10 +73,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 interface TeacherPerformance {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   emailAddress?: string
   profilePhotoUrl?: string
@@ -113,6 +116,7 @@ export default function TeacherPerformanceContent({
   dictionary,
   lang,
 }: Props) {
+  const nameDisplay = useNameDisplay()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [performanceFilter, setPerformanceFilter] = useState<string>("all")
@@ -309,10 +313,6 @@ export default function TeacherPerformanceContent({
     }
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -429,12 +429,14 @@ export default function TeacherPerformanceContent({
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
-                            {getInitials(teacher.firstName, teacher.lastName)}
+                            {nameInitials(teacher, nameDisplay)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <p className="font-medium">
-                            {teacher.firstName} {teacher.lastName}
+                            <bdi dir="auto">
+                              {displayName(teacher, nameDisplay)}
+                            </bdi>
                           </p>
                           <p className="text-muted-foreground text-sm">
                             {teacher.departments[0]?.name || "-"}
@@ -670,15 +672,14 @@ export default function TeacherPerformanceContent({
                                   src={teacher.profilePhotoUrl || ""}
                                 />
                                 <AvatarFallback className="text-xs">
-                                  {getInitials(
-                                    teacher.firstName,
-                                    teacher.lastName
-                                  )}
+                                  {nameInitials(teacher, nameDisplay)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">
-                                  {teacher.firstName} {teacher.lastName}
+                                  <bdi dir="auto">
+                                    {displayName(teacher, nameDisplay)}
+                                  </bdi>
                                 </p>
                                 <p className="text-muted-foreground text-xs">
                                   {teacher.emailAddress}
@@ -755,12 +756,14 @@ export default function TeacherPerformanceContent({
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
-                            {getInitials(teacher.firstName, teacher.lastName)}
+                            {nameInitials(teacher, nameDisplay)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <CardTitle className="text-base">
-                            {teacher.firstName} {teacher.lastName}
+                            <bdi dir="auto">
+                              {displayName(teacher, nameDisplay)}
+                            </bdi>
                           </CardTitle>
                           <CardDescription>
                             {teacher.departments[0]?.name || "-"}

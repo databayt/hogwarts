@@ -394,7 +394,14 @@ export async function getTrip(id: string) {
         driver: true,
         boardings: {
           include: {
-            student: { select: { id: true, firstName: true, lastName: true } },
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
             stop: { select: { id: true, name: true, stopOrder: true } },
           },
           orderBy: { stop: { stopOrder: "asc" } },

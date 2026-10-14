@@ -13,6 +13,8 @@
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
 
 export type MobileUpdateRow = {
@@ -120,18 +122,19 @@ export async function getMobileCalls(
           actualEnd: true,
           subject: { select: { name: true } },
           section: { select: { name: true } },
-          teacher: { select: { firstName: true, lastName: true } },
+          teacher: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       },
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return rows.map((r) => {
     const s = r.session
     const at = s.actualStart ?? s.scheduledStart ?? r.createdAt
-    const host = s.teacher
-      ? `${s.teacher.firstName} ${s.teacher.lastName}`.trim()
-      : null
+    const host = s.teacher ? displayName(s.teacher, nameDisplay) : null
 
     let outcome: MobileCallRow["outcome"]
     if (s.status === "live") outcome = "live"

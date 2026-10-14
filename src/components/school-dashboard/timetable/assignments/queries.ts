@@ -11,6 +11,8 @@
 
 import { db } from "@/lib/db"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { displayName, shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { getLabels, getNames } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
@@ -123,6 +125,7 @@ export async function getAssignmentBoardData(params: {
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           subjectExpertise: {
             where: { schoolId },
@@ -159,6 +162,7 @@ export async function getAssignmentBoardData(params: {
     subjectsByGrade.set(sel.gradeId, bySubject)
   }
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const [labels, names] = await Promise.all([
     getLabels(
       [
@@ -169,7 +173,7 @@ export async function getAssignmentBoardData(params: {
       lang,
       schoolId
     ),
-    getNames(teachers, (t) => t, lang, schoolId),
+    getNames(teachers, (t) => shortNameParts(t, nameDisplay), lang, schoolId),
   ])
   const label = (v: string) => labels.get(v) ?? v
 
@@ -225,7 +229,7 @@ export async function getAssignmentBoardData(params: {
     grades: boardGrades.filter((g) => g.sections.length > 0),
     cells,
     teachers: teachers.map((t) => {
-      const raw = `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim()
+      const raw = displayName(t, nameDisplay)
       return {
         teacherId: t.id,
         name: names.get(raw) ?? raw,
@@ -271,6 +275,7 @@ export async function getTeacherEditorData(params: {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         subjectExpertise: {
           where: { schoolId: params.schoolId },
@@ -289,7 +294,7 @@ export async function getTeacherEditorData(params: {
     })
     teacher = {
       teacherId: row.id,
-      name: `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim(),
+      name: displayName(row, await schoolNameDisplay(params.schoolId)),
       load,
       cap: board.teachers[0]?.cap ?? DEFAULT_PER_WEEK,
       subjectIds: row.subjectExpertise.map((e) => e.subjectId),

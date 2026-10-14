@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 import { hasRole } from "../../lib/roles"
@@ -43,7 +45,12 @@ export async function GET(request: NextRequest) {
           maxCapacity: true,
           grade: { select: { id: true, name: true, gradeNumber: true } },
           homeroomTeacher: {
-            select: { id: true, firstName: true, lastName: true },
+            select: {
+              id: true,
+              firstName: true,
+              middleName: true,
+              lastName: true,
+            },
           },
           classroom: { select: { id: true, roomName: true } },
           _count: {
@@ -56,6 +63,7 @@ export async function GET(request: NextRequest) {
       db.section.count({ where }),
     ])
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = sections.map((s) => ({
       id: s.id,
       name: s.name,
@@ -72,9 +80,7 @@ export async function GET(request: NextRequest) {
       homeroom_teacher: s.homeroomTeacher
         ? {
             id: s.homeroomTeacher.id,
-            name: [s.homeroomTeacher.firstName, s.homeroomTeacher.lastName]
-              .filter(Boolean)
-              .join(" "),
+            name: displayName(s.homeroomTeacher, nameDisplay),
           }
         : null,
       classroom: s.classroom

@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +54,7 @@ import {
 import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { createRoute, deleteRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
@@ -110,6 +112,7 @@ export function RoutesClient({
   dictionary,
 }: Props) {
   const t = dictionary.transportation
+  const nameDisplay = useNameDisplay()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
@@ -480,7 +483,7 @@ export function RoutesClient({
                     <SelectContent>
                       {drivers.map((d) => (
                         <SelectItem key={d.id} value={d.id}>
-                          {d.firstName} {d.lastName}
+                          <bdi dir="auto">{displayName(d, nameDisplay)}</bdi>
                         </SelectItem>
                       ))}
                     </SelectContent>

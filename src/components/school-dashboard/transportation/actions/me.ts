@@ -45,6 +45,7 @@ export interface MyTransportationTrip {
 export interface MyTransportationChild {
   studentId: string
   firstName: string
+  middleName?: string | null
   lastName: string
   assignments: MyTransportationAssignment[]
   recentTrips: MyTransportationTrip[]
@@ -102,6 +103,7 @@ export async function getMyTransportationView(displayLang?: Locale) {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         routeAssignments: {
           where: { schoolId, status: "ACTIVE", deletedAt: null },
@@ -165,6 +167,7 @@ export async function getMyTransportationView(displayLang?: Locale) {
     const data: MyTransportationChild[] = students.map((s) => ({
       studentId: s.id,
       firstName: s.firstName,
+      middleName: s.middleName,
       lastName: s.lastName,
       assignments: s.routeAssignments.map((a) => ({
         id: a.id,

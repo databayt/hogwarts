@@ -4,6 +4,7 @@
 import { SearchParams } from "nuqs/server"
 
 import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -51,13 +52,13 @@ export default async function ApplicationsContent({
       // Resolve applicant + campaign names in ONE batched, deduped pass
       // (getLabels) — replaces the per-row 2×getText N+1.
       const labels = await getLabels(
-        rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+        rows.flatMap((a) => [displayName(a, "full"), a.campaign.name]),
         lang,
         schoolId
       )
 
       data = rows.map((a) => {
-        const applicantName = `${a.firstName} ${a.lastName}`
+        const applicantName = displayName(a, "full")
         return {
           id: a.id,
           applicationNumber: a.applicationNumber,

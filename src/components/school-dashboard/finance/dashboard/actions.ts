@@ -7,6 +7,8 @@ import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import {
   schoolCalendarDayOf,
   schoolEndOfMonth,
@@ -441,6 +443,7 @@ export async function getRecentTransactions(
   }
 
   const schoolId = session.user.schoolId
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const dictionary = await getFinanceDictionary(lang)
   const dp = (dictionary as any)?.finance?.dashboardPage as
@@ -506,7 +509,7 @@ export async function getRecentTransactions(
       type: "income",
       description: (dp?.feePaymentFrom || "Fee payment from {name}").replace(
         "{name}",
-        `${pay.student.firstName} ${pay.student.lastName}`
+        displayName(pay.student, nameDisplay)
       ),
       amount: decimalToNumber(pay.amount),
       date: pay.paymentDate,

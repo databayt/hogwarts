@@ -6,6 +6,7 @@ import { NextResponse } from "next/server"
 import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 
 /**
  * Cron job to check for unmarked attendance and send reminders to teachers
@@ -71,6 +72,7 @@ export async function GET(request: Request) {
             select: {
               id: true,
               firstName: true,
+              middleName: true,
               lastName: true,
               userId: true,
             },
@@ -125,7 +127,7 @@ export async function GET(request: Request) {
 
           stats.remindersCreated++
           console.log(
-            `[Cron] Created reminder for teacher ${entry.teacher?.firstName} ${entry.teacher?.lastName} - ${entry.section?.name ?? ""}`
+            `[Cron] Created reminder for teacher ${displayName(entry.teacher, "full")} - ${entry.section?.name ?? ""}`
           )
         }
       }

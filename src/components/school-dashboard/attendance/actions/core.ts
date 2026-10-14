@@ -10,8 +10,10 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName, shortNameParts } from "@/lib/name-utils"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   canMarkAttendance,
@@ -100,7 +102,7 @@ async function triggerAbsenceNotification(
       ? ["email", "whatsapp"]
       : []
 
-    const studentName = `${student.firstName} ${student.lastName}`
+    const studentName = displayName(student, await schoolNameDisplay(schoolId))
     const className = sectionInfo?.name || "Unknown class"
     const schoolName = schoolInfo?.name || "School"
     const dateStrAr = date.toLocaleDateString("ar-SA", {
@@ -521,7 +523,13 @@ export async function getAttendanceList(input: {
     // The section's students
     const students = await db.student.findMany({
       where: { schoolId, sectionId: parsed.sectionId },
-      select: { id: true, firstName: true, lastName: true, userId: true },
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        userId: true,
+      },
       orderBy: { firstName: "asc" },
     })
 
@@ -562,20 +570,18 @@ export async function getAttendanceList(input: {
     // PERF: one batched, deduped name resolution for the whole roster (was a
     // getText call per student inside Promise.all — N translation lookups, which
     // the translation rules explicitly forbid in a .map()).
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const nameMap = needsTranslation
       ? await getNames(
           students,
-          (s) => ({ firstName: s.firstName, lastName: s.lastName }),
+          (s) => shortNameParts(s, nameDisplay),
           displayLang,
           schoolId
         )
       : null
 
     const rows = students.map((s) => {
-      const rawName = fullName({
-        firstName: s.firstName,
-        lastName: s.lastName,
-      })
+      const rawName = fullName(shortNameParts(s, nameDisplay))
       const name = nameMap?.get(rawName) ?? rawName
 
       return {
@@ -672,11 +678,15 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
         letter: true,
         gradeId: true,
         grade: { select: { name: true } },
-        homeroomTeacher: { select: { firstName: true, lastName: true } },
+        homeroomTeacher: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
         _count: { select: { students: true } },
       },
       orderBy: { name: "asc" },
     })
+
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       success: true,
@@ -687,7 +697,7 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
           gradeName: s.grade.name,
           gradeId: s.gradeId,
           teacher: s.homeroomTeacher
-            ? `${s.homeroomTeacher.firstName} ${s.homeroomTeacher.lastName}`
+            ? displayName(s.homeroomTeacher, nameDisplay)
             : null,
           studentCount: s._count.students,
         })),

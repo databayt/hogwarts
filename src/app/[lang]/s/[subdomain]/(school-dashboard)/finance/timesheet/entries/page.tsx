@@ -6,6 +6,8 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -54,10 +56,14 @@ export default async function TimesheetEntriesPage({ params }: Props) {
     orderBy: { entryDate: "desc" },
     take: 100,
     include: {
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       period: { select: { name: true } },
     },
   })
+
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return (
     <div className="space-y-4">
@@ -89,7 +95,9 @@ export default async function TimesheetEntriesPage({ params }: Props) {
               <CardContent className="flex items-center justify-between py-4 max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
                 <div className="max-md:min-w-0">
                   <p className="font-medium">
-                    {entry.teacher.firstName} {entry.teacher.lastName}
+                    <bdi dir="auto">
+                      {displayName(entry.teacher, nameDisplay)}
+                    </bdi>
                   </p>
                   <p className="text-muted-foreground text-sm max-md:text-xs">
                     {entry.period.name} &mdash;{" "}

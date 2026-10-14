@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -45,6 +47,7 @@ export async function TransportationFeesContent({ locale, dictionary }: Props) {
   // all rows; source fallback on miss). This also localizes the CSV export,
   // which consumes the same `fees` array.
   const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const allRouteNames = result.data.fees.flatMap((f) =>
     f.routes.map((r) => r.routeName)
   )
@@ -120,7 +123,7 @@ export async function TransportationFeesContent({ locale, dictionary }: Props) {
                 {fees.map((fee) => (
                   <TableRow key={fee.studentId}>
                     <TableCell className="font-medium">
-                      {fee.firstName} {fee.lastName}
+                      <bdi dir="auto">{displayName(fee, nameDisplay)}</bdi>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {fee.routes.map((r) => r.routeName).join(", ")}

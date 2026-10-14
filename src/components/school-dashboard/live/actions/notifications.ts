@@ -8,6 +8,8 @@
 
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 type LiveEventKind =
   | "scheduled"
@@ -148,7 +150,12 @@ async function loadSession(
       visibility: true,
       scheduledStart: true,
       teacher: {
-        select: { firstName: true, lastName: true, userId: true },
+        select: {
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          userId: true,
+        },
       },
       school: { select: { preferredLanguage: true } },
     },
@@ -156,8 +163,11 @@ async function loadSession(
   if (!session) return null
 
   const lang = pickLang(session.school.preferredLanguage)
-  const teacherFullName =
-    `${session.teacher.firstName} ${session.teacher.lastName}`.trim()
+  // A notification is a UI label — the school's short name.
+  const teacherFullName = displayName(
+    session.teacher,
+    await schoolNameDisplay(schoolId)
+  )
   const routePath = `/live/${session.id}`
 
   const userIds = new Set<string>()

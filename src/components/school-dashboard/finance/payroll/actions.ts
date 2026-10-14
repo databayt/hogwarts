@@ -138,6 +138,7 @@ export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
               select: {
                 id: true,
                 firstName: true,
+                middleName: true,
                 lastName: true,
                 employeeId: true,
               },
@@ -749,7 +750,14 @@ export async function processPayments(
         taxAmount: true,
         socialSecurityAmount: true,
         netSalary: true,
-        teacher: { select: { userId: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            userId: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
       },
     })
 
@@ -926,6 +934,7 @@ export async function getSalarySlip(
             id: true,
             userId: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             employeeId: true,
             emailAddress: true,

@@ -12,6 +12,7 @@
 import { jwtVerify, SignJWT } from "jose"
 
 import { db } from "@/lib/db"
+import { parseFullName } from "@/lib/name-utils"
 
 if (!process.env.AUTH_SECRET) {
   throw new Error("AUTH_SECRET environment variable is required")
@@ -100,13 +101,16 @@ export async function buildUserResponse(user: {
   image: string | null
 }) {
   const grade = await resolveStudentGrade(user.id, user.role)
+  // Compound-aware: "عبد الله أحمد" → given "عبد الله", family "أحمد".
+  const parsed = parseFullName(user.username ?? "")
   return {
     id: user.id,
     email: user.email,
     school_id: user.schoolId,
     role: user.role,
-    given_name: user.username?.split(" ")[0] || null,
-    family_name: user.username?.split(" ").slice(1).join(" ") || null,
+    given_name: parsed.firstName || null,
+    family_name:
+      [parsed.middleName, parsed.lastName].filter(Boolean).join(" ") || null,
     avatar_url: user.image,
     grade,
   }

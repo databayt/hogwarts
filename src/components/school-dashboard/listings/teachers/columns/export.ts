@@ -6,6 +6,7 @@
  * Used with unified File Block ExportButton
  */
 
+import { displayName } from "@/lib/name-utils"
 import { createColumnHelpers, type ExportColumn } from "@/components/file"
 
 // ============================================================================
@@ -16,6 +17,7 @@ export interface TeacherExportData {
   id: string
   employeeId: string | null
   firstName: string
+  middleName?: string | null
   lastName: string
   fullName: string
   gender: string
@@ -44,7 +46,7 @@ export const TEACHER_EXPORT_COLUMNS: ExportColumn<TeacherExportData>[] = [
   custom(
     "fullName",
     "Full Name",
-    (row) => [row.firstName, row.lastName].filter(Boolean).join(" "),
+    (row) => displayName(row, "full"),
     "الاسم الكامل"
   ),
   text("firstName", "First Name", "الاسم الأول"),
@@ -105,7 +107,7 @@ export const TEACHER_EXPORT_COLUMNS_COMPACT: ExportColumn<TeacherExportData>[] =
     custom(
       "fullName",
       "Full Name",
-      (row) => [row.firstName, row.lastName].filter(Boolean).join(" "),
+      (row) => displayName(row, "full"),
       "الاسم الكامل"
     ),
     text("email", "Email", "البريد الإلكتروني"),

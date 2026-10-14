@@ -8,7 +8,9 @@ import type { Prisma, UserRole } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { isStaffRole } from "../authorization"
@@ -129,7 +131,10 @@ export async function submitExcuse(input: {
     // Tell the teachers who review it
     const reviewerIds = await absenceReviewerUserIds(schoolId, attendance)
 
-    const studentName = `${attendance.student.firstName} ${attendance.student.lastName}`
+    const studentName = displayName(
+      attendance.student,
+      await schoolNameDisplay(schoolId)
+    )
     const dateStr = attendance.date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -265,7 +270,10 @@ export async function reviewExcuse(input: {
     })
 
     // Notify the guardian who submitted the excuse
-    const studentName = `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`
+    const studentName = displayName(
+      excuse.attendance.student,
+      await schoolNameDisplay(schoolId)
+    )
     const className = excuse.attendance.section?.name ?? ""
     const statusTextAr =
       parsed.status === "APPROVED" ? "تمت الموافقة على" : "تم رفض"
@@ -491,7 +499,12 @@ export async function getPendingExcuses(input?: {
         attendance: {
           include: {
             student: {
-              select: { id: true, firstName: true, lastName: true },
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
             },
             section: {
               select: { name: true },
@@ -502,6 +515,8 @@ export async function getPendingExcuses(input?: {
       orderBy: { submittedAt: "desc" },
       take: input?.limit ?? 50,
     })
+
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     // Get submitter names (use username or email as fallback)
     const submitterIds = [...new Set(excuses.map((e) => e.submittedBy))]
@@ -520,7 +535,7 @@ export async function getPendingExcuses(input?: {
           id: e.id,
           attendanceId: e.attendanceId,
           studentId: e.attendance.studentId,
-          studentName: `${e.attendance.student.firstName} ${e.attendance.student.lastName}`,
+          studentName: displayName(e.attendance.student, nameDisplay),
           className: e.attendance.section?.name ?? "",
           date: e.attendance.date.toISOString(),
           reason: e.reason,
@@ -591,7 +606,12 @@ export async function getExcuseById(excuseId: string): Promise<
         attendance: {
           include: {
             student: {
-              select: { id: true, firstName: true, lastName: true },
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
             },
             section: {
               select: { name: true },
@@ -638,7 +658,10 @@ export async function getExcuseById(excuseId: string): Promise<
           id: excuse.id,
           attendanceId: excuse.attendanceId,
           studentId: excuse.attendance.studentId,
-          studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
+          studentName: displayName(
+            excuse.attendance.student,
+            await schoolNameDisplay(schoolId)
+          ),
           className: excuse.attendance.section?.name ?? "",
           date: excuse.attendance.date.toISOString(),
           attendanceStatus: excuse.attendance.status,
@@ -754,7 +777,12 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
       },
       include: {
         student: {
-          select: { id: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         section: {
           select: { name: true },
@@ -763,6 +791,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
       orderBy: { date: "desc" },
       take: 50,
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       success: true,
@@ -770,7 +799,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
         absences: absences.map((a) => ({
           id: a.id,
           studentId: a.studentId,
-          studentName: `${a.student.firstName} ${a.student.lastName}`,
+          studentName: displayName(a.student, nameDisplay),
           sectionId: a.sectionId,
           className: a.section?.name ?? "",
           date: a.date.toISOString(),

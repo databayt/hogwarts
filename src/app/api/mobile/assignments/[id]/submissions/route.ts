@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import {
   getStudentSubmission,
   submitAssignmentCore,
@@ -87,19 +89,25 @@ export async function GET(
           feedback: true,
           gradedAt: true,
           student: {
-            select: { id: true, firstName: true, lastName: true },
+            select: {
+              id: true,
+              firstName: true,
+              middleName: true,
+              lastName: true,
+            },
           },
         },
       }),
       db.assignmentSubmission.count({ where }),
     ])
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     return NextResponse.json({
       data: await Promise.all(
         rows.map(async (r) => ({
           id: r.id,
           student_id: r.student.id,
-          student_name: `${r.student.firstName} ${r.student.lastName}`.trim(),
+          student_name: displayName(r.student, nameDisplay),
           status: r.status,
           submitted_at: r.submittedAt,
           content: r.content,

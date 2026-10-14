@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { gradeLabel as formatGrade } from "@/lib/grade"
+import { initialsOf } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { BlurImage } from "@/components/atom/blur-image"
 import { blurFromColor } from "@/components/atom/blur-placeholder"
@@ -204,12 +205,5 @@ function Portrait({
   )
 }
 
-/** First letters of the first two words — the usual two-letter monogram. */
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => [...word][0] ?? "")
-    .join("")
-}
+/** Two-letter monogram from names, not words (عبد الله → ع). */
+const initials = initialsOf

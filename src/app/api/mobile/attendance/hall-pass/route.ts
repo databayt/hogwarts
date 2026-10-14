@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type { HallPassDestination, HallPassStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 import { hasRole } from "../../lib/roles"
@@ -130,15 +132,16 @@ export async function GET(request: NextRequest) {
         returnedAt: true,
         status: true,
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = passes.map((p) => ({
       id: p.id,
       student_id: p.studentId,
-      student_name: `${p.student.firstName} ${p.student.lastName}`,
+      student_name: displayName(p.student, nameDisplay),
       section_id: p.sectionId,
       destination: p.destination,
       destination_note: p.destinationNote,

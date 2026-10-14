@@ -9,6 +9,8 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertResultPermission,
@@ -561,7 +563,10 @@ export async function getResults(
     // Map, then translate ALL text columns in ONE batched, deduped pass
     // (getLabels) — matches content.tsx's SSR path so client-side
     // search/load-more doesn't regress rows from translated back to raw.
-    const rawMapped: ResultListResult[] = rows.map((r) => formatResultRow(r))
+    const nameDisplay = await schoolNameDisplay(schoolId)
+    const rawMapped: ResultListResult[] = rows.map((r) =>
+      formatResultRow(r, nameDisplay)
+    )
     const labels = await getLabels(
       rawMapped.flatMap((row) => [
         row.studentName,
@@ -680,7 +685,7 @@ export async function getResultsCSV(
     const csvRows = rows.map((r) =>
       [
         r.id,
-        `"${r.student ? `${r.student.firstName} ${r.student.lastName}` : "Unknown"}"`,
+        `"${r.student ? displayName(r.student, "full").replace(/"/g, '""') : "Unknown"}"`,
         `"${(r.assignment?.title || r.exam?.title || "").replace(/"/g, '""')}"`,
         `"${(r.section?.name || "").replace(/"/g, '""')}"`,
         Number(r.score),

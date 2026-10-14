@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Link2, Mail, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
-import type { NameContact } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -320,12 +320,7 @@ function ParentsTableInner({
           ) : (
             <GridContainer columns={4} className="mt-4">
               {data.map((parent) => {
-                const initials = parent.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
+                const initials = initialsOf(parent.name)
                 return (
                   <GridCard
                     key={parent.id}

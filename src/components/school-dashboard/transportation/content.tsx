@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
@@ -58,6 +60,7 @@ export async function TransportationOverviewContent({
   // Localize route place-names in the recent-assignments widget (ONE batched
   // resolution; source fallback on miss).
   const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const routeLabels =
     recent.length > 0 && schoolId
       ? await getLabels(
@@ -120,7 +123,7 @@ export async function TransportationOverviewContent({
                     className="flex justify-between border-b py-1.5 last:border-b-0"
                   >
                     <span>
-                      {d.firstName} {d.lastName} ·{" "}
+                      <bdi dir="auto">{displayName(d, nameDisplay)}</bdi> ·{" "}
                       {t.drivers.licenseExpiringSoon}
                     </span>
                     <span className="text-muted-foreground">
@@ -166,7 +169,10 @@ export async function TransportationOverviewContent({
                     className="flex justify-between border-b py-1.5 last:border-b-0"
                   >
                     <span>
-                      {a.student?.firstName} {a.student?.lastName} →{" "}
+                      <bdi dir="auto">
+                        {displayName(a.student, nameDisplay)}
+                      </bdi>{" "}
+                      →{" "}
                       {a.route?.name
                         ? (routeLabels.get(a.route.name) ?? a.route.name)
                         : ""}

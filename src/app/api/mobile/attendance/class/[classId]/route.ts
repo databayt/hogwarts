@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 
@@ -48,6 +50,7 @@ export async function GET(
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         profilePhotoUrl: true,
       },
@@ -67,11 +70,12 @@ export async function GET(
 
     const recordMap = new Map(records.map((r) => [r.studentId, r]))
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = students.map((s) => {
       const record = recordMap.get(s.id)
       return {
         student_id: s.id,
-        student_name: [s.firstName, s.lastName].filter(Boolean).join(" "),
+        student_name: displayName(s, nameDisplay),
         photo_url: s.profilePhotoUrl,
         status: record?.status || null,
         notes: record?.notes || null,

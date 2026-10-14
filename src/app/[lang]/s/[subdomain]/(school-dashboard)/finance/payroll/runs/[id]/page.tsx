@@ -7,6 +7,8 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
@@ -64,7 +66,12 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         salarySlips: {
           include: {
             teacher: {
-              select: { firstName: true, lastName: true, employeeId: true },
+              select: {
+                firstName: true,
+                middleName: true,
+                lastName: true,
+                employeeId: true,
+              },
             },
           },
           orderBy: { teacher: { lastName: "asc" } },
@@ -80,9 +87,13 @@ export default async function PayrollRunDetailPage({ params }: Props) {
   if (!run) notFound()
 
   const currency = schoolForCurrency?.currency ?? "USD"
+  // Listing label — the school's short name display.
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const short = (t: Parameters<typeof shortNameParts>[0]) =>
+    shortNameParts(t, nameDisplay)
   const staffNames = await getNames(
     run.salarySlips,
-    (slip) => slip.teacher ?? {},
+    (slip) => (slip.teacher ? short(slip.teacher) : {}),
     lang,
     schoolId
   )
@@ -161,10 +172,14 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                 <CardContent className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium">
-                      {slip.teacher
-                        ? (staffNames.get(fullName(slip.teacher)) ??
-                          fullName(slip.teacher))
-                        : ""}
+                      {slip.teacher ? (
+                        <bdi dir="auto">
+                          {staffNames.get(fullName(short(slip.teacher))) ??
+                            fullName(short(slip.teacher))}
+                        </bdi>
+                      ) : (
+                        ""
+                      )}
                     </p>
                     <p className="text-muted-foreground text-xs">
                       {slip.slipNumber}

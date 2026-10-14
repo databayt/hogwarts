@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface PaymentScheduleEntry {
@@ -230,14 +231,8 @@ export async function ensureInvoicesForAssignment(
 
   if (rows.length === 0) return { invoicesCreated: 0 }
 
-  const studentName =
-    [
-      assignment.student.firstName,
-      assignment.student.middleName,
-      assignment.student.lastName,
-    ]
-      .filter(Boolean)
-      .join(" ") || "Student"
+  // An invoice is a formal document — the full name.
+  const studentName = displayName(assignment.student, "full") || "Student"
 
   let created = 0
   for (let i = 0; i < rows.length; i++) {

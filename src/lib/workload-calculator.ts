@@ -46,6 +46,7 @@
  */
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 export type WorkloadStatus = "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
 
@@ -129,6 +130,7 @@ export async function calculateTeacherWorkload(
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
     },
   })
@@ -179,7 +181,9 @@ export async function calculateTeacherWorkload(
 
   return {
     teacherId: teacher.id,
-    teacherName: `${teacher.firstName} ${teacher.lastName}`,
+    // Full name: a data field with no UI consumer yet. A listing that renders
+    // it should switch to displayName(teacher, schoolNameDisplay(schoolId)).
+    teacherName: displayName(teacher, "full"),
     totalPeriodsPerWeek,
     uniqueClassesCount: uniqueClassIds.size,
     uniqueSubjectsCount: uniqueSubjectIds.size,

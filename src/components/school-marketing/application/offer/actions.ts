@@ -13,6 +13,7 @@ import {
   resolveSchoolLang,
 } from "@/lib/dispatch-notification"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { displayName } from "@/lib/name-utils"
 import { toSmallestUnit } from "@/lib/payment/currency"
 import {
   getSchoolPaymentSettings,
@@ -56,6 +57,7 @@ export interface OfferDetails {
     id: string
     applicationNumber: string
     firstName: string
+    middleName: string | null
     lastName: string
     applyingForClass: string
     status: string
@@ -192,6 +194,7 @@ async function validateAccessToken(applicationId: string, accessToken: string) {
       campaignId: true,
       applicationNumber: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       applyingForClass: true,
       status: true,
@@ -493,6 +496,7 @@ export async function getOfferDetails(
           id: application.id,
           applicationNumber: application.applicationNumber,
           firstName: application.firstName,
+          middleName: application.middleName,
           lastName: application.lastName,
           applyingForClass: application.applyingForClass,
           status: application.status,
@@ -586,7 +590,7 @@ export async function acceptOffer(
     }
 
     const now = new Date()
-    const applicantName = `${application.firstName} ${application.lastName}`
+    const applicantName = displayName(application, "full")
 
     // Resolve the school's notification language once — run alongside the
     // write since neither depends on the other's result.
@@ -692,7 +696,7 @@ export async function declineOffer(
       return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
     }
 
-    const applicantName = `${application.firstName} ${application.lastName}`
+    const applicantName = displayName(application, "full")
 
     // Resolve the school's notification language once — run alongside the
     // write since neither depends on the other's result.
@@ -925,7 +929,7 @@ export async function createRegistrationFeeCheckout(
       lineItems: [
         {
           name: `Registration Fee - ${application.applicationNumber}`,
-          description: `Registration fee for ${application.firstName} ${application.lastName}`,
+          description: `Registration fee for ${displayName(application, "full")}`,
           quantity: 1,
           unitAmount: toSmallestUnit(feeAmount, currency),
         },
@@ -1078,7 +1082,7 @@ export async function recordRegistrationCashIntent(
     })
 
     // Notify school admins about cash intent — in the school's own language
-    const applicantName = `${application.firstName} ${application.lastName}`
+    const applicantName = displayName(application, "full")
     await dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -1227,7 +1231,7 @@ export async function recordRegistrationBankTransferIntent(
 
     // Notify school admins about bank transfer intent — in the school's own
     // language
-    const applicantName = `${application.firstName} ${application.lastName}`
+    const applicantName = displayName(application, "full")
     await dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -1388,7 +1392,7 @@ export async function recordRegistrationWalletIntent(
 
     // Tell the school there is a transfer to look for — the wallet rails have
     // no webhook, so this notice is the only signal the money is coming.
-    const applicantName = `${application.firstName} ${application.lastName}`
+    const applicantName = displayName(application, "full")
     await dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -1500,7 +1504,7 @@ export async function submitRegistrationFeeProof(
     // to check — in the school's language, linking the enrollment tab.
     try {
       const lang = await resolveSchoolLang(schoolId)
-      const applicantName = `${application.firstName} ${application.lastName}`
+      const applicantName = displayName(application, "full")
       await dispatchNotificationsToAudience({
         schoolId,
         type: "system_alert",

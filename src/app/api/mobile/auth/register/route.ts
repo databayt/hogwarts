@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
+import { composeFullName } from "@/lib/name-utils"
 import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
 
 /**
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user with role USER
-    const username = `${firstName} ${lastName}`
+    const username = composeFullName(firstName, null, lastName)
     const user = await db.user.create({
       data: {
         email: normalizedEmail,

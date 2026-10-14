@@ -7,6 +7,8 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { localize } from "@/components/translation/localize"
 
 export async function getParentEvents(displayLang?: "ar" | "en") {
@@ -129,12 +131,13 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
       eventCount: mappedEvents.length,
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     return {
       success: true,
       events: mappedEvents,
       students: guardian.studentGuardians.map((sg) => ({
         id: sg.student.id,
-        name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
+        name: displayName(sg.student, nameDisplay),
       })),
     }
   } catch (error) {

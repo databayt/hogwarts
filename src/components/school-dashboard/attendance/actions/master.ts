@@ -6,7 +6,9 @@ import { auth } from "@/auth"
 import type { AttendanceMethod, AttendanceStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   canMarkAttendance,
@@ -152,11 +154,12 @@ export async function getMasterAttendanceForDay(input: {
       },
       include: {
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
       orderBy: { checkInTime: "asc" },
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     const summary = {
       total: records.length,
@@ -171,7 +174,7 @@ export async function getMasterAttendanceForDay(input: {
       data: {
         records: records.map((r) => ({
           studentId: r.studentId,
-          studentName: `${r.student.firstName} ${r.student.lastName}`,
+          studentName: displayName(r.student, nameDisplay),
           status: r.status,
           checkInTime: r.checkInTime?.toISOString() || null,
           checkOutTime: r.checkOutTime?.toISOString() || null,
@@ -234,8 +237,9 @@ export async function getPrefillFromMaster(input: {
     // The section's students
     const sectionStudents = await db.student.findMany({
       where: { schoolId, sectionId: input.sectionId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     // Get master attendance for these students today
     const studentIds = sectionStudents.map((s) => s.id)
@@ -267,12 +271,12 @@ export async function getPrefillFromMaster(input: {
       if (!master || master.status === "ABSENT") {
         absentStudents.push({
           studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
+          studentName: displayName(student, nameDisplay),
         })
       } else {
         presentStudents.push({
           studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
+          studentName: displayName(student, nameDisplay),
           masterStatus: master.status,
           checkInTime: master.checkInTime?.toISOString() || null,
         })

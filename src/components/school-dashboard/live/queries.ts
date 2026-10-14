@@ -14,6 +14,8 @@
 import { Prisma, type ConferenceVisibility } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { isOwnStorageUrl } from "@/lib/storage-key"
 import {
   buildProtectedFileUrl,
@@ -52,7 +54,7 @@ export type LiveClassQueryParams = LiveClassListFilters &
 // Relations included for display (teacher name, subject name, section name).
 const liveClassListInclude = {
   teacher: {
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true, firstName: true, middleName: true, lastName: true },
   },
   subject: {
     select: { id: true, name: true },
@@ -84,6 +86,7 @@ const landingSessionInclude = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profilePhotoUrl: true,
     },
@@ -315,7 +318,7 @@ export async function getLiveClassFormOptions(
   const [teachers, selections, sections] = await Promise.all([
     db.teacher.findMany({
       where: { schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, middleName: true, lastName: true },
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     }),
     // Catalog Subject is global (no schoolId) — the SubjectSelection bridge is
@@ -361,10 +364,11 @@ export async function getLiveClassFormOptions(
     })
   }
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return {
     teachers: teachers.map((t) => ({
       id: t.id,
-      name: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
+      name: displayName(t, nameDisplay),
     })),
     subjects: [...bySubject.values()],
     sections: sections.map((s) => ({
@@ -450,7 +454,9 @@ export async function getLiveSlotOptions(
       section: {
         select: { name: true, grade: { select: { gradeNumber: true } } },
       },
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       period: { select: { name: true, startTime: true, endTime: true } },
     },
     orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
@@ -466,6 +472,7 @@ export async function getLiveSlotOptions(
   const truncated = slots.length > SLOT_OPTION_CAP
   const rows = truncated ? slots.slice(0, SLOT_OPTION_CAP) : slots
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const options = rows.flatMap((s) =>
     s.teacherId && s.sectionId
       ? [
@@ -476,8 +483,7 @@ export async function getLiveSlotOptions(
             startTime: periodTimeString(s.period.startTime),
             endTime: periodTimeString(s.period.endTime),
             teacherId: s.teacherId,
-            teacherName:
-              `${s.teacher?.firstName ?? ""} ${s.teacher?.lastName ?? ""}`.trim(),
+            teacherName: displayName(s.teacher, nameDisplay),
             subjectId: s.subjectId,
             subjectName: s.subject?.name ?? "",
             sectionId: s.sectionId,
@@ -1357,6 +1363,7 @@ export async function findRoomClassPeople(
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profilePhotoUrl: true,
     },

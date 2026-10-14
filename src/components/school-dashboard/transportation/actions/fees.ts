@@ -22,6 +22,7 @@ import { requireContext } from "./helpers"
 export interface StudentTransportFee {
   studentId: string
   firstName: string
+  middleName?: string | null
   lastName: string
   monthlyTotal: number
   routes: Array<{
@@ -55,7 +56,12 @@ export async function previewTransportFees(): Promise<
       where: { schoolId, status: "ACTIVE", deletedAt: null },
       include: {
         student: {
-          select: { id: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         route: {
           select: { id: true, name: true, monthlyFee: true },
@@ -82,6 +88,7 @@ export async function previewTransportFees(): Promise<
         byStudent.set(a.studentId, {
           studentId: a.studentId,
           firstName: a.student.firstName,
+          middleName: a.student.middleName,
           lastName: a.student.lastName,
           monthlyTotal: feeAmount,
           routes: [

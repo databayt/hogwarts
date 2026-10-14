@@ -14,6 +14,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import { checkFinancePermission } from "@/components/school-dashboard/finance/lib/permissions"
 import { PayslipDocument } from "@/components/school-dashboard/finance/payroll/payslip/payslip-document"
@@ -78,7 +79,14 @@ export async function GET(_req: Request, ctx: RouteContext) {
   const slip = await db.salarySlip.findFirst({
     where: { id, schoolId },
     include: {
-      teacher: { select: { userId: true, firstName: true, lastName: true } },
+      teacher: {
+        select: {
+          userId: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+        },
+      },
       school: {
         select: {
           name: true,
@@ -111,10 +119,7 @@ export async function GET(_req: Request, ctx: RouteContext) {
       t: LABELS[lang],
       data: {
         slipNumber: slip.slipNumber,
-        employeeName:
-          [slip.teacher?.firstName, slip.teacher?.lastName]
-            .filter(Boolean)
-            .join(" ") || "—",
+        employeeName: displayName(slip.teacher, "full") || "—",
         payPeriod: `${fmtDate(slip.payPeriodStart)} — ${fmtDate(slip.payPeriodEnd)}`,
         payDate: fmtDate(slip.payDate),
         status: slip.status,

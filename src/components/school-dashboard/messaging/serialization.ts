@@ -18,6 +18,12 @@
  * - Prevents runtime serialization errors
  */
 
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  type NameDisplay,
+} from "@/lib/name-utils"
+
 /**
  * Safely serialize a date to ISO string
  * @param date - Date object, null, or undefined
@@ -34,14 +40,18 @@ export function safeSerializeDate(date: Date | null | undefined): string {
 }
 
 /**
- * Helper to resolve username to profile name (firstName + lastName) if present
+ * Resolve a user's label: their profile name in the school's short display
+ * (first + second or first + last) when present, else the username.
  */
-function resolveProfileName(user: any): string | null {
+function resolveProfileName(
+  user: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+): string | null {
   if (!user) return null
   const profile =
     user.student || user.teacher || user.guardian || user.staffMember
   if (profile?.firstName) {
-    return `${profile.firstName} ${profile.lastName || ""}`.trim()
+    return displayName(profile, nameDisplay)
   }
   return user.username ?? null
 }
@@ -49,7 +59,10 @@ function resolveProfileName(user: any): string | null {
 /**
  * Serialize a conversation participant
  */
-export function serializeParticipant(participant: any) {
+export function serializeParticipant(
+  participant: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!participant) return null
 
   return {
@@ -59,7 +72,7 @@ export function serializeParticipant(participant: any) {
     user: participant.user
       ? {
           ...participant.user,
-          username: resolveProfileName(participant.user),
+          username: resolveProfileName(participant.user, nameDisplay),
         }
       : null,
   }
@@ -84,7 +97,10 @@ export function serializeAttachment(attachment: any) {
 /**
  * Serialize a message reaction
  */
-export function serializeReaction(reaction: any) {
+export function serializeReaction(
+  reaction: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!reaction) return null
 
   return {
@@ -93,7 +109,7 @@ export function serializeReaction(reaction: any) {
     user: reaction.user
       ? {
           ...reaction.user,
-          username: resolveProfileName(reaction.user),
+          username: resolveProfileName(reaction.user, nameDisplay),
         }
       : null,
   }
@@ -102,7 +118,10 @@ export function serializeReaction(reaction: any) {
 /**
  * Serialize a message read receipt
  */
-export function serializeReadReceipt(receipt: any) {
+export function serializeReadReceipt(
+  receipt: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!receipt) return null
 
   return {
@@ -111,7 +130,7 @@ export function serializeReadReceipt(receipt: any) {
     user: receipt.user
       ? {
           ...receipt.user,
-          username: resolveProfileName(receipt.user),
+          username: resolveProfileName(receipt.user, nameDisplay),
         }
       : null,
   }
@@ -120,7 +139,10 @@ export function serializeReadReceipt(receipt: any) {
 /**
  * Serialize a reply-to message (partial message)
  */
-export function serializeReplyTo(replyTo: any) {
+export function serializeReplyTo(
+  replyTo: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!replyTo) return null
 
   return {
@@ -129,7 +151,7 @@ export function serializeReplyTo(replyTo: any) {
     sender: replyTo.sender
       ? {
           ...replyTo.sender,
-          username: resolveProfileName(replyTo.sender),
+          username: resolveProfileName(replyTo.sender, nameDisplay),
         }
       : null,
   }
@@ -138,7 +160,10 @@ export function serializeReplyTo(replyTo: any) {
 /**
  * Serialize a full message with all nested relations
  */
-export function serializeMessage(message: any) {
+export function serializeMessage(
+  message: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!message) return null
 
   return {
@@ -150,24 +175,32 @@ export function serializeMessage(message: any) {
     sender: message.sender
       ? {
           ...message.sender,
-          username: resolveProfileName(message.sender),
+          username: resolveProfileName(message.sender, nameDisplay),
         }
       : null,
     attachments: message.attachments?.map(serializeAttachment) || [],
-    reactions: message.reactions?.map(serializeReaction) || [],
-    readReceipts: message.readReceipts?.map(serializeReadReceipt) || [],
+    reactions:
+      message.reactions?.map((r: any) => serializeReaction(r, nameDisplay)) ||
+      [],
+    readReceipts:
+      message.readReceipts?.map((r: any) =>
+        serializeReadReceipt(r, nameDisplay)
+      ) || [],
     // readCount comes from the eager _count; falls back to the array length
     // when a caller selected full receipts instead of the count.
     readCount:
       message._count?.readReceipts ?? message.readReceipts?.length ?? 0,
-    replyTo: serializeReplyTo(message.replyTo),
+    replyTo: serializeReplyTo(message.replyTo, nameDisplay),
   }
 }
 
 /**
  * Serialize a conversation with all nested relations
  */
-export function serializeConversation(conversation: any) {
+export function serializeConversation(
+  conversation: any,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   if (!conversation) return null
 
   return {
@@ -177,17 +210,20 @@ export function serializeConversation(conversation: any) {
     lastMessageAt: conversation.lastMessageAt
       ? safeSerializeDate(conversation.lastMessageAt)
       : null,
-    participants: conversation.participants?.map(serializeParticipant) || [],
+    participants:
+      conversation.participants?.map((p: any) =>
+        serializeParticipant(p, nameDisplay)
+      ) || [],
     createdBy: conversation.createdBy
       ? {
           ...conversation.createdBy,
-          username: resolveProfileName(conversation.createdBy),
+          username: resolveProfileName(conversation.createdBy, nameDisplay),
         }
       : null,
     lastMessage: conversation.lastMessage
-      ? serializeMessage(conversation.lastMessage)
+      ? serializeMessage(conversation.lastMessage, nameDisplay)
       : conversation.messages?.[0]
-        ? serializeMessage(conversation.messages[0])
+        ? serializeMessage(conversation.messages[0], nameDisplay)
         : null,
   }
 }
@@ -195,28 +231,37 @@ export function serializeConversation(conversation: any) {
 /**
  * Serialize an array of messages (bulk operation)
  */
-export function serializeMessages(messages: any[]): any[] {
-  return messages.map(serializeMessage)
+export function serializeMessages(
+  messages: any[],
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+): any[] {
+  return messages.map((m) => serializeMessage(m, nameDisplay))
 }
 
 /**
  * Serialize an array of conversations (bulk operation)
  */
-export function serializeConversations(conversations: any[]): any[] {
-  return conversations.map(serializeConversation)
+export function serializeConversations(
+  conversations: any[],
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+): any[] {
+  return conversations.map((c) => serializeConversation(c, nameDisplay))
 }
 
 /**
  * Serialize cursor-based pagination result
  */
-export function serializeMessagesPaginated(result: {
-  items: any[]
-  hasMore: boolean
-  nextCursor: string | null
-  prevCursor: string | null
-}) {
+export function serializeMessagesPaginated(
+  result: {
+    items: any[]
+    hasMore: boolean
+    nextCursor: string | null
+    prevCursor: string | null
+  },
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+) {
   return {
-    items: serializeMessages(result.items),
+    items: serializeMessages(result.items, nameDisplay),
     hasMore: result.hasMore,
     nextCursor: result.nextCursor,
     prevCursor: result.prevCursor,

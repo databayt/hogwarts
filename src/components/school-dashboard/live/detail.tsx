@@ -5,6 +5,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
@@ -70,6 +72,7 @@ export async function LiveClassDetailContent({
   if (!detail) {
     notFound()
   }
+  const nameDisplay = await schoolNameDisplay(tenant.schoolId)
   const {
     session,
     canJoin,
@@ -172,7 +175,7 @@ export async function LiveClassDetailContent({
               {t?.labels?.teacher ?? "Teacher"}
             </dt>
             <dd>
-              {session.teacher.firstName} {session.teacher.lastName}
+              <bdi dir="auto">{displayName(session.teacher, nameDisplay)}</bdi>
             </dd>
           </div>
         )}

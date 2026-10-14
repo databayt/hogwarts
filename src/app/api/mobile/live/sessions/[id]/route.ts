@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { checkLiveClassPermission } from "@/components/school-dashboard/live/authorization"
@@ -56,7 +58,7 @@ export async function GET(
     if (session.teacher)
       rows.push({
         label: t?.labels?.teacher ?? "Teacher",
-        value: `${session.teacher.firstName} ${session.teacher.lastName}`,
+        value: displayName(session.teacher, await schoolNameDisplay(auth.schoolId)),
       })
     if (session.timetable?.classroom?.roomName)
       rows.push({ label: t?.labels?.room ?? "Room", value: session.timetable.classroom.roomName })

@@ -62,6 +62,7 @@ export async function getSalaryStructures(
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             employeeId: true,
           },
@@ -107,6 +108,7 @@ export async function getSalaryStructure(
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             employeeId: true,
             emailAddress: true,

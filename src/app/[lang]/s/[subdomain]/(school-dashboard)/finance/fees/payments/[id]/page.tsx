@@ -72,7 +72,9 @@ export default async function PaymentDetailPage({ params }: Props) {
     db.payment.findFirst({
       where: { id, schoolId },
       include: {
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
         feeAssignment: {
           select: {
             id: true,
@@ -94,6 +96,7 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   const currency = school?.currency ?? "USD"
 
+  // Full name: it also prints on the receipt.
   const studentName = payment.student
     ? await getName(payment.student, lang, schoolId)
     : ""
@@ -321,7 +324,9 @@ export default async function PaymentDetailPage({ params }: Props) {
               <span className="text-muted-foreground">
                 {d?.student ?? "Student"}
               </span>
-              <span className="font-medium">{studentName}</span>
+              <span className="font-medium">
+                <bdi dir="auto">{studentName}</bdi>
+              </span>
             </div>
             {payment.feeAssignment && (
               <>

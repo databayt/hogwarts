@@ -3,6 +3,8 @@
 
 import Link from "next/link"
 
+import { displayName, shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,11 +58,12 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
 
   const trip = result.data
   const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
   // Driver name (transliterated) + route place-name (translated) resolve in the
   // viewer's locale; both fall back to source on miss.
   const [driverName, routeLabels] = await Promise.all([
     trip.driver
-      ? getName(trip.driver, locale, schoolId!)
+      ? getName(shortNameParts(trip.driver, nameDisplay), locale, schoolId!)
       : Promise.resolve("—"),
     trip.route?.name
       ? getLabels([trip.route.name], locale, schoolId!)
@@ -182,8 +185,10 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
                     className="flex justify-between border-b py-1.5 last:border-b-0"
                   >
                     <span>
-                      #{b.stop?.stopOrder} {b.student?.firstName}{" "}
-                      {b.student?.lastName}
+                      #{b.stop?.stopOrder}{" "}
+                      <bdi dir="auto">
+                        {displayName(b.student, nameDisplay)}
+                      </bdi>
                     </span>
                     <span className="text-muted-foreground">
                       {t.trips.boardingStatuses[

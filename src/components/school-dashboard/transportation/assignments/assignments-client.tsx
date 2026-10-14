@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +52,7 @@ import {
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { assignStudentToRoute, endAssignment } from "../actions/assignments"
 import { TransportationEmptyState } from "../empty-state"
@@ -78,6 +80,7 @@ const EMPTY_FORM: FormState = {
 interface StudentLite {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
 }
 
@@ -101,6 +104,7 @@ export function AssignmentsClient({
   dictionary,
 }: Props) {
   const t = dictionary.transportation
+  const nameDisplay = useNameDisplay()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
@@ -118,9 +122,13 @@ export function AssignmentsClient({
             className="hover:underline"
             href={`/${locale}/transportation/assignments/${row.original.id}`}
           >
-            {row.original.student
-              ? `${row.original.student.firstName} ${row.original.student.lastName}`
-              : "—"}
+            {row.original.student ? (
+              <bdi dir="auto">
+                {displayName(row.original.student, nameDisplay)}
+              </bdi>
+            ) : (
+              "—"
+            )}
           </Link>
         ),
       },
@@ -182,7 +190,7 @@ export function AssignmentsClient({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, locale]
+    [t, locale, nameDisplay]
   )
 
   const table = useReactTable({
@@ -315,7 +323,7 @@ export function AssignmentsClient({
                   <SelectContent>
                     {students.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {s.firstName} {s.lastName}
+                        <bdi dir="auto">{displayName(s, nameDisplay)}</bdi>
                       </SelectItem>
                     ))}
                   </SelectContent>

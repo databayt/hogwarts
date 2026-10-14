@@ -7,12 +7,14 @@ import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
 import { confirmDeleteDialog, DeleteToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 import {
   ItemCard,
   ListingViews,
@@ -73,6 +75,7 @@ function SalaryStructuresTableInner({
   configDict,
 }: SalaryStructuresTableProps) {
   const router = useRouter()
+  const nameDisplay = useNameDisplay()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // View mode (table/grid) — cards by default on a phone
@@ -107,9 +110,7 @@ function SalaryStructuresTableInner({
       }
       const rows: SalaryStructureRow[] = result.data.map((ss: any) => ({
         id: ss.id,
-        teacherName: [ss.teacher?.firstName, ss.teacher?.lastName]
-          .filter(Boolean)
-          .join(" "),
+        teacherName: displayName(ss.teacher, nameDisplay),
         teacherId: ss.teacherId,
         employeeId: ss.teacher?.employeeId || null,
         baseSalary: Number(ss.baseSalary),

@@ -5,6 +5,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
@@ -39,7 +41,12 @@ export default async function FineDetailPage({ params }: Props) {
     where: { id, schoolId },
     include: {
       student: {
-        select: { id: true, firstName: true, lastName: true },
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+        },
       },
     },
   })
@@ -48,7 +55,11 @@ export default async function FineDetailPage({ params }: Props) {
 
   const data = {
     id: fine.id,
-    studentName: await getName(fine.student, lang, schoolId),
+    studentName: await getName(
+      shortNameParts(fine.student, await schoolNameDisplay(schoolId)),
+      lang,
+      schoolId
+    ),
     studentId: fine.student.id,
     fineType: fine.fineType,
     amount: Number(fine.amount),

@@ -22,7 +22,9 @@ import {
   type StudentAttendanceData,
 } from "@/lib/ai/attendance-predictor"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { translate } from "@/components/translation/actions"
 import { detectLang } from "@/components/translation/util"
 
@@ -120,6 +122,8 @@ export async function runRiskPredictions(
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
+
     // Build student attendance data for prediction
     const studentDataList: StudentAttendanceData[] = students.map((student) => {
       // Calculate metrics - cast to typed array
@@ -208,7 +212,7 @@ export async function runRiskPredictions(
 
       return {
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, nameDisplay),
         grNumber: student.grNumber,
         yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName || null,
         totalDays,
@@ -331,6 +335,8 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
+
     // Calculate risk scores using simple statistical method
     const atRiskStudents: AtRiskStudent[] = students
       .map((student) => {
@@ -353,7 +359,7 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
 
         return {
           id: student.id,
-          name: `${student.firstName} ${student.lastName}`,
+          name: displayName(student, nameDisplay),
           grNumber: student.grNumber,
           yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName || null,
           profilePhotoUrl: student.profilePhotoUrl,

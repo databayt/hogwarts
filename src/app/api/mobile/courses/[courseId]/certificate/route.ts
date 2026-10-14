@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 import { findCatalogSubject } from "../../lib/subject"
@@ -42,7 +43,10 @@ export async function GET(
       },
     })
     if (!certificate) {
-      return NextResponse.json({ error: "Certificate not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Certificate not found" },
+        { status: 404 }
+      )
     }
 
     // A certificate carries the reader's name, and `User` has no name — only
@@ -55,12 +59,7 @@ export async function GET(
       }),
       db.user.findUnique({ where: { id: userId }, select: { username: true } }),
     ])
-    const studentName =
-      [student?.firstName, student?.middleName, student?.lastName]
-        .filter(Boolean)
-        .join(" ") ||
-      user?.username ||
-      ""
+    const studentName = displayName(student, "full") || user?.username || ""
 
     return NextResponse.json({
       id: certificate.id,
@@ -76,6 +75,9 @@ export async function GET(
     })
   } catch (error) {
     console.error("[mobile/courses/:id/certificate] GET failed:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
 }

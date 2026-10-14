@@ -14,6 +14,7 @@
 import { headers } from "next/headers"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 /**
  * Rate limit configuration
@@ -435,6 +436,7 @@ export async function verifyCertificateCode(
       student: {
         select: {
           firstName: true,
+          middleName: true,
           lastName: true,
           studentId: true,
         },
@@ -475,7 +477,7 @@ export async function verifyCertificateCode(
   return {
     valid: true,
     certificate: {
-      studentName: `${certificate.student.firstName} ${certificate.student.lastName}`,
+      studentName: displayName(certificate.student, "full"),
       studentId: certificate.student.studentId,
       examTitle: certificate.examResult.exam.title,
       examDate: certificate.examResult.exam.examDate,

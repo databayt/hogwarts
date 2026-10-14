@@ -6,7 +6,9 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { audienceLabel, audienceRosterWhere } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -347,8 +349,8 @@ export async function generateProgressReports(
 
     for (const student of students) {
       try {
-        const studentName =
-          `${student.firstName} ${student.middleName || ""} ${student.lastName}`.trim()
+        // The report is an official document — the full name.
+        const studentName = displayName(student, "full")
 
         // Collect report data based on toggles
         const reportData: Record<string, unknown> = {
@@ -471,6 +473,7 @@ export async function getGeneratedReports(
   try {
     const schoolId = await getSchoolId()
     if (!schoolId) return []
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     const reports = await db.generatedProgressReport.findMany({
       where: {
@@ -492,8 +495,7 @@ export async function getGeneratedReports(
     return reports.map((r) => ({
       id: r.id,
       studentId: r.studentId,
-      studentName:
-        `${r.student.firstName} ${r.student.middleName || ""} ${r.student.lastName}`.trim(),
+      studentName: displayName(r.student, nameDisplay),
       reportData: r.reportData,
       sentAt: r.sentAt,
       createdAt: r.createdAt,

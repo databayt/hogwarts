@@ -21,9 +21,9 @@
  * - Cannot look up students from other schools
  *
  * NAME FORMAT:
- * - Concatenates: firstName + middleName + lastName
- * - Filters out null/empty parts
- * - Arabic names may have 3-4 parts
+ * - Breadcrumb label: the school's short name display (displayName)
+ * - "first-second" → given + father's name; "first-last" → given + family
+ * - Compound names (عبد الله, نور الدين) stay whole
  *
  * WHY MINIMAL SELECT:
  * - Only fetches name fields (not full student)
@@ -31,7 +31,7 @@
  * - Protects sensitive info (DOB, contact, etc.)
  *
  * RESPONSE:
- * - { name: "Ahmed Mohamed Ali" }
+ * - { name: "Ahmed Mohamed" }
  * - 404 if not found or wrong school
  */
 
@@ -39,7 +39,9 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 export async function GET(
@@ -82,9 +84,7 @@ export async function GET(
       return NextResponse.json({ error: "Student not found" }, { status: 404 })
     }
 
-    const name = [student.firstName, student.middleName, student.lastName]
-      .filter(Boolean)
-      .join(" ")
+    const name = displayName(student, await schoolNameDisplay(schoolId))
 
     return NextResponse.json({ name })
   } catch (error) {

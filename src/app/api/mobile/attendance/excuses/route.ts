@@ -6,6 +6,8 @@ import type { ExcuseReason, ExcuseStatus, Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { excuseReasonSchema } from "@/components/school-dashboard/attendance/shared/validation"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
@@ -91,7 +93,7 @@ export async function GET(request: NextRequest) {
               status: true,
               studentId: true,
               student: {
-                select: { firstName: true, lastName: true },
+                select: { firstName: true, middleName: true, lastName: true },
               },
             },
           },
@@ -100,13 +102,14 @@ export async function GET(request: NextRequest) {
       db.attendanceExcuse.count({ where }),
     ])
 
+    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = excuses.map((e) => ({
       id: e.id,
       attendance_id: e.attendanceId,
       attendance_date: e.attendance.date.toISOString(),
       attendance_status: e.attendance.status,
       student_id: e.attendance.studentId,
-      student_name: `${e.attendance.student.firstName} ${e.attendance.student.lastName}`,
+      student_name: displayName(e.attendance.student, nameDisplay),
       reason: e.reason,
       description: e.description,
       attachments: e.attachments,

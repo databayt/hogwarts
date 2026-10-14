@@ -4,6 +4,7 @@ import { Fragment, type ReactNode } from "react"
 import Link from "next/link"
 import { Radio } from "lucide-react"
 
+import { initialsOf } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { BlurImage } from "@/components/atom/blur-image"
@@ -172,7 +173,9 @@ export function LandingSessionRow({
                     name={session.teacherName}
                     photoUrl={session.teacherPhotoUrl}
                   />
-                  <span className="font-bold">{session.teacherName}</span>
+                  <span className="font-bold">
+                    <bdi dir="auto">{session.teacherName}</bdi>
+                  </span>
                 </span>
               ) : null}
 
@@ -221,7 +224,7 @@ function BriefMeta({
       key: "who",
       node: (
         <span className="text-foreground truncate font-bold">
-          {session.teacherName}
+          <bdi dir="auto">{session.teacherName}</bdi>
         </span>
       ),
     })
@@ -353,19 +356,9 @@ function Portrait({
       aria-hidden="true"
       className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold"
     >
-      {initials(name)}
+      {initialsOf(name)}
     </span>
   )
-}
-
-/** First letters of the first two words — the usual two-letter monogram. */
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => [...word][0] ?? "")
-    .join("")
 }
 
 /**

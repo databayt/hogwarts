@@ -25,6 +25,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { formatCurrency } from "@/lib/payment/currency"
 import { getTenantContext } from "@/lib/tenant-context"
 import { ReceiptDocument } from "@/components/school-dashboard/finance/fees/receipt-document"
@@ -66,6 +67,7 @@ export async function GET(_req: Request, ctx: RouteContext) {
           id: true,
           userId: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           studentGuardians: {
             select: { guardian: { select: { userId: true } } },
@@ -129,9 +131,8 @@ export async function GET(_req: Request, ctx: RouteContext) {
   const currency = payment.currency ?? payment.school?.currency ?? "USD"
   const amountFormatted = formatCurrency(Number(payment.amount), currency)
 
-  const studentName = [payment.student?.firstName, payment.student?.lastName]
-    .filter(Boolean)
-    .join(" ")
+  // A receipt is a formal document — the full name.
+  const studentName = displayName(payment.student, "full")
 
   // i18n label map — resolved from school.preferredLanguage.
   // An API route has no access to the dictionary pipeline, so we keep a

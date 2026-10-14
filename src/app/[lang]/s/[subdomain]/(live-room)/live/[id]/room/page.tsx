@@ -6,6 +6,8 @@ import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
@@ -41,6 +43,7 @@ import { getSlideOptions } from "@/components/school-dashboard/live/room/slide-o
 import type { RoomTitleCardData } from "@/components/school-dashboard/live/room/title-card"
 import { getText } from "@/components/translation/display"
 import { getLabels, getName, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 // Page-data OOM safety: auth-gated room, render on demand.
 export const dynamic = "force-dynamic"
@@ -50,10 +53,7 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const [{ lang, subdomain, id }, session] = await Promise.all([
-    params,
-    auth(),
-  ])
+  const [{ lang, subdomain, id }, session] = await Promise.all([params, auth()])
   if (!session?.user?.id) {
     redirect(`/${lang}/login`)
   }
@@ -169,12 +169,15 @@ export default async function Page({ params }: Props) {
     timeZone,
   })
 
-  const teacherRaw = row?.teacher
-    ? `${row.teacher.firstName} ${row.teacher.lastName}`.trim()
-    : ""
+  // People in the room show the school's short name display.
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const teacherParts = row?.teacher
+    ? shortNameParts(row.teacher, nameDisplay)
+    : null
+  const teacherRaw = teacherParts ? fullName(teacherParts) : ""
   const teacher =
-    row?.teacher && schoolId && teacherRaw
-      ? await getName(row.teacher, lang, schoolId)
+    teacherParts && schoolId && teacherRaw
+      ? await getName(teacherParts, lang, schoolId)
       : teacherRaw || null
 
   // Catalog and roster names are stored in ONE language and translated on
@@ -449,7 +452,12 @@ export default async function Page({ params }: Props) {
   // up to 24 people, and it transliterates when the translation API is down
   // rather than printing the wrong script.
   const rosterNames = schoolId
-    ? await getNames(rosterRows, (r) => r, lang, schoolId)
+    ? await getNames(
+        rosterRows,
+        (r) => shortNameParts(r, nameDisplay),
+        lang,
+        schoolId
+      )
     : new Map<string, string>()
   const people: RoomPerson[] = [
     ...(teacher && row?.teacher
@@ -463,7 +471,7 @@ export default async function Page({ params }: Props) {
         ]
       : []),
     ...rosterRows.map((r) => {
-      const raw = `${r.firstName} ${r.lastName}`.trim()
+      const raw = fullName(shortNameParts(r, nameDisplay))
       return {
         id: r.id,
         name: rosterNames.get(raw) ?? raw,

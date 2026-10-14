@@ -6,7 +6,9 @@ import { auth } from "@/auth"
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
@@ -92,6 +94,7 @@ export async function getPeriodsForSection(input: {
         teacher: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -122,6 +125,7 @@ export async function getPeriodsForSection(input: {
     })
 
     const attendedPeriods = new Set(existingAttendance.map((a) => a.periodId))
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       success: true,
@@ -134,7 +138,7 @@ export async function getPeriodsForSection(input: {
           timetableId: entry.id,
           name: entry.subject?.name || null,
           teacherName: entry.teacher
-            ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
+            ? displayName(entry.teacher, nameDisplay)
             : null,
           hasAttendance: attendedPeriods.has(entry.periodId),
         })),
@@ -755,6 +759,7 @@ export async function getStudentDayAttendance(input: {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         userId: true,
         studentGuardians: {
@@ -844,7 +849,7 @@ export async function getStudentDayAttendance(input: {
       data: {
         student: {
           id: student.id,
-          name: `${student.firstName} ${student.lastName}`,
+          name: displayName(student, await schoolNameDisplay(schoolId)),
         },
         periods: attendances.map((a) => ({
           periodId: a.periodId,

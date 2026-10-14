@@ -11,6 +11,7 @@ import {
   Trophy,
 } from "lucide-react"
 
+import { displayName } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -22,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import type { Student } from "../../registration/types"
 import type { GradeBoundaryData } from "../student-profile"
@@ -109,6 +111,7 @@ export function AcademicTab({
   dictionary,
 }: AcademicTabProps) {
   const d = dictionary
+  const nameDisplay = useNameDisplay()
   const studentClasses = student.studentClasses || []
   const examResults = student.examResults || []
   const submissions = student.submissions || []
@@ -122,7 +125,7 @@ export function AcademicTab({
           name:
             studentClasses[0]?.class?.name || d?.notAssigned || "Not Assigned",
           teacher: studentClasses[0]?.class?.teacher
-            ? `${studentClasses[0].class.teacher.firstName} ${studentClasses[0].class.teacher.lastName}`
+            ? displayName(studentClasses[0].class.teacher, nameDisplay)
             : d?.notAssigned || "Not Assigned",
           subjects: studentClasses.map((sc: any) => ({
             name:
@@ -131,7 +134,7 @@ export function AcademicTab({
               d?.unknown ||
               "Unknown",
             teacher: sc.class?.teacher
-              ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
+              ? displayName(sc.class.teacher, nameDisplay)
               : d?.notAssigned || "Not Assigned",
             grade: examResults.find(
               (er: any) => er.subjectId === sc.class?.subject?.id
@@ -290,7 +293,9 @@ export function AcademicTab({
                   <p className="text-muted-foreground text-sm">
                     {d?.classTeacher || "Class Teacher"}
                   </p>
-                  <p className="font-medium">{currentClass.teacher}</p>
+                  <p className="font-medium">
+                    <bdi dir="auto">{currentClass.teacher}</bdi>
+                  </p>
                 </div>
               </div>
 
@@ -350,7 +355,9 @@ export function AcademicTab({
                     <TableCell className="font-medium">
                       {subject.name}
                     </TableCell>
-                    <TableCell>{subject.teacher}</TableCell>
+                    <TableCell>
+                      <bdi dir="auto">{subject.teacher}</bdi>
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`font-bold ${getGradeColor(subject.grade)}`}

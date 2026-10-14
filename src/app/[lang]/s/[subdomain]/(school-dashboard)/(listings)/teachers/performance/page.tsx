@@ -150,6 +150,7 @@ export default async function Page({ params }: Props) {
       return {
         id: teacher.id,
         firstName: teacher.firstName,
+        middleName: teacher.middleName,
         lastName: teacher.lastName,
         emailAddress: teacher.emailAddress,
         profilePhotoUrl: teacher.profilePhotoUrl,

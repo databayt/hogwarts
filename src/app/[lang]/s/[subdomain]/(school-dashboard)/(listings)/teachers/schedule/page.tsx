@@ -42,6 +42,7 @@ export default async function Page({ params }: Props) {
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,

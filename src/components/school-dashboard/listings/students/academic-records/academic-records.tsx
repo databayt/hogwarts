@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -687,7 +688,7 @@ export function AcademicRecords({
                     {d?.academicTranscript || "Academic Transcript"}
                   </h3>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    {student.firstName} {student.middleName} {student.lastName}
+                    <bdi dir="auto">{displayName(student, "full")}</bdi>
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {student.grNumber} | {student.email}

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { BULK_MAX_ENTITIES } from "../../documents/config"
 import { downloadBase64 } from "../../documents/download"
@@ -54,6 +56,7 @@ export function ReportCardsTable({
 }: ReportCardsTableProps) {
   const dict = dictionary.results.reportCards
   const docs = dictionary.school?.documents
+  const nameDisplay = useNameDisplay()
   const [data, setData] = useState(initialData)
   const [count, setCount] = useState(total)
   const [termId, setTermId] = useState(defaultTermId || "")
@@ -280,7 +283,9 @@ export function ReportCardsTable({
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      {rc.student.firstName} {rc.student.lastName}
+                      <bdi dir="auto">
+                        {displayName(rc.student, nameDisplay)}
+                      </bdi>
                     </div>
                     {rc.student.studentId && (
                       <div className="text-muted-foreground text-xs">

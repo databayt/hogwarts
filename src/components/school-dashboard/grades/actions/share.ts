@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -120,7 +121,7 @@ export async function getSharedReportCard(token: string): Promise<{
         rank: true,
         totalStudents: true,
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
         term: {
           select: {
@@ -156,7 +157,7 @@ export async function getSharedReportCard(token: string): Promise<{
       .catch(() => undefined)
 
     const data: SharedReportCardData = {
-      studentName: `${reportCard.student.firstName} ${reportCard.student.lastName}`,
+      studentName: displayName(reportCard.student, "full"),
       termNumber: reportCard.term?.termNumber ?? null,
       termStartDate: reportCard.term?.startDate ?? null,
       termEndDate: reportCard.term?.endDate ?? null,

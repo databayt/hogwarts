@@ -80,8 +80,10 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertParentPermission,
@@ -500,11 +502,12 @@ export async function getParents(
       guardianModel.count({ where }),
     ])
 
-    // Map results
+    // Map results — the school's short display (first + second or first + last)
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const mapped: ParentListResult[] = (rows as Array<any>).map((p) => ({
       id: p.id as string,
       userId: p.userId as string | null,
-      name: [p.firstName, p.lastName].filter(Boolean).join(" "),
+      name: displayName(p, nameDisplay),
       emailAddress: p.emailAddress || "-",
       phone: (p.phoneNumbers?.[0]?.phoneNumber as string | undefined) || null,
       status: p.userId ? "active" : "inactive",

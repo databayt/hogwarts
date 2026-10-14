@@ -5,6 +5,8 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { examRosterWhere } from "@/components/school-dashboard/exams/lib/audience"
 import { notifyAllResultsPublished } from "@/components/school-dashboard/exams/notifications/actions"
@@ -45,12 +47,11 @@ export async function getExamResults(input: {
       orderBy: { marksObtained: "desc" },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const mapped: ExamResultRow[] = results.map((result) => ({
       id: result.id,
       studentId: result.student.studentId,
-      studentName: `${result.student.firstName} ${
-        result.student.middleName || ""
-      } ${result.student.lastName}`.trim(),
+      studentName: displayName(result.student, nameDisplay),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage,
@@ -232,12 +233,11 @@ export async function getTopPerformers(input: {
       take: limit,
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const mapped: ExamResultRow[] = topResults.map((result, index) => ({
       id: result.id,
       studentId: result.student.studentId,
-      studentName: `${result.student.firstName} ${
-        result.student.middleName || ""
-      } ${result.student.lastName}`.trim(),
+      studentName: displayName(result.student, nameDisplay),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage,

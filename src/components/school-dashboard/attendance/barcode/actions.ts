@@ -7,7 +7,9 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -229,10 +231,10 @@ export async function processBarcodeScan(
       success: true,
       attendanceId: attendance.id,
       studentId: studentIdentifier.studentId,
-      studentName:
-        studentIdentifier.student.firstName +
-        " " +
-        studentIdentifier.student.lastName,
+      studentName: displayName(
+        studentIdentifier.student,
+        await schoolNameDisplay(schoolId)
+      ),
       status: attendance.status,
     }
   } catch (error) {
@@ -319,8 +321,7 @@ export async function assignBarcodeToStudent(
       entityId: identifier.id,
       newValue: {
         studentId: data.studentId,
-        studentName:
-          identifier.student.firstName + " " + identifier.student.lastName,
+        studentName: displayName(identifier.student, "full"),
         isActive: data.isActive ?? true,
         expiresAt: data.expiresAt,
       },

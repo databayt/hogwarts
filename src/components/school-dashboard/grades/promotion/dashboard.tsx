@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import { displayName } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import {
   approvePromotionBatch,
@@ -71,6 +73,7 @@ export function PromotionDashboard({
   dictionary,
 }: PromotionDashboardProps) {
   const t = dictionary.results.promotion
+  const nameDisplay = useNameDisplay()
   const [batches, setBatches] = useState(initialBatches)
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null)
   const [candidates, setCandidates] = useState<any[]>([])
@@ -296,7 +299,9 @@ export function PromotionDashboard({
                   <TableRow key={c.id}>
                     <TableCell>
                       <div className="font-medium">
-                        {c.student.firstName} {c.student.lastName}
+                        <bdi dir="auto">
+                          {displayName(c.student, nameDisplay)}
+                        </bdi>
                       </div>
                       {c.student.studentId && (
                         <div className="text-muted-foreground text-xs">

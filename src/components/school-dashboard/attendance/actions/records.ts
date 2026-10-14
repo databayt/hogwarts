@@ -6,6 +6,8 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 /**
@@ -202,9 +204,10 @@ export async function getGuardianChildrenAttendance(): Promise<
       return { success: false, error: "Guardian record not found" }
     }
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const students = guardian.studentGuardians.map((sg) => ({
       id: sg.student.id,
-      name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
+      name: displayName(sg.student, nameDisplay),
       email: null as string | null,
       classes: [],
       attendances: sg.student.attendances.map((a) => ({

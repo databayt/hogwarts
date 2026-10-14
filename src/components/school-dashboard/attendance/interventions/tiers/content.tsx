@@ -11,12 +11,14 @@
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 
+import { displayName } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { phone } from "../../shared/phone"
 import {
@@ -33,6 +35,7 @@ import {
 interface Student {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   grNumber: string | null
   profilePhotoUrl: string | null
@@ -124,6 +127,7 @@ interface MTSSContentProps {
 
 export function MTSSContent({ locale }: MTSSContentProps) {
   const { dictionary } = useDictionary()
+  const nameDisplay = useNameDisplay()
   const t = dictionary?.attendance?.mtss
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(true)
@@ -174,7 +178,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
       studentId: student.id,
       tier: student.tier,
       action,
-      title: `${actionLabels[action]?.[isRTL ? "ar" : "en"] || action} - ${student.firstName} ${student.lastName}`,
+      title: `${actionLabels[action]?.[isRTL ? "ar" : "en"] || action} - ${displayName(student, nameDisplay)}`,
       priority:
         student.tier === "TIER_3" ? 4 : student.tier === "TIER_2" ? 3 : 2,
       parentNotify: student.tier !== "TIER_1",
@@ -385,7 +389,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                           {student.profilePhotoUrl ? (
                             <Image
                               src={student.profilePhotoUrl}
-                              alt={`${student.firstName} ${student.lastName}`}
+                              alt={displayName(student, nameDisplay)}
                               width={48}
                               height={48}
                               className="h-full w-full object-cover"
@@ -399,7 +403,9 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                         {/* Info */}
                         <div className="max-md:min-w-0">
                           <p className="font-medium">
-                            {student.firstName} {student.lastName}
+                            <bdi dir="auto">
+                              {displayName(student, nameDisplay)}
+                            </bdi>
                           </p>
                           <p className="text-muted-foreground text-sm">
                             {student.grNumber} •{" "}

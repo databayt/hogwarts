@@ -89,6 +89,7 @@ export const applicationListSelect = {
   applicationNumber: true,
   channel: true,
   firstName: true,
+  middleName: true,
   lastName: true,
   email: true,
   phone: true,

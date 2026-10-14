@@ -13,6 +13,8 @@ export interface School {
   website?: string | null
   timezone?: string
   preferredLanguage?: string
+  /** How listings and profiles show a name — see NameDisplay. */
+  nameDisplay?: string
   locale?: string
   planType?: string
   maxStudents?: number

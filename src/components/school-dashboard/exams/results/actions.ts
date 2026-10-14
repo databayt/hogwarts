@@ -17,6 +17,8 @@ import {
   warmCache,
 } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   examAudienceInclude,
@@ -65,6 +67,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) throw new Error("Missing school context")
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     const { examId, includeAbsent, includeQuestionBreakdown } =
       getResultsSchema.parse(input)
@@ -157,8 +160,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
         return {
           id: result.id,
           studentId: result.student.studentId || "",
-          studentName:
-            `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim(),
+          studentName: displayName(result.student, nameDisplay),
           marksObtained: result.marksObtained,
           totalMarks: result.totalMarks,
           percentage: result.percentage,
@@ -233,6 +235,7 @@ export async function getExamAnalytics(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) throw new Error("Missing school context")
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     const { examId } = getAnalyticsSchema.parse(input)
 
@@ -311,8 +314,7 @@ export async function getExamAnalytics(
       return {
         id: result.id,
         studentId: result.student.studentId || "",
-        studentName:
-          `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim(),
+        studentName: displayName(result.student, nameDisplay),
         marksObtained: result.marksObtained,
         totalMarks: result.totalMarks,
         percentage: result.percentage,
@@ -569,8 +571,7 @@ export async function generateStudentPDF(
     const studentResult: StudentResultDTO = {
       id: studentExamResult.id,
       studentId: studentExamResult.student.studentId || "",
-      studentName:
-        `${studentExamResult.student.firstName} ${studentExamResult.student.middleName || ""} ${studentExamResult.student.lastName}`.trim(),
+      studentName: displayName(studentExamResult.student, "full"),
       marksObtained: studentExamResult.marksObtained,
       totalMarks: studentExamResult.totalMarks,
       percentage: studentExamResult.percentage,

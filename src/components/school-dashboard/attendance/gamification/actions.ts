@@ -13,7 +13,9 @@ import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getLabels } from "@/components/translation/person"
 
 import { getOwnedStudentIds } from "../actions/helpers"
@@ -379,6 +381,7 @@ export async function getLeaderboard(
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         profilePhotoUrl: true,
         attendanceRewards: {
@@ -407,10 +410,11 @@ export async function getLeaderboard(
 
     // Calculate total points and sort
     const lang = displayLang || "ar"
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const leaderboardRaw = students
       .map((student) => ({
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, nameDisplay),
         profilePhotoUrl: student.profilePhotoUrl,
         points: student.attendanceRewards.reduce((sum, r) => sum + r.points, 0),
         currentStreak: student.attendanceStreak?.currentStreak || 0,

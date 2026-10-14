@@ -202,7 +202,14 @@ export async function listAssignments(filters?: {
         ...(filters?.status && { status: filters.status }),
       },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         route: { select: { id: true, name: true, code: true } },
         stop: { select: { id: true, name: true, stopOrder: true } },
       },
@@ -223,7 +230,14 @@ export async function getAssignment(id: string) {
     const assignment = await db.routeAssignment.findFirst({
       where: { id, schoolId, deletedAt: null },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         route: { select: { id: true, name: true, code: true } },
         stop: { select: { id: true, name: true, stopOrder: true } },
       },
@@ -298,6 +312,7 @@ export async function listStudentsForAssignment() {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         admissionNumber: true,
       },

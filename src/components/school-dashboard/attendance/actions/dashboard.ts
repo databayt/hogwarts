@@ -7,6 +7,8 @@ import type { Prisma } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   isAdminRole,
@@ -116,6 +118,7 @@ export async function getStudentsByRiskLevel(input?: {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         section: { select: { id: true, name: true } },
         attendances: {
@@ -126,6 +129,7 @@ export async function getStudentsByRiskLevel(input?: {
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const riskData: StudentRiskData[] = students.map((student) => {
       const attendances = student.attendances
       const totalDays = attendances.length
@@ -180,7 +184,7 @@ export async function getStudentsByRiskLevel(input?: {
 
       return {
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, nameDisplay),
         sectionId: student.section?.id ?? null,
         sectionName: student.section?.name ?? null,
         totalDays,
@@ -273,6 +277,7 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         section: { select: { id: true, name: true } },
         attendances: {
@@ -427,7 +432,7 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       data: {
         student: {
           studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
+          studentName: displayName(student, await schoolNameDisplay(schoolId)),
           sectionId: student.section?.id ?? null,
           sectionName: student.section?.name ?? null,
           totalDays,
@@ -590,6 +595,7 @@ export async function getParentAttendanceSummary(): Promise<
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             section: { select: { name: true } },
           },
@@ -696,6 +702,7 @@ export async function getParentAttendanceSummary(): Promise<
       }
     }
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const children = studentGuardians.map((sg) => {
       const student = sg.student
       // The child's section. Empty, not "Unassigned": a server action cannot
@@ -703,7 +710,7 @@ export async function getParentAttendanceSummary(): Promise<
       const className = student.section?.name ?? ""
       return {
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, nameDisplay),
         className,
         stats: statsByStudent.get(student.id)!,
         recentAbsences: absencesByStudent.get(student.id) ?? [],

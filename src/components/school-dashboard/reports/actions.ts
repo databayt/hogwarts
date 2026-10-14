@@ -18,7 +18,9 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { sendBatchGradeNotifications } from "@/components/school-dashboard/grades/actions/notifications"
 
 type ActionResponse<T = void> =
@@ -115,9 +117,7 @@ export async function updateReportCardComments(input: {
 /**
  * Get report cards for a term (admin/teacher view)
  */
-export async function getReportCards(input: {
-  termId: string
-}): Promise<
+export async function getReportCards(input: { termId: string }): Promise<
   ActionResponse<
     Array<{
       id: string
@@ -148,6 +148,7 @@ export async function getReportCards(input: {
         student: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
             studentId: true,
           },
@@ -157,9 +158,10 @@ export async function getReportCards(input: {
       orderBy: { student: { firstName: "asc" } },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const data = reportCards.map((rc) => ({
       id: rc.id,
-      studentName: `${rc.student.firstName} ${rc.student.lastName}`,
+      studentName: displayName(rc.student, nameDisplay),
       studentId: rc.student.studentId ?? "",
       overallGrade: rc.overallGrade,
       overallGPA: rc.overallGPA ? Number(rc.overallGPA) : null,

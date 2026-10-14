@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react"
 import { Calendar, ChevronRight, TriangleAlert, Users } from "lucide-react"
 
+import { initialsOf } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -196,15 +197,6 @@ export default function GuardianView({
     return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
   // Get current/next class
   const getCurrentClass = () => {
     const now = new Date()
@@ -298,10 +290,12 @@ export default function GuardianView({
                     src={child.photoUrl || undefined}
                     alt={child.name}
                   />
-                  <AvatarFallback>{getInitials(child.name)}</AvatarFallback>
+                  <AvatarFallback>{initialsOf(child.name)}</AvatarFallback>
                 </Avatar>
                 <div className="text-start">
-                  <p className="font-medium">{child.name}</p>
+                  <p className="font-medium">
+                    <bdi dir="auto">{child.name}</bdi>
+                  </p>
                   {(child.gradeName || child.className) && (
                     <p className="text-xs opacity-80">
                       {isRTL
@@ -329,12 +323,12 @@ export default function GuardianView({
                   alt={selectedChildData.name}
                 />
                 <AvatarFallback className="text-lg">
-                  {getInitials(selectedChildData.name)}
+                  {initialsOf(selectedChildData.name)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="text-lg font-semibold">
-                  {selectedChildData.name}
+                  <bdi dir="auto">{selectedChildData.name}</bdi>
                 </h3>
                 {(selectedChildData.gradeName ||
                   selectedChildData.className) && (

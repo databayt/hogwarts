@@ -4,7 +4,9 @@
 import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
+import { shortNameParts } from "@/lib/name-utils"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -82,11 +84,13 @@ export default async function LiveClassesContent({
         // ONE batched translation pass: titles via localize, teacher names via
         // getNames, subject/section labels via getLabels (replaces per-row getText).
         const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+        const nameDisplay = await schoolNameDisplay(schoolId)
         const [localizedRows, teacherNames, labels] = await Promise.all([
           localize("Conference", rows, { schoolId, lang: displayLang }),
           getNames(
             rows.filter((r) => r.teacher),
-            (r: (typeof rows)[number]) => r.teacher!,
+            (r: (typeof rows)[number]) =>
+              shortNameParts(r.teacher!, nameDisplay),
             displayLang,
             schoolId
           ),
@@ -97,7 +101,9 @@ export default async function LiveClassesContent({
           ),
         ])
         data = localizedRows.map((r) => {
-          const rawTeacher = r.teacher ? fullName(r.teacher) : ""
+          const rawTeacher = r.teacher
+            ? fullName(shortNameParts(r.teacher, nameDisplay))
+            : ""
           return {
             id: r.id,
             title: r.title,

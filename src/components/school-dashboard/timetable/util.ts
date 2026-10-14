@@ -1,6 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  type NameDisplay,
+} from "@/lib/name-utils"
+
 import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
 import {
   Period,
@@ -408,7 +414,8 @@ export function isSlotEditable(
 export function getSlotDisplayInfo(
   slot: TimetableSlot,
   subjects: SubjectInfo[],
-  teachers: TeacherInfo[]
+  teachers: TeacherInfo[],
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
 ): {
   subject: string
   section: string | undefined
@@ -428,7 +435,7 @@ export function getSlotDisplayInfo(
     subject: subjectName,
     section: slot.sectionName,
     teacher: teacher
-      ? `${teacher.firstName} ${teacher.lastName}`
+      ? displayName(teacher, nameDisplay)
       : slot.teacherId
         ? "TBA"
         : "Unassigned",

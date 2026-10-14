@@ -4,6 +4,8 @@
 import type { Metadata } from "next"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
@@ -45,7 +47,9 @@ export default async function RecordPaymentPage({ params }: Props) {
   const assignments = await db.feeAssignment.findMany({
     where: { schoolId, status: { in: ["PENDING", "PARTIAL"] } },
     include: {
-      student: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       feeStructure: { select: { name: true } },
       payments: { where: { status: "SUCCESS" }, select: { amount: true } },
     },
@@ -54,8 +58,17 @@ export default async function RecordPaymentPage({ params }: Props) {
 
   // One batched resolution for student names and structure labels — never
   // per row. Stored text is in the school's language, the viewer's may differ.
+  // The picker shows the school's short name display.
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const short = (s: Parameters<typeof shortNameParts>[0]) =>
+    shortNameParts(s, nameDisplay)
   const [names, labels] = await Promise.all([
-    getNames(assignments, (a) => a.student ?? {}, lang, schoolId),
+    getNames(
+      assignments,
+      (a) => (a.student ? short(a.student) : {}),
+      lang,
+      schoolId
+    ),
     getLabels(
       assignments.map((a) => a.feeStructure?.name),
       lang,
@@ -71,7 +84,7 @@ export default async function RecordPaymentPage({ params }: Props) {
     return {
       id: a.id,
       studentName: a.student
-        ? (names.get(fullName(a.student)) ?? fullName(a.student))
+        ? (names.get(fullName(short(a.student))) ?? fullName(short(a.student)))
         : "",
       feeStructureName: a.feeStructure?.name
         ? (labels.get(a.feeStructure.name) ?? a.feeStructure.name)

@@ -6,6 +6,8 @@ import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { isStaffRole } from "../authorization"
@@ -471,6 +473,7 @@ export async function getActiveInterventions(input?: {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             section: { select: { name: true } },
             attendances: {
@@ -487,6 +490,7 @@ export async function getActiveInterventions(input?: {
       orderBy: [{ priority: "desc" }, { scheduledDate: "asc" }],
       take: input?.limit ?? 50,
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     // Get assignee names
     const assigneeIds = [
@@ -520,7 +524,7 @@ export async function getActiveInterventions(input?: {
           return {
             id: intervention.id,
             studentId: intervention.studentId,
-            studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
+            studentName: displayName(intervention.student, nameDisplay),
             className: intervention.student.section?.name ?? null,
             type: intervention.type,
             title: intervention.title,
@@ -658,6 +662,7 @@ export async function getAllInterventions(input?: {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             section: { select: { name: true } },
             attendances: {
@@ -675,6 +680,7 @@ export async function getAllInterventions(input?: {
       skip,
       take: limit,
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     // Get assignee names
     const assigneeIds = [
@@ -708,7 +714,7 @@ export async function getAllInterventions(input?: {
           return {
             id: intervention.id,
             studentId: intervention.studentId,
-            studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
+            studentName: displayName(intervention.student, nameDisplay),
             className: intervention.student.section?.name ?? null,
             type: intervention.type,
             title: intervention.title,

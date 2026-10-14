@@ -9,10 +9,12 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { reviewTransportSkip } from "../actions/skips"
 import type { PendingTransportSkip } from "../actions/skips"
@@ -25,6 +27,7 @@ interface Props {
 
 export function TripSkipApprovals({ skips, locale, dictionary }: Props) {
   const t = dictionary.transportation.trips.skipApprovals
+  const nameDisplay = useNameDisplay()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
@@ -61,7 +64,16 @@ export function TripSkipApprovals({ skips, locale, dictionary }: Props) {
             >
               <div>
                 <p className="font-medium">
-                  {s.studentFirstName} {s.studentLastName}
+                  <bdi dir="auto">
+                    {displayName(
+                      {
+                        firstName: s.studentFirstName,
+                        middleName: s.studentMiddleName,
+                        lastName: s.studentLastName,
+                      },
+                      nameDisplay
+                    )}
+                  </bdi>
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {fmt.format(new Date(s.dateFrom))}

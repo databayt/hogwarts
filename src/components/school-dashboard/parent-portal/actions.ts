@@ -5,8 +5,10 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getPolicyContext, PolicyContextError } from "@/lib/rbac/context"
 import { POLICY_ERROR_CODES } from "@/lib/rbac/types"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -40,10 +42,11 @@ async function getGuardianChildren(guardianId: string, schoolId: string) {
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return studentGuardians.map((sg) => ({
     id: sg.student.id,
     studentId: sg.student.studentId,
-    name: `${sg.student.firstName} ${sg.student.middleName || ""} ${sg.student.lastName}`.trim(),
+    name: displayName(sg.student, nameDisplay),
   }))
 }
 
@@ -234,7 +237,9 @@ export async function getChildTimetable(input: { studentId: string }) {
     include: {
       section: { select: { name: true } },
       subject: { select: { name: true } },
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { roomName: true } },
       period: {
         select: {
@@ -246,6 +251,7 @@ export async function getChildTimetable(input: { studentId: string }) {
     },
     orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
   })
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return {
     timetable: timetableEntries.map((entry) => ({
@@ -256,9 +262,7 @@ export async function getChildTimetable(input: { studentId: string }) {
       endTime: entry.period.endTime.toISOString(),
       className: entry.section?.name ?? "",
       name: entry.subject?.name ?? "",
-      teacherName: entry.teacher
-        ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
-        : "",
+      teacherName: entry.teacher ? displayName(entry.teacher, nameDisplay) : "",
       roomName: entry.classroom?.roomName || "TBA",
     })),
   }
@@ -345,12 +349,14 @@ export async function getChildOverview(input: { studentId: string }) {
         examResults.length
       : 0
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
+
   return {
     student: student
       ? {
           id: student.id,
           studentId: student.studentId,
-          name: `${student.firstName} ${student.middleName || ""} ${student.lastName}`.trim(),
+          name: displayName(student, nameDisplay),
           gender: student.gender,
           dateOfBirth: student.dateOfBirth.toISOString(),
         }

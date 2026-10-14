@@ -7,6 +7,7 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { issueFine } from "./actions"
 
@@ -41,6 +43,7 @@ interface FineFormProps {
   students: Array<{
     id: string
     firstName: string | null
+    middleName?: string | null
     lastName: string | null
   }>
   lang: Locale
@@ -48,6 +51,7 @@ interface FineFormProps {
 
 export function FineForm({ students, lang }: FineFormProps) {
   const router = useRouter()
+  const nameDisplay = useNameDisplay()
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
   const ff = (dictionary as any)?.finance?.fineForm as
@@ -91,7 +95,7 @@ export function FineForm({ students, lang }: FineFormProps) {
           <SelectContent>
             {students.map((s) => (
               <SelectItem key={s.id} value={s.id}>
-                {[s.firstName, s.lastName].filter(Boolean).join(" ")}
+                <bdi dir="auto">{displayName(s, nameDisplay)}</bdi>
               </SelectItem>
             ))}
           </SelectContent>

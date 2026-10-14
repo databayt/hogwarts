@@ -18,7 +18,10 @@ import type {
 export type VehicleRow = Vehicle
 
 export type DriverRow = Driver & {
-  staffMember: Pick<StaffMember, "id" | "firstName" | "lastName"> | null
+  staffMember: Pick<
+    StaffMember,
+    "id" | "firstName" | "middleName" | "lastName"
+  > | null
 }
 
 export type RouteRow = Route & {
@@ -33,7 +36,7 @@ export type RouteRow = Route & {
 export type RouteStopRow = RouteStop
 
 export type RouteAssignmentRow = RouteAssignment & {
-  student: Pick<Student, "id" | "firstName" | "lastName"> | null
+  student: Pick<Student, "id" | "firstName" | "middleName" | "lastName"> | null
   route: Pick<Route, "id" | "name" | "code"> | null
   stop: Pick<RouteStop, "id" | "name" | "stopOrder"> | null
 }

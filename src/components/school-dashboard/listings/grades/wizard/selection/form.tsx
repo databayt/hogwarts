@@ -12,12 +12,14 @@ import React, {
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import {
   getAssignmentsForStudent,
@@ -31,6 +33,7 @@ import { selectionSchema, type SelectionFormData } from "./validation"
 interface StudentOption {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
 }
 
@@ -63,6 +66,7 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     const [exams, setExams] = useState<ExamOption[]>([])
     const [subjects, setSubjects] = useState<SubjectOption[]>([])
     const { dictionary: dict } = useDictionary()
+    const nameDisplay = useNameDisplay()
     const d = dict?.school?.grades as Record<string, any> | undefined
 
     const form = useForm<SelectionFormData>({
@@ -157,7 +161,7 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     }))
 
     const studentOptions = students.map((s) => ({
-      label: `${s.firstName} ${s.lastName}`,
+      label: displayName(s, nameDisplay),
       value: s.id,
     }))
 

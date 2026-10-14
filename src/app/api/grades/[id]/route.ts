@@ -43,7 +43,9 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 export async function GET(
@@ -81,6 +83,7 @@ export async function GET(
         student: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -104,7 +107,7 @@ export async function GET(
 
     // Build name: "Student Name - Assignment/Exam Title"
     const studentName = result.student
-      ? `${result.student.firstName} ${result.student.lastName}`
+      ? displayName(result.student, await schoolNameDisplay(schoolId))
       : "Unknown Student"
 
     const itemTitle =

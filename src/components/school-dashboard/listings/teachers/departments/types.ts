@@ -11,6 +11,7 @@
 export interface DepartmentTeacher {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null

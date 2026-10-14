@@ -4,9 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { BookOpen, GraduationCap } from "lucide-react"
 
+import { displayName } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import type { ChildProgress } from "./actions"
 
@@ -21,6 +23,7 @@ export function ParentProgressContent({
   childrenProgress: childrenData,
 }: Props) {
   const d = dictionary?.parentDashboard
+  const nameDisplay = useNameDisplay()
 
   if (childrenData.length === 0) {
     return (
@@ -52,7 +55,7 @@ export function ParentProgressContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap className="size-5" />
-              {child.student.firstName} {child.student.lastName}
+              <bdi dir="auto">{displayName(child.student, nameDisplay)}</bdi>
             </CardTitle>
           </CardHeader>
           <CardContent>

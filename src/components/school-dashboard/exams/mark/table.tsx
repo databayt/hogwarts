@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { getColumns } from "./columns"
 
@@ -64,7 +65,11 @@ function MarkingTableInner({
   const [globalFilter, setGlobalFilter] = useState("")
 
   const dict = dictionary.marking
-  const columns = useMemo(() => getColumns(dictionary), [dictionary])
+  const nameDisplay = useNameDisplay()
+  const columns = useMemo(
+    () => getColumns(dictionary, nameDisplay),
+    [dictionary, nameDisplay]
+  )
 
   const table = useReactTable({
     data,

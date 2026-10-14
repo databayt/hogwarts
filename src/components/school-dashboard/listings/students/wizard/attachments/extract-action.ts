@@ -8,6 +8,7 @@ import { canUseAI } from "@/lib/ai/budget"
 import { extractWithSchema } from "@/lib/document-extraction"
 import type { GenericExtractionOptions } from "@/lib/document-extraction/types"
 import { logger } from "@/lib/logger"
+import { parseFullName, tokenizeName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   admissionSystemMessage,
@@ -211,18 +212,22 @@ function mapToStudentData(
   }
 }
 
+/**
+ * First / middle / last from an extracted full name — names, not words, so
+ * "عبد الله" or "نور الدين" stay one name. Null when there is only one name.
+ */
+function splitExtractedName(raw: string) {
+  if (tokenizeName(raw).length < 2) return null
+  const { firstName, middleName, lastName } = parseFullName(raw)
+  return { firstName, lastName, ...(middleName ? { middleName } : {}) }
+}
+
 function mapNationalId(e: Record<string, unknown>): StudentAutoFillResult {
   const fullName = (e.fullName as string) || ""
-  const parts = fullName.split(/\s+/).filter(Boolean)
+  const split = splitExtractedName(fullName)
 
   const personal: StudentAutoFillResult["personal"] = {}
-  if (parts.length >= 2) {
-    personal.firstName = parts[0]
-    personal.lastName = parts[parts.length - 1]
-    if (parts.length >= 3) {
-      personal.middleName = parts.slice(1, -1).join(" ")
-    }
-  }
+  if (split) Object.assign(personal, split)
   if (e.dateOfBirth) personal.dateOfBirth = e.dateOfBirth as string
   if (e.gender) personal.gender = normalizeGender(e.gender as string)
   if (e.nationality) personal.nationality = e.nationality as string
@@ -242,16 +247,8 @@ function mapTranscript(e: Record<string, unknown>): StudentAutoFillResult {
   }
 
   if (e.studentName) {
-    const parts = (e.studentName as string).split(/\s+/).filter(Boolean)
-    if (parts.length >= 2) {
-      result.personal = {
-        firstName: parts[0],
-        lastName: parts[parts.length - 1],
-        ...(parts.length >= 3 && {
-          middleName: parts.slice(1, -1).join(" "),
-        }),
-      }
-    }
+    const split = splitExtractedName(e.studentName as string)
+    if (split) result.personal = split
   }
 
   return result
@@ -278,16 +275,8 @@ function mapResume(e: Record<string, unknown>): StudentAutoFillResult {
   }
 
   if (e.fullName) {
-    const parts = (e.fullName as string).split(/\s+/).filter(Boolean)
-    if (parts.length >= 2) {
-      result.personal = {
-        firstName: parts[0],
-        lastName: parts[parts.length - 1],
-        ...(parts.length >= 3 && {
-          middleName: parts.slice(1, -1).join(" "),
-        }),
-      }
-    }
+    const split = splitExtractedName(e.fullName as string)
+    if (split) result.personal = split
   }
 
   return result

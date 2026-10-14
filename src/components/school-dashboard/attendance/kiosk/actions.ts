@@ -13,7 +13,9 @@ import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { KioskAction, KioskMethod } from "./validation"
@@ -168,7 +170,7 @@ export async function lookupStudent(
       success: true,
       student: {
         id: student.id,
-        name: `${student.firstName} ${student.lastName}`,
+        name: displayName(student, await schoolNameDisplay(schoolId)),
         photoUrl: student.profilePhotoUrl,
         grNumber: student.grNumber,
         yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName,

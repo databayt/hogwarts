@@ -2,6 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
@@ -20,11 +22,7 @@ import { localize } from "@/components/translation/localize"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
-import type {
-  LandingPolicy,
-  LandingSession,
-  LandingViewer,
-} from "./types"
+import type { LandingPolicy, LandingSession, LandingViewer } from "./types"
 import { resolveLandingViewer } from "./viewer"
 
 /** A class this close to starting says so rather than printing a bare time. */
@@ -228,18 +226,17 @@ export async function loadLiveLanding(opts: {
         ...rows.live,
         ...rows.upcoming,
         ...catchUpRows,
-        ...recordingRows.filter(
-          (r) => !catchUpRows.some((c) => c.id === r.id)
-        ),
+        ...recordingRows.filter((r) => !catchUpRows.some((c) => c.id === r.id)),
       ]
 
       // ONE batched translation pass over both slices — titles via localize,
       // names via getNames, labels via getLabels. Never per row.
+      const nameDisplay = await schoolNameDisplay(schoolId)
       const [localizedRows, teacherNames, labels] = await Promise.all([
         localize("Conference", all, { schoolId, lang: displayLang }),
         getNames(
           all.filter((r) => r.teacher),
-          (r: (typeof all)[number]) => r.teacher!,
+          (r: (typeof all)[number]) => shortNameParts(r.teacher!, nameDisplay),
           displayLang,
           schoolId
         ),
@@ -272,10 +269,10 @@ export async function loadLiveLanding(opts: {
 
       const liveIds = new Set(rows.live.map((r) => r.id))
       const pastIds = new Set(catchUpRows.map((r) => r.id))
-      const toSession = (
-        r: (typeof localizedRows)[number]
-      ): LandingSession => {
-        const rawTeacher = r.teacher ? fullName(r.teacher) : ""
+      const toSession = (r: (typeof localizedRows)[number]): LandingSession => {
+        const rawTeacher = r.teacher
+          ? fullName(shortNameParts(r.teacher, nameDisplay))
+          : ""
         return {
           id: r.id,
           title: r.title,
@@ -330,9 +327,7 @@ export async function loadLiveLanding(opts: {
       // Newest first, straight out of the query's order — the shelf scrolls,
       // so every row the query returned is rendered rather than sliced.
       const catchUpIds = new Set(catchUpRows.map((r) => r.id))
-      catchUp = localizedRows
-        .filter((r) => catchUpIds.has(r.id))
-        .map(toSession)
+      catchUp = localizedRows.filter((r) => catchUpIds.has(r.id)).map(toSession)
 
       // The recordings keep the QUERY's order, not the localized array's —
       // that order is the ranking (missed first, then recent) and a filter

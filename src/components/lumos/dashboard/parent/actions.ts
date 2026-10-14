@@ -15,6 +15,7 @@ export interface ChildProgress {
   student: {
     id: string
     firstName: string
+    middleName?: string | null
     lastName: string
   }
   enrollments: Array<{
@@ -49,6 +50,7 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
             select: {
               id: true,
               firstName: true,
+              middleName: true,
               lastName: true,
               userId: true,
             },
@@ -63,7 +65,12 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
   // Map each child's userId → student record. Skip children with no user account.
   const studentsByUserId = new Map<
     string,
-    { id: string; firstName: string; lastName: string }
+    {
+      id: string
+      firstName: string
+      middleName: string | null
+      lastName: string
+    }
   >()
   for (const sg of guardian.studentGuardians) {
     const s = sg.student
@@ -71,6 +78,7 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
       studentsByUserId.set(s.userId, {
         id: s.id,
         firstName: s.firstName,
+        middleName: s.middleName,
         lastName: s.lastName,
       })
     }

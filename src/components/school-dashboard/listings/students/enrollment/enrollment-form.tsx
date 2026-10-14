@@ -9,6 +9,7 @@ import { BookOpen, CreditCard, TriangleAlert, Users } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -50,6 +51,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import type { Batch, Student } from "../registration/types"
 import type { Course, Section, Subject } from "./types"
@@ -77,6 +79,7 @@ export function EnrollmentForm({
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
   const ef = dictionary?.school?.students?.enrollmentForm
+  const nameDisplay = useNameDisplay()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
@@ -171,7 +174,9 @@ export function EnrollmentForm({
                     <AlertDescription>
                       {ef?.studentInfo?.enrolling || "Enrolling:"}{" "}
                       <strong>
-                        {student.firstName} {student.lastName}
+                        <bdi dir="auto">
+                          {displayName(student, nameDisplay)}
+                        </bdi>
                       </strong>
                       {student.grNumber && ` (${student.grNumber})`}
                     </AlertDescription>

@@ -8,7 +8,9 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
+import { displayName } from "@/lib/name-utils"
 import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type {
@@ -392,6 +394,10 @@ export async function submitInternalOnboarding(
         select: { id: true },
       })
       if (admins.length > 0) {
+        const applicantName = displayName(
+          data.personal,
+          await schoolNameDisplay(schoolId)
+        )
         await Promise.all(
           admins.map((admin) =>
             dispatchNotification({
@@ -400,7 +406,7 @@ export async function submitInternalOnboarding(
               type: "account_created",
               priority: "high",
               title: `New ${data.role} application`,
-              body: `${data.personal.firstName} ${data.personal.lastName} has applied to join as ${data.role}. Review pending.`,
+              body: `${applicantName} has applied to join as ${data.role}. Review pending.`,
             })
           )
         )

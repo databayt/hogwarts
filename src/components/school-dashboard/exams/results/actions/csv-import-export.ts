@@ -18,6 +18,7 @@ import { z } from "zod"
 
 import { cacheKeys, gradeBoundaryCache } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   examAudienceInclude,
@@ -178,9 +179,7 @@ export async function exportExamResultsToCSV(
     const rows = [RESULT_CSV_HEADERS.join(",")]
 
     for (const result of resultsWithRank) {
-      const studentName = `${result.student.firstName} ${
-        result.student.middleName || ""
-      } ${result.student.lastName}`.trim()
+      const studentName = displayName(result.student, "full")
 
       const row = [
         result.student.studentId || "",
@@ -552,9 +551,7 @@ export async function generateResultImportTemplate(examId: string): Promise<{
 
     // Add student rows
     for (const student of students) {
-      const studentName = `${student.firstName} ${student.middleName || ""} ${
-        student.lastName
-      }`.trim()
+      const studentName = displayName(student, "full")
 
       rows.push(`${student.studentId || ""},"${studentName}",0,No,`)
     }

@@ -20,7 +20,12 @@ export type {
 }
 
 export type LiveWithRefs = Conference & {
-  teacher: { id: string; firstName: string; lastName: string } | null
+  teacher: {
+    id: string
+    firstName: string
+    middleName?: string | null
+    lastName: string
+  } | null
   section: { id: string; name: string } | null
   subject: { id: string; name: string } | null
   _count?: { participants: number; recordings: number }

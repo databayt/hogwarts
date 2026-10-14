@@ -1,6 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -41,6 +44,8 @@ export async function TransportationReportsContent({
 }: Props) {
   const t = dictionary.transportation
   const r = t.reports
+  const { schoolId } = await getTenantContext()
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const [utilResult, hoursResult, statsResult, feesResult] = await Promise.all([
     getRouteUtilization(),
@@ -153,9 +158,7 @@ export async function TransportationReportsContent({
                   key={h.driverId}
                   className="flex justify-between border-b py-1.5 last:border-b-0"
                 >
-                  <span>
-                    {h.firstName} {h.lastName}
-                  </span>
+                  <bdi dir="auto">{displayName(h, nameDisplay)}</bdi>
                   <span className="text-muted-foreground">
                     {h.completedTrips} {r.driverHours.tripsLabel} ·{" "}
                     {formatMinutes(h.totalMinutes, locale)}

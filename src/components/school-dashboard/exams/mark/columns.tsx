@@ -13,6 +13,11 @@ import type {
 import type { ColumnDef } from "@tanstack/react-table"
 import { CircleCheck, Eye, Pencil } from "lucide-react"
 
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  type NameDisplay,
+} from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -33,7 +38,8 @@ type MarkingQueueItem = StudentAnswer & {
 }
 
 export function getColumns(
-  dictionary: Dictionary
+  dictionary: Dictionary,
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
 ): ColumnDef<MarkingQueueItem>[] {
   const dict = dictionary.marking
   return [
@@ -42,11 +48,11 @@ export function getColumns(
       header: dict.table.student,
       cell: ({ row }) => {
         const student = row.original.student
-        const fullName =
-          `${student.firstName} ${student.middleName || ""} ${student.lastName}`
-            .trim()
-            .replace(/\s+/g, " ")
-        return <div className="font-medium">{fullName}</div>
+        return (
+          <div className="font-medium">
+            <bdi dir="auto">{displayName(student, nameDisplay)}</bdi>
+          </div>
+        )
       },
     },
     {

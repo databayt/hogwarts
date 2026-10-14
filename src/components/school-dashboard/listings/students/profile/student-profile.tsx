@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -45,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import type { Student } from "../registration/types"
 import { AcademicTab } from "./tabs/academic-tab"
@@ -95,6 +97,7 @@ export function StudentProfile({
   gradeBoundaries,
 }: StudentProfileProps) {
   const [activeTab, setActiveTab] = useState("personal")
+  const nameDisplay = useNameDisplay()
 
   const p = dictionary?.students?.profile
   const h = p?.header
@@ -109,15 +112,9 @@ export function StudentProfile({
     DROPPED_OUT: statusOpts?.droppedOut || defaultStatusLabels.DROPPED_OUT,
   }
 
-  const getInitials = () => {
-    return `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
-  }
+  const getInitials = () => nameInitials(student, nameDisplay)
 
-  const getFullName = () => {
-    return [student.firstName, student.middleName, student.lastName]
-      .filter(Boolean)
-      .join(" ")
-  }
+  const getFullName = () => displayName(student, nameDisplay)
 
   const getAge = () => {
     if (!student.dateOfBirth) return null
@@ -170,7 +167,7 @@ export function StudentProfile({
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="flex items-center gap-2">
-                    {getFullName()}
+                    <bdi dir="auto">{getFullName()}</bdi>
                     <Badge
                       className={cn(statusColors[student.status], "text-white")}
                     >

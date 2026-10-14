@@ -14,7 +14,9 @@ import type { UserRole } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { isStaffRole } from "../authorization"
 import {
@@ -118,10 +120,10 @@ export async function generateLetter(
     const className = student.section?.name || "N/A"
 
     const templateData: Record<string, string> = {
-      studentName: `${student.firstName} ${student.lastName}`,
+      studentName: displayName(student, "full"),
       studentId: student.grNumber || student.id,
       guardianName: guardian
-        ? `${guardian.firstName} ${guardian.lastName}`
+        ? displayName(guardian, "full")
         : "Parent/Guardian",
       className,
       absenceRate: absenceRate.toFixed(1),
@@ -339,6 +341,8 @@ export async function getStudentsNeedingLetters(
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
+
     // Filter based on tier threshold
     const thresholds = {
       TIER_1: { min: 0, max: 9.99 },
@@ -375,7 +379,7 @@ export async function getStudentsNeedingLetters(
       success: true,
       data: eligibleStudents.map((s) => ({
         id: s.id,
-        name: `${s.firstName} ${s.lastName}`,
+        name: displayName(s, nameDisplay),
         grNumber: s.grNumber,
         yearLevel: s.studentYearLevels[0]?.yearLevel?.levelName,
         absenceRate: Math.round(s.absenceRate * 10) / 10,
@@ -513,10 +517,10 @@ export async function previewLetter(
 
     // Build template data
     const templateData: Record<string, string> = {
-      studentName: `${student.firstName} ${student.lastName}`,
+      studentName: displayName(student, "full"),
       studentId: student.grNumber || student.id,
       guardianName: guardian
-        ? `${guardian.firstName} ${guardian.lastName}`
+        ? displayName(guardian, "full")
         : "Parent/Guardian",
       className: student.section?.name || "N/A",
       absenceRate: absenceRate.toFixed(1),

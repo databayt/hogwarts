@@ -6,6 +6,8 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -71,7 +73,9 @@ export default async function FeeReportsPage({ params }: Props) {
           amount: true,
           paymentDate: true,
           paymentMethod: true,
-          student: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
         },
       }),
       db.feeStructure.findMany({
@@ -92,9 +96,12 @@ export default async function FeeReportsPage({ params }: Props) {
       }),
     ])
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const short = (s: Parameters<typeof shortNameParts>[0]) =>
+    shortNameParts(s, nameDisplay)
   const payerNames = await getNames(
     recentPayments,
-    (p) => p.student ?? {},
+    (p) => (p.student ? short(p.student) : {}),
     lang,
     schoolId
   )
@@ -287,10 +294,14 @@ export default async function FeeReportsPage({ params }: Props) {
                 {recentPayments.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">
-                      {p.student
-                        ? (payerNames.get(fullName(p.student)) ??
-                          fullName(p.student))
-                        : ""}
+                      {p.student ? (
+                        <bdi dir="auto">
+                          {payerNames.get(fullName(short(p.student))) ??
+                            fullName(short(p.student))}
+                        </bdi>
+                      ) : (
+                        ""
+                      )}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatCurrency(Number(p.amount), lang, currency)}

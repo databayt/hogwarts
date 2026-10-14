@@ -7,6 +7,7 @@ import { format } from "date-fns"
 import JsBarcode from "jsbarcode"
 import { QRCodeSVG } from "qrcode.react"
 
+import { nameInitials, parseFullName } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import type { IDCardData, IDCardTemplate } from "./types"
@@ -38,10 +39,9 @@ export const IDCardTemplateComponent = forwardRef<
     }
   }, [data.grNumber, template.includeBarcode])
 
-  const getInitials = (name: string) => {
-    const parts = name.split(" ")
-    return `${parts[0]?.[0] || ""}${parts[parts.length - 1]?.[0] || ""}`.toUpperCase()
-  }
+  // First + family initial — names, not words (عبد الله → ع).
+  const getInitials = (name: string) =>
+    nameInitials(parseFullName(name), "first-last")
 
   const cardStyle: React.CSSProperties = {
     width: template.orientation === "portrait" ? "54mm" : "85.6mm",
@@ -109,7 +109,7 @@ export const IDCardTemplateComponent = forwardRef<
                   margin: 0,
                 }}
               >
-                {data.studentName}
+                <bdi dir="auto">{data.studentName}</bdi>
               </p>
               <p style={{ fontSize: "10px", color: "#666", margin: "1mm 0" }}>
                 {data.grNumber}

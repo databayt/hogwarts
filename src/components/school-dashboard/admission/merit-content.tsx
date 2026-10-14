@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { displayName } from "@/lib/name-utils"
 import { ADMIN_ROLES, isRoleIn } from "@/lib/rbac/ui-permissions"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -60,14 +61,14 @@ export default async function MeritContent({
       // One batched, deduped resolution for applicant + campaign names
       const labels = await getLabels(
         [
-          ...listResult.rows.map((a) => `${a.firstName} ${a.lastName}`),
+          ...listResult.rows.map((a) => displayName(a, "full")),
           ...listResult.rows.map((a) => a.campaign.name),
         ],
         lang,
         schoolId!
       )
       data = listResult.rows.map((a) => {
-        const fullName = `${a.firstName} ${a.lastName}`
+        const fullName = displayName(a, "full")
         return {
           id: a.id,
           applicationNumber: a.applicationNumber,

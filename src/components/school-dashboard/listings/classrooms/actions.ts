@@ -10,6 +10,8 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { localize } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
@@ -482,6 +484,7 @@ export async function getRoomTimetable(input: {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -497,6 +500,7 @@ export async function getRoomTimetable(input: {
       select: { id: true, name: true, startTime: true, endTime: true },
     }),
   ])
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return {
     slots: slots.map((s) => ({
@@ -508,7 +512,7 @@ export async function getRoomTimetable(input: {
       gradeName: s.section?.grade?.name ?? null,
       gradeId: s.section?.grade?.id ?? null,
       subject: s.subject?.name ?? "",
-      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
+      teacher: s.teacher ? displayName(s.teacher, nameDisplay) : "",
       teacherId: s.teacher?.id ?? "",
     })),
     workingDays: weekConfig?.workingDays ?? [0, 1, 2, 3, 4],

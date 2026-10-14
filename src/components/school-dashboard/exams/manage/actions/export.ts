@@ -5,6 +5,7 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -168,9 +169,7 @@ export async function getExamResultsCSV(input: {
     const resultsWithRank = results.map((result, index) => ({
       rank: result.isAbsent ? "Absent" : String(index + 1),
       studentId: result.student.studentId,
-      studentName: `${result.student.firstName} ${
-        result.student.middleName || ""
-      } ${result.student.lastName}`.trim(),
+      studentName: displayName(result.student, "full"),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage.toFixed(2),

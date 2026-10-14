@@ -11,6 +11,8 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -262,6 +264,7 @@ export async function checkExamConflicts(
         include: { ...slotInclude, teacher: true },
       })
 
+      const nameDisplay = await schoolNameDisplay(schoolId)
       for (const entry of teacherTimetable) {
         const periodStart = dateTimeToTimeString(entry.period.startTime)
         const periodEnd = dateTimeToTimeString(entry.period.endTime)
@@ -271,7 +274,7 @@ export async function checkExamConflicts(
             type: "teacher",
             entityId: entry.teacherId ?? "",
             entityName: entry.teacher
-              ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
+              ? displayName(entry.teacher, nameDisplay)
               : "",
             conflictingEvent: `Teaching ${slotLabel(entry) || "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,

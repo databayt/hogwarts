@@ -7,7 +7,9 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   canMarkAttendance,
@@ -314,7 +316,9 @@ export async function getAttendanceReport(
     db.attendance.findMany({
       where,
       include: {
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
         section: { select: { name: true } },
       },
       orderBy: { date: "desc" },
@@ -327,6 +331,7 @@ export async function getAttendanceReport(
   const pageSize = parsed.limit
   const currentPage = Math.floor(parsed.offset / pageSize) + 1
   const totalPages = Math.ceil(total / pageSize)
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return {
     success: true,
@@ -334,7 +339,7 @@ export async function getAttendanceReport(
       id: r.id,
       date: r.date.toISOString().split("T")[0],
       studentId: r.studentId,
-      studentName: `${r.student.firstName} ${r.student.lastName}`,
+      studentName: displayName(r.student, nameDisplay),
       sectionId: r.sectionId,
       className: r.section?.name ?? "",
       status: r.status,
@@ -425,7 +430,9 @@ export async function getAttendanceReportCsv(input: {
     orderBy: { date: "desc" },
     take: sp.limit ?? 1000,
     include: {
-      student: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { name: true } },
     },
   })
@@ -442,7 +449,7 @@ export async function getAttendanceReportCsv(input: {
       [
         r.date.toISOString().split("T")[0],
         r.studentId,
-        `${r.student.firstName} ${r.student.lastName}`,
+        displayName(r.student, "full"),
         r.sectionId ?? "",
         r.section?.name ?? "",
         String(r.status),

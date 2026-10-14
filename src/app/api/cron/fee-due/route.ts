@@ -34,6 +34,8 @@ import {
   dispatchNotification,
   dispatchNotificationsToAudience,
 } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import {
   getFinanceNotificationCopy,
   interp,
@@ -371,6 +373,7 @@ async function processSchool(
       id: true,
       applicationNumber: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       email: true,
       userId: true,
@@ -379,6 +382,7 @@ async function processSchool(
     },
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   for (const application of expiringOffers) {
     // Idempotency check for offer-expiry alerts.
     if (
@@ -396,7 +400,7 @@ async function processSchool(
     const expiryDate = application.offerExpiryDate
       ? calendarDay(application.offerExpiryDate)
       : "—"
-    const studentName = `${application.firstName} ${application.lastName}`
+    const studentName = displayName(application, nameDisplay)
     const daysUntilExpiry = application.offerExpiryDate
       ? Math.ceil(
           (application.offerExpiryDate.getTime() - now.getTime()) /

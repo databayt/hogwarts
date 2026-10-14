@@ -46,6 +46,7 @@ import {
   User,
 } from "lucide-react"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -61,6 +62,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 import { formatName } from "@/components/translation/transliterate"
 
 import { specialtyFamilies } from "../subjects/families"
@@ -72,6 +74,7 @@ import { specialtyFamilies } from "../subjects/families"
 interface TeacherDetailData {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   gender?: string
   emailAddress: string
@@ -170,10 +173,6 @@ function formatDate(
   })
 }
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
 function getStatusColor(status?: string): string {
   switch (status) {
     case "ACTIVE":
@@ -242,6 +241,7 @@ export function TeacherDetailContent({
   workload,
   isOwner = false,
 }: Props) {
+  const nameDisplay = useNameDisplay()
   const [activeTab, setActiveTab] = useState("overview")
 
   const d = dictionary?.teachers?.detail
@@ -267,7 +267,7 @@ export function TeacherDetailContent({
     departments: d?.departments || "Departments",
   }
 
-  const fullName = `${teacher.firstName} ${teacher.lastName}`
+  const fullName = displayName(teacher, nameDisplay)
 
   return (
     <>
@@ -285,7 +285,7 @@ export function TeacherDetailContent({
                   alt={fullName}
                 />
                 <AvatarFallback className="bg-primary/10 text-2xl md:text-3xl">
-                  {getInitials(teacher.firstName, teacher.lastName)}
+                  {nameInitials(teacher, nameDisplay)}
                 </AvatarFallback>
               </Avatar>
 
@@ -294,7 +294,7 @@ export function TeacherDetailContent({
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
                     <h1 className="text-2xl font-bold md:text-3xl">
-                      {fullName}
+                      <bdi dir="auto">{fullName}</bdi>
                     </h1>
                     <p className="text-muted-foreground">
                       {teacher.emailAddress}

@@ -6,6 +6,8 @@ import { ArrowLeft, Minus, TrendingDown, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,6 +53,7 @@ export default async function ResultsAnalyticsContent({
   }
 
   if (schoolId) {
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const [examsCount, results] = await Promise.all([
       db.schoolExam.count({ where: { schoolId, status: "COMPLETED" } }),
       db.examResult.findMany({
@@ -61,7 +64,7 @@ export default async function ResultsAnalyticsContent({
           marksObtained: true,
           grade: true,
           student: {
-            select: { firstName: true, lastName: true },
+            select: { firstName: true, middleName: true, lastName: true },
           },
           exam: {
             select: { passingMarks: true },
@@ -128,9 +131,7 @@ export default async function ResultsAnalyticsContent({
       (a, b) => b.percentage - a.percentage
     )
     const toPerformer = (r: (typeof sorted)[0]) => ({
-      studentName:
-        `${r.student.firstName || ""} ${r.student.lastName || ""}`.trim() ||
-        "Unknown",
+      studentName: displayName(r.student, nameDisplay) || "Unknown",
       percentage: r.percentage,
       grade: r.grade,
     })

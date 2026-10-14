@@ -6,6 +6,8 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
@@ -50,7 +52,13 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
     where: { id, schoolId },
     include: {
       teacher: {
-        select: { id: true, firstName: true, lastName: true, employeeId: true },
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          employeeId: true,
+        },
       },
       allowances: { orderBy: { createdAt: "desc" } },
       deductions: { orderBy: { createdAt: "desc" } },
@@ -60,18 +68,18 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
 
   if (!structure) notFound()
 
-  const teacherName = [
-    structure.teacher?.firstName,
-    structure.teacher?.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ")
+  const teacherName = displayName(
+    structure.teacher,
+    await schoolNameDisplay(schoolId)
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div>
-          <h3 className="text-lg font-medium">{teacherName}</h3>
+          <h3 className="text-lg font-medium">
+            <bdi dir="auto">{teacherName}</bdi>
+          </h3>
           <p className="text-muted-foreground text-sm">
             {structure.teacher?.employeeId || c?.noId || "No ID"} —{" "}
             {payFrequency?.[structure.payFrequency] ?? structure.payFrequency}

@@ -93,7 +93,9 @@ import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { shortNameParts } from "@/lib/name-utils"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
@@ -1143,11 +1145,9 @@ export async function getStudents(
     ])
 
     // Translate student names for current locale (canonical helper — must match the
-    // initial server render in content.tsx: display = first + last, no middle).
-    const nameOf = (s: any) => ({
-      firstName: s.firstName,
-      lastName: s.lastName,
-    })
+    // initial server render in content.tsx: the school's short display).
+    const nameDisplay = await schoolNameDisplay(schoolId)
+    const nameOf = (s: any) => shortNameParts(s, nameDisplay)
     // Classrooms: room codes (B102) transliterate directly; real names go
     // through ONE batched, deduped getLabels pass (script-detected source).
     const uniqueClassrooms = new Set<string>()

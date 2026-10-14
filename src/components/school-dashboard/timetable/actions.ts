@@ -69,7 +69,9 @@ import { Prisma } from "@prisma/client"
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName, shortNameParts } from "@/lib/name-utils"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
@@ -185,7 +187,7 @@ async function validateTeacherConstraints(input: {
   // Get teacher info
   const teacher = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId: input.schoolId },
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true, firstName: true, middleName: true, lastName: true },
   })
 
   if (!teacher) {
@@ -203,7 +205,10 @@ async function validateTeacherConstraints(input: {
     }
   }
 
-  const teacherName = `${teacher.firstName} ${teacher.lastName}`
+  const teacherName = displayName(
+    teacher,
+    await schoolNameDisplay(input.schoolId)
+  )
 
   // Get teacher constraint (term-specific or school-wide)
   const constraint = await db.teacherConstraint.findFirst({
@@ -648,6 +653,7 @@ export async function detectTimetableConflicts(input?: unknown) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Log action for audit trail
   await logTimetableAction("manage_conflicts", {
@@ -711,7 +717,9 @@ export async function detectTimetableConflicts(input?: unknown) {
       teacherId: true,
       classroomId: true,
       section: { select: { id: true, name: true } },
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { roomName: true } },
     } as const
 
@@ -755,9 +763,7 @@ export async function detectTimetableConflicts(input?: unknown) {
           classB: cohortOf(b),
           teacher: {
             id: a.teacherId ?? "",
-            name: [a.teacher?.firstName, a.teacher?.lastName]
-              .filter(Boolean)
-              .join(" "),
+            name: displayName(a.teacher, nameDisplay),
           },
           room: null,
         })
@@ -847,12 +853,14 @@ export async function getTeachersForSelection(input: unknown) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const rows = await db.teacher.findMany({
     where: { schoolId },
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       employmentStatus: true,
       _count: { select: { timetables: true } },
@@ -864,7 +872,7 @@ export async function getTeachersForSelection(input: unknown) {
   const lang = await getDisplayLang()
   const nameMap = await getNames(
     rows,
-    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    (t) => shortNameParts(t, nameDisplay),
     lang,
     schoolId
   )
@@ -879,14 +887,17 @@ export async function getTeachersForSelection(input: unknown) {
     return (b._count?.timetables ?? 0) - (a._count?.timetables ?? 0)
   })
 
-  // Deduplicate by localized name so repeated teacher rows in seed data don't repeat in the selector
+  // Deduplicate by full stored name so repeated teacher rows in seed data don't
+  // repeat in the selector — never by the short label, which two different
+  // teachers can share.
   const seen = new Set<string>()
   const teachers: Array<{ id: string; label: string }> = []
   for (const t of sorted) {
-    const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
+    const raw = fullName(shortNameParts(t, nameDisplay))
     const label = nameMap.get(raw) || raw
-    if (!label || seen.has(label)) continue
-    seen.add(label)
+    const key = fullName(t)
+    if (!label || seen.has(key)) continue
+    seen.add(key)
     teachers.push({ id: t.id, label })
   }
 
@@ -1160,7 +1171,9 @@ export async function moveTimetableSlot(rawInput: {
     where: { id: input.slotId, schoolId },
     include: {
       section: { select: { id: true, name: true } },
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { id: true, roomName: true } },
     },
   })
@@ -1225,7 +1238,9 @@ export async function moveTimetableSlot(rawInput: {
           },
           include: {
             section: { select: { name: true } },
-            teacher: { select: { firstName: true, lastName: true } },
+            teacher: {
+              select: { firstName: true, middleName: true, lastName: true },
+            },
           },
         })
       : null
@@ -1566,6 +1581,7 @@ async function getTimetableBySection(input: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1599,7 +1615,14 @@ async function getTimetableBySection(input: {
         sectionId: input.sectionId,
       },
       include: {
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         classroom: { select: { id: true, roomName: true } },
         section: { select: { name: true } },
         subject: { select: { name: true } },
@@ -1624,7 +1647,7 @@ async function getTimetableBySection(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
+      teacher: s.teacher ? displayName(s.teacher, nameDisplay) : "",
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
@@ -1653,6 +1676,7 @@ export async function getTimetableByStudentGrade(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const session = await auth()
   const userId = session?.user?.id
@@ -1664,6 +1688,7 @@ export async function getTimetableByStudentGrade(input: {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       sectionId: true,
     },
@@ -1727,7 +1752,14 @@ export async function getTimetableByStudentGrade(input: {
           : { id: { in: [] } }),
       },
       include: {
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         classroom: { select: { id: true, roomName: true } },
         section: { select: { name: true } },
         subject: { select: { name: true } },
@@ -1749,7 +1781,7 @@ export async function getTimetableByStudentGrade(input: {
   return {
     studentInfo: {
       id: student.id,
-      name: `${student.firstName} ${student.lastName}`,
+      name: displayName(student, nameDisplay),
       gradeName,
       gradeLang,
     },
@@ -1769,7 +1801,7 @@ export async function getTimetableByStudentGrade(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
+      teacher: s.teacher ? displayName(s.teacher, nameDisplay) : "",
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
@@ -1806,6 +1838,7 @@ export async function getTimetableByTeacher(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1851,6 +1884,7 @@ export async function getTimetableByTeacher(input: {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         emailAddress: true,
       },
@@ -1871,12 +1905,12 @@ export async function getTimetableByTeacher(input: {
     ? (
         await getNames(
           [teacherInfo],
-          (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+          (t) => shortNameParts(t, nameDisplay),
           lang,
           schoolId
         )
-      ).get(`${teacherInfo.firstName} ${teacherInfo.lastName}`.trim()) ||
-      `${teacherInfo.firstName} ${teacherInfo.lastName}`
+      ).get(displayName(teacherInfo, nameDisplay)) ||
+      displayName(teacherInfo, nameDisplay)
     : ""
 
   return {
@@ -1944,6 +1978,7 @@ export async function getTimetableByRoom(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1978,7 +2013,14 @@ export async function getTimetableByRoom(input: {
       include: {
         subject: { select: { id: true, name: true } },
         section: { select: { id: true, name: true } },
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         period: {
           select: { id: true, name: true, startTime: true, endTime: true },
         },
@@ -2005,7 +2047,7 @@ export async function getTimetableByRoom(input: {
   const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
   const teacherNames = await getNames(
     slots.filter((s) => s.teacher).map((s) => s.teacher!),
-    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    (t) => shortNameParts(t, nameDisplay),
     lang,
     schoolId
   )
@@ -2027,9 +2069,7 @@ export async function getTimetableByRoom(input: {
     })),
     slots: slots.map((s) => {
       const subject = rawSubject(s)
-      const rawTeacher = s.teacher
-        ? `${s.teacher.firstName} ${s.teacher.lastName}`.trim()
-        : ""
+      const rawTeacher = s.teacher ? displayName(s.teacher, nameDisplay) : ""
       return {
         id: s.id,
         dayOfWeek: s.dayOfWeek,
@@ -2065,6 +2105,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -2082,7 +2123,9 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   const slots = await db.timetable.findMany({
     where: { schoolId, termId: input.termId, weekOffset: 0 },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { id: true, roomName: true, capacity: true } },
       // The operational identity of a slot is section+subject.
       subject: { select: { name: true } },
@@ -2109,7 +2152,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     if (slot.teacher) {
       const key = slot.teacherId ?? ""
       const existing = teacherWorkload.get(key) || {
-        name: `${slot.teacher.firstName} ${slot.teacher.lastName}`,
+        name: displayName(slot.teacher, nameDisplay),
         periods: 0,
         classes: new Set(),
         subjects: new Set(),
@@ -2192,11 +2235,9 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     schoolId
   )
   const analyticsTeacherNames = await getNames(
-    Array.from(teacherWorkload.entries()).map(([id, d]) => {
-      const [firstName, ...rest] = d.name.split(" ")
-      return { id, firstName, lastName: rest.join(" ") }
-    }),
-    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    // `name` is already the school's short display name — translate it whole.
+    Array.from(teacherWorkload.values()),
+    (d) => ({ firstName: d.name }),
     lang,
     schoolId
   )
@@ -2271,7 +2312,14 @@ export async function deleteTimetableSlot(rawInput: {
     slotToDelete = await db.timetable.findFirst({
       where: { id: input.id, schoolId },
       include: {
-        teacher: { select: { userId: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            userId: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         section: { select: { name: true } },
       },
     })
@@ -2293,7 +2341,14 @@ export async function deleteTimetableSlot(rawInput: {
         weekOffset: input.weekOffset,
       },
       include: {
-        teacher: { select: { userId: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            userId: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         section: { select: { name: true } },
       },
     })
@@ -2657,6 +2712,7 @@ export async function getPersonalizedTimetable(input: {
                 select: {
                   id: true,
                   firstName: true,
+                  middleName: true,
                   lastName: true,
                 },
               },
@@ -2767,6 +2823,7 @@ export async function getGuardianChildren() {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const session = await auth()
   const userId = session?.user?.id
@@ -2787,6 +2844,7 @@ export async function getGuardianChildren() {
             select: {
               id: true,
               firstName: true,
+              middleName: true,
               lastName: true,
               profilePhotoUrl: true,
               section: { select: { id: true, name: true } },
@@ -2820,7 +2878,7 @@ export async function getGuardianChildren() {
 
     return {
       id: sg.student.id,
-      name: `${sg.student.firstName} ${sg.student.lastName}`,
+      name: displayName(sg.student, nameDisplay),
       photoUrl: sg.student.profilePhotoUrl,
       sectionId: sg.student.section?.id,
       // The child's section (Grade 7-A)
@@ -2846,6 +2904,7 @@ export async function getChildTimetable(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const session = await auth()
   const userId = session?.user?.id
@@ -2881,7 +2940,13 @@ export async function getChildTimetable(input: {
 
   const student = await db.student.findFirst({
     where: { id: input.childId, schoolId },
-    select: { id: true, firstName: true, lastName: true, sectionId: true },
+    select: {
+      id: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      sectionId: true,
+    },
   })
 
   // A child not yet placed in a section has no timetable yet.
@@ -2905,7 +2970,7 @@ export async function getChildTimetable(input: {
     studentInfo: student
       ? {
           id: student.id,
-          name: `${student.firstName} ${student.lastName}`,
+          name: displayName(student, nameDisplay),
         }
       : null,
     ...timetableData,
@@ -2927,6 +2992,7 @@ export async function getChildTodaySchedule(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const session = await auth()
   const userId = session?.user?.id
@@ -2999,7 +3065,9 @@ export async function getChildTodaySchedule(input: {
     include: {
       section: { select: { name: true } },
       subject: { select: { name: true } },
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       classroom: { select: { roomName: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
@@ -3026,10 +3094,8 @@ export async function getChildTodaySchedule(input: {
     className: slot.section?.name || "",
     teacher: (() => {
       const sub = subsBySlot.get(slot.id)
-      if (sub) return `${sub.firstName} ${sub.lastName}`
-      return slot.teacher
-        ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
-        : ""
+      if (sub) return displayName(sub, nameDisplay)
+      return slot.teacher ? displayName(slot.teacher, nameDisplay) : ""
     })(),
     room: slot.classroom?.roomName || "",
     sectionId: slot.sectionId,
@@ -3111,6 +3177,7 @@ export async function getTeacherConstraints(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const constraint = await db.teacherConstraint.findFirst({
     where: {
@@ -3120,7 +3187,9 @@ export async function getTeacherConstraints(input: {
     },
     include: {
       unavailableBlocks: true,
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
     orderBy: { termId: "desc" },
   })
@@ -3133,7 +3202,7 @@ export async function getTeacherConstraints(input: {
     constraint: {
       id: constraint.id,
       teacherId: constraint.teacherId,
-      teacherName: `${constraint.teacher.firstName} ${constraint.teacher.lastName}`,
+      teacherName: displayName(constraint.teacher, nameDisplay),
       termId: constraint.termId,
       maxPeriodsPerDay: constraint.maxPeriodsPerDay,
       maxPeriodsPerWeek: constraint.maxPeriodsPerWeek,
@@ -4591,7 +4660,7 @@ export async function createTeacherAbsence(input: {
   // Verify teacher exists in this school
   const teacher = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId },
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true, firstName: true, middleName: true, lastName: true },
   })
 
   if (!teacher) throw new Error("TEACHER_NOT_FOUND")
@@ -4627,7 +4696,9 @@ export async function createTeacherAbsence(input: {
       status: "PENDING",
     },
     include: {
-      teacher: { select: { firstName: true, lastName: true } },
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
   })
 
@@ -4636,7 +4707,7 @@ export async function createTeacherAbsence(input: {
     entityId: absence.id,
     metadata: {
       teacherId: input.teacherId,
-      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      teacherName: displayName(teacher, "full"),
       absenceType: input.absenceType,
       startDate: input.startDate.toISOString(),
       endDate: input.endDate.toISOString(),
@@ -4714,6 +4785,7 @@ export async function getTeacherAbsences(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const where: Record<string, unknown> = { schoolId }
   if (input.teacherId) where.teacherId = input.teacherId
@@ -4735,11 +4807,23 @@ export async function getTeacherAbsences(input: {
       take: input.limit ?? 50,
       skip: input.offset ?? 0,
       include: {
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         substitutionRecords: {
           include: {
             substituteTeacher: {
-              select: { id: true, firstName: true, lastName: true },
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
             },
             originalSlot: {
               include: {
@@ -4761,7 +4845,7 @@ export async function getTeacherAbsences(input: {
     absences: absences.map((a) => ({
       id: a.id,
       teacherId: a.teacherId,
-      teacherName: `${a.teacher.firstName} ${a.teacher.lastName}`,
+      teacherName: displayName(a.teacher, nameDisplay),
       startDate: a.startDate,
       endDate: a.endDate,
       absenceType: a.absenceType,
@@ -4773,7 +4857,7 @@ export async function getTeacherAbsences(input: {
         status: s.status,
         slotDate: s.slotDate,
         substituteId: s.substituteTeacherId,
-        substituteName: `${s.substituteTeacher.firstName} ${s.substituteTeacher.lastName}`,
+        substituteName: displayName(s.substituteTeacher, nameDisplay),
         periodName: s.originalSlot.period.name,
         className: s.originalSlot.section?.name,
         name: s.originalSlot.subject?.name,
@@ -4798,6 +4882,7 @@ export async function findAvailableSubstitutes(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Get all active teachers except the absent one
   const teachers = await db.teacher.findMany({
@@ -4873,7 +4958,7 @@ export async function findAvailableSubstitutes(input: {
 
     available.push({
       id: teacher.id,
-      name: `${teacher.firstName} ${teacher.lastName}`,
+      name: displayName(teacher, nameDisplay),
       hasSubjectExpertise: !!subjectExp,
       expertiseLevel: subjectExp?.expertiseLevel || null,
       currentWorkload: weekSlots,
@@ -4908,11 +4993,16 @@ export async function assignSubstitute(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Verify absence exists
   const absence = await db.teacherAbsence.findFirst({
     where: { id: input.absenceId, schoolId },
-    include: { teacher: { select: { firstName: true, lastName: true } } },
+    include: {
+      teacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+    },
   })
 
   if (!absence) throw new Error("ABSENCE_NOT_FOUND")
@@ -4921,7 +5011,9 @@ export async function assignSubstitute(input: {
   const originalSlot = await db.timetable.findFirst({
     where: { id: input.originalSlotId, schoolId },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { name: true } },
       subject: { select: { name: true } },
       period: { select: { name: true } },
@@ -4933,7 +5025,7 @@ export async function assignSubstitute(input: {
   // Verify substitute teacher
   const substitute = await db.teacher.findFirst({
     where: { id: input.substituteTeacherId, schoolId },
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true, firstName: true, middleName: true, lastName: true },
   })
 
   if (!substitute) throw new Error("SUBSTITUTE_TEACHER_NOT_FOUND")
@@ -4965,8 +5057,12 @@ export async function assignSubstitute(input: {
       notes: input.notes,
     },
     include: {
-      substituteTeacher: { select: { firstName: true, lastName: true } },
-      originalTeacher: { select: { firstName: true, lastName: true } },
+      substituteTeacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+      originalTeacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
     },
   })
 
@@ -4975,8 +5071,8 @@ export async function assignSubstitute(input: {
     entityId: substitution.id,
     metadata: {
       type: "substitution",
-      originalTeacher: `${originalSlot.teacher?.firstName} ${originalSlot.teacher?.lastName}`,
-      substituteTeacher: `${substitute.firstName} ${substitute.lastName}`,
+      originalTeacher: displayName(originalSlot.teacher, "full"),
+      substituteTeacher: displayName(substitute, "full"),
       slotDate: input.slotDate.toISOString(),
       periodName: originalSlot.period?.name,
       className: originalSlot.section?.name,
@@ -4994,12 +5090,7 @@ export async function assignSubstitute(input: {
       select: { preferredLanguage: true },
     })
     const notifLang3 = schoolPref3?.preferredLanguage ?? "ar"
-    const origTeacher = [
-      originalSlot.teacher?.firstName,
-      originalSlot.teacher?.lastName,
-    ]
-      .filter(Boolean)
-      .join(" ")
+    const origTeacher = displayName(originalSlot.teacher, nameDisplay)
     dispatchNotification({
       schoolId,
       userId: subTeacherUser.userId,
@@ -5128,6 +5219,7 @@ export async function getSubstitutionRecords(rawInput: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const where: Record<string, unknown> = { schoolId }
   if (input.absenceId) where.absenceId = input.absenceId
@@ -5156,10 +5248,20 @@ export async function getSubstitutionRecords(rawInput: {
       skip: input.offset ?? 0,
       include: {
         originalTeacher: {
-          select: { id: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         substituteTeacher: {
-          select: { id: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         originalSlot: {
           include: {
@@ -5187,11 +5289,11 @@ export async function getSubstitutionRecords(rawInput: {
       confirmedAt: r.confirmedAt,
       originalTeacher: {
         id: r.originalTeacher.id,
-        name: `${r.originalTeacher.firstName} ${r.originalTeacher.lastName}`,
+        name: displayName(r.originalTeacher, nameDisplay),
       },
       substituteTeacher: {
         id: r.substituteTeacher.id,
-        name: `${r.substituteTeacher.firstName} ${r.substituteTeacher.lastName}`,
+        name: displayName(r.substituteTeacher, nameDisplay),
       },
       slot: {
         id: r.originalSlotId,
@@ -5293,6 +5395,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Find teacher by user ID
   const teacher = await db.teacher.findFirst({
@@ -5313,7 +5416,9 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
     orderBy: { slotDate: "asc" },
     take: input.limit ?? 10,
     include: {
-      originalTeacher: { select: { firstName: true, lastName: true } },
+      originalTeacher: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       originalSlot: {
         include: {
           period: { select: { name: true, startTime: true, endTime: true } },
@@ -5330,7 +5435,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
       id: r.id,
       slotDate: r.slotDate,
       status: r.status,
-      originalTeacher: `${r.originalTeacher.firstName} ${r.originalTeacher.lastName}`,
+      originalTeacher: displayName(r.originalTeacher, nameDisplay),
       periodName: r.originalSlot.period.name,
       periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
       className: r.originalSlot.section?.name,
@@ -5352,12 +5457,15 @@ export async function getSlotsNeedingSubstitutes(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   // Get the absence details
   const absence = await db.teacherAbsence.findFirst({
     where: { id: input.absenceId, schoolId },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       substitutionRecords: {
         select: { originalSlotId: true, slotDate: true, status: true },
       },
@@ -5447,7 +5555,7 @@ export async function getSlotsNeedingSubstitutes(input: {
   return {
     teacher: {
       id: absence.teacherId,
-      name: `${absence.teacher.firstName} ${absence.teacher.lastName}`,
+      name: displayName(absence.teacher, nameDisplay),
     },
     absence: {
       id: absence.id,
@@ -5552,6 +5660,7 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
   await requireReadAccess()
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const [teachers, termSlots, workload] = await Promise.all([
     db.teacher.findMany({
@@ -5559,6 +5668,7 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         _count: { select: { timetables: true } },
         constraints: {
@@ -5612,7 +5722,7 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
   const lang = await getDisplayLang()
   const nameMap = await getNames(
     teachers,
-    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    (t) => shortNameParts(t, nameDisplay),
     lang,
     schoolId
   )
@@ -5636,10 +5746,12 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     busy: string[]
   }> = []
   for (const t of sorted) {
-    const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
+    const raw = fullName(shortNameParts(t, nameDisplay))
     const name = nameMap.get(raw) || raw
-    if (!name || seen.has(name)) continue
-    seen.add(name)
+    // Dedupe on the full stored name — two teachers can share a short label.
+    const key = fullName(t)
+    if (!name || seen.has(key)) continue
+    seen.add(key)
     out.push({
       id: t.id,
       firstName: t.firstName || "",
@@ -5676,6 +5788,7 @@ export async function getSlotDetail(input: { timetableId: string }) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   const session = await auth()
   const userId = session?.user?.id
@@ -5694,7 +5807,9 @@ export async function getSlotDetail(input: { timetableId: string }) {
         select: { name: true, grade: { select: { name: true } } },
       },
       classroom: { select: { roomName: true } },
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
@@ -5719,15 +5834,13 @@ export async function getSlotDetail(input: { timetableId: string }) {
   // static teacherId on the school-calendar day they're covering. Gated on
   // `isToday` — a substitution is dated, so a cell inspected for a day other
   // than the school's today must keep showing the pattern's own teacher.
-  let teacherName = slot.teacher
-    ? `${slot.teacher.firstName} ${slot.teacher.lastName}`.trim()
-    : null
+  let teacherName = slot.teacher ? displayName(slot.teacher, nameDisplay) : null
   if (isToday) {
     const subsBySlot = await substitutesForSlots(schoolId, schoolTz, now, [
       slot.id,
     ])
     const sub = subsBySlot.get(slot.id)
-    if (sub) teacherName = `${sub.firstName} ${sub.lastName}`.trim()
+    if (sub) teacherName = displayName(sub, nameDisplay)
   }
 
   type Personal =

@@ -21,6 +21,7 @@ import React from "react"
 import { renderToBuffer } from "@react-pdf/renderer"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { ReportCardTemplate } from "@/components/file/generate/report-card"
 import type {
   ReportCardData,
@@ -50,6 +51,7 @@ export async function renderAndUploadReportCardPdf(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           studentId: true,
         },
@@ -123,7 +125,7 @@ export async function renderAndUploadReportCardPdf(
     schoolEmail: school?.email ?? undefined,
     issueDate: rc.publishedAt ?? new Date(),
     locale,
-    studentName: `${rc.student.firstName} ${rc.student.lastName}`,
+    studentName: displayName(rc.student, "full"),
     studentId: rc.student.studentId ?? rc.student.id,
     studentPhoto: undefined,
     className: "",

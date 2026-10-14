@@ -21,6 +21,7 @@ export interface PendingTransportSkip {
   id: string
   studentId: string
   studentFirstName: string
+  studentMiddleName?: string | null
   studentLastName: string
   dateFrom: string
   dateTo: string
@@ -51,7 +52,9 @@ export async function listPendingTransportSkips() {
         dateFrom: true,
         dateTo: true,
         description: true,
-        student: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
       },
     })
     return {
@@ -60,6 +63,7 @@ export async function listPendingTransportSkips() {
         id: s.id,
         studentId: s.studentId,
         studentFirstName: s.student.firstName,
+        studentMiddleName: s.student.middleName,
         studentLastName: s.student.lastName,
         dateFrom: s.dateFrom.toISOString(),
         dateTo: s.dateTo.toISOString(),

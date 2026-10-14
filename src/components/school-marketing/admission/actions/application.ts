@@ -14,6 +14,7 @@ import {
   buildNewApplicationAdminNotification,
   buildResumeApplicationEmail,
 } from "@/lib/email-templates/admission"
+import { displayName } from "@/lib/name-utils"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -377,10 +378,15 @@ export async function getDraftApplicationsByUser(
 
     const drafts = sessions.map((session) => {
       const formData = session.formData as Record<string, unknown>
-      const firstName = (formData?.firstName as string) || null
-      const lastName = (formData?.lastName as string) || null
       const studentName =
-        firstName && lastName ? `${firstName} ${lastName}` : firstName || null
+        displayName(
+          {
+            firstName: formData?.firstName as string | undefined,
+            middleName: formData?.middleName as string | undefined,
+            lastName: formData?.lastName as string | undefined,
+          },
+          "full"
+        ) || null
 
       return {
         sessionToken: session.sessionToken,
@@ -447,6 +453,7 @@ export async function getSubmittedApplicationsByUser(
         applicationNumber: true,
         status: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         submittedAt: true,
         accessToken: true,
@@ -466,10 +473,7 @@ export async function getSubmittedApplicationsByUser(
         id: app.id,
         applicationNumber: app.applicationNumber,
         status: app.status,
-        studentName:
-          app.firstName && app.lastName
-            ? `${app.firstName} ${app.lastName}`
-            : app.firstName || null,
+        studentName: displayName(app, "full") || null,
         campaignName: app.campaign?.name ?? null,
         submittedAt: app.submittedAt,
         offerToken:
@@ -839,7 +843,7 @@ export async function submitApplication(
     // preferred language so admins see the alert in the language they set up.
     const adminNotification = buildNewApplicationAdminNotification({
       school: schoolResult.data,
-      studentName: `${validated.firstName} ${validated.lastName}`,
+      studentName: displayName(validated, "full"),
       applicationNumber,
     })
     dispatchNotificationsToAudience({
@@ -868,8 +872,8 @@ export async function submitApplication(
         parentName:
           validated.fatherName ||
           validated.motherName ||
-          `${validated.firstName} ${validated.lastName}`,
-        studentName: `${validated.firstName} ${validated.lastName}`,
+          displayName(validated, "full"),
+        studentName: displayName(validated, "full"),
         applicationNumber,
         trackUrl: await tenantUrl(
           subdomain,

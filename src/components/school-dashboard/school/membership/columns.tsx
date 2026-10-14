@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Copy, Eye } from "lucide-react"
 
+import { initialsOf } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,16 +44,6 @@ const statusVariant = (status: string) => {
     default:
       return "outline"
   }
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
 }
 
 function CopyEmailCell({ email }: { email: string | null }) {
@@ -105,14 +96,14 @@ export const getMemberColumns = (
             <Avatar className="h-7 w-7">
               <AvatarImage src={member.image || undefined} alt={member.name} />
               <AvatarFallback className="text-xs">
-                {getInitials(member.name)}
+                {initialsOf(member.name)}
               </AvatarFallback>
             </Avatar>
             <Link
               href={`/${locale}/profile/${member.id}`}
               className="font-medium hover:underline"
             >
-              {member.name}
+              <bdi dir="auto">{member.name}</bdi>
             </Link>
           </div>
         )

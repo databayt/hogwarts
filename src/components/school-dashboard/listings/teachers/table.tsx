@@ -8,7 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
-import type { NameContact } from "@/lib/name-utils"
+import { initialsOf, parseFullName, type NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -157,23 +157,29 @@ function TeachersTableInner({
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }
-      const rows = result.data.rows.map((r: any) => ({
-        ...r,
-        firstName: r.firstName || r.name?.split(" ")[0] || "",
-        lastName: r.lastName || r.name?.split(" ").slice(1).join(" ") || "",
-        phone: r.phone || null,
-        department: r.department || null,
-        departmentId: r.departmentId || null,
-        subjects: r.subjects ?? [],
-        sectionCount: r.sectionCount ?? 0,
-        employmentStatus: r.employmentStatus || "ACTIVE",
-        employmentType: r.employmentType || "FULL_TIME",
-        hasAccount: r.hasAccount ?? !!r.userId,
-        userId: r.userId || null,
-        profilePhotoUrl: r.profilePhotoUrl || null,
-        joiningDate: r.joiningDate || null,
-        wizardStep: r.wizardStep || null,
-      })) as TeacherRow[]
+      const rows = result.data.rows.map((r: any) => {
+        const parsed = parseFullName(r.name ?? "")
+        return {
+          ...r,
+          firstName: r.firstName || parsed.firstName || "",
+          lastName:
+            r.lastName ||
+            [parsed.middleName, parsed.lastName].filter(Boolean).join(" ") ||
+            "",
+          phone: r.phone || null,
+          department: r.department || null,
+          departmentId: r.departmentId || null,
+          subjects: r.subjects ?? [],
+          sectionCount: r.sectionCount ?? 0,
+          employmentStatus: r.employmentStatus || "ACTIVE",
+          employmentType: r.employmentType || "FULL_TIME",
+          hasAccount: r.hasAccount ?? !!r.userId,
+          userId: r.userId || null,
+          profilePhotoUrl: r.profilePhotoUrl || null,
+          joiningDate: r.joiningDate || null,
+          wizardStep: r.wizardStep || null,
+        }
+      }) as TeacherRow[]
       return { rows, total: result.data.total }
     },
     filters: debouncedSearch ? { name: debouncedSearch } : undefined,
@@ -347,16 +353,6 @@ function TeachersTableInner({
     }
   }
 
-  // Get initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase()
-  }
-
   // Export CSV wrapper
   const handleExportCSV = useCallback(
     async (filters?: Record<string, unknown>) => {
@@ -430,12 +426,7 @@ function TeachersTableInner({
           ) : (
             <GridContainer columns={4} className="mt-4">
               {data.map((teacher) => {
-                const initials = teacher.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
+                const initials = initialsOf(teacher.name)
                 return (
                   <GridCard
                     key={teacher.id}

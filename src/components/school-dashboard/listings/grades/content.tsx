@@ -6,6 +6,7 @@ import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -72,7 +73,8 @@ export default async function GradesContent({
 
       // Map results, then translate ALL text columns in ONE batched, deduped
       // pass (getLabels) — replaces the per-row 3×getText N+1.
-      const rawData = rows.map((r) => formatResultRow(r))
+      const nameDisplay = await schoolNameDisplay(schoolId)
+      const rawData = rows.map((r) => formatResultRow(r, nameDisplay))
       const labels = await getLabels(
         rawData.flatMap((row) => [
           row.studentName,

@@ -17,6 +17,8 @@
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { displayName, type NameDisplay } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { MAX_CONTACTS_PER_CATEGORY, ROLE_CATEGORIES } from "./config"
 import type { ContactCategory, ContactDTO, ContactGroup } from "./types"
@@ -143,6 +145,7 @@ async function getContactsForCategory(
 
 type ProfileData = {
   firstName: string
+  middleName?: string | null
   lastName: string
   email: string | null
   image: string | null
@@ -193,16 +196,17 @@ async function getMembersByRole(
   const profiles = await enrichProfiles(userRole, schoolId, userIds)
 
   // 3. Merge: domain data preferred, User fallback
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return users.map((u) => {
     const profile = profiles.get(u.id)
-    const displayName = profile?.firstName
-      ? `${profile.firstName} ${profile.lastName}`
+    const label = profile?.firstName
+      ? displayName(profile, nameDisplay)
       : (u.username ?? u.email ?? "User")
     return {
       id: u.id,
       firstName: profile?.firstName ?? u.username ?? "",
       lastName: profile?.lastName ?? "",
-      displayName,
+      displayName: label,
       email: profile?.email ?? u.email ?? null,
       image: u.image ?? profile?.image ?? null,
       role: u.role,
@@ -262,6 +266,7 @@ async function enrichProfiles(
         select: {
           userId: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
@@ -281,6 +286,7 @@ async function enrichProfiles(
         if (t.userId) {
           map.set(t.userId, {
             firstName: t.firstName,
+            middleName: t.middleName,
             lastName: t.lastName,
             email: t.emailAddress,
             image: t.profilePhotoUrl ?? null,
@@ -299,6 +305,7 @@ async function enrichProfiles(
         select: {
           userId: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           email: true,
           profilePhotoUrl: true,
@@ -309,6 +316,7 @@ async function enrichProfiles(
         if (s.userId) {
           map.set(s.userId, {
             firstName: s.firstName,
+            middleName: s.middleName,
             lastName: s.lastName,
             email: s.email ?? null,
             image: s.profilePhotoUrl ?? null,
@@ -324,12 +332,15 @@ async function enrichProfiles(
         select: {
           userId: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
           studentGuardians: {
             select: {
-              student: { select: { firstName: true, lastName: true } },
+              student: {
+                select: { firstName: true, middleName: true, lastName: true },
+              },
             },
             take: 2,
           },
@@ -347,6 +358,7 @@ async function enrichProfiles(
             .join(", ")
           map.set(g.userId, {
             firstName: g.firstName,
+            middleName: g.middleName,
             lastName: g.lastName,
             email: g.emailAddress ?? null,
             image: g.profilePhotoUrl ?? null,
@@ -363,6 +375,7 @@ async function enrichProfiles(
         select: {
           userId: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
@@ -374,6 +387,7 @@ async function enrichProfiles(
         if (s.userId) {
           map.set(s.userId, {
             firstName: s.firstName,
+            middleName: s.middleName,
             lastName: s.lastName,
             email: s.emailAddress,
             image: s.profilePhotoUrl ?? null,
@@ -460,6 +474,7 @@ function nameSearch(search?: string) {
 
 const teacherSelect = {
   firstName: true,
+  middleName: true,
   lastName: true,
   emailAddress: true,
   profilePhotoUrl: true,
@@ -474,6 +489,7 @@ const teacherSelect = {
 const studentSelect = {
   id: true,
   firstName: true,
+  middleName: true,
   lastName: true,
   email: true,
   profilePhotoUrl: true,
@@ -483,12 +499,17 @@ const studentSelect = {
 
 const guardianSelect = {
   firstName: true,
+  middleName: true,
   lastName: true,
   emailAddress: true,
   profilePhotoUrl: true,
   user: { select: { id: true, image: true, role: true } },
   studentGuardians: {
-    select: { student: { select: { firstName: true, lastName: true } } },
+    select: {
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
+    },
     take: 2,
   },
 } as const
@@ -499,12 +520,16 @@ type TeacherRow = Awaited<
   ReturnType<typeof db.teacher.findMany<{ select: typeof teacherSelect }>>
 >[number]
 
-function mapTeacher(t: TeacherRow, category: ContactCategory): ContactDTO {
+function mapTeacher(
+  t: TeacherRow,
+  category: ContactCategory,
+  nameDisplay: NameDisplay
+): ContactDTO {
   return {
     id: t.user!.id,
     firstName: t.firstName,
     lastName: t.lastName,
-    displayName: `${t.firstName} ${t.lastName}`,
+    displayName: displayName(t, nameDisplay),
     email: t.emailAddress,
     image: t.user!.image ?? t.profilePhotoUrl ?? null,
     role: t.user!.role,
@@ -519,12 +544,16 @@ type StudentRow = Awaited<
   ReturnType<typeof db.student.findMany<{ select: typeof studentSelect }>>
 >[number]
 
-function mapStudent(s: StudentRow, category: ContactCategory): ContactDTO {
+function mapStudent(
+  s: StudentRow,
+  category: ContactCategory,
+  nameDisplay: NameDisplay
+): ContactDTO {
   return {
     id: s.user!.id,
     firstName: s.firstName,
     lastName: s.lastName,
-    displayName: `${s.firstName} ${s.lastName}`,
+    displayName: displayName(s, nameDisplay),
     email: s.email ?? null,
     image: s.user!.image ?? s.profilePhotoUrl ?? null,
     role: s.user!.role,
@@ -537,7 +566,11 @@ type GuardianRow = Awaited<
   ReturnType<typeof db.guardian.findMany<{ select: typeof guardianSelect }>>
 >[number]
 
-function mapGuardian(g: GuardianRow, category: ContactCategory): ContactDTO {
+function mapGuardian(
+  g: GuardianRow,
+  category: ContactCategory,
+  nameDisplay: NameDisplay
+): ContactDTO {
   const childNames = g.studentGuardians
     .map((sg) => sg.student.firstName)
     .join(", ")
@@ -545,7 +578,7 @@ function mapGuardian(g: GuardianRow, category: ContactCategory): ContactDTO {
     id: g.user!.id,
     firstName: g.firstName,
     lastName: g.lastName,
-    displayName: `${g.firstName} ${g.lastName}`,
+    displayName: displayName(g, nameDisplay),
     email: g.emailAddress ?? null,
     image: g.user!.image ?? g.profilePhotoUrl ?? null,
     role: g.user!.role,
@@ -615,7 +648,10 @@ async function getTeachersForStudent(
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
-  return teachers.filter((t) => t.user).map((t) => mapTeacher(t, "my_teachers"))
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  return teachers
+    .filter((t) => t.user)
+    .map((t) => mapTeacher(t, "my_teachers", nameDisplay))
 }
 
 async function getTeachersForGuardian(
@@ -690,9 +726,10 @@ async function getTeachersForGuardian(
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return teachers
     .filter((t) => t.user)
-    .map((t) => mapTeacher(t, "my_children_teachers"))
+    .map((t) => mapTeacher(t, "my_children_teachers", nameDisplay))
 }
 
 // -- Students (relationship) --
@@ -750,7 +787,10 @@ async function getStudentsForTeacher(
   search?: string
 ): Promise<ContactDTO[]> {
   const students = await getTeacherSectionStudents(schoolId, userId, search)
-  return students.filter((s) => s.user).map((s) => mapStudent(s, "my_students"))
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  return students
+    .filter((s) => s.user)
+    .map((s) => mapStudent(s, "my_students", nameDisplay))
 }
 
 async function getClassmatesForStudent(
@@ -773,9 +813,10 @@ async function getClassmatesForStudent(
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   return classmates
     .filter((s) => s.user)
-    .map((s) => mapStudent(s, "classmates"))
+    .map((s) => mapStudent(s, "classmates", nameDisplay))
 }
 
 // -- Guardians (relationship) --
@@ -800,5 +841,8 @@ async function getGuardiansForTeacher(
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
-  return guardians.filter((g) => g.user).map((g) => mapGuardian(g, "parents"))
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  return guardians
+    .filter((g) => g.user)
+    .map((g) => mapGuardian(g, "parents", nameDisplay))
 }

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -123,7 +125,14 @@ export async function ParentAttendanceContent({
             sectionId: true,
             subjectId: true,
             subject: { select: { name: true } },
-            teacher: { select: { id: true, firstName: true, lastName: true } },
+            teacher: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
           },
         })
       : []
@@ -143,21 +152,25 @@ export async function ParentAttendanceContent({
     ...teachings.map((row) => row.subject.name),
     ...children.flatMap((c) => c.attendances.map((a) => markSubject(a)?.name)),
   ]
+  // UI labels: the school's short display (first + second or first + last)
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const short = (p: Parameters<typeof shortNameParts>[0]) =>
+    shortNameParts(p, nameDisplay)
   const [studentNames, teacherNames, labels] = await Promise.all([
     getNames(
       guardian.studentGuardians,
-      (sg) => sg.student,
+      (sg) => short(sg.student),
       displayLang,
       schoolId
     ),
-    getNames(allTeachers, (t) => t, displayLang, schoolId),
+    getNames(allTeachers, (t) => short(t), displayLang, schoolId),
     getLabels(allLabels, displayLang, schoolId),
   ])
   const t = (v: string | null | undefined) => (v ? (labels.get(v) ?? v) : "")
 
   // Prepare data for the view
   const students = guardian.studentGuardians.map((sg) => {
-    const rawStudent = fullName(sg.student)
+    const rawStudent = fullName(short(sg.student))
     return {
       id: sg.student.id,
       name: studentNames.get(rawStudent) ?? rawStudent,
@@ -171,7 +184,7 @@ export async function ParentAttendanceContent({
         >()
         for (const row of teachings) {
           if (row.sectionId !== sg.student.sectionId) continue
-          const rawTeacher = fullName(row.teacher)
+          const rawTeacher = fullName(short(row.teacher))
           options.set(row.subjectId, {
             id: row.subjectId,
             name: t(row.subject.name),

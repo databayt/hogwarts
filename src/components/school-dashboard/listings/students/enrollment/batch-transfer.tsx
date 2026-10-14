@@ -18,6 +18,7 @@ import {
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -70,6 +71,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import type { Batch, Student } from "../registration/types"
 import type { BatchTransferRequest } from "./types"
@@ -95,6 +97,7 @@ export function BatchTransfer({
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
   const bt = dictionary?.school?.students?.enrollmentForm?.batchTransfer
+  const nameDisplay = useNameDisplay()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -159,7 +162,7 @@ export function BatchTransfer({
   const getStudentName = (studentId: string) => {
     const student = students.find((s) => s.id === studentId)
     return student
-      ? `${student.firstName} ${student.lastName}`
+      ? displayName(student, nameDisplay)
       : bt?.unknown || "Unknown"
   }
 
@@ -294,7 +297,7 @@ export function BatchTransfer({
                 {pendingTransfers.map((transfer) => (
                   <TableRow key={transfer.id}>
                     <TableCell className="font-medium">
-                      {getStudentName(transfer.studentId)}
+                      <bdi dir="auto">{getStudentName(transfer.studentId)}</bdi>
                     </TableCell>
                     <TableCell>{getBatchName(transfer.fromBatchId)}</TableCell>
                     <TableCell>
@@ -387,7 +390,7 @@ export function BatchTransfer({
               {transfers.map((transfer) => (
                 <TableRow key={transfer.id}>
                   <TableCell className="font-medium">
-                    {getStudentName(transfer.studentId)}
+                    <bdi dir="auto">{getStudentName(transfer.studentId)}</bdi>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -477,7 +480,9 @@ export function BatchTransfer({
                       <SelectContent>
                         {students.map((student) => (
                           <SelectItem key={student.id} value={student.id}>
-                            {student.firstName} {student.lastName}
+                            <bdi dir="auto">
+                              {displayName(student, nameDisplay)}
+                            </bdi>
                             {student.grNumber && ` (${student.grNumber})`}
                           </SelectItem>
                         ))}
@@ -673,7 +678,9 @@ export function BatchTransfer({
                 </AlertTitle>
                 <AlertDescription>
                   {bt?.studentLabel || "Student:"}{" "}
-                  {getStudentName(selectedTransfer.studentId)}
+                  <bdi dir="auto">
+                    {getStudentName(selectedTransfer.studentId)}
+                  </bdi>
                   <br />
                   {bt?.fromLabel || "From:"}{" "}
                   {getBatchName(selectedTransfer.fromBatchId)}

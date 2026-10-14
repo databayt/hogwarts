@@ -12,6 +12,7 @@
  */
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 // Unambiguous characters: excludes 0, O, I, L, 1
 const UNAMBIGUOUS_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -183,6 +184,7 @@ export async function validateAccessCode(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
         },
       },
@@ -204,8 +206,9 @@ export async function validateAccessCode(
   return {
     valid: true,
     studentId: accessCode.studentId,
-    studentName:
-      `${accessCode.student.firstName} ${accessCode.student.lastName}`.trim(),
+    // Full name: the guardian confirms WHICH child the code links — a short
+    // name could match two siblings or classmates.
+    studentName: displayName(accessCode.student, "full"),
     codeId: accessCode.id,
   }
 }

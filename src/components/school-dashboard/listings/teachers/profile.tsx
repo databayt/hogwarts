@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +42,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { specialtyFamilies } from "./subjects/families"
 
@@ -51,6 +53,7 @@ interface TeacherProfileProps {
 
 export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
   const [activeTab, setActiveTab] = useState("overview")
+  const nameDisplay = useNameDisplay()
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.teachers?.profile
 
@@ -146,13 +149,12 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <Avatar className="h-20 w-20">
                 <AvatarImage src={teacher.avatarUrl} />
                 <AvatarFallback className="text-2xl">
-                  {teacher.firstName?.[0]}
-                  {teacher.lastName?.[0]}
+                  {nameInitials(teacher, nameDisplay)}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
                 <h2 className="text-2xl font-bold">
-                  {teacher.firstName} {teacher.lastName}
+                  <bdi dir="auto">{displayName(teacher, nameDisplay)}</bdi>
                 </h2>
                 <p className="text-muted-foreground">
                   {teacher.employeeId
@@ -289,7 +291,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                     {t?.fullName || "Full Name"}
                   </p>
                   <p className="font-medium">
-                    {teacher.firstName} {teacher.lastName}
+                    <bdi dir="auto">{displayName(teacher, "full")}</bdi>
                   </p>
                 </div>
                 <div>

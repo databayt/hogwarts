@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react"
 
+import { initialsOf } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -50,13 +51,8 @@ export interface ConversationInfoPanelProps {
 // ---------------------------------------------------------------------------
 
 function getInitials(name: string | null | undefined): string {
-  if (!name) return "?"
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
+  // Names, not words: "عبد الله" is one name → one initial.
+  return initialsOf(name) || "?"
 }
 
 const ROLE_ORDER: Record<string, number> = {
@@ -218,7 +214,7 @@ export function ConversationInfoPanel({
           </Avatar>
 
           <h2 className="text-foreground mt-3 text-center text-xl font-medium">
-            {displayName}
+            <bdi dir="auto">{displayName}</bdi>
           </h2>
 
           {/* Subtitle: participant count or email */}
@@ -379,7 +375,11 @@ export function ConversationInfoPanel({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-foreground truncate text-sm">
-                          {isCurrentUser ? labels.you : name}
+                          {isCurrentUser ? (
+                            labels.you
+                          ) : (
+                            <bdi dir="auto">{name}</bdi>
+                          )}
                         </span>
                         <RoleBadge
                           role={participant.role}

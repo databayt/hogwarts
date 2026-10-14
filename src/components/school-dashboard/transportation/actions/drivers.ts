@@ -146,7 +146,14 @@ export async function listDrivers() {
     const drivers = await db.driver.findMany({
       where: { schoolId, deletedAt: null },
       include: {
-        staffMember: { select: { id: true, firstName: true, lastName: true } },
+        staffMember: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
       },
       orderBy: [{ status: "asc" }, { lastName: "asc" }],
     })
@@ -169,7 +176,14 @@ export async function getDriver(id: string) {
           where: { deletedAt: null },
           select: { id: true, name: true, code: true },
         },
-        staffMember: { select: { id: true, firstName: true, lastName: true } },
+        staffMember: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
       },
     })
     if (!driver) return actionError(ACTION_ERRORS.DRIVER_NOT_FOUND)

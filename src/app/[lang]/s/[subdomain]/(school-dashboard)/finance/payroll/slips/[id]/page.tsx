@@ -58,7 +58,12 @@ export default async function PayslipPage({ params }: Props) {
     where: { id, schoolId },
     include: {
       teacher: {
-        select: { userId: true, firstName: true, lastName: true },
+        select: {
+          userId: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+        },
       },
     },
   })
@@ -83,6 +88,7 @@ export default async function PayslipPage({ params }: Props) {
     select: { currency: true },
   })
 
+  // A payslip is a formal document — the full name.
   const employeeName = slip.teacher
     ? await getName(slip.teacher, lang, schoolId)
     : ""

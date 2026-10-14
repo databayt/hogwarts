@@ -17,7 +17,9 @@ import type {
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { isStaffRole } from "../../authorization"
 import {
@@ -96,6 +98,7 @@ export async function getStudentsByTier(): Promise<ActionResult> {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         grNumber: true,
         profilePhotoUrl: true,
@@ -244,7 +247,7 @@ export async function createTieredIntervention(
       },
       include: {
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
     })
@@ -255,7 +258,10 @@ export async function createTieredIntervention(
       success: true,
       data: {
         id: intervention.id,
-        studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
+        studentName: displayName(
+          intervention.student,
+          await schoolNameDisplay(schoolId)
+        ),
         tier,
         action,
       },
@@ -417,6 +423,7 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             profilePhotoUrl: true,
           },
@@ -424,13 +431,15 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
       },
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
+
     return {
       success: true,
       data: interventions.map((i) => ({
         id: i.id,
         student: {
           id: i.student.id,
-          name: `${i.student.firstName} ${i.student.lastName}`,
+          name: displayName(i.student, nameDisplay),
           photoUrl: i.student.profilePhotoUrl,
         },
         type: i.type,

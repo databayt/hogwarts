@@ -7,6 +7,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,13 +23,19 @@ import {
 } from "@/components/ui/select"
 import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { assignFee, bulkAssignFees } from "./actions"
 
 interface FeeAssignmentFormProps {
   lang: string
   feeStructures: { id: string; name: string; totalAmount: number }[]
-  students: { id: string; firstName: string; lastName: string }[]
+  students: {
+    id: string
+    firstName: string
+    middleName?: string | null
+    lastName: string
+  }[]
 }
 
 export function FeeAssignmentForm({
@@ -39,6 +46,7 @@ export function FeeAssignmentForm({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
+  const nameDisplay = useNameDisplay()
   const af = (dictionary as any)?.finance?.assignmentForm as
     | Record<string, string>
     | undefined
@@ -287,7 +295,7 @@ export function FeeAssignmentForm({
                   htmlFor={`student-${student.id}`}
                   className="font-normal"
                 >
-                  {student.firstName} {student.lastName}
+                  <bdi dir="auto">{displayName(student, nameDisplay)}</bdi>
                 </Label>
               </div>
             ))}

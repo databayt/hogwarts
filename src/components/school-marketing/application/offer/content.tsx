@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { gradeLabel } from "@/lib/grade"
+import { displayName } from "@/lib/name-utils"
 import { formatCurrency } from "@/lib/payment/currency"
 import type {
   BankDetails,
@@ -745,7 +746,7 @@ export default function OfferContent({
             {t?.congratulations || "Congratulations! You've Been Accepted"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {application.firstName} {application.lastName} —{" "}
+            <bdi dir="auto">{displayName(application, "full")}</bdi> —{" "}
             {getSchoolDisplayName(school, locale)}
           </p>
         </div>

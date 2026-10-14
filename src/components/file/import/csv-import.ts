@@ -24,11 +24,11 @@ import { parse } from "csv-parse/sync"
 import { z, ZodError } from "zod"
 
 import { generateEasyPin } from "@/lib/credentials"
-import { allocateLoginCode, allocateLoginCodes } from "@/lib/login-code"
-import { parseFullName } from "@/lib/name-utils"
 import { db } from "@/lib/db"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { logger } from "@/lib/logger"
+import { allocateLoginCode, allocateLoginCodes } from "@/lib/login-code"
+import { displayName, parseFullName } from "@/lib/name-utils"
 import {
   provisionStudent,
   type ProvisionGuardianInput,
@@ -1169,7 +1169,7 @@ class CsvImportService {
 
           result.credentials?.push({
             row: rowNumber,
-            name: `${validated.firstName} ${validated.lastName}`.trim(),
+            name: displayName(validated, "full"),
             username: staffUsername,
             email: validated.emailAddress ?? null,
             role: "STAFF",
@@ -1391,7 +1391,7 @@ class CsvImportService {
 
           result.credentials?.push({
             row: rowNumber,
-            name: `${validated.firstName} ${validated.lastName}`.trim(),
+            name: displayName(validated, "full"),
             username: guardianUsername,
             email: validated.emailAddress ?? null,
             role: "GUARDIAN",

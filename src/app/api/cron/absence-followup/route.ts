@@ -10,6 +10,8 @@ import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getGuardiansForStudent } from "@/lib/guardian-utils"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 export const dynamic = "force-dynamic"
 
@@ -103,6 +105,7 @@ export async function GET(request: Request) {
       })
       absencesScanned += candidates.length
 
+      const nameDisplay = await schoolNameDisplay(config.schoolId)
       for (const absence of candidates) {
         const guardians = await getGuardiansForStudent(
           db,
@@ -111,14 +114,7 @@ export async function GET(request: Request) {
         )
         if (guardians.length === 0) continue
 
-        const studentName = [
-          absence.student.firstName,
-          absence.student.middleName,
-          absence.student.lastName,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .trim()
+        const studentName = displayName(absence.student, nameDisplay)
 
         const lang = (config.school?.preferredLanguage as "ar" | "en") ?? "ar"
         const title =

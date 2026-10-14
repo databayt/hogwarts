@@ -22,6 +22,7 @@ import {
 } from "@/lib/dispatch-notification"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
@@ -491,7 +492,7 @@ export async function getApplications(params: {
           id: a.id,
           applicationNumber: a.applicationNumber,
           channel: a.channel,
-          applicantName: `${a.firstName} ${a.lastName}`,
+          applicantName: displayName(a, "full"),
           firstName: a.firstName,
           lastName: a.lastName,
           email: a.email,
@@ -634,6 +635,7 @@ export async function updateApplicationStatus(params: {
         userId: true,
         lang: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         campaignId: true,
         accessToken: true,
@@ -766,7 +768,7 @@ export async function updateApplicationStatus(params: {
           const parentName =
             application.fatherName ||
             application.motherName ||
-            `${application.firstName} ${application.lastName}`
+            displayName(application, "full")
           const { subject, html } = buildOfferEmail({
             school: {
               name: school?.name,
@@ -774,7 +776,7 @@ export async function updateApplicationStatus(params: {
               preferredLanguage: school?.preferredLanguage,
             },
             parentName,
-            studentName: `${application.firstName} ${application.lastName}`,
+            studentName: displayName(application, "full"),
             applicationNumber: application.applicationNumber,
             offerUrl,
             expiryDate: application.offerExpiryDate
@@ -830,7 +832,7 @@ export async function getMeritListData(params: {
         rows: result.rows.map((a) => ({
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: `${a.firstName} ${a.lastName}`,
+          applicantName: displayName(a, "full"),
           firstName: a.firstName,
           lastName: a.lastName,
           applyingForClass: a.applyingForClass,
@@ -1111,7 +1113,7 @@ export async function getEnrollmentData(params: {
         rows: result.rows.map((a) => ({
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: `${a.firstName} ${a.lastName}`,
+          applicantName: displayName(a, "full"),
           firstName: a.firstName,
           lastName: a.lastName,
           applyingForClass: a.applyingForClass,
@@ -1703,7 +1705,7 @@ export async function confirmEnrollment(params: {
           studentId,
           userId: notifyUserId,
           origin: "PORTAL",
-          studentName: `${application.firstName} ${application.lastName}`,
+          studentName: displayName(application, "full"),
           email: application.email,
           enrollmentNumber,
           isNewUser: isNewGuestUser,
@@ -1779,6 +1781,7 @@ export async function recordPayment(params: {
           userId: true,
           email: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           lang: true,
         },
@@ -2331,7 +2334,7 @@ export async function getApplicationsCSV(params: {
     const statusLabels = admission.status as Record<string, string>
     const channelLabels = admission.channel as Record<string, string>
     const labels = await getLabels(
-      rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+      rows.flatMap((a) => [displayName(a, "full"), a.campaign.name]),
       lang,
       schoolId
     )
@@ -2349,7 +2352,7 @@ export async function getApplicationsCSV(params: {
       admission.applicationDetail.phone,
     ]
     const body = rows.map((a) => {
-      const name = `${a.firstName} ${a.lastName}`
+      const name = displayName(a, "full")
       return [
         a.applicationNumber,
         labels.get(name) ?? name,
@@ -2409,7 +2412,7 @@ export async function getEnrollmentCSV(params: {
     const enrollment = admission.enrollment
     const statusLabels = admission.status as Record<string, string>
     const labels = await getLabels(
-      rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+      rows.flatMap((a) => [displayName(a, "full"), a.campaign.name]),
       lang,
       schoolId
     )
@@ -2429,7 +2432,7 @@ export async function getEnrollmentCSV(params: {
       admission.applicationDetail.confirmationDate,
     ]
     const body = rows.map((a) => {
-      const name = `${a.firstName} ${a.lastName}`
+      const name = displayName(a, "full")
       const offer = a.admissionConfirmed
         ? enrollment.accepted
         : a.admissionOffered

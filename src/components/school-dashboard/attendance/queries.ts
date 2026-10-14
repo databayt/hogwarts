@@ -10,6 +10,8 @@ import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { getTeacherSectionIds } from "./actions/helpers"
 
@@ -97,6 +99,7 @@ export async function loadTodaysAttendanceDashboard(
   input: AttendanceViewer
 ): Promise<TodaysAttendanceDashboard> {
   const { schoolId, userId, role } = input
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const dayNames = [
@@ -199,7 +202,9 @@ export async function loadTodaysAttendanceDashboard(
     select: {
       studentId: true,
       date: true,
-      student: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { name: true } },
     },
     orderBy: { date: "desc" },
@@ -214,7 +219,7 @@ export async function loadTodaysAttendanceDashboard(
     const key = absence.studentId
     if (!studentAbsences.has(key)) {
       studentAbsences.set(key, {
-        name: `${absence.student.firstName} ${absence.student.lastName}`,
+        name: displayName(absence.student, nameDisplay),
         className: absence.section?.name ?? "",
         dates: [],
       })
@@ -271,13 +276,15 @@ export async function loadTodaysAttendanceDashboard(
       markedAt: true,
       method: true,
       date: true,
-      student: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { name: true } },
     },
   })
   const recentActivity = recentRows.map((a) => ({
     id: a.id,
-    studentName: `${a.student.firstName} ${a.student.lastName}`,
+    studentName: displayName(a.student, nameDisplay),
     className: a.section?.name ?? "",
     status: a.status,
     time: a.markedAt.toLocaleTimeString("en-US", {
@@ -334,6 +341,7 @@ export async function loadAttendanceFollowUp(
   input: AttendanceViewer & { limit?: number }
 ): Promise<AttendanceFollowUp> {
   const { schoolId, userId, role } = input
+  const nameDisplay = await schoolNameDisplay(schoolId)
   // Teacher scoping
   const teacherSectionIds =
     role === "TEACHER" ? await getTeacherSectionIds(schoolId, userId) : null
@@ -373,7 +381,9 @@ export async function loadAttendanceFollowUp(
     select: {
       studentId: true,
       date: true,
-      student: { select: { firstName: true, lastName: true } },
+      student: {
+        select: { firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { name: true } },
     },
     orderBy: { date: "desc" },
@@ -387,7 +397,7 @@ export async function loadAttendanceFollowUp(
   for (const absence of recentAbsences) {
     if (!studentAbsenceMap.has(absence.studentId)) {
       studentAbsenceMap.set(absence.studentId, {
-        name: `${absence.student.firstName} ${absence.student.lastName}`,
+        name: displayName(absence.student, nameDisplay),
         className: absence.section?.name ?? "",
         dates: [],
       })
@@ -442,7 +452,9 @@ export async function loadAttendanceFollowUp(
         select: {
           studentId: true,
           date: true,
-          student: { select: { firstName: true, lastName: true } },
+          student: {
+            select: { firstName: true, middleName: true, lastName: true },
+          },
           section: { select: { name: true } },
         },
       },
@@ -453,7 +465,7 @@ export async function loadAttendanceFollowUp(
   for (const excuse of pendingExcuses) {
     results.push({
       studentId: excuse.attendance.studentId,
-      studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
+      studentName: displayName(excuse.attendance.student, nameDisplay),
       className: excuse.attendance.section?.name ?? "",
       issue: "unexcused_pending",
       severity: "info",

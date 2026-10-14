@@ -43,7 +43,12 @@ export default async function AssignFeePage({ params }: Props) {
   const [students, feeStructures] = await Promise.all([
     db.student.findMany({
       where: { schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+      },
       orderBy: { firstName: "asc" },
       take: 500,
     }),

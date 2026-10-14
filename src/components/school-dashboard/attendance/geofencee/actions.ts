@@ -13,6 +13,8 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import {
   checkGeofences,
@@ -536,7 +538,9 @@ export async function getLiveStudentLocations(
     const locations = await db.$queryRaw<
       Array<{
         student_id: string
-        student_name: string
+        first_name: string | null
+        middle_name: string | null
+        last_name: string | null
         lat: number
         lon: number
         accuracy: number | null
@@ -546,7 +550,9 @@ export async function getLiveStudentLocations(
     >`
       SELECT DISTINCT ON (l."studentId")
         l."studentId" as student_id,
-        CONCAT(s."firstName", ' ', s."lastName") as student_name,
+        s."firstName" as first_name,
+        s."middleName" as middle_name,
+        s."lastName" as last_name,
         CAST(l.lat AS DOUBLE PRECISION) as lat,
         CAST(l.lon AS DOUBLE PRECISION) as lon,
         l.accuracy,
@@ -559,6 +565,8 @@ export async function getLiveStudentLocations(
       ORDER BY l."studentId", l.timestamp DESC
     `
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
+
     // Get current geofences for each student
     const enrichedLocations = await Promise.all(
       locations.map(async (loc) => {
@@ -568,7 +576,14 @@ export async function getLiveStudentLocations(
         )
         return {
           studentId: loc.student_id,
-          studentName: loc.student_name,
+          studentName: displayName(
+            {
+              firstName: loc.first_name,
+              middleName: loc.middle_name,
+              lastName: loc.last_name,
+            },
+            nameDisplay
+          ),
           lat: loc.lat,
           lon: loc.lon,
           accuracy: loc.accuracy,
@@ -648,6 +663,7 @@ export async function getGeofenceEvents(
         student: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -661,10 +677,11 @@ export async function getGeofenceEvents(
       take: validated.limit,
     })
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const serialized = events.map((e) => ({
       id: e.id,
       studentId: e.studentId,
-      studentName: `${e.student.firstName} ${e.student.lastName}`,
+      studentName: displayName(e.student, nameDisplay),
       geofenceId: e.geofenceId,
       geofenceName: e.geofence.name,
       eventType: e.eventType,

@@ -1,4 +1,6 @@
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import type {
   MembershipRequestRow,
@@ -16,6 +18,7 @@ export async function getUnifiedMembers(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           email: true,
           status: true,
@@ -28,6 +31,7 @@ export async function getUnifiedMembers(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           employmentStatus: true,
@@ -44,6 +48,7 @@ export async function getUnifiedMembers(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           employmentStatus: true,
@@ -54,6 +59,7 @@ export async function getUnifiedMembers(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           _count: { select: { studentGuardians: true } },
@@ -62,30 +68,19 @@ export async function getUnifiedMembers(
     },
     orderBy: { createdAt: "desc" },
   })
+  const nameDisplay = await schoolNameDisplay(schoolId)
 
   return users.map((user) => {
     // Name resolution: role-specific > username > email
     let name = user.username || user.email || "Unknown"
     if (user.student) {
-      name =
-        [user.student.firstName, user.student.lastName]
-          .filter(Boolean)
-          .join(" ") || name
+      name = displayName(user.student, nameDisplay) || name
     } else if (user.teacher) {
-      name =
-        [user.teacher.firstName, user.teacher.lastName]
-          .filter(Boolean)
-          .join(" ") || name
+      name = displayName(user.teacher, nameDisplay) || name
     } else if (user.staffMember) {
-      name =
-        [user.staffMember.firstName, user.staffMember.lastName]
-          .filter(Boolean)
-          .join(" ") || name
+      name = displayName(user.staffMember, nameDisplay) || name
     } else if (user.guardian) {
-      name =
-        [user.guardian.firstName, user.guardian.lastName]
-          .filter(Boolean)
-          .join(" ") || name
+      name = displayName(user.guardian, nameDisplay) || name
     }
 
     // Role-specific status

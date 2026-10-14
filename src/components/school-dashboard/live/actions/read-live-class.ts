@@ -45,7 +45,13 @@ export async function readLiveClass(
         // `userId` so the detail page can match the viewer against the HOST:
         // End is gated on it, because a TEACHER may only end their OWN class.
         teacher: {
-          select: { id: true, userId: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            userId: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },

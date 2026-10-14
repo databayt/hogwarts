@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
+import { displayName } from "@/lib/name-utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -71,9 +72,7 @@ export function ReviewStep() {
         // Ignore
       }
       const ref = result.data?.userId?.slice(-8).toUpperCase() || ""
-      const name = encodeURIComponent(
-        `${personal.firstName} ${personal.lastName}`
-      )
+      const name = encodeURIComponent(displayName(personal, "full"))
       const role = encodeURIComponent(state.role)
       const phone = contact.phone ? encodeURIComponent(contact.phone) : ""
       const params = new URLSearchParams({ ref, name, role })

@@ -5,6 +5,7 @@
 import crypto from "crypto"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -456,8 +457,7 @@ export async function generateCertificate(
     }
 
     const studentName =
-      `${examResult.student.firstName} ${examResult.student.middleName || ""} ${examResult.student.lastName}`.trim() ||
-      "Unknown Student"
+      displayName(examResult.student, "full") || "Unknown Student"
 
     const certificate = await db.examCertificate.create({
       data: {
@@ -657,8 +657,7 @@ export async function batchGenerateCertificates(
         )
         const verificationCode = generateVerificationCode()
         const studentName =
-          `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim() ||
-          "Unknown Student"
+          displayName(result.student, "full") || "Unknown Student"
 
         let expiresAt: Date | undefined
         if (config.expiryMonths) {

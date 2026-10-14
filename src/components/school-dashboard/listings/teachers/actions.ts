@@ -74,8 +74,10 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName, shortNameParts } from "@/lib/name-utils"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -730,12 +732,19 @@ export async function getTeachers(
 
     // Translate teacher names via the canonical helper (script-detected + dedup +
     // transliterate fallback) — must match the initial render in content.tsx.
+    // Short name (the school's first + second or first + last) — as content.tsx.
+    const nameDisplay = await schoolNameDisplay(schoolId)
     const [nameTranslations, taught] = await Promise.all([
-      getNames(rows as Array<any>, (t) => t, displayLang, schoolId),
+      getNames(
+        rows as Array<any>,
+        (t) => shortNameParts(t, nameDisplay),
+        displayLang,
+        schoolId
+      ),
       getTaughtSubjects(rows as Array<any>, displayLang, schoolId),
     ])
     const mapped = (rows as Array<any>).map((t) => {
-      const rawName = fullName(t)
+      const rawName = fullName(shortNameParts(t, nameDisplay))
       return {
         id: t.id as string,
         userId: t.userId as string | null,
@@ -861,7 +870,7 @@ export async function getTeachersCSV(
       employeeId: teacher.employeeId || "",
       firstName: teacher.firstName || "",
       lastName: teacher.lastName || "",
-      fullName: [teacher.firstName, teacher.lastName].filter(Boolean).join(" "),
+      fullName: displayName(teacher, "full"),
       gender: teacher.gender || "",
       email: teacher.emailAddress || "",
       userEmail: teacher.user?.email || "",
@@ -1019,6 +1028,7 @@ export async function getTeachersExportData(
       id: string
       employeeId: string | null
       firstName: string
+      middleName: string | null
       lastName: string
       fullName: string
       gender: string
@@ -1118,8 +1128,9 @@ export async function getTeachersExportData(
       id: teacher.id,
       employeeId: teacher.employeeId || null,
       firstName: teacher.firstName || "",
+      middleName: teacher.middleName || null,
       lastName: teacher.lastName || "",
-      fullName: [teacher.firstName, teacher.lastName].filter(Boolean).join(" "),
+      fullName: displayName(teacher, "full"),
       gender: teacher.gender || "",
       email: teacher.emailAddress || null,
       userEmail: teacher.user?.email || null,

@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { asset } from "@/lib/asset-url"
-import type { NameContact } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -477,11 +477,7 @@ function StudentsTableInner({
               <ItemGrid className="mt-2">
                 {data.map((student) => {
                   const status = getStatusBadge(student.status)
-                  const initials = student.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .substring(0, 2)
+                  const initials = initialsOf(student.name)
                   return (
                     <ItemCard
                       key={student.id}

@@ -7,6 +7,7 @@ import { renderToStream } from "@react-pdf/renderer"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import type { Locale } from "@/components/internationalization/config"
 
 import {
@@ -56,6 +57,7 @@ export async function generateGradeCertificate(
         student: {
           select: {
             firstName: true,
+            middleName: true,
             lastName: true,
             studentId: true,
             email: true,
@@ -102,7 +104,7 @@ export async function generateGradeCertificate(
 
     // 3. Build certificate data
     const studentName = grade.student
-      ? `${grade.student.firstName} ${grade.student.lastName}`
+      ? displayName(grade.student, "full")
       : "Unknown Student"
 
     const title =

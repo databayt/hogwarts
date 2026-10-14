@@ -19,7 +19,9 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 export async function GET(
@@ -51,6 +53,7 @@ export async function GET(
       },
       select: {
         firstName: true,
+        middleName: true,
         lastName: true,
       },
     })
@@ -59,7 +62,8 @@ export async function GET(
       return NextResponse.json({ error: "Teacher not found" }, { status: 404 })
     }
 
-    const name = [teacher.firstName, teacher.lastName].filter(Boolean).join(" ")
+    // Breadcrumb label — the school's short name display.
+    const name = displayName(teacher, await schoolNameDisplay(schoolId))
 
     return NextResponse.json({ name })
   } catch (error) {

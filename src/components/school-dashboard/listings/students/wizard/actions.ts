@@ -10,7 +10,9 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { isDraftId } from "@/lib/draft-id"
 import { PARENT_GUARDIAN_TYPE_NAMES } from "@/lib/guardian-utils"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
@@ -220,14 +222,14 @@ export async function completeStudentWizard(studentId: string): Promise<
     // push every legacy student back through the core on Update: a re-stamped
     // status and dates, a fresh shadow application, a second welcome notice.
     const alreadyProvisioned = student.wizardStep === null
-    const displayName = `${student.firstName} ${student.lastName}`.trim()
+    const fullName = displayName(student, "full")
     if (alreadyProvisioned) {
       revalidatePath("/[lang]/s/[subdomain]/students", "page")
       return {
         success: true,
         data: {
           studentId,
-          name: displayName,
+          name: fullName,
           phone: student.mobileNumber ?? null,
           credentials: null,
           warnings: [],
@@ -306,13 +308,14 @@ export async function completeStudentWizard(studentId: string): Promise<
     // the personal step do have addresses, and before this they were never
     // told their child had been enrolled. Credentials travel through `result`
     // to the shared credentials dialog (wizard/finish.ts), not through mail.
+    const nameDisplay = await schoolNameDisplay(schoolId)
     after(() =>
       notifyProvisionedStudent({
         schoolId,
         studentId,
         userId: result.userId,
         origin: "ADMIN_DIRECT",
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: displayName(student, nameDisplay),
         email: student.email,
         isNewUser: result.isNewUser,
         lang: student.lang,
@@ -332,7 +335,7 @@ export async function completeStudentWizard(studentId: string): Promise<
       success: true,
       data: {
         studentId,
-        name: displayName,
+        name: fullName,
         phone: student.mobileNumber ?? null,
         credentials: result.credentials ?? null,
         warnings: result.warnings,

@@ -7,6 +7,8 @@ import { auth } from "@/auth"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchTemplated } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -57,7 +59,13 @@ export async function sendGradeNotification(input: {
       where: { id: input.resultId, schoolId },
       include: {
         student: {
-          select: { id: true, userId: true, firstName: true, lastName: true },
+          select: {
+            id: true,
+            userId: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
         },
         subject: { select: { name: true } },
       },
@@ -65,7 +73,10 @@ export async function sendGradeNotification(input: {
 
     if (!result) return { success: false, error: "Result not found" }
 
-    const studentName = `${result.student.firstName} ${result.student.lastName}`
+    const studentName = displayName(
+      result.student,
+      await schoolNameDisplay(schoolId)
+    )
     const subject = result.subject?.name ?? ""
     // Render whatever the school configured: "A", "85%", "85/100", etc.
     const grade = result.grade || `${result.score}/${result.maxScore}` || ""
@@ -166,6 +177,7 @@ export async function sendBatchGradeNotifications(input: {
             id: true,
             userId: true,
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -195,8 +207,9 @@ export async function sendBatchGradeNotifications(input: {
 
     let count = 0
 
+    const nameDisplay = await schoolNameDisplay(schoolId)
     for (const rc of reportCards) {
-      const studentName = `${rc.student.firstName} ${rc.student.lastName}`
+      const studentName = displayName(rc.student, nameDisplay)
       const termName = rc.term ? `Term ${rc.term.termNumber}` : ""
       const recipients: string[] = []
       if (rc.student.userId) recipients.push(rc.student.userId)

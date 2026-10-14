@@ -16,6 +16,11 @@ import { cache } from "react"
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  type NameDisplay,
+} from "@/lib/name-utils"
 import { search } from "@/components/translation/search"
 
 // ============================================================================
@@ -72,6 +77,7 @@ export const resultListSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       lang: true,
     },
@@ -128,6 +134,7 @@ export const resultDetailSelect = {
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       email: true,
       studentId: true,
@@ -779,11 +786,18 @@ export function getStudentRank(
  * @param result - Result with student relation
  * @returns Formatted student name
  */
-export function formatStudentName(result: {
-  student: { firstName: string; lastName: string } | null
-}): string {
+export function formatStudentName(
+  result: {
+    student: {
+      firstName: string
+      middleName?: string | null
+      lastName: string
+    } | null
+  },
+  mode: NameDisplay | "full" = NAME_DISPLAY_DEFAULT
+): string {
   if (!result.student) return "Unknown"
-  return `${result.student.firstName} ${result.student.lastName}`
+  return displayName(result.student, mode)
 }
 
 /**
@@ -882,11 +896,12 @@ export const getChildrenIdsForGuardian = cache(
  * @returns Formatted result row
  */
 export function formatResultRow(
-  result: Awaited<ReturnType<typeof getResultsList>>["rows"][number]
+  result: Awaited<ReturnType<typeof getResultsList>>["rows"][number],
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
 ) {
   return {
     id: result.id,
-    studentName: formatStudentName(result),
+    studentName: formatStudentName(result, nameDisplay),
     assignmentTitle:
       result.assignment?.title || result.exam?.title || "Unknown",
     className: result.section?.name || "—",

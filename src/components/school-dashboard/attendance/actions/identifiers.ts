@@ -7,6 +7,8 @@ import type { Prisma, UserRole } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { studentIdentifierSchema } from "../shared/validation"
@@ -101,17 +103,18 @@ export async function getStudentIdentifiers(studentId?: string) {
       where,
       include: {
         student: {
-          select: { firstName: true, lastName: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
       orderBy: { issuedAt: "desc" },
     })
+    const nameDisplay = await schoolNameDisplay(schoolId)
 
     return {
       identifiers: identifiers.map((i) => ({
         id: i.id,
         studentId: i.studentId,
-        studentName: `${i.student.firstName} ${i.student.lastName}`,
+        studentName: displayName(i.student, nameDisplay),
         type: i.type,
         value: i.value,
         isActive: i.isActive,
@@ -175,6 +178,7 @@ export async function findStudentByIdentifier(input: {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
           },
         },
@@ -199,7 +203,10 @@ export async function findStudentByIdentifier(input: {
       found: true,
       student: {
         id: identifier.student.id,
-        name: `${identifier.student.firstName} ${identifier.student.lastName}`,
+        name: displayName(
+          identifier.student,
+          await schoolNameDisplay(schoolId)
+        ),
       },
     }
   } catch (error) {

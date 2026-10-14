@@ -14,6 +14,8 @@
  */
 
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import type {
   GenerationConfig,
@@ -111,6 +113,7 @@ export async function buildGenerationInputs(params: {
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         subjectExpertise: {
           where: { schoolId },
@@ -230,12 +233,13 @@ export async function buildGenerationInputs(params: {
     return teacherId ? [teacherId] : []
   }
 
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const teachers: TeacherAvailability[] = teacherRows.map((t) => {
     const c = t.constraints[0]
     const periodPrefs = (c?.periodPreferences as Record<string, string>) || {}
     return {
       teacherId: t.id,
-      teacherName: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
+      teacherName: displayName(t, nameDisplay),
       maxPeriodsPerDay: c?.maxPeriodsPerDay || cap.perDay,
       maxPeriodsPerWeek: c?.maxPeriodsPerWeek || cap.perWeek,
       maxConsecutive: c?.maxConsecutivePeriods || cap.consecutive,

@@ -6,6 +6,7 @@ import { db } from "@/lib/db"
 export interface MyFeesStudent {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   preferredPaymentMethod: string | null
   academicGradeId: string | null
@@ -26,6 +27,7 @@ export async function getBillingStudentsForUser(
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       preferredPaymentMethod: true,
       academicGradeId: true,
@@ -43,6 +45,7 @@ export async function getBillingStudentsForUser(
             select: {
               id: true,
               firstName: true,
+              middleName: true,
               lastName: true,
               preferredPaymentMethod: true,
               academicGradeId: true,

@@ -36,8 +36,8 @@ import {
 } from "./helpers"
 import { resolveSubstitutes } from "./materialize-day"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
-import { findSlotSessionForDay } from "./slot-session"
 import { readLiveClass } from "./read-live-class"
+import { findSlotSessionForDay } from "./slot-session"
 import { transitionToLive } from "./went-live"
 
 /**
@@ -512,7 +512,14 @@ export async function listLiveClasses(filter?: {
         ...(filter?.status ? { status: { in: filter.status } } : {}),
       },
       include: {
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+          },
+        },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },
         _count: { select: { participants: true, recordings: true } },
@@ -554,7 +561,9 @@ async function listForTeacher(ctx: Ctx, filter?: { status?: string[] }) {
         : {}),
     },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { id: true, name: true } },
       subject: { select: { id: true, name: true } },
       _count: { select: { participants: true, recordings: true } },
@@ -596,7 +605,9 @@ async function listForStudent(ctx: Ctx, filter?: { status?: string[] }) {
         : {}),
     },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { id: true, name: true } },
       subject: { select: { id: true, name: true } },
       _count: { select: { participants: true, recordings: true } },
@@ -645,7 +656,9 @@ async function listForGuardian(ctx: Ctx, filter?: { status?: string[] }) {
         : {}),
     },
     include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
+      teacher: {
+        select: { id: true, firstName: true, middleName: true, lastName: true },
+      },
       section: { select: { id: true, name: true } },
       subject: { select: { id: true, name: true } },
       _count: { select: { participants: true, recordings: true } },

@@ -5,6 +5,7 @@ import { headers } from "next/headers"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
@@ -105,7 +106,11 @@ export async function MessagingContent({
           .catch(() => null),
       ])
 
-    conversationsData = serializeConversations(conversationsResult.rows)
+    const nameDisplay = await schoolNameDisplay(schoolId)
+    conversationsData = serializeConversations(
+      conversationsResult.rows,
+      nameDisplay
+    )
     whatsappConnected = waSession?.status === "connected"
     if (waSession) {
       whatsappSessionData = {
@@ -121,10 +126,13 @@ export async function MessagingContent({
     }
 
     if (activeConversation) {
-      activeConversationData = serializeConversation(activeConversation)
+      activeConversationData = serializeConversation(
+        activeConversation,
+        nameDisplay
+      )
       // Messages already included via conversationDetailSelect (take: 50)
       const rawMessages = (activeConversation as any).messages ?? []
-      messagesData = serializeMessages(rawMessages).reverse()
+      messagesData = serializeMessages(rawMessages, nameDisplay).reverse()
     }
   } catch (error) {
     console.error("[MessagingContent] Error fetching conversations:", error)

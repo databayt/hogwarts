@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import { displayName } from "@/lib/name-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,7 @@ import {
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { scheduleTrip } from "../actions/trips"
 import { TransportationEmptyState } from "../empty-state"
@@ -84,6 +86,7 @@ interface Props {
 
 export function TripsClient({ locale, trips, routes, dictionary }: Props) {
   const t = dictionary.transportation
+  const nameDisplay = useNameDisplay()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
@@ -132,9 +135,13 @@ export function TripsClient({ locale, trips, routes, dictionary }: Props) {
         id: "driver",
         header: t.trips.fields.driver,
         cell: ({ row }) =>
-          row.original.driver
-            ? `${row.original.driver.firstName} ${row.original.driver.lastName}`
-            : "—",
+          row.original.driver ? (
+            <bdi dir="auto">
+              {displayName(row.original.driver, nameDisplay)}
+            </bdi>
+          ) : (
+            "—"
+          ),
       },
       {
         id: "boardings",
@@ -154,7 +161,7 @@ export function TripsClient({ locale, trips, routes, dictionary }: Props) {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, locale]
+    [t, locale, nameDisplay]
   )
 
   const table = useReactTable({

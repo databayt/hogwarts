@@ -7,7 +7,9 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -173,11 +175,15 @@ export async function evaluatePolicies(): Promise<
               if (policy.alertRecipients.length > 0) {
                 const student = await db.student.findFirst({
                   where: { id: studentId, schoolId },
-                  select: { firstName: true, lastName: true },
+                  select: {
+                    firstName: true,
+                    middleName: true,
+                    lastName: true,
+                  },
                 })
 
                 const studentName = student
-                  ? `${student.firstName} ${student.lastName}`
+                  ? displayName(student, await schoolNameDisplay(schoolId))
                   : "طالب"
 
                 await Promise.all(

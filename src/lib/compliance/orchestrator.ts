@@ -12,6 +12,7 @@ import {
 import { logAudit } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { displayName } from "@/lib/name-utils"
 
 import { ComplianceAudit } from "./audit-actions"
 import { buildAdekArtifact } from "./providers/adek/dry-run"
@@ -88,14 +89,8 @@ export async function buildPayloadForDay(
   const records: ComplianceAttendanceRecord[] = dayAttendance.map((a) => {
     const slot = perStudent.get(a.studentId) ?? { absent: 0, total: 0 }
     const pct = slot.total === 0 ? 0 : (slot.absent / slot.total) * 100
-    const fullName = [
-      a.student.firstName,
-      a.student.middleName,
-      a.student.lastName,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim()
+    // Regulator record — the full name.
+    const fullName = displayName(a.student, "full")
     return {
       studentId: a.studentId,
       externalStudentRef: null,

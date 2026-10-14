@@ -233,6 +233,7 @@ export async function getReportCards(input: {
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             studentId: true,
           },
@@ -268,6 +269,7 @@ export async function getReportCard(reportCardId: string) {
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           studentId: true,
           profilePhotoUrl: true,

@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { displayName, nameInitials } from "@/lib/name-utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
@@ -73,6 +74,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import {
   createDepartment,
@@ -89,6 +91,7 @@ import {
 interface Teacher {
   id: string
   firstName: string
+  middleName?: string | null
   lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null
@@ -119,15 +122,12 @@ interface Props {
 // Helper Functions
 // ============================================================================
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
 // ============================================================================
 // Component
 // ============================================================================
 
 export function DepartmentsContent({ dictionary, lang }: Props) {
+  const nameDisplay = useNameDisplay()
   // Data states
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -573,7 +573,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                             src={teacher.profilePhotoUrl || undefined}
                           />
                           <AvatarFallback className="text-xs">
-                            {getInitials(teacher.firstName, teacher.lastName)}
+                            {nameInitials(teacher, nameDisplay)}
                           </AvatarFallback>
                         </Avatar>
                       ))}
@@ -643,15 +643,14 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                                   src={teacher.profilePhotoUrl || undefined}
                                 />
                                 <AvatarFallback className="text-xs">
-                                  {getInitials(
-                                    teacher.firstName,
-                                    teacher.lastName
-                                  )}
+                                  {nameInitials(teacher, nameDisplay)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
                                 <p className="text-sm font-medium">
-                                  {teacher.firstName} {teacher.lastName}
+                                  <bdi dir="auto">
+                                    {displayName(teacher, nameDisplay)}
+                                  </bdi>
                                 </p>
                                 <p className="text-muted-foreground text-xs">
                                   {teacher.emailAddress}

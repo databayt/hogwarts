@@ -24,6 +24,7 @@
 // needs DR Cash / CR Revenue, which has no posting rule yet. Wrong books are
 // worse than no books — tracked in finance/invoice/ISSUE.md.
 import { db } from "@/lib/db"
+import { displayName } from "@/lib/name-utils"
 
 export type PurchaseType =
   | "video_purchase"
@@ -77,20 +78,20 @@ export async function createPurchaseInvoiceForCheckout(
       select: {
         username: true,
         email: true,
-        student: { select: { firstName: true, lastName: true } },
-        guardian: { select: { firstName: true, lastName: true } },
+        student: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
+        guardian: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
       },
     }),
   ])
   if (!school || !user) return { created: false }
 
   const buyerName =
-    [user.student?.firstName, user.student?.lastName]
-      .filter(Boolean)
-      .join(" ") ||
-    [user.guardian?.firstName, user.guardian?.lastName]
-      .filter(Boolean)
-      .join(" ") ||
+    displayName(user.student, "full") ||
+    displayName(user.guardian, "full") ||
     user.username ||
     user.email ||
     "Customer"
