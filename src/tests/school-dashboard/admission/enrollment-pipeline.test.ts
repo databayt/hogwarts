@@ -13,6 +13,12 @@ import { getCampaignsList } from "@/components/school-dashboard/admission/querie
 // Mocks
 // ---------------------------------------------------------------------------
 
+vi.mock("@/lib/login-code", () => ({
+  allocateLoginCode: vi.fn().mockResolvedValue("260001"),
+  allocateLoginCodes: vi.fn().mockResolvedValue(["260001"]),
+  LOGIN_CODE_RE: /^\d{6}$/,
+  isLoginCode: (v: string | null | undefined) => !!v && /^\d{6,9}$/.test(v),
+}))
 vi.mock("@/lib/db", () => ({
   db: {
     admissionCampaign: {

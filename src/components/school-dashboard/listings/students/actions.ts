@@ -84,6 +84,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { withArchiveScope } from "@/lib/archive-scope"
 import { mintTempPassword } from "@/lib/credentials"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
@@ -2078,13 +2079,19 @@ export async function getStudentCredentials(input: {
         select: { email: true, username: true },
       })
 
-      // Stamp code onto username only if the user never had one (e.g., guest
-      // created during admin enrollment without a chosen handle). Self-onboarded
-      // users keep their registered username.
+      // Stamp a login code onto username only if the user never had one
+      // (e.g., guest created during admin enrollment without a chosen
+      // handle). Self-onboarded users keep their registered username.
+      let loginUsername = existingUser?.username ?? null
       if (existingUser && !existingUser.username) {
-        await db.user.update({
-          where: { id: student.userId },
-          data: { username: studentCode },
+        const userId = student.userId
+        loginUsername = await db.$transaction(async (tx) => {
+          const code = await allocateLoginCode(tx, schoolId)
+          await tx.user.update({
+            where: { id: userId },
+            data: { username: code },
+          })
+          return code
         })
       }
 
@@ -2106,7 +2113,10 @@ export async function getStudentCredentials(input: {
       return {
         success: true,
         data: {
-          username: studentCode,
+          username:
+            loginUsername && LOGIN_CODE_RE.test(loginUsername)
+              ? loginUsername
+              : studentCode,
           email: resolvedEmail,
           password: null,
           isNew: false,
@@ -2123,18 +2133,22 @@ export async function getStudentCredentials(input: {
     const { plain, hashed } = await mintPlainPassword()
     const email = student.email ?? null
 
-    const newUser = await db.user.create({
-      data: {
-        email,
-        // Admin added this student manually, so email verification is moot —
-        // timestamp it so the login verification gate never stalls the student.
-        emailVerified: new Date(),
-        password: hashed,
-        role: "STUDENT",
-        schoolId,
-        username: studentCode,
-        mustChangePassword: true,
-      },
+    const { newUser, loginCode } = await db.$transaction(async (tx) => {
+      const loginCode = await allocateLoginCode(tx, schoolId)
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          // Admin added this student manually, so email verification is moot —
+          // timestamp it so the login verification gate never stalls the student.
+          emailVerified: new Date(),
+          password: hashed,
+          role: "STUDENT",
+          schoolId,
+          username: loginCode,
+          mustChangePassword: true,
+        },
+      })
+      return { newUser, loginCode }
     })
 
     await db.student.update({
@@ -2150,7 +2164,7 @@ export async function getStudentCredentials(input: {
       await deliverStudentCredentials({
         schoolId,
         studentUserId: newUser.id,
-        username: studentCode,
+        username: loginCode,
         tempPassword: plain,
         isFirstTime: true,
       })
@@ -2168,7 +2182,7 @@ export async function getStudentCredentials(input: {
     return {
       success: true,
       data: {
-        username: studentCode,
+        username: loginCode,
         email,
         password: plain,
         isNew: true,
@@ -2217,13 +2231,27 @@ export async function resetStudentPassword(input: {
       return getStudentCredentials({ studentId })
     }
 
-    const studentCode = await ensureStudentCode(student, schoolId)
+    await ensureStudentCode(student, schoolId)
     const isSelfOnboarded = deriveIsSelfOnboarded(student)
     const { plain, hashed } = await mintPlainPassword()
 
-    await db.user.update({
-      where: { id: student.userId },
-      data: { password: hashed, mustChangePassword: true },
+    // A reset moves an older login onto the school's 6-digit code; someone
+    // already on a code keeps it.
+    const userId = student.userId
+    const loginUsername = await db.$transaction(async (tx) => {
+      const current = await tx.user.findUnique({
+        where: { id: userId },
+        select: { username: true },
+      })
+      const username =
+        current?.username && LOGIN_CODE_RE.test(current.username)
+          ? current.username
+          : await allocateLoginCode(tx, schoolId)
+      await tx.user.update({
+        where: { id: userId },
+        data: { password: hashed, mustChangePassword: true, username },
+      })
+      return username
     })
 
     // Same auto-delivery as first-time creation — the admin re-shared a new
@@ -2232,7 +2260,7 @@ export async function resetStudentPassword(input: {
       await deliverStudentCredentials({
         schoolId,
         studentUserId: student.userId,
-        username: studentCode,
+        username: loginUsername,
         tempPassword: plain,
         isFirstTime: false,
       })
@@ -2256,7 +2284,7 @@ export async function resetStudentPassword(input: {
     return {
       success: true,
       data: {
-        username: studentCode,
+        username: loginUsername,
         email: resolvedEmail,
         password: plain,
         isNew: false,

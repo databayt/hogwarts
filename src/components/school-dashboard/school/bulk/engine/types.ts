@@ -30,6 +30,7 @@ export type RowAction = "create" | "update" | "skip" | "error"
 export interface GuardianInput {
   relation: "father" | "mother" | "guardian"
   firstName: string
+  middleName?: string
   lastName: string
   email?: string
   phone?: string
@@ -55,6 +56,7 @@ export interface StudentRec {
 export interface TeacherRec {
   kind: "teachers"
   firstName: string
+  middleName?: string
   lastName: string
   employeeId?: string
   email?: string
@@ -68,6 +70,7 @@ export interface TeacherRec {
 export interface StaffRec {
   kind: "staff"
   firstName: string
+  middleName?: string
   lastName: string
   employeeId?: string
   email?: string
@@ -82,6 +85,7 @@ export interface StaffRec {
 export interface GuardianRec {
   kind: "guardians"
   firstName: string
+  middleName?: string
   lastName: string
   email?: string
   phone?: string

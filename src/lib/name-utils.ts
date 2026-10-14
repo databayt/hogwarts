@@ -17,16 +17,125 @@ export const NAME_CONTACT_DEFAULTS: Record<NameContactListing, NameContact> = {
 }
 
 /**
+ * How listings and profiles show a person: given name + second name (the
+ * father's name — the Sudanese/Arabic convention) or given name + family name.
+ * Applications, credentials, certificates and exports always show the full
+ * name; this setting only shortens UI labels.
+ */
+export type NameDisplay = "first-second" | "first-last"
+export const NAME_DISPLAY_DEFAULT: NameDisplay = "first-second"
+
+export function isNameDisplay(v: unknown): v is NameDisplay {
+  return v === "first-second" || v === "first-last"
+}
+
+/**
+ * Words that are not a name on their own — they bind to the word AFTER them.
+ *
+ * "عبد" means servant, not somebody called Abd: the name is the whole
+ * construction "عبد الرحمن". Same for the kunya and parentage prefixes, and
+ * their Latin spellings. Written joined ("عبدالله") it is one word already.
+ */
+export const BOUND_PREFIX = new Set([
+  "عبد",
+  "أبو",
+  "ابو",
+  "إبو",
+  "أبي",
+  "ابي",
+  "أم",
+  "ام",
+  "ابن",
+  "بنت",
+  "ذو",
+  "abdul",
+  "abdel",
+  "abdal",
+  "abd",
+  "abdu",
+  "abu",
+  "abo",
+  "umm",
+  "um",
+  "ibn",
+  "bin",
+  "bint",
+  "al",
+  "el",
+])
+
+/**
+ * Words that bind to the word BEFORE them: "نور الدين", "فضل الله",
+ * "حسب الرسول", "نور الهدى" are one name each, and they are everyday
+ * Sudanese names, not edge cases.
+ */
+export const BOUND_SUFFIX = new Set([
+  "الدين",
+  "الله",
+  "الهدى",
+  "الرسول",
+  "النبي",
+  "الرحمن",
+  "الرحيم",
+  "الكريم",
+  "الجليل",
+  "الحق",
+  "eldin",
+  "eddin",
+  "uddin",
+  "aldin",
+  "allah",
+  "ullah",
+])
+
+const DIACRITICS = /[\u064B-\u065F\u0670\u0640]/g
+
+/** Bare comparison key: no tashkeel or tatweel, lowercased. */
+const nameKey = (word: string) => word.replace(DIACRITICS, "").toLowerCase()
+
+/** Collapse whitespace and drop tatweel so stored names compare equal. */
+export function normalizeName(value: string | null | undefined): string {
+  return (value ?? "").replace(/\u0640/g, "").replace(/\s+/g, " ").trim()
+}
+
+/**
+ * Split a name into its NAMES, not its words.
+ *
+ * "عبد الرحمن أبو بكر نور الدين" → ["عبد الرحمن", "أبو بكر", "نور الدين"].
+ * A bare first-word split would misname a real child on a real card.
+ */
+export function tokenizeName(value: string | null | undefined): string[] {
+  const words = normalizeName(value).split(" ").filter(Boolean)
+  const tokens: string[] = []
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i]
+    const key = nameKey(word)
+    if (BOUND_SUFFIX.has(key) && tokens.length > 0) {
+      tokens[tokens.length - 1] = `${tokens[tokens.length - 1]} ${word}`
+      continue
+    }
+    if (BOUND_PREFIX.has(key) && i + 1 < words.length) {
+      tokens.push(`${word} ${words[i + 1]}`)
+      i++
+      continue
+    }
+    tokens.push(word)
+  }
+  return tokens
+}
+
+/**
  * Parse a full name string into first/middle/last parts.
- * First word → firstName, last word → lastName, everything in between → middleName.
+ * First name → firstName, last name → lastName, everything between → middleName.
+ * Compound names (عبد الله, أبو بكر, نور الدين) stay whole.
  */
 export function parseFullName(fullName: string): {
   firstName: string
   middleName: string | undefined
   lastName: string
 } {
-  const parts = fullName.trim().split(/\s+/)
-  if (parts.length === 0 || (parts.length === 1 && parts[0] === ""))
+  const parts = tokenizeName(fullName)
+  if (parts.length === 0)
     return { firstName: "", middleName: undefined, lastName: "" }
   if (parts.length === 1)
     return { firstName: parts[0], middleName: undefined, lastName: "" }
@@ -37,6 +146,68 @@ export function parseFullName(fullName: string): {
     middleName: parts.slice(1, -1).join(" "),
     lastName: parts[parts.length - 1],
   }
+}
+
+export interface PersonNameParts {
+  firstName?: string | null
+  middleName?: string | null
+  lastName?: string | null
+}
+
+/**
+ * The second name: the first name inside middleName, or — when middle is
+ * empty and lastName holds several names (a full name typed into one box
+ * before middle names were stored) — the first of those.
+ */
+export function secondName(person: PersonNameParts): string {
+  const middle = tokenizeName(person.middleName)
+  if (middle.length > 0) return middle[0]
+  const last = tokenizeName(person.lastName)
+  return last[0] ?? ""
+}
+
+/**
+ * The name a UI label shows.
+ *
+ * - "full": every part, in order — applications, credentials, certificates.
+ * - "first-second": given + father's name — "محمد أحمد".
+ * - "first-last": given + family name — "محمد حسن".
+ */
+export function displayName(
+  person: PersonNameParts | null | undefined,
+  mode: NameDisplay | "full" = NAME_DISPLAY_DEFAULT
+): string {
+  if (!person) return ""
+  const first = normalizeName(person.firstName)
+  if (mode === "full")
+    return composeFullName(first, person.middleName, person.lastName)
+  const tail =
+    mode === "first-second"
+      ? secondName(person)
+      : (() => {
+          const last = tokenizeName(person.lastName)
+          return last[last.length - 1] ?? ""
+        })()
+  return [first, tail].filter(Boolean).join(" ") ||
+    composeFullName(first, person.middleName, person.lastName)
+}
+
+/**
+ * Initials from names, not words: "عبد الله حسن" → "عح", never "عا".
+ * For a two-name display the second initial follows the display mode.
+ */
+export function nameInitials(
+  person: PersonNameParts | null | undefined,
+  mode: NameDisplay = NAME_DISPLAY_DEFAULT
+): string {
+  if (!person) return ""
+  const first = tokenizeName(person.firstName)[0] ?? ""
+  const tail =
+    mode === "first-second"
+      ? secondName(person)
+      : (tokenizeName(person.lastName).at(-1) ?? "")
+  const letter = (s: string) => Array.from(s)[0] ?? ""
+  return (letter(first) + letter(tail)).toUpperCase()
 }
 
 /**
@@ -461,5 +632,8 @@ export function composeFullName(
   middleName?: string | null,
   lastName?: string | null
 ): string {
-  return [firstName, middleName, lastName].filter(Boolean).join(" ")
+  return [firstName, middleName, lastName]
+    .map((part) => normalizeName(part))
+    .filter(Boolean)
+    .join(" ")
 }

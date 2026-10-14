@@ -9,7 +9,8 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { makeUniqueUsername, mintTempPassword } from "@/lib/credentials"
+import { mintTempPassword } from "@/lib/credentials"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -272,33 +273,6 @@ async function linkMemberUser(
   }
 }
 
-/** Login-valid, school-unique username from email local-part or name. */
-async function buildMemberUsername(
-  role: MemberRole,
-  entity: MemberEntity,
-  schoolId: string
-): Promise<string> {
-  const base =
-    entity.email?.split("@")[0] ||
-    [entity.firstName, entity.lastName].filter(Boolean).join(".")
-
-  const taken = new Set<string>()
-  // Preload colliding usernames so makeUniqueUsername can suffix around them.
-  const sanitizedSeed = base
-    ?.toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, ".")
-    .replace(/^[._-]+/, "")
-    .slice(0, 16)
-  if (sanitizedSeed) {
-    const existing = await db.user.findMany({
-      where: { schoolId, username: { startsWith: sanitizedSeed } },
-      select: { username: true },
-    })
-    existing.forEach((u) => u.username && taken.add(u.username))
-  }
-  return makeUniqueUsername(base, taken, ROLE_PREFIX[role])
-}
-
 async function handleMember(
   role: MemberRole,
   id: string,
@@ -310,18 +284,22 @@ async function handleMember(
   const { plain, hashed } = await mintTempPassword()
 
   // Path 1: no User yet — mint one so the admin has something to share.
+  // The username is the school's next 6-digit login code (YY + serial).
   if (!entity.userId) {
-    const username = await buildMemberUsername(role, entity, schoolId)
-    const newUser = await db.user.create({
-      data: {
-        email: entity.email,
-        emailVerified: new Date(),
-        password: hashed,
-        role: ROLE_TO_USER_ROLE[role],
-        schoolId,
-        username,
-        mustChangePassword: true,
-      },
+    const { newUser, username } = await db.$transaction(async (tx) => {
+      const username = await allocateLoginCode(tx, schoolId)
+      const newUser = await tx.user.create({
+        data: {
+          email: entity.email,
+          emailVerified: new Date(),
+          password: hashed,
+          role: ROLE_TO_USER_ROLE[role],
+          schoolId,
+          username,
+          mustChangePassword: true,
+        },
+      })
+      return { newUser, username }
     })
     await linkMemberUser(role, entity.id, newUser.id)
     queueDeliver(schoolId, newUser.id, username, plain, true)
@@ -345,14 +323,19 @@ async function handleMember(
     select: { email: true, username: true },
   })
 
-  let username = user?.username ?? null
-  if (!username) {
-    username = await buildMemberUsername(role, entity, schoolId)
-  }
-
-  await db.user.update({
-    where: { id: entity.userId },
-    data: { password: hashed, mustChangePassword: true, username },
+  // Regenerating moves an older login (email local-part, first.last) onto
+  // the 6-digit code; someone already on a code keeps it.
+  const userId = entity.userId
+  const username = await db.$transaction(async (tx) => {
+    const username =
+      user?.username && LOGIN_CODE_RE.test(user.username)
+        ? user.username
+        : await allocateLoginCode(tx, schoolId)
+    await tx.user.update({
+      where: { id: userId },
+      data: { password: hashed, mustChangePassword: true, username },
+    })
+    return username
   })
   queueDeliver(schoolId, entity.userId, username, plain, false)
 

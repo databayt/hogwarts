@@ -14,7 +14,8 @@ model School {
   website           String?
   timezone          String   @default("Africa/Khartoum")
   preferredLanguage String   @default("ar") // Admin's chosen content language ("ar" or "en")
-  nameFormat        String   @default("full") // "full" (single full name field) | "split" (first+last fields)
+  nameFormat        String   @default("full") // "full" (single full name field) | "split" (first+last fields) — INPUT only
+  nameDisplay       String   @default("first-second") // "first-second" | "first-last" — how listings + profiles SHOW a name; applications, credentials and certificates always show the full name
   teacherNameContact String  @default("email") // "email" | "phone" — the line under a teacher's name in the listing
   studentNameContact String  @default("phone") // "email" | "phone" — the line under a student's name in the listing
   guardianNameContact String @default("phone") // "email" | "phone" — the line under a parent's name in the listing

@@ -23,6 +23,7 @@
 import type { AdmissionChannel, Prisma } from "@prisma/client"
 
 import { mintTempPassword } from "@/lib/credentials"
+import { allocateLoginCode } from "@/lib/login-code"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { parseGrade } from "@/lib/grade"
@@ -39,6 +40,7 @@ import { detectLang } from "@/components/translation/util"
 export interface ProvisionGuardianInput {
   typeName: string
   firstName: string
+  middleName?: string | null
   lastName: string
   email?: string | null
   phone?: string | null
@@ -236,27 +238,34 @@ export async function provisionStudent(
   // ---------------------------------------------------------------------
   let userId: string | null = input.userId ?? priorStudent?.userId ?? null
   let isNewUser = false
+  // The login is the school's 6-digit code (YY + serial shared by every
+  // role); the student code above stays on Student.studentId.
+  let loginUsername: string | null = null
   if (!userId) {
     // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
     // same email may exist as separate rows in other schools.
     const existingUser = await tx.user.findFirst({
       where: { email, schoolId },
-      select: { id: true },
+      select: { id: true, username: true },
     })
 
     if (existingUser) {
       userId = existingUser.id
-      // Stamp the code onto the existing user's username if they don't
+      // Stamp a login code onto the existing user's username if they don't
       // already have one (e.g. an applicant who self-registered).
-      await tx.user.updateMany({
-        where: { id: existingUser.id, username: null },
-        data: { username: studentCode },
-      })
+      if (!existingUser.username) {
+        loginUsername = await allocateLoginCode(tx, schoolId)
+        await tx.user.updateMany({
+          where: { id: existingUser.id, username: null },
+          data: { username: loginUsername },
+        })
+      }
     } else {
+      loginUsername = await allocateLoginCode(tx, schoolId)
       const guestUser = await tx.user.create({
         data: {
           email,
-          username: studentCode,
+          username: loginUsername,
           role: "STUDENT",
           schoolId,
           emailVerified: new Date(),
@@ -635,6 +644,7 @@ export async function provisionStudent(
         studentId: student.id,
         typeName: guardian.typeName,
         firstName: guardian.firstName,
+        middleName: guardian.middleName ?? null,
         lastName: guardian.lastName,
         email: guardian.email ?? null,
         phone: guardian.phone ?? null,
@@ -724,7 +734,7 @@ export async function provisionStudent(
       where: { id: userId },
       data: { password: hashed },
     })
-    credentials = { username: studentCode, password: plain }
+    credentials = { username: loginUsername ?? studentCode, password: plain }
   }
 
   return {

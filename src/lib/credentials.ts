@@ -47,15 +47,76 @@ export function generateTempPassword(
 }
 
 /**
- * Mint a fresh temp password: returns the plaintext (deliver once) and its
- * bcrypt hash (store on User.password). Default cost 10 matches the login
- * verification path; bulk importers may pass a lower cost for throughput.
+ * PINs nobody should be handed: one digit repeated, the textbook sequences,
+ * and anything that reads as a birth year (19xx / 20xx).
+ */
+function isWeakPin(pin: string): boolean {
+  if (/^(\d)\1{3}$/.test(pin)) return true
+  if (["1234", "4321", "0123", "3210", "9876", "6789"].includes(pin))
+    return true
+  return /^(19|20)\d\d$/.test(pin)
+}
+
+// Keypad columns and diagonals — easy to recall as a shape on the phone pad.
+const KEYPAD_PINS = [
+  "2580",
+  "0852",
+  "1470",
+  "0741",
+  "3690",
+  "0963",
+  "1590",
+  "9510",
+  "3570",
+  "7530",
+]
+
+type PinFamily = (a: number, b: number) => string
+
+const PIN_FAMILIES: PinFamily[] = [
+  (a, b) => `${a}${a}${b}${b}`, // 1122
+  (a, b) => `${a}${b}${a}${b}`, // 1212
+  (a, b) => `${a}${b}${b}${a}`, // 1221
+  (a, b) => `${a}${a}${a}${b}`, // 1112
+  (a, b) => `${a}${b}${b}${b}`, // 1222
+  (a) => [0, 1, 2, 3].map((i) => (a + i) % 10).join(""), // 3456
+  (a) => [0, 1, 2, 3].map((i) => (a + 10 - i) % 10).join(""), // 8765
+  () => KEYPAD_PINS[crypto.randomInt(0, KEYPAD_PINS.length)], // 2580
+]
+
+/**
+ * A 4-digit PIN that is easy to remember — a pattern (1122, 1212, 3456,
+ * 2580), never 0000/1234 or a birth year. Patterns are picked with
+ * crypto.randomInt so neighbours don't share a PIN; pass `taken` to keep a
+ * batch distinct (falls back to repeats once the pattern space runs out).
+ * Login lockout (rate-limited sign-in) is what makes 4 digits acceptable.
+ */
+export function generateEasyPin(taken?: Set<string>): string {
+  let pin = ""
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const family = PIN_FAMILIES[crypto.randomInt(0, PIN_FAMILIES.length)]
+    const a = crypto.randomInt(0, 10)
+    let b = crypto.randomInt(0, 9)
+    if (b >= a) b++ // b ≠ a
+    pin = family(a, b)
+    if (isWeakPin(pin)) continue
+    if (!taken || !taken.has(pin)) break
+  }
+  taken?.add(pin)
+  return pin
+}
+
+/**
+ * Mint a fresh login password for a school member: an easy 4-digit PIN
+ * (deliver once) and its bcrypt hash (store on User.password). Default cost
+ * 10 matches the login verification path; bulk importers may pass lower.
  */
 export async function mintTempPassword(
-  rounds: number = 10
+  rounds: number = 10,
+  taken?: Set<string>
 ): Promise<{ plain: string; hashed: string }> {
   const { hash } = await import("bcryptjs")
-  const plain = generateTempPassword()
+  const plain = generateEasyPin(taken)
   const hashed = await hash(plain, rounds)
   return { plain, hashed }
 }

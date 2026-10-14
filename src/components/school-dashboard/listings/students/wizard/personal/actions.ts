@@ -217,12 +217,15 @@ export async function saveStudentPersonalGuardians(
     // the one row to "whatsapp", so the phone field came back empty.
     await db.$transaction(async (tx) => {
       if (parsed.fatherName?.trim()) {
-        const { firstName, lastName } = splitGuardianName(parsed.fatherName)
+        const { firstName, middleName, lastName } = splitGuardianName(
+          parsed.fatherName
+        )
         await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "father",
           firstName,
+          middleName,
           lastName,
           email: null,
           phone: parsed.fatherPhone?.trim() || null,
@@ -233,12 +236,15 @@ export async function saveStudentPersonalGuardians(
       }
 
       if (parsed.motherName?.trim()) {
-        const { firstName, lastName } = splitGuardianName(parsed.motherName)
+        const { firstName, middleName, lastName } = splitGuardianName(
+          parsed.motherName
+        )
         await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "mother",
           firstName,
+          middleName,
           lastName,
           email: null,
           phone: parsed.motherPhone?.trim() || null,

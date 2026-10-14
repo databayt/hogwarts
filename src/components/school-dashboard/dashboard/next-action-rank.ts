@@ -12,6 +12,8 @@
  * rest in order, so whatever a role should do FIRST has to come first here.
  */
 
+import { tokenizeName } from "@/lib/name-utils"
+
 export type NextActionKind =
   | "assignmentOverdue"
   | "assignmentDue"
@@ -94,34 +96,6 @@ const str = (v: unknown): string => {
 }
 
 /**
- * Names whose first word is not a name on its own.
- *
- * "عبد" is a word meaning servant, not somebody called Abd — the name is the
- * whole construction, "عبد الرحمن". Same for the kunya and parentage prefixes,
- * and for their Latin spellings. These are ordinary names here rather than edge
- * cases, so a bare first-word split would misname a real child on a real card.
- * Written with a space or without ("عبدالله") — the joined spelling is one word
- * already and needs nothing.
- */
-const BOUND_PREFIX = new Set([
-  "عبد",
-  "أبو",
-  "ابو",
-  "أم",
-  "ام",
-  "ابن",
-  "بنت",
-  "ذو",
-  "abdul",
-  "abd",
-  "abu",
-  "umm",
-  "bin",
-  "ibn",
-  "bint",
-])
-
-/**
  * A person's given name, for the cards that address a parent about one child.
  *
  * A card that says "Khadija" where the register says "Khadija Alnoor" is how a
@@ -129,11 +103,7 @@ const BOUND_PREFIX = new Set([
  * on two lines — a full name spends the whole mark budget and pushes the tail
  * of the sentence out of the clipped box.
  */
-const given = (v: unknown): string => {
-  const words = str(v).split(" ")
-  const bound = BOUND_PREFIX.has(words[0].toLowerCase())
-  return bound && words.length > 1 ? `${words[0]} ${words[1]}` : words[0]
-}
+const given = (v: unknown): string => tokenizeName(str(v))[0] ?? ""
 
 /**
  * Rank a role's upcoming data into the actions the card cycles through.

@@ -4,6 +4,7 @@ import "server-only"
 
 import { db } from "@/lib/db"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { composeFullName, parseFullName } from "@/lib/name-utils"
 
 import type { ColumnMapping, ImportType } from "../fields"
 import type { Table } from "../read-file"
@@ -34,15 +35,26 @@ function cellsOf(mapping: ColumnMapping, row: string[]): Cells {
   return out
 }
 
-function splitName(c: Cells): { first: string; last: string } | null {
+function splitName(
+  c: Cells
+): { first: string; middle?: string; last: string } | null {
   const full = n.text(c.name)
   if (full) {
-    const parts = full.split(" ")
-    return { first: parts[0], last: parts.slice(1).join(" ") }
+    // Names, not words: "عبد الله أبو بكر" never splits inside a compound.
+    const parts = parseFullName(full)
+    return {
+      first: parts.firstName,
+      middle: parts.middleName,
+      last: parts.lastName,
+    }
   }
   const first = n.text(c.firstName)
   if (!first) return null
-  return { first, last: n.text(c.lastName) ?? "" }
+  return {
+    first,
+    middle: n.text(c.middleName) ?? undefined,
+    last: n.text(c.lastName) ?? "",
+  }
 }
 
 /** Words without the Arabic article, so "الرياضيات" meets "رياضيات". */
@@ -243,7 +255,7 @@ async function planStudents(
       out.push({ row: p.row, action: "error", name: "", issues: p.issues })
       return
     }
-    const display = `${name.first} ${name.last}`.trim()
+    const display = composeFullName(name.first, name.middle, name.last)
 
     const admissionNumber = n.text(c.studentId)
     const emailValue = n.email(c.email)
@@ -339,11 +351,12 @@ async function planStudents(
       if (gPhone === null)
         p.warn("INVALID_GUARDIAN_PHONE", { value: n.text(rawPhone)! })
       if (!gEmail && !gPhone) p.warn("GUARDIAN_NO_CONTACT", { value: gName })
-      const parts = gName.split(" ")
+      const parts = parseFullName(gName)
       guardians.push({
         relation,
-        firstName: parts[0],
-        lastName: parts.slice(1).join(" "),
+        firstName: parts.firstName,
+        middleName: parts.middleName,
+        lastName: parts.lastName,
         email: gEmail ?? undefined,
         phone: gPhone ?? undefined,
       })
@@ -361,7 +374,7 @@ async function planStudents(
       kind: "students",
       firstName: name.first,
       lastName: name.last,
-      middleName: n.text(c.middleName),
+      middleName: n.text(c.middleName) ?? name.middle,
       admissionNumber,
       email: emailValue ?? undefined,
       phone: phoneValue,
@@ -574,7 +587,7 @@ async function planEmployees(
       out.push({ row: p.row, action: "error", name: "", issues: p.issues })
       return
     }
-    const display = `${name.first} ${name.last}`.trim()
+    const display = composeFullName(name.first, name.middle, name.last)
     const employeeId = n.text(c.employeeId)
     const emailValue = n.email(c.email)
     if (emailValue === null)
@@ -619,6 +632,7 @@ async function planEmployees(
         ? {
             kind: "teachers",
             firstName: name.first,
+            middleName: name.middle,
             lastName: name.last,
             employeeId,
             email: emailValue ?? undefined,
@@ -630,6 +644,7 @@ async function planEmployees(
         : {
             kind: "staff",
             firstName: name.first,
+            middleName: name.middle,
             lastName: name.last,
             employeeId,
             email: emailValue ?? undefined,
@@ -834,7 +849,7 @@ async function planGuardians(
       out.push({ row: p.row, action: "error", name: "", issues: p.issues })
       return
     }
-    const display = `${name.first} ${name.last}`.trim()
+    const display = composeFullName(name.first, name.middle, name.last)
     const emailValue = n.email(c.email)
     if (emailValue === null)
       p.error("INVALID_EMAIL", { value: n.text(c.email) ?? "" })
@@ -854,6 +869,7 @@ async function planGuardians(
     const rec: GuardianRec = {
       kind: "guardians",
       firstName: name.first,
+      middleName: name.middle,
       lastName: name.last,
       email: emailValue ?? undefined,
       phone: phoneValue,

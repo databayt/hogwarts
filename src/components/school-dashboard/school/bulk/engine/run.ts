@@ -5,7 +5,8 @@ import "server-only"
 import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 
-import { makeUniqueUsername, mintTempPassword } from "@/lib/credentials"
+import { mintTempPassword } from "@/lib/credentials"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { db } from "@/lib/db"
 import {
   createOrLinkGuardian,
@@ -59,7 +60,6 @@ interface Ctx {
   batchId: string
   startedAt: Date
   options: ImportOptions
-  takenUsernames: Set<string>
   sections: Map<string, string>
   departments: Map<string, string>
   guardianTypes: Map<string, string>
@@ -178,11 +178,8 @@ async function createLogin(
 ): Promise<string> {
   const user = await tx.user.create({
     data: {
-      username: makeUniqueUsername(
-        base,
-        ctx.takenUsernames,
-        role === "TEACHER" ? "t" : role === "STAFF" ? "s" : "g"
-      ),
+      // The school's next 6-digit login code (YY + serial, every role).
+      username: await allocateLoginCode(tx, ctx.schoolId),
       email: email ?? null,
       // The school vouches for the address it imported.
       emailVerified: email ? new Date() : null,
@@ -255,6 +252,7 @@ function provisionGuardians(rec: StudentRec): ProvisionGuardianInput[] {
   return rec.guardians.map((g, i) => ({
     typeName: g.relation,
     firstName: g.firstName,
+    middleName: g.middleName ?? null,
     lastName: g.lastName,
     email: g.email ?? null,
     phone: g.phone ?? null,
@@ -436,6 +434,7 @@ async function createTeacher(
         userId,
         employeeId: rec.employeeId ?? null,
         firstName: rec.firstName,
+        middleName: rec.middleName ?? null,
         lastName: rec.lastName,
         emailAddress: rec.email ?? null,
         gender: rec.gender ?? null,
@@ -568,6 +567,7 @@ async function createStaff(ctx: Ctx, rec: StaffRec, records: RecordInput[]) {
         userId,
         employeeId: rec.employeeId ?? null,
         firstName: rec.firstName,
+        middleName: rec.middleName ?? null,
         lastName: rec.lastName,
         emailAddress: rec.email ?? null,
         gender: rec.gender ?? null,
@@ -677,6 +677,7 @@ async function createGuardian(
         schoolId: ctx.schoolId,
         userId,
         firstName: rec.firstName,
+        middleName: rec.middleName ?? null,
         lastName: rec.lastName,
         emailAddress: rec.email ?? null,
         lang: detectScript(name),
@@ -926,11 +927,7 @@ export async function runBatch(batchId: string): Promise<void> {
   const issues = (batch.issues as unknown as Issue[] | null) ?? []
   const schoolId = batch.schoolId
 
-  const [users, sectionLetters, recorded, schoolYear] = await Promise.all([
-    db.user.findMany({
-      where: { schoolId, username: { not: null } },
-      select: { username: true },
-    }),
+  const [sectionLetters, recorded, schoolYear] = await Promise.all([
     db.section.findMany({ where: { schoolId }, select: { letter: true } }),
     db.importBatchRecord.findMany({
       where: { batchId, entity: "guardian" },
@@ -948,7 +945,6 @@ export async function runBatch(batchId: string): Promise<void> {
     batchId,
     startedAt: new Date(startedAt.getTime() - 1000),
     options: batch.options as unknown as ImportOptions,
-    takenUsernames: new Set(users.map((u) => u.username!)),
     sections: new Map(),
     departments: new Map(),
     guardianTypes: new Map(),
@@ -1114,6 +1110,7 @@ export async function reissueLogins(
   const names = await namesFor(schoolId, ids)
 
   const credentials: LoginCredential[] = []
+  const takenPins = new Set<string>()
   let active = 0
   for (const r of records) {
     const user = userById.get(r.userId!)
@@ -1122,16 +1119,23 @@ export async function reissueLogins(
       active++
       continue
     }
-    const { plain, hashed } = await mintTempPassword(8)
-    await db.user.update({
-      where: { id: user.id },
-      data: { password: hashed, mustChangePassword: true },
+    const { plain, hashed } = await mintTempPassword(8, takenPins)
+    // Issuing moves an older handle onto the 6-digit login code.
+    const username = await db.$transaction(async (tx) => {
+      const username =
+        user.username && LOGIN_CODE_RE.test(user.username)
+          ? user.username
+          : await allocateLoginCode(tx, schoolId)
+      await tx.user.update({
+        where: { id: user.id },
+        data: { password: hashed, mustChangePassword: true, username },
+      })
+      return username
     })
-    // Email-only accounts sign in with their email.
     credentials.push({
       name: names.get(r.entityId) ?? "",
       role: ROLE_OF[r.entity] ?? r.entity,
-      username: user.username ?? user.email ?? "",
+      username,
       email: user.email && !user.email.endsWith(".local") ? user.email : null,
       password: plain,
     })

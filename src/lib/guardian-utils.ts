@@ -8,7 +8,9 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import { mintTempPassword, sanitizeUsername } from "@/lib/credentials"
+import { mintTempPassword } from "@/lib/credentials"
+import { allocateLoginCode } from "@/lib/login-code"
+import { parseFullName } from "@/lib/name-utils"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -17,6 +19,8 @@ import { mintTempPassword, sanitizeUsername } from "@/lib/credentials"
 export interface GuardianEntry {
   typeName: string // "father", "mother", "guardian", etc.
   firstName: string
+  /** Second (father's) + further names, between given and family. */
+  middleName?: string | null
   lastName: string
   email: string | null
   phone: string | null
@@ -129,6 +133,7 @@ export async function createOrLinkGuardian(
     isPrimary,
     createLogin,
   } = params
+  const middleName = params.middleName?.trim() || null
   let credentials: { username: string; password: string } | null = null
 
   // 1. Resolve the GuardianType. Callers always ask for the lowercase English
@@ -167,7 +172,7 @@ export async function createOrLinkGuardian(
       where: {
         schoolId_emailAddress: { schoolId, emailAddress: email },
       },
-      create: { schoolId, firstName, lastName, emailAddress: email },
+      create: { schoolId, firstName, middleName, lastName, emailAddress: email },
       update: {},
     })
   } else if (phone) {
@@ -215,17 +220,17 @@ export async function createOrLinkGuardian(
     guardian =
       existingGuardian ??
       (await tx.guardian.create({
-        data: { schoolId, firstName, lastName },
+        data: { schoolId, firstName, middleName, lastName },
       }))
   } else {
     guardian = await tx.guardian.create({
-      data: { schoolId, firstName, lastName },
+      data: { schoolId, firstName, middleName, lastName },
     })
   }
 
   // 2.5 Optional guardian portal login (bulk-import parity). User is unique by
   //     (email, schoolId); reuse an existing account, else mint one with a
-  //     temp password. username is non-unique so a sanitized base is fine.
+  //     temp PIN. The username is the school's next 6-digit login code.
   if (createLogin && email && !guardian.userId) {
     const existingUser = await tx.user.findFirst({
       where: { email, schoolId },
@@ -236,10 +241,7 @@ export async function createOrLinkGuardian(
       guardianUserId = existingUser.id
     } else {
       const { plain, hashed } = await mintTempPassword()
-      const username =
-        sanitizeUsername(email) ||
-        sanitizeUsername(`${firstName}.${lastName}`) ||
-        undefined
+      const username = await allocateLoginCode(tx, schoolId)
       const created = await tx.user.create({
         data: {
           email,
@@ -251,7 +253,7 @@ export async function createOrLinkGuardian(
         },
       })
       guardianUserId = created.id
-      credentials = { username: username ?? email, password: plain }
+      credentials = { username, password: plain }
     }
     await tx.guardian.update({
       where: { id: guardian.id },
@@ -343,12 +345,16 @@ export async function createOrLinkGuardian(
  */
 export function splitGuardianName(fullName: string): {
   firstName: string
+  middleName: string | null
   lastName: string
 } {
-  const parts = fullName.trim().split(/\s+/)
-  const lastName = parts.length > 1 ? parts.pop()! : ""
-  const firstName = parts.join(" ") || fullName
-  return { firstName, lastName }
+  // Names, not words: "عبد الله أبو بكر" never splits inside a compound.
+  const { firstName, middleName, lastName } = parseFullName(fullName)
+  return {
+    firstName: firstName || fullName.trim(),
+    middleName: middleName ?? null,
+    lastName,
+  }
 }
 
 /**
@@ -357,8 +363,8 @@ export function splitGuardianName(fullName: string): {
  */
 export function fromFullName(entry: GuardianFullNameEntry): GuardianEntry {
   const { fullName, ...rest } = entry
-  const { firstName, lastName } = splitGuardianName(fullName)
-  return { ...rest, firstName, lastName }
+  const { firstName, middleName, lastName } = splitGuardianName(fullName)
+  return { ...rest, firstName, middleName, lastName }
 }
 
 // ---------------------------------------------------------------------------

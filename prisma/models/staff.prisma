@@ -5,6 +5,7 @@ model Teacher {
   schoolId     String
   employeeId   String? // External employee identifier
   firstName    String  @map("givenName")
+  middleName   String? // second (father's) + further names, between given and family
   lastName     String  @map("surname")
   lang         String  @default("ar")
   gender       String?

@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { isLoginCode } from "@/lib/login-code"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -58,12 +59,22 @@ export async function updateGitHubProfile(
 
     const parsed = updateGitHubProfileSchema.parse(input)
 
+    // `username` doubles as the display name, but a numeric one is a login
+    // code (26xxxx, or a student code) — renaming it would lock the person
+    // out, and a typed number could collide with someone else's code.
+    const current = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { username: true },
+    })
+    const canRename =
+      parsed.displayName !== undefined &&
+      !isLoginCode(current?.username) &&
+      !isLoginCode(parsed.displayName)
+
     await db.user.update({
       where: { id: session.user.id },
       data: {
-        ...(parsed.displayName !== undefined && {
-          username: parsed.displayName,
-        }),
+        ...(canRename && { username: parsed.displayName }),
         bio: parsed.bio || null,
         website: parsed.website || null,
         timezone: parsed.timezone || null,

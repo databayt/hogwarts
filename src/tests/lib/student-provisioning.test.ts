@@ -21,6 +21,12 @@ import { provisionStudent } from "@/lib/student-provisioning"
 import { generateStudentUsername } from "@/lib/student-username"
 import { ensureDirectAdmitApplication } from "@/lib/system-campaign"
 
+vi.mock("@/lib/login-code", () => ({
+  allocateLoginCode: vi.fn().mockResolvedValue("260001"),
+  allocateLoginCodes: vi.fn().mockResolvedValue(["260001"]),
+  LOGIN_CODE_RE: /^\d{6}$/,
+  isLoginCode: (v: string | null | undefined) => !!v && /^\d{6,9}$/.test(v),
+}))
 vi.mock("@/lib/credentials", () => ({
   mintTempPassword: vi
     .fn()
@@ -158,8 +164,9 @@ describe("provisionStudent — existing student rows", () => {
     expect(tx.user.create).toHaveBeenCalledTimes(1)
     expect(result.isNewUser).toBe(true)
     expect(result.applicationId).toBe("app-shadow-new")
+    // The login is the 6-digit code; the student code stays on Student.
     expect(result.credentials).toEqual({
-      username: "26030042",
+      username: "260001",
       password: "temp-1234",
     })
   })

@@ -216,6 +216,7 @@ model Guardian {
   id              String  @id @default(cuid())
   schoolId        String
   firstName       String  @map("givenName")
+  middleName      String? // second (father's) + further names, between given and family
   lastName        String  @map("surname")
   lang            String  @default("ar") // Language of stored name data
   emailAddress    String?

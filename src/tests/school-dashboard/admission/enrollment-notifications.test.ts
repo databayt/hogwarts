@@ -29,6 +29,12 @@ const flushDeferredNotifications = async () => {
 // Mocks — follows the same pattern as actions.test.ts
 // ---------------------------------------------------------------------------
 
+vi.mock("@/lib/login-code", () => ({
+  allocateLoginCode: vi.fn().mockResolvedValue("260001"),
+  allocateLoginCodes: vi.fn().mockResolvedValue(["260001"]),
+  LOGIN_CODE_RE: /^\d{6}$/,
+  isLoginCode: (v: string | null | undefined) => !!v && /^\d{6,9}$/.test(v),
+}))
 vi.mock("@/lib/db", () => ({
   db: {
     // The fee notice now also reports the instalment schedule and stamps
