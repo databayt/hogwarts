@@ -95,6 +95,14 @@ export const ResetForm = (props: Props) => {
                 <FormError message={error} />
                 <FormSuccess message={success} />
 
+                {/* Login codes have no email to send a link to — the school
+                    office resets those (credentials dialog → Reset). */}
+                <p className="text-muted-foreground text-center text-xs">
+                  {(dictionary?.auth as { resetNoEmailHint?: string })
+                    ?.resetNoEmailHint ||
+                    "Sign in with a 6-digit number and no email? Ask the school office — they can reset your password straight away."}
+                </p>
+
                 <Button
                   disabled={isPending}
                   type="submit"

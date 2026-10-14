@@ -9,6 +9,7 @@ import { AuthError } from "next-auth"
 import * as z from "zod"
 
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { cookieDomainForHost, tenantOriginForHost } from "@/lib/root-domain"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
@@ -91,14 +92,18 @@ export const login = async (
   // timing can't be used to enumerate valid usernames/emails. The school is
   // resolved from the subdomain (never the identifier), so it runs alongside
   // — from the tenant resolver's in-memory cache, usually with no query.
-  const [blocked, subdomainSchoolId] = await Promise.all([
-    isBruteForceBlocked(trimmedIdentifier),
+  // Six-digit login codes repeat across schools, so the lockout is counted
+  // per school — and per address, which caps PIN sweeps across many codes.
+  const [subdomainSchoolId, clientIp] = await Promise.all([
     subdomain ? getSchoolIdFromSubdomain(subdomain) : null,
+    getClientIp(),
   ])
+  const blocked = await isBruteForceBlocked(trimmedIdentifier, {
+    schoolId: subdomainSchoolId,
+    ip: clientIp,
+  })
   if (blocked) {
-    return {
-      error: "Too many failed attempts. Please try again in 15 minutes.",
-    }
+    return { error: "TOO_MANY_ATTEMPTS" }
   }
 
   // Resolve schoolId from subdomain for tenant-aware user lookup
@@ -112,11 +117,12 @@ export const login = async (
   // Email is optional for manually-added students (they log in with username),
   // so don't require it here — only a password and a User row.
   if (!existingUser || !existingUser.password) {
-    logLoginAttempt({
+    await logLoginAttempt({
       email: trimmedIdentifier,
       success: false,
       failureReason: "USER_NOT_FOUND",
-      schoolId: null,
+      schoolId: loginSchoolId ?? null,
+      ip: clientIp,
     })
     return { error: "EMAIL_NOT_FOUND" }
   }
@@ -397,11 +403,12 @@ export const login = async (
     return { success: "Login successful!", redirectUrl: finalRedirectUrl }
   } catch (error) {
     if (error instanceof AuthError) {
-      logLoginAttempt({
+      await logLoginAttempt({
         email: trimmedIdentifier,
         success: false,
         failureReason: error.type,
         schoolId: existingUser.schoolId,
+        ip: clientIp,
       })
       switch (error.type) {
         case "CredentialsSignin":

@@ -281,11 +281,18 @@ describe("NewPasswordSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("should reject password shorter than 6 characters", () => {
+  // School members sign in with 4-digit PINs and may keep one.
+  it("should reject password shorter than 4 characters", () => {
     const result = NewPasswordSchema.safeParse({
-      password: "12345",
+      password: "123",
     })
     expect(result.success).toBe(false)
+  })
+
+  it("should accept a 4-digit PIN", () => {
+    expect(NewPasswordSchema.safeParse({ password: "1122" }).success).toBe(
+      true
+    )
   })
 
   it("should reject empty password", () => {
@@ -392,7 +399,7 @@ describe("SettingsSchema", () => {
     it("should reject short newPassword", () => {
       const result = SettingsSchema.safeParse({
         password: "oldpassword",
-        newPassword: "12345", // Less than 6 characters
+        newPassword: "123", // Less than 4 characters
         role: "USER",
       })
       expect(result.success).toBe(false)

@@ -9,10 +9,12 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { clearLoginFailures } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
-import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { canManageCredentials } from "@/lib/credentials-access"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -24,6 +26,9 @@ import type { CredentialsPayload, CredentialsRole } from "./types"
 const inputSchema = z.object({
   role: z.enum(["student", "teacher", "guardian", "staff"]),
   id: z.string().min(1),
+  /** Force a new password even for a student who chose their own — the
+   *  admin's recovery path when someone has lost access. */
+  reset: z.boolean().optional(),
 })
 
 type MemberRole = Exclude<CredentialsRole, "student">
@@ -57,18 +62,22 @@ const ROLE_PREFIX: Record<MemberRole, string> = {
 export async function generateCredentials(input: {
   role: CredentialsRole
   id: string
+  reset?: boolean
 }): Promise<ActionResponse<CredentialsPayload>> {
   try {
     const session = await auth()
     if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    // A fresh password comes back in plain text — admins only.
+    if (!canManageCredentials(session.user.role))
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const { role, id } = inputSchema.parse(input)
+    const { role, id, reset } = inputSchema.parse(input)
 
     if (role === "student") {
-      return handleStudent(id, schoolId)
+      return handleStudent(id, schoolId, reset)
     }
     return handleMember(role, id, schoolId)
   } catch (error) {
@@ -87,12 +96,16 @@ export async function generateCredentials(input: {
 
 async function handleStudent(
   id: string,
-  schoolId: string
+  schoolId: string,
+  reset = false
 ): Promise<ActionResponse<CredentialsPayload>> {
   // First open creates the User (and mints a password); an existing admin-
   // managed account returns password:null — mint a fresh one so there's always
-  // something to share. A self-onboarded student keeps their own password.
-  const initial = await getStudentCredentials({ studentId: id })
+  // something to share. A self-onboarded student keeps their own password
+  // unless the admin explicitly resets it (`reset`).
+  const initial = reset
+    ? await resetStudentPassword({ studentId: id })
+    : await getStudentCredentials({ studentId: id })
   if (!initial.success || !initial.data) {
     return { success: false, error: initial.error, code: initial.code }
   }
@@ -337,6 +350,8 @@ async function handleMember(
     })
     return username
   })
+  // A reset is also the recovery path — lift any lockout right away.
+  await clearLoginFailures(schoolId, [username, user?.username, user?.email])
   queueDeliver(schoolId, entity.userId, username, plain, false)
 
   return {

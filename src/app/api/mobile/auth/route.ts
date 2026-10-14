@@ -4,7 +4,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 
+import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
 import { db } from "@/lib/db"
+import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 import {
@@ -21,7 +23,7 @@ import {
  * this returns access and refresh tokens for mobile clients.
  *
  * POST /api/mobile/auth
- * Body: { email: string, password: string }
+ * Body: { identifier: string, password: string, school?: subdomain | schoolId }
  * Returns: { access_token, refresh_token, expires_at, user }
  */
 
@@ -46,19 +48,61 @@ export async function POST(request: NextRequest) {
     const trimmedIdentifier = identifier.trim()
     const identifierIsEmail = trimmedIdentifier.includes("@")
 
-    // Find user. Mobile clients may send either an email or a generated
-    // student username — getUserByIdentifier branches on the `@` sign. Without
-    // a subdomain context, username lookups aren't tenant-scoped here; we fall
-    // back to cross-school search for email only (preserves prior behavior).
-    let user = identifierIsEmail
-      ? await getUserByIdentifier(trimmedIdentifier)
-      : // Cross-school username search for mobile — scan schools to find the
-        // matching student handle. Usernames are per-school unique but mobile
-        // has no subdomain hint, so findFirst picks the most recent match.
-        await db.user.findFirst({
-          where: { username: trimmedIdentifier, schoolId: { not: null } },
-          orderBy: { updatedAt: "desc" },
-        })
+    // The school the app is signed into: a subdomain ("alabidae") or an id.
+    // Six-digit login codes repeat across schools (260001 exists in every
+    // one), so a username login is only resolved inside a known school.
+    const schoolHint =
+      typeof body?.school === "string"
+        ? body.school.trim()
+        : typeof body?.schoolId === "string"
+          ? body.schoolId.trim()
+          : ""
+    const schoolId = schoolHint
+      ? ((await getSchoolIdFromSubdomain(schoolHint)) ??
+        (await db.school
+          .findUnique({ where: { id: schoolHint }, select: { id: true } })
+          .then((s) => s?.id ?? null)))
+      : null
+
+    const ip =
+      request.headers.get("cf-connecting-ip") ||
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      null
+    if (await isBruteForceBlocked(trimmedIdentifier, { schoolId, ip })) {
+      return NextResponse.json(
+        { error: "Too many failed attempts", code: "TOO_MANY_ATTEMPTS" },
+        { status: 429 }
+      )
+    }
+    const fail = async (reason: string, userSchoolId?: string | null) =>
+      logLoginAttempt({
+        email: trimmedIdentifier,
+        success: false,
+        failureReason: reason,
+        schoolId: userSchoolId ?? schoolId,
+        ip: ip ?? undefined,
+      })
+
+    let user
+    if (identifierIsEmail) {
+      user = await getUserByIdentifier(trimmedIdentifier, schoolId ?? undefined)
+    } else if (schoolId) {
+      user = await getUserByIdentifier(trimmedIdentifier, schoolId)
+    } else {
+      // No school hint (older app builds): only an unambiguous username
+      // resolves — never guess between two schools' 260001.
+      const matches = await db.user.findMany({
+        where: { username: trimmedIdentifier, schoolId: { not: null } },
+        take: 2,
+      })
+      if (matches.length > 1) {
+        return NextResponse.json(
+          { error: "School required", code: "SCHOOL_REQUIRED" },
+          { status: 400 }
+        )
+      }
+      user = matches[0] ?? null
+    }
 
     if (user && identifierIsEmail && !user.schoolId) {
       // Platform user found but has no school — check for a school-scoped version
@@ -70,6 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
+      await fail("USER_NOT_FOUND")
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -88,6 +133,7 @@ export async function POST(request: NextRequest) {
     const passwordsMatch = await bcrypt.compare(password, user.password)
 
     if (!passwordsMatch) {
+      await fail("CredentialsSignin", user.schoolId)
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }

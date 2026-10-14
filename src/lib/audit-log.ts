@@ -99,27 +99,66 @@ export async function logLoginAttempt(params: {
   }
 }
 
+const LOCKOUT_WINDOW_MS = 15 * 60 * 1000
+const MAX_FAILURES_PER_LOGIN = 5
+// One address guessing PINs across many codes — far above a family sharing
+// a phone, far below a sweep of the easy-PIN space.
+const MAX_FAILURES_PER_IP = 30
+
 /**
- * Check if an email/IP is brute-force blocked.
- * Returns true if blocked (5+ failures in last 15 minutes).
+ * Is this login (or this address) brute-force blocked?
+ * 5 failures in 15 minutes per identifier, 30 per IP.
+ *
+ * Six-digit login codes repeat across schools (260001 exists everywhere), so
+ * when a school is known the identifier count is scoped to it — failures at
+ * one school never lock out the same code at another.
  */
 export async function isBruteForceBlocked(
   email: string,
-  ip?: string
+  opts: { schoolId?: string | null; ip?: string | null } = {}
 ): Promise<boolean> {
   try {
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000)
-
-    const recentFailures = await db.loginAttempt.count({
-      where: {
-        email,
-        success: false,
-        timestamp: { gte: fifteenMinutesAgo },
-      },
-    })
-
-    return recentFailures >= 5
+    const since = new Date(Date.now() - LOCKOUT_WINDOW_MS)
+    const [perLogin, perIp] = await Promise.all([
+      db.loginAttempt.count({
+        where: {
+          email,
+          success: false,
+          timestamp: { gte: since },
+          ...(opts.schoolId ? { schoolId: opts.schoolId } : {}),
+        },
+      }),
+      opts.ip && opts.ip !== "unknown"
+        ? db.loginAttempt.count({
+            where: { ip: opts.ip, success: false, timestamp: { gte: since } },
+          })
+        : 0,
+    ])
+    return perLogin >= MAX_FAILURES_PER_LOGIN || perIp >= MAX_FAILURES_PER_IP
   } catch {
     return false
+  }
+}
+
+/**
+ * Lift a lockout — an admin who resets someone's password hands them a
+ * working login immediately, not after the 15-minute window.
+ */
+export async function clearLoginFailures(
+  schoolId: string,
+  identifiers: Array<string | null | undefined>
+): Promise<void> {
+  const emails = identifiers.filter((v): v is string => !!v)
+  if (emails.length === 0) return
+  try {
+    await db.loginAttempt.deleteMany({
+      where: {
+        success: false,
+        email: { in: emails },
+        OR: [{ schoolId }, { schoolId: null }],
+      },
+    })
+  } catch (error) {
+    console.error("[AuditLog] Failed to clear login failures:", error)
   }
 }

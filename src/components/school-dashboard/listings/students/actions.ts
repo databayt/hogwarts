@@ -83,14 +83,16 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { withArchiveScope } from "@/lib/archive-scope"
+import { clearLoginFailures } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
-import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { canManageCredentials } from "@/lib/credentials-access"
 import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
@@ -2056,6 +2058,10 @@ export async function getStudentCredentials(input: {
     if (!session?.user) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    // Credentials come back in plain text — admins only.
+    if (!canManageCredentials(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -2212,6 +2218,10 @@ export async function resetStudentPassword(input: {
     if (!session?.user) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    // Credentials come back in plain text — admins only.
+    if (!canManageCredentials(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -2251,6 +2261,11 @@ export async function resetStudentPassword(input: {
         where: { id: userId },
         data: { password: hashed, mustChangePassword: true, username },
       })
+      await clearLoginFailures(schoolId, [
+        username,
+        current?.username,
+        student.email,
+      ])
       return username
     })
 

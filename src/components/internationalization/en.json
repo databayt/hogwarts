@@ -521,6 +521,36 @@
     }
   },
   "auth": {
+    "resetNoEmailHint": "Sign in with a 6-digit number and no email? Ask the school office — they can reset your password straight away.",
+    "changePassword": {
+      "current": "Current password",
+      "currentPlaceholder": "Your current password",
+      "new": "New password",
+      "newPlaceholder": "4 digits or more",
+      "confirm": "Type it again",
+      "submit": "Change password",
+      "submitting": "Changing...",
+      "success": "Password changed",
+      "wrongCurrent": "The current password is wrong",
+      "mismatch": "The two passwords don't match",
+      "tooShort": "At least 4 characters",
+      "failed": "Couldn't change the password. Try again.",
+      "forgotHint": "Forgot your current password? Ask the school office — they can reset it for you any time."
+    },
+    "firstLogin": {
+      "title": "Choose your own password",
+      "description": "You signed in with the PIN the school gave you. Pick a new one only you know — 4 digits is enough.",
+      "newPassword": "New password",
+      "confirmPassword": "Type it again",
+      "placeholder": "4 digits or more",
+      "mismatch": "The two passwords don't match",
+      "tooShort": "At least 4 characters",
+      "sameAsOld": "Choose a different password from the one the school gave you",
+      "save": "Save and continue",
+      "saving": "Saving...",
+      "failed": "Couldn't save the password. Try again.",
+      "forgotHint": "Forgot it later? Change it any time in Settings → Password, or ask the school office to reset it."
+    },
     "signIn": "Login",
     "signUp": "Sign Up",
     "signOut": "Logout",

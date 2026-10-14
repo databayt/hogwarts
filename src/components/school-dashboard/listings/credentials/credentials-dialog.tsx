@@ -3,9 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Minimal, role-agnostic credentials dialog. The login is NEVER shown on screen
-// — it sits behind two borderless icons: Copy (clipboard) and Share (one direct
-// channel). The admin exposes it only by copying or sharing.
+// Minimal, role-agnostic credentials dialog: the 6-digit username and 4-digit
+// PIN, a Copy icon and one icon per share channel. When the password can't be
+// shown (a student who chose their own), "Reset password" is the admin's
+// recovery path — it always works.
 //
 // Steadiness: the layout is fixed. The Share affordance is always the same <a>
 // element (it just gains/loses an href once credentials load) — no element
@@ -249,6 +250,28 @@ export function CredentialsDialog({
 
   const copyLabel = tr("copyDetails", "Copy details to clipboard")
 
+  // Recovery: mint a new PIN for an account whose password isn't shown.
+  const [resetting, setResetting] = useState(false)
+  const handleReset = useCallback(async () => {
+    const s = getStore()
+    if (!s.role || !s.id) return
+    const { role, id } = s
+    setResetting(true)
+    const result = await generateCredentials({ role, id, reset: true })
+    setResetting(false)
+    if (getStore().id !== id) return
+    if (result.success && result.data) {
+      setStore({ credentials: result.data, error: null })
+      setCachedCredentials(role, id, result.data)
+    } else {
+      setStore({
+        error:
+          ("error" in result && result.error) ||
+          tr("failedToReset", "Failed to reset password"),
+      })
+    }
+  }, [tr])
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xs">
@@ -257,7 +280,9 @@ export function CredentialsDialog({
             <HandLock className="h-full w-full" />
           </div>
           <DialogTitle className="flex flex-wrap items-center justify-center gap-2 text-center">
-            <span>{name}</span>
+            {/* Full name, isolated so an English name in an Arabic dialog
+                (or the reverse) never reorders. */}
+            <bdi dir="auto">{name}</bdi>
             {badge && (
               <Badge variant="secondary" className="font-normal">
                 {badge}
@@ -275,16 +300,36 @@ export function CredentialsDialog({
           <dt className="text-muted-foreground text-xs">
             {tr("username", "Username")}
           </dt>
-          <dd className="font-mono text-sm break-all">
-            {credentials?.username ?? "—"}
+          <dd className="font-mono text-base tracking-wider break-all">
+            <bdi dir="ltr">{credentials?.username ?? "—"}</bdi>
           </dd>
           <dt className="text-muted-foreground text-xs">
             {tr("password", "Password")}
           </dt>
-          <dd className="font-mono text-sm break-all">
-            {credentials?.password ?? "—"}
+          <dd className="font-mono text-base tracking-wider break-all">
+            <bdi dir="ltr">{credentials?.password ?? "—"}</bdi>
           </dd>
         </dl>
+
+        {credentials && !credentials.password ? (
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={resetting}
+            className="text-muted-foreground hover:text-foreground mx-auto text-xs underline underline-offset-4 disabled:opacity-50"
+          >
+            {resetting
+              ? tr("resettingPassword", "Resetting password...")
+              : tr("resetPassword", "Reset Password")}
+          </button>
+        ) : (
+          <p className="text-muted-foreground text-center text-xs">
+            {tr(
+              "mustChangePassword",
+              "They will be asked to change the password on first login."
+            )}
+          </p>
+        )}
 
         <div className="flex items-center justify-center gap-5 pt-1">
           <button

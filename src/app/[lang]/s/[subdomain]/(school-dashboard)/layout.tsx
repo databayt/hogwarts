@@ -220,7 +220,7 @@ export default async function PlatformLayout({
                 {/* Admin-forced password reset. Streams in behind the page
                     instead of holding the whole layout for its lookup. */}
                 <Suspense fallback={null}>
-                  <MustChangePasswordGate userId={session.user.id} />
+                  <MustChangePasswordGate userId={session.user.id} lang={lang} />
                 </Suspense>
                 {/* The "Quick Guide" welcome dialog stood here, rendered for
                     every user who had not dismissed it. Phones stopped showing

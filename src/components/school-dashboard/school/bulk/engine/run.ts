@@ -5,8 +5,8 @@ import "server-only"
 import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 
+import { clearLoginFailures } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
-import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { db } from "@/lib/db"
 import {
   createOrLinkGuardian,
@@ -14,6 +14,7 @@ import {
   type ParentRole,
 } from "@/lib/guardian-utils"
 import { logger } from "@/lib/logger"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import {
   provisionStudent,
   type ProvisionGuardianInput,
@@ -1132,6 +1133,7 @@ export async function reissueLogins(
       })
       return username
     })
+    await clearLoginFailures(schoolId, [username, user.username, user.email])
     credentials.push({
       name: names.get(r.entityId) ?? "",
       role: ROLE_OF[r.entity] ?? r.entity,

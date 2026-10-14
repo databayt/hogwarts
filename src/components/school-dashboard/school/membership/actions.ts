@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { clearLoginFailures } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
@@ -18,6 +19,7 @@ import {
   isInvitationExpired,
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
+import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { refreshPage } from "@/lib/refresh-page"
 import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
 import type { ProvisionStudentResult } from "@/lib/student-provisioning"
@@ -1331,10 +1333,24 @@ export async function resetMemberPassword(
 
     const { plain, hashed } = await mintTempPassword()
 
-    await db.user.update({
-      where: { id: targetUser.id },
-      data: { password: hashed, mustChangePassword: true },
+    // A reset moves an older handle onto the school's 6-digit login code and
+    // lifts any lockout — this is the recovery path when someone is stuck.
+    const username = await db.$transaction(async (tx) => {
+      const username =
+        targetUser.username && LOGIN_CODE_RE.test(targetUser.username)
+          ? targetUser.username
+          : await allocateLoginCode(tx, schoolId)
+      await tx.user.update({
+        where: { id: targetUser.id },
+        data: { password: hashed, mustChangePassword: true, username },
+      })
+      return username
     })
+    await clearLoginFailures(schoolId, [
+      username,
+      targetUser.username,
+      targetUser.email,
+    ])
 
     // Push the new credentials to the member (in-app + email + WhatsApp).
     // Non-fatal — the plaintext is still returned for manual sharing.
@@ -1342,7 +1358,7 @@ export async function resetMemberPassword(
       await deliverCredentials({
         schoolId,
         userId: targetUser.id,
-        username: targetUser.username ?? targetUser.email ?? "",
+        username,
         tempPassword: plain,
         isFirstTime: false,
       })
@@ -1357,7 +1373,7 @@ export async function resetMemberPassword(
     return {
       success: true,
       data: {
-        username: targetUser.username ?? targetUser.email ?? "",
+        username,
         tempPassword: plain,
         email: targetUser.email,
       },

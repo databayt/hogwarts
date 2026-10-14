@@ -58,8 +58,8 @@ export function createSettingsSchema(dictionary: Dictionary) {
       isTwoFactorEnabled: z.optional(z.boolean()),
       role: z.enum(["ADMIN", "USER"] as const satisfies readonly UserRole[]),
       email: z.optional(z.string().email()),
-      password: z.optional(z.string().min(6)),
-      newPassword: z.optional(z.string().min(6)),
+      password: z.optional(z.string().min(4)),
+      newPassword: z.optional(z.string().min(4)),
     })
     .refine(
       (data) => {
@@ -95,8 +95,9 @@ export function createNewPasswordSchema(dictionary: Dictionary) {
   const v = getValidationMessages(dictionary)
 
   return z.object({
-    password: z.string().min(6, {
-      message: v.passwordMinLength(),
+    // School members sign in with 4-digit PINs and may keep one.
+    password: z.string().min(4, {
+      message: v.passwordMinLength4(),
     }),
   })
 }
@@ -166,8 +167,8 @@ export const SettingsSchema = z
     isTwoFactorEnabled: z.optional(z.boolean()),
     role: z.enum(["ADMIN", "USER"] as const satisfies readonly UserRole[]),
     email: z.optional(z.string().email()),
-    password: z.optional(z.string().min(6)),
-    newPassword: z.optional(z.string().min(6)),
+    password: z.optional(z.string().min(4)),
+    newPassword: z.optional(z.string().min(4)),
   })
   .refine(
     (data) => {
@@ -195,8 +196,8 @@ export const SettingsSchema = z
   )
 
 export const NewPasswordSchema = z.object({
-  password: z.string().min(6, {
-    message: "Minimum of 6 characters required",
+  password: z.string().min(4, {
+    message: "Minimum of 4 characters required",
   }),
 })
 

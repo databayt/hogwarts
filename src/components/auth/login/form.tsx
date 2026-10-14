@@ -24,7 +24,6 @@ import {
 } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Form,
@@ -39,6 +38,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { FormError } from "../error/form-error"
@@ -106,6 +106,9 @@ export const LoginForm = ({
       authErrors?.invalidCredentials ??
       validationMsgs?.invalidCredentials ??
       "Invalid email or password",
+    TOO_MANY_ATTEMPTS:
+      authErrors?.tooManyAttempts ??
+      "Too many wrong attempts. Wait 15 minutes, or ask the school office to reset your password.",
     INVALID_CODE: validationMsgs?.invalidCode ?? "Invalid code",
     CODE_EXPIRED: validationMsgs?.codeExpired ?? "Code expired",
     INVALID_FIELDS: validationMsgs?.requiredField ?? "Invalid fields",

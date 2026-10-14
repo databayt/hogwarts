@@ -2,8 +2,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { ForceChangePasswordModal } from "./force-change-password-modal"
+import {
+  ForceChangePasswordModal,
+  type FirstLoginLabels,
+} from "./force-change-password-modal"
 
 /**
  * Renders the forced password-change modal when an admin reset left the user
@@ -16,11 +21,21 @@ import { ForceChangePasswordModal } from "./force-change-password-modal"
  * revalidating Server Action triggers. Now the page streams and the modal
  * arrives a moment later for the rare user who needs it.
  */
-export async function MustChangePasswordGate({ userId }: { userId: string }) {
+export async function MustChangePasswordGate({
+  userId,
+  lang,
+}: {
+  userId: string
+  lang: string
+}) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { mustChangePassword: true, password: true },
+    select: { mustChangePassword: true },
   })
   if (!user?.mustChangePassword) return null
-  return <ForceChangePasswordModal hasPassword={!!user.password} />
+  // Only the rare first-login render pays for the dictionary.
+  const dictionary = await getDictionary(lang as Locale)
+  const labels = (dictionary.auth as { firstLogin?: FirstLoginLabels })
+    .firstLogin
+  return <ForceChangePasswordModal labels={labels} />
 }

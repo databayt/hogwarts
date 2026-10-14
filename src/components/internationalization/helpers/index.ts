@@ -108,6 +108,11 @@ export class ValidationHelper {
     return this.messages.passwordMinLength
   }
 
+  /** School members may keep a 4-digit PIN. */
+  passwordMinLength4(): string {
+    return this.messages.passwordMinLength4 ?? this.messages.passwordMinLength
+  }
+
   /**
    * Get a password mismatch message
    */

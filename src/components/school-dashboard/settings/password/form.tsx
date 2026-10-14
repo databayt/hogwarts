@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,25 +17,65 @@ import {
 import { Input } from "@/components/ui/input"
 
 import { changePassword } from "./actions"
-import { changePasswordSchema, type ChangePasswordInput } from "./validation"
+import { type ChangePasswordInput } from "./validation"
+
+export type ChangePasswordLabels = Partial<
+  Record<
+    | "current"
+    | "currentPlaceholder"
+    | "new"
+    | "newPlaceholder"
+    | "confirm"
+    | "submit"
+    | "submitting"
+    | "success"
+    | "wrongCurrent"
+    | "mismatch"
+    | "tooShort"
+    | "failed"
+    | "forgotHint",
+    string
+  >
+>
 
 interface ChangePasswordFormProps {
   /** Whether the user has an existing password (false for OAuth-only users) */
   hasPassword: boolean
   /** Called after a successful password change */
   onSuccess?: () => void
+  /** `dictionary.auth.changePassword` */
+  labels?: ChangePasswordLabels
 }
 
 export function ChangePasswordForm({
   hasPassword,
   onSuccess,
+  labels,
 }: ChangePasswordFormProps) {
+  const t = (key: keyof ChangePasswordLabels, fallback: string) =>
+    labels?.[key] || fallback
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | undefined>()
   const [success, setSuccess] = useState<string | undefined>()
 
   const form = useForm<ChangePasswordInput>({
-    resolver: zodResolver(changePasswordSchema),
+    // Same rules as the server schema, with this locale's messages.
+    resolver: zodResolver(
+      z
+        .object({
+          currentPassword: z.string().optional(),
+          newPassword: z
+            .string()
+            .min(4, t("tooShort", "At least 4 characters")),
+          confirmPassword: z
+            .string()
+            .min(1, t("mismatch", "The two passwords don't match")),
+        })
+        .refine((d) => d.newPassword === d.confirmPassword, {
+          message: t("mismatch", "The two passwords don't match"),
+          path: ["confirmPassword"],
+        })
+    ),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -49,11 +90,15 @@ export function ChangePasswordForm({
     startTransition(async () => {
       const result = await changePassword(values)
       if (result.success) {
-        setSuccess("Password changed successfully")
+        setSuccess(t("success", "Password changed"))
         form.reset()
         onSuccess?.()
       } else {
-        setError(result.error)
+        setError(
+          result.code === "WRONG_CURRENT"
+            ? t("wrongCurrent", "The current password is wrong")
+            : t("failed", "Couldn't change the password. Try again.")
+        )
       }
     })
   }
@@ -67,13 +112,17 @@ export function ChangePasswordForm({
             name="currentPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Password</FormLabel>
+                <FormLabel>{t("current", "Current password")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
+                    dir="ltr"
                     disabled={isPending}
-                    placeholder="Enter current password"
+                    placeholder={t(
+                      "currentPlaceholder",
+                      "Your current password"
+                    )}
                   />
                 </FormControl>
                 <FormMessage />
@@ -87,13 +136,14 @@ export function ChangePasswordForm({
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>New Password</FormLabel>
+              <FormLabel>{t("new", "New password")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="password"
+                  dir="ltr"
                   disabled={isPending}
-                  placeholder="Enter new password"
+                  placeholder={t("newPlaceholder", "4 digits or more")}
                 />
               </FormControl>
               <FormMessage />
@@ -106,13 +156,14 @@ export function ChangePasswordForm({
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>{t("confirm", "Type it again")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="password"
+                  dir="ltr"
                   disabled={isPending}
-                  placeholder="Confirm new password"
+                  placeholder={t("newPlaceholder", "4 digits or more")}
                 />
               </FormControl>
               <FormMessage />
@@ -124,8 +175,19 @@ export function ChangePasswordForm({
         {success && <p className="text-sm text-green-600">{success}</p>}
 
         <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Changing..." : "Change Password"}
+          {isPending
+            ? t("submitting", "Changing...")
+            : t("submit", "Change password")}
         </Button>
+
+        {hasPassword && (
+          <p className="text-muted-foreground text-xs">
+            {t(
+              "forgotHint",
+              "Forgot your current password? Ask the school office — they can reset it for you any time."
+            )}
+          </p>
+        )}
       </form>
     </Form>
   )

@@ -11,7 +11,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-import { ChangePasswordForm } from "./password/form"
+import { ChangePasswordForm, type ChangePasswordLabels } from "./password/form"
 
 // Lazy load heavy components for better initial page load performance
 const NotificationSettings = React.lazy(() =>
@@ -113,7 +113,13 @@ export function EnhancedSettingsContent({
 
         {/* Password */}
         <TabsContent value="password" className="space-y-6">
-          <ChangePasswordForm hasPassword={hasPassword} />
+          <ChangePasswordForm
+            hasPassword={hasPassword}
+            labels={
+              (dictionary.auth as { changePassword?: ChangePasswordLabels })
+                .changePassword
+            }
+          />
         </TabsContent>
 
         {/* Language */}

@@ -127,7 +127,7 @@ export default async function MessagingLayout({
             {children}
           </div>
           <Suspense fallback={null}>
-            <MustChangePasswordGate userId={session.user.id} />
+            <MustChangePasswordGate userId={session.user.id} lang={lang} />
           </Suspense>
         </ModalProvider>
       </SchoolProvider>
