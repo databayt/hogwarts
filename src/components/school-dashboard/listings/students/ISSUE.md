@@ -134,7 +134,7 @@ Found, not fixed (recorded):
       raw ("Direct Admission" on an Arabic school); the Applications tab
       localizes it through `getLabels`.
 - [ ] Mapbox picker on the location step logs `TypeError: mo is not a
-    function` (pre-existing; `NEXT_PUBLIC_MAPBOX_TOKEN` set locally).
+  function` (pre-existing; `NEXT_PUBLIC_MAPBOX_TOKEN` set locally).
 - [ ] `PhoneField` with no country selected stores "+0912…" (leading plus on a
       local number) in both wizards.
 - [ ] Demo seed has each section twice (Arabic-named and English-named rows).

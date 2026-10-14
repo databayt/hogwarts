@@ -66,7 +66,15 @@ export function CredentialsDialog({
   labels,
   onClosed,
 }: CredentialsDialogProps) {
-  const { open, name, badge, credentials } = useCredentialsDialogState()
+  const {
+    open,
+    name: listedName,
+    badge,
+    credentials,
+  } = useCredentialsDialogState()
+  // Listings show the school's short name; a login is handed over under the
+  // person's full name.
+  const name = credentials?.fullName || listedName
   const [copied, setCopied] = useState(false)
   const [loginUrl, setLoginUrl] = useState("")
 

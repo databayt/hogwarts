@@ -5,10 +5,10 @@
 import * as React from "react"
 import Link from "next/link"
 
-import { BlurImage } from "@/components/atom/blur-image"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 
 import { getSubjectImage } from "./image-map"

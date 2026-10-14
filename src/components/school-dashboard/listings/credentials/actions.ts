@@ -15,6 +15,7 @@ import { canManageCredentials } from "@/lib/credentials-access"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -116,11 +117,18 @@ async function handleStudent(
     if (reset.success && reset.data) data = reset.data
   }
 
-  const contact = await loadStudentContact(id, schoolId)
+  const [contact, person] = await Promise.all([
+    loadStudentContact(id, schoolId),
+    db.student.findFirst({
+      where: { id, schoolId },
+      select: { firstName: true, middleName: true, lastName: true },
+    }),
+  ])
   return {
     success: true,
     data: {
       ...data,
+      fullName: person ? displayName(person, "full") : undefined,
       phone: contact.phone,
       email: data.email ?? contact.email,
     },
@@ -176,6 +184,7 @@ interface MemberEntity {
   userId: string | null
   email: string | null
   firstName: string | null
+  middleName?: string | null
   lastName: string | null
   phone: string | null
 }
@@ -193,6 +202,7 @@ async function loadMember(
         userId: true,
         emailAddress: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         phoneNumbers: {
           orderBy: { isPrimary: "desc" },
@@ -207,6 +217,7 @@ async function loadMember(
       userId: t.userId,
       email: t.emailAddress ?? null,
       firstName: t.firstName,
+      middleName: t.middleName,
       lastName: t.lastName,
       phone: t.phoneNumbers?.[0]?.phoneNumber ?? null,
     }
@@ -220,6 +231,7 @@ async function loadMember(
         userId: true,
         emailAddress: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         phoneNumbers: {
           orderBy: { isPrimary: "desc" },
@@ -234,6 +246,7 @@ async function loadMember(
       userId: g.userId,
       email: g.emailAddress ?? null,
       firstName: g.firstName,
+      middleName: g.middleName,
       lastName: g.lastName,
       phone: g.phoneNumbers?.[0]?.phoneNumber ?? null,
     }
@@ -247,6 +260,7 @@ async function loadMember(
       userId: true,
       emailAddress: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       phoneNumber: true,
       alternatePhone: true,
@@ -263,6 +277,7 @@ async function loadMember(
     userId: s.userId,
     email: s.emailAddress ?? null,
     firstName: s.firstName,
+    middleName: s.middleName,
     lastName: s.lastName,
     phone:
       s.phoneNumber ||
@@ -321,6 +336,7 @@ async function handleMember(
       success: true,
       data: {
         username,
+        fullName: displayName(entity, "full"),
         email: entity.email,
         password: plain,
         phone: entity.phone,
@@ -358,6 +374,7 @@ async function handleMember(
     success: true,
     data: {
       username,
+      fullName: displayName(entity, "full"),
       email: user?.email ?? entity.email,
       password: plain,
       phone: entity.phone,

@@ -26,8 +26,7 @@ export default function SelectionContent() {
   useEffect(() => {
     if (data) {
       setIsValid(
-        data.studentId.trim().length >= 1 &&
-          (data.subjectId ?? "").length >= 1
+        data.studentId.trim().length >= 1 && (data.subjectId ?? "").length >= 1
       )
     }
   }, [data])

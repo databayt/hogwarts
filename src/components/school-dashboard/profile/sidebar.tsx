@@ -15,6 +15,7 @@ import {
 
 import { asset } from "@/lib/asset-url"
 import { formatDate as formatLocaleDate } from "@/lib/i18n-format"
+import { initialsOf } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -214,11 +215,11 @@ export default function ProfileSidebar({
   // 64px avatar sits beside the name instead of a portrait above it.
   const compact = isMobile
 
-  const firstName = data.displayName.split(" ")[0] ?? data.displayName
-  const restName = data.displayName.split(" ").slice(1).join(" ")
-  const initials =
-    `${data.firstName?.[0] ?? ""}${data.lastName?.[0] ?? ""}`.toUpperCase() ||
-    (data.displayName[0] ?? "?").toUpperCase()
+  // The school's short name, already split by NAMES — "عبد الله" stays on
+  // one line instead of breaking after "عبد".
+  const firstName = data.firstName || data.displayName
+  const restName = data.firstName ? data.lastName : ""
+  const initials = initialsOf(data.displayName) || "?"
 
   // GitHub-style link rows: website + social accounts (already stored + edited
   // via the profile form, previously never displayed).
@@ -237,13 +238,18 @@ export default function ProfileSidebar({
   // Name + role, rendered beside the avatar on a phone and beneath it on the
   // desktop column.
   const nameBlock = (
-    <div className="min-w-0 space-y-1">
+    <div className="min-w-0 space-y-1" title={data.fullName}>
       <h1 className="text-foreground text-2xl leading-tight font-bold">
-        {firstName}
+        <bdi dir="auto">{firstName}</bdi>
       </h1>
       {restName && (
         <p className="text-muted-foreground text-xl leading-tight font-light">
-          {restName}
+          <bdi dir="auto">{restName}</bdi>
+        </p>
+      )}
+      {data.fullName && data.fullName !== data.displayName && (
+        <p className="text-muted-foreground text-sm">
+          <bdi dir="auto">{data.fullName}</bdi>
         </p>
       )}
       {data.pronouns && (

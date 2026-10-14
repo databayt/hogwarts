@@ -18,6 +18,8 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { displayName, shortNameParts } from "@/lib/name-utils"
+import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getStudentSubjects } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -128,6 +130,8 @@ export interface ProfileViewData {
   firstName: string
   lastName: string
   displayName: string
+  /** Every name part — for the details line and tooltips. */
+  fullName: string
   handle: string
   photoUrl: string | null
   bio: string | null
@@ -234,6 +238,7 @@ export async function getProfileView(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           profilePhotoUrl: true,
           grNumber: true,
@@ -264,6 +269,7 @@ export async function getProfileView(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           profilePhotoUrl: true,
           employeeId: true,
@@ -287,6 +293,7 @@ export async function getProfileView(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           emailAddress: true,
           phoneNumbers: {
@@ -301,6 +308,7 @@ export async function getProfileView(
         select: {
           id: true,
           firstName: true,
+          middleName: true,
           lastName: true,
           profilePhotoUrl: true,
           employeeId: true,
@@ -355,6 +363,7 @@ async function buildFromUser(
 
   const firstName: string = entity?.firstName || user.username || ""
   const lastName: string = entity?.lastName || ""
+  const middleName: string | null = entity?.middleName ?? null
   const photoUrl: string | null =
     user.student?.profilePhotoUrl ??
     user.teacher?.profilePhotoUrl ??
@@ -444,6 +453,7 @@ async function buildFromUser(
     privileged,
     displayLang,
     firstName,
+    middleName,
     lastName,
     bio: user.bio ?? null,
     photoUrl,
@@ -493,6 +503,7 @@ async function buildFromOrphanEntity(
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profilePhotoUrl: true,
       grNumber: true,
@@ -537,6 +548,7 @@ async function buildFromOrphanEntity(
       privileged,
       displayLang,
       firstName: e.firstName || "",
+      middleName: e.middleName ?? null,
       lastName: e.lastName || "",
       bio: null,
       photoUrl: e.profilePhotoUrl ?? null,
@@ -587,6 +599,7 @@ async function buildFromOrphanEntity(
     select: {
       id: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profilePhotoUrl: true,
       employeeId: true,
@@ -641,6 +654,9 @@ interface AssembleArgs {
   privileged: boolean
   displayLang: "ar" | "en"
   firstName: string
+  /** Second (father's) + further names; the header shows the school's
+   *  short display, the full name stays available as `fullName`. */
+  middleName?: string | null
   lastName: string
   bio: string | null
   photoUrl: string | null
@@ -668,6 +684,11 @@ interface AssembleArgs {
 
 async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   const { schoolId, userId, role, isOwner, displayLang } = args
+  // The header shows the school's short name (first + second or first +
+  // last); the full name rides along for the details line.
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const short = shortNameParts(args, nameDisplay)
+  const rawFullName = displayName(args, "full")
 
   // Badges, organizations, pinned, activity are keyed by userId. Orphan
   // entities (no User) simply have none.
@@ -752,8 +773,9 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   }
 
   // ---- translation (batched, cache-backed) --------------------------------
-  let firstName = args.firstName
-  let lastName = args.lastName
+  let firstName = short.firstName
+  let lastName = short.lastName
+  let fullName = rawFullName
   let bio = args.bio
   let statusMessage = args.statusMessage ?? null
   let sectionName = args.sectionName ?? null
@@ -767,8 +789,9 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
       : []
   )
   const toTranslate = [
-    args.firstName,
-    args.lastName,
+    short.firstName,
+    short.lastName,
+    rawFullName,
     args.bio ?? "",
     args.statusMessage ?? "",
     args.sectionName ?? "",
@@ -790,8 +813,9 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   if (toTranslate.length) {
     const map = await getLabels(toTranslate, displayLang, schoolId)
     const tr = (s?: string | null) => (s ? (map.get(s) ?? s) : (s ?? null))
-    firstName = tr(args.firstName) ?? args.firstName
-    lastName = tr(args.lastName) ?? args.lastName
+    firstName = tr(short.firstName) ?? short.firstName
+    lastName = tr(short.lastName) ?? short.lastName
+    fullName = tr(rawFullName) ?? rawFullName
     bio = tr(args.bio)
     statusMessage = tr(args.statusMessage)
     sectionName = tr(sectionName)
@@ -839,7 +863,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     })
   }
 
-  const displayName = `${firstName} ${lastName}`.trim() || firstName
+  const shownName = `${firstName} ${lastName}`.trim() || firstName
 
   const info: ProfileInfoItem[] = []
   if (departmentName) info.push({ icon: "org", value: departmentName })
@@ -857,7 +881,8 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     canEdit: isOwner,
     firstName,
     lastName,
-    displayName,
+    displayName: shownName,
+    fullName,
     handle: args.handleSeed,
     photoUrl: args.photoUrl,
     bio,
@@ -921,6 +946,7 @@ async function fetchRoleDetail(
   schoolId: string,
   privileged: boolean
 ): Promise<ProfileRoleDetail> {
+  const nameDisplay = await schoolNameDisplay(schoolId)
   const empty: ProfileRoleDetail = {
     subjects: [],
     classes: [],
@@ -944,6 +970,7 @@ async function fetchRoleDetail(
               id: true,
               userId: true,
               firstName: true,
+              middleName: true,
               lastName: true,
               profilePhotoUrl: true,
               emailAddress: true,
@@ -961,7 +988,7 @@ async function fetchRoleDetail(
     const guardians: ProfileGuardianView[] = guardianRows.map((r) => ({
       id: r.guardian.id,
       profileId: r.guardian.userId ?? r.guardian.id,
-      name: `${r.guardian.firstName ?? ""} ${r.guardian.lastName ?? ""}`.trim(),
+      name: displayName(r.guardian, nameDisplay),
       relation: r.guardianType?.name ?? null,
       isPrimary: r.isPrimary,
       photoUrl: r.guardian.profilePhotoUrl ?? null,
@@ -1008,6 +1035,7 @@ async function fetchRoleDetail(
           select: {
             id: true,
             firstName: true,
+            middleName: true,
             lastName: true,
             profilePhotoUrl: true,
             section: {
@@ -1030,7 +1058,7 @@ async function fetchRoleDetail(
             : null
           return {
             id: s.id,
-            name: `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim(),
+            name: displayName(s, nameDisplay),
             sectionName,
             photoUrl: s.profilePhotoUrl ?? null,
           }

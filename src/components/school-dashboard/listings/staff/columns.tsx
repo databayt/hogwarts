@@ -111,10 +111,12 @@ export function getStaffColumns(
                 href={`/${locale}/profile/${staff.userId}`}
                 className="font-medium hover:underline"
               >
-                {staff.name}
+                <bdi dir="auto">{staff.name}</bdi>
               </Link>
             ) : (
-              <span className="font-medium">{staff.name}</span>
+              <span className="font-medium">
+                <bdi dir="auto">{staff.name}</bdi>
+              </span>
             )}
             <NameContactLine
               email={staff.emailAddress || null}

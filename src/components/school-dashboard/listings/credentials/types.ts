@@ -12,6 +12,8 @@ export type CredentialsRole = "student" | "teacher" | "guardian" | "staff"
 
 export interface CredentialsPayload {
   username: string
+  /** Every name part — credentials, slips and shares show the full name. */
+  fullName?: string
   /** Best email on file (own → guardian fallback for students). Null when none. */
   email: string | null
   /**

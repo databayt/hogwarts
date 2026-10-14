@@ -14,6 +14,12 @@
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import {
+  displayName,
+  NAME_DISPLAY_DEFAULT,
+  nameInitials,
+  type NameDisplay,
+} from "@/lib/name-utils"
 
 import type { StaffRow } from "./types"
 
@@ -53,6 +59,7 @@ export const staffListSelect = {
   id: true,
   employeeId: true,
   firstName: true,
+  middleName: true,
   lastName: true,
   emailAddress: true,
   phoneNumber: true,
@@ -78,6 +85,7 @@ export const staffDetailSelect = {
   schoolId: true,
   employeeId: true,
   firstName: true,
+  middleName: true,
   lastName: true,
   gender: true,
   emailAddress: true,
@@ -373,47 +381,53 @@ export async function getStaffStats(schoolId: string) {
 // ============================================================================
 
 /**
- * Format staff full name
+ * A staff member's name: the school's short display (first + second or
+ * first + last) by default, every part with "full".
  */
-export function formatStaffName(staff: {
-  firstName: string
-  lastName: string
-}): string {
-  return `${staff.firstName} ${staff.lastName}`
+export function formatStaffName(
+  staff: { firstName: string; middleName?: string | null; lastName: string },
+  mode: NameDisplay | "full" = NAME_DISPLAY_DEFAULT
+): string {
+  return displayName(staff, mode)
 }
 
 /**
- * Get staff initials for avatar
+ * Get staff initials for avatar — names, not words (عبد الله → ع).
  */
 export function getStaffInitials(staff: {
   firstName: string
+  middleName?: string | null
   lastName: string
 }): string {
-  return `${staff.firstName.charAt(0)}${staff.lastName.charAt(0)}`.toUpperCase()
+  return nameInitials(staff)
 }
 
 /**
  * Transform a list row into the table row. Lives here, not in the client
  * table, because the server content calls it.
  */
-export function transformStaffToRow(staff: {
-  id: string
-  firstName: string
-  lastName: string
-  emailAddress: string | null
-  phoneNumber?: string | null
-  alternatePhone?: string | null
-  position: string | null
-  employmentStatus: string
-  employmentType: string
-  userId: string | null
-  createdAt: Date
-  department?: { departmentName: string } | null
-}): StaffRow {
+export function transformStaffToRow(
+  staff: {
+    id: string
+    firstName: string
+    middleName?: string | null
+    lastName: string
+    emailAddress: string | null
+    phoneNumber?: string | null
+    alternatePhone?: string | null
+    position: string | null
+    employmentStatus: string
+    employmentType: string
+    userId: string | null
+    createdAt: Date
+    department?: { departmentName: string } | null
+  },
+  nameDisplay: NameDisplay = NAME_DISPLAY_DEFAULT
+): StaffRow {
   return {
     id: staff.id,
     userId: staff.userId,
-    name: formatStaffName(staff),
+    name: formatStaffName(staff, nameDisplay),
     emailAddress: staff.emailAddress ?? "",
     phone: staff.phoneNumber || staff.alternatePhone || null,
     position: staff.position || "",

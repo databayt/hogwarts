@@ -4,8 +4,8 @@
 // reader's structure. Not a "use server" action.
 import "server-only"
 
-import { catalogSibling } from "@/components/catalog/catalog-key"
 import { getCloudFrontUrl } from "@/lib/cloudfront-url"
+import { catalogSibling } from "@/components/catalog/catalog-key"
 
 import { fill, formatNumber, gradeLine, stageLine } from "./format"
 import { anchorToc, parseTwin, type TwinPage } from "./parse"

@@ -5,10 +5,10 @@
 import { useCallback, useMemo, useState } from "react"
 import Link from "next/link"
 
-import { BlurImage } from "@/components/atom/blur-image"
+import { gradeRangeLabel } from "@/lib/grade"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
-import { gradeRangeLabel } from "@/lib/grade"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 

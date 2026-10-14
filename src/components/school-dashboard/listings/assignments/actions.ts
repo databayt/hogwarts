@@ -566,9 +566,8 @@ export async function getAssignmentsExportData(
       status: assignment.status as string,
       submissionCount: assignment._count.submissions as number,
       gradedCount:
-        assignment.submissions?.filter(
-          (s: any) => s.gradedAt !== null
-        ).length || 0,
+        assignment.submissions?.filter((s: any) => s.gradedAt !== null)
+          .length || 0,
       createdAt: assignment.createdAt as Date,
     }))
 

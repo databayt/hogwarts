@@ -6,9 +6,14 @@ import { SearchParams } from "nuqs/server"
 import { withArchiveScope } from "@/lib/archive-scope"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { shortNameParts } from "@/lib/name-utils"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameContact, schoolNameFormat } from "@/lib/school-name-format"
+import {
+  schoolNameContact,
+  schoolNameDisplay,
+  schoolNameFormat,
+} from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -119,6 +124,8 @@ export default async function StudentsContent({
   const nameFormatPromise = schoolNameFormat(schoolId)
   // What the Name cell shows under the name — a school setting.
   const nameContactPromise = schoolNameContact(schoolId, "student")
+  // First + second or first + last — a school setting.
+  const nameDisplayPromise = schoolNameDisplay(schoolId)
   const permissions = getUIConfigForRole(role as Role | null | undefined)
 
   const effectiveSchoolId = school?.id || schoolId
@@ -190,12 +197,10 @@ export default async function StudentsContent({
     ])
 
     // Student names: one canonical helper (compose -> detect script -> dedupe ->
-    // translate, with transliterate fallback). Display = first + last (no middle),
-    // preserving the prior column behaviour. See getNames in translation/.
-    const nameOf = (s: any) => ({
-      firstName: s.firstName,
-      lastName: s.lastName,
-    })
+    // translate, with transliterate fallback). Display = the school's choice,
+    // first + second or first + last. See getNames in translation/.
+    const nameDisplay = await nameDisplayPromise
+    const nameOf = (s: any) => shortNameParts(s, nameDisplay)
     // Classrooms: room codes (B102) transliterate directly; real names go
     // through ONE batched, deduped getLabels pass (script-detected source).
     const uniqueClassrooms = new Set<string>()

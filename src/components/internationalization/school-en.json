@@ -74,6 +74,16 @@
         "updateSuccess": "Name format updated",
         "updateError": "Failed to update"
       },
+      "nameDisplay": {
+        "title": "Name Display",
+        "description": "How names appear in listings and profiles. Applications, certificates and login slips always show the full name.",
+        "firstSecondLabel": "First + second name",
+        "firstSecondDescription": "The person's name and their father's name",
+        "firstLastLabel": "First + last name",
+        "firstLastDescription": "The person's name and the family name",
+        "updateSuccess": "Name display updated",
+        "updateError": "Failed to update"
+      },
       "nameContact": {
         "title": "Contact Under Name",
         "description": "Choose what the teachers, students, parents and staff listings show under each name",
@@ -672,7 +682,11 @@
         },
         "name-format": {
           "title": "Name Format",
-          "description": "How student and staff names are displayed"
+          "description": "How names are typed in forms: one field or first + last"
+        },
+        "name-display": {
+          "title": "Name Display",
+          "description": "First + second or first + last name in listings and profiles"
         },
         "name-contact": {
           "title": "Contact Under Name",
@@ -762,7 +776,9 @@
           "starter": "Starter",
           "premium": "Premium",
           "enterprise": "Enterprise"
-        }
+        },
+        "firstSecondName": "First + second name",
+        "firstLastName": "First + last name"
       }
     },
     "bulk": {

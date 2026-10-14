@@ -95,7 +95,10 @@ const nameKey = (word: string) => word.replace(DIACRITICS, "").toLowerCase()
 
 /** Collapse whitespace and drop tatweel so stored names compare equal. */
 export function normalizeName(value: string | null | undefined): string {
-  return (value ?? "").replace(/\u0640/g, "").replace(/\s+/g, " ").trim()
+  return (value ?? "")
+    .replace(/\u0640/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 /**
@@ -188,8 +191,39 @@ export function displayName(
           const last = tokenizeName(person.lastName)
           return last[last.length - 1] ?? ""
         })()
-  return [first, tail].filter(Boolean).join(" ") ||
+  return (
+    [first, tail].filter(Boolean).join(" ") ||
     composeFullName(first, person.middleName, person.lastName)
+  )
+}
+
+/**
+ * The two names a listing shows, as first/last parts — so the translation
+ * pipeline (getName/getNames compose → detect script → translate) works on
+ * the short name unchanged. "full" keeps every part.
+ */
+export function shortNameParts(
+  person: PersonNameParts,
+  mode: NameDisplay | "full" = NAME_DISPLAY_DEFAULT
+): { firstName: string; middleName?: string | null; lastName: string } {
+  if (mode === "full")
+    return {
+      firstName: normalizeName(person.firstName),
+      middleName: person.middleName ?? null,
+      lastName: normalizeName(person.lastName),
+    }
+  const tail =
+    mode === "first-second"
+      ? secondName(person)
+      : (tokenizeName(person.lastName).at(-1) ?? "")
+  return { firstName: normalizeName(person.firstName), lastName: tail }
+}
+
+/** Two initials from an already-composed display name, compound-aware. */
+export function initialsOf(name: string | null | undefined): string {
+  const tokens = tokenizeName(name)
+  const letter = (s: string | undefined) => Array.from(s ?? "")[0] ?? ""
+  return (letter(tokens[0]) + letter(tokens[1])).toUpperCase()
 }
 
 /**

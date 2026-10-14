@@ -45,6 +45,7 @@ export default async function EditorLayout({ children, params }: Props) {
               nameEn: true,
               preferredLanguage: true,
               nameFormat: true,
+              nameDisplay: true,
               teacherNameContact: true,
               studentNameContact: true,
               guardianNameContact: true,
@@ -113,6 +114,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "branding",
     "hero",
     "name-format",
+    "name-display",
     "name-contact",
     "join",
     "visibility",
@@ -277,6 +279,10 @@ export default async function EditorLayout({ children, params }: Props) {
         return school.nameFormat === "full"
           ? ((cs?.fullName as string) ?? "Full Name (single field)")
           : ((cs?.splitName as string) ?? "Split (First + Last)")
+      case "name-display":
+        return school.nameDisplay === "first-last"
+          ? ((cs?.firstLastName as string) ?? "First + last name")
+          : ((cs?.firstSecondName as string) ?? "First + second name")
       case "name-contact": {
         const label = (v: string) =>
           v === "phone"

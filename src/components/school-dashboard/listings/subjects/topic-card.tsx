@@ -3,10 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { BlurImage } from "@/components/atom/blur-image"
 
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 
 import { getSubjectImage } from "./image-map"

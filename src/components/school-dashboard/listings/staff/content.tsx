@@ -3,7 +3,7 @@
 
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameContact } from "@/lib/school-name-format"
+import { schoolNameContact, schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -72,7 +72,8 @@ export async function StaffContent({
       : undefined,
   })
 
-  const rawData = rows.map(transformStaffToRow)
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const rawData = rows.map((row) => transformStaffToRow(row, nameDisplay))
 
   // Translate text fields for display — one batched, deduped resolution
   // across names/positions/departments. getLabels detects each value's

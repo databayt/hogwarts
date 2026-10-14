@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { CheckCircle } from "lucide-react"
 
-import type { NameContact } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -113,14 +113,8 @@ export const getTeacherColumns = (
         ?.subjectsEditor?.action || "Assign subjects",
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase()
-  }
+  // Names, not words: "عبد الله حسن" → "عح", never "عا".
+  const getInitials = initialsOf
 
   const statusVariants: Record<
     string,
@@ -166,7 +160,7 @@ export const getTeacherColumns = (
                   href={`/${lang}/profile/${teacher.userId || teacher.id}`}
                   className="font-medium hover:underline"
                 >
-                  {teacher.name}
+                  <bdi dir="auto">{teacher.name}</bdi>
                 </Link>
               </div>
               <NameContactLine

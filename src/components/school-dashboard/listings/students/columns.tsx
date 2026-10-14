@@ -7,7 +7,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { formatDate } from "@/lib/i18n-format"
-import type { NameContact } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -136,14 +136,8 @@ export const getStudentColumns = (
       "Cannot restore: another active student already uses this ID",
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase()
-  }
+  // Names, not words: "عبد الله حسن" → "عح", never "عا".
+  const getInitials = initialsOf
 
   return [
     {
@@ -171,7 +165,7 @@ export const getStudentColumns = (
                   href={`/${lang}/profile/${student.userId || student.id}`}
                   className="font-medium hover:underline"
                 >
-                  {student.name}
+                  <bdi dir="auto">{student.name}</bdi>
                 </Link>
               </div>
               <NameContactLine

@@ -20,6 +20,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Lottie from "lottie-react"
 import { useReducedMotion } from "motion/react"
+
 import { cdn } from "@/lib/cdn"
 
 const ANIMATION_URL = cdn("hogwarts/animations/hand-lock.json")

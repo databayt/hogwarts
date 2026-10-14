@@ -687,6 +687,60 @@ export async function updateSchoolNameFormat(
   }
 }
 
+// Schema for how listings + profiles show a name
+const nameDisplaySchema = z.object({
+  nameDisplay: z.enum(["first-second", "first-last"]),
+})
+
+/**
+ * How listings and profiles SHOW a person: given + second (father's) name or
+ * given + family name. Applications, credentials and certificates keep the
+ * full name either way.
+ */
+export async function updateSchoolNameDisplay(
+  schoolId: string,
+  data: z.infer<typeof nameDisplaySchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = nameDisplaySchema.parse(data)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: { nameDisplay: validatedData.nameDisplay },
+    })
+
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/name-display")
+    refreshPage("/students")
+    refreshPage("/teachers")
+    refreshPage("/parents")
+    refreshPage("/staff")
+    refreshPage("/profile")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating name display:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
 // Schema for the contact line shown under names
 const nameContactSchema = z.object({
   listing: z.enum(["teacher", "student", "guardian", "staff"]),

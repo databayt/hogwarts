@@ -114,7 +114,7 @@ view.
   pages ghost through each other; the UA root cross-fade is suppressed during a
   turn; and the easing is fitted to the captures — ease-in-out
   `cubic-bezier(0.42, 0, 0.58, 1)` (UIKit's default). The captures fix
-  *position*, never time — they are stills, so duration and curve are chosen,
+  _position_, never time — they are stills, so duration and curve are chosen,
   not measured, and live in `--book-turn-duration` / `--book-turn-ease`. What
   the frames do fix exactly is the incoming page's parallax,
   `17.4 % x (1 - p)` of width, its dim, `brightness(0.771 -> 1)`, the moving

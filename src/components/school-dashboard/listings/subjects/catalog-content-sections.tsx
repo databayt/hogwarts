@@ -4,13 +4,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import Image from "next/image"
-
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { BookOpen, Clock, Play } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { ShelfCard, shelfScroller } from "@/components/lumos/shared/shelf-card"

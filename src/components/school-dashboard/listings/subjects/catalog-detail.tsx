@@ -6,8 +6,8 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { BookOpen, ChevronRight } from "lucide-react"
 
-import { BlurImage } from "@/components/atom/blur-image"
 import { Card, CardContent } from "@/components/ui/card"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 

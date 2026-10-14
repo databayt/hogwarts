@@ -3,11 +3,16 @@
 
 import "server-only"
 
+import { cache } from "react"
+
 import { db } from "@/lib/db"
 import {
+  isNameDisplay,
   NAME_CONTACT_DEFAULTS,
+  NAME_DISPLAY_DEFAULT,
   type NameContact,
   type NameContactListing,
+  type NameDisplay,
 } from "@/lib/name-utils"
 
 /**
@@ -62,3 +67,25 @@ export async function schoolNameContact(
     return fallback
   }
 }
+
+/**
+ * How listings and profiles show a name: "first-second" (given + father's)
+ * or "first-last". Cached per request — a listing and its profile drawer
+ * share one lookup. Never throws.
+ */
+export const schoolNameDisplay = cache(
+  async (schoolId: string | null | undefined): Promise<NameDisplay> => {
+    if (!schoolId) return NAME_DISPLAY_DEFAULT
+    try {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { nameDisplay: true },
+      })
+      return isNameDisplay(school?.nameDisplay)
+        ? school.nameDisplay
+        : NAME_DISPLAY_DEFAULT
+    } catch {
+      return NAME_DISPLAY_DEFAULT
+    }
+  }
+)

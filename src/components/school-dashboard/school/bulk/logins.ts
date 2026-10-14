@@ -81,7 +81,7 @@ export async function printSlips(
       <article class="slip">
         <header>
           <div>
-            <h2>${escapeHtml(c.name)}</h2>
+            <h2><bdi dir="auto">${escapeHtml(c.name)}</bdi></h2>
             <p class="muted">${escapeHtml(roles[c.role] ?? c.role)}${opts.schoolName ? ` · ${escapeHtml(opts.schoolName)}` : ""}</p>
           </div>
           <img src="${qr}" alt="" />

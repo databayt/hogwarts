@@ -4,9 +4,14 @@
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { shortNameParts } from "@/lib/name-utils"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameContact, schoolNameFormat } from "@/lib/school-name-format"
+import {
+  schoolNameContact,
+  schoolNameDisplay,
+  schoolNameFormat,
+} from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import type { Locale } from "@/components/internationalization/config"
@@ -40,6 +45,8 @@ export default async function TeachersContent({
   const nameFormatPromise = schoolNameFormat(schoolId)
   // What the Name cell shows under the name — a school setting.
   const nameContactPromise = schoolNameContact(schoolId, "teacher")
+  // First + second or first + last — a school setting.
+  const nameDisplayPromise = schoolNameDisplay(schoolId)
   const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: TeacherRow[] = []
   let total = 0
@@ -133,8 +140,14 @@ export default async function TeachersContent({
     const departments = (rows as any[])
       .map((t: any) => t.teacherDepartments?.[0]?.department)
       .filter(Boolean)
+    const nameDisplay = await nameDisplayPromise
     const [nameTranslations, localizedDepartments, taught] = await Promise.all([
-      getNames(rows as any[], (t: any) => t, lang, schoolId!),
+      getNames(
+        rows as any[],
+        (t: any) => shortNameParts(t, nameDisplay),
+        lang,
+        schoolId!
+      ),
       localize("Department", departments, { schoolId, lang }),
       getTaughtSubjects(rows as any[], lang, schoolId!),
     ])
@@ -144,7 +157,7 @@ export default async function TeachersContent({
 
     data = (rows as any[]).map((t: any) => {
       const primaryDept = t.teacherDepartments?.[0]?.department
-      const rawName = fullName(t)
+      const rawName = fullName(shortNameParts(t, nameDisplay))
 
       return {
         id: t.id,

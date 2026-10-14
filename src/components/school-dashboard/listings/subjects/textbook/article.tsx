@@ -2,8 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { formatNumber } from "./format"
-import { Ornament } from "./ornament"
 import type { Opener } from "./load"
+import { Ornament } from "./ornament"
 import type { Block, TwinPage } from "./parse"
 
 export type { Opener } from "./load"

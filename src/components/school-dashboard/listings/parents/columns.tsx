@@ -74,7 +74,9 @@ export const getParentColumns = (
         const parent = row.original
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{parent.name}</span>
+            <span className="font-medium">
+              <bdi dir="auto">{parent.name}</bdi>
+            </span>
             <NameContactLine
               email={parent.emailAddress !== "-" ? parent.emailAddress : null}
               phone={parent.phone}

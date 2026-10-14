@@ -3,9 +3,10 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { shortNameParts } from "@/lib/name-utils"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
-import { schoolNameContact } from "@/lib/school-name-format"
+import { schoolNameContact, schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -32,6 +33,8 @@ export default async function ParentsContent({
   // What the Name cell shows under the name — a school setting. Started now,
   // awaited last, so it overlaps the list queries.
   const nameContactPromise = schoolNameContact(schoolId, "guardian")
+  // First + second or first + last — a school setting.
+  const nameDisplayPromise = schoolNameDisplay(schoolId)
   let data: ParentRow[] = []
   let total = 0
   const guardianModel = getModel("guardian")
@@ -79,11 +82,12 @@ export default async function ParentsContent({
       }),
       guardianModel.count({ where }),
     ])
+    const nameDisplay = await nameDisplayPromise
     data = await Promise.all(
       rows.map(async (p: any) => ({
         id: p.id,
         userId: p.userId || null,
-        name: await getName(p, lang, schoolId!),
+        name: await getName(shortNameParts(p, nameDisplay), lang, schoolId!),
         emailAddress: p.emailAddress || "-",
         phone: p.phoneNumbers?.[0]?.phoneNumber || null,
         status: p.userId ? "active" : "inactive",

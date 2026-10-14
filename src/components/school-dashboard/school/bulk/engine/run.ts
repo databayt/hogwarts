@@ -15,6 +15,7 @@ import {
 } from "@/lib/guardian-utils"
 import { logger } from "@/lib/logger"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { displayName } from "@/lib/name-utils"
 import {
   provisionStudent,
   type ProvisionGuardianInput,
@@ -1063,9 +1064,19 @@ async function namesFor(
   schoolId: string,
   ids: Record<string, string[]>
 ): Promise<Map<string, string>> {
-  const pick = (r: { id: string; firstName: string; lastName: string }) =>
-    [r.id, `${r.firstName} ${r.lastName}`.trim()] as const
-  const select = { id: true, firstName: true, lastName: true } as const
+  // Slips and the CSV carry the full name — every part, never shortened.
+  const pick = (r: {
+    id: string
+    firstName: string
+    middleName: string | null
+    lastName: string
+  }) => [r.id, displayName(r, "full")] as const
+  const select = {
+    id: true,
+    firstName: true,
+    middleName: true,
+    lastName: true,
+  } as const
   const [s, t, st, g] = await Promise.all([
     db.student.findMany({
       where: { schoolId, id: { in: ids.student ?? [] } },

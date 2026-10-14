@@ -1667,7 +1667,10 @@ html[data-book-turn]::view-transition-new(root) {
      This curve reproduces those three points to rms 0.04; the front-loaded
      curves tried first (0.2,0.7,0.2,1 and 0.32,0.72,0,1) were ~13x worse and
      read as a snap: 94% of the travel was spent in the first 45% of the time. */
-  animation-timing-function: var(--book-turn-ease, cubic-bezier(0.42, 0, 0.58, 1));
+  animation-timing-function: var(
+    --book-turn-ease,
+    cubic-bezier(0.42, 0, 0.58, 1)
+  );
 }
 /* A group with a single image would otherwise take the UA's fade. */
 ::view-transition-new(book-leaf-out),
