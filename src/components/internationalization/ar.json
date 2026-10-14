@@ -2513,6 +2513,8 @@
       "capacity": "السعة",
       "branding": "الهوية البصرية",
       "name-format": "صيغة الاسم",
+      "name-display": "عرض الأسماء",
+      "name-contact": "التواصل تحت الاسم",
       "join": "الانضمام",
       "visibility": "الظهور",
       "modules": "الوحدات",

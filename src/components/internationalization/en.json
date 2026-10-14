@@ -2513,6 +2513,8 @@
       "capacity": "Capacity",
       "branding": "Branding",
       "name-format": "Name Format",
+      "name-display": "Name Display",
+      "name-contact": "Contact Under Name",
       "join": "Join",
       "visibility": "Visibility",
       "modules": "Modules",
