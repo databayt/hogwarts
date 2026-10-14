@@ -38,7 +38,11 @@ export default function InformationContent() {
     if (data && validityFromRef.current !== data.id) {
       validityFromRef.current = data.id
       if (nameFormat === "full") {
-        const full = composeFullName(data.firstName, null, data.lastName)
+        const full = composeFullName(
+          data.firstName,
+          data.middleName,
+          data.lastName
+        )
         setIsValid(full.trim().length >= 1)
       } else {
         setIsValid(
@@ -71,6 +75,7 @@ export default function InformationContent() {
             data
               ? {
                   firstName: data.firstName,
+                  middleName: data.middleName ?? undefined,
                   lastName: data.lastName,
                   gender: data.gender as "male" | "female" | undefined,
                   birthDate: data.birthDate ?? undefined,

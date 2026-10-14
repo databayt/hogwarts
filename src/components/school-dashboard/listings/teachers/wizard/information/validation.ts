@@ -15,6 +15,8 @@ const nonNameFields = {
 export function createInformationSchema(v?: ValidationHelper) {
   return z.object({
     firstName: z.string().min(1, v?.required() || "First name is required"),
+    // Second (father's) + further names — filled by the full-name field.
+    middleName: z.string().optional(),
     lastName: z.string().min(1, v?.required() || "Last name is required"),
     ...nonNameFields,
   })
@@ -37,6 +39,7 @@ export function getInformationSchema(
     return z.object({
       _fullName: z.string().min(1, v?.required() || "Full name is required"),
       firstName: z.string().default(""),
+      middleName: z.string().optional(),
       lastName: z.string().default(""),
       ...nonNameFields,
     })

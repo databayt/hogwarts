@@ -22,6 +22,7 @@ export async function getTeacherInformation(
       where: { id: teacherId, schoolId },
       select: {
         firstName: true,
+        middleName: true,
         lastName: true,
         gender: true,
         birthDate: true,
@@ -35,6 +36,7 @@ export async function getTeacherInformation(
       success: true,
       data: {
         firstName: teacher.firstName,
+        middleName: teacher.middleName ?? undefined,
         lastName: teacher.lastName,
         gender: teacher.gender as "male" | "female" | undefined,
         birthDate: teacher.birthDate ?? undefined,
@@ -65,6 +67,7 @@ export async function updateTeacherInformation(
       where: { id: teacherId, schoolId },
       data: {
         firstName: parsed.firstName,
+        middleName: parsed.middleName?.trim() || null,
         lastName: parsed.lastName,
         gender: parsed.gender ?? null,
         birthDate: parsed.birthDate ?? null,

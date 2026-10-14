@@ -63,6 +63,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       resolver: zodResolver(schema) as any,
       defaultValues: {
         firstName: initialData?.firstName || "",
+        middleName: initialData?.middleName || "",
         lastName: initialData?.lastName || "",
         gender: initialData?.gender || "male",
         birthDate: initialData?.birthDate,
@@ -71,7 +72,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
           ? {
               _fullName: composeFullName(
                 initialData?.firstName,
-                null,
+                initialData?.middleName,
                 initialData?.lastName
               ),
             }
@@ -145,7 +146,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             nameFormat={nameFormat}
             fields={{
               firstName: "firstName",
-              middleName: "_unused_middleName",
+              middleName: "middleName",
               lastName: "lastName",
             }}
             labels={{

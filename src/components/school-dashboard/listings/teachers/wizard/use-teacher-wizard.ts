@@ -10,6 +10,7 @@ export interface TeacherWizardData {
   schoolId: string
   nameFormat: string
   firstName: string
+  middleName?: string | null
   lastName: string
   gender: string | null
   nationality: string | null
@@ -79,6 +80,7 @@ export function emptyTeacherDraft(
     schoolId: "",
     nameFormat,
     firstName: "",
+    middleName: null,
     lastName: "",
     gender: null,
     nationality: null,
