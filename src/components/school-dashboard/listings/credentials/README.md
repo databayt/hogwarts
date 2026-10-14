@@ -18,9 +18,22 @@ a role/grade badge, the username + password, and a row of contact icons.
   - email on file → **Email** (`mailto:` with the credentials prefilled)
   - For students the contact falls back own → **primary guardian** (phone & email).
 - **Copy** — copies `Username / Email / Password / Login URL` as one block.
-- **Generate-on-open** — opening mints a fresh temp password to hand out (no
-  separate "Reset" button). The one exception is a **self-onboarded student** who
-  set their own password — it isn't clobbered (password shows `—`).
+- **Generate-on-open** — opening mints a fresh password to hand out. The one
+  exception is a **self-onboarded student** who set their own password — it
+  isn't clobbered (password shows `—`) and a **Reset Password** link appears:
+  the admin's recovery path always works.
+- **Format (2026-10-14)** — username = the school's next **6-digit login code**
+  (`YY` + a 4-digit serial shared by every role, `@/lib/login-code`); password =
+  an **easy 4-digit PIN** (1122, 1212, 3456, 2580 — never 0000/1234/19xx,
+  `generateEasyPin`). Existing logins move onto a code the next time they are
+  generated or reset. The dialog shows the person's **full** name (`fullName`
+  in the payload), not the listing's short one.
+- **Admins only** — `generateCredentials`, `getStudentCredentials` and
+  `resetStudentPassword` require ADMIN/DEVELOPER (`@/lib/credentials-access`).
+  Every reset also lifts a login lockout (`clearLoginFailures`).
+- **First sign-in** — `mustChangePassword` opens the first-login dialog
+  (`force-change-password-modal.tsx`, same look as this one) asking for a new
+  password; no current password needed.
 
 The minted `User` (crypto temp password via `@/lib/credentials`) is linked back
 to the person record, and credentials are pushed over notification channels

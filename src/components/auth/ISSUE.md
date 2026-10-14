@@ -63,6 +63,15 @@ last_audited: 2026-05-25
 
 ## Resolved Issues
 
+- [x] **Login codes, PINs, lockout, recovery (2026-10-14)** — usernames are 6-digit
+  codes (`YY` + per-school serial, `@/lib/login-code`, partial unique index on
+  `User(schoolId, username)` for `^[0-9]{6}$`); passwords are easy 4-digit PINs.
+  Change/reset schemas accept 4+ characters (register stays 6). Lockout is 5
+  failures / 15 min per login **scoped to the school** + 30 per IP; mobile
+  login only resolves a username inside a known school (`school` in the body).
+  First sign-in opens the PIN dialog; admin resets lift the lockout. Closed a
+  hole: credential actions checked only for a session — now ADMIN/DEVELOPER.
+
 - [x] **Credential generation + password reset hardening (2026-06-15)** — shared crypto-secure mint in `@/lib/credentials` (`generateTempPassword`/`mintTempPassword`/`sanitizeUsername`/`makeUniqueUsername`/`hashToken`) now backs every path:
   - Student/CSV/member temp passwords are crypto-random (was `Math.random()` for students, and **guessable/static** for bulk import: `student<id>`, `teacher<id>`, shared `parent123`). `mustChangePassword` unchanged.
   - CSV-imported teachers/staff/guardians now get login-valid usernames (names with spaces/Arabic were rejected by the login schema → those users couldn't sign in). Bulk import returns a downloadable credentials sheet (`bulk/content.tsx` key icon).

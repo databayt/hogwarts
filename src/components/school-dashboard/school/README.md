@@ -122,3 +122,16 @@ export async function performAction(input: FormData) {
 For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
 
 ---
+
+
+## Name display (2026-10-14, #434)
+
+`/school/configuration/name-display` — `School.nameDisplay`: `first-second`
+(default — given + father's name) or `first-last`. Read with
+`schoolNameDisplay()` (`@/lib/school-name-format`, request-cached) and applied by
+`shortNameParts()` / `displayName()` (`@/lib/name-utils`) in the students,
+teachers, parents and staff listings and the profile. Applications, credentials,
+slips, certificates and exports keep the **full** name. Separate from
+`nameFormat`, which only controls how names are **typed** (one field or two).
+Names split by `tokenizeName()` — عبد الله, أبو بكر, نور الدين, فضل الله stay
+one name.
