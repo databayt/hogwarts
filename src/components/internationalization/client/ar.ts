@@ -32,6 +32,11 @@ import schoolConfig from "../dictionaries/ar/school-config.json"
 import schoolBilling from "../dictionaries/ar/school-billing.json"
 import schoolSettings from "../dictionaries/ar/school-settings.json"
 import schoolConsole from "../dictionaries/ar/school-console.json"
+import attendanceHub from "../dictionaries/ar/attendance-hub.json"
+import attendanceToday from "../dictionaries/ar/attendance-today.json"
+import attendanceTake from "../dictionaries/ar/attendance-take.json"
+import attendanceRisk from "../dictionaries/ar/attendance-risk.json"
+import attendanceReports from "../dictionaries/ar/attendance-reports.json"
 import liveClasses from "../dictionaries/ar/live-classes.json"
 import parentPortal from "../dictionaries/ar/parentPortal.json"
 
@@ -61,6 +66,11 @@ export const dictionary = {
   schoolBilling,
   schoolSettings,
   schoolConsole,
+  attendanceHub,
+  attendanceToday,
+  attendanceTake,
+  attendanceRisk,
+  attendanceReports,
   liveClasses,
   parentPortal,
 } as unknown as Dictionary

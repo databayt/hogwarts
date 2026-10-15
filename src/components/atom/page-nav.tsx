@@ -14,6 +14,8 @@ export interface PageNavItem {
   hidden?: boolean
   exact?: boolean
   matchPrefix?: string
+  /** Extra route prefixes that also activate this tab (merged sections). */
+  matchPrefixes?: string[]
   badge?: number
 }
 
@@ -47,8 +49,11 @@ export function PageNav({
 
     if (page.exact) return { page, score: 0, len: 0 }
 
-    if (page.matchPrefix) {
-      const normalizedPrefix = page.matchPrefix.replace(/\/$/, "")
+    for (const prefix of [
+      ...(page.matchPrefix ? [page.matchPrefix] : []),
+      ...(page.matchPrefixes ?? []),
+    ]) {
+      const normalizedPrefix = prefix.replace(/\/$/, "")
       if (
         normalizedPath === normalizedPrefix ||
         normalizedPath.startsWith(normalizedPrefix + "/")

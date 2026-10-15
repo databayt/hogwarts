@@ -1241,7 +1241,10 @@
         "continue": "Continue",
         "unavailable": "Unavailable",
         "current": "Current",
-        "requiresHardware": "Requires hardware"
+        "requiresHardware": "Requires hardware",
+        "today": "Today",
+        "take": "Take attendance",
+        "atRisk": "Students at risk"
       },
       "overviewExtras": {
         "retry": "Retry",

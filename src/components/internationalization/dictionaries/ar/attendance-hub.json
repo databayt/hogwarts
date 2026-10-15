@@ -1,0 +1,64 @@
+{
+  "sections": {
+    "take": {
+      "manual": "قائمة الفصل",
+      "qr": "رمز الاستجابة",
+      "barcode": "بطاقات الطلاب",
+      "more": "المزيد",
+      "kiosk": "جهاز التسجيل الذاتي",
+      "upload": "رفع ملف",
+      "hallPass": "تصاريح الخروج",
+      "geo": "التسجيل بالموقع"
+    },
+    "excuses": { "excuses": "الأعذار", "intentions": "الغياب المُخطَّط" },
+    "risk": {
+      "list": "الطلاب",
+      "interventions": "التدخلات",
+      "tiers": "مستويات الدعم",
+      "ai": "التنبؤات",
+      "letters": "الخطابات",
+      "more": "المزيد",
+      "gamification": "المكافآت"
+    },
+    "reports": {
+      "overview": "نظرة عامة",
+      "records": "السجلات",
+      "recent": "النشاط"
+    }
+  },
+  "methods": {
+    "MANUAL": "يدوي",
+    "QR_CODE": "رمز الاستجابة",
+    "BARCODE": "باركود",
+    "KIOSK": "جهاز ذاتي",
+    "GEOFENCE": "الموقع",
+    "BULK_UPLOAD": "رفع ملف",
+    "RFID": "RFID",
+    "NFC": "NFC",
+    "BIOMETRIC": "بصمة",
+    "BLUETOOTH": "بلوتوث"
+  },
+  "status": {
+    "PRESENT": "حاضر",
+    "ABSENT": "غائب",
+    "LATE": "متأخر",
+    "EXCUSED": "بعذر",
+    "SICK": "مريض",
+    "HOLIDAY": "عطلة"
+  },
+  "table": {
+    "rowsPerPage": "عدد الصفوف",
+    "pageOf": "صفحة {page} من {pages}",
+    "showingOf": "عرض {shown} من {total}",
+    "selected": "تم تحديد {selected} من {total}",
+    "view": "عرض",
+    "previous": "السابق",
+    "next": "التالي"
+  },
+  "error": {
+    "title": "حدث خطأ ما",
+    "description": "تعذّر تحميل هذه الصفحة. حاول مرة أخرى أو عد بعد قليل.",
+    "retry": "إعادة المحاولة",
+    "home": "العودة إلى الحضور"
+  }
+}

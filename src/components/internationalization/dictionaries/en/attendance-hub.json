@@ -1,0 +1,64 @@
+{
+  "sections": {
+    "take": {
+      "manual": "Class list",
+      "qr": "QR code",
+      "barcode": "ID cards",
+      "more": "More",
+      "kiosk": "Self check-in kiosk",
+      "upload": "Upload a file",
+      "hallPass": "Hall passes",
+      "geo": "Location check-in"
+    },
+    "excuses": { "excuses": "Excuses", "intentions": "Planned absences" },
+    "risk": {
+      "list": "Students",
+      "interventions": "Interventions",
+      "tiers": "Support tiers",
+      "ai": "Predictions",
+      "letters": "Letters",
+      "more": "More",
+      "gamification": "Rewards"
+    },
+    "reports": {
+      "overview": "Overview",
+      "records": "Records",
+      "recent": "Activity"
+    }
+  },
+  "methods": {
+    "MANUAL": "Manual",
+    "QR_CODE": "QR code",
+    "BARCODE": "Barcode",
+    "KIOSK": "Kiosk",
+    "GEOFENCE": "Location",
+    "BULK_UPLOAD": "File upload",
+    "RFID": "RFID",
+    "NFC": "NFC",
+    "BIOMETRIC": "Biometric",
+    "BLUETOOTH": "Bluetooth"
+  },
+  "status": {
+    "PRESENT": "Present",
+    "ABSENT": "Absent",
+    "LATE": "Late",
+    "EXCUSED": "Excused",
+    "SICK": "Sick",
+    "HOLIDAY": "Holiday"
+  },
+  "table": {
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pages}",
+    "showingOf": "Showing {shown} of {total}",
+    "selected": "{selected} of {total} selected",
+    "view": "View",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "This page couldn't load. Try again, or come back in a moment.",
+    "retry": "Try again",
+    "home": "Back to attendance"
+  }
+}

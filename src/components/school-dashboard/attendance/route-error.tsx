@@ -6,9 +6,9 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -22,6 +22,8 @@ interface ErrorProps {
  */
 export default function AttendanceRouteError({ error, reset }: ErrorProps) {
   const params = useParams<{ lang: string }>()
+  const { dictionary } = useDictionary()
+  const t = (dictionary as any)?.attendanceHub?.error ?? {}
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
@@ -30,29 +32,29 @@ export default function AttendanceRouteError({ error, reset }: ErrorProps) {
   }, [error])
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-8 p-8">
-      <Alert variant="destructive" className="max-w-md">
-        <Icons.alertCircle className="h-4 w-4" />
-        <AlertTitle>Attendance Error</AlertTitle>
-        <AlertDescription className="mt-2 space-y-2">
-          <p>Unable to load this page. Please try again.</p>
-          {error.digest && (
-            <p className="text-muted-foreground text-xs">
-              Error reference: {error.digest}
-            </p>
-          )}
-        </AlertDescription>
-      </Alert>
-
-      <div className="flex gap-4">
-        <Button onClick={reset} variant="outline" className="gap-2">
-          <Icons.refresh className="h-4 w-4" />
-          Try again
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-6 p-8 text-center">
+      <Icons.alertCircle className="text-muted-foreground size-8" />
+      <div className="max-w-sm space-y-2">
+        <h2 className="text-lg font-semibold">
+          {t.title ?? "Something went wrong"}
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          {t.description ??
+            "This page couldn't load. Try again, or come back in a moment."}
+        </p>
+        {error.digest && (
+          <p className="text-muted-foreground font-mono text-xs" dir="ltr">
+            {error.digest}
+          </p>
+        )}
+      </div>
+      <div className="flex gap-3">
+        <Button onClick={reset} className="rounded-full">
+          {t.retry ?? "Try again"}
         </Button>
-        <Button variant="ghost" className="gap-2" asChild>
-          <Link href={`/${params.lang || "en"}/attendance`}>
-            <Icons.home className="h-4 w-4" />
-            Back to attendance
+        <Button variant="ghost" className="rounded-full" asChild>
+          <Link href={`/${params.lang || "ar"}/attendance`}>
+            {t.home ?? "Back to attendance"}
           </Link>
         </Button>
       </div>

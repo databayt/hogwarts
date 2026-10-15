@@ -137,6 +137,36 @@ export const featureDictionaries = {
     ar: () =>
       import("./dictionaries/ar/school-console.json").then((m) => m.default),
   },
+  attendanceHub: {
+    en: () =>
+      import("./dictionaries/en/attendance-hub.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/attendance-hub.json").then((m) => m.default),
+  },
+  attendanceToday: {
+    en: () =>
+      import("./dictionaries/en/attendance-today.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/attendance-today.json").then((m) => m.default),
+  },
+  attendanceTake: {
+    en: () =>
+      import("./dictionaries/en/attendance-take.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/attendance-take.json").then((m) => m.default),
+  },
+  attendanceRisk: {
+    en: () =>
+      import("./dictionaries/en/attendance-risk.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/attendance-risk.json").then((m) => m.default),
+  },
+  attendanceReports: {
+    en: () =>
+      import("./dictionaries/en/attendance-reports.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/attendance-reports.json").then((m) => m.default),
+  },
   liveClasses: {
     en: () =>
       import("./dictionaries/en/live-classes.json").then((m) => m.default),

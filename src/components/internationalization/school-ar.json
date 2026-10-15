@@ -1241,7 +1241,10 @@
         "continue": "متابعة",
         "unavailable": "غير متاح",
         "current": "حالي",
-        "requiresHardware": "يتطلب أجهزة"
+        "requiresHardware": "يتطلب أجهزة",
+        "today": "اليوم",
+        "take": "التسجيل",
+        "atRisk": "الطلاب المتابَعون"
       },
       "overviewExtras": {
         "retry": "إعادة المحاولة",

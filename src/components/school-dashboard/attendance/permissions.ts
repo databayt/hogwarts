@@ -38,36 +38,61 @@ export function getTabsForRole(
   const isAdmin = isRoleIn(role, ADMIN_ROLES)
   const basePath = `/${lang}/attendance`
 
+  // Five jobs, one tab each. Every page the module ever grew still has a
+  // route; merged pages light up the tab they now live under.
+  const at = (p: string) => `${basePath}/${p}`
+  const t = d?.hub as Record<string, string> | undefined
+
+  if (!isStaff) {
+    return [
+      { name: t?.today || d?.overview || "Today", href: basePath, exact: true },
+      { name: d?.records || "Records", href: at("records") },
+      { name: d?.excuses || "Excuses", href: at("excuses") },
+    ]
+  }
+
   const tabs: PageNavItem[] = [
-    { name: d?.overview || "Overview", href: basePath, exact: true },
+    {
+      name: t?.today || d?.overview || "Today",
+      href: basePath,
+      exact: true,
+    },
+    {
+      name: t?.take || "Take attendance",
+      href: at("manual"),
+      matchPrefixes: [
+        at("qr-code"),
+        at("barcode"),
+        at("kiosk"),
+        at("bulk-upload"),
+        at("bulk"),
+        at("geo"),
+        at("hall-pass"),
+      ],
+    },
+    {
+      name: d?.excuses || "Excuses",
+      href: at("excuses"),
+      matchPrefixes: [at("intentions")],
+    },
+    {
+      name: t?.atRisk || "Students at risk",
+      href: at("early-warning"),
+      matchPrefixes: [
+        at("interventions"),
+        at("ai"),
+        at("letters"),
+        at("gamification"),
+      ],
+    },
+    {
+      name: d?.reports || "Reports",
+      href: at("reports"),
+      matchPrefixes: [at("analytics"), at("analysis"), at("recent")],
+    },
   ]
-  if (isStaff) {
-    tabs.push({ name: d?.manual || "Manual", href: `${basePath}/manual` })
-    tabs.push({
-      name: d?.navQrCode || "QR Code",
-      href: `${basePath}/qr-code`,
-    })
-  } else {
-    tabs.push({ name: d?.records || "Records", href: `${basePath}/records` })
-  }
-  tabs.push({ name: d?.excuses || "Excuses", href: `${basePath}/excuses` })
-  if (isStaff) {
-    tabs.push({
-      name: d?.earlyWarning?.title || "Early Warning",
-      href: `${basePath}/early-warning`,
-    })
-    tabs.push({
-      name: d?.interventions?.title || "Interventions",
-      href: `${basePath}/interventions`,
-    })
-    tabs.push({
-      name: d?.analytics || "Analytics",
-      href: `${basePath}/analytics`,
-    })
-    tabs.push({ name: d?.reports || "Reports", href: `${basePath}/reports` })
-  }
   if (isAdmin) {
-    tabs.push({ name: d?.settings || "Settings", href: `${basePath}/settings` })
+    tabs.push({ name: d?.settings || "Settings", href: at("settings") })
   }
   return tabs
 }
