@@ -2,8 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
-import { Loader2 } from "lucide-react"
+import { useEffect, useState, useTransition } from "react"
+import { Check, Loader2 } from "lucide-react"
 
 import {
   AlertDialog,
@@ -22,7 +22,6 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { requestSubdomainChange, updateSchoolName } from "./actions"
-import { SaveStatus } from "./ui/save-status"
 import { useAutoSave } from "./use-auto-save"
 
 interface Props {
@@ -46,6 +45,7 @@ export function ConfigTitleForm({
   const { isRTL } = useLocale()
 
   const dict = (dictionary as any)?.school?.onboarding || {}
+  const common = (dictionary as any)?.school?.common || {}
 
   const trimmed = name.trim()
   const isDirty = trimmed !== initialTitle.title.trim()
@@ -72,24 +72,41 @@ export function ConfigTitleForm({
     1000
   )
 
+  // Hide the "Saved" indicator after a short window.
+  useEffect(() => {
+    if (!savedAt) return
+    const t = setTimeout(() => setSavedAt(null), 2000)
+    return () => clearTimeout(t)
+  }, [savedAt])
+
   return (
     <div className="space-y-6">
       {/* School name -- auto-saves on input */}
       <div className="space-y-2">
-        <Input
+        <Textarea
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={dict.schoolNamePlaceholder || "School Name"}
-          aria-label={dict.schoolNamePlaceholder || "School Name"}
-          className="h-14 rounded-xl px-4 text-start text-xl md:text-xl"
+          className="border-input focus:border-ring h-[80px] w-full resize-none rounded-lg border p-4 text-start text-sm transition-colors focus:outline-none sm:h-[100px] sm:p-6 sm:text-base"
           maxLength={100}
+          disabled={isPending}
           dir={isRTL ? "rtl" : "ltr"}
         />
-        <div className="text-muted-foreground flex items-center justify-between px-1 text-xs">
-          <SaveStatus pending={isPending} savedAt={savedAt} />
-          <span dir="ltr" className="tabular-nums">
-            {name.length}/100
-          </span>
+        <div className="text-muted-foreground flex items-center justify-between text-xs sm:text-sm rtl:flex-row-reverse">
+          <div className="flex items-center gap-1">
+            {isPending ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {common?.status?.saving || "Saving..."}
+              </>
+            ) : savedAt ? (
+              <>
+                <Check className="h-3 w-3 text-green-500" />
+                {common?.messages?.saveSuccess || "Saved"}
+              </>
+            ) : null}
+          </div>
+          <div>{name.length}/100</div>
         </div>
       </div>
 
@@ -98,16 +115,15 @@ export function ConfigTitleForm({
         <p className="text-muted-foreground text-start text-sm">
           {dict.schoolAvailableAt || "Your school will be available at:"}
         </p>
-        <div className="flex w-full items-center gap-2">
+        <div className="flex w-full items-center gap-2 lg:max-w-[70%]">
           <div
-            className="border-input flex min-w-0 flex-1 items-center rounded-lg border"
+            className="border-input flex flex-1 items-center rounded-lg border"
             dir="ltr"
           >
             <Input
               value={initialTitle.subdomain}
               disabled
-              dir="ltr"
-              className="rounded-e-none border-0 text-left font-mono focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="rounded-e-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <span className="bg-muted text-muted-foreground rounded-e-lg border-s px-3 py-2 font-mono text-sm whitespace-nowrap">
               .balqalam.com
@@ -174,7 +190,7 @@ function SubdomainChangeDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" type="button">
+        <Button variant="ghost" size="sm" type="button">
           {common?.actions?.edit || "Edit"}
         </Button>
       </AlertDialogTrigger>
