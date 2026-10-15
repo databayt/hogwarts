@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Copy, Eye } from "lucide-react"
 
-import { initialsOf } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
+import { NameContactLine } from "@/components/school-dashboard/shared/name-contact-line"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { fillT, roleLabel } from "./labels"
@@ -31,6 +32,8 @@ interface ColumnOptions {
   onActivate?: (member: MemberRow) => void
   onRemove?: (member: MemberRow) => void
   canManage?: boolean
+  /** What shows under the name: the phone (default) or the email. */
+  nameContact?: NameContact
   t: Record<string, string>
   lang?: string
   gradeOptions?: { label: string; value: string }[]
@@ -103,24 +106,34 @@ export const getMemberColumns = (
         const member = row.original
         const locale = options.lang || "en"
         return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-7 w-7">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
               <AvatarImage src={member.image || undefined} alt={member.name} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="bg-primary/10 text-xs">
                 {initialsOf(member.name)}
               </AvatarFallback>
             </Avatar>
-            <Link
-              href={`/${locale}/profile/${member.id}`}
-              className="font-medium hover:underline"
-            >
-              <bdi dir="auto">{member.name}</bdi>
-            </Link>
+            <div className="flex flex-col">
+              <Link
+                href={`/${locale}/profile/${member.id}`}
+                className="font-medium hover:underline"
+              >
+                <bdi dir="auto">{member.name}</bdi>
+              </Link>
+              <NameContactLine
+                email={member.email}
+                phone={member.phone}
+                prefer={options.nameContact ?? "phone"}
+                empty="-"
+                className="max-w-[180px] truncate"
+              />
+            </div>
           </div>
         )
       },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
+      size: 250,
     },
     {
       accessorKey: "email",

@@ -51,6 +51,7 @@ export default async function NameContactPage({ params }: Props) {
             studentNameContact: true,
             guardianNameContact: true,
             staffNameContact: true,
+            memberNameContact: true,
           },
         })
         .catch(() => null)
@@ -64,6 +65,7 @@ export default async function NameContactPage({ params }: Props) {
         student: asNameContact(school?.studentNameContact, "student"),
         guardian: asNameContact(school?.guardianNameContact, "guardian"),
         staff: asNameContact(school?.staffNameContact, "staff"),
+        member: asNameContact(school?.memberNameContact, "member"),
       }}
       dictionary={dictionary}
     />

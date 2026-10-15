@@ -22,12 +22,13 @@ interface Props {
 
 const LISTINGS: Array<{
   key: NameContactListing
-  label: "teachers" | "students" | "parents" | "staff"
+  label: "teachers" | "students" | "parents" | "staff" | "members"
 }> = [
   { key: "teacher", label: "teachers" },
   { key: "student", label: "students" },
   { key: "guardian", label: "parents" },
   { key: "staff", label: "staff" },
+  { key: "member", label: "members" },
 ]
 
 const SAMPLE_PHONE = "+249 912 345 678"

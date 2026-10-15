@@ -8,6 +8,7 @@ export type UnifiedMember = {
   id: string
   name: string
   email: string | null
+  phone: string | null
   role: UserRole
   memberStatus: "active" | "suspended" | "inactive"
   roleSpecificStatus: string | null
@@ -24,14 +25,6 @@ export type UnifiedMember = {
   /** Teaching load / family size, formatted (and translated) by the column. */
   classCount: number
   childCount: number
-}
-
-export type MembershipStats = {
-  total: number
-  active: number
-  suspended: number
-  pending: number
-  roleDistribution: Record<string, number>
 }
 
 export type MembershipRequestRow = {

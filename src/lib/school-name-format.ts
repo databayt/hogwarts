@@ -54,6 +54,7 @@ export async function schoolNameContact(
         studentNameContact: true,
         guardianNameContact: true,
         staffNameContact: true,
+        memberNameContact: true,
       },
     })
     const value = {
@@ -61,6 +62,7 @@ export async function schoolNameContact(
       student: school?.studentNameContact,
       guardian: school?.guardianNameContact,
       staff: school?.staffNameContact,
+      member: school?.memberNameContact,
     }[listing]
     return value === "email" || value === "phone" ? value : fallback
   } catch {

@@ -2,11 +2,7 @@ import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
-import type {
-  MembershipRequestRow,
-  MembershipStats,
-  UnifiedMember,
-} from "./types"
+import type { MembershipRequestRow, UnifiedMember } from "./types"
 
 export async function getUnifiedMembers(
   schoolId: string
@@ -21,6 +17,8 @@ export async function getUnifiedMembers(
           middleName: true,
           lastName: true,
           email: true,
+          mobileNumber: true,
+          alternatePhone: true,
           status: true,
           academicGradeId: true,
           academicGrade: { select: { name: true } },
@@ -34,6 +32,11 @@ export async function getUnifiedMembers(
           middleName: true,
           lastName: true,
           emailAddress: true,
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
           employmentStatus: true,
           teacherDepartments: {
             where: { isPrimary: true },
@@ -51,6 +54,8 @@ export async function getUnifiedMembers(
           middleName: true,
           lastName: true,
           emailAddress: true,
+          phoneNumber: true,
+          alternatePhone: true,
           employmentStatus: true,
           position: true,
         },
@@ -62,6 +67,11 @@ export async function getUnifiedMembers(
           middleName: true,
           lastName: true,
           emailAddress: true,
+          phoneNumbers: {
+            orderBy: { isPrimary: "desc" },
+            take: 1,
+            select: { phoneNumber: true },
+          },
           _count: { select: { studentGuardians: true } },
         },
       },
@@ -105,6 +115,16 @@ export async function getUnifiedMembers(
     else if (user.guardian?.emailAddress)
       personalEmail = user.guardian.emailAddress
 
+    // The profile's phone — role models keep it, the login User does not
+    const phone =
+      user.student?.mobileNumber ||
+      user.student?.alternatePhone ||
+      user.teacher?.phoneNumbers[0]?.phoneNumber ||
+      user.staffMember?.phoneNumber ||
+      user.staffMember?.alternatePhone ||
+      user.guardian?.phoneNumbers[0]?.phoneNumber ||
+      null
+
     // Build contextual info
     let contextInfo: string | null = null
     if (user.student) {
@@ -127,6 +147,7 @@ export async function getUnifiedMembers(
       id: user.id,
       name,
       email: personalEmail,
+      phone,
       role: user.role,
       memberStatus,
       roleSpecificStatus,
@@ -144,36 +165,6 @@ export async function getUnifiedMembers(
       childCount: user.guardian?._count.studentGuardians ?? 0,
     }
   })
-}
-
-export async function getMembershipStats(
-  schoolId: string
-): Promise<MembershipStats> {
-  const [total, suspended, pendingRequests, users] = await Promise.all([
-    db.user.count({ where: { schoolId } }),
-    db.user.count({ where: { schoolId, isSuspended: true } }),
-    db.membershipRequest.count({
-      where: { schoolId, status: "PENDING" },
-    }),
-    db.user.findMany({
-      where: { schoolId },
-      select: { role: true, isSuspended: true },
-    }),
-  ])
-
-  const active = users.filter((u) => !u.isSuspended).length
-  const roleDistribution: Record<string, number> = {}
-  for (const user of users) {
-    roleDistribution[user.role] = (roleDistribution[user.role] || 0) + 1
-  }
-
-  return {
-    total,
-    active,
-    suspended,
-    pending: pendingRequests,
-    roleDistribution,
-  }
 }
 
 export async function getPendingRequests(

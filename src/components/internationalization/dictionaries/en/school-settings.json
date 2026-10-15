@@ -14,6 +14,7 @@
     "students": "Students",
     "parents": "Parents",
     "staff": "Staff",
+    "members": "Members",
     "email": "Email",
     "phone": "Phone",
     "footer": "The contact detail shown under each person in these lists, for example {sample}.",

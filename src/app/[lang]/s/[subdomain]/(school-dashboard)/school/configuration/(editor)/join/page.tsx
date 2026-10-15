@@ -41,7 +41,11 @@ export default async function JoinPage({ params }: Props) {
   return (
     <ConfigJoinForm
       schoolId={schoolId || ""}
-      initialJoinMethod={branding?.allowSelfEnrollment === false ? "manual-enrollment" : "invite-with-codes"}
+      initialJoinMethod={
+        branding?.allowSelfEnrollment === false
+          ? "manual-enrollment"
+          : "invite-with-codes"
+      }
       dictionary={dictionary}
     />
   )

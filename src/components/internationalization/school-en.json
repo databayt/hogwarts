@@ -736,6 +736,7 @@
         "studentsLabel": "Students",
         "parentsLabel": "Parents",
         "staffLabel": "Staff",
+        "membersLabel": "Members",
         "noCustomDomain": "No custom domain",
         "pending": "Pending",
         "active": "Active",

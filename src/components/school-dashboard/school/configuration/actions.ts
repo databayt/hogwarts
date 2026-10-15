@@ -764,7 +764,7 @@ export async function updateSchoolNameDisplay(
 
 // Schema for the contact line shown under names
 const nameContactSchema = z.object({
-  listing: z.enum(["teacher", "student", "guardian", "staff"]),
+  listing: z.enum(["teacher", "student", "guardian", "staff", "member"]),
   nameContact: z.enum(["email", "phone"]),
 })
 
@@ -796,6 +796,7 @@ export async function updateSchoolNameContact(
         | "studentNameContact"
         | "guardianNameContact"
         | "staffNameContact"
+        | "memberNameContact"
       >,
     })
 
@@ -807,6 +808,7 @@ export async function updateSchoolNameContact(
         student: "/students",
         guardian: "/parents",
         staff: "/staff",
+        member: "/school/membership",
       }[validatedData.listing]
     )
 

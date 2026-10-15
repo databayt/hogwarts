@@ -3,18 +3,18 @@
 
 import { db } from "@/lib/db"
 import { parseEnabledModules } from "@/lib/enabled-modules"
+import { normalizePlanType } from "@/lib/plan-type"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { normalizePlanType } from "@/lib/plan-type"
 import { ReportIssue } from "@/components/report-issue"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { formatMoney } from "@/components/school-dashboard/finance/lib/format-money"
+import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 import {
   joinList,
   plural,
 } from "@/components/school-dashboard/school/configuration/ui/format"
-import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
 
@@ -57,6 +57,7 @@ export default async function EditorLayout({ children, params }: Props) {
               studentNameContact: true,
               guardianNameContact: true,
               staffNameContact: true,
+              memberNameContact: true,
               schoolType: true,
               schoolLevel: true,
               city: true,
@@ -110,21 +111,28 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
   ])
 
-  // Apple-Settings-style groups — the order a new admin fills things in:
-  // who the school is, how it teaches, how people appear, how families
-  // join and pay, then the account (plan, address, legal).
-  const SECTION_GROUPS = [
-    {
-      key: "identity",
-      items: ["title", "description", "branding", "hero", "location"],
-    },
-    {
-      key: "academic",
-      items: ["academic", "schedule", "capacity", "live-classes", "modules"],
-    },
-    { key: "people", items: ["name-format", "name-display", "name-contact"] },
-    { key: "admissions", items: ["join", "visibility", "price", "discount"] },
-    { key: "account", items: ["plan", "domain", "legal"] },
+  // One card per section, in the order a new admin fills things in.
+  const SECTION_KEYS = [
+    "title",
+    "description",
+    "location",
+    "capacity",
+    "schedule",
+    "academic",
+    "live-classes",
+    "branding",
+    "hero",
+    "name-format",
+    "name-display",
+    "name-contact",
+    "join",
+    "visibility",
+    "modules",
+    "price",
+    "discount",
+    "legal",
+    "plan",
+    "domain",
   ] as const
 
   const sc = dictionary?.schoolConfig as Record<string, any> | undefined
@@ -212,14 +220,21 @@ export default async function EditorLayout({ children, params }: Props) {
           monthly: sc?.perMonth,
         }
         return [
-          formatMoney(Number(school.tuitionFee), school.currency || "USD", lang),
+          formatMoney(
+            Number(school.tuitionFee),
+            school.currency || "USD",
+            lang
+          ),
           period[school.paymentSchedule ?? ""] ?? null,
         ]
           .filter(Boolean)
           .join(" ")
       }
       case "schedule":
-        return joinList([count("year", yearCount), count("term", termCount)], lang)
+        return joinList(
+          [count("year", yearCount), count("term", termCount)],
+          lang
+        )
       case "academic":
         return [
           count("year", yearCount),
@@ -279,6 +294,7 @@ export default async function EditorLayout({ children, params }: Props) {
           `${(cs?.studentsLabel as string) ?? "Students"}: ${label(school.studentNameContact)}`,
           `${(cs?.parentsLabel as string) ?? "Parents"}: ${label(school.guardianNameContact)}`,
           `${(cs?.staffLabel as string) ?? "Staff"}: ${label(school.staffNameContact)}`,
+          `${(cs?.membersLabel as string) ?? "Members"}: ${label(school.memberNameContact)}`,
         ].join(" · ")
       }
       case "domain": {
@@ -296,24 +312,18 @@ export default async function EditorLayout({ children, params }: Props) {
     }
   }
 
-  const groups = await Promise.all(
-    SECTION_GROUPS.map(async (group) => ({
-      key: group.key,
-      title: (sc?.groups?.[group.key] as string) ?? group.key,
-      items: await Promise.all(
-        group.items.map(async (key) => {
-          const section = d?.[key] as
-            | { title: string; description: string }
-            | undefined
-          const dynamicDesc = await getDynamicDescription(key)
-          return {
-            key,
-            title: section?.title ?? key,
-            description: dynamicDesc ?? section?.description ?? "",
-          }
-        })
-      ),
-    }))
+  const sectionLinks = await Promise.all(
+    SECTION_KEYS.map(async (key) => {
+      const section = d?.[key] as
+        | { title: string; description: string }
+        | undefined
+      const dynamicDesc = await getDynamicDescription(key)
+      return {
+        key,
+        title: section?.title ?? key,
+        description: dynamicDesc ?? section?.description ?? "",
+      }
+    })
   )
 
   // Breadcrumb segments use the same titles as the list, so the trail reads
@@ -323,8 +333,7 @@ export default async function EditorLayout({ children, params }: Props) {
       (dictionary?.school?.schoolAdmin?.navigation as any)?.configuration ??
       "Configuration",
   }
-  for (const g of groups)
-    for (const item of g.items) segmentTitles[item.key] = item.title
+  for (const link of sectionLinks) segmentTitles[link.key] = link.title
 
   return (
     <div className="h-[calc(100vh-15rem)] overflow-hidden">
@@ -333,7 +342,7 @@ export default async function EditorLayout({ children, params }: Props) {
           <BreadcrumbTitle segments={segmentTitles} />
           <ConfigSidebar
             lang={lang}
-            groups={groups}
+            sectionLinks={sectionLinks}
             notSet={sc?.notSet ?? "Not set"}
           />
           <div className="lg:overflow-y-auto">
@@ -343,7 +352,7 @@ export default async function EditorLayout({ children, params }: Props) {
                 `:has()` widens the column and the footer together. Reading the
                 route from a request header does not work here: nothing in the
                 app sets `x-pathname`. */}
-            <div className="flex min-h-full flex-col items-start justify-start py-8 lg:ps-6 [--config-col:560px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
+            <div className="flex min-h-full flex-col items-start justify-start py-8 [--config-col:560px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem] lg:ps-6">
               <div className="w-full max-w-[var(--config-col)]">{children}</div>
               <div className="text-muted-foreground w-full max-w-[var(--config-col)] pt-8 pb-4 text-start text-sm">
                 <ReportIssue />

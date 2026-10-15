@@ -736,6 +736,7 @@
         "studentsLabel": "الطلاب",
         "parentsLabel": "أولياء الأمور",
         "staffLabel": "الموظفون",
+        "membersLabel": "الأعضاء",
         "noCustomDomain": "لا يوجد نطاق مخصص",
         "pending": "قيد الانتظار",
         "active": "نشط",

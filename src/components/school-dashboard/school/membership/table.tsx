@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Ban, Download, ShieldCheck } from "lucide-react"
 
-import { initialsOf } from "@/lib/name-utils"
+import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { SuccessToast } from "@/components/atom/toast"
@@ -39,6 +39,8 @@ interface MembershipTableProps {
   pendingRequests: MembershipRequestRow[]
   grades: { id: string; name: string }[]
   canManage: boolean
+  /** What shows under each name — School → Configuration → Contact under name. */
+  nameContact?: NameContact
   lang: Locale
   t: Record<string, string>
 }
@@ -48,6 +50,7 @@ export function MembershipTable({
   pendingRequests,
   grades,
   canManage,
+  nameContact = "phone",
   lang,
   t,
 }: MembershipTableProps) {
@@ -151,6 +154,7 @@ export function MembershipTable({
         onActivate: handleActivate,
         onRemove: handleRemove,
         canManage,
+        nameContact,
         t,
         lang,
         gradeOptions,
@@ -163,6 +167,7 @@ export function MembershipTable({
       handleActivate,
       handleRemove,
       canManage,
+      nameContact,
       t,
       lang,
       gradeOptions,
@@ -175,7 +180,7 @@ export function MembershipTable({
     pageCount: 1,
     initialState: {
       pagination: { pageIndex: 0, pageSize: visibleData.length || 20 },
-      columnVisibility: { joinedAtStr: false },
+      columnVisibility: { email: false, joinedAtStr: false },
     },
   })
 
