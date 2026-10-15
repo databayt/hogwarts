@@ -7,6 +7,8 @@
  * Helper functions for tenant data manipulation, formatting, and validation.
  */
 
+import { normalizePlanType } from "@/lib/plan-type"
+
 import {
   PLAN_LIMITS,
   PLAN_TYPE_LABELS,
@@ -34,7 +36,7 @@ export function formatTenantUrl(
  * Get plan type display label
  */
 export function getPlanTypeLabel(planType: string): string {
-  return PLAN_TYPE_LABELS[planType as PlanType] || planType
+  return PLAN_TYPE_LABELS[normalizePlanType(planType)]
 }
 
 /**
@@ -100,7 +102,7 @@ export function hasReachedPlanLimit(
   planType: PlanType,
   metrics: TenantMetrics
 ): { students: boolean; teachers: boolean } {
-  const limits = PLAN_LIMITS[planType]
+  const limits = PLAN_LIMITS[normalizePlanType(planType)]
   return {
     students: metrics.students >= limits.maxStudents,
     teachers: metrics.teachers >= limits.maxTeachers,

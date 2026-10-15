@@ -25,21 +25,21 @@ import type { Locale } from "@/components/internationalization/config"
 
 interface MRRByPlanProps {
   data: {
-    BASIC: number
-    PREMIUM: number
-    ENTERPRISE: number
+    free: number
+    pro: number
+    enterprise: number
   }
   lang: Locale
 }
 
 export function MRRByPlan({ data, lang }: MRRByPlanProps) {
   const chartData = [
-    { name: "Basic", value: data.BASIC, fill: "hsl(var(--chart-1))" },
-    { name: "Premium", value: data.PREMIUM, fill: "hsl(var(--chart-2))" },
-    { name: "Enterprise", value: data.ENTERPRISE, fill: "hsl(var(--chart-3))" },
+    { name: "Free", value: data.free, fill: "hsl(var(--chart-1))" },
+    { name: "Pro", value: data.pro, fill: "hsl(var(--chart-2))" },
+    { name: "Enterprise", value: data.enterprise, fill: "hsl(var(--chart-3))" },
   ]
 
-  const total = data.BASIC + data.PREMIUM + data.ENTERPRISE
+  const total = data.free + data.pro + data.enterprise
 
   return (
     <Card>

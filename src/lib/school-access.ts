@@ -240,7 +240,7 @@ export async function ensureUserSchool(
           maxStudents: 500,
           maxTeachers: 50,
           isActive: true,
-          planType: "starter",
+          planType: "free",
           createdByUserId: userId, // Track who created this school (immutable, prevents duplicates)
           ...safeTemplateData,
         },

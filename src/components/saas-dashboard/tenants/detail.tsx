@@ -5,6 +5,7 @@
 import * as React from "react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { normalizePlanType } from "@/lib/plan-type"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -23,6 +24,7 @@ import {
   tenantStopImpersonation,
   tenantToggleActive,
 } from "@/components/saas-dashboard/tenants/actions"
+import { getPlanTypeLabel } from "@/components/saas-dashboard/tenants/util"
 
 type TenantDetailProps = {
   tenantId: string
@@ -147,12 +149,15 @@ export function TenantDetail({
   }
   const onChangePlan = async () => {
     const next =
-      prompt("New plan (TRIAL/BASIC/PREMIUM/ENTERPRISE)?", planType) || planType
+      prompt(
+        "New plan (free / pro / enterprise)?",
+        normalizePlanType(planType)
+      ) || planType
     const reason = prompt("Reason to change plan?") || ""
     try {
       const result = await tenantChangePlan({
         tenantId,
-        planType: next as any,
+        planType: next,
         reason,
       })
       if (result.success) {
@@ -203,7 +208,7 @@ export function TenantDetail({
             <div className="text-muted-foreground">{domain}</div>
             <div className="mt-2 flex gap-4">
               <span className="text-xs">
-                {d?.plan || "Plan"}: {planType}
+                {d?.plan || "Plan"}: {getPlanTypeLabel(planType)}
               </span>
               <span className="text-xs">
                 {d?.status || "Status"}:{" "}
@@ -219,7 +224,7 @@ export function TenantDetail({
                   {d?.plan || "Plan"}
                 </div>
                 <div className="font-medium">
-                  {billing?.planType ?? planType}
+                  {getPlanTypeLabel(billing?.planType ?? planType)}
                 </div>
               </div>
               <div>

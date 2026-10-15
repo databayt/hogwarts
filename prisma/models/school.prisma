@@ -33,7 +33,7 @@ model School {
   country String?
 
   // Subscription/billing info (high-level; detailed state in Subscription)
-  planType    String    @default("basic") // basic, premium, enterprise
+  planType    String    @default("free") // free, pro, enterprise — lib/plan-type (legacy basic/premium read via normalizePlanType)
   // The pilot/trial clock. Nullable because most schools never trial.
   // isTenantOnTrial()/getTrialDaysRemaining() consume it; before this field
   // existed they were passed undefined and the trial column was always blank.

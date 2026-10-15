@@ -23,7 +23,7 @@ export async function createTestSchool(overrides?: {
       name: overrides?.name ?? `Test School ${suffix}`,
       domain: overrides?.domain ?? `test-${suffix}`,
       email: `admin@test-${suffix}.com`,
-      planType: "basic",
+      planType: "free",
       maxStudents: 100,
       maxTeachers: 20,
       isActive: true,

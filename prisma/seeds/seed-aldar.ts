@@ -59,7 +59,7 @@ async function upsertSchool() {
       timezone: "Asia/Dubai",
       preferredLanguage: "ar",
       currency: "AED",
-      planType: "premium",
+      planType: "pro",
       maxStudents: 5000,
       maxTeachers: 500,
       maxClasses: 200,

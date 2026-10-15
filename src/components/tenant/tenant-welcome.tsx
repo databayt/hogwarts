@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { normalizePlanType } from "@/lib/plan-type"
 import { rootDomainFromLocation } from "@/lib/root-domain"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,22 +55,18 @@ export default function TenantWelcome({
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.tenant?.welcome
 
-  const getPlanBadge = (planType?: string) => {
-    if (!planType) return null
+  const getPlanBadge = (stored?: string) => {
+    if (!stored) return null
+    const planType = normalizePlanType(stored)
 
     const planColors = {
-      basic: "bg-blue-100 text-blue-800",
-      premium: "bg-purple-100 text-purple-800",
+      free: "bg-blue-100 text-blue-800",
+      pro: "bg-purple-100 text-purple-800",
       enterprise: "bg-green-100 text-green-800",
     }
 
     return (
-      <Badge
-        className={
-          planColors[planType as keyof typeof planColors] ||
-          "bg-gray-100 text-gray-800"
-        }
-      >
+      <Badge className={planColors[planType]}>
         {planType.charAt(0).toUpperCase() + planType.slice(1)}{" "}
         {t?.plan?.suffix || "Plan"}
       </Badge>

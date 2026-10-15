@@ -30,7 +30,10 @@ describe("getTenants integration (where/orderBy mapping)", () => {
     expect(arg).toBeTruthy()
     expect(arg.where.name.contains).toBe("alp")
     expect(arg.where.domain.contains).toBe("school")
-    expect(arg.where.planType).toBe("basic")
+    // Legacy "basic" reads as free and matches every stored spelling of it.
+    expect(arg.where.planType.in).toEqual(
+      expect.arrayContaining(["free", "basic", "BASIC"])
+    )
     expect(arg.where.isActive).toBe(true)
     expect(arg.orderBy[0].createdAt).toBe("desc")
   })

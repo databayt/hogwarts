@@ -64,7 +64,7 @@ export function createMockSchool(overrides?: Partial<School>): School {
     logoUrl: overrides?.logoUrl ?? null,
     website: overrides?.website ?? null,
     isActive: overrides?.isActive ?? true,
-    planType: overrides?.planType ?? "basic",
+    planType: overrides?.planType ?? "free",
     maxStudents: overrides?.maxStudents ?? 500,
     maxTeachers: overrides?.maxTeachers ?? 50,
     createdAt: overrides?.createdAt ?? new Date("2024-01-01"),

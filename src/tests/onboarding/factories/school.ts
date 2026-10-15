@@ -118,7 +118,7 @@ export function createMockSchool(
     // School details
     schoolLevel: randomFrom(SCHOOL_TYPES),
     schoolType: randomFrom(SCHOOL_CATEGORIES),
-    planType: faker.helpers.arrayElement(["basic", "pro", "enterprise"]),
+    planType: faker.helpers.arrayElement(["free", "pro", "enterprise"]),
 
     // Pricing
     tuitionFee: faker.number.int({ min: 1000, max: 50000 }),

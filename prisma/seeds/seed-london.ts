@@ -103,7 +103,7 @@ async function upsertSchool() {
       ...common,
       domain: DOMAIN,
       email: ADMIN_EMAIL,
-      planType: "premium",
+      planType: "pro",
       maxStudents: 2000,
       maxTeachers: 200,
       maxClasses: 60,

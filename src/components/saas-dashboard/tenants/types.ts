@@ -10,6 +10,8 @@
 
 import type { School } from "@prisma/client"
 
+import type { PlanType } from "@/lib/plan-type"
+
 /**
  * Base tenant data from School model
  */
@@ -86,9 +88,10 @@ export interface TenantListItem {
 }
 
 /**
- * Plan types available for tenants
+ * Plan types available for tenants — the public pricing ids (free / pro /
+ * enterprise). Stored legacy ids read through `normalizePlanType`.
  */
-export type PlanType = "basic" | "premium" | "enterprise"
+export type { PlanType } from "@/lib/plan-type"
 
 /**
  * Tenant status for filtering and display

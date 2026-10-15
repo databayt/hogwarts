@@ -122,19 +122,39 @@ describe("tenants/actions.ts", () => {
     it("changes tenant plan", async () => {
       vi.mocked(db.school.update).mockResolvedValue({
         id: "s1",
-        planType: "PREMIUM",
+        planType: "pro",
       } as any)
 
       const result = await tenants.tenantChangePlan({
         tenantId: "s1",
-        planType: "PREMIUM",
+        planType: "pro",
         reason: "Upgrade",
       })
 
       expect(result).toEqual({
         success: true,
-        data: expect.objectContaining({ id: "s1", planType: "PREMIUM" }),
+        data: expect.objectContaining({ id: "s1", planType: "pro" }),
       })
+      expect(db.school.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ planType: "pro" }),
+        })
+      )
+    })
+
+    it("maps a legacy plan id to the new one", async () => {
+      vi.mocked(db.school.update).mockResolvedValue({
+        id: "s1",
+        planType: "pro",
+      } as any)
+
+      await tenants.tenantChangePlan({ tenantId: "s1", planType: "PREMIUM" })
+
+      expect(db.school.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ planType: "pro" }),
+        })
+      )
     })
 
     it("handles invalid plan type", async () => {
@@ -153,7 +173,7 @@ describe("tenants/actions.ts", () => {
 
       const result = await tenants.tenantChangePlan({
         tenantId: "s1",
-        planType: "BASIC",
+        planType: "free",
       })
 
       expect(result.success).toBe(false)
@@ -165,10 +185,10 @@ describe("tenants/actions.ts", () => {
   // ==========================================================================
 
   describe("tenantEndTrial", () => {
-    it("ends tenant trial and sets BASIC plan", async () => {
+    it("ends tenant trial and sets the free plan", async () => {
       vi.mocked(db.school.update).mockResolvedValue({
         id: "s1",
-        planType: "BASIC",
+        planType: "free",
       } as any)
 
       const result = await tenants.tenantEndTrial({
@@ -178,11 +198,11 @@ describe("tenants/actions.ts", () => {
 
       expect(result).toEqual({
         success: true,
-        data: expect.objectContaining({ id: "s1", planType: "BASIC" }),
+        data: expect.objectContaining({ id: "s1", planType: "free" }),
       })
       expect(db.school.update).toHaveBeenCalledWith({
         where: { id: "s1" },
-        data: expect.objectContaining({ planType: "BASIC" }),
+        data: expect.objectContaining({ planType: "free" }),
       })
     })
 

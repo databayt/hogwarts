@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { normalizePlanType, type PlanType } from "@/lib/plan-type"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { tenantRepairProvisioning, tenantSetupCatalog } from "./actions"
+import { PLAN_TYPE_LABELS } from "./config"
 import { DeleteSchoolDialog } from "./delete-dialog"
 import { TenantDetail } from "./detail"
 
@@ -30,7 +32,8 @@ export type TenantRow = {
   subdomain: string
   domain: string
   isActive: boolean
-  planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE"
+  /** Normalized id (free / pro / enterprise) — legacy rows are mapped on read. */
+  planType: PlanType
   studentCount: number
   teacherCount: number
   catalogLevels: number
@@ -80,20 +83,18 @@ export const getTenantColumns = (
       <DataTableColumnHeader column={column} title="Plan" />
     ),
     cell: ({ getValue }) => {
-      const plan = getValue<string>()
+      const plan = normalizePlanType(getValue<string>())
       return (
         <span
           className={`rounded px-2 py-1 text-xs font-medium ${
-            plan === "ENTERPRISE"
+            plan === "enterprise"
               ? "bg-purple-100 text-purple-800"
-              : plan === "PREMIUM"
+              : plan === "pro"
                 ? "bg-blue-100 text-blue-800"
-                : plan === "BASIC"
-                  ? "bg-gray-100 text-gray-800"
-                  : "bg-yellow-100 text-yellow-800"
+                : "bg-gray-100 text-gray-800"
           }`}
         >
-          {plan}
+          {PLAN_TYPE_LABELS[plan]}
         </span>
       )
     },
@@ -102,10 +103,9 @@ export const getTenantColumns = (
       variant: "select",
       placeholder: "Plan type",
       options: [
-        { label: "Trial", value: "TRIAL" },
-        { label: "Basic", value: "BASIC" },
-        { label: "Premium", value: "PREMIUM" },
-        { label: "Enterprise", value: "ENTERPRISE" },
+        { label: PLAN_TYPE_LABELS.free, value: "free" },
+        { label: PLAN_TYPE_LABELS.pro, value: "pro" },
+        { label: PLAN_TYPE_LABELS.enterprise, value: "enterprise" },
       ],
     },
     enableColumnFilter: true,

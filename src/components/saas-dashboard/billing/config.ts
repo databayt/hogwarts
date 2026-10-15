@@ -7,6 +7,8 @@
  * Static configuration data, enums, and lookup tables for billing management.
  */
 
+import type { PlanType } from "@/lib/plan-type"
+
 import type { InvoiceStatus, ReceiptStatus } from "./types"
 
 /**
@@ -189,14 +191,16 @@ export const MAX_RECEIPT_FILE_SIZE = 5 * 1024 * 1024
 export const INVOICE_NUMBER_PREFIX = "INV-"
 
 /**
- * Plan pricing in USD/month.
- * TODO(production): Replace with Stripe price lookup via price IDs
+ * Plan pricing in USD/month, keyed by plan id (free / pro / enterprise).
+ * Read it through `normalizePlanType` — stored rows may still carry the
+ * legacy ids (basic/premium/trial, any casing).
+ * TODO(production): Pro and Enterprise bill per student (rates.ts); replace
+ * these flat figures with the per-student quote or a Stripe price lookup.
  */
-export const PLAN_PRICING: Record<string, number> = {
-  TRIAL: 0,
-  BASIC: 99,
-  PREMIUM: 299,
-  ENTERPRISE: 999,
+export const PLAN_PRICING: Record<PlanType, number> = {
+  free: 0,
+  pro: 299,
+  enterprise: 999,
 } as const
 
 /**

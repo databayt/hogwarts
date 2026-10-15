@@ -7,23 +7,21 @@
  * Static configuration data, enums, and lookup tables for tenant management.
  */
 
+import { PLAN_TYPES as PLAN_TYPE_IDS } from "@/lib/plan-type"
+
 import type { PlanType, TenantStatus } from "./types"
 
 /**
  * Available subscription plans
  */
-export const PLAN_TYPES: readonly PlanType[] = [
-  "basic",
-  "premium",
-  "enterprise",
-] as const
+export const PLAN_TYPES: readonly PlanType[] = PLAN_TYPE_IDS
 
 /**
  * Plan type display labels
  */
 export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
-  basic: "Basic",
-  premium: "Premium",
+  free: "Free",
+  pro: "Pro",
   enterprise: "Enterprise",
 } as const
 
@@ -31,9 +29,9 @@ export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
  * Plan type descriptions
  */
 export const PLAN_TYPE_DESCRIPTIONS: Record<PlanType, string> = {
-  basic: "Up to 100 students, 10 teachers",
-  premium: "Up to 500 students, 50 teachers, advanced features",
-  enterprise: "Unlimited students and teachers, custom features",
+  free: "Up to 100 students, 10 teachers",
+  pro: "The first 100 students free, then 24 SAR per student a year",
+  enterprise: "1,000+ students, dedicated contract",
 } as const
 
 /**
@@ -43,8 +41,8 @@ export const PLAN_LIMITS: Record<
   PlanType,
   { maxStudents: number; maxTeachers: number }
 > = {
-  basic: { maxStudents: 100, maxTeachers: 10 },
-  premium: { maxStudents: 500, maxTeachers: 50 },
+  free: { maxStudents: 100, maxTeachers: 10 },
+  pro: { maxStudents: Infinity, maxTeachers: Infinity },
   enterprise: { maxStudents: Infinity, maxTeachers: Infinity },
 } as const
 
@@ -143,7 +141,7 @@ export const TENANT_ACTIONS = {
  * Default values for new tenants
  */
 export const TENANT_DEFAULTS = {
-  planType: "basic" as PlanType,
+  planType: "free" as PlanType,
   isActive: true,
   timezone: "Africa/Khartoum",
   maxStudents: 100,

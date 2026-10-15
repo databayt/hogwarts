@@ -54,7 +54,7 @@ async function ensureSentinels(): Promise<void> {
       name: "Databayt Platform",
       domain: PLATFORM_SCHOOL_ID,
       isActive: false,
-      planType: "basic",
+      planType: "free",
       maxStudents: 0,
       maxTeachers: 0,
     },

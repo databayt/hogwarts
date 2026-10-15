@@ -8,6 +8,7 @@ import type { School } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { isKnownPlanType, normalizePlanType, PLAN_TYPES } from "@/lib/plan-type"
 import { refreshPage } from "@/lib/refresh-page"
 import {
   repairProvisioning,
@@ -38,7 +39,12 @@ const toggleActiveSchema = z.object({
 
 const changePlanSchema = z.object({
   tenantId: z.string().min(1),
-  planType: z.enum(["TRIAL", "BASIC", "PREMIUM", "ENTERPRISE"]),
+  // free | pro | enterprise; a legacy id (BASIC, premium, trial…) maps over.
+  planType: z.preprocess(
+    (v) =>
+      typeof v === "string" && isKnownPlanType(v) ? normalizePlanType(v) : v,
+    z.enum(PLAN_TYPES)
+  ),
   reason: z.string().optional(),
 })
 
@@ -177,7 +183,7 @@ export async function tenantEndTrial(input: {
     const school = await db.school.update({
       where: { id: validated.tenantId },
       data: {
-        planType: "BASIC",
+        planType: "free",
         updatedAt: new Date(),
       },
     })
@@ -791,7 +797,7 @@ export async function getTenantDetail(tenantId: string): Promise<{
     owners: owners.map((o) => ({ id: o.id, email: o.email ?? "" })),
     metrics: { students, teachers, classes },
     billing: {
-      planType: school?.planType ?? "basic",
+      planType: normalizePlanType(school?.planType),
       outstandingCents,
       trialEndsAt: null,
       nextInvoiceDate: null,

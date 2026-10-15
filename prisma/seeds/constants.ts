@@ -41,7 +41,7 @@ export const DEMO_SCHOOL = {
 
   // Settings
   timezone: "Africa/Khartoum",
-  planType: "premium",
+  planType: "pro",
   maxStudents: 2000,
   maxTeachers: 200,
 

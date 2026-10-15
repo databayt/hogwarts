@@ -93,12 +93,10 @@ export async function POST() {
           maxStudents: 500,
           maxTeachers: 50,
           isActive: true,
-          // "basic" — the schema default, and the only value valid in BOTH
-          // plan vocabularies. "starter" was in neither: the school-configuration
-          // form validates z.enum(["basic","premium","enterprise"]) and the tenant
-          // actions validate the uppercase set, so every onboarded school carried a
-          // plan its own settings page would refuse to save.
-          planType: "basic",
+          // "free" — the schema default and the public pricing's first plan
+          // (lib/plan-type). Every new school starts free; its first 100
+          // students never bill.
+          planType: "free",
           createdByUserId: userId, // Track owner (unique constraint prevents duplicates)
         },
       })

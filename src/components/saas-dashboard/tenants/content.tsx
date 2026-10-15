@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { normalizePlanType, storedPlanTypeValues } from "@/lib/plan-type"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
@@ -31,8 +32,14 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
     ...(searchParams?.status && searchParams.status !== "all"
       ? { isActive: searchParams.status === "active" }
       : {}),
+    // Legacy rows (basic/premium, any casing) match their new id until the
+    // plan-id migration runs.
     ...(searchParams?.plan && searchParams.plan !== "all"
-      ? { planType: searchParams.plan }
+      ? {
+          planType: {
+            in: storedPlanTypeValues(normalizePlanType(searchParams.plan)),
+          },
+        }
       : {}),
     ...(searchParams?.search
       ? {
@@ -104,7 +111,7 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
     subdomain: tenant.domain,
     domain: tenant.domain,
     isActive: tenant.isActive,
-    planType: tenant.planType as "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE",
+    planType: normalizePlanType(tenant.planType),
     studentCount: tenant._count.students,
     teacherCount: tenant._count.teachers,
     catalogLevels: tenant._count.academicLevels,

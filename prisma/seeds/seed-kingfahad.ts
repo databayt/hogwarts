@@ -41,7 +41,7 @@ async function createSchool() {
       timezone: "Africa/Khartoum",
       preferredLanguage: "ar",
       currency: "SDG",
-      planType: "premium",
+      planType: "pro",
       maxStudents: 2000,
       maxTeachers: 200,
       maxClasses: 60,

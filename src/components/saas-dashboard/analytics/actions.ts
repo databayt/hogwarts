@@ -3,16 +3,17 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { normalizePlanType } from "@/lib/plan-type"
 import { PLAN_PRICING } from "@/components/saas-dashboard/billing/config"
 import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
-// School.planType is stored inconsistently (lowercase "basic" via onboarding/marketing,
-// uppercase "BASIC" via the operator createTenant path). PLAN_PRICING is keyed uppercase,
-// so all lookups MUST normalize case or every plan resolves to $0. Centralize it here.
+// School.planType is stored inconsistently — legacy ids (basic/premium) and
+// mixed casing ("BASIC" from the old operator path). Every lookup goes through
+// normalizePlanType so legacy rows still price correctly. Centralize it here.
 const TRIAL_PLAN_VALUES = ["TRIAL", "trial"] as const
 
 function planPrice(planType: string): number {
-  return PLAN_PRICING[planType.toUpperCase() as keyof typeof PLAN_PRICING] || 0
+  return PLAN_PRICING[normalizePlanType(planType)] ?? 0
 }
 
 /**
@@ -47,18 +48,15 @@ export async function calculateMRR() {
   const growth =
     lastMonthMRR > 0 ? ((currentMRR - lastMonthMRR) / lastMonthMRR) * 100 : 0
 
-  // MRR by plan type (keys are uppercase to match PLAN_PRICING)
+  // MRR by plan id (free / pro / enterprise)
   const mrrByPlan = {
-    BASIC: 0,
-    PREMIUM: 0,
-    ENTERPRISE: 0,
+    free: 0,
+    pro: 0,
+    enterprise: 0,
   }
 
   for (const school of activeSchools) {
-    const key = school.planType.toUpperCase() as keyof typeof mrrByPlan
-    if (key in mrrByPlan) {
-      mrrByPlan[key] += planPrice(school.planType)
-    }
+    mrrByPlan[normalizePlanType(school.planType)] += planPrice(school.planType)
   }
 
   return {
@@ -198,7 +196,7 @@ export async function getAtRiskSchools() {
     id: invoice.school.id,
     name: invoice.school.name,
     domain: invoice.school.domain,
-    planType: invoice.school.planType,
+    planType: normalizePlanType(invoice.school.planType),
     riskReasons: ["Payment failure in last 30 days"],
     riskScore: 75, // High risk due to payment issues
   }))

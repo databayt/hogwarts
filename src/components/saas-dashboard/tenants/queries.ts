@@ -11,6 +11,7 @@ import {
 } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { normalizePlanType, storedPlanTypeValues } from "@/lib/plan-type"
 import { unstable_cache } from "@/components/table/lib/unstable-cache"
 
 export const tenantsSearchParams = createSearchParamsCache({
@@ -59,11 +60,24 @@ export async function getTenants(input: GetTenantsInput) {
         ...(input.domain
           ? { domain: { contains: input.domain, mode: "insensitive" } }
           : {}),
-        ...(input.planType ? { planType: input.planType } : {}),
+        // Legacy spellings (basic/premium, any casing) match their new id.
+        ...(input.planType
+          ? {
+              planType: {
+                in: storedPlanTypeValues(normalizePlanType(input.planType)),
+              },
+            }
+          : {}),
         ...(input.isActive === "true" ? { isActive: true } : {}),
         ...(input.isActive === "false" ? { isActive: false } : {}),
         // legacy keys support
-        ...(input.plan ? { planType: input.plan } : {}),
+        ...(input.plan
+          ? {
+              planType: {
+                in: storedPlanTypeValues(normalizePlanType(input.plan)),
+              },
+            }
+          : {}),
         ...(input.status === "true" ? { isActive: true } : {}),
         ...(input.status === "false" ? { isActive: false } : {}),
       }

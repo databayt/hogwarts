@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Building2, TrendingUp, Users } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { normalizePlanType } from "@/lib/plan-type"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,13 +39,16 @@ async function getTenantStats() {
 
   let totalTenants = 0
   let activeTenants = 0
-  const planCounts = { trial: 0, basic: 0, premium: 0, enterprise: 0 }
+  // Trials stay their own bucket; every other id (legacy basic/premium too)
+  // reads through normalizePlanType.
+  const planCounts = { trial: 0, free: 0, pro: 0, enterprise: 0 }
   for (const group of planGroups) {
     const n = group._count
     totalTenants += n
     if (group.isActive) activeTenants += n
-    const key = group.planType.toLowerCase()
-    if (key in planCounts) planCounts[key as keyof typeof planCounts] += n
+    const raw = group.planType.toLowerCase()
+    if (raw === "trial") planCounts.trial += n
+    else planCounts[normalizePlanType(raw)] += n
   }
   const inactiveTenants = totalTenants - activeTenants
 
@@ -53,8 +57,8 @@ async function getTenantStats() {
     activeTenants,
     inactiveTenants,
     trialTenants: planCounts.trial,
-    basicTenants: planCounts.basic,
-    premiumTenants: planCounts.premium,
+    freeTenants: planCounts.free,
+    proTenants: planCounts.pro,
     enterpriseTenants: planCounts.enterprise,
     totalStudents,
     totalTeachers,
@@ -174,14 +178,14 @@ export async function TenantsAnalysis({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t?.basic || "Basic"}
+              {t?.free || "Free"}
             </CardTitle>
-            <Badge variant="default">$99/mo</Badge>
+            <Badge variant="secondary">≤ 100</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.basicTenants}</div>
+            <div className="text-2xl font-bold">{stats.freeTenants}</div>
             <p className="text-muted-foreground text-xs">
-              {t?.basicPlanSchools || "Basic plan schools"}
+              {t?.freePlanSchools || "Free plan schools"}
             </p>
           </CardContent>
         </Card>
@@ -189,14 +193,14 @@ export async function TenantsAnalysis({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t?.premium || "Premium"}
+              {t?.pro || "Pro"}
             </CardTitle>
-            <Badge variant="default">$299/mo</Badge>
+            <Badge variant="default">24 SAR</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.premiumTenants}</div>
+            <div className="text-2xl font-bold">{stats.proTenants}</div>
             <p className="text-muted-foreground text-xs">
-              {t?.premiumPlanSchools || "Premium plan schools"}
+              {t?.proPlanSchools || "Pro plan schools"}
             </p>
           </CardContent>
         </Card>

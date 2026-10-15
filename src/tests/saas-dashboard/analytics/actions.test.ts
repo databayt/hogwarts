@@ -47,7 +47,7 @@ vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
 }))
 
 vi.mock("@/components/saas-dashboard/billing/config", () => ({
-  PLAN_PRICING: { TRIAL: 0, BASIC: 99, PREMIUM: 299, ENTERPRISE: 999 },
+  PLAN_PRICING: { free: 0, pro: 299, enterprise: 999 },
 }))
 
 function mockOperatorAccess() {
@@ -77,7 +77,7 @@ describe("Analytics Actions", () => {
   // ==========================================================================
 
   describe("calculateMRR", () => {
-    it("returns correct MRR with mix of BASIC/PREMIUM/ENTERPRISE schools", async () => {
+    it("returns correct MRR with a mix of legacy and new plan ids", async () => {
       mockOperatorAccess()
 
       vi.mocked(db.school.findMany).mockResolvedValueOnce([
@@ -89,8 +89,9 @@ describe("Analytics Actions", () => {
 
       const result = await calculateMRR()
 
-      // 99 + 299 + 999 + 99 = 1496
-      expect(result.currentMRR).toBe(1496)
+      // Legacy ids normalize: BASIC → free (0), PREMIUM → pro (299).
+      // 0 + 299 + 999 + 0 = 1298
+      expect(result.currentMRR).toBe(1298)
       expect(result.totalSchools).toBe(4)
     })
 
@@ -104,12 +105,12 @@ describe("Analytics Actions", () => {
 
       const result = await calculateMRR()
 
-      // Previously these resolved to $0 because PLAN_PRICING is uppercase-keyed.
-      expect(result.currentMRR).toBe(398)
+      // basic → free (0), premium → pro (299)
+      expect(result.currentMRR).toBe(299)
       expect(result.mrrByPlan).toEqual({
-        BASIC: 99,
-        PREMIUM: 299,
-        ENTERPRISE: 0,
+        free: 0,
+        pro: 299,
+        enterprise: 0,
       })
     })
 
@@ -118,30 +119,30 @@ describe("Analytics Actions", () => {
 
       // Last-month MRR is derived from createdAt in the same single fetch.
       vi.mocked(db.school.findMany).mockResolvedValueOnce([
-        { planType: "BASIC", createdAt: OLD_DATE },
         { planType: "PREMIUM", createdAt: OLD_DATE },
-        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "ENTERPRISE", createdAt: OLD_DATE },
+        { planType: "pro", createdAt: NOW_DATE },
       ] as any)
 
       const result = await calculateMRR()
 
-      // Current: 99 + 299 + 99 = 497; last month (created before last month): 398
-      // Growth: ((497 - 398) / 398) * 100 = 24.87 → 24.9
-      expect(result.currentMRR).toBe(497)
-      expect(result.lastMonthMRR).toBe(398)
-      expect(result.growth).toBe(24.9)
+      // Current: 299 + 999 + 299 = 1597; last month (created before last month): 1298
+      // Growth: ((1597 - 1298) / 1298) * 100 = 23.04 → 23
+      expect(result.currentMRR).toBe(1597)
+      expect(result.lastMonthMRR).toBe(1298)
+      expect(result.growth).toBe(23)
     })
 
     it("returns 0 growth when no previous month data", async () => {
       mockOperatorAccess()
 
       vi.mocked(db.school.findMany).mockResolvedValueOnce([
-        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "PREMIUM", createdAt: NOW_DATE },
       ] as any)
 
       const result = await calculateMRR()
 
-      expect(result.currentMRR).toBe(99)
+      expect(result.currentMRR).toBe(299)
       expect(result.lastMonthMRR).toBe(0)
       expect(result.growth).toBe(0)
     })
@@ -159,9 +160,9 @@ describe("Analytics Actions", () => {
       const result = await calculateMRR()
 
       expect(result.mrrByPlan).toEqual({
-        BASIC: 198, // 99 * 2
-        PREMIUM: 299,
-        ENTERPRISE: 999,
+        free: 0, // BASIC → free
+        pro: 299,
+        enterprise: 999,
       })
     })
 
@@ -175,9 +176,9 @@ describe("Analytics Actions", () => {
       expect(result.currentMRR).toBe(0)
       expect(result.totalSchools).toBe(0)
       expect(result.mrrByPlan).toEqual({
-        BASIC: 0,
-        PREMIUM: 0,
-        ENTERPRISE: 0,
+        free: 0,
+        pro: 0,
+        enterprise: 0,
       })
     })
 
@@ -202,14 +203,14 @@ describe("Analytics Actions", () => {
       mockOperatorAccess()
 
       vi.mocked(db.school.findMany).mockResolvedValueOnce([
-        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "PREMIUM", createdAt: NOW_DATE },
         { planType: "UNKNOWN_PLAN", createdAt: NOW_DATE },
       ] as any)
 
       const result = await calculateMRR()
 
-      // BASIC = 99, UNKNOWN_PLAN = 0
-      expect(result.currentMRR).toBe(99)
+      // PREMIUM → pro = 299, UNKNOWN_PLAN → free = 0
+      expect(result.currentMRR).toBe(299)
     })
 
     it("fetches active non-trial schools in a single query", async () => {
@@ -260,8 +261,8 @@ describe("Analytics Actions", () => {
 
       const result = await getMRRHistory()
 
-      expect(result[0].mrr).toBe(398) // 99 + 299
-      expect(result[5].mrr).toBe(398)
+      expect(result[0].mrr).toBe(299) // free 0 + pro 299
+      expect(result[5].mrr).toBe(299)
       expect(result[5].schools).toBe(2)
     })
 
@@ -498,7 +499,7 @@ describe("Analytics Actions", () => {
         id: "school-1",
         name: "Failing School",
         domain: "failing",
-        planType: "PREMIUM",
+        planType: "pro",
         riskReasons: ["Payment failure in last 30 days"],
         riskScore: 75,
       })

@@ -824,7 +824,7 @@ export function createMockSchool(overrides?: {
     domain: overrides?.domain ?? "testschool",
     address: overrides?.address ?? "123 Test St",
     website: overrides?.website ?? null,
-    planType: overrides?.planType ?? "basic",
+    planType: overrides?.planType ?? "free",
     maxStudents: 100,
     maxTeachers: 20,
     createdAt: new Date(),
