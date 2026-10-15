@@ -98,6 +98,11 @@ export async function updateGradeSelection(
 }
 
 /** Get students for the grade selection dropdown */
+/**
+ * Every student, with what tells two namesakes apart: their grade and
+ * section, and their student number. Section and grade names are shown in
+ * the viewer's language.
+ */
 export async function getStudentsForGrade(): Promise<
   ActionResponse<
     {
@@ -105,6 +110,8 @@ export async function getStudentsForGrade(): Promise<
       firstName: string
       middleName: string | null
       lastName: string
+      number: string | null
+      place: string | null
     }[]
   >
 > {
@@ -112,18 +119,59 @@ export async function getStudentsForGrade(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const students = await db.student.findMany({
-      where: { schoolId },
-      select: { id: true, firstName: true, middleName: true, lastName: true },
-      orderBy: { firstName: "asc" },
-    })
+    const [students, lang] = await Promise.all([
+      db.student.findMany({
+        where: { schoolId },
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          studentId: true,
+          grNumber: true,
+          section: {
+            select: { name: true, grade: { select: { name: true } } },
+          },
+          academicGrade: { select: { name: true } },
+        },
+        orderBy: { firstName: "asc" },
+      }),
+      getDisplayLang(),
+    ])
 
-    return { success: true, data: students }
-  } catch (error) {
+    const labels = await getLabels(
+      students.flatMap((s) => [
+        s.section?.name,
+        s.section?.grade?.name ?? s.academicGrade?.name,
+      ]),
+      lang,
+      schoolId
+    )
+    const label = (v: string | null | undefined) =>
+      v ? (labels.get(v) ?? v) : null
+
     return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load students",
+      success: true,
+      data: students.map((s) => {
+        const grade = label(s.section?.grade?.name ?? s.academicGrade?.name)
+        const section = label(s.section?.name)
+        return {
+          id: s.id,
+          firstName: s.firstName,
+          middleName: s.middleName,
+          lastName: s.lastName,
+          number: s.studentId ?? s.grNumber ?? null,
+          // A section name usually already carries its grade ("Grade 11-B").
+          place:
+            section && grade && !section.includes(grade)
+              ? `${grade} · ${section}`
+              : (section ?? grade),
+        }
+      }),
     }
+  } catch (error) {
+    console.error("[getStudentsForGrade]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 

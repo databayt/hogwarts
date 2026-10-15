@@ -33,7 +33,7 @@ export default async function GradesLayout({ children, params }: Props) {
 
   // The hub, then one tab per step of the school's grade workflow: record
   // the marks, turn them into report cards and transcripts, promote,
-  // certify, then the templates the documents are filled from.
+  // certify, then settings (the grade scale and report-card templates).
   const gradesPages: PageNavItem[] = [
     { name: d.navOverview, href: `/${lang}/grades`, exact: true },
     {
@@ -46,7 +46,7 @@ export default async function GradesLayout({ children, params }: Props) {
     { name: d.navTranscripts, href: `/${lang}/grades/transcripts` },
     { name: d.navPromotion, href: `/${lang}/grades/promotion` },
     { name: d.navCertificates, href: `/${lang}/grades/certificates` },
-    { name: d.navTemplates, href: `/${lang}/grades/templates` },
+    { name: d.navSettings, href: `/${lang}/grades/settings` },
   ]
 
   return (

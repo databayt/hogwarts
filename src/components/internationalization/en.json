@@ -449,7 +449,8 @@
       "PROMOTION_BATCH_NOT_IN_REVIEW": "This promotion batch isn't in review.",
       "PROMOTION_BATCH_NOT_APPROVED": "Approve the promotion batch before running it.",
       "PDF_GENERATION_FAILED": "Couldn't create the PDF. Try again.",
-      "VERIFICATION_FAILED": "Verification failed."
+      "VERIFICATION_FAILED": "Verification failed.",
+      "REPORT_CARD_NOT_PUBLISHED": "Publish the report card before sharing it."
     },
     "tryAgain": "Try again"
   },

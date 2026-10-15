@@ -30,6 +30,8 @@ import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
+import { bandFor, getSchoolScale, type ScaleBand } from "./scale"
+
 interface SubjectGradeData {
   subjectId: string
   score: number
@@ -39,40 +41,12 @@ interface SubjectGradeData {
   credits: number
 }
 
-interface GradeBoundary {
-  grade: string
-  minScore: number
-  maxScore: number
-  gpa4?: number
-  gpa5?: number
-}
-
-const DEFAULT_BOUNDARIES: GradeBoundary[] = [
-  { grade: "A+", minScore: 97, maxScore: 100, gpa4: 4.0, gpa5: 5.0 },
-  { grade: "A", minScore: 93, maxScore: 96, gpa4: 4.0, gpa5: 4.75 },
-  { grade: "A-", minScore: 90, maxScore: 92, gpa4: 3.7, gpa5: 4.5 },
-  { grade: "B+", minScore: 87, maxScore: 89, gpa4: 3.3, gpa5: 4.0 },
-  { grade: "B", minScore: 83, maxScore: 86, gpa4: 3.0, gpa5: 3.75 },
-  { grade: "B-", minScore: 80, maxScore: 82, gpa4: 2.7, gpa5: 3.5 },
-  { grade: "C+", minScore: 77, maxScore: 79, gpa4: 2.3, gpa5: 3.0 },
-  { grade: "C", minScore: 73, maxScore: 76, gpa4: 2.0, gpa5: 2.75 },
-  { grade: "C-", minScore: 70, maxScore: 72, gpa4: 1.7, gpa5: 2.5 },
-  { grade: "D+", minScore: 67, maxScore: 69, gpa4: 1.3, gpa5: 2.0 },
-  { grade: "D", minScore: 60, maxScore: 66, gpa4: 1.0, gpa5: 1.5 },
-  { grade: "F", minScore: 0, maxScore: 59, gpa4: 0, gpa5: 0 },
-]
-
 function percentageToGrade(
   pct: number,
-  boundaries: GradeBoundary[]
+  scale: ScaleBand[]
 ): { grade: string; gpa: number } {
-  const rounded = Math.round(pct)
-  for (const b of boundaries) {
-    if (rounded >= b.minScore && rounded <= b.maxScore) {
-      return { grade: b.grade, gpa: b.gpa4 ?? 0 }
-    }
-  }
-  return { grade: "F", gpa: 0 }
+  const band = bandFor(pct, scale)
+  return { grade: band.grade, gpa: band.gpa }
 }
 
 /** Row writes are batched; these bound one statement / one transaction. */
@@ -120,12 +94,8 @@ export async function computeReportCards(
   })
   if (!term) return { ok: false, error: ACTION_ERRORS.NOT_FOUND }
 
-  const gradingConfig = await db.schoolGradingConfig.findUnique({
-    where: { schoolId },
-  })
-  const boundaries = gradingConfig?.customBoundaries
-    ? (gradingConfig.customBoundaries as unknown as GradeBoundary[])
-    : DEFAULT_BOUNDARIES
+  // The same scale the gradebook letters come from (grades/lib/scale).
+  const boundaries = await getSchoolScale(schoolId)
 
   // ---- Scope --------------------------------------------------------
   const studentWhere: Prisma.StudentWhereInput = { schoolId }

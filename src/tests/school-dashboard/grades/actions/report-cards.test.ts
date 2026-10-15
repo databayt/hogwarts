@@ -17,6 +17,8 @@ vi.mock("@/lib/db", () => ({
   db: {
     $transaction: vi.fn(async (ops: unknown[]) => ops),
     schoolGradingConfig: { findUnique: vi.fn() },
+    // grades/lib/scale — no school scale → DEFAULT_SCALE.
+    gradeBoundary: { findMany: vi.fn().mockResolvedValue([]) },
     student: { findMany: vi.fn() },
     term: { findFirst: vi.fn() },
     examResult: { findMany: vi.fn() },
@@ -221,7 +223,7 @@ describe("generateReportCards", () => {
       schoolId: SCHOOL,
       studentId: "stu-1",
       termId: "term-1",
-      overallGrade: "A-",
+      overallGrade: "A+", // unified scale (grades/lib/scale): 90+ is A+
       rank: 1,
       totalStudents: 1,
       daysPresent: 42,

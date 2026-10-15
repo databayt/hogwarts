@@ -352,6 +352,7 @@
         "/grades/add/[id]/selection",
         "/grades/book",
         "/grades/certificates",
+        "/grades/settings",
         "/grades/promotion",
         "/grades/reports",
         "/grades/templates",

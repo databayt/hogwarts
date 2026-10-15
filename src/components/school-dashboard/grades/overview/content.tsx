@@ -26,6 +26,7 @@ import {
   getGradesOverview,
   type OverviewTerm,
 } from "../lib/overview"
+import { CollectButton } from "./collect-button"
 import { TermPills, termTitle } from "./term-pills"
 
 const GRADE_ORDER = [
@@ -92,6 +93,7 @@ export async function GradesOverviewContent({
     attention: boolean
     cta: string
     href: string
+    extra?: React.ReactNode
   }> = [
     {
       icon: <Inbox />,
@@ -116,6 +118,7 @@ export async function GradesOverviewContent({
               },
             ],
       attention: pending > 0,
+      extra: <CollectButton />,
       cta: t.collect.cta,
       href:
         data.collect.examsAwaiting === 0 && data.collect.submissionsToGrade > 0
@@ -227,6 +230,7 @@ export async function GradesOverviewContent({
                 )
               )}
             </div>
+            {step.extra}
             <Link
               href={step.href}
               className="text-primary mt-auto inline-flex items-center gap-1 text-sm font-medium hover:underline"

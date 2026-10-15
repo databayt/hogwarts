@@ -16,7 +16,7 @@ import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { SelectField } from "@/components/form"
+import { ComboboxField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
@@ -35,6 +35,8 @@ interface StudentOption {
   firstName: string
   middleName?: string | null
   lastName: string
+  number?: string | null
+  place?: string | null
 }
 
 interface AssignmentOption {
@@ -160,8 +162,12 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
         }),
     }))
 
+    // Name, then grade · section, then the student number — two students
+    // with the same name are told apart, and any of the three is searchable.
     const studentOptions = students.map((s) => ({
-      label: displayName(s, nameDisplay),
+      label: [displayName(s, nameDisplay), s.place, s.number]
+        .filter(Boolean)
+        .join(" — "),
       value: s.id,
     }))
 
@@ -183,29 +189,32 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <SelectField
+          <ComboboxField
             name="studentId"
-            label={d?.student || "Student"}
+            label={d?.student}
             options={studentOptions}
+            placeholder={d?.selectStudent}
+            searchPlaceholder={d?.searchStudent}
+            emptyMessage={d?.noStudentFound}
             required
             disabled={isPending}
           />
           <SelectField
             name="subjectId"
-            label={d?.subject || "Subject"}
+            label={d?.subject}
             options={subjectOptions}
             required
             disabled={isPending || !studentId}
           />
           <SelectField
             name="examId"
-            label={d?.exam || "Exam"}
+            label={d?.exam}
             options={examOptions}
             disabled={isPending || !subjectId}
           />
           <SelectField
             name="assignmentId"
-            label={d?.assignment || "Assignment"}
+            label={d?.assignment}
             options={assignmentOptions}
             disabled={isPending || !subjectId}
           />

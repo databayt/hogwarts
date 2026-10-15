@@ -120,7 +120,7 @@ export async function createDocumentTemplate(
     })
 
     refreshPage("/exams/templates")
-    refreshPage("/grades/templates")
+    refreshPage("/grades/settings")
     return {
       success: true,
       data: {
@@ -187,7 +187,7 @@ export async function setDefaultTemplate(id: string): Promise<ActionResponse> {
     ])
 
     refreshPage("/exams/templates")
-    refreshPage("/grades/templates")
+    refreshPage("/grades/settings")
     return { success: true }
   } catch (error) {
     return {
@@ -218,7 +218,7 @@ export async function deleteDocumentTemplate(
     if (count === 0) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
 
     refreshPage("/exams/templates")
-    refreshPage("/grades/templates")
+    refreshPage("/grades/settings")
     return { success: true }
   } catch (error) {
     return {

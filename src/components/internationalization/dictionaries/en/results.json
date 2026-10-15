@@ -283,6 +283,19 @@
     },
     "count": "report cards",
     "countLabel": "{count} report cards",
+    "pageOf": "Page {page} of {count}",
+    "previous": "Previous",
+    "next": "Next",
+    "share": {
+      "label": "Share",
+      "copy": "Copy share link",
+      "whatsapp": "Send on WhatsApp",
+      "revoke": "Stop sharing",
+      "copied": "Link copied — anyone with it can view this report card.",
+      "revoked": "Sharing stopped. The link no longer opens.",
+      "failed": "Couldn't share the report card.",
+      "message": "{name}'s report card: {url}"
+    },
     "attendanceSummary": "Present {present} · Absent {absent} · Late {late}",
     "columns": {
       "rank": "Rank",
@@ -321,6 +334,8 @@
     "generating": "Generating...",
     "count": "transcripts",
     "countLabel": "{count} transcripts",
+    "generated": "Transcript created.",
+    "generateFailed": "Couldn't create the transcript.",
     "columns": {
       "number": "Number",
       "student": "Student",
@@ -329,7 +344,7 @@
       "pdf": "PDF",
       "date": "Date"
     },
-    "empty": "No transcripts found. Enter a student ID and click \"Generate Transcript\".",
+    "empty": "No transcripts yet. Pick a student and click \"Generate Transcript\".",
     "download": "Download",
     "pending": "Pending"
   },

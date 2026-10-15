@@ -55,6 +55,8 @@ export type ResultRow = {
 export interface ResultColumnCallbacks {
   onDelete?: (row: ResultRow) => void
   permissions?: UIPermissions
+  /** A student reading their own grades — the student column is them. */
+  hideStudent?: boolean
 }
 
 export const resultColumns = (
@@ -63,7 +65,7 @@ export const resultColumns = (
   callbacks?: ResultColumnCallbacks
 ): ColumnDef<ResultRow>[] => {
   const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
-  return [
+  const columns: ColumnDef<ResultRow>[] = [
     {
       accessorKey: "studentName",
       header: ({ column }) => (
@@ -225,4 +227,10 @@ export const resultColumns = (
       enableColumnFilter: false,
     },
   ]
+  // Read-only viewers have no row actions; a student needs no student column.
+  return columns.filter(
+    (c) =>
+      !(c.id === "actions" && permissions.readOnlyMode) &&
+      !(c.id === "studentName" && callbacks?.hideStudent)
+  )
 }

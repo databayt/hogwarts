@@ -4,10 +4,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
+
+// A public link exposes a student's grades — staff decide, never a student
+// or guardian acting on someone else's card.
+const SHARE_ROLES = new Set(["ADMIN", "TEACHER", "DEVELOPER"])
 
 // ============================================================================
 // SHARE A REPORT CARD (admin / teacher action)
@@ -29,11 +34,14 @@ export async function shareReportCard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, code: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+    if (!SHARE_ROLES.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
     }
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, code: "MISSING_SCHOOL_CONTEXT" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const reportCard = await db.reportCard.findFirst({
@@ -42,11 +50,11 @@ export async function shareReportCard(
     })
 
     if (!reportCard) {
-      return { success: false, code: "REPORT_CARD_NOT_FOUND" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (!reportCard.isPublished) {
-      return { success: false, code: "REPORT_CARD_NOT_PUBLISHED" }
+      return actionError(ACTION_ERRORS.REPORT_CARD_NOT_PUBLISHED)
     }
 
     // Reuse existing token if already generated.
@@ -67,11 +75,8 @@ export async function shareReportCard(
 
     return { success: true, data: { token } }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to share report card",
-    }
+    console.error("[shareReportCard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -197,11 +202,14 @@ export async function revokeReportCardShare(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, code: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+    if (!SHARE_ROLES.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
     }
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, code: "MISSING_SCHOOL_CONTEXT" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const reportCard = await db.reportCard.findFirst({
@@ -210,7 +218,7 @@ export async function revokeReportCardShare(
     })
 
     if (!reportCard) {
-      return { success: false, code: "REPORT_CARD_NOT_FOUND" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.reportCard.update({
@@ -220,12 +228,7 @@ export async function revokeReportCardShare(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to revoke report card share",
-    }
+    console.error("[revokeReportCardShare]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

@@ -24,18 +24,23 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { GenerateWithTemplateButton } from "../documents/generate-with-template-button"
+import { ReportCardShareButton } from "../grades/report-cards/share-button"
 import { TemplateBulkButton } from "../grades/report-cards/template-bulk-button"
 import { GenerateButton } from "./generate-button"
 import { PublishButton } from "./publish-button"
+
+const PAGE_SIZE = 50
 
 export async function ReportCardsContent({
   locale,
   dictionary,
   termId,
+  page = 1,
 }: {
   locale: Locale
   dictionary: Dictionary
   termId?: string
+  page?: number
 }) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
@@ -68,9 +73,22 @@ export async function ReportCardsContent({
     )
   }
 
-  // Fetch existing report cards for this term
+  // One page of the term's cards; the stats count the whole term in the
+  // database instead of loading every card (975 rows on a mid-size school).
+  const where = { schoolId, termId: activeTerm.id }
+  const [total, published, withPdf, unpublished] = await Promise.all([
+    db.reportCard.count({ where }),
+    db.reportCard.count({ where: { ...where, isPublished: true } }),
+    db.reportCard.count({ where: { ...where, pdfUrl: { not: null } } }),
+    db.reportCard.findMany({
+      where: { ...where, isPublished: false },
+      select: { id: true },
+    }),
+  ])
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const currentPage = Math.min(Math.max(1, page), pageCount)
   const reportCards = await db.reportCard.findMany({
-    where: { schoolId, termId: activeTerm.id },
+    where,
     include: {
       student: {
         select: {
@@ -78,21 +96,21 @@ export async function ReportCardsContent({
           middleName: true,
           lastName: true,
           studentId: true,
+          grNumber: true,
         },
       },
       grades: {
         include: { subject: { select: { name: true } } },
       },
     },
-    orderBy: { student: { firstName: "asc" } },
+    orderBy: [{ student: { firstName: "asc" } }, { id: "asc" }],
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   })
 
   const nameDisplay = await schoolNameDisplay(schoolId)
-
-  // Stats
-  const total = reportCards.length
-  const published = reportCards.filter((r) => r.isPublished).length
-  const withPdf = reportCards.filter((r) => r.pdfUrl).length
+  const pageHref = (p: number) =>
+    `/${locale}/grades/reports?termId=${activeTerm.id}&page=${p}`
 
   // Grades and their sections — generation can be narrowed to either
   const grades = await db.academicGrade.findMany({
@@ -191,11 +209,7 @@ export async function ReportCardsContent({
           )}
           {total > 0 && <TemplateBulkButton termId={activeTerm.id} />}
           {total > 0 && published < total && (
-            <PublishButton
-              reportCardIds={reportCards
-                .filter((r) => !r.isPublished)
-                .map((r) => r.id)}
-            />
+            <PublishButton reportCardIds={unpublished.map((r) => r.id)} />
           )}
         </div>
       )}
@@ -242,7 +256,9 @@ export async function ReportCardsContent({
                       </bdi>
                     </TableCell>
                     <TableCell>
-                      <Ltr>{rc.student.studentId ?? "—"}</Ltr>
+                      <Ltr>
+                        {rc.student.studentId ?? rc.student.grNumber ?? "—"}
+                      </Ltr>
                     </TableCell>
                     <TableCell>{rc.grades.length}</TableCell>
                     <TableCell>
@@ -284,6 +300,13 @@ export async function ReportCardsContent({
                             </a>
                           </Button>
                         )}
+                        {canManage && rc.isPublished && (
+                          <ReportCardShareButton
+                            reportCardId={rc.id}
+                            isPublic={rc.isPublic}
+                            studentName={displayName(rc.student, nameDisplay)}
+                          />
+                        )}
                         {canManage && (
                           <GenerateWithTemplateButton
                             category="REPORT_CARD"
@@ -297,6 +320,29 @@ export async function ReportCardsContent({
                 ))}
               </TableBody>
             </Table>
+            {pageCount > 1 && (
+              <nav className="flex items-center justify-between gap-2 pt-4 text-sm">
+                <span className="text-muted-foreground">
+                  {(copy?.pageOf ?? "{page} / {count}")
+                    .replace("{page}", String(currentPage))
+                    .replace("{count}", String(pageCount))}
+                </span>
+                <div className="flex gap-2">
+                  {currentPage > 1 && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={pageHref(currentPage - 1)}>
+                        {copy?.previous}
+                      </Link>
+                    </Button>
+                  )}
+                  {currentPage < pageCount && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={pageHref(currentPage + 1)}>{copy?.next}</Link>
+                    </Button>
+                  )}
+                </div>
+              </nav>
+            )}
           </CardContent>
         </Card>
       )}

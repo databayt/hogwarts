@@ -449,7 +449,8 @@
       "PROMOTION_BATCH_NOT_IN_REVIEW": "دفعة الترقية هذه ليست قيد المراجعة.",
       "PROMOTION_BATCH_NOT_APPROVED": "اعتمد دفعة الترقية قبل تنفيذها.",
       "PDF_GENERATION_FAILED": "تعذّر إنشاء ملف PDF. حاول مرة أخرى.",
-      "VERIFICATION_FAILED": "فشل التحقق."
+      "VERIFICATION_FAILED": "فشل التحقق.",
+      "REPORT_CARD_NOT_PUBLISHED": "انشر بطاقة التقرير قبل مشاركتها."
     },
     "tryAgain": "إعادة المحاولة"
   },

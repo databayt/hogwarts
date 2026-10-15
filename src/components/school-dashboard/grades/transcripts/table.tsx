@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,9 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { generateTranscript, getTranscripts } from "../actions/transcripts"
+import { StudentPicker } from "../ui/student-picker"
 
 interface TranscriptsTableProps {
   initialData: any[]
@@ -29,6 +32,7 @@ export function TranscriptsTable({
   dictionary,
 }: TranscriptsTableProps) {
   const dict = dictionary.results.transcripts
+  const g = dictionary.school.grades
   const [data, setData] = useState(initialData)
   const [search, setSearch] = useState("")
   const [studentId, setStudentId] = useState("")
@@ -46,9 +50,14 @@ export function TranscriptsTable({
     startTransition(async () => {
       const result = await generateTranscript({ studentId })
       if (result.success) {
+        SuccessToast(dict.generated)
         const refreshed = await getTranscripts()
         setData(refreshed)
         setStudentId("")
+      } else {
+        ErrorToast(
+          actionErrorMessage(result.error, dictionary, dict.generateFailed)
+        )
       }
     })
   }
@@ -67,11 +76,12 @@ export function TranscriptsTable({
           {dict.search}
         </Button>
         <div className="flex items-center gap-2">
-          <Input
-            placeholder={dict.studentIdPlaceholder}
+          <StudentPicker
             value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            className="w-64"
+            onChange={setStudentId}
+            placeholder={g.selectStudent}
+            searchPlaceholder={g.searchStudent}
+            emptyMessage={g.noStudentFound}
           />
           <Button onClick={handleGenerate} disabled={!studentId || isPending}>
             {isPending ? dict.generating : dict.generate}

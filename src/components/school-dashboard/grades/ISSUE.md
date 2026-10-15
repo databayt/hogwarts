@@ -13,6 +13,36 @@ last_audited: 2026-10-15
 
 # Grades — Production Readiness Tracker
 
+## 2026-10-15 — grades hub, phase 3: the tools
+
+- [x] **One grade scale** (`grades/lib/scale.ts`). Gradebook letters and
+      report-card letters/GPA had separate defaults (90+ = A+ vs 97+ = A+);
+      both now read `GradeBoundary`, falling back to one DEFAULT_SCALE, and a
+      score between two bands' edges no longer falls through to F.
+      `/grades/settings` edits the scale (ADMIN/DEVELOPER; validated: starts at
+      0, no overlap, no duplicates) and holds the report-card templates —
+      `/grades/templates` redirects there.
+- [x] **Homework reaches the gradebook.** `gradeSubmissionCore` (web +
+      mobile) now writes through `recordAssignmentGrade`; before, a graded
+      submission never reached `Result`, so report cards missed every
+      homework mark. "اجمع درجات الواجبات الآن" on the hub backfills marks
+      given before this (1,000 per click, reports what is left).
+- [x] **Share a report card**: per-row menu — copy link, WhatsApp, stop
+      sharing. `shareReportCard` / `revokeReportCardShare` were open to any
+      signed-in school user; now ADMIN/TEACHER/DEVELOPER only, with codes.
+- [x] Report cards page 50 at a time; stats are counted, not loaded.
+- [x] Searchable student picker (name — grade · section — number) in the
+      add-grade wizard and on transcripts (was a 978-row select / a typed id);
+      transcript generation now says whether it worked.
+- [x] Self view: a student's table has no student/actions columns; a
+      guardian always sees the child's name.
+- Not a bug: "+" opening a draft is the shared wizard pattern (drafts are
+  hidden and discarded on close).
+- Open: `SchoolGradingConfig.customBoundaries` and the orphaned
+  `exams/grading/grading-config-form.tsx` (no page renders it, and its
+  actions have no role check) — retire or wire; exam-side CSV import keeps
+  its own hardcoded scale; regrade existing rows after a scale change.
+
 ## 2026-10-15 — grades hub, phase 2: the overview and the self view
 
 - [x] `/grades` is the hub. Staff: the term's average as the headline, term

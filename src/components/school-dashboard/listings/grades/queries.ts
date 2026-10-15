@@ -21,6 +21,10 @@ import {
   NAME_DISPLAY_DEFAULT,
   type NameDisplay,
 } from "@/lib/name-utils"
+import {
+  bandFor,
+  DEFAULT_SCALE,
+} from "@/components/school-dashboard/grades/lib/scale"
 import { search } from "@/components/translation/search"
 
 // ============================================================================
@@ -854,33 +858,18 @@ export function calculateGrade(
   percentage: number,
   gradeBoundaries?: GradeBoundaryLike[]
 ): string {
-  if (gradeBoundaries && gradeBoundaries.length > 0) {
-    for (const boundary of gradeBoundaries) {
-      const min =
-        typeof boundary.minScore === "object" && boundary.minScore?.toNumber
-          ? boundary.minScore.toNumber()
-          : Number(boundary.minScore)
-      const max =
-        typeof boundary.maxScore === "object" && boundary.maxScore?.toNumber
-          ? boundary.maxScore.toNumber()
-          : Number(boundary.maxScore)
-      if (percentage >= min && percentage <= max) {
-        return boundary.grade
-      }
-    }
-    return "F"
-  }
-
-  // Default fallback scale
-  if (percentage >= 90) return "A+"
-  if (percentage >= 85) return "A"
-  if (percentage >= 80) return "B+"
-  if (percentage >= 75) return "B"
-  if (percentage >= 70) return "C+"
-  if (percentage >= 65) return "C"
-  if (percentage >= 60) return "D+"
-  if (percentage >= 50) return "D"
-  return "F"
+  const num = (v: GradeBoundaryLike["minScore"]) =>
+    typeof v === "object" && v?.toNumber ? v.toNumber() : Number(v)
+  const scale =
+    gradeBoundaries && gradeBoundaries.length > 0
+      ? gradeBoundaries.map((b) => ({
+          grade: b.grade,
+          minScore: num(b.minScore),
+          maxScore: num(b.maxScore),
+          gpa: 0,
+        }))
+      : DEFAULT_SCALE
+  return bandFor(percentage, scale).grade
 }
 
 /**

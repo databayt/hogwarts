@@ -28,7 +28,10 @@ export async function GradesSelfView({
   term,
   dictionary,
   lang,
+  showNames = false,
 }: {
+  /** A guardian always sees whose results these are, even with one child. */
+  showNames?: boolean
   schoolId: string
   studentIds: string[]
   term: OverviewTerm | null
@@ -61,7 +64,7 @@ export async function GradesSelfView({
     <div className="space-y-12">
       {children.map((child) => (
         <section key={child.student.id} className="space-y-6">
-          {children.length > 1 && (
+          {(showNames || children.length > 1) && (
             <h2 className="text-2xl font-semibold tracking-tight">
               <bdi dir="auto">{displayName(child.student, nameDisplay)}</bdi>
             </h2>

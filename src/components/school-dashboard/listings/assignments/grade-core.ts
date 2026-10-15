@@ -6,6 +6,7 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
+import { recordAssignmentGrade } from "@/components/school-dashboard/grades/lib/gradebook"
 
 /**
  * Grading a submission — shared by the `gradeSubmission` action and the
@@ -79,6 +80,12 @@ export async function gradeSubmissionCore(input: {
       gradedBy: input.graderUserId,
     },
   })
+
+  // The mark reaches the gradebook and report cards, not just the
+  // submission. A gradebook failure must not undo the grading itself.
+  await recordAssignmentGrade({ schoolId, submissionId }).catch((err) =>
+    console.error("[gradeSubmission] Gradebook write failed:", err)
+  )
 
   // Notify the student that their assignment was graded (non-blocking)
   if (submission.student.userId) {

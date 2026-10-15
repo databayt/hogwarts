@@ -9,7 +9,7 @@ import { ReportCardsContent } from "@/components/school-dashboard/reports/conten
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
-  searchParams: Promise<{ termId?: string }>
+  searchParams: Promise<{ termId?: string; page?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function ReportCardsPage({ params, searchParams }: Props) {
   const { lang } = await params
-  const { termId } = await searchParams
+  const { termId, page } = await searchParams
   const dictionary = await getDictionary(lang)
 
   return (
@@ -34,6 +34,7 @@ export default async function ReportCardsPage({ params, searchParams }: Props) {
         locale={lang}
         dictionary={dictionary}
         termId={termId}
+        page={Number(page) || 1}
       />
     </div>
   )

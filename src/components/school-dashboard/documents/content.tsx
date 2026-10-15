@@ -11,7 +11,7 @@ import { DocumentsManager, RESOLVABLE_SECTIONS } from "./templates-list"
 
 /**
  * Template management, rendered per host block: `/exams/templates` shows the
- * exam-paper + certificate categories, `/grades/templates` shows report cards.
+ * exam-paper + certificate categories, `/grades/settings` shows report cards.
  */
 export default async function DocumentsContent({
   lang,

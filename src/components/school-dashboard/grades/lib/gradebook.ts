@@ -280,3 +280,116 @@ export async function resolveStudentSubjectContext(
     termId: term?.id ?? null,
   }
 }
+
+// ============================================================================
+// HOMEWORK → GRADEBOOK (graded AssignmentSubmission → Result)
+// ============================================================================
+
+/**
+ * Record one graded homework submission in the gradebook, keyed on the
+ * assignment so re-grading updates the same row. Grading used to stop at
+ * `AssignmentSubmission.score`, which neither the gradebook nor report cards
+ * read — a teacher's marks never reached the student's report card.
+ *
+ * Returns null when there is nothing to record (not graded, no score).
+ */
+export async function recordAssignmentGrade(params: {
+  schoolId: string
+  submissionId: string
+  boundaries?: GradeBoundaries
+}) {
+  const sub = await db.assignmentSubmission.findFirst({
+    where: { id: params.submissionId, schoolId: params.schoolId },
+    select: {
+      studentId: true,
+      score: true,
+      feedback: true,
+      gradedBy: true,
+      submittedAt: true,
+      status: true,
+      assignment: {
+        select: {
+          id: true,
+          title: true,
+          totalPoints: true,
+          subjectId: true,
+          termId: true,
+        },
+      },
+      student: {
+        select: {
+          sectionId: true,
+          academicGradeId: true,
+          section: { select: { gradeId: true } },
+        },
+      },
+    },
+  })
+  if (!sub || sub.score == null) return null
+  if (sub.status !== "GRADED" && sub.status !== "RETURNED") return null
+  const maxScore = Number(sub.assignment.totalPoints)
+  if (!maxScore || maxScore <= 0) return null
+
+  const termId =
+    sub.assignment.termId ??
+    (await resolveActiveTerm(params.schoolId)).term?.id ??
+    null
+
+  return upsertGradebookResult({
+    schoolId: params.schoolId,
+    studentId: sub.studentId,
+    sectionId: sub.student.sectionId,
+    academicGradeId:
+      sub.student.section?.gradeId ?? sub.student.academicGradeId,
+    termId,
+    score: Number(sub.score),
+    maxScore,
+    subjectId: sub.assignment.subjectId,
+    assignmentId: sub.assignment.id,
+    title: sub.assignment.title,
+    feedback: sub.feedback,
+    gradedBy: sub.gradedBy,
+    submittedAt: sub.submittedAt,
+    boundaries: params.boundaries,
+  })
+}
+
+/**
+ * Backfill: every graded submission that has no gradebook row yet. Bounded
+ * per run (`limit`) so one click never outlives a request; the count left is
+ * returned so the caller can say "run again".
+ */
+export async function collectGradedAssignments(
+  schoolId: string,
+  limit = 1000
+): Promise<{ recorded: number; remaining: number }> {
+  const [graded, recorded] = await Promise.all([
+    db.assignmentSubmission.findMany({
+      where: {
+        schoolId,
+        status: { in: ["GRADED", "RETURNED"] },
+        score: { not: null },
+      },
+      select: { id: true, assignmentId: true, studentId: true },
+    }),
+    db.result.findMany({
+      where: { schoolId, assignmentId: { not: null } },
+      select: { assignmentId: true, studentId: true },
+    }),
+  ])
+  const have = new Set(recorded.map((r) => `${r.assignmentId}:${r.studentId}`))
+  const missing = graded.filter(
+    (s) => !have.has(`${s.assignmentId}:${s.studentId}`)
+  )
+  const boundaries = await getGradeBoundaries(schoolId)
+  let done = 0
+  for (const s of missing.slice(0, limit)) {
+    const row = await recordAssignmentGrade({
+      schoolId,
+      submissionId: s.id,
+      boundaries,
+    })
+    if (row) done++
+  }
+  return { recorded: done, remaining: Math.max(0, missing.length - limit) }
+}

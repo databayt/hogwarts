@@ -109,6 +109,7 @@ export default async function GradesContent({
         lang={lang}
         perPage={sp.perPage}
         permissions={permissions}
+        hideStudent={role === "STUDENT"}
       />
     </div>
   )

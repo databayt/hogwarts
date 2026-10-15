@@ -55,6 +55,7 @@ export default async function Page({ params, searchParams }: Props) {
           term={current}
           dictionary={dictionary}
           lang={lang}
+          showNames={role === "GUARDIAN"}
         />
         <section className="space-y-4">
           <h2 className="text-muted-foreground px-1 text-sm font-medium">

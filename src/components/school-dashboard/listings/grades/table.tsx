@@ -45,6 +45,7 @@ interface ResultsTableProps {
   lang: Locale
   perPage?: number
   permissions?: UIPermissions
+  hideStudent?: boolean
 }
 
 function ResultsTableInner({
@@ -54,6 +55,7 @@ function ResultsTableInner({
   lang,
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
+  hideStudent = false,
 }: ResultsTableProps) {
   const router = useRouter()
   const t = dictionary
@@ -136,8 +138,9 @@ function ResultsTableInner({
       resultColumns(t, lang, {
         onDelete: handleDelete,
         permissions,
+        hideStudent,
       }),
-    [t, lang, handleDelete, permissions]
+    [t, lang, handleDelete, permissions, hideStudent]
   )
 
   // Table instance

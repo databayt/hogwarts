@@ -9725,6 +9725,37 @@
         "PRESENTATION": "Presentation"
       },
       "navOverview": "Overview",
+      "searchStudent": "Search by name, section or number…",
+      "noStudentFound": "No student found.",
+      "settings": {
+        "title": "Grade scale",
+        "description": "The letter and GPA points each score range earns. Report cards and new grades use it.",
+        "grade": "Grade",
+        "from": "From %",
+        "to": "To %",
+        "gpa": "GPA",
+        "remove": "Remove",
+        "add": "Add a grade",
+        "reset": "Back to default",
+        "save": "Save scale",
+        "saving": "Saving…",
+        "saved": "Grade scale saved.",
+        "saveFailed": "Couldn't save the grade scale.",
+        "resetDone": "Back on the default scale.",
+        "customHint": "Your school's own scale.",
+        "defaultHint": "The default scale — save to make it your school's own.",
+        "existingHint": "Grades already recorded keep their letter; regenerate report cards to apply a change.",
+        "templatesTitle": "Report-card templates",
+        "templatesDescription": "Upload your school's own .docx report card; it's filled for every student.",
+        "errors": {
+          "SCALE_EMPTY": "Add at least one grade.",
+          "SCALE_NAME_REQUIRED": "Every row needs a grade name.",
+          "SCALE_DUPLICATE_GRADE": "Each grade name can appear only once.",
+          "SCALE_OUT_OF_RANGE": "Scores must be between 0 and 100, and GPA between 0 and 5.",
+          "SCALE_MUST_START_AT_ZERO": "The lowest grade must start at 0 so every score gets a grade.",
+          "SCALE_OVERLAP": "Two grades cover the same scores."
+        }
+      },
       "overview": {
         "termLabel": "Term {number}",
         "termWithYear": "{year} · Term {number}",
@@ -9738,7 +9769,11 @@
           "examsAwaiting": "Exams without marks: {count}",
           "submissionsToGrade": "Submissions to grade: {count}",
           "done": "Everything is collected.",
-          "cta": "Open marking"
+          "cta": "Open marking",
+          "collectNow": "Collect homework marks now",
+          "collected": "{count} homework marks added to the gradebook.",
+          "collectedMore": "{count} added; {remaining} left — collect again.",
+          "failed": "Couldn't collect the marks."
         },
         "review": {
           "title": "Review",
