@@ -476,8 +476,9 @@ export async function loadAttendanceFollowUp(
         severity: consecutive >= 5 ? "critical" : "warning",
         details: `Absent ${consecutive} consecutive days`,
         count: consecutive,
-        // The Students-at-risk tab is where an absence streak is acted on.
-        actionUrl: `/attendance/early-warning`,
+        // Shared with /api/mobile/attendance/today (action_url): the apps
+        // route on /students/:id, so keep it.
+        actionUrl: `/students/${studentId}`,
       })
     }
   }

@@ -22,40 +22,50 @@ describe("attendance UI permissions", () => {
       expect(getTabsForRole("ACCOUNTANT" as any, "en")).toEqual([])
     })
 
+    // Five jobs, one tab each (+ Settings for admins). Merged pages keep
+    // their routes and light up the tab they live under.
     it("DEVELOPER gets all tabs (admin + staff)", () => {
-      const tabs = getTabsForRole("DEVELOPER", "en")
-      const names = tabs.map((t) => t.name)
+      const names = getTabsForRole("DEVELOPER", "en").map((t) => t.name)
 
-      expect(names).toContain("Overview")
-      expect(names).toContain("Manual")
-      expect(names).toContain("QR Code")
-      expect(names).toContain("Settings")
-      expect(names).toContain("Analytics")
+      expect(names).toEqual([
+        "Today",
+        "Take attendance",
+        "Excuses",
+        "Students at risk",
+        "Reports",
+        "Settings",
+      ])
     })
 
     it("ADMIN gets staff + Settings tab", () => {
-      const tabs = getTabsForRole("ADMIN", "en")
-      const names = tabs.map((t) => t.name)
+      const names = getTabsForRole("ADMIN", "en").map((t) => t.name)
 
-      expect(names).toContain("Manual")
+      expect(names).toContain("Take attendance")
       expect(names).toContain("Settings")
     })
 
     it("TEACHER gets staff tabs but NOT Settings", () => {
-      const tabs = getTabsForRole("TEACHER", "en")
-      const names = tabs.map((t) => t.name)
+      const names = getTabsForRole("TEACHER", "en").map((t) => t.name)
 
-      expect(names).toContain("Manual")
-      expect(names).toContain("Analytics")
+      expect(names).toContain("Take attendance")
+      expect(names).toContain("Reports")
       expect(names).not.toContain("Settings")
     })
 
     it("STAFF gets staff tabs but NOT Settings", () => {
-      const tabs = getTabsForRole("STAFF", "en")
-      const names = tabs.map((t) => t.name)
+      const names = getTabsForRole("STAFF", "en").map((t) => t.name)
 
-      expect(names).toContain("Manual")
+      expect(names).toContain("Take attendance")
       expect(names).not.toContain("Settings")
+    })
+
+    it("merged pages light up their tab", () => {
+      const take = getTabsForRole("ADMIN", "ar").find(
+        (t) => t.name === "Take attendance"
+      )
+
+      expect(take?.href).toBe("/ar/attendance/manual")
+      expect(take?.matchPrefixes).toContain("/ar/attendance/qr-code")
     })
 
     it("STUDENT gets non-staff (Records) instead of Manual", () => {
@@ -63,8 +73,8 @@ describe("attendance UI permissions", () => {
       const names = tabs.map((t) => t.name)
 
       expect(names).toContain("Records")
-      expect(names).not.toContain("Manual")
-      expect(names).not.toContain("Analytics")
+      expect(names).not.toContain("Take attendance")
+      expect(names).not.toContain("Reports")
       expect(names).not.toContain("Settings")
     })
 
@@ -79,20 +89,17 @@ describe("attendance UI permissions", () => {
 
     it("uses dictionary values when provided", () => {
       const tabs = getTabsForRole("ADMIN", "en", {
-        overview: "نظرة عامة",
-        manual: "يدوي",
+        hub: { today: "اليوم", take: "التسجيل" },
       })
 
-      expect(tabs[0]?.name).toBe("نظرة عامة")
-      const manualTab = tabs.find((t) => t.name === "يدوي")
-      expect(manualTab).toBeDefined()
+      expect(tabs[0]?.name).toBe("اليوم")
+      expect(tabs.find((t) => t.name === "التسجيل")).toBeDefined()
     })
 
     it("hrefs include locale prefix", () => {
-      const tabs = getTabsForRole("ADMIN", "ar")
-      const overview = tabs.find((t) => t.name === "Overview")
+      const today = getTabsForRole("ADMIN", "ar").find((t) => t.name === "Today")
 
-      expect(overview?.href).toBe("/ar/attendance")
+      expect(today?.href).toBe("/ar/attendance")
     })
   })
 

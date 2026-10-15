@@ -10,10 +10,11 @@ import { db } from "@/lib/db"
 // tested through the same loaders the web overview reads.
 vi.mock("@/lib/db", () => ({
   db: {
+    school: { findUnique: vi.fn() },
     section: { findMany: vi.fn() },
     schoolWeekConfig: { findMany: vi.fn() },
     attendance: { findMany: vi.fn() },
-    attendanceExcuse: { findMany: vi.fn() },
+    attendanceExcuse: { findMany: vi.fn(), count: vi.fn() },
     teacher: { findFirst: vi.fn() },
   },
 }))
@@ -53,10 +54,15 @@ const student = (first: string) => ({ firstName: first, lastName: "Test" })
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // "Today" is the school's calendar day (attendance/queries.ts).
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    timezone: "Africa/Khartoum",
+  } as never)
   vi.mocked(db.section.findMany).mockResolvedValue([])
   vi.mocked(db.schoolWeekConfig.findMany).mockResolvedValue([])
   vi.mocked(db.attendance.findMany).mockResolvedValue([])
   vi.mocked(db.attendanceExcuse.findMany).mockResolvedValue([])
+  vi.mocked(db.attendanceExcuse.count).mockResolvedValue(0)
 })
 
 describe("GET /api/mobile/attendance/today", () => {

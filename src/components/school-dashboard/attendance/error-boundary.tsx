@@ -134,11 +134,9 @@ function BoundaryFallback({
   onReset: () => void
 }) {
   const { dictionary } = useDictionary()
-  const t = ((
-    dictionary as
-      | { attendanceToday?: { shell?: Record<string, string> } }
-      | undefined
-  )?.attendanceToday?.shell ?? {}) as Record<string, string>
+  const t = ((dictionary?.attendanceToday as
+    | { shell?: Record<string, string> }
+    | undefined)?.shell ?? {}) as Record<string, string>
 
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 p-8 text-center">
