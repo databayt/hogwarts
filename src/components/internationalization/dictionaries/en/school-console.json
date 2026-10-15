@@ -15,6 +15,17 @@
     "billingDescription": "Manage billing, subscription, and payment information."
   },
   "overview": {
+    "hero": {
+      "title": "{mark} in one place, from setup to reports",
+      "titleMark": "Your whole school"
+    },
+    "glance": {
+      "title": "The school at a glance",
+      "description": "The accounts and records every other section is built on."
+    },
+    "guide": {
+      "title": "What you can do here"
+    },
     "stats": {
       "users": "Users",
       "verifiedCount": "{count} verified",

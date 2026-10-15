@@ -3,26 +3,21 @@
 
 import Link from "next/link"
 import {
-  AlertCircle,
   ArrowRight,
   Bell,
-  CheckCircle2,
-  Cloud,
-  Database,
+  Check,
   FileText,
-  Mail,
-  Server,
   Settings,
   Shield,
   Upload,
   UserCog,
+  type LucideIcon,
 } from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { typographyVariants } from "@/lib/typography"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -33,10 +28,12 @@ interface Props {
   lang: Locale
 }
 
-// Glassmorphism card base
-const glass =
-  "rounded-2xl border-white/10 bg-card/60 shadow-sm backdrop-blur-xl dark:border-white/[0.06] dark:bg-card/40"
-
+/**
+ * The /school overview, drawn in the /live landing's pattern: a green brand
+ * hero, then flat bordered bands — the school at a glance, system status —
+ * and a grid of real destinations. See `live/landing/` for the reasoning
+ * behind each piece; this page reuses the same geometry, ink and type.
+ */
 export default async function AdminContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
@@ -87,8 +84,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   }
 
   const t = dictionary.schoolConsole.overview
-  const num = (v: number, opts?: Intl.NumberFormatOptions) =>
-    formatConsoleNumber(v, lang, opts)
+  const num = (v: number) => formatConsoleNumber(v, lang)
 
   const stats = [
     {
@@ -96,286 +92,206 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       value: totalUsers,
       sub: fill(t.stats.verifiedCount, { count: num(activeUsers) }),
     },
-    {
-      label: t.stats.teachers,
-      value: totalTeachers,
-      sub: t.stats.teachersSub,
-    },
-    {
-      label: t.stats.students,
-      value: totalStudents,
-      sub: t.stats.studentsSub,
-    },
+    { label: t.stats.teachers, value: totalTeachers, sub: t.stats.teachersSub },
+    { label: t.stats.students, value: totalStudents, sub: t.stats.studentsSub },
     {
       label: t.stats.departments,
       value: totalDepartments,
       sub: t.stats.departmentsSub,
     },
+    { label: t.stats.classrooms, value: totalClassrooms },
   ]
 
-  const modules = [
+  const modules: Array<{
+    key: keyof typeof t.modules
+    Icon: LucideIcon
+    href: string
+  }> = [
     {
-      title: t.modules.configuration.title,
-      description: t.modules.configuration.description,
+      key: "configuration",
+      Icon: Settings,
       href: `/${lang}/school/configuration/title`,
-      icon: Settings,
     },
-    {
-      title: t.modules.membership.title,
-      description: t.modules.membership.description,
-      href: `/${lang}/school/membership`,
-      icon: UserCog,
-    },
-    {
-      title: t.modules.communication.title,
-      description: t.modules.communication.description,
-      href: `/${lang}/school/communication`,
-      icon: Bell,
-    },
-    {
-      title: t.modules.security.title,
-      description: t.modules.security.description,
-      href: `/${lang}/school/security`,
-      icon: Shield,
-    },
-    {
-      title: t.modules.reports.title,
-      description: t.modules.reports.description,
-      href: `/${lang}/school/reports`,
-      icon: FileText,
-    },
-    {
-      title: t.modules.bulk.title,
-      description: t.modules.bulk.description,
-      href: `/${lang}/school/bulk`,
-      icon: Upload,
-    },
+    { key: "membership", Icon: UserCog, href: `/${lang}/school/membership` },
+    { key: "communication", Icon: Bell, href: `/${lang}/school/communication` },
+    { key: "security", Icon: Shield, href: `/${lang}/school/security` },
+    { key: "reports", Icon: FileText, href: `/${lang}/school/reports` },
+    { key: "bulk", Icon: Upload, href: `/${lang}/school/bulk` },
   ]
 
   const services = [
-    { name: t.systemStatus.api, icon: Server },
-    { name: t.systemStatus.database, icon: Database },
-    { name: t.systemStatus.storage, icon: Cloud },
-    { name: t.systemStatus.email, icon: Mail },
-  ]
-
-  // Proportional bar segments for organization composition
-  const orgTotal =
-    totalTeachers +
-    totalStudents +
-    totalDepartments +
-    totalClassrooms +
-    activeUsers
-  const barSegments = [
-    {
-      value: totalTeachers,
-      color: "bg-[#6A9BCC]",
-      dot: "bg-[#6A9BCC]",
-      label: t.stats.teachers,
-    },
-    {
-      value: totalStudents,
-      color: "bg-[#CBCADB]",
-      dot: "bg-[#CBCADB]",
-      label: t.stats.students,
-    },
-    {
-      value: totalDepartments,
-      color: "bg-[#BCD1CA]",
-      dot: "bg-[#BCD1CA]",
-      label: t.stats.departments,
-    },
-    {
-      value: totalClassrooms,
-      color: "bg-amber-500",
-      dot: "bg-amber-500",
-      label: t.stats.classrooms,
-    },
-    {
-      value: activeUsers,
-      color: "bg-rose-400",
-      dot: "bg-rose-400",
-      label: t.stats.verified,
-    },
+    t.systemStatus.api,
+    t.systemStatus.database,
+    t.systemStatus.storage,
+    t.systemStatus.email,
   ]
 
   return (
-    <div className="min-h-full space-y-5">
-      {/* ============================================================== */}
-      {/* SECTION 1 — Stat cards: 4 in a row                             */}
-      {/* ============================================================== */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className={glass}>
-            <CardContent className="p-5">
-              <p className="text-muted-foreground text-xs tracking-wide uppercase rtl:tracking-normal">
-                {stat.label}
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">
+    <>
+      {/* Hero — the /live banner: brand green, ink pinned dark, two pills. */}
+      <section className="mb-8">
+        <div className="relative isolate flex flex-col justify-between gap-8 overflow-hidden rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
+          {/* Derived from `Objects-Puzzle.svg` with its cream fill recoloured
+              to the hero mint `#9FE5B1`, so it sits on the green unboxed. */}
+          <img
+            src="/anthropic/Objects-Puzzle-alpha.svg"
+            alt=""
+            decoding="async"
+            draggable={false}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-12 hidden size-[170px] object-contain md:block lg:size-[190px]"
+          />
+
+          <div className="relative min-w-0">
+            <h1
+              className="max-w-[16ch] text-3xl leading-[1.35] font-light text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]"
+              style={{ fontFamily: '"thmanyah sans", sans-serif' }}
+            >
+              <MarkedHeadline template={t.hero.title} mark={t.hero.titleMark} />
+            </h1>
+
+            <div className="mt-7 flex flex-wrap items-center gap-2">
+              <Link className={pill("default")} href={modules[0].href}>
+                {t.modules.configuration.title}
+              </Link>
+              <Link className={pill("ghost")} href={modules[1].href}>
+                {t.modules.membership.title}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* At a glance — the readiness band's shape, carrying the counts. */}
+      <section className="mb-16">
+        <div className="mb-5">
+          <h2 className={typographyVariants.cardTitle}>{t.glance.title}</h2>
+          <p className={cn(typographyVariants.hint, "mt-1 max-w-[64ch]")}>
+            {t.glance.description}
+          </p>
+        </div>
+
+        <ul className="divide-border grid grid-cols-1 divide-y rounded-xl border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-5">
+          {stats.map((stat) => (
+            <li key={stat.label} className="p-4 text-start">
+              <span className={typographyVariants.hint}>{stat.label}</span>
+              <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
                 {num(stat.value)}
               </p>
-              <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              {stat.sub ? (
+                <p className="text-muted-foreground mt-1 text-xs">{stat.sub}</p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
 
-      {/* ============================================================== */}
-      {/* SECTION 2 — Organization snapshot                              */}
-      {/* ============================================================== */}
-      <div className="grid grid-cols-1 gap-5">
-        {/* --- Organization Snapshot ---------------------------------- */}
-        <Card className={glass}>
-          <CardHeader className="px-6 pt-5 pb-2">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-1">
-                <CardTitle className="text-base">
-                  {t.organization.title}
-                </CardTitle>
-                <p className="text-muted-foreground text-xs">
-                  {fill(t.organization.caption, { total: num(orgTotal) })}
-                </p>
-              </div>
-              {pendingApprovals > 0 && (
-                <Link
-                  href={`/${lang}/school/membership`}
-                  className="group"
-                  aria-label={t.organization.attentionLink}
-                >
-                  <Badge
-                    variant="secondary"
-                    className="gap-1.5 bg-amber-500/10 text-xs text-amber-600 transition-colors group-hover:bg-amber-500/20"
-                  >
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    {fill(
-                      pendingApprovals === 1
-                        ? t.organization.attentionOne
-                        : t.organization.attentionMany,
-                      { count: num(pendingApprovals) }
-                    )}
-                    <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                  </Badge>
-                </Link>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="px-6 pb-5">
-            {/* Row breakdown — label, inline mini bar, count */}
-            <div className="divide-border/40 divide-y">
-              {barSegments.map((seg) => {
-                const pct = orgTotal > 0 ? (seg.value / orgTotal) * 100 : 0
-                return (
-                  <div
-                    key={seg.label}
-                    className="grid grid-cols-[minmax(7rem,10rem)_1fr_3rem] items-center gap-4 py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {seg.label}
-                      </p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {fill(t.organization.barCaption, {
-                          value: num(seg.value),
-                          total: num(orgTotal),
-                          percent: num(pct / 100, {
-                            style: "percent",
-                            maximumFractionDigits: 0,
-                          }),
-                        })}
-                      </p>
-                    </div>
-                    <div className="bg-muted/50 h-1.5 w-full overflow-hidden rounded-full">
-                      <div
-                        className={cn("h-full rounded-full", seg.color)}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-end text-sm font-semibold tabular-nums">
-                      {num(seg.value)}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {pendingApprovals > 0 ? (
+          <Link
+            href={`/${lang}/school/membership`}
+            aria-label={t.organization.attentionLink}
+            className="text-muted-foreground hover:text-foreground group mt-3 inline-flex items-center gap-1.5 text-xs transition-colors"
+          >
+            {fill(
+              pendingApprovals === 1
+                ? t.organization.attentionOne
+                : t.organization.attentionMany,
+              { count: num(pendingApprovals) }
+            )}
+            <ArrowRight
+              className="size-3 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+              aria-hidden="true"
+            />
+          </Link>
+        ) : null}
+      </section>
 
-      {/* ============================================================== */}
-      {/* SECTION 3 — Admin Workflow Guide + System Status, 50/50        */}
-      {/* ============================================================== */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* --- Admin Workflow Guide (module navigation) --------------- */}
-        <Card className={cn(glass, "overflow-hidden")}>
-          <CardHeader className="px-6 pt-5 pb-3">
-            <CardTitle className="text-base">{t.workflow.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-border/50 divide-y">
-              {modules.map((mod) => {
-                const Icon = mod.icon
-                return (
-                  <Link key={mod.href} href={mod.href} className="group block">
-                    <div className="hover:bg-accent/30 flex items-center gap-4 px-6 py-4 transition-colors">
-                      <div
-                        className={cn(
-                          "bg-muted/60 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                        )}
-                      >
-                        <Icon className="text-foreground h-[18px] w-[18px]" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{mod.title}</p>
-                        <p className="text-muted-foreground mt-0.5 line-clamp-1 text-xs leading-relaxed">
-                          {mod.description}
-                        </p>
-                      </div>
-                      <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {/* System status — same band, one state dot per service. */}
+      <section className="mb-16">
+        <h2 className={cn(typographyVariants.cardTitle, "mb-5")}>
+          {t.systemStatus.title}
+        </h2>
 
-        {/* --- System Status ------------------------------------------ */}
-        <Card className={glass}>
-          <CardHeader className="px-6 pt-5 pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {t.systemStatus.title}
-              </CardTitle>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-600">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        <ul className="divide-border grid grid-cols-1 divide-y rounded-xl border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
+          {services.map((name) => (
+            <li key={name} className="p-4 text-start">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--chart-2)]/15 text-[var(--chart-2)]">
+                  <Check
+                    className="size-2.5"
+                    strokeWidth={3}
+                    aria-hidden="true"
+                  />
                 </span>
+                <span className={typographyVariants.hint}>{name}</span>
+              </div>
+              <span className="text-sm font-medium">
                 {t.systemStatus.operational}
               </span>
-            </div>
-          </CardHeader>
-          <CardContent className="px-6 pb-5">
-            <div className="divide-border/50 divide-y">
-              {services.map((service) => {
-                const Icon = service.icon
-                return (
-                  <div
-                    key={service.name}
-                    className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="bg-muted/60 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                      <Icon className="text-foreground h-[18px] w-[18px]" />
-                    </div>
-                    <span className="text-sm font-medium">{service.name}</span>
-                    <CheckCircle2 className="ms-auto h-4 w-4 text-emerald-500" />
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* What you can do here — the role guide's cards, one per module. */}
+      <section className="mb-16">
+        <h2 className={cn(typographyVariants.cardTitle, "mb-5")}>
+          {t.guide.title}
+        </h2>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map(({ key, Icon, href }) => (
+            <Link
+              key={key}
+              href={href}
+              className="hover:border-foreground group rounded-xl border p-5 text-start transition-colors"
+            >
+              <Icon
+                className="text-foreground mb-4 size-6"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              <h3 className="mb-1.5 text-sm font-semibold">
+                {t.modules[key].title}
+              </h3>
+              <p className={typographyVariants.hint}>
+                {t.modules[key].description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </>
+  )
+}
+
+/** The headline with its `{mark}` phrase in bold — as on /live. */
+function MarkedHeadline({
+  template,
+  mark,
+}: {
+  template?: string
+  mark?: string
+}) {
+  if (!template) return null
+  const [before, after] = template.split("{mark}")
+  if (after === undefined || !mark) return <>{template}</>
+  return (
+    <>
+      {before}
+      <strong className="font-bold">{mark}</strong>
+      {after}
+    </>
+  )
+}
+
+/** The /live hero pill: pinned colours, because the ground does not invert. */
+function pill(variant: "default" | "ghost") {
+  return cn(
+    "inline-flex h-10 items-center justify-center gap-2 rounded-full px-5",
+    "text-sm font-medium whitespace-nowrap transition-colors",
+    "outline-none focus-visible:ring-2 focus-visible:ring-[#050505]/40",
+    variant === "default"
+      ? "bg-white text-[#050505] hover:bg-white/90"
+      : "text-[#050505]/75 hover:bg-[#050505]/10 hover:text-[#050505]"
   )
 }
