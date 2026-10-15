@@ -21,7 +21,7 @@ export default function PricingHeader({ dictionary }: PricingHeaderProps) {
       </h1>
       <p className="muted mx-auto max-w-[85%]">
         {dictionary?.marketing?.pricing?.subtitle ||
-          "All components and building blocks are open source — we charge for crafting fully functional masterpieces and ensuring their ongoing reliability."}
+          "Open source at the core — we charge for crafting it and keeping it reliable."}
       </p>
     </div>
   )

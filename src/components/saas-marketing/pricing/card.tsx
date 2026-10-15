@@ -74,8 +74,8 @@ export function PricingCard({
   const includesHeading = getIncludesHeading(offer.id, pricing)
 
   return (
-    <Card className="bg-muted text-card-foreground relative flex h-full w-full flex-col items-start gap-0 overflow-hidden rounded-2xl border-none py-6 text-start shadow-none">
-      <CardHeader className="w-full gap-1 pb-4">
+    <Card className="bg-muted text-card-foreground relative flex h-full w-full flex-col items-start gap-0 overflow-hidden rounded-2xl border-none py-4 text-start shadow-none">
+      <CardHeader className="w-full gap-1 pb-2">
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight whitespace-nowrap">
           <span className="tabular-nums">{priceDisplay}</span>
@@ -85,11 +85,11 @@ export function PricingCard({
         <p className="muted line-clamp-1 text-xs">{note}</p>
       </CardHeader>
 
-      <div className="w-full px-6 py-2">
+      <div className="w-full px-6 py-1">
         <Separator />
       </div>
 
-      <CardContent className="w-full flex-1 pt-4">
+      <CardContent className="w-full flex-1 pt-3">
         <p className="muted mb-2">{includesHeading}</p>
         <ul>
           {offer.benefits.map((feature) => (
@@ -101,7 +101,7 @@ export function PricingCard({
         </ul>
       </CardContent>
 
-      <CardFooter className="mt-auto w-full pt-6">
+      <CardFooter className="mt-auto w-full pt-4">
         <Link
           href={isEnterprise ? contactHref : `/${lang}/onboarding`}
           className={cn(
