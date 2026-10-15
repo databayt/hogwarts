@@ -31,29 +31,37 @@ import {
   type SubmitIntentionInput,
 } from "./validation"
 
+import { countSchoolDays, DEFAULT_WORKING_DAYS } from "./school-days"
+
 export type ActionResponse<T = void> =
   | { success: true; data: T }
   | { success: false; error: string }
 
-/**
- * Calculate number of school days between two dates
- * Excludes weekends (configurable per school later)
- */
-function calculateSchoolDays(dateFrom: Date, dateTo: Date): number {
-  let count = 0
-  const current = new Date(dateFrom)
+/** The school's default working week (termId = null row), or Sun–Thu. */
+async function loadWorkingDays(schoolId: string): Promise<number[]> {
+  // A missing config row or a failed read falls back to Sun–Thu rather
+  // than blocking the parent's submission.
+  const configs = await db.schoolWeekConfig
+    .findMany({
+      where: { schoolId },
+      select: { termId: true, workingDays: true, updatedAt: true },
+    })
+    .catch(() => [])
+  const config =
+    configs.find((c) => c.termId === null) ??
+    configs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0]
+  return config?.workingDays?.length ? config.workingDays : DEFAULT_WORKING_DAYS
+}
 
-  while (current <= dateTo) {
-    const dayOfWeek = current.getDay()
-    // Skip weekends (0 = Sunday, 6 = Saturday)
-    // Note: This could be made configurable per school
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      count++
-    }
-    current.setDate(current.getDate() + 1)
+/** For the submit form, so its preview count matches what is stored. */
+export async function getSchoolWorkingDays(): Promise<number[]> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return DEFAULT_WORKING_DAYS
+    return await loadWorkingDays(schoolId)
+  } catch {
+    return DEFAULT_WORKING_DAYS
   }
-
-  return count
 }
 
 /**
@@ -126,7 +134,11 @@ export async function submitAbsenceIntention(
     }
 
     // Calculate school days
-    const daysCount = calculateSchoolDays(validated.dateFrom, validated.dateTo)
+    const daysCount = countSchoolDays(
+      validated.dateFrom,
+      validated.dateTo,
+      await loadWorkingDays(schoolId)
+    )
 
     // Create the intention
     const intention = await db.absenceIntention.create({

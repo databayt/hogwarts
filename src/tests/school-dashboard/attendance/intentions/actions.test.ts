@@ -18,6 +18,7 @@ vi.mock("@/lib/db", () => ({
     student: {
       findFirst: vi.fn(),
     },
+    schoolWeekConfig: { findMany: vi.fn().mockResolvedValue([]) },
     absenceIntention: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),

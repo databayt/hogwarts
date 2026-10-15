@@ -31,7 +31,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { formatInstant, plural } from "../overview/format"
-import { submitAbsenceIntention } from "./actions"
+import { getSchoolWorkingDays, submitAbsenceIntention } from "./actions"
+import { countSchoolDays, DEFAULT_WORKING_DAYS } from "./school-days"
 import { excuseReasonValues, type ExcuseReasonType } from "./validation"
 
 interface SubmitFormProps {
@@ -121,18 +122,16 @@ export function IntentionSubmitForm({
     }
   }
 
-  // Mirrors the server's count (calculateSchoolDays in ./actions).
-  const daysCount = React.useMemo(() => {
-    if (!dateFrom || !dateTo) return 0
-    let count = 0
-    const current = new Date(dateFrom)
-    while (current <= dateTo) {
-      const day = current.getDay()
-      if (day !== 0 && day !== 6) count++
-      current.setDate(current.getDate() + 1)
-    }
-    return count
-  }, [dateFrom, dateTo])
+  // Same count the server stores — the school's own working week.
+  const [workingDays, setWorkingDays] = React.useState(DEFAULT_WORKING_DAYS)
+  React.useEffect(() => {
+    getSchoolWorkingDays().then(setWorkingDays).catch(() => {})
+  }, [])
+  const daysCount = React.useMemo(
+    () =>
+      dateFrom && dateTo ? countSchoolDays(dateFrom, dateTo, workingDays) : 0,
+    [dateFrom, dateTo, workingDays]
+  )
 
   if (success) {
     return (

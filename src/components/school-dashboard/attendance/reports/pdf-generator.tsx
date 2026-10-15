@@ -5,7 +5,6 @@
 import * as React from "react"
 import {
   Document,
-  Font,
   Page,
   pdf,
   StyleSheet,
@@ -13,8 +12,14 @@ import {
   View,
 } from "@react-pdf/renderer"
 
-// Register fonts (optional - uses default sans-serif)
-// Font.register({ family: 'Rubik', src: '/fonts/Rubik-Regular.ttf' })
+import { ensureFontsRegistered } from "@/components/school-dashboard/exams/templates/fonts"
+
+// Helvetica has no Arabic glyphs — Arabic exports drew empty boxes. Rubik
+// (shared with the exam papers) carries Arabic; rows flip for RTL.
+const rtl = StyleSheet.create({
+  page: { fontFamily: "Rubik", textAlign: "right" },
+  row: { flexDirection: "row-reverse" },
+})
 
 const styles = StyleSheet.create({
   page: {
@@ -227,6 +232,10 @@ function AttendanceReportDocument({
   methodLabels = {},
 }: AttendancePDFProps) {
   const isArabic = locale === "ar"
+  ensureFontsRegistered()
+  type ViewStyle = React.ComponentProps<typeof View>["style"]
+  const row = (base: ViewStyle): ViewStyle =>
+    isArabic ? ([base, rtl.row] as ViewStyle) : base
   const itemsPerPage = 25
   const pages = []
 
@@ -244,7 +253,7 @@ function AttendanceReportDocument({
         <Page
           key={pageIndex}
           size="A4"
-          style={styles.page}
+          style={isArabic ? [styles.page, rtl.page] : styles.page}
           orientation="landscape"
         >
           {/* Header - only on first page */}
@@ -282,7 +291,7 @@ function AttendanceReportDocument({
 
               {/* Stats Summary */}
               {stats && (
-                <View style={styles.statsGrid}>
+                <View style={row(styles.statsGrid)}>
                   <View style={styles.statBox}>
                     <Text style={styles.statLabel}>
                       {isArabic ? "إجمالي السجلات" : "Total Records"}
@@ -322,7 +331,7 @@ function AttendanceReportDocument({
 
           {/* Table */}
           <View style={styles.table}>
-            <View style={styles.tableHeader}>
+            <View style={row(styles.tableHeader)}>
               <Text style={[styles.colDate, styles.headerCell]}>
                 {isArabic ? "التاريخ" : "Date"}
               </Text>
@@ -352,7 +361,7 @@ function AttendanceReportDocument({
             {pageRecords.map((record, index) => (
               <View
                 key={record.id}
-                style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+                style={row(index % 2 === 0 ? styles.tableRow : styles.tableRowAlt)}
               >
                 <Text style={styles.colDate}>
                   {formatDate(record.date, locale)}
@@ -377,7 +386,7 @@ function AttendanceReportDocument({
             ))}
 
             {pageRecords.length === 0 && (
-              <View style={styles.tableRow}>
+              <View style={row(styles.tableRow)}>
                 <Text style={{ textAlign: "center", width: "100%" }}>
                   {isArabic ? "لا توجد سجلات" : "No records found"}
                 </Text>

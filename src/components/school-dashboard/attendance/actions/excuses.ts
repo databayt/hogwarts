@@ -106,7 +106,7 @@ export async function submitExcuse(input: {
 
     // Also allow admins and teachers to submit on behalf
     const isStaff =
-      session.user.role === "ADMIN" || session.user.role === "TEACHER"
+      isStaffRole(session.user.role as UserRole)
 
     if (!isGuardian && !isStaff) {
       return {
@@ -198,11 +198,11 @@ export async function reviewExcuse(input: {
     // Validate input
     const parsed = reviewExcuseSchema.parse(input)
 
-    // Check user role - only teachers and admins can review
-    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+    // Staff roles (developer, admin, teacher, staff) review excuses
+    if (!isStaffRole(session.user.role as UserRole)) {
       return {
         success: false,
-        error: "Only teachers and administrators can review excuses",
+        error: "Only school staff can review excuses",
       }
     }
 
@@ -373,7 +373,7 @@ export async function getExcusesForStudent(studentId: string): Promise<
       (sg) => sg.guardian.userId === session.user.id
     )
     const isStaff =
-      session.user.role === "ADMIN" || session.user.role === "TEACHER"
+      isStaffRole(session.user.role as UserRole)
 
     if (!isGuardian && !isStaff) {
       return {
@@ -468,11 +468,11 @@ export async function getPendingExcuses(input?: {
       return { success: false, error: "Authentication required" }
     }
 
-    // Only teachers and admins can view pending excuses
-    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+    // Staff roles view the excuse queue (teachers scoped to their sections)
+    if (!isStaffRole(session.user.role as UserRole)) {
       return {
         success: false,
-        error: "Only teachers and administrators can review excuses",
+        error: "Only school staff can review excuses",
       }
     }
 
@@ -751,7 +751,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
         (sg) => sg.guardian.userId === session.user.id
       )
       const isStaff =
-        session.user.role === "ADMIN" || session.user.role === "TEACHER"
+        isStaffRole(session.user.role as UserRole)
 
       if (!isGuardian && !isStaff) {
         return { success: false, error: "Not authorized to view this student" }

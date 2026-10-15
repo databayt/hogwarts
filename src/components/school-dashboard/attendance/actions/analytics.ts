@@ -21,6 +21,23 @@ import { getTeacherSectionIds, sectionScopeWhere } from "./helpers"
 /**
  * Get overall attendance statistics
  */
+/**
+ * A teacher's analytics cover their own sections only (a section filter is
+ * intersected with them); other analytics roles see the whole school.
+ */
+async function teacherScope(
+  schoolId: string,
+  role: string | undefined,
+  userId: string | undefined,
+  sectionId?: string | null
+) {
+  const teacherSectionIds =
+    role === "TEACHER" && userId
+      ? await getTeacherSectionIds(schoolId, userId)
+      : null
+  return sectionScopeWhere({ teacherSectionIds, sectionId })
+}
+
 export async function getAttendanceStats(input?: {
   sectionId?: string
   dateFrom?: string
@@ -60,9 +77,17 @@ export async function getAttendanceStats(input?: {
   const role = session?.user?.role as UserRole | undefined
   if (!role || !canViewSchoolAnalytics(role)) return empty
 
-  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...(await teacherScope(
+      schoolId,
+      role,
+      session?.user?.id,
+      input?.sectionId
+    )),
+  }
 
-  if (input?.sectionId) where.sectionId = input.sectionId
   if (input?.studentId) where.studentId = input.studentId
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -167,7 +192,15 @@ export async function getAttendanceTrends(input: {
       },
     }
 
-    if (input.sectionId) where.sectionId = input.sectionId
+    Object.assign(
+      where,
+      await teacherScope(
+        schoolId,
+        session.user.role,
+        session.user.id,
+        input.sectionId
+      )
+    )
 
     const attendance = await db.attendance.findMany({
       where,
@@ -223,6 +256,7 @@ export async function getAttendanceTrends(input: {
 export async function getMethodUsageStats(input?: {
   dateFrom?: string
   dateTo?: string
+  sectionId?: string
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
@@ -237,7 +271,16 @@ export async function getMethodUsageStats(input?: {
     return { success: false, error: "Unauthorized" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...(await teacherScope(
+      schoolId,
+      session.user.role,
+      session.user.id,
+      input?.sectionId
+    )),
+  }
 
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -285,7 +328,15 @@ export async function getDayWisePatterns(input?: {
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
-  if (input?.sectionId) where.sectionId = input.sectionId
+  Object.assign(
+    where,
+    await teacherScope(
+      schoolId,
+      session.user.role,
+      session.user.id,
+      input?.sectionId
+    )
+  )
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
     if (input.dateFrom) where.date.gte = new Date(input.dateFrom)

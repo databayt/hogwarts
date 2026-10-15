@@ -127,7 +127,7 @@ export default function AnalyticsContent({
         getAttendanceStats({ dateFrom, dateTo, sectionId }),
         getAttendanceTrends({ dateFrom, dateTo, sectionId }),
         getDayWisePatterns({ dateFrom, dateTo, sectionId }),
-        getMethodUsageStats({ dateFrom, dateTo }),
+        getMethodUsageStats({ dateFrom, dateTo, sectionId }),
         getSectionComparisonStats({ dateFrom, dateTo }),
         getStudentsAtRisk({ threshold: 80, dateFrom, dateTo }),
       ])
