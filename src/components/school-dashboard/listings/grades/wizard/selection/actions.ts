@@ -31,15 +31,23 @@ export async function getGradeSelection(
         assignmentId: true,
         examId: true,
         subjectId: true,
+        wizardStep: true,
       },
     })
 
     if (!result) return actionError(ACTION_ERRORS.NOT_FOUND)
 
+    // A fresh draft is stored against a placeholder student (the column is
+    // required). Until the selection step is saved — it always sets the
+    // subject — show no student, so nobody grades the placeholder by
+    // clicking Next.
+    const untouchedDraft =
+      result.wizardStep === "selection" && !result.subjectId
+
     return {
       success: true,
       data: {
-        studentId: result.studentId,
+        studentId: untouchedDraft ? "" : result.studentId,
         subjectId: result.subjectId ?? "",
         assignmentId: result.assignmentId ?? undefined,
         examId: result.examId ?? undefined,
@@ -161,11 +169,9 @@ export async function getStudentsForGrade(): Promise<
           middleName: s.middleName,
           lastName: s.lastName,
           number: s.studentId ?? s.grNumber ?? null,
-          // A section name usually already carries its grade ("Grade 11-B").
-          place:
-            section && grade && !section.includes(grade)
-              ? `${grade} · ${section}`
-              : (section ?? grade),
+          // A section name carries its grade ("Grade 7-A"); a student
+          // not yet in a section shows the grade they were placed in.
+          place: section ?? grade,
         }
       }),
     }

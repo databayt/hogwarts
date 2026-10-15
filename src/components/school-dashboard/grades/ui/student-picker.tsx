@@ -86,6 +86,7 @@ export function StudentPicker({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={placeholder}
           className={cn("w-72 justify-between font-normal", className)}
         >
           <span className="truncate">
@@ -99,7 +100,7 @@ export function StudentPicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
-        <Command>
+        <Command label={searchPlaceholder}>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
