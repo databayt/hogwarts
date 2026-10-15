@@ -5,6 +5,8 @@
 import { headers } from "next/headers"
 
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
+import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 import { sendPasswordResetEmail } from "@/components/auth/mail"
 import { generatePasswordResetToken } from "@/components/auth/tokens"
 import type { Locale } from "@/components/internationalization/config"
@@ -47,13 +49,24 @@ export const reset = async (
   // Only send when the account exists — but ALWAYS return the same neutral
   // success message so the response can't be used to enumerate which emails
   // are registered (the previous "Email not found!" leaked exactly that).
-  const existingUser = await getUserByEmail(email)
+  //
+  // Emails are unique per school, not globally — on a school's host the
+  // account is that school's (see new-password, which resolves the same way),
+  // and the link goes back to the same host so it lands in the same school.
+  const subdomain = hdrs.get("x-subdomain")
+  const schoolId = subdomain ? await getSchoolIdFromSubdomain(subdomain) : null
+  const existingUser = await getUserByEmail(email, schoolId)
   if (existingUser) {
+    const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host")
+    const origin = subdomain
+      ? tenantOriginForHost(host, subdomain)
+      : mainOriginForHost(host)
     const passwordResetToken = await generatePasswordResetToken(email)
     await sendPasswordResetEmail(
       passwordResetToken.email,
       passwordResetToken.token,
-      locale
+      locale,
+      origin
     )
   }
 

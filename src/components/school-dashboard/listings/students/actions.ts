@@ -76,6 +76,7 @@
 
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import type { AdmissionChannel } from "@prisma/client"
 import { z } from "zod"
@@ -2257,9 +2258,15 @@ export async function resetStudentPassword(input: {
         current?.username && LOGIN_CODE_RE.test(current.username)
           ? current.username
           : await allocateLoginCode(tx, schoolId)
+      // tokenVersion bump signs the old holder out on web + mobile.
       await tx.user.update({
         where: { id: userId },
-        data: { password: hashed, mustChangePassword: true, username },
+        data: {
+          password: hashed,
+          mustChangePassword: true,
+          username,
+          tokenVersion: { increment: 1 },
+        },
       })
       await clearLoginFailures(schoolId, [
         username,
@@ -2271,20 +2278,24 @@ export async function resetStudentPassword(input: {
 
     // Same auto-delivery as first-time creation — the admin re-shared a new
     // password, so push it through the student's notification channels.
-    try {
-      await deliverStudentCredentials({
-        schoolId,
-        studentUserId: student.userId,
-        username: loginUsername,
-        tempPassword: plain,
-        isFirstTime: false,
-      })
-    } catch (deliveryErr) {
-      console.error(
-        "[resetStudentPassword] credentials delivery failed:",
-        deliveryErr
-      )
-    }
+    // After the response: the dialog shouldn't wait on email/WhatsApp.
+    const studentUserId = student.userId
+    after(async () => {
+      try {
+        await deliverStudentCredentials({
+          schoolId,
+          studentUserId,
+          username: loginUsername,
+          tempPassword: plain,
+          isFirstTime: false,
+        })
+      } catch (deliveryErr) {
+        console.error(
+          "[resetStudentPassword] credentials delivery failed:",
+          deliveryErr
+        )
+      }
+    })
 
     const existingUser = await db.user.findUnique({
       where: { id: student.userId },

@@ -29,8 +29,8 @@ import { ApprovalSection } from "./approval-section"
 import { getMemberColumns, type MemberRow } from "./columns"
 import { GradeAssignDialog } from "./grade-assign-dialog"
 import { InviteDialog } from "./invite-dialog"
-import { ResetPasswordDialog } from "./reset-password-dialog"
 import { fillT, roleLabel } from "./labels"
+import { ResetPasswordDialog } from "./reset-password-dialog"
 import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
 import type { MembershipRequestRow, UnifiedMember } from "./types"
@@ -46,6 +46,8 @@ interface MembershipTableProps {
   t: Record<string, string>
   /** `school.students.credentials` — shared with the credentials dialog. */
   credentialsLabels?: Record<string, string>
+  /** The signed-in admin — their own row has no "Reset password". */
+  currentUserId?: string
 }
 
 export function MembershipTable({
@@ -57,6 +59,7 @@ export function MembershipTable({
   lang,
   t,
   credentialsLabels,
+  currentUserId,
 }: MembershipTableProps) {
   const BATCH_SIZE = 20
   const router = useRouter()
@@ -164,6 +167,7 @@ export function MembershipTable({
         onActivate: handleActivate,
         onRemove: handleRemove,
         onResetPassword: handleResetPassword,
+        currentUserId,
         canManage,
         nameContact,
         t,
@@ -178,6 +182,7 @@ export function MembershipTable({
       handleActivate,
       handleRemove,
       handleResetPassword,
+      currentUserId,
       canManage,
       nameContact,
       t,

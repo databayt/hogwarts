@@ -246,9 +246,12 @@ export const sendTwoFactorTokenEmail = async (
 export const sendPasswordResetEmail = async (
   email: string,
   token: string,
-  locale = "en"
+  locale = "en",
+  /** Origin the request came from (the school's own host). Falls back to
+   *  NEXT_PUBLIC_APP_URL, which can point at a retired root. */
+  origin?: string
 ): Promise<boolean> => {
-  const resetLink = `${domain}/${locale}/new-password?token=${token}`
+  const resetLink = `${origin ?? domain}/${locale}/new-password?token=${token}`
   const t = getStrings(locale)
 
   if (isDev) console.log("Password reset link:", resetLink)

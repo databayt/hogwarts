@@ -64,6 +64,8 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 export const RATE_LIMITS = {
   // Authentication endpoints - strict limits
   AUTH: { windowMs: 60 * 1000, maxRequests: 5 }, // 5 requests per minute
+  // Admin password resets — each one sends an email + WhatsApp message.
+  AUTH_ADMIN_RESET: { windowMs: 10 * 60 * 1000, maxRequests: 30 }, // 30 per 10 minutes
 
   // Onboarding actions - moderate limits
   ONBOARDING: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 requests per minute

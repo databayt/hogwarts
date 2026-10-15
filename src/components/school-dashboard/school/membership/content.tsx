@@ -83,6 +83,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         lang={lang}
         t={t}
         credentialsLabels={credentialsLabels}
+        currentUserId={session?.user?.id}
       />
     </div>
   )

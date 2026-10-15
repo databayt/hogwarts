@@ -565,6 +565,12 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
             token.role = (user as any).role
             authLogger.debug("JWT: Role set in token", { role: token.role })
           }
+          // Session revocation: a password reset bumps User.tokenVersion;
+          // MustChangePasswordGate signs out a session minted under an older
+          // one. Never refreshed afterwards — that would undo the revocation.
+          if ("tokenVersion" in user) {
+            token.tv = (user as any).tokenVersion ?? 0
+          }
           if ("schoolId" in user) {
             token.schoolId = (user as any).schoolId
             authLogger.debug("JWT: SchoolId set in token", {
@@ -708,6 +714,9 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           }
           if (token.schoolId) {
             ;(session.user as any).schoolId = token.schoolId
+          }
+          if (typeof token.tv === "number") {
+            ;(session.user as any).tv = token.tv
           }
 
           // Sync lightweight role cookie for Edge middleware (proxy.ts)

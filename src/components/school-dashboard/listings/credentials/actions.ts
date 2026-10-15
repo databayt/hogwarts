@@ -360,9 +360,15 @@ async function handleMember(
       user?.username && LOGIN_CODE_RE.test(user.username)
         ? user.username
         : await allocateLoginCode(tx, schoolId)
+    // tokenVersion bump signs the old holder out on web + mobile.
     await tx.user.update({
       where: { id: userId },
-      data: { password: hashed, mustChangePassword: true, username },
+      data: {
+        password: hashed,
+        mustChangePassword: true,
+        username,
+        tokenVersion: { increment: 1 },
+      },
     })
     return username
   })

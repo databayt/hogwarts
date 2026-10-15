@@ -32,6 +32,8 @@ interface ColumnOptions {
   onActivate?: (member: MemberRow) => void
   onRemove?: (member: MemberRow) => void
   onResetPassword?: (member: MemberRow) => void
+  /** Own row: admins change their own password in Settings, not here. */
+  currentUserId?: string
   canManage?: boolean
   /** What shows under the name: the phone (default) or the email. */
   nameContact?: NameContact
@@ -267,11 +269,13 @@ export const getMemberColumns = (
               label={t.viewProfile}
               href={`/${options.lang || "en"}/profile/${member.id}`}
             />
-            <ActionMenuItem
-              icon={KeyRound}
-              label={t.resetPassword}
-              onClick={() => options.onResetPassword?.(member)}
-            />
+            {member.id !== options.currentUserId && (
+              <ActionMenuItem
+                icon={KeyRound}
+                label={t.resetPassword}
+                onClick={() => options.onResetPassword?.(member)}
+              />
+            )}
             <DropdownMenuSeparator />
             <ActionMenuItem
               label={t.changeRole}

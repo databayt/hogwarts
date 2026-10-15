@@ -7,7 +7,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { clearLoginFailures } from "@/lib/audit-log"
+import { clearLoginFailures, logAudit } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
@@ -21,6 +21,7 @@ import {
 } from "@/lib/invitation-utils"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { displayName } from "@/lib/name-utils"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { refreshPage } from "@/lib/refresh-page"
 import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
 import type { ProvisionStudentResult } from "@/lib/student-provisioning"
@@ -1329,8 +1330,17 @@ export async function resetMemberPassword(
 
     // Admins reset their own password through the normal settings/forgot flow.
     if (parsed.userId === authContext.userId) {
-      return actionError(ACTION_ERRORS.UNKNOWN)
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    // Every reset fires an email + WhatsApp send — cap a runaway admin (or a
+    // stolen admin session) before it floods members or burns the WA number.
+    const rl = await checkUserRateLimit(
+      authContext.userId,
+      RATE_LIMITS.AUTH_ADMIN_RESET,
+      "member-pwreset"
+    )
+    if (!rl.allowed) return actionError(ACTION_ERRORS.RATE_LIMITED)
 
     const targetUser = await db.user.findFirst({
       where: { id: parsed.userId, schoolId },
@@ -1342,6 +1352,8 @@ export async function resetMemberPassword(
 
     // A reset moves an older handle onto the school's 6-digit login code and
     // lifts any lockout — this is the recovery path when someone is stuck.
+    // Bumping tokenVersion signs the member out everywhere (web + mobile), so
+    // whoever held the old password loses the session too.
     const username = await db.$transaction(async (tx) => {
       const username =
         targetUser.username && LOGIN_CODE_RE.test(targetUser.username)
@@ -1349,7 +1361,12 @@ export async function resetMemberPassword(
           : await allocateLoginCode(tx, schoolId)
       await tx.user.update({
         where: { id: targetUser.id },
-        data: { password: hashed, mustChangePassword: true, username },
+        data: {
+          password: hashed,
+          mustChangePassword: true,
+          username,
+          tokenVersion: { increment: 1 },
+        },
       })
       return username
     })
@@ -1359,24 +1376,33 @@ export async function resetMemberPassword(
       targetUser.email,
     ])
 
-    // Push the new credentials to the member (in-app + email + WhatsApp).
-    // Non-fatal — the plaintext is still returned for manual sharing.
-    try {
-      await deliverCredentials({
+    // Delivery (in-app + email + WhatsApp) and the audit row run after the
+    // response — the dialog shows the PIN at once instead of waiting on
+    // Resend and the WhatsApp gateway. Non-fatal either way.
+    const actorId = authContext.userId
+    after(async () => {
+      try {
+        await deliverCredentials({
+          schoolId,
+          userId: targetUser.id,
+          username,
+          tempPassword: plain,
+          isFirstTime: false,
+        })
+      } catch (deliveryErr) {
+        console.error(
+          "[resetMemberPassword] credentials delivery failed:",
+          deliveryErr
+        )
+      }
+      await logAudit({
+        userId: actorId,
         schoolId,
-        userId: targetUser.id,
-        username,
-        tempPassword: plain,
-        isFirstTime: false,
+        action: "member.password_reset",
+        entityType: "User",
+        entityId: targetUser.id,
       })
-    } catch (deliveryErr) {
-      console.error(
-        "[resetMemberPassword] credentials delivery failed:",
-        deliveryErr
-      )
-    }
-
-    refreshPage("/school/membership")
+    })
     return {
       success: true,
       data: {

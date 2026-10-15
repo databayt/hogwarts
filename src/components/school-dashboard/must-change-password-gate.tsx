@@ -9,10 +9,11 @@ import {
   ForceChangePasswordModal,
   type FirstLoginLabels,
 } from "./force-change-password-modal"
+import { SessionRevoked } from "./session-revoked"
 
 /**
  * Renders the forced password-change modal when an admin reset left the user
- * with `mustChangePassword`.
+ * with `mustChangePassword`, and signs out a session the reset revoked.
  *
  * Its own async component so the dashboard layouts can put it behind
  * `<Suspense fallback={null}>`: the lookup used to be awaited before the
@@ -24,15 +25,23 @@ import {
 export async function MustChangePasswordGate({
   userId,
   lang,
+  sessionTv,
 }: {
   userId: string
   lang: string
+  /** `session.user.tv` — absent on sessions minted before revocation shipped. */
+  sessionTv?: number
 }) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { mustChangePassword: true },
+    select: { mustChangePassword: true, tokenVersion: true },
   })
-  if (!user?.mustChangePassword) return null
+  if (!user) return null
+  // A reset since this session signed in revokes it (same read, no extra query).
+  if (typeof sessionTv === "number" && sessionTv !== user.tokenVersion) {
+    return <SessionRevoked lang={lang} />
+  }
+  if (!user.mustChangePassword) return null
   // Only the rare first-login render pays for the dictionary.
   const dictionary = await getDictionary(lang as Locale)
   const labels = (dictionary.auth as { firstLogin?: FirstLoginLabels })

@@ -16,6 +16,8 @@ declare module "next-auth" {
       schoolId?: string
       isTwoFactorEnabled: boolean
       isOAuth: boolean
+      /** User.tokenVersion at sign-in — compared to revoke stale sessions. */
+      tv?: number
     } & DefaultSession["user"]
   }
 }

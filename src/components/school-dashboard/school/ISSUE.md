@@ -27,6 +27,14 @@ Status legend: [x] done, [~] in progress, [ ] todo
       action menu gains "Reset password", opening `reset-password-dialog.tsx`:
       confirm → `resetMemberPassword` → the 6-digit username + temp password shown
       once with a copy button (delivery in-app/email/WhatsApp still runs).
+- [x] **Password resets production-ready (2026-10-15)** — every reset path
+      (membership, credentials dialog, student reset, forgot-password) bumps
+      `User.tokenVersion`; web JWTs carry it as `tv` and `MustChangePasswordGate`
+      signs out a stale session on its existing user read (mobile already checked
+      `tv`). Membership reset: own row hidden, 30/10 min per-admin rate limit,
+      `member.password_reset` audit row, delivery in `after()`, no table refresh.
+      Forgot-password resolves the account by the school host (emails are unique
+      per school only) and links back to that host instead of NEXT_PUBLIC_APP_URL.
 - [x] **Bulk import returns a credentials sheet (2026-06-15)** — `bulk` CSV
       import now mints crypto-random, unguessable temp passwords (was guessable
       `student<id>`/`teacher<id>` and a shared static `parent123`) and login-valid
