@@ -1,1 +1,259 @@
-{}
+{
+  "meta": {
+    "students": "الحضور · الطلاب المتابَعون",
+    "interventions": "الحضور · التدخلات",
+    "tiers": "الحضور · مستويات الدعم",
+    "ai": "الحضور · التنبؤات",
+    "letters": "الحضور · الخطابات",
+    "rewards": "الحضور · المكافآت"
+  },
+  "bands": {
+    "all": "كل المتابَعين",
+    "critical": "حرج",
+    "high": "مرتفع",
+    "moderate": "متوسط",
+    "ok": "منتظم"
+  },
+  "tiers": {
+    "TIER_1": "المستوى 1",
+    "TIER_2": "المستوى 2",
+    "TIER_3": "المستوى 3"
+  },
+  "tierNames": {
+    "TIER_1": "متابعة",
+    "TIER_2": "دعم موجَّه",
+    "TIER_3": "دعم مكثَّف"
+  },
+  "tierHints": {
+    "TIER_1": "يحضر بين 90 و95% من الأيام. وقاية وتشجيع.",
+    "TIER_2": "يغيب بين 10 و20% من الأيام. دعم مبكر وموجَّه.",
+    "TIER_3": "يغيب أكثر من 20% من الأيام. دعم مكثَّف وعاجل."
+  },
+  "list": {
+    "title": "الطلاب المتابَعون",
+    "search": "ابحث بالاسم أو الشعبة",
+    "allSections": "كل الشعب",
+    "absences": {
+      "zero": "لا غياب",
+      "one": "غياب يوم واحد",
+      "two": "غياب يومين",
+      "few": "غياب {n} أيام",
+      "many": "غياب {n} يومًا",
+      "other": "غياب {n} يوم"
+    },
+    "streak": {
+      "one": "يوم متتالٍ",
+      "two": "يومان متتاليان",
+      "few": "{n} أيام متتالية",
+      "many": "{n} يومًا متتاليًا",
+      "other": "{n} يوم متتالٍ"
+    },
+    "activeIntervention": "تدخل مفتوح",
+    "empty": "لا يوجد طلاب هنا",
+    "emptyHint": "كل طلاب هذه الفئة يحضرون 95% من الأيام الدراسية على الأقل.",
+    "noMatch": "لا يوجد طلاب يطابقون البحث.",
+    "footnote": "بناءً على آخر {days} يومًا. التأخر يُحسب حضورًا. لا يُصنَّف الطالب الذي سُجِّل له أقل من {min} أيام.",
+    "insufficient": {
+      "zero": "",
+      "one": "طالب واحد سجله قصير لا يكفي للحكم.",
+      "two": "طالبان سجلهما قصير لا يكفي للحكم.",
+      "few": "{n} طلاب سجلهم قصير لا يكفي للحكم.",
+      "many": "{n} طالبًا سجلهم قصير لا يكفي للحكم.",
+      "other": "{n} طالب سجلهم قصير لا يكفي للحكم."
+    },
+    "actions": "إجراءات",
+    "openProfile": "فتح الملف",
+    "openInterventions": "عرض التدخلات",
+    "createIntervention": "تدخل جديد",
+    "generateLetter": "إنشاء خطاب",
+    "trend": {
+      "improving": "يتحسن",
+      "stable": "ثابت",
+      "declining": "يتراجع"
+    }
+  },
+  "create": {
+    "title": "تدخل جديد",
+    "for": "للطالب {name}",
+    "type": "النوع",
+    "name": "العنوان",
+    "date": "التاريخ",
+    "note": "ملاحظة",
+    "notePlaceholder": "ما الذي يجب فعله ولماذا",
+    "cancel": "إلغاء",
+    "submit": "إنشاء",
+    "creating": "جارٍ الإنشاء…",
+    "done": "تم إنشاء التدخل",
+    "failed": "تعذّر إنشاء التدخل. حاول مرة أخرى."
+  },
+  "interventions": {
+    "active": "نشطة",
+    "completed": "مكتملة",
+    "successRate": "نسبة النجاح",
+    "avgDays": "متوسط أيام الإكمال",
+    "daysValue": "{n} يوم",
+    "filters": {
+      "all": "الكل",
+      "active": "نشطة",
+      "completed": "مكتملة",
+      "closed": "ملغاة أو مصعَّدة"
+    },
+    "search": "ابحث عن طالب أو عنوان",
+    "columns": {
+      "student": "الطالب",
+      "type": "النوع",
+      "status": "الحالة",
+      "risk": "مستوى الخطر",
+      "date": "التاريخ",
+      "assignee": "المسؤول"
+    },
+    "unassigned": "غير مُسنَد",
+    "empty": "لا توجد تدخلات بعد",
+    "emptyHint": "أنشئ تدخلًا من قائمة الطلاب المتابَعين.",
+    "noMatch": "لا توجد تدخلات مطابقة.",
+    "forStudent": "تدخلات طالب واحد",
+    "showAll": "عرض الكل",
+    "total": {
+      "zero": "لا توجد تدخلات",
+      "one": "تدخل واحد",
+      "two": "تدخلان",
+      "few": "{n} تدخلات",
+      "many": "{n} تدخلًا",
+      "other": "{n} تدخل"
+    }
+  },
+  "tiersPage": {
+    "pending": "قيد الانتظار",
+    "completedThisMonth": "أُنجز هذا الشهر",
+    "escalations": "مصعَّدة",
+    "overdue": "متأخرة",
+    "empty": "لا يوجد طلاب في هذا المستوى",
+    "pickAction": "ابدأ تدخلًا",
+    "days": "غاب {absent} من {total} يومًا",
+    "active": "تدخل مفتوح",
+    "showMore": "عرض المزيد",
+    "actions": {
+      "WELCOME_MESSAGE": "رسالة ترحيب",
+      "POSITIVE_RECOGNITION": "تقدير إيجابي",
+      "ATTENDANCE_INCENTIVE": "حافز حضور",
+      "CLASS_COMPETITION": "مسابقة بين الشعب",
+      "PERFECT_ATTENDANCE_CERTIFICATE": "شهادة حضور مثالي",
+      "PARENT_PHONE_CALL": "الاتصال بولي الأمر",
+      "PARENT_EMAIL": "مراسلة ولي الأمر",
+      "COUNSELOR_CHECK_IN": "متابعة المرشد",
+      "ACADEMIC_SUPPORT_REFERRAL": "دعم أكاديمي",
+      "ATTENDANCE_LETTER_1": "خطاب الحضور 1",
+      "MENTOR_ASSIGNMENT": "تعيين مرشد",
+      "PARENT_CONFERENCE_REQUEST": "اجتماع مع ولي الأمر",
+      "HOME_VISIT_SCHEDULED": "زيارة منزلية",
+      "SOCIAL_WORKER_REFERRAL": "إحالة للأخصائي الاجتماعي",
+      "ATTENDANCE_CONTRACT": "عقد حضور",
+      "ATTENDANCE_LETTER_2": "خطاب الحضور 2",
+      "ATTENDANCE_LETTER_3": "خطاب الحضور 3",
+      "TRUANCY_REFERRAL": "إحالة تغيّب",
+      "ADMINISTRATOR_MEETING": "اجتماع مع الإدارة",
+      "COMMUNITY_RESOURCE_CONNECTION": "موارد مجتمعية",
+      "LEGAL_NOTICE": "إشعار رسمي"
+    }
+  },
+  "letters": {
+    "types": {
+      "ATTENDANCE_NOTICE_1": "الإشعار الأول",
+      "ATTENDANCE_NOTICE_2": "الإشعار الثاني",
+      "ATTENDANCE_NOTICE_3": "الإشعار الأخير",
+      "TRUANCY_WARNING": "إنذار تغيّب",
+      "ATTENDANCE_CONTRACT": "عقد حضور",
+      "ATTENDANCE_IMPROVEMENT": "تقدير التحسن",
+      "PERFECT_ATTENDANCE": "حضور مثالي"
+    },
+    "groups": {
+      "warning": "إنذارات",
+      "positive": "تقدير"
+    },
+    "for": {
+      "high": "للطلاب الذين يغيبون بين 10 و20% من الأيام الدراسية.",
+      "critical": "للطلاب الذين يغيبون أكثر من 20% من الأيام الدراسية.",
+      "improving": "للطلاب المتابَعين الذين يتحسن حضورهم.",
+      "perfect": "للطلاب الذين لم يغيبوا أي يوم."
+    },
+    "delivery": "طريقة الإرسال",
+    "methods": {
+      "EMAIL": "البريد",
+      "PRINT": "طباعة",
+      "PORTAL": "البوابة"
+    },
+    "selectAll": "تحديد الكل",
+    "selected": {
+      "zero": "لم يُحدَّد أحد",
+      "one": "طالب واحد محدد",
+      "two": "طالبان محددان",
+      "few": "{n} طلاب محددون",
+      "many": "{n} طالبًا محددًا",
+      "other": "{n} طالب محدد"
+    },
+    "generate": "إنشاء {n}",
+    "generating": "جارٍ الإنشاء…",
+    "preview": "معاينة",
+    "previewTitle": "معاينة الخطاب",
+    "close": "إغلاق",
+    "noEmail": "لا بريد لولي الأمر",
+    "missed": "غاب {absent} من {total} يومًا",
+    "empty": "لا يحتاج أي طالب هذا الخطاب",
+    "emptyHint": "إما أن كل المستحقين استلموه، أو لا أحد يبلغ الحد.",
+    "done": {
+      "zero": "لم يُنشأ أي خطاب",
+      "one": "أُنشئ خطاب واحد",
+      "two": "أُنشئ خطابان",
+      "few": "أُنشئت {n} خطابات",
+      "many": "أُنشئ {n} خطابًا",
+      "other": "أُنشئ {n} خطاب"
+    },
+    "someFailed": "تعذّر {n}",
+    "showMore": "عرض المزيد"
+  },
+  "ai": {
+    "summary": "الطلاب المرصودون",
+    "avgScore": "متوسط درجة الخطر",
+    "levels": {
+      "LOW": "منخفض",
+      "MODERATE": "متوسط",
+      "HIGH": "مرتفع",
+      "CRITICAL": "حرج"
+    }
+  },
+  "rewards": {
+    "points": {
+      "zero": "0 نقطة",
+      "one": "نقطة واحدة",
+      "two": "نقطتان",
+      "few": "{n} نقاط",
+      "many": "{n} نقطة",
+      "other": "{n} نقطة"
+    },
+    "streak": {
+      "zero": "لا سلسلة بعد",
+      "one": "يوم متتالٍ",
+      "two": "يومان متتاليان",
+      "few": "{n} أيام متتالية",
+      "many": "{n} يومًا متتاليًا",
+      "other": "{n} يوم متتالٍ"
+    },
+    "create": {
+      "open": "مسابقة جديدة",
+      "title": "مسابقة جديدة",
+      "description": "تتنافس الشعب على نسبة الحضور بين تاريخين.",
+      "name": "الاسم",
+      "namePlaceholder": "مثال: كأس حضور أكتوبر",
+      "start": "تبدأ",
+      "end": "تنتهي",
+      "reward": "الجائزة (اختياري)",
+      "sections": "الشعب",
+      "sectionsHint": "اختر شعبتين على الأقل.",
+      "cancel": "إلغاء",
+      "submit": "إنشاء",
+      "creating": "جارٍ الإنشاء…",
+      "failed": "تعذّر إنشاء المسابقة. تحقق من التاريخين واختر شعبتين على الأقل."
+    },
+    "badgePoints": "+{n} نقطة"
+  }
+}

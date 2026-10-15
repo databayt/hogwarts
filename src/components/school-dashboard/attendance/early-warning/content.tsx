@@ -2,546 +2,371 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
-import { format } from "date-fns"
+
+/**
+ * Students at risk — the one ranked list. Counts on the Segmented and the
+ * rows come from the same `getRiskList` pass (see ./risk.ts for thresholds),
+ * 25 per page. Row → student profile; "…" → interventions / letter.
+ */
+import { useCallback, useEffect, useState, useTransition } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
-  AlertTriangle,
-  CheckCircle,
+  ChevronLeft,
   ChevronRight,
-  CircleAlert,
-  Loader2,
-  Minus,
+  MoreHorizontal,
+  Search,
   TrendingDown,
   TrendingUp,
-  Users,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { formatCount } from "@/components/school-dashboard/school/configuration/ui/format"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
+
+import { CreateInterventionDialog } from "../interventions/create-dialog"
+import { AttendanceSectionNav } from "../ui/section-nav"
+import { getRiskList, type RiskListResult, type RiskListRow } from "./actions"
 import {
-  getSectionsForSelection,
-  getStudentsByRiskLevel,
-  type AttendanceRiskLevel,
-} from "@/components/school-dashboard/attendance/actions"
+  BAND_TONE,
+  formatRate,
+  MIN_RECORDED_DAYS,
+  RISK_WINDOW_DAYS,
+  type AtRiskBand,
+} from "./risk"
+import { pick, pl, useRiskDict, type RiskDict } from "./use-risk-dict"
 
-import { phone } from "../shared/phone"
+type Filter = AtRiskBand | "all"
 
-// Risk level color configuration. The i18n text (label/description/threshold)
-// is merged in from the dictionary inside the component (see RISK_LEVELS there);
-// the Arabic values below act as fallbacks when a key is missing.
-const RISK_COLORS = {
-  SATISFACTORY: {
-    label: "مرضي",
-    color: "bg-green-500",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
-    textColor: "text-green-700",
-    threshold: "≥95%",
-    description: "حضور على المسار الصحيح",
-  },
-  AT_RISK: {
-    label: "معرض للخطر",
-    color: "bg-yellow-500",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
-    textColor: "text-yellow-700",
-    threshold: "90-94.9%",
-    description: "يحتاج تدخل مبكر",
-  },
-  MODERATELY_CHRONIC: {
-    label: "غياب متوسط مزمن",
-    color: "bg-orange-500",
-    bgColor: "bg-orange-50",
-    borderColor: "border-orange-200",
-    textColor: "text-orange-700",
-    threshold: "80-89.9%",
-    description: "يتطلب اهتمام فوري",
-  },
-  SEVERELY_CHRONIC: {
-    label: "غياب شديد مزمن",
-    color: "bg-red-500",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200",
-    textColor: "text-red-700",
-    threshold: "<80%",
-    description: "يتطلب تدخل عاجل",
-  },
-} as const
+export function EarlyWarningContent({ locale = "ar" }: { locale?: string }) {
+  const lang = locale
+  const router = useRouter()
+  const { t, table } = useRiskDict()
+  const tl: NonNullable<RiskDict["list"]> = t.list ?? {}
+  const tb = t.bands
 
-interface StudentRisk {
-  studentId: string
-  studentName: string
-  sectionId: string | null
-  sectionName: string | null
-  totalDays: number
-  presentDays: number
-  absentDays: number
-  lateDays: number
-  excusedDays: number
-  attendanceRate: number
-  riskLevel: AttendanceRiskLevel
-  trend: "improving" | "stable" | "declining"
-  consecutiveAbsences: number
-  lastAttendance: string | null
-}
-
-interface Summary {
-  satisfactory: number
-  atRisk: number
-  moderatelyChronic: number
-  severelyChronic: number
-  total: number
-}
-
-interface EarlyWarningContentProps {
-  locale?: string
-}
-
-export function EarlyWarningContent({
-  locale = "en",
-}: EarlyWarningContentProps) {
-  const [students, setStudents] = useState<StudentRisk[]>([])
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<
-    AttendanceRiskLevel | "all"
-  >("all")
-  const [selectedSectionId, setSelectedSectionId] = useState<string>("all")
-  const [sections, setSections] = useState<
-    Array<{
-      id: string
-      name: string
-      gradeName: string
-      gradeId: string
-      teacher: string | null
-      studentCount: number
-    }>
-  >([])
+  const [band, setBand] = useState<Filter>("all")
+  const [search, setSearch] = useState("")
+  const [query, setQuery] = useState("")
+  const [page, setPage] = useState(1)
+  const [data, setData] = useState<RiskListResult | null>(null)
+  const [loading, setLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
+  const [creating, setCreating] = useState<RiskListRow | null>(null)
 
-  const isArabic = locale === "ar"
-
-  const { dictionary } = useDictionary()
-  const dictRiskLevels = (
-    dictionary as unknown as {
-      attendance?: {
-        earlyWarning?: {
-          riskLevels?: Record<
-            string,
-            { label?: string; description?: string; threshold?: string }
-          >
-        }
-      }
-    }
-  )?.attendance?.earlyWarning?.riskLevels
-
-  // Merge localized text over the color-only constants so labels/descriptions
-  // follow the active locale instead of being hardcoded Arabic.
-  const RISK_LEVELS = {
-    SATISFACTORY: {
-      ...RISK_COLORS.SATISFACTORY,
-      ...dictRiskLevels?.satisfactory,
-    },
-    AT_RISK: { ...RISK_COLORS.AT_RISK, ...dictRiskLevels?.atRisk },
-    MODERATELY_CHRONIC: {
-      ...RISK_COLORS.MODERATELY_CHRONIC,
-      ...dictRiskLevels?.moderatelyChronic,
-    },
-    SEVERELY_CHRONIC: {
-      ...RISK_COLORS.SEVERELY_CHRONIC,
-      ...dictRiskLevels?.severelyChronic,
-    },
-  }
-
-  // Fetch sections for the filter
+  // Debounce typing into the query that hits the server
   useEffect(() => {
-    getSectionsForSelection().then((sectionsResult) => {
-      if (sectionsResult.success && sectionsResult.data) {
-        setSections(sectionsResult.data.sections)
-      }
+    const id = setTimeout(() => {
+      setQuery(search)
+      setPage(1)
+    }, 250)
+    return () => clearTimeout(id)
+  }, [search])
+
+  const load = useCallback(() => {
+    startTransition(async () => {
+      const res = await getRiskList({ band, search: query, page })
+      if (res.success) setData(res.data)
+      setLoading(false)
     })
-  }, [])
+  }, [band, query, page])
 
-  // Fetch students by risk level
   useEffect(() => {
-    const fetchStudents = async () => {
-      setIsLoading(true)
-      const result = await getStudentsByRiskLevel({
-        sectionId: selectedSectionId !== "all" ? selectedSectionId : undefined,
-        riskLevel: selectedRiskLevel !== "all" ? selectedRiskLevel : undefined,
-      })
-      if (result.success && result.data) {
-        setStudents(result.data.students)
-        setSummary(result.data.summary)
-      }
-      setIsLoading(false)
-    }
-    fetchStudents()
-  }, [selectedSectionId, selectedRiskLevel])
+    load()
+  }, [load])
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case "improving":
-        return <TrendingUp className="h-4 w-4 text-green-500" />
-      case "declining":
-        return <TrendingDown className="h-4 w-4 text-red-500" />
-      default:
-        return <Minus className="h-4 w-4 text-gray-400" />
-    }
-  }
+  const counts = data?.counts
+  const options = (["all", "critical", "high", "moderate"] as Filter[]).map(
+    (v) => ({
+      value: v,
+      label: (
+        <span className="flex items-center gap-1.5">
+          {v !== "all" ? (
+            <span
+              className={cn("size-1.5 rounded-full", BAND_TONE[v].dot)}
+              aria-hidden
+            />
+          ) : null}
+          {pick(tb, v) ?? v}
+          {counts ? (
+            <span className="text-muted-foreground tabular-nums">
+              {formatCount(counts[v], lang)}
+            </span>
+          ) : null}
+        </span>
+      ),
+    })
+  )
 
-  const getRiskBadge = (riskLevel: AttendanceRiskLevel) => {
-    const config = RISK_LEVELS[riskLevel]
-    return (
-      <Badge
-        className={cn(
-          config.bgColor,
-          config.textColor,
-          config.borderColor,
-          "border"
-        )}
-      >
-        {config.label}
-      </Badge>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
-        </div>
-        <Skeleton className="h-96 w-full" />
-      </div>
-    )
-  }
+  const base = `/${lang}/attendance`
 
   return (
-    <div className="space-y-6" dir={isArabic ? "rtl" : "ltr"}>
-      {/* Summary Cards */}
-      <div
-        className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4", phone.panel)}
-      >
-        <Card
-          className={cn(
-            RISK_LEVELS.SATISFACTORY.borderColor,
-            "border-2",
-            phone.cell
-          )}
-        >
-          <CardHeader className={cn("pb-2", phone.cellHead)}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium",
-                phone.cellLabel
-              )}
-            >
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              {isArabic ? "مرضي" : "Satisfactory"}
-            </CardTitle>
-            <CardDescription>
-              {RISK_LEVELS.SATISFACTORY.threshold}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <h2 className={cn("text-green-700", phone.cellValue)}>
-              {summary?.satisfactory || 0}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
-              {RISK_LEVELS.SATISFACTORY.description}
-            </p>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      <AttendanceSectionNav group="risk" />
 
-        <Card
-          className={cn(
-            RISK_LEVELS.AT_RISK.borderColor,
-            "border-2",
-            phone.cell
-          )}
-        >
-          <CardHeader className={cn("pb-2", phone.cellHead)}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium",
-                phone.cellLabel
-              )}
-            >
-              <CircleAlert className="h-4 w-4 text-yellow-500" />
-              {isArabic ? "معرض للخطر" : "At Risk"}
-            </CardTitle>
-            <CardDescription>{RISK_LEVELS.AT_RISK.threshold}</CardDescription>
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <h2 className={cn("text-yellow-700", phone.cellValue)}>
-              {summary?.atRisk || 0}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
-              {RISK_LEVELS.AT_RISK.description}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            RISK_LEVELS.MODERATELY_CHRONIC.borderColor,
-            "border-2",
-            phone.cell
-          )}
-        >
-          <CardHeader className={cn("pb-2", phone.cellHead)}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium",
-                phone.cellLabel
-              )}
-            >
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-              {isArabic ? "غياب متوسط" : "Moderately Chronic"}
-            </CardTitle>
-            <CardDescription>
-              {RISK_LEVELS.MODERATELY_CHRONIC.threshold}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <h2 className={cn("text-orange-700", phone.cellValue)}>
-              {summary?.moderatelyChronic || 0}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
-              {RISK_LEVELS.MODERATELY_CHRONIC.description}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            RISK_LEVELS.SEVERELY_CHRONIC.borderColor,
-            "border-2",
-            phone.cell
-          )}
-        >
-          <CardHeader className={cn("pb-2", phone.cellHead)}>
-            <CardTitle
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium",
-                phone.cellLabel
-              )}
-            >
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              {isArabic ? "غياب شديد" : "Severely Chronic"}
-            </CardTitle>
-            <CardDescription>
-              {RISK_LEVELS.SEVERELY_CHRONIC.threshold}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <h2 className={cn("text-red-700", phone.cellValue)}>
-              {summary?.severelyChronic || 0}
-            </h2>
-            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
-              {RISK_LEVELS.SEVERELY_CHRONIC.description}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Segmented
+          value={band}
+          onValueChange={(v) => {
+            setBand(v)
+            setPage(1)
+          }}
+          options={options}
+          aria-label={tl.title}
+          className="overflow-x-auto"
+        />
+        <div className="relative sm:w-72">
+          <Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={tl.search}
+            className="rounded-full ps-9"
+          />
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className={phone.card}>
-        <CardHeader className="pb-4">
-          <CardTitle>{isArabic ? "الفلاتر" : "Filters"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 max-md:gap-3">
-            <Select
-              value={selectedRiskLevel}
-              onValueChange={(v) =>
-                setSelectedRiskLevel(v as AttendanceRiskLevel | "all")
-              }
-            >
-              <SelectTrigger
-                className={cn("w-[200px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={isArabic ? "مستوى الخطر" : "Risk Level"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {isArabic ? "جميع المستويات" : "All Levels"}
-                </SelectItem>
-                <SelectItem value="SEVERELY_CHRONIC">
-                  {isArabic ? "غياب شديد مزمن" : "Severely Chronic"}
-                </SelectItem>
-                <SelectItem value="MODERATELY_CHRONIC">
-                  {isArabic ? "غياب متوسط مزمن" : "Moderately Chronic"}
-                </SelectItem>
-                <SelectItem value="AT_RISK">
-                  {isArabic ? "معرض للخطر" : "At Risk"}
-                </SelectItem>
-                <SelectItem value="SATISFACTORY">
-                  {isArabic ? "مرضي" : "Satisfactory"}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={selectedSectionId}
-              onValueChange={setSelectedSectionId}
-            >
-              <SelectTrigger
-                className={cn("w-[200px] max-md:w-full", phone.field)}
-              >
-                <SelectValue placeholder={isArabic ? "الفصل" : "Section"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {isArabic ? "جميع الفصول" : "All Sections"}
-                </SelectItem>
-                {sections.map((sec) => (
-                  <SelectItem key={sec.id} value={sec.id}>
-                    {sec.gradeName} - {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Students List */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            {isArabic ? "الطلاب المعرضين للخطر" : "At-Risk Students"}
-          </CardTitle>
-          <CardDescription>
-            {isArabic
-              ? `${students.length} طالب يحتاجون للمتابعة`
-              : `${students.length} students requiring attention`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {students.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              <CheckCircle className="mx-auto mb-3 h-12 w-12 text-green-500 opacity-50" />
-              <p>
-                {isArabic
-                  ? "لا يوجد طلاب في هذه الفئة"
-                  : "No students in this category"}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {students.map((student) => (
-                <div
-                  key={student.studentId}
-                  className={cn(
-                    "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors max-md:gap-2 max-md:p-3",
-                    RISK_LEVELS[student.riskLevel].bgColor,
-                    RISK_LEVELS[student.riskLevel].borderColor
-                  )}
-                >
-                  <div className="flex-1 max-md:min-w-0">
-                    <div className="mb-2 flex items-center gap-3 max-md:flex-wrap max-md:gap-2">
-                      <h4 className="font-medium">{student.studentName}</h4>
-                      {getRiskBadge(student.riskLevel)}
-                      {getTrendIcon(student.trend)}
-                    </div>
-                    <div className="text-muted-foreground flex items-center gap-4 text-sm max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs">
-                      {student.sectionName && (
-                        <span>{student.sectionName}</span>
-                      )}
-                      <span>
-                        {isArabic ? "معدل الحضور:" : "Attendance:"}{" "}
-                        {student.attendanceRate}%
-                      </span>
-                      <span>
-                        {isArabic ? "غياب:" : "Absent:"} {student.absentDays}{" "}
-                        {isArabic ? "يوم" : "days"}
-                      </span>
-                      {student.consecutiveAbsences > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          {student.consecutiveAbsences}{" "}
-                          {isArabic ? "أيام متتالية" : "consecutive"}
-                        </Badge>
-                      )}
-                    </div>
-                    <Progress
-                      value={student.attendanceRate}
-                      className="mt-2 h-2"
-                    />
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Risk Level Legend */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle>
-            {isArabic ? "دليل مستويات الخطر" : "Risk Level Guide"}
-          </CardTitle>
-          <CardDescription>
-            {isArabic
-              ? "معايير وزارة التعليم الأمريكية للغياب المزمن"
-              : "US Department of Education chronic absenteeism criteria"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-2 md:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(RISK_LEVELS).map(([key, config]) => (
-              <div
-                key={key}
-                className={cn(
-                  "rounded-lg border p-3",
-                  config.bgColor,
-                  config.borderColor
-                )}
-              >
-                <div className="mb-1 flex items-center gap-2">
-                  <div className={cn("h-3 w-3 rounded-full", config.color)} />
-                  <span className={cn("text-sm font-medium", config.textColor)}>
-                    {config.label}
-                  </span>
-                </div>
-                <p className="font-mono text-xs">{config.threshold}</p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {config.description}
-                </p>
+      {loading ? (
+        <div className="bg-card divide-y overflow-hidden rounded-2xl border">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
               </div>
-            ))}
+              <Skeleton className="h-2 w-24 rounded-full" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : !data || data.rows.length === 0 ? (
+        <div className="bg-card flex flex-col items-center gap-1 rounded-2xl border px-6 py-16 text-center">
+          <p className="font-medium">{query ? tl.noMatch : tl.empty}</p>
+          {!query ? (
+            <p className="text-muted-foreground max-w-sm text-sm">
+              {tl.emptyHint}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border transition-opacity",
+            isPending && "opacity-60"
+          )}
+        >
+          {data.rows.map((row) => (
+            <RiskRow
+              key={row.studentId}
+              row={row}
+              lang={lang}
+              t={t}
+              onOpen={() => router.push(`/${lang}/students/${row.studentId}`)}
+              onCreate={() => setCreating(row)}
+              interventionsHref={`${base}/interventions?student=${row.studentId}`}
+              letterHref={`${base}/letters?student=${row.studentId}&band=${row.band}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {data && data.pageCount > 1 ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {(table.pageOf ?? "Page {page} of {pages}")
+              .replace("{page}", formatCount(data.page, lang))
+              .replace("{pages}", formatCount(data.pageCount, lang))}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              disabled={data.page <= 1 || isPending}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="size-4 rtl:rotate-180" />
+              {table.previous}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              disabled={data.page >= data.pageCount || isPending}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {table.next}
+              <ChevronRight className="size-4 rtl:rotate-180" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      ) : null}
+
+      <div className="text-muted-foreground space-y-1 px-1 text-xs leading-relaxed">
+        <p>
+          {(tl.footnote ?? "")
+            .replace("{days}", formatCount(RISK_WINDOW_DAYS, lang))
+            .replace("{min}", formatCount(MIN_RECORDED_DAYS, lang))}
+        </p>
+        {data && data.insufficient > 0 ? (
+          <p>{pl(tl.insufficient, data.insufficient, lang)}</p>
+        ) : null}
+      </div>
+
+      <CreateInterventionDialog
+        student={
+          creating
+            ? {
+                id: creating.studentId,
+                name: creating.name,
+                band: creating.band,
+              }
+            : null
+        }
+        onOpenChange={(open) => !open && setCreating(null)}
+        onCreated={() => {
+          setCreating(null)
+          load()
+        }}
+      />
+    </div>
+  )
+}
+
+function RiskRow({
+  row,
+  lang,
+  t,
+  onOpen,
+  onCreate,
+  interventionsHref,
+  letterHref,
+}: {
+  row: RiskListRow
+  lang: string
+  t: RiskDict
+  onOpen: () => void
+  onCreate: () => void
+  interventionsHref: string
+  letterHref: string
+}) {
+  const tl: NonNullable<RiskDict["list"]> = t.list ?? {}
+  const tone = BAND_TONE[row.band]
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen()
+      }}
+      className="hover:bg-muted/40 focus-visible:bg-muted/40 flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors focus-visible:outline-none"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">
+          <bdi>{row.name}</bdi>
+        </p>
+        <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
+          {row.sectionName ? <bdi>{row.sectionName}</bdi> : null}
+          {row.sectionName ? <span aria-hidden>·</span> : null}
+          <span>{pl(tl.absences, row.absentDays, lang)}</span>
+          {row.consecutiveAbsences > 1 ? (
+            <>
+              <span aria-hidden>·</span>
+              <span className="text-red-600 dark:text-red-400">
+                {pl(tl.streak, row.consecutiveAbsences, lang)}
+              </span>
+            </>
+          ) : null}
+          {row.hasActiveIntervention ? (
+            <>
+              <span aria-hidden>·</span>
+              <span>{tl.activeIntervention}</span>
+            </>
+          ) : null}
+        </p>
+      </div>
+
+      <div className="hidden w-36 items-center gap-2 sm:flex">
+        <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+          <div
+            className={cn("h-full rounded-full", tone.dot)}
+            style={{ width: `${Math.max(2, Math.min(100, row.rate))}%` }}
+          />
+        </div>
+        <span className="w-12 text-end text-sm font-medium tabular-nums">
+          {formatRate(row.rate, lang)}
+        </span>
+        {row.trend !== "stable" ? (
+          <span title={pick(tl.trend, row.trend)}>
+            {row.trend === "improving" ? (
+              <TrendingUp className="size-3.5 text-emerald-600" />
+            ) : (
+              <TrendingDown className="size-3.5 text-red-600" />
+            )}
+          </span>
+        ) : (
+          <span className="w-3.5" />
+        )}
+      </div>
+      <span className="text-sm font-medium tabular-nums sm:hidden">
+        {formatRate(row.rate, lang)}
+      </span>
+
+      <span
+        className={cn(
+          "hidden rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap md:inline-flex",
+          tone.badge
+        )}
+        title={pick(t.tierNames, row.tier)}
+      >
+        {pick(t.tiers, row.tier) ?? row.tier}
+        <span className="mx-1 opacity-50">·</span>
+        {pick(t.bands, row.band)}
+      </span>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0 rounded-full"
+            aria-label={tl.actions}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem onSelect={onOpen}>
+            {tl.openProfile}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href={interventionsHref}>{tl.openInterventions}</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={onCreate}>
+            {tl.createIntervention}
+          </DropdownMenuItem>
+          {row.band !== "moderate" ? (
+            <DropdownMenuItem asChild>
+              <Link href={letterHref}>{tl.generateLetter}</Link>
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

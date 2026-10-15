@@ -1,1 +1,231 @@
-{}
+{
+  "meta": {
+    "students": "Attendance · Students at risk",
+    "interventions": "Attendance · Interventions",
+    "tiers": "Attendance · Support tiers",
+    "ai": "Attendance · Predictions",
+    "letters": "Attendance · Letters",
+    "rewards": "Attendance · Rewards"
+  },
+  "bands": {
+    "all": "All at risk",
+    "critical": "Critical",
+    "high": "High",
+    "moderate": "Moderate",
+    "ok": "On track"
+  },
+  "tiers": {
+    "TIER_1": "Tier 1",
+    "TIER_2": "Tier 2",
+    "TIER_3": "Tier 3"
+  },
+  "tierNames": {
+    "TIER_1": "Watch",
+    "TIER_2": "Targeted",
+    "TIER_3": "Intensive"
+  },
+  "tierHints": {
+    "TIER_1": "Attending 90–95% of days. Prevention and encouragement.",
+    "TIER_2": "Missing 10–20% of days. Early, targeted support.",
+    "TIER_3": "Missing more than 20% of days. Intensive, urgent support."
+  },
+  "list": {
+    "title": "Students at risk",
+    "search": "Search by name or section",
+    "allSections": "All sections",
+    "absences": {
+      "zero": "No absences",
+      "one": "{n} absence",
+      "other": "{n} absences"
+    },
+    "streak": {
+      "one": "{n} day in a row",
+      "other": "{n} days in a row"
+    },
+    "activeIntervention": "Intervention open",
+    "empty": "No students here",
+    "emptyHint": "Everyone in this group attends at least 95% of school days.",
+    "noMatch": "No students match your search.",
+    "footnote": "Based on the last {days} days. Late counts as present. Students with fewer than {min} recorded days are not ranked.",
+    "insufficient": {
+      "one": "{n} student has too few recorded days to judge.",
+      "other": "{n} students have too few recorded days to judge."
+    },
+    "actions": "Actions",
+    "openProfile": "Open profile",
+    "openInterventions": "View interventions",
+    "createIntervention": "New intervention",
+    "generateLetter": "Generate letter",
+    "trend": {
+      "improving": "Improving",
+      "stable": "Steady",
+      "declining": "Declining"
+    }
+  },
+  "create": {
+    "title": "New intervention",
+    "for": "For {name}",
+    "type": "Type",
+    "name": "Title",
+    "date": "Date",
+    "note": "Note",
+    "notePlaceholder": "What should happen, and why",
+    "cancel": "Cancel",
+    "submit": "Create",
+    "creating": "Creating…",
+    "done": "Intervention created",
+    "failed": "Couldn't create the intervention. Try again."
+  },
+  "interventions": {
+    "active": "Active",
+    "completed": "Completed",
+    "successRate": "Success rate",
+    "avgDays": "Avg. days to complete",
+    "daysValue": "{n} d",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "completed": "Completed",
+      "closed": "Cancelled or escalated"
+    },
+    "search": "Search student or title",
+    "columns": {
+      "student": "Student",
+      "type": "Type",
+      "status": "Status",
+      "risk": "Risk",
+      "date": "Date",
+      "assignee": "Assigned to"
+    },
+    "unassigned": "Unassigned",
+    "empty": "No interventions yet",
+    "emptyHint": "Create one from a student in the at-risk list.",
+    "noMatch": "No interventions match.",
+    "forStudent": "Showing one student's interventions",
+    "showAll": "Show all",
+    "total": {
+      "one": "{n} intervention",
+      "other": "{n} interventions"
+    }
+  },
+  "tiersPage": {
+    "pending": "Pending",
+    "completedThisMonth": "Done this month",
+    "escalations": "Escalated",
+    "overdue": "Overdue",
+    "empty": "No students in this tier",
+    "pickAction": "Start an intervention",
+    "days": "{absent} of {total} days missed",
+    "active": "Intervention open",
+    "showMore": "Show more",
+    "actions": {
+      "WELCOME_MESSAGE": "Welcome message",
+      "POSITIVE_RECOGNITION": "Positive recognition",
+      "ATTENDANCE_INCENTIVE": "Attendance incentive",
+      "CLASS_COMPETITION": "Class competition",
+      "PERFECT_ATTENDANCE_CERTIFICATE": "Perfect attendance certificate",
+      "PARENT_PHONE_CALL": "Call the parent",
+      "PARENT_EMAIL": "Email the parent",
+      "COUNSELOR_CHECK_IN": "Counselor check-in",
+      "ACADEMIC_SUPPORT_REFERRAL": "Academic support",
+      "ATTENDANCE_LETTER_1": "Attendance letter 1",
+      "MENTOR_ASSIGNMENT": "Assign a mentor",
+      "PARENT_CONFERENCE_REQUEST": "Parent conference",
+      "HOME_VISIT_SCHEDULED": "Home visit",
+      "SOCIAL_WORKER_REFERRAL": "Social worker referral",
+      "ATTENDANCE_CONTRACT": "Attendance contract",
+      "ATTENDANCE_LETTER_2": "Attendance letter 2",
+      "ATTENDANCE_LETTER_3": "Attendance letter 3",
+      "TRUANCY_REFERRAL": "Truancy referral",
+      "ADMINISTRATOR_MEETING": "Administrator meeting",
+      "COMMUNITY_RESOURCE_CONNECTION": "Community resources",
+      "LEGAL_NOTICE": "Legal notice"
+    }
+  },
+  "letters": {
+    "types": {
+      "ATTENDANCE_NOTICE_1": "First notice",
+      "ATTENDANCE_NOTICE_2": "Second notice",
+      "ATTENDANCE_NOTICE_3": "Final notice",
+      "TRUANCY_WARNING": "Truancy warning",
+      "ATTENDANCE_CONTRACT": "Attendance contract",
+      "ATTENDANCE_IMPROVEMENT": "Improvement",
+      "PERFECT_ATTENDANCE": "Perfect attendance"
+    },
+    "groups": {
+      "warning": "Warnings",
+      "positive": "Recognition"
+    },
+    "for": {
+      "high": "For students missing 10–20% of school days.",
+      "critical": "For students missing more than 20% of school days.",
+      "improving": "For at-risk students whose attendance is improving.",
+      "perfect": "For students with no missed days."
+    },
+    "delivery": "Send by",
+    "methods": {
+      "EMAIL": "Email",
+      "PRINT": "Print",
+      "PORTAL": "Portal"
+    },
+    "selectAll": "Select all",
+    "selected": {
+      "zero": "None selected",
+      "one": "{n} selected",
+      "other": "{n} selected"
+    },
+    "generate": "Generate {n}",
+    "generating": "Generating…",
+    "preview": "Preview",
+    "previewTitle": "Letter preview",
+    "close": "Close",
+    "noEmail": "No guardian email",
+    "missed": "{absent} of {total} days missed",
+    "empty": "No students need this letter",
+    "emptyHint": "Everyone eligible has already received it, or no one meets the threshold.",
+    "done": {
+      "one": "{n} letter generated",
+      "other": "{n} letters generated"
+    },
+    "someFailed": "{n} failed",
+    "showMore": "Show more"
+  },
+  "ai": {
+    "summary": "Students flagged",
+    "avgScore": "Avg. risk score",
+    "levels": {
+      "LOW": "Low",
+      "MODERATE": "Moderate",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    }
+  },
+  "rewards": {
+    "points": {
+      "one": "{n} point",
+      "other": "{n} points"
+    },
+    "streak": {
+      "zero": "No streak yet",
+      "one": "{n}-day streak",
+      "other": "{n}-day streak"
+    },
+    "create": {
+      "open": "New competition",
+      "title": "New competition",
+      "description": "Sections compete on attendance rate between two dates.",
+      "name": "Name",
+      "namePlaceholder": "e.g. October attendance cup",
+      "start": "Starts",
+      "end": "Ends",
+      "reward": "Prize (optional)",
+      "sections": "Sections",
+      "sectionsHint": "Pick at least two.",
+      "cancel": "Cancel",
+      "submit": "Create",
+      "creating": "Creating…",
+      "failed": "Couldn't create the competition. Check the dates and pick at least two sections."
+    },
+    "badgePoints": "+{n} points"
+  }
+}
