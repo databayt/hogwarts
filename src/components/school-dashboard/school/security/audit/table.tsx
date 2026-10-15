@@ -23,6 +23,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import {
+  enumLabel,
+  fill,
+  formatConsoleDateTime,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 type AuditLogWithPerformer = AuditLog & {
   performer: {
@@ -40,6 +47,8 @@ interface Props {
 }
 
 export function AuditTable({ logs, total, lang }: Props) {
+  const dictionary = useDictionaryFallback()
+  const t = dictionary.schoolConsole.audit
   const [selectedLog, setSelectedLog] = useState<AuditLogWithPerformer | null>(
     null
   )
@@ -49,9 +58,11 @@ export function AuditTable({ logs, total, lang }: Props) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Audit Log</h3>
+            <h3 className="text-lg font-semibold">{t.title}</h3>
             <p className="text-muted-foreground text-sm">
-              {total} total events
+              {fill(t.totalEvents, {
+                count: formatConsoleNumber(total, lang),
+              })}
             </p>
           </div>
         </div>
@@ -60,11 +71,13 @@ export function AuditTable({ logs, total, lang }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead className="w-[60px]" />
+                <TableHead>{t.columns.time}</TableHead>
+                <TableHead>{t.columns.user}</TableHead>
+                <TableHead>{t.columns.action}</TableHead>
+                <TableHead>{t.columns.entity}</TableHead>
+                <TableHead className="w-[60px]">
+                  <span className="sr-only">{t.columns.details}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -74,35 +87,45 @@ export function AuditTable({ logs, total, lang }: Props) {
                     colSpan={5}
                     className="text-muted-foreground py-8 text-center"
                   >
-                    No audit events recorded yet
+                    {t.empty}
                   </TableCell>
                 </TableRow>
               ) : (
                 logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="text-muted-foreground text-xs">
-                      {new Date(log.createdAt).toLocaleString()}
+                      {formatConsoleDateTime(log.createdAt, lang)}
                     </TableCell>
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">
-                          {log.performer
-                            ? log.performer.username || log.performer.email
-                            : "System"}
+                          {log.performer ? (
+                            <bdi dir="auto">
+                              {log.performer.username || log.performer.email}
+                            </bdi>
+                          ) : (
+                            t.system
+                          )}
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          {log.performer?.role ?? "—"}
+                          {log.performer
+                            ? enumLabel(t.roles, log.performer.role)
+                            : "—"}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{log.action}</Badge>
+                      <Badge variant="outline" dir="ltr">
+                        {enumLabel(t.actions, log.action)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {log.entityType && (
                         <span className="text-muted-foreground text-xs">
-                          {log.entityType}
-                          {log.entityId && `: ${log.entityId.slice(0, 8)}...`}
+                          <bdi dir="ltr">
+                            {log.entityType}
+                            {log.entityId && `: ${log.entityId.slice(0, 8)}...`}
+                          </bdi>
                         </span>
                       )}
                     </TableCell>
@@ -112,6 +135,8 @@ export function AuditTable({ logs, total, lang }: Props) {
                           variant="ghost"
                           size="icon"
                           onClick={() => setSelectedLog(log)}
+                          aria-label={t.viewDetails}
+                          title={t.viewDetails}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -132,41 +157,49 @@ export function AuditTable({ logs, total, lang }: Props) {
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Audit Event Details</DialogTitle>
+            <DialogTitle>{t.detailsTitle}</DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Action</p>
-                  <p className="font-medium">{selectedLog.action}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">User</p>
-                  <p className="font-medium">
-                    {selectedLog.performer
-                      ? selectedLog.performer.username ||
-                        selectedLog.performer.email
-                      : "System"}
+                  <p className="text-muted-foreground">{t.columns.action}</p>
+                  <p className="font-medium" dir="ltr">
+                    {enumLabel(t.actions, selectedLog.action)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Entity</p>
+                  <p className="text-muted-foreground">{t.columns.user}</p>
                   <p className="font-medium">
-                    {selectedLog.entityType || "N/A"}
+                    {selectedLog.performer ? (
+                      <bdi dir="auto">
+                        {selectedLog.performer.username ||
+                          selectedLog.performer.email}
+                      </bdi>
+                    ) : (
+                      t.system
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">{t.columns.entity}</p>
+                  <p className="font-medium" dir="ltr">
+                    {selectedLog.entityType || t.notAvailable}
                     {selectedLog.entityId && ` (${selectedLog.entityId})`}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Time</p>
+                  <p className="text-muted-foreground">{t.columns.time}</p>
                   <p className="font-medium">
-                    {new Date(selectedLog.createdAt).toLocaleString()}
+                    {formatConsoleDateTime(selectedLog.createdAt, lang)}
                   </p>
                 </div>
                 {selectedLog.ip && (
                   <div>
-                    <p className="text-muted-foreground">IP Address</p>
-                    <p className="font-medium">{selectedLog.ip}</p>
+                    <p className="text-muted-foreground">{t.ipAddress}</p>
+                    <p className="font-medium" dir="ltr">
+                      {selectedLog.ip}
+                    </p>
                   </div>
                 )}
               </div>
@@ -174,9 +207,12 @@ export function AuditTable({ logs, total, lang }: Props) {
               {selectedLog.previousValue && (
                 <div>
                   <p className="text-muted-foreground mb-1 text-sm">
-                    Previous Value
+                    {t.previousValue}
                   </p>
-                  <pre className="bg-muted max-h-40 overflow-auto rounded p-3 text-xs">
+                  <pre
+                    dir="ltr"
+                    className="bg-muted max-h-40 overflow-auto rounded p-3 text-start text-xs"
+                  >
                     {formatJson(selectedLog.previousValue)}
                   </pre>
                 </div>
@@ -185,9 +221,12 @@ export function AuditTable({ logs, total, lang }: Props) {
               {selectedLog.newValue && (
                 <div>
                   <p className="text-muted-foreground mb-1 text-sm">
-                    New Value
+                    {t.newValue}
                   </p>
-                  <pre className="bg-muted max-h-40 overflow-auto rounded p-3 text-xs">
+                  <pre
+                    dir="ltr"
+                    className="bg-muted max-h-40 overflow-auto rounded p-3 text-start text-xs"
+                  >
                     {formatJson(selectedLog.newValue)}
                   </pre>
                 </div>

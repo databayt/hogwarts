@@ -30,42 +30,38 @@ export async function getRoleStats() {
   return roleStats
 }
 
+/** Permission ids (translated in `schoolConsole.access.permissions`). */
 const PERMISSION_MATRIX: Record<string, string[]> = {
   ADMIN: [
-    "Manage users",
-    "Manage classes",
-    "View reports",
-    "Manage settings",
-    "View billing",
-    "Manage communication",
-    "View audit logs",
+    "manageUsers",
+    "manageClasses",
+    "viewReports",
+    "manageSettings",
+    "viewBilling",
+    "manageCommunication",
+    "viewAuditLogs",
   ],
   TEACHER: [
-    "View students",
-    "Manage grades",
-    "Mark attendance",
-    "View class reports",
-    "Send messages",
+    "viewStudents",
+    "manageGrades",
+    "markAttendance",
+    "viewClassReports",
+    "sendMessages",
   ],
-  STUDENT: [
-    "View grades",
-    "View attendance",
-    "View assignments",
-    "Send messages",
-  ],
+  STUDENT: ["viewGrades", "viewAttendance", "viewAssignments", "sendMessages"],
   GUARDIAN: [
-    "View student grades",
-    "View attendance",
-    "Receive notifications",
-    "Send messages",
+    "viewStudentGrades",
+    "viewAttendance",
+    "receiveNotifications",
+    "sendMessages",
   ],
   ACCOUNTANT: [
-    "View billing",
-    "Manage invoices",
-    "View financial reports",
-    "Process payments",
+    "viewBilling",
+    "manageInvoices",
+    "viewFinancialReports",
+    "processPayments",
   ],
-  STAFF: ["View students", "View attendance", "View reports", "Send messages"],
+  STAFF: ["viewStudents", "viewAttendance", "viewReports", "sendMessages"],
 }
 
 export async function getPermissionMatrix() {

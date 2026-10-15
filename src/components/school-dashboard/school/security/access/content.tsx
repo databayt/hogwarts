@@ -12,14 +12,22 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  enumLabel,
+  fill,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 import { getPermissionMatrix, getRoleStats } from "./actions"
 
 interface Props {
+  dictionary: Dictionary
   lang: Locale
 }
 
-export default async function AccessContent({ lang }: Props) {
+export default async function AccessContent({ dictionary, lang }: Props) {
+  const t = dictionary.schoolConsole.access
   const [roleStats, permissionMatrix] = await Promise.all([
     getRoleStats(),
     getPermissionMatrix(),
@@ -34,16 +42,20 @@ export default async function AccessContent({ lang }: Props) {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Users className="h-4 w-4" />
-                {role}
+                {enumLabel(t.roles, role)}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">{stats.count}</span>
+                <span className="text-2xl font-bold">
+                  {formatConsoleNumber(stats.count, lang)}
+                </span>
                 <div className="text-end">
                   <div className="flex items-center gap-1 text-xs">
                     <Key className="h-3 w-3" />
-                    {stats.twoFactorCount} with 2FA
+                    {fill(t.withTwoFactor, {
+                      count: formatConsoleNumber(stats.twoFactorCount, lang),
+                    })}
                   </div>
                 </div>
               </div>
@@ -57,19 +69,19 @@ export default async function AccessContent({ lang }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Permission Matrix
+            {t.matrixTitle}
           </CardTitle>
-          <CardDescription>Permissions assigned to each role</CardDescription>
+          <CardDescription>{t.matrixDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {Object.entries(permissionMatrix).map(([role, permissions]) => (
               <div key={role} className="space-y-2">
-                <h4 className="font-medium">{role}</h4>
+                <h4 className="font-medium">{enumLabel(t.roles, role)}</h4>
                 <div className="flex flex-wrap gap-2">
                   {permissions.map((perm) => (
                     <Badge key={perm} variant="secondary">
-                      {perm}
+                      {enumLabel(t.permissions, perm)}
                     </Badge>
                   ))}
                 </div>

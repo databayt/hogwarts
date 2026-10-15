@@ -10,6 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  fill,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 import AccessContent from "./access/content"
 import AuditContent from "./audit/content"
@@ -21,6 +25,9 @@ interface Props {
 
 export default async function SecurityContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+  const t = dictionary.schoolConsole.security
+  const num = (v: number, opts?: Intl.NumberFormatOptions) =>
+    formatConsoleNumber(v, lang, opts)
 
   let failedLogins = 0
   let twoFactorUsers = 0
@@ -70,38 +77,46 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Audit Events Today
+              {t.auditEventsToday}
             </CardTitle>
             <FileWarning className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{auditEventsToday}</div>
-            <p className="text-muted-foreground text-xs">Logged actions</p>
+            <div className="text-2xl font-bold">{num(auditEventsToday)}</div>
+            <p className="text-muted-foreground text-xs">{t.loggedActions}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed Logins</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t.failedLogins}
+            </CardTitle>
             <UserX className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{failedLogins}</div>
-            <p className="text-muted-foreground text-xs">Last 24 hours</p>
+            <div className="text-2xl font-bold">{num(failedLogins)}</div>
+            <p className="text-muted-foreground text-xs">{t.last24Hours}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">2FA Enabled</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t.twoFactorEnabled}
+            </CardTitle>
             <Key className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{twoFactorUsers}</div>
+            <div className="text-2xl font-bold">{num(twoFactorUsers)}</div>
             <p className="text-muted-foreground text-xs">
               {totalUsers > 0
-                ? `${Math.round(twoFactorRate)}% of users`
-                : "No users"}
+                ? fill(t.percentOfUsers, {
+                    percent: num(Math.round(twoFactorRate) / 100, {
+                      style: "percent",
+                    }),
+                  })
+                : t.noUsers}
             </p>
           </CardContent>
         </Card>
@@ -109,18 +124,20 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Security Score
+              {t.securityScore}
             </CardTitle>
             <Shield className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityScore}%</div>
+            <div className="text-2xl font-bold">
+              {num(securityScore / 100, { style: "percent" })}
+            </div>
             <p className="text-muted-foreground text-xs">
               {securityScore >= 80
-                ? "Good protection"
+                ? t.scoreGood
                 : securityScore >= 50
-                  ? "Needs improvement"
-                  : "Action needed"}
+                  ? t.scoreImprove
+                  : t.scoreAction}
             </p>
           </CardContent>
         </Card>
@@ -129,15 +146,15 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
       {/* Tabs */}
       <Tabs defaultValue="audit">
         <TabsList>
-          <TabsTrigger value="audit">Audit Log</TabsTrigger>
-          <TabsTrigger value="access">Access Control</TabsTrigger>
+          <TabsTrigger value="audit">{t.tabs.audit}</TabsTrigger>
+          <TabsTrigger value="access">{t.tabs.access}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="audit" className="mt-4">
           <Suspense
             fallback={
               <div className="text-muted-foreground py-8 text-center">
-                Loading audit logs...
+                {t.loadingAudit}
               </div>
             }
           >
@@ -149,11 +166,11 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
           <Suspense
             fallback={
               <div className="text-muted-foreground py-8 text-center">
-                Loading access control...
+                {t.loadingAccess}
               </div>
             }
           >
-            <AccessContent lang={lang} />
+            <AccessContent dictionary={dictionary} lang={lang} />
           </Suspense>
         </TabsContent>
       </Tabs>
