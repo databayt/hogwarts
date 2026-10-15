@@ -12,11 +12,13 @@
 
 "use server"
 
+import { auth } from "@/auth"
 import type { GradingSystem } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getChildrenIdsForGuardian } from "@/components/school-dashboard/listings/grades/queries"
 
 import {
   calculateCumulativeGPA,
@@ -35,6 +37,12 @@ import {
   type GradingConfigInput,
   type TargetGPAInput,
 } from "./validation"
+
+// The school's grading rules decide every student's letter and GPA — only
+// its admins change them. Reads of one student's history are the student's
+// own, their guardian's, or staff's.
+const CONFIG_EDITORS = new Set(["ADMIN", "DEVELOPER"])
+const HISTORY_STAFF = new Set(["ADMIN", "DEVELOPER", "TEACHER", "STAFF"])
 
 /**
  * Get school grading configuration
@@ -57,9 +65,12 @@ export async function getGradingConfig() {
  * Create or update school grading configuration
  */
 export async function saveGradingConfig(data: GradingConfigInput) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
 
   if (!schoolId) {
+    throw new Error("Unauthorized")
+  }
+  if (!CONFIG_EDITORS.has(role ?? "")) {
     throw new Error("Unauthorized")
   }
 
@@ -305,10 +316,26 @@ export async function calculateRequiredGPAAction(data: TargetGPAInput) {
  * Get student's CGPA history
  */
 export async function getStudentCGPAHistory(studentId: string) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
+  }
+  if (!HISTORY_STAFF.has(role ?? "")) {
+    const userId = (await auth())?.user?.id
+    const allowed =
+      !!userId &&
+      (role === "GUARDIAN"
+        ? (await getChildrenIdsForGuardian(userId, schoolId)).includes(
+            studentId
+          )
+        : role === "STUDENT"
+          ? !!(await db.student.findFirst({
+              where: { id: studentId, schoolId, userId },
+              select: { id: true },
+            }))
+          : false)
+    if (!allowed) throw new Error("Unauthorized")
   }
 
   // Get all exam results for the student with course/exam info
@@ -430,9 +457,12 @@ export async function updateGradeBoundaries(
     gpa5: number
   }>
 ) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
 
   if (!schoolId) {
+    throw new Error("Unauthorized")
+  }
+  if (!CONFIG_EDITORS.has(role ?? "")) {
     throw new Error("Unauthorized")
   }
 

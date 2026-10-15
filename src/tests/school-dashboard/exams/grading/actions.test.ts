@@ -31,6 +31,8 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
+vi.mock("@/auth", () => ({ auth: vi.fn() }))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
@@ -130,6 +132,23 @@ describe("Grading Config Actions — multi-tenant safety", () => {
       )
       expect(db.schoolGradingConfig.upsert).not.toHaveBeenCalled()
     })
+
+    it.each(["TEACHER", "STUDENT", "GUARDIAN", "STAFF"])(
+      "rejects a %s — only admins change the grading rules",
+      async (role) => {
+        vi.mocked(getTenantContext).mockResolvedValue({
+          schoolId: SCHOOL_ID,
+          requestId: "req-1",
+          role,
+          isPlatformAdmin: false,
+        } as any)
+
+        await expect(saveGradingConfig(VALID_CONFIG)).rejects.toThrow(
+          "Unauthorized"
+        )
+        expect(db.schoolGradingConfig.upsert).not.toHaveBeenCalled()
+      }
+    )
 
     it("validates input — rejects bad passingThreshold", async () => {
       await expect(
