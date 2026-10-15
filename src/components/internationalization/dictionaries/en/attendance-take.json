@@ -203,5 +203,42 @@
     "center": "Center",
     "autoMark": "Marks arrivals present (6–10 AM)",
     "deleted": "Zone deleted"
+  },
+  "hallPass": {
+    "issue": "Issue a pass",
+    "issueDesc": "Who is leaving, where to, and for how long.",
+    "issueButton": "Issue pass",
+    "section": "Section",
+    "pickSection": "Choose",
+    "student": "Student",
+    "pickStudent": "Choose",
+    "destination": "Destination",
+    "where": "Where to?",
+    "duration": "Back within",
+    "minutes": "{n} min",
+    "notes": "Note (optional)",
+    "cancel": "Cancel",
+    "required": "Choose a student and a destination.",
+    "failed": "Couldn't issue the pass. Try again.",
+    "out": "{n} out of class now",
+    "noneOut": "Everyone is in class.",
+    "noneOutHint": "Passes you issue show up here until the student is back.",
+    "since": "since {time}",
+    "conflict": "Another student is at the same place.",
+    "overdue": "Overdue",
+    "left": "{n} min left",
+    "back": "Back",
+    "more": "More",
+    "cancelPass": "Cancel pass",
+    "destinations": {
+      "BATHROOM": "Restroom",
+      "NURSE": "Nurse",
+      "OFFICE": "Office",
+      "COUNSELOR": "Counselor",
+      "LIBRARY": "Library",
+      "LOCKER": "Locker",
+      "WATER_FOUNTAIN": "Water",
+      "OTHER": "Other"
+    }
   }
 }

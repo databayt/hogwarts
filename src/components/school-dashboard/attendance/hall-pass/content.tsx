@@ -1,42 +1,36 @@
+"use client"
+
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Hall Pass Content
- *
- * Main content component for hall pass management.
- * Shows active passes and allows issuing new ones.
+ * Hall passes: who is out of class right now, one row each, with the time
+ * left and one action (back). Issuing a pass is the page's one primary
+ * button. Refreshes every 30 seconds.
  */
-"use client"
-
-import { useCallback, useEffect, useState } from "react"
-import Image from "next/image"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { CircleCheck, Ellipsis, Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import {
-  AttendanceCardSkeleton,
-  AttendancePageSkeleton,
-} from "../loading-skeleton"
-import { phone } from "../shared/phone"
+import { AttendanceSectionNav } from "../ui/section-nav"
 import { cancelHallPass, getActiveHallPasses, returnHallPass } from "./actions"
 import { IssuePassDialog } from "./issue-dialog"
+import { destinationIcon, destinationLabel } from "./labels"
 import type { HallPassDestination } from "./validation"
 
 interface ActivePass {
   id: string
-  student: {
-    id: string
-    name: string
-    photoUrl?: string | null
-  }
-  class: {
-    id: string
-    name: string
-  }
+  student: { id: string; name: string; photoUrl?: string | null }
+  class: { id: string; name: string }
   destination: HallPassDestination
   destinationNote?: string | null
   issuedAt: Date
@@ -46,53 +40,35 @@ interface ActivePass {
   hasConflict: boolean
 }
 
-// Fallback labels when dictionary is not loaded
-const destinationLabelsFallback: Record<HallPassDestination, string> = {
-  BATHROOM: "Bathroom",
-  NURSE: "Nurse",
-  OFFICE: "Office",
-  COUNSELOR: "Counselor",
-  LIBRARY: "Library",
-  LOCKER: "Locker",
-  WATER_FOUNTAIN: "Water Fountain",
-  OTHER: "Other",
-}
-
-// Map destination codes to dictionary keys
-const destinationKeyMap: Record<HallPassDestination, string> = {
-  BATHROOM: "bathroom",
-  NURSE: "nurse",
-  OFFICE: "office",
-  COUNSELOR: "counselor",
-  LIBRARY: "library",
-  LOCKER: "other",
-  WATER_FOUNTAIN: "other",
-  OTHER: "other",
-}
-
-const destinationIcons: Record<HallPassDestination, string> = {
-  BATHROOM: "🚻",
-  NURSE: "🏥",
-  OFFICE: "🏢",
-  COUNSELOR: "💬",
-  LIBRARY: "📚",
-  LOCKER: "🔐",
-  WATER_FOUNTAIN: "💧",
-  OTHER: "📍",
-}
-
 interface HallPassContentProps {
   locale: string
 }
 
 export function HallPassContent({ locale }: HallPassContentProps) {
   const { dictionary } = useDictionary()
-  const t = (dictionary?.school?.attendance as any)?.hallPass
-  const destinations = t?.destinations as Record<string, string> | undefined
-  const isRTL = locale === "ar"
+  const t = (dictionary?.attendanceTake?.hallPass ?? {}) as Record<
+    string,
+    string
+  >
+  const labels = dictionary?.attendanceTake?.hallPass?.destinations as
+    | Record<string, string>
+    | undefined
   const [passes, setPasses] = useState<ActivePass[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false)
+  const [issuing, setIssuing] = useState(false)
+
+  const time = useMemo(
+    () =>
+      new Intl.DateTimeFormat(
+        locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+        { hour: "numeric", minute: "2-digit" }
+      ),
+    [locale]
+  )
+  const num = useMemo(
+    () => new Intl.NumberFormat(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US"),
+    [locale]
+  )
 
   const loadPasses = useCallback(async () => {
     const result = await getActiveHallPasses()
@@ -103,243 +79,147 @@ export function HallPassContent({ locale }: HallPassContentProps) {
   }, [])
 
   useEffect(() => {
-    loadPasses()
-    // Refresh every 30 seconds
-    const interval = setInterval(loadPasses, 30000)
-    return () => clearInterval(interval)
+    const first = setTimeout(() => void loadPasses(), 0)
+    const interval = setInterval(() => void loadPasses(), 30000)
+    return () => {
+      clearTimeout(first)
+      clearInterval(interval)
+    }
   }, [loadPasses])
 
   const handleReturn = async (passId: string) => {
     const result = await returnHallPass({ passId })
-    if (result.success) {
-      loadPasses()
-    }
+    if (result.success) void loadPasses()
   }
 
   const handleCancel = async (passId: string) => {
     const result = await cancelHallPass(passId)
-    if (result.success) {
-      loadPasses()
-    }
-  }
-
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString(isRTL ? "ar-SA" : "en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const getTimeStatus = (minutesRemaining: number) => {
-    if (minutesRemaining <= 0) return "expired"
-    if (minutesRemaining <= 2) return "warning"
-    return "normal"
-  }
-
-  if (isLoading) {
-    return (
-      <AttendancePageSkeleton label={dictionary?.common?.loading} action>
-        <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <AttendanceCardSkeleton key={i} />
-          ))}
-        </div>
-      </AttendancePageSkeleton>
-    )
+    if (result.success) void loadPasses()
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{t?.title || "Hall Passes"}</h1>
-          <p className="text-muted-foreground">
-            {(t?.students_out || "{count} students currently out").replace(
-              "{count}",
-              String(passes.length)
-            )}
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsIssueDialogOpen(true)}
-          className={phone.pill}
-        >
-          {t?.issue_new_pass || "Issue New Pass"}
+      <AttendanceSectionNav group="take" />
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground text-sm">
+          {isLoading
+            ? " "
+            : passes.length === 0
+              ? (t.noneOut ?? "Everyone is in class.")
+              : (t.out ?? "{n} out of class now").replace(
+                  "{n}",
+                  num.format(passes.length)
+                )}
+        </p>
+        <Button className="rounded-full" onClick={() => setIssuing(true)}>
+          <Plus className="size-4" />
+          {t.issue ?? "Issue a pass"}
         </Button>
       </div>
 
-      {/* Active passes grid */}
-      {passes.length === 0 ? (
-        <Card className={phone.card}>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="bg-muted max-md:bg-background mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl">
-              ✓
-            </div>
-            <h3 className="mb-2 text-lg font-medium">
-              {t?.no_students_out || "No students out"}
-            </h3>
-            <p className="text-muted-foreground text-sm">
-              {t?.all_in_classrooms || "All students are in their classrooms"}
-            </p>
-          </CardContent>
-        </Card>
+      {isLoading ? (
+        <div className="bg-muted/50 h-40 animate-pulse rounded-2xl" />
+      ) : passes.length === 0 ? (
+        <div className="bg-card flex flex-col items-center gap-3 rounded-2xl border px-4 py-12 text-center">
+          <CircleCheck className="size-8 text-green-600" />
+          <p className="font-medium">{t.noneOut ?? "Everyone is in class."}</p>
+          <p className="text-muted-foreground text-sm">
+            {t.noneOutHint ??
+              "Passes you issue show up here until the student is back."}
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
           {passes.map((pass) => {
-            const timeStatus = getTimeStatus(pass.minutesRemaining)
+            const Icon = destinationIcon[pass.destination]
+            const overdue = pass.minutesRemaining <= 0
+            const soon = !overdue && pass.minutesRemaining <= 2
             return (
-              <Card
+              <li
                 key={pass.id}
-                className={cn(
-                  "relative overflow-hidden",
-                  phone.card,
-                  timeStatus === "expired" && "border-destructive",
-                  timeStatus === "warning" && "border-yellow-500",
-                  pass.hasConflict && "ring-2 ring-orange-500"
-                )}
+                className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-3"
               >
-                {/* Time indicator bar */}
-                <div
+                <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full">
+                  <Icon className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {pass.student.name}
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {pass.destination === "OTHER" && pass.destinationNote
+                      ? pass.destinationNote
+                      : destinationLabel(pass.destination, labels)}
+                    {pass.class?.name ? ` · ${pass.class.name}` : ""}
+                    {" · "}
+                    {(t.since ?? "since {time}").replace(
+                      "{time}",
+                      time.format(new Date(pass.issuedAt))
+                    )}
+                  </p>
+                  {pass.hasConflict ? (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      {t.conflict ?? "Another student is at the same place."}
+                    </p>
+                  ) : null}
+                </div>
+                <span
                   className={cn(
-                    "absolute start-0 end-0 top-0 h-1",
-                    timeStatus === "expired" && "bg-destructive",
-                    timeStatus === "warning" && "bg-yellow-500",
-                    timeStatus === "normal" && "bg-primary"
+                    "text-xs tabular-nums",
+                    overdue
+                      ? "text-destructive font-medium"
+                      : soon
+                        ? "text-amber-600 dark:text-amber-400"
+                        : "text-muted-foreground"
                   )}
-                />
-
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* Student photo */}
-                      <div className="bg-muted max-md:bg-background h-10 w-10 overflow-hidden rounded-full">
-                        {pass.student.photoUrl ? (
-                          <Image
-                            src={pass.student.photoUrl}
-                            alt={pass.student.name}
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-lg">
-                            {pass.student.name.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">
-                          {pass.student.name}
-                        </CardTitle>
-                        <p className="text-muted-foreground text-xs">
-                          {pass.class.name}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-2xl">
-                      {destinationIcons[pass.destination]}
-                    </span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  {/* Destination */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">
-                      {t?.destination || "Destination"}
-                    </span>
-                    <span className="font-medium">
-                      {destinations?.[destinationKeyMap[pass.destination]] ||
-                        destinationLabelsFallback[pass.destination]}
-                    </span>
-                  </div>
-
-                  {/* Time info */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">
-                      {t?.left_at || "Left at"}
-                    </span>
-                    <span>{formatTime(pass.issuedAt)}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">
-                      {t?.expected_back || "Expected back"}
-                    </span>
-                    <span
-                      className={cn(
-                        "font-medium",
-                        timeStatus === "expired" && "text-destructive",
-                        timeStatus === "warning" && "text-yellow-600"
+                >
+                  {overdue
+                    ? (t.overdue ?? "Overdue")
+                    : (t.left ?? "{n} min left").replace(
+                        "{n}",
+                        num.format(pass.minutesRemaining)
                       )}
-                    >
-                      {formatTime(pass.expectedReturn)}
-                    </span>
-                  </div>
-
-                  {/* Time remaining */}
-                  <div
-                    className={cn(
-                      "rounded-lg px-3 py-2 text-center",
-                      timeStatus === "expired" &&
-                        "bg-destructive/10 text-destructive",
-                      timeStatus === "warning" &&
-                        "bg-yellow-100 text-yellow-700",
-                      timeStatus === "normal" && "bg-muted max-md:bg-background"
-                    )}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => void handleReturn(pass.id)}
                   >
-                    {timeStatus === "expired" ? (
-                      <span className="font-medium">
-                        {t?.overdue || "Overdue"}
-                      </span>
-                    ) : (
-                      <span>
-                        {pass.minutesRemaining}{" "}
-                        {t?.min_remaining || "min remaining"}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Conflict warning */}
-                  {pass.hasConflict && (
-                    <div className="rounded-lg bg-orange-100 px-3 py-2 text-center text-sm text-orange-700">
-                      {t?.conflict_warning ||
-                        "Warning: Another student at same destination"}
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2 max-md:[&_button]:h-9 max-md:[&_button]:rounded-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleCancel(pass.id)}
-                    >
-                      {dictionary?.attendance?.form?.cancel || "Cancel"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleReturn(pass.id)}
-                    >
-                      {t?.mark_returned || "Mark Returned"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    {t.back ?? "Back"}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full"
+                        aria-label={t.more ?? "More"}
+                      >
+                        <Ellipsis className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => void handleCancel(pass.id)}
+                      >
+                        {t.cancelPass ?? "Cancel pass"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
 
-      {/* Issue dialog */}
       <IssuePassDialog
-        open={isIssueDialogOpen}
-        onOpenChange={setIsIssueDialogOpen}
+        open={issuing}
+        onOpenChange={setIssuing}
         locale={locale}
-        onSuccess={loadPasses}
+        onSuccess={() => void loadPasses()}
       />
     </div>
   )

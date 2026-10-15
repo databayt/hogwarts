@@ -203,5 +203,42 @@
     "center": "المركز",
     "autoMark": "تسجّل الواصلين حاضرين (6–10 صباحاً)",
     "deleted": "تم حذف المنطقة"
+  },
+  "hallPass": {
+    "issue": "إصدار تصريح",
+    "issueDesc": "من يخرج، وإلى أين، ولكم من الوقت.",
+    "issueButton": "إصدار",
+    "section": "الشعبة",
+    "pickSection": "اختر",
+    "student": "الطالب",
+    "pickStudent": "اختر",
+    "destination": "الوجهة",
+    "where": "إلى أين؟",
+    "duration": "يعود خلال",
+    "minutes": "{n} د",
+    "notes": "ملاحظة (اختياري)",
+    "cancel": "إلغاء",
+    "required": "اختر الطالب والوجهة.",
+    "failed": "تعذّر إصدار التصريح. حاول مرة أخرى.",
+    "out": "{n} خارج الفصل الآن",
+    "noneOut": "الجميع في الفصل.",
+    "noneOutHint": "تظهر التصاريح هنا حتى يعود الطالب.",
+    "since": "منذ {time}",
+    "conflict": "يوجد طالب آخر في المكان نفسه.",
+    "overdue": "متأخر",
+    "left": "باقٍ {n} د",
+    "back": "عاد",
+    "more": "المزيد",
+    "cancelPass": "إلغاء التصريح",
+    "destinations": {
+      "BATHROOM": "دورة المياه",
+      "NURSE": "العيادة",
+      "OFFICE": "الإدارة",
+      "COUNSELOR": "المرشد",
+      "LIBRARY": "المكتبة",
+      "LOCKER": "الخزانة",
+      "WATER_FOUNTAIN": "الماء",
+      "OTHER": "أخرى"
+    }
   }
 }
