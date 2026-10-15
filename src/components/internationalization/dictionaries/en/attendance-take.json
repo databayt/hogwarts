@@ -92,5 +92,28 @@
     "save": "Save",
     "duplicate": "That card number is already in use.",
     "addFailed": "Couldn't add the card."
+  },
+  "kiosk": {
+    "student_not_found": "No student matches this card.",
+    "check_failed": "Couldn't record this. Try again.",
+    "register_failed": "Couldn't register the kiosk."
+  },
+  "kioskReasons": {
+    "lateArrival": "Why are you late?",
+    "earlyDeparture": "Why are you leaving early?",
+    "enterReason": "Add a note (optional)",
+    "cancel": "Cancel",
+    "skip": "Skip",
+    "confirm": "Confirm",
+    "reasons": {
+      "traffic": "Traffic",
+      "medical": "Medical",
+      "family": "Family",
+      "transport": "Transport",
+      "weather": "Weather",
+      "earlyPickup": "Picked up by a parent",
+      "appointment": "Appointment",
+      "other": "Other"
+    }
   }
 }

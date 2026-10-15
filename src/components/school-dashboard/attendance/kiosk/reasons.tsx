@@ -36,10 +36,12 @@ export function KioskReasons({
   locale,
 }: KioskReasonsProps) {
   const { dictionary } = useDictionary()
-  const t = (dictionary?.school?.attendance as any)?.kioskReasons as
-    | Record<string, any>
+  const t = dictionary?.attendanceTake?.kioskReasons as
+    | Record<string, string>
     | undefined
-  const reasonsDict = t?.reasons as Record<string, string> | undefined
+  const reasonsDict = dictionary?.attendanceTake?.kioskReasons?.reasons as
+    | Record<string, string>
+    | undefined
   const [selectedReason, setSelectedReason] = useState<string>("")
   const [customNote, setCustomNote] = useState("")
 
@@ -100,10 +102,7 @@ export function KioskReasons({
           <textarea
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
-            placeholder={
-              (dictionary?.school?.attendance as any)?.kiosk?.enter_reason ||
-              "Enter reason here..."
-            }
+            placeholder={t?.enterReason || "Enter reason here..."}
             className="border-input bg-background w-full rounded-lg border p-3 text-lg"
             rows={3}
           />

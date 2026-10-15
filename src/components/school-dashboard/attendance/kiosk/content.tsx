@@ -53,6 +53,8 @@ interface KioskContentProps {
   locale: string
 }
 
+const KIOSK_STORAGE_KEY = "hogwarts:attendance-kiosk-id"
+
 export function KioskContent({
   schoolId,
   schoolName,
@@ -63,12 +65,29 @@ export function KioskContent({
 }: KioskContentProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.attendance?.kiosk
+  const tk = dictionary?.attendanceTake?.kiosk
   const isRTL = locale === "ar"
 
   // Kiosk state
   const [state, setState] = useState<KioskState>("idle")
   const [kioskId, setKioskId] = useState(initialKioskId || "")
   const [isRegistered, setIsRegistered] = useState(!!kioskSession)
+
+  // A registered kiosk stays registered across reloads on this device.
+  useEffect(() => {
+    if (initialKioskId || kioskSession) return
+    try {
+      const saved = window.localStorage.getItem(KIOSK_STORAGE_KEY)
+      if (saved) {
+        // Read after mount on purpose: storage isn't available during SSR.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setKioskId(saved)
+        setIsRegistered(true)
+      }
+    } catch {
+      // Storage blocked (private mode) — register each time.
+    }
+  }, [initialKioskId, kioskSession])
 
   // Student state
   const [student, setStudent] = useState<StudentInfo | null>(null)
@@ -87,6 +106,13 @@ export function KioskContent({
     return () => clearInterval(timer)
   }, [])
 
+  const resetKiosk = useCallback(() => {
+    setState("idle")
+    setStudent(null)
+    setAction("CHECK_IN")
+    setErrorMessage("")
+  }, [])
+
   // Reset to idle after timeout
   useEffect(() => {
     if (state === "success" || state === "error") {
@@ -95,14 +121,7 @@ export function KioskContent({
       }, 5000)
       return () => clearTimeout(timer)
     }
-  }, [state])
-
-  const resetKiosk = useCallback(() => {
-    setState("idle")
-    setStudent(null)
-    setAction("CHECK_IN")
-    setErrorMessage("")
-  }, [])
+  }, [state, resetKiosk])
 
   // Handle student lookup from scan or manual entry
   const handleStudentLookup = async (
@@ -120,7 +139,9 @@ export function KioskContent({
 
       if (!result.success || !result.student) {
         setState("error")
-        setErrorMessage(result.error || "Student not found")
+        setErrorMessage(
+          tk?.student_not_found || "No student matches this card."
+        )
         return
       }
 
@@ -151,7 +172,7 @@ export function KioskContent({
       }
     } catch (error) {
       setState("error")
-      setErrorMessage("Failed to look up student")
+      setErrorMessage(t?.please_try_again || "Please try again")
     }
   }
 
@@ -178,11 +199,11 @@ export function KioskContent({
         setState("success")
       } else {
         setState("error")
-        setErrorMessage(result.error || "Failed to process check-in/out")
+        setErrorMessage(tk?.check_failed || "Couldn't record this. Try again.")
       }
     } catch (error) {
       setState("error")
-      setErrorMessage("An error occurred")
+      setErrorMessage(t?.please_try_again || "Please try again")
     }
   }
 
@@ -197,30 +218,41 @@ export function KioskContent({
       if (result.success) {
         setKioskId(newKioskId)
         setIsRegistered(true)
+        try {
+          window.localStorage.setItem(KIOSK_STORAGE_KEY, newKioskId)
+        } catch {
+          // Storage blocked — fine, it just won't survive a reload.
+        }
       } else {
-        setErrorMessage(result.error || "Failed to register kiosk")
+        setErrorMessage(tk?.register_failed || "Couldn't register the kiosk.")
       }
-    } catch (error) {
-      setErrorMessage("Failed to register kiosk")
+    } catch {
+      setErrorMessage(tk?.register_failed || "Couldn't register the kiosk.")
     }
   }
 
   // Format time for display
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
+    return date.toLocaleTimeString(
+      locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }
+    )
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+    return date.toLocaleDateString(
+      locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+      {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }
+    )
   }
 
   // Kiosk registration screen
@@ -229,9 +261,9 @@ export function KioskContent({
       <div className="from-primary/10 to-background flex h-full flex-col items-center justify-center bg-gradient-to-b p-8">
         <div className="bg-card w-full max-w-md space-y-6 rounded-xl border p-8 shadow-lg">
           <div className="text-center">
-            <h1 className="text-2xl font-bold">
+            <h2 className="text-2xl font-bold">
               {t?.registration_title || "Kiosk Registration"}
-            </h1>
+            </h2>
             <p className="text-muted-foreground mt-2">
               {t?.registration_subtitle || "Enter kiosk ID and name to begin"}
             </p>
@@ -304,7 +336,7 @@ export function KioskContent({
             />
           )}
           <div>
-            <h1 className="text-xl font-bold">{schoolName}</h1>
+            <p className="text-xl font-bold">{schoolName}</p>
             <p className="text-muted-foreground text-sm">
               {t?.self_service_kiosk || "Self-Service Attendance Kiosk"}
             </p>

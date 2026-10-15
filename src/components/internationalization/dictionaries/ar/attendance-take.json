@@ -92,5 +92,28 @@
     "save": "حفظ",
     "duplicate": "رقم البطاقة مستخدم مسبقاً.",
     "addFailed": "تعذّرت إضافة البطاقة."
+  },
+  "kiosk": {
+    "student_not_found": "لا يوجد طالب بهذه البطاقة.",
+    "check_failed": "تعذّر التسجيل. حاول مرة أخرى.",
+    "register_failed": "تعذّر تسجيل الكشك."
+  },
+  "kioskReasons": {
+    "lateArrival": "ما سبب التأخر؟",
+    "earlyDeparture": "ما سبب المغادرة المبكرة؟",
+    "enterReason": "أضف ملاحظة (اختياري)",
+    "cancel": "إلغاء",
+    "skip": "تخطٍّ",
+    "confirm": "تأكيد",
+    "reasons": {
+      "traffic": "زحمة المرور",
+      "medical": "سبب طبي",
+      "family": "ظرف عائلي",
+      "transport": "المواصلات",
+      "weather": "الطقس",
+      "earlyPickup": "استلام من ولي الأمر",
+      "appointment": "موعد",
+      "other": "أخرى"
+    }
   }
 }
