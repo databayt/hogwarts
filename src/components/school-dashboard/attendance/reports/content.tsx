@@ -367,7 +367,7 @@ export function ReportsContent({
                     {r.checkOutTime ? formatTime(r.checkOutTime, lang) : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground max-w-[220px] truncate pe-5 max-lg:hidden">
-                    {r.notes || "—"}
+                    {(r.notes && (hub.notes?.[r.notes] ?? r.notes)) || "—"}
                   </TableCell>
                 </TableRow>
               ))}

@@ -168,13 +168,13 @@ export function AttendanceOverviewContent({
   return (
     <div className="max-w-3xl space-y-10">
       {/* Date — the one quiet heading line; the layout carries the H1. */}
-      <p className="text-muted-foreground text-sm">
+      <div className="text-muted-foreground text-sm">
         {loading || !dateLabel ? (
           <Skeleton className="inline-block h-4 w-48 align-middle" />
         ) : (
           dateLabel
         )}
-      </p>
+      </div>
 
       {/* Marking progress */}
       {loading ? (

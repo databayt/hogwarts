@@ -10,7 +10,10 @@
       "hallPass": "Hall passes",
       "geo": "Location check-in"
     },
-    "excuses": { "excuses": "Excuses", "intentions": "Planned absences" },
+    "excuses": {
+      "excuses": "Excuses",
+      "intentions": "Planned absences"
+    },
     "risk": {
       "list": "Students",
       "interventions": "Interventions",
@@ -36,7 +39,10 @@
     "RFID": "RFID",
     "NFC": "NFC",
     "BIOMETRIC": "Biometric",
-    "BLUETOOTH": "Bluetooth"
+    "BLUETOOTH": "Bluetooth",
+    "VIRTUAL": "Live class",
+    "FINGERPRINT": "Fingerprint",
+    "FACE_RECOGNITION": "Face recognition"
   },
   "status": {
     "PRESENT": "Present",
@@ -60,5 +66,8 @@
     "description": "This page couldn't load. Try again, or come back in a moment.",
     "retry": "Try again",
     "home": "Back to attendance"
+  },
+  "notes": {
+    "auto: live-class presence": "Auto: live-class presence"
   }
 }

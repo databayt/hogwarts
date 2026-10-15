@@ -10,7 +10,10 @@
       "hallPass": "تصاريح الخروج",
       "geo": "التسجيل بالموقع"
     },
-    "excuses": { "excuses": "الأعذار", "intentions": "الغياب المُخطَّط" },
+    "excuses": {
+      "excuses": "الأعذار",
+      "intentions": "الغياب المُخطَّط"
+    },
     "risk": {
       "list": "الطلاب",
       "interventions": "التدخلات",
@@ -36,7 +39,10 @@
     "RFID": "RFID",
     "NFC": "NFC",
     "BIOMETRIC": "بصمة",
-    "BLUETOOTH": "بلوتوث"
+    "BLUETOOTH": "بلوتوث",
+    "VIRTUAL": "حصة مباشرة",
+    "FINGERPRINT": "بصمة الإصبع",
+    "FACE_RECOGNITION": "التعرف على الوجه"
   },
   "status": {
     "PRESENT": "حاضر",
@@ -60,5 +66,8 @@
     "description": "تعذّر تحميل هذه الصفحة. حاول مرة أخرى أو عد بعد قليل.",
     "retry": "إعادة المحاولة",
     "home": "العودة إلى الحضور"
+  },
+  "notes": {
+    "auto: live-class presence": "تلقائي: حضور الحصة المباشرة"
   }
 }
