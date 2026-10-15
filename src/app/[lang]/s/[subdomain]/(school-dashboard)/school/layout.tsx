@@ -27,7 +27,9 @@ export default async function SchoolLayout({ children, params }: Props) {
   return (
     <AdminAuthGuard lang={lang as Locale}>
       <div className="space-y-6">
-        <PageHeadingSetter title={d?.title || "School"} />
+        <PageHeadingSetter
+          title={d?.title ?? dictionary.schoolConsole.meta.school}
+        />
         <PageNav pages={schoolPages} />
         {children}
       </div>

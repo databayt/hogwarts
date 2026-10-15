@@ -1,1 +1,509 @@
-{}
+{
+  "meta": {
+    "school": "المدرسة",
+    "overview": "المدرسة: نظرة عامة",
+    "analysis": "المدرسة: التحليل",
+    "bulk": "المدرسة: العمليات الجماعية",
+    "security": "المدرسة: الأمان",
+    "reports": "المدرسة: التقارير",
+    "membership": "المدرسة: العضوية",
+    "communication": "المدرسة: التواصل",
+    "notificationSettings": "التواصل: الإعدادات",
+    "templates": "التواصل: القوالب",
+    "broadcast": "التواصل: البثّ",
+    "billing": "الفوترة - إدارة المدرسة",
+    "billingDescription": "إدارة الفوترة والاشتراك ومعلومات الدفع."
+  },
+  "overview": {
+    "stats": {
+      "users": "المستخدمون",
+      "verifiedCount": "{count} حساب موثّق",
+      "teachers": "المعلمون",
+      "teachersSub": "سجلات المعلمين",
+      "students": "الطلاب",
+      "studentsSub": "الطلاب المسجّلون",
+      "departments": "الأقسام",
+      "departmentsSub": "الأقسام الأكاديمية",
+      "classrooms": "القاعات الدراسية",
+      "verified": "الحسابات الموثّقة"
+    },
+    "organization": {
+      "title": "المؤسسة",
+      "caption": "يوضّح كل شريط حصته من إجمالي {total} سجل",
+      "barCaption": "{value} من {total} سجل ({percent})",
+      "attentionOne": "{count} حساب غير موثّق",
+      "attentionMany": "{count} حسابات غير موثّقة",
+      "attentionLink": "مراجعة الحسابات غير الموثّقة في العضوية"
+    },
+    "workflow": {
+      "title": "دليل سير عمل المدير"
+    },
+    "modules": {
+      "configuration": {
+        "title": "الإعدادات",
+        "description": "ملف المدرسة والأعوام الدراسية والأقسام والتقييم"
+      },
+      "membership": {
+        "title": "العضوية",
+        "description": "المستخدمون والأدوار والدعوات والحسابات"
+      },
+      "communication": {
+        "title": "التواصل",
+        "description": "الإعلانات والإشعارات والمراسلة"
+      },
+      "security": {
+        "title": "الأمان",
+        "description": "سجلات التدقيق والجلسات والتحكم في الوصول"
+      },
+      "reports": {
+        "title": "التقارير",
+        "description": "التحليلات والتصدير ورؤى البيانات"
+      },
+      "bulk": {
+        "title": "العمليات الجماعية",
+        "description": "استيراد بيانات المدرسة وتصديرها ومعالجتها دفعة واحدة"
+      }
+    },
+    "systemStatus": {
+      "title": "حالة النظام",
+      "operational": "يعمل",
+      "api": "خدمات الواجهة البرمجية",
+      "database": "قاعدة البيانات",
+      "storage": "التخزين",
+      "email": "خدمة البريد الإلكتروني"
+    }
+  },
+  "billing": {
+    "openPortal": "فتح بوابة العملاء",
+    "error": {
+      "title": "تعذّر تحميل معلومات الفوترة",
+      "userNotFound": "تعذّر العثور على حساب المستخدم. يرجى تسجيل الخروج ثم الدخول مرة أخرى.",
+      "paymentService": "تعذّر الاتصال بخدمة الدفع. يرجى المحاولة مرة أخرى بعد قليل.",
+      "unexpected": "حدث خطأ غير متوقع أثناء تحميل معلومات الفوترة.",
+      "reference": "مرجع الخطأ",
+      "tryAgain": "إعادة المحاولة",
+      "contactSupport": "التواصل مع الدعم"
+    }
+  },
+  "membership": {
+    "all": "الكل",
+    "expired": "منتهية",
+    "expiringSoon": "تنتهي خلال {days} يوم",
+    "exportCSV": "تصدير CSV",
+    "exporting": "جارٍ التصدير...",
+    "failedToResend": "تعذّرت إعادة إرسال الدعوة",
+    "invitationResent": "تمت إعادة إرسال الدعوة",
+    "maxResendsReached": "تم بلوغ الحد الأقصى لإعادة الإرسال",
+    "noColumns": "لا توجد أعمدة.",
+    "noMembers": "لا يوجد أعضاء",
+    "noMembersDescription": "جرّب تعديل البحث أو عوامل التصفية",
+    "resend": "إعادة إرسال",
+    "reset": "إعادة تعيين",
+    "searchColumns": "بحث في الأعمدة...",
+    "seeMore": "عرض المزيد",
+    "view": "عرض",
+    "viewProfile": "عرض الملف الشخصي",
+    "noSchoolContext": "لا يوجد سياق مدرسة",
+    "membersSuspended": "تم تعليق {count} عضو",
+    "membersActivated": "تم تفعيل {count} عضو",
+    "classesCount": "{count} فصول",
+    "childrenCount": "{count} أبناء",
+    "role_ADMIN": "مدير",
+    "role_TEACHER": "معلم",
+    "role_STUDENT": "طالب",
+    "role_GUARDIAN": "ولي أمر",
+    "role_ACCOUNTANT": "محاسب",
+    "role_STAFF": "موظف",
+    "role_USER": "مستخدم",
+    "role_DEVELOPER": "مطوّر",
+    "joinMethod_MANUAL": "يدوي",
+    "joinMethod_JOIN_CODE": "رمز الانضمام",
+    "joinMethod_INVITATION": "دعوة"
+  },
+  "title": "تحليل المدرسة",
+  "description": "تحليلات ورؤى حول أداء المدرسة والحضور والمقاييس الأكاديمية.",
+  "totalStudents": "إجمالي الطلاب",
+  "enrolledStudents": "الطلاب المسجّلون",
+  "totalTeachers": "إجمالي المعلمين",
+  "activeFaculty": "الهيئة التدريسية الفعّالة",
+  "studentTeacher": "الطلاب إلى المعلمين",
+  "ratio": "النسبة",
+  "attendanceRate": "نسبة الحضور",
+  "averageThisTerm": "المتوسط في هذا الفصل",
+  "enrollmentTrends": "اتجاهات التسجيل",
+  "enrollmentOverTime": "تسجيل الطلاب عبر الزمن",
+  "gradeDistribution": "توزيع المراحل الدراسية",
+  "studentsByLevel": "الطلاب حسب المرحلة الدراسية",
+  "chartComingSoon": "الرسم البياني قريبًا",
+  "academicPerformance": "الأداء الأكاديمي",
+  "academicPerformanceDesc": "أبرز المقاييس والرؤى الأكاديمية",
+  "passRate": "نسبة النجاح",
+  "subjectsOffered": "المواد المطروحة",
+  "activeClasses": "الفصول الفعّالة",
+  "avgGpa": "متوسط المعدل التراكمي",
+  "totalPeople": "إجمالي الأفراد",
+  "attendanceGoalMet": "تحقيق هدف الحضور",
+  "academicSuccess": "النجاح الأكاديمي",
+  "academic": {
+    "title": "التقارير الأكاديمية",
+    "subtitle": "تحليلات أداء الطلاب",
+    "description": "حلّل درجات الطلاب ونتائج الاختبارات والتقدّم الأكاديمي.",
+    "action": "عرض التقارير الأكاديمية"
+  },
+  "attendance": {
+    "title": "تقارير الحضور",
+    "subtitle": "أنماط الحضور واتجاهاته",
+    "description": "اطّلع على سجلات الحضور وأنماط الغياب والمشاركة في الفصول.",
+    "action": "عرض تقارير الحضور"
+  },
+  "financial": {
+    "title": "التقارير المالية",
+    "subtitle": "تحليل الإيرادات والمصروفات",
+    "description": "تابع الإيرادات والمصروفات ومؤشرات الأداء المالي.",
+    "action": "عرض التقارير المالية"
+  },
+  "communication": {
+    "stats": {
+      "totalAnnouncements": "إجمالي الإعلانات",
+      "activeCount": "{count} فعّال",
+      "emailTemplates": "قوالب البريد الإلكتروني",
+      "configuredTemplates": "القوالب المُعدّة",
+      "notificationsSent": "الإشعارات المرسلة",
+      "thisMonth": "هذا الشهر",
+      "recentBroadcasts": "البثّ الأخير",
+      "lastBatches": "آخر 5 دفعات"
+    },
+    "tools": {
+      "templates": {
+        "title": "قوالب البريد الإلكتروني",
+        "subtitle": "قوالب إشعارات قابلة للتخصيص",
+        "description": "صمّم قوالب الإشعارات لأحداث النظام المختلفة وأدرها.",
+        "action": "إدارة القوالب"
+      },
+      "broadcast": {
+        "title": "رسائل البثّ",
+        "subtitle": "مراسلة جماعية حسب الدور أو الفصل",
+        "description": "أرسل إشعارات جماعية إلى مجموعات محددة من المستخدمين.",
+        "action": "إرسال بثّ"
+      },
+      "settings": {
+        "title": "إعدادات الإشعارات",
+        "subtitle": "ضبط تفضيلات التسليم",
+        "description": "اضبط تفضيلات الإشعارات وساعات الهدوء وإعدادات الملخّص.",
+        "action": "ضبط الإعدادات"
+      }
+    },
+    "recentActivity": "نشاط البثّ الأخير",
+    "sentOf": "أُرسل {sent} من {total}",
+    "batchStatus": {
+      "completed": "مكتمل",
+      "processing": "قيد المعالجة",
+      "failed": "فشل",
+      "pending": "قيد الانتظار"
+    }
+  },
+  "broadcast": {
+    "sendTitle": "إرسال بثّ",
+    "sendDescription": "أرسل إشعارًا إلى مجموعة من المستخدمين حسب الدور أو الصف أو الشعبة",
+    "notificationType": "نوع الإشعار",
+    "types": {
+      "announcement": "إعلان",
+      "system_alert": "تنبيه النظام",
+      "event_reminder": "تذكير بفعالية"
+    },
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "عنوان البثّ",
+    "message": "الرسالة",
+    "messagePlaceholder": "اكتب رسالة البثّ...",
+    "targetRole": "الدور المستهدف (اختياري)",
+    "allRoles": "جميع الأدوار",
+    "roles": {
+      "TEACHER": "المعلمون",
+      "STUDENT": "الطلاب",
+      "GUARDIAN": "أولياء الأمور",
+      "STAFF": "الموظفون",
+      "ADMIN": "المدراء",
+      "ACCOUNTANT": "المحاسبون"
+    },
+    "gradeOrSection": "الصف أو الشعبة (اختياري)",
+    "wholeSchool": "المدرسة كلها",
+    "sending": "جارٍ الإرسال...",
+    "sent": "تم إرسال البثّ! أُنشئ {count} إشعار.",
+    "sendFailed": "تعذّر إرسال البثّ. يرجى المحاولة مرة أخرى.",
+    "recentTitle": "البثّ الأخير",
+    "recentDescription": "آخر 10 رسائل بثّ",
+    "empty": "لم يُرسل أي بثّ بعد",
+    "sentOf": "أُرسل {sent} من {total}",
+    "failedCount": "فشل {count}",
+    "status": {
+      "done": "تم",
+      "processing": "قيد المعالجة",
+      "failed": "فشل",
+      "pending": "قيد الانتظار"
+    }
+  },
+  "notificationSettings": {
+    "publishing": {
+      "title": "إعدادات النشر الافتراضية",
+      "description": "الإعدادات الافتراضية للإعلانات الجديدة",
+      "defaultScope": "النطاق الافتراضي",
+      "defaultPriority": "الأولوية الافتراضية",
+      "autoPublish": "النشر التلقائي",
+      "autoPublishHint": "نشر الإعلانات فورًا دون مراجعة",
+      "defaultExpiry": "مدة الصلاحية الافتراضية (بالأيام)"
+    },
+    "scope": {
+      "school": "المدرسة كلها",
+      "grade": "الصف",
+      "section": "الشعبة",
+      "role": "الدور"
+    },
+    "priority": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    },
+    "delivery": {
+      "title": "تسليم الإشعارات",
+      "description": "كيفية وصول الإعلانات إلى المستخدمين",
+      "emailOnPublish": "البريد الإلكتروني عند النشر",
+      "emailOnPublishHint": "إرسال إشعارات بالبريد الإلكتروني عند نشر الإعلانات",
+      "push": "الإشعارات الفورية",
+      "pushHint": "إرسال إشعارات فورية (عند توفرها)",
+      "quietStart": "بداية ساعات الهدوء",
+      "quietEnd": "نهاية ساعات الهدوء",
+      "digest": "وتيرة الملخّص"
+    },
+    "digest": {
+      "none": "بدون",
+      "daily": "يوميًا",
+      "weekly": "أسبوعيًا"
+    },
+    "retention": {
+      "title": "البيانات والاحتفاظ",
+      "description": "سياسات التتبّع والاحتفاظ بالبيانات",
+      "readTracking": "تتبّع القراءة",
+      "readTrackingHint": "تتبّع المستخدمين الذين قرأوا الإعلانات",
+      "period": "مدة الاحتفاظ (بالأيام)",
+      "autoArchive": "الأرشفة التلقائية",
+      "autoArchiveHint": "أرشفة الإعلانات القديمة تلقائيًا",
+      "archiveAfter": "الأرشفة بعد (بالأيام)"
+    },
+    "saved": "تم حفظ الإعدادات بنجاح!",
+    "saveFailed": "تعذّر حفظ الإعدادات. يرجى المحاولة مرة أخرى.",
+    "saving": "جارٍ الحفظ...",
+    "save": "حفظ الإعدادات"
+  },
+  "templates": {
+    "heading": "قوالب الإشعارات",
+    "configuredCount": "{count} قالب مُعدّ",
+    "createTemplate": "إنشاء قالب",
+    "editTemplate": "تعديل القالب",
+    "updateTemplate": "تحديث القالب",
+    "deleteTemplate": "حذف القالب",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا القالب؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleteFailed": "تعذّر حذف القالب. يرجى المحاولة مرة أخرى.",
+    "saveFailed": "تعذّر حفظ القالب. يرجى المحاولة مرة أخرى.",
+    "columns": {
+      "type": "النوع",
+      "channel": "القناة",
+      "title": "العنوان",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "empty": "لا توجد قوالب بعد. أنشئ أول قالب.",
+    "active": "فعّال",
+    "inactive": "غير فعّال",
+    "notificationType": "نوع الإشعار",
+    "channel": "القناة",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "عنوان الإشعار (يدعم متغيرات {{variable}})",
+    "body": "المحتوى",
+    "bodyPlaceholder": "نص الإشعار...",
+    "emailSubject": "موضوع البريد (اختياري)",
+    "emailSubjectPlaceholder": "سطر موضوع بريد مخصص",
+    "emailBody": "نص البريد (اختياري)",
+    "emailBodyPlaceholder": "نص بريد HTML مخصص...",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ...",
+    "delete": "حذف",
+    "deleting": "جارٍ الحذف...",
+    "types": {
+      "message": "رسالة",
+      "message_mention": "إشارة في رسالة",
+      "assignment_created": "إنشاء واجب",
+      "assignment_due": "موعد تسليم واجب",
+      "assignment_graded": "تصحيح واجب",
+      "grade_posted": "نشر الدرجات",
+      "attendance_marked": "تسجيل الحضور",
+      "attendance_alert": "تنبيه حضور",
+      "absence_intention": "إشعار غياب",
+      "absence_intention_decision": "قرار إشعار الغياب",
+      "fee_due": "استحقاق رسوم",
+      "fee_overdue": "تأخر سداد الرسوم",
+      "fee_paid": "سداد الرسوم",
+      "announcement": "إعلان",
+      "event_reminder": "تذكير بفعالية",
+      "class_cancelled": "إلغاء حصة",
+      "class_rescheduled": "إعادة جدولة حصة",
+      "system_alert": "تنبيه النظام",
+      "account_created": "إنشاء حساب",
+      "password_reset": "إعادة تعيين كلمة المرور",
+      "login_alert": "تنبيه تسجيل دخول",
+      "document_shared": "مشاركة مستند",
+      "report_ready": "تقرير جاهز"
+    },
+    "channels": {
+      "in_app": "داخل التطبيق",
+      "email": "البريد الإلكتروني",
+      "push": "إشعار فوري",
+      "sms": "رسالة نصية"
+    }
+  },
+  "security": {
+    "auditEventsToday": "أحداث التدقيق اليوم",
+    "loggedActions": "الإجراءات المسجّلة",
+    "failedLogins": "محاولات الدخول الفاشلة",
+    "last24Hours": "آخر 24 ساعة",
+    "twoFactorEnabled": "المصادقة الثنائية مفعّلة",
+    "percentOfUsers": "{percent} من المستخدمين",
+    "noUsers": "لا يوجد مستخدمون",
+    "securityScore": "درجة الأمان",
+    "scoreGood": "حماية جيدة",
+    "scoreImprove": "تحتاج إلى تحسين",
+    "scoreAction": "يلزم اتخاذ إجراء",
+    "tabs": {
+      "audit": "سجل التدقيق",
+      "access": "التحكم في الوصول"
+    },
+    "loadingAudit": "جارٍ تحميل سجلات التدقيق...",
+    "loadingAccess": "جارٍ تحميل التحكم في الوصول..."
+  },
+  "audit": {
+    "title": "سجل التدقيق",
+    "totalEvents": "إجمالي الأحداث: {count}",
+    "columns": {
+      "time": "الوقت",
+      "user": "المستخدم",
+      "action": "الإجراء",
+      "entity": "الكيان",
+      "details": "التفاصيل"
+    },
+    "empty": "لم تُسجَّل أي أحداث تدقيق بعد",
+    "system": "النظام",
+    "viewDetails": "عرض التفاصيل",
+    "detailsTitle": "تفاصيل حدث التدقيق",
+    "notAvailable": "غير متاح",
+    "ipAddress": "عنوان IP",
+    "previousValue": "القيمة السابقة",
+    "newValue": "القيمة الجديدة",
+    "roles": {
+      "DEVELOPER": "مطوّر",
+      "ADMIN": "مدير",
+      "TEACHER": "معلم",
+      "STUDENT": "طالب",
+      "GUARDIAN": "ولي أمر",
+      "ACCOUNTANT": "محاسب",
+      "STAFF": "موظف",
+      "USER": "مستخدم",
+      "PRINCIPAL": "مدير المدرسة"
+    },
+    "actions": {
+      "CREATED": "إنشاء",
+      "UPDATED": "تحديث",
+      "DELETED": "حذف",
+      "create": "إنشاء",
+      "update": "تحديث",
+      "delete": "حذف",
+      "view": "عرض",
+      "login": "تسجيل دخول",
+      "logout": "تسجيل خروج",
+      "CHECK_IN": "تسجيل حضور"
+    }
+  },
+  "access": {
+    "withTwoFactor": "{count} بمصادقة ثنائية",
+    "matrixTitle": "مصفوفة الصلاحيات",
+    "matrixDescription": "الصلاحيات الممنوحة لكل دور",
+    "roles": {
+      "DEVELOPER": "مطوّر",
+      "ADMIN": "مدير",
+      "TEACHER": "معلم",
+      "STUDENT": "طالب",
+      "GUARDIAN": "ولي أمر",
+      "ACCOUNTANT": "محاسب",
+      "STAFF": "موظف",
+      "USER": "مستخدم",
+      "PRINCIPAL": "مدير المدرسة"
+    },
+    "permissions": {
+      "manageUsers": "إدارة المستخدمين",
+      "manageClasses": "إدارة الفصول",
+      "viewReports": "عرض التقارير",
+      "manageSettings": "إدارة الإعدادات",
+      "viewBilling": "عرض الفوترة",
+      "manageCommunication": "إدارة التواصل",
+      "viewAuditLogs": "عرض سجلات التدقيق",
+      "viewStudents": "عرض الطلاب",
+      "manageGrades": "إدارة الدرجات",
+      "markAttendance": "تسجيل الحضور",
+      "viewClassReports": "عرض تقارير الفصل",
+      "sendMessages": "إرسال الرسائل",
+      "viewGrades": "عرض الدرجات",
+      "viewAttendance": "عرض الحضور",
+      "viewAssignments": "عرض الواجبات",
+      "viewStudentGrades": "عرض درجات الطالب",
+      "receiveNotifications": "استلام الإشعارات",
+      "manageInvoices": "إدارة الفواتير",
+      "viewFinancialReports": "عرض التقارير المالية",
+      "processPayments": "معالجة المدفوعات"
+    }
+  },
+  "analysis": {
+    "title": "تحليل المدرسة",
+    "description": "تحليلات ورؤى حول أداء المدرسة والحضور والمقاييس الأكاديمية.",
+    "totalStudents": "إجمالي الطلاب",
+    "enrolledStudents": "الطلاب المسجّلون",
+    "totalTeachers": "إجمالي المعلمين",
+    "activeFaculty": "الهيئة التدريسية الفعّالة",
+    "studentTeacher": "الطلاب إلى المعلمين",
+    "ratio": "النسبة",
+    "attendanceRate": "نسبة الحضور",
+    "averageThisTerm": "المتوسط في هذا الفصل",
+    "enrollmentTrends": "اتجاهات التسجيل",
+    "enrollmentOverTime": "تسجيل الطلاب عبر الزمن",
+    "gradeDistribution": "توزيع المراحل الدراسية",
+    "studentsByLevel": "الطلاب حسب المرحلة الدراسية",
+    "chartComingSoon": "الرسم البياني قريبًا",
+    "academicPerformance": "الأداء الأكاديمي",
+    "academicPerformanceDesc": "أبرز المقاييس والرؤى الأكاديمية",
+    "passRate": "نسبة النجاح",
+    "subjectsOffered": "المواد المطروحة",
+    "activeClasses": "الفصول الفعّالة",
+    "avgGpa": "متوسط المعدل التراكمي",
+    "totalPeople": "إجمالي الأفراد",
+    "attendanceGoalMet": "تحقيق هدف الحضور",
+    "academicSuccess": "النجاح الأكاديمي"
+  },
+  "reports": {
+    "academic": {
+      "title": "التقارير الأكاديمية",
+      "subtitle": "تحليلات أداء الطلاب",
+      "description": "حلّل درجات الطلاب ونتائج الاختبارات والتقدّم الأكاديمي.",
+      "action": "عرض التقارير الأكاديمية"
+    },
+    "attendance": {
+      "title": "تقارير الحضور",
+      "subtitle": "أنماط الحضور واتجاهاته",
+      "description": "اطّلع على سجلات الحضور وأنماط الغياب والمشاركة في الفصول.",
+      "action": "عرض تقارير الحضور"
+    },
+    "financial": {
+      "title": "التقارير المالية",
+      "subtitle": "تحليل الإيرادات والمصروفات",
+      "description": "تابع الإيرادات والمصروفات ومؤشرات الأداء المالي.",
+      "action": "عرض التقارير المالية"
+    }
+  }
+}

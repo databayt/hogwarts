@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react"
 import { Loader2, RotateCcw, Undo2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatDateTime } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import {
   AlertDialog,
@@ -24,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { formatConsoleDateTime } from "@/components/school-dashboard/school/format"
 
 import { listImportBatches, resumeImport, undoImport } from "./actions"
 import type { BatchSummary } from "./engine/types"
@@ -147,7 +147,7 @@ function BatchRow({
           </Badge>
         </div>
         <p className="text-muted-foreground truncate text-xs">
-          {b.fileName} · {formatDateTime(b.createdAt, lang)}
+          {b.fileName} · {formatConsoleDateTime(b.createdAt, lang)}
         </p>
         {inFlight ? (
           <div className="flex items-center gap-2 pt-1">

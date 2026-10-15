@@ -16,9 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return constructMetadata({
-    title:
-      dictionary?.school?.billing?.title || "Billing – School Administration",
-    description: "Manage billing, subscription, and payment information.",
+    title: dictionary.schoolConsole.meta.billing,
+    description: dictionary.schoolConsole.meta.billingDescription,
   })
 }
 

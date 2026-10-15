@@ -16,9 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return {
-    title:
-      dictionary?.school?.schoolAdmin?.navigation?.bulk ||
-      "School: Bulk Operations",
+    title: dictionary.schoolConsole.meta.bulk,
   }
 }
 
@@ -28,9 +26,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
-      <BreadcrumbTitle
-        title={dictionary?.school?.schoolAdmin?.navigation?.bulk}
-      />
+      <BreadcrumbTitle title={dictionary.schoolConsole.meta.bulk} />
       <BulkContent dictionary={dictionary} lang={lang} />
     </>
   )

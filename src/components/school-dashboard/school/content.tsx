@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 import {
+  AlertCircle,
   ArrowRight,
   Bell,
   CheckCircle2,
@@ -24,6 +25,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { fill, formatConsoleNumber } from "./format"
 
 interface Props {
   dictionary: Dictionary
@@ -83,87 +86,77 @@ export default async function AdminContent({ dictionary, lang }: Props) {
     }
   }
 
-  const d = dictionary?.admin
+  const t = dictionary.schoolConsole.overview
+  const num = (v: number, opts?: Intl.NumberFormatOptions) =>
+    formatConsoleNumber(v, lang, opts)
 
   const stats = [
     {
-      label: d?.stats?.users || "Users",
+      label: t.stats.users,
       value: totalUsers,
-      sub: `${activeUsers} ${d?.stats?.activeInLast30Days || "verified"}`,
+      sub: fill(t.stats.verifiedCount, { count: num(activeUsers) }),
     },
     {
-      label: d?.stats?.teachers || "Teachers",
+      label: t.stats.teachers,
       value: totalTeachers,
-      sub: d?.stats?.activeTeachers || "Active teachers",
+      sub: t.stats.teachersSub,
     },
     {
-      label: d?.stats?.students || "Students",
+      label: t.stats.students,
       value: totalStudents,
-      sub: d?.stats?.enrolledStudents || "Enrolled students",
+      sub: t.stats.studentsSub,
     },
     {
-      label: d?.stats?.departments || "Departments",
+      label: t.stats.departments,
       value: totalDepartments,
-      sub: d?.stats?.activeDepartments || "Active departments",
+      sub: t.stats.departmentsSub,
     },
   ]
 
   const modules = [
     {
-      title: d?.cards?.configuration?.viewSettings || "Configuration",
-      description:
-        d?.cards?.configuration?.details ||
-        "School profile, academic years, departments, and grading",
+      title: t.modules.configuration.title,
+      description: t.modules.configuration.description,
       href: `/${lang}/school/configuration/title`,
       icon: Settings,
     },
     {
-      title: d?.quickActions?.addUser || "Membership",
-      description:
-        d?.quickActions?.addUserDesc ||
-        "Users, roles, invitations, and accounts",
+      title: t.modules.membership.title,
+      description: t.modules.membership.description,
       href: `/${lang}/school/membership`,
       icon: UserCog,
     },
     {
-      title: d?.quickActions?.announce || "Communication",
-      description:
-        d?.quickActions?.announceDesc ||
-        "Announcements, notifications, and messaging",
+      title: t.modules.communication.title,
+      description: t.modules.communication.description,
       href: `/${lang}/school/communication`,
       icon: Bell,
     },
     {
-      title: d?.quickActions?.viewLogs || "Security",
-      description:
-        d?.quickActions?.viewLogsDesc ||
-        "Audit logs, sessions, and access control",
+      title: t.modules.security.title,
+      description: t.modules.security.description,
       href: `/${lang}/school/security`,
       icon: Shield,
     },
     {
-      title: d?.quickActions?.exportData || "Reports",
-      description:
-        d?.quickActions?.exportDataDesc ||
-        "Analytics, exports, and data insights",
+      title: t.modules.reports.title,
+      description: t.modules.reports.description,
       href: `/${lang}/school/reports`,
       icon: FileText,
     },
     {
-      title: d?.cards?.configuration?.schoolProfile || "Bulk Operations",
-      description:
-        d?.quickActions?.bulkDesc ||
-        "Import, export, and batch process school data",
+      title: t.modules.bulk.title,
+      description: t.modules.bulk.description,
       href: `/${lang}/school/bulk`,
       icon: Upload,
     },
   ]
 
   const services = [
-    { name: d?.systemStatus?.api || "API Services", icon: Server },
-    { name: d?.systemStatus?.database || "Database", icon: Database },
-    { name: d?.systemStatus?.storage || "Storage", icon: Cloud },
-    { name: d?.systemStatus?.email || "Email Service", icon: Mail },
+    { name: t.systemStatus.api, icon: Server },
+    { name: t.systemStatus.database, icon: Database },
+    { name: t.systemStatus.storage, icon: Cloud },
+    { name: t.systemStatus.email, icon: Mail },
   ]
 
   // Proportional bar segments for organization composition
@@ -178,31 +171,31 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       value: totalTeachers,
       color: "bg-[#6A9BCC]",
       dot: "bg-[#6A9BCC]",
-      label: d?.stats?.teachers || "Teachers",
+      label: t.stats.teachers,
     },
     {
       value: totalStudents,
       color: "bg-[#CBCADB]",
       dot: "bg-[#CBCADB]",
-      label: d?.stats?.students || "Students",
+      label: t.stats.students,
     },
     {
       value: totalDepartments,
       color: "bg-[#BCD1CA]",
       dot: "bg-[#BCD1CA]",
-      label: d?.stats?.departments || "Departments",
+      label: t.stats.departments,
     },
     {
       value: totalClassrooms,
       color: "bg-amber-500",
       dot: "bg-amber-500",
-      label: d?.stats?.totalClassrooms || "Classrooms",
+      label: t.stats.classrooms,
     },
     {
       value: activeUsers,
       color: "bg-rose-400",
       dot: "bg-rose-400",
-      label: d?.stats?.currentlyLoggedIn || "Verified",
+      label: t.stats.verified,
     },
   ]
 
@@ -215,11 +208,11 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         {stats.map((stat) => (
           <Card key={stat.label} className={glass}>
             <CardContent className="p-5">
-              <p className="text-muted-foreground text-xs tracking-wide uppercase">
+              <p className="text-muted-foreground text-xs tracking-wide uppercase rtl:tracking-normal">
                 {stat.label}
               </p>
               <p className="mt-2 text-3xl font-bold tracking-tight">
-                {stat.value.toLocaleString()}
+                {num(stat.value)}
               </p>
               <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
             </CardContent>
@@ -228,46 +221,41 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       </div>
 
       {/* ============================================================== */}
-      {/* SECTION 2 — Operation CTA + Organization snapshot              */}
+      {/* SECTION 2 — Organization snapshot                              */}
       {/* ============================================================== */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* --- Operation / View Settings CTA -------------------------- */}
-        <Card className="overflow-hidden rounded-2xl border-none bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg dark:from-emerald-600 dark:to-teal-700">
-          <CardContent className="p-6">
-            <p className="text-xs font-medium tracking-wider text-white/70 uppercase">
-              {d?.stats?.operation || "Operation"}
-            </p>
-            <p className="mt-2 text-lg leading-tight font-bold">
-              {d?.cards?.configuration?.viewSettings || "View Settings"}
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-white/80">
-              {d?.cards?.configuration?.details ||
-                "Manage school profile, academic years, and settings."}
-            </p>
-            <Link
-              href={`/${lang}/school/configuration/title`}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/30"
-            >
-              {d?.actions?.configure || "Configure"}
-              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-5">
         {/* --- Organization Snapshot ---------------------------------- */}
-        <Card className={cn(glass, "lg:col-span-2")}>
+        <Card className={glass}>
           <CardHeader className="px-6 pt-5 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {d?.stats?.organization || "Organization"}
-              </CardTitle>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-1">
+                <CardTitle className="text-base">
+                  {t.organization.title}
+                </CardTitle>
+                <p className="text-muted-foreground text-xs">
+                  {fill(t.organization.caption, { total: num(orgTotal) })}
+                </p>
+              </div>
               {pendingApprovals > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="bg-amber-500/10 text-xs text-amber-600"
+                <Link
+                  href={`/${lang}/school/membership`}
+                  className="group"
+                  aria-label={t.organization.attentionLink}
                 >
-                  {pendingApprovals} {d?.stats?.requiresAttention || "pending"}
-                </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5 bg-amber-500/10 text-xs text-amber-600 transition-colors group-hover:bg-amber-500/20"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    {fill(
+                      pendingApprovals === 1
+                        ? t.organization.attentionOne
+                        : t.organization.attentionMany,
+                      { count: num(pendingApprovals) }
+                    )}
+                    <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                  </Badge>
+                </Link>
               )}
             </div>
           </CardHeader>
@@ -279,11 +267,23 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                 return (
                   <div
                     key={seg.label}
-                    className="grid grid-cols-[7rem_1fr_3rem] items-center gap-4 py-2 first:pt-0 last:pb-0"
+                    className="grid grid-cols-[minmax(7rem,10rem)_1fr_3rem] items-center gap-4 py-3 first:pt-0 last:pb-0"
                   >
-                    <span className="text-muted-foreground truncate text-xs">
-                      {seg.label}
-                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {seg.label}
+                      </p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {fill(t.organization.barCaption, {
+                          value: num(seg.value),
+                          total: num(orgTotal),
+                          percent: num(pct / 100, {
+                            style: "percent",
+                            maximumFractionDigits: 0,
+                          }),
+                        })}
+                      </p>
+                    </div>
                     <div className="bg-muted/50 h-1.5 w-full overflow-hidden rounded-full">
                       <div
                         className={cn("h-full rounded-full", seg.color)}
@@ -291,7 +291,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       />
                     </div>
                     <span className="text-end text-sm font-semibold tabular-nums">
-                      {seg.value}
+                      {num(seg.value)}
                     </span>
                   </div>
                 )
@@ -308,9 +308,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         {/* --- Admin Workflow Guide (module navigation) --------------- */}
         <Card className={cn(glass, "overflow-hidden")}>
           <CardHeader className="px-6 pt-5 pb-3">
-            <CardTitle className="text-base">
-              {d?.workflow?.title || "Admin Workflow Guide"}
-            </CardTitle>
+            <CardTitle className="text-base">{t.workflow.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-border/50 divide-y">
@@ -346,14 +344,14 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           <CardHeader className="px-6 pt-5 pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">
-                {d?.systemStatus?.title || "System Status"}
+                {t.systemStatus.title}
               </CardTitle>
               <span className="flex items-center gap-1.5 text-xs text-emerald-600">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                {d?.systemStatus?.operational || "Operational"}
+                {t.systemStatus.operational}
               </span>
             </div>
           </CardHeader>
