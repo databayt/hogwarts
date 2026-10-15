@@ -2,49 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Interventions — a quiet stat row, one Segmented status filter + search,
+ * and a clean table. `?student=<id>` scopes it to one student (linked from
+ * the at-risk list's "…" menu).
+ */
 import { useCallback, useEffect, useState, useTransition } from "react"
-import { format } from "date-fns"
-import {
-  AlertTriangle,
-  ArrowUpDown,
-  Award,
-  Building,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Filter,
-  GraduationCap,
-  HelpCircle,
-  Home,
-  Loader2,
-  Mail,
-  Phone,
-  RefreshCw,
-  Search,
-  User,
-  UserCheck,
-  Users,
-} from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import type { InterventionStatus } from "@prisma/client"
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -54,87 +25,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getAllInterventions,
   getInterventionStats,
 } from "@/components/school-dashboard/attendance/actions"
+import { formatCount } from "@/components/school-dashboard/school/configuration/ui/format"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import { phone } from "../shared/phone"
+import { BAND_TONE, legacyBand } from "../early-warning/risk"
+import {
+  pick,
+  pl,
+  useRiskDict,
+  type RiskDict,
+} from "../early-warning/use-risk-dict"
+import { AttendanceSectionNav } from "../ui/section-nav"
+import { INTERVENTION_TYPE_KEYS } from "./create-dialog"
 
-// Icon and color config (labels come from dictionary)
-const INTERVENTION_TYPE_ICONS: Record<
-  string,
-  { icon: React.ReactNode; color: string }
-> = {
-  PARENT_PHONE_CALL: {
-    icon: <Phone className="h-4 w-4" />,
-    color: "text-blue-500",
-  },
-  PARENT_EMAIL: { icon: <Mail className="h-4 w-4" />, color: "text-blue-500" },
-  PARENT_MEETING: {
-    icon: <Users className="h-4 w-4" />,
-    color: "text-green-500",
-  },
-  HOME_VISIT: { icon: <Home className="h-4 w-4" />, color: "text-purple-500" },
-  COUNSELOR_REFERRAL: {
-    icon: <GraduationCap className="h-4 w-4" />,
-    color: "text-yellow-500",
-  },
-  SOCIAL_WORKER_REFERRAL: {
-    icon: <UserCheck className="h-4 w-4" />,
-    color: "text-orange-500",
-  },
-  ADMINISTRATOR_MEETING: {
-    icon: <Building className="h-4 w-4" />,
-    color: "text-red-500",
-  },
-  ATTENDANCE_CONTRACT: {
-    icon: <FileText className="h-4 w-4" />,
-    color: "text-red-500",
-  },
-  TRUANCY_REFERRAL: {
-    icon: <AlertTriangle className="h-4 w-4" />,
-    color: "text-red-700",
-  },
-  COMMUNITY_RESOURCE: {
-    icon: <Building className="h-4 w-4" />,
-    color: "text-teal-500",
-  },
-  ACADEMIC_SUPPORT: {
-    icon: <GraduationCap className="h-4 w-4" />,
-    color: "text-indigo-500",
-  },
-  MENTORSHIP_ASSIGNMENT: {
-    icon: <Award className="h-4 w-4" />,
-    color: "text-pink-500",
-  },
-  INCENTIVE_PROGRAM: {
-    icon: <Award className="h-4 w-4" />,
-    color: "text-green-500",
-  },
-  OTHER: { icon: <HelpCircle className="h-4 w-4" />, color: "text-gray-500" },
+type Filter = "all" | "active" | "completed" | "closed"
+
+const FILTER_STATUSES: Record<Filter, InterventionStatus[] | undefined> = {
+  all: undefined,
+  active: ["SCHEDULED", "IN_PROGRESS"],
+  completed: ["COMPLETED"],
+  closed: ["CANCELLED", "ESCALATED"],
 }
 
-// Map type codes to dictionary keys
-const TYPE_KEY_MAP: Record<string, string> = {
-  PARENT_PHONE_CALL: "parentPhoneCall",
-  PARENT_EMAIL: "parentEmail",
-  PARENT_MEETING: "parentMeeting",
-  HOME_VISIT: "homeVisit",
-  COUNSELOR_REFERRAL: "counselorReferral",
-  SOCIAL_WORKER_REFERRAL: "socialWorkerReferral",
-  ADMINISTRATOR_MEETING: "administratorMeeting",
-  ATTENDANCE_CONTRACT: "attendanceContract",
-  TRUANCY_REFERRAL: "truancyReferral",
-  COMMUNITY_RESOURCE: "communityResource",
-  ACADEMIC_SUPPORT: "academicSupport",
-  MENTORSHIP_ASSIGNMENT: "mentorshipAssignment",
-  INCENTIVE_PROGRAM: "incentiveProgram",
-  OTHER: "other",
-}
-
-const STATUS_KEY_MAP: Record<string, string> = {
+const STATUS_KEYS: Record<string, string> = {
   SCHEDULED: "scheduled",
   IN_PROGRESS: "inProgress",
   COMPLETED: "completed",
@@ -142,501 +59,338 @@ const STATUS_KEY_MAP: Record<string, string> = {
   ESCALATED: "escalated",
 }
 
-const STATUS_COLORS: Record<string, { color: string; bgColor: string }> = {
-  SCHEDULED: { color: "text-blue-700", bgColor: "bg-blue-100" },
-  IN_PROGRESS: { color: "text-yellow-700", bgColor: "bg-yellow-100" },
-  COMPLETED: { color: "text-green-700", bgColor: "bg-green-100" },
-  CANCELLED: { color: "text-gray-700", bgColor: "bg-gray-100" },
-  ESCALATED: { color: "text-red-700", bgColor: "bg-red-100" },
+const STATUS_TONE: Record<string, string> = {
+  SCHEDULED: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
+  IN_PROGRESS: "bg-amber-400/15 text-amber-700 dark:text-amber-400",
+  COMPLETED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  CANCELLED: "bg-muted text-muted-foreground",
+  ESCALATED: "bg-red-500/10 text-red-700 dark:text-red-400",
 }
 
-const PRIORITY_KEY_MAP: Record<number, string> = {
-  1: "low",
-  2: "medium",
-  3: "high",
-  4: "critical",
-}
+const PAGE_SIZE = 15
 
-const PRIORITY_COLORS: Record<number, string> = {
-  1: "text-gray-500",
-  2: "text-blue-500",
-  3: "text-orange-500",
-  4: "text-red-500",
-}
-
-interface Intervention {
+interface Row {
   id: string
   studentId: string
   studentName: string
   className: string | null
   type: string
   title: string
-  description: string | null
   status: string
-  priority: number
   scheduledDate: string | null
-  completedDate: string | null
-  assigneeName: string | null
-  outcome: string | null
   createdAt: string
+  assigneeName: string | null
   riskLevel: string
 }
 
 interface Stats {
-  byType: Array<{ type: string; count: number }>
   byStatus: Array<{ status: string; count: number }>
-  successRate: number
-  averageDaysToComplete: number
+  successRate: number | null
+  averageDaysToComplete: number | null
 }
 
-interface InterventionsContentProps {
-  locale?: string
+/** Gregorian calendar + Latin digits in both languages (ar-SA defaults to Hijri). */
+export function formatDay(iso: string, lang: string): string {
+  return new Intl.DateTimeFormat(
+    lang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+    { day: "numeric", month: "short", year: "numeric" }
+  ).format(new Date(iso))
 }
 
-export function InterventionsContent({
-  locale = "en",
-}: InterventionsContentProps) {
-  const [interventions, setInterventions] = useState<Intervention[]>([])
+function fmt1(n: number, lang: string): string {
+  return new Intl.NumberFormat(lang === "ar" ? "ar-SA" : "en-US", {
+    numberingSystem: "latn",
+    maximumFractionDigits: 1,
+  }).format(n)
+}
+
+export function InterventionsContent({ locale = "ar" }: { locale?: string }) {
+  const lang = locale
+  const router = useRouter()
+  const pathname = usePathname()
+  const studentId = useSearchParams().get("student") ?? undefined
+
+  const { t, table, typeLabels, statusLabels } = useRiskDict()
+  const ti: NonNullable<RiskDict["interventions"]> = t.interventions ?? {}
+
+  const [filter, setFilter] = useState<Filter>("all")
+  const [search, setSearch] = useState("")
+  const [query, setQuery] = useState("")
+  const [page, setPage] = useState(1)
+  const [rows, setRows] = useState<Row[]>([])
+  const [total, setTotal] = useState(0)
+  const [pageCount, setPageCount] = useState(1)
   const [stats, setStats] = useState<Stats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
 
-  // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [typeFilter, setTypeFilter] = useState<string>("all")
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setQuery(search)
+      setPage(1)
+    }, 250)
+    return () => clearTimeout(id)
+  }, [search])
 
-  // Pagination
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
+  // Stats are admin-only server-side; a teacher simply gets no stat row.
+  useEffect(() => {
+    getInterventionStats().then((r) => {
+      if (r.success && r.data) setStats(r.data)
+    })
+  }, [])
 
-  const { dictionary } = useDictionary()
-  const t = (dictionary?.school?.attendance as any)?.interventions as
-    | Record<string, any>
-    | undefined
-  const typeLabels = t?.interventionTypes as Record<string, string> | undefined
-  const statusLabels = t?.statusConfig as Record<string, string> | undefined
-  const priorityLabels = t?.priorityConfig as Record<string, string> | undefined
-  const limit = 15
-
-  const fetchData = useCallback(async () => {
-    setIsLoading(true)
-
-    const [interventionsResult, statsResult] = await Promise.all([
-      getAllInterventions({
-        search: search || undefined,
-        status:
-          statusFilter !== "all"
-            ? (statusFilter as
-                | "SCHEDULED"
-                | "IN_PROGRESS"
-                | "COMPLETED"
-                | "CANCELLED"
-                | "ESCALATED")
-            : undefined,
-        type:
-          typeFilter !== "all"
-            ? (typeFilter as
-                | "PARENT_PHONE_CALL"
-                | "PARENT_EMAIL"
-                | "PARENT_MEETING"
-                | "HOME_VISIT"
-                | "COUNSELOR_REFERRAL"
-                | "SOCIAL_WORKER_REFERRAL"
-                | "ADMINISTRATOR_MEETING"
-                | "ATTENDANCE_CONTRACT"
-                | "TRUANCY_REFERRAL"
-                | "COMMUNITY_RESOURCE"
-                | "ACADEMIC_SUPPORT"
-                | "MENTORSHIP_ASSIGNMENT"
-                | "INCENTIVE_PROGRAM"
-                | "OTHER")
-            : undefined,
+  const load = useCallback(() => {
+    startTransition(async () => {
+      const r = await getAllInterventions({
+        status: FILTER_STATUSES[filter],
+        search: query || undefined,
+        studentId,
         page,
-        limit,
-      }),
-      getInterventionStats(),
-    ])
-
-    if (interventionsResult.success && interventionsResult.data) {
-      setInterventions(interventionsResult.data.interventions)
-      setTotalPages(interventionsResult.data.pagination.totalPages)
-      setTotal(interventionsResult.data.pagination.total)
-    }
-
-    if (statsResult.success && statsResult.data) {
-      setStats(statsResult.data)
-    }
-
-    setIsLoading(false)
-  }, [search, statusFilter, typeFilter, page])
+        limit: PAGE_SIZE,
+      })
+      if (r.success && r.data) {
+        setRows(r.data.interventions)
+        setTotal(r.data.pagination.total)
+        setPageCount(Math.max(1, r.data.pagination.totalPages))
+      }
+      setLoading(false)
+    })
+  }, [filter, query, studentId, page])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    load()
+  }, [load])
 
-  const handleSearch = (value: string) => {
-    setSearch(value)
-    setPage(1)
-  }
+  const count = (s: string[]) =>
+    stats?.byStatus
+      .filter((b) => s.includes(b.status))
+      .reduce((a, b) => a + b.count, 0) ?? 0
 
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value)
-    setPage(1)
-  }
+  const figures = stats
+    ? [
+        {
+          label: ti.active,
+          value: formatCount(count(["SCHEDULED", "IN_PROGRESS"]), lang),
+        },
+        { label: ti.completed, value: formatCount(count(["COMPLETED"]), lang) },
+        {
+          label: ti.successRate,
+          value:
+            stats.successRate === null
+              ? "—"
+              : `${fmt1(stats.successRate, lang)}%`,
+        },
+        {
+          label: ti.avgDays,
+          value:
+            stats.averageDaysToComplete === null
+              ? "—"
+              : (ti.daysValue ?? "{n}").replace(
+                  "{n}",
+                  fmt1(stats.averageDaysToComplete, lang)
+                ),
+        },
+      ]
+    : null
 
-  const handleTypeChange = (value: string) => {
-    setTypeFilter(value)
-    setPage(1)
-  }
-
-  const handleRefresh = () => {
-    startTransition(() => {
-      fetchData()
-    })
-  }
-
-  const getStatusBadge = (status: string) => {
-    const colors = STATUS_COLORS[status] || STATUS_COLORS.SCHEDULED
-    const label =
-      statusLabels?.[STATUS_KEY_MAP[status]] || STATUS_KEY_MAP[status] || status
-    return (
-      <Badge className={cn(colors.bgColor, colors.color, "font-normal")}>
-        {label}
-      </Badge>
-    )
-  }
-
-  const getTypeInfo = (type: string) => {
-    const iconConfig =
-      INTERVENTION_TYPE_ICONS[type] || INTERVENTION_TYPE_ICONS.OTHER
-    const label = typeLabels?.[TYPE_KEY_MAP[type]] || TYPE_KEY_MAP[type] || type
-    return { ...iconConfig, label }
-  }
-
-  const getPriorityInfo = (priority: number) => {
-    const color = PRIORITY_COLORS[priority] || PRIORITY_COLORS[2]
-    const label =
-      priorityLabels?.[PRIORITY_KEY_MAP[priority]] ||
-      PRIORITY_KEY_MAP[priority] ||
-      String(priority)
-    return { label, color }
-  }
-
-  const getRiskBadge = (riskLevel: string) => {
-    const colors: Record<string, string> = {
-      SATISFACTORY: "bg-green-100 text-green-700",
-      AT_RISK: "bg-yellow-100 text-yellow-700",
-      MODERATELY_CHRONIC: "bg-orange-100 text-orange-700",
-      SEVERELY_CHRONIC: "bg-red-100 text-red-700",
-    }
-    return colors[riskLevel] || "bg-gray-100 text-gray-700"
-  }
-
-  if (isLoading && interventions.length === 0) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    )
-  }
+  const typeLabel = (ty: string) =>
+    typeLabels[
+      INTERVENTION_TYPE_KEYS[ty as keyof typeof INTERVENTION_TYPE_KEYS]
+    ] ?? ty
+  const filters = (["all", "active", "completed", "closed"] as Filter[]).map(
+    (v) => ({ value: v, label: pick(ti.filters, v) ?? v })
+  )
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      {stats && (
+      <AttendanceSectionNav group="risk" />
+
+      {figures ? (
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          {figures.map((f) => (
+            <div key={f.label} className="space-y-1">
+              <dt className="text-muted-foreground text-xs">{f.label}</dt>
+              <dd className="text-2xl font-semibold tracking-tight tabular-nums">
+                {f.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      {studentId ? (
+        <div className="bg-muted/60 flex items-center justify-between gap-3 rounded-full py-1.5 ps-4 pe-1.5 text-sm">
+          <span>{ti.forStudent}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full"
+            onClick={() => router.replace(pathname)}
+          >
+            <X className="size-3.5" />
+            {ti.showAll}
+          </Button>
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Segmented
+          value={filter}
+          onValueChange={(v) => {
+            setFilter(v)
+            setPage(1)
+          }}
+          options={filters}
+          className="overflow-x-auto"
+        />
+        <div className="relative sm:w-72">
+          <Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={ti.search}
+            className="rounded-full ps-9"
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2 rounded-2xl border p-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="bg-card flex flex-col items-center gap-1 rounded-2xl border px-6 py-16 text-center">
+          <p className="font-medium">
+            {query || filter !== "all" || studentId ? ti.noMatch : ti.empty}
+          </p>
+          {!query && filter === "all" && !studentId ? (
+            <p className="text-muted-foreground text-sm">{ti.emptyHint}</p>
+          ) : null}
+        </div>
+      ) : (
         <div
-          className={cn("grid grid-cols-2 gap-4 md:grid-cols-4", phone.panel)}
+          className={cn(
+            "bg-card overflow-hidden rounded-2xl border transition-opacity",
+            isPending && "opacity-60"
+          )}
         >
-          <Card className={phone.cell}>
-            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
-              <CardDescription className={phone.cellLabel}>
-                {t?.total || "Total"}
-              </CardDescription>
-              <CardTitle className={cn("text-2xl", phone.cellValue)}>
-                {total}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
-              <CardDescription className={phone.cellLabel}>
-                {t?.active || "Active"}
-              </CardDescription>
-              <CardTitle
-                className={cn("text-2xl text-yellow-600", phone.cellValue)}
-              >
-                {stats.byStatus
-                  .filter(
-                    (s) =>
-                      s.status === "SCHEDULED" || s.status === "IN_PROGRESS"
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="ps-4">{ti.columns?.student}</TableHead>
+                  <TableHead>{ti.columns?.type}</TableHead>
+                  <TableHead>{ti.columns?.status}</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {ti.columns?.risk}
+                  </TableHead>
+                  <TableHead>{ti.columns?.date}</TableHead>
+                  <TableHead className="hidden pe-4 lg:table-cell">
+                    {ti.columns?.assignee}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((r) => {
+                  const band = legacyBand(r.riskLevel)
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="ps-4">
+                        <p className="font-medium">
+                          <bdi>{r.studentName}</bdi>
+                        </p>
+                        {r.className ? (
+                          <p className="text-muted-foreground text-xs">
+                            <bdi>{r.className}</bdi>
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{typeLabel(r.type)}</p>
+                        {r.title && r.title !== typeLabel(r.type) ? (
+                          <p className="text-muted-foreground max-w-[14rem] truncate text-xs">
+                            <bdi>{r.title}</bdi>
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap",
+                            STATUS_TONE[r.status] ?? STATUS_TONE.CANCELLED
+                          )}
+                        >
+                          {statusLabels[STATUS_KEYS[r.status]] ?? r.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className="flex items-center gap-1.5 text-sm whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "size-1.5 rounded-full",
+                              BAND_TONE[band].dot
+                            )}
+                          />
+                          {pick(t.bands, band)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm whitespace-nowrap tabular-nums">
+                        {formatDay(r.scheduledDate ?? r.createdAt, lang)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden pe-4 text-sm lg:table-cell">
+                        {r.assigneeName ?? ti.unassigned}
+                      </TableCell>
+                    </TableRow>
                   )
-                  .reduce((a, b) => a + b.count, 0)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
-              <CardDescription className={phone.cellLabel}>
-                {t?.successRate || "Success Rate"}
-              </CardDescription>
-              <CardTitle
-                className={cn("text-2xl text-green-600", phone.cellValue)}
-              >
-                {stats.successRate.toFixed(1)}%
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
-              <CardDescription className={phone.cellLabel}>
-                {t?.avgDaysComplete || "Avg. Days to Complete"}
-              </CardDescription>
-              <CardTitle className={cn("text-2xl", phone.cellValue)}>
-                {stats.averageDaysToComplete.toFixed(1)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
-      {/* Filters */}
-      <Card className={phone.card}>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-              <Input
-                placeholder={
-                  t?.searchPlaceholder || "Search student or title..."
-                }
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className={cn("ps-10", phone.field)}
-              />
+      {!loading && rows.length > 0 ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {pl(ti.total, total, lang)}
+            {pageCount > 1 ? (
+              <>
+                {" · "}
+                {(table.pageOf ?? "")
+                  .replace("{page}", formatCount(page, lang))
+                  .replace("{pages}", formatCount(pageCount, lang))}
+              </>
+            ) : null}
+          </p>
+          {pageCount > 1 ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                disabled={page <= 1 || isPending}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="size-4 rtl:rotate-180" />
+                {table.previous}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                disabled={page >= pageCount || isPending}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                {table.next}
+                <ChevronRight className="size-4 rtl:rotate-180" />
+              </Button>
             </div>
-            <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className={cn("w-full md:w-[180px]", phone.field)}>
-                <SelectValue placeholder={t?.statusFilter || "Status"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.allStatuses || "All Statuses"}
-                </SelectItem>
-                {Object.entries(STATUS_COLORS).map(([key]) => (
-                  <SelectItem key={key} value={key}>
-                    {statusLabels?.[STATUS_KEY_MAP[key]] ||
-                      STATUS_KEY_MAP[key] ||
-                      key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={handleTypeChange}>
-              <SelectTrigger className={cn("w-full md:w-[180px]", phone.field)}>
-                <SelectValue placeholder={t?.typeFilter || "Type"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.allTypes || "All Types"}
-                </SelectItem>
-                {Object.keys(INTERVENTION_TYPE_ICONS).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {typeLabels?.[TYPE_KEY_MAP[key]] ||
-                      TYPE_KEY_MAP[key] ||
-                      key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleRefresh}
-              disabled={isPending}
-              aria-label={t?.refresh || "Refresh"}
-            >
-              <RefreshCw
-                className={cn("h-4 w-4", isPending && "animate-spin")}
-              />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {t?.allInterventions || "All Interventions"}
-          </CardTitle>
-          <CardDescription>
-            {(t?.showingOf || "Showing {shown} of {total} interventions")
-              .replace("{shown}", String(interventions.length))
-              .replace("{total}", String(total))}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {interventions.length === 0 ? (
-            <div className="text-muted-foreground py-12 text-center">
-              <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>
-                {t?.noInterventionsMatch ||
-                  "No interventions match your search"}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t?.typeLabel || "Type"}</TableHead>
-                      <TableHead>{t?.titleLabel || "Title"}</TableHead>
-                      <TableHead>{t?.studentLabel || "Student"}</TableHead>
-                      <TableHead>{t?.statusLabel || "Status"}</TableHead>
-                      <TableHead>{t?.priorityLabel || "Priority"}</TableHead>
-                      <TableHead>{t?.riskLabel || "Risk"}</TableHead>
-                      <TableHead>{t?.dateLabel || "Date"}</TableHead>
-                      <TableHead>{t?.assigneeLabel || "Assignee"}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {interventions.map((intervention) => {
-                      const typeInfo = getTypeInfo(intervention.type)
-                      const priorityInfo = getPriorityInfo(
-                        intervention.priority
-                      )
-
-                      return (
-                        <TableRow key={intervention.id}>
-                          <TableCell>
-                            <div
-                              className={cn(
-                                "flex items-center gap-2",
-                                typeInfo.color
-                              )}
-                            >
-                              {typeInfo.icon}
-                              <span className="hidden text-sm md:inline">
-                                {typeInfo.label}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-[200px]">
-                              <p className="truncate font-medium">
-                                {intervention.title}
-                              </p>
-                              {intervention.description && (
-                                <p className="text-muted-foreground truncate text-xs">
-                                  {intervention.description}
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <User className="text-muted-foreground h-4 w-4" />
-                              <div>
-                                <p className="text-sm">
-                                  {intervention.studentName}
-                                </p>
-                                {intervention.className && (
-                                  <p className="text-muted-foreground text-xs">
-                                    {intervention.className}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(intervention.status)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={priorityInfo.color}
-                            >
-                              {priorityInfo.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={getRiskBadge(intervention.riskLevel)}
-                            >
-                              {intervention.riskLevel.replace("_", " ")}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {intervention.scheduledDate ? (
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {format(
-                                    new Date(intervention.scheduledDate),
-                                    "PP"
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {intervention.assigneeName ||
-                                t?.unassigned ||
-                                "Unassigned"}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-4 flex items-center justify-between border-t pt-4">
-                  <p className="text-muted-foreground text-sm">
-                    {(t?.pageOf || "Page {page} of {total}")
-                      .replace("{page}", String(page))
-                      .replace("{total}", String(totalPages))}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-                      {t?.previous || "Previous"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page === totalPages}
-                    >
-                      {t?.next || "Next"}
-                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

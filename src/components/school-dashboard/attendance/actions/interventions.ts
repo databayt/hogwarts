@@ -667,6 +667,7 @@ export async function getAllInterventions(input?: {
             section: { select: { name: true } },
             attendances: {
               where: {
+                deletedAt: null,
                 date: {
                   gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
                 },
@@ -757,8 +758,10 @@ export async function getInterventionStats(): Promise<
     byType: Array<{ type: string; count: number }>
     byStatus: Array<{ status: string; count: number }>
     byMonth: Array<{ month: string; created: number; completed: number }>
-    successRate: number
-    averageDaysToComplete: number
+    /** completed ÷ closed (completed + cancelled + escalated); null when none closed. */
+    successRate: number | null
+    /** Mean days created → completed over COMPLETED rows; null when none. */
+    averageDaysToComplete: number | null
   }>
 > {
   try {
@@ -840,29 +843,34 @@ export async function getInterventionStats(): Promise<
       byMonth.push({ month: monthKey, created, completed })
     }
 
-    // Calculate success rate (completed vs total excluding scheduled)
-    const nonScheduled = interventions.filter((i) => i.status !== "SCHEDULED")
+    // Success = completed out of the closed ones; open work (scheduled /
+    // in progress) is neither a success nor a failure yet.
     const completed = interventions.filter((i) => i.status === "COMPLETED")
+    const closed = interventions.filter(
+      (i) =>
+        i.status === "COMPLETED" ||
+        i.status === "CANCELLED" ||
+        i.status === "ESCALATED"
+    )
     const successRate =
-      nonScheduled.length > 0
-        ? (completed.length / nonScheduled.length) * 100
-        : 0
+      closed.length > 0 ? (completed.length / closed.length) * 100 : null
 
-    // Calculate average days to complete
-    const completedWithDates = interventions.filter((i) => i.completedDate)
-    let totalDays = 0
-    completedWithDates.forEach((i) => {
-      if (i.completedDate) {
-        const days = Math.floor(
-          (new Date(i.completedDate).getTime() -
+    // Days to complete: COMPLETED rows with a date only, each clamped at 0
+    // (backfilled/seeded rows can carry a completedDate before createdAt).
+    const durations = completed
+      .filter((i) => i.completedDate)
+      .map((i) =>
+        Math.max(
+          0,
+          (new Date(i.completedDate!).getTime() -
             new Date(i.createdAt).getTime()) /
             (1000 * 60 * 60 * 24)
         )
-        totalDays += days
-      }
-    })
+      )
     const averageDaysToComplete =
-      completedWithDates.length > 0 ? totalDays / completedWithDates.length : 0
+      durations.length > 0
+        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        : null
 
     return {
       success: true,
@@ -870,8 +878,12 @@ export async function getInterventionStats(): Promise<
         byType,
         byStatus,
         byMonth,
-        successRate: Math.round(successRate * 10) / 10,
-        averageDaysToComplete: Math.round(averageDaysToComplete * 10) / 10,
+        successRate:
+          successRate === null ? null : Math.round(successRate * 10) / 10,
+        averageDaysToComplete:
+          averageDaysToComplete === null
+            ? null
+            : Math.round(averageDaysToComplete * 10) / 10,
       },
     }
   } catch (error) {
