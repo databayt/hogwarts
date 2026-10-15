@@ -2,19 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 
 import type { NameContact, NameContactListing } from "@/lib/name-utils"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { resolveActionError } from "@/lib/resolve-action-error"
+import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateSchoolNameContact } from "./actions"
-
-type NameContactDict = NonNullable<
-  Dictionary["school"]["configuration"]
->["nameContact"]
+import { SaveStatus } from "./ui/save-status"
+import { Segmented } from "./ui/segmented"
+import { SettingsGroup, SettingsRow } from "./ui/settings-group"
 
 interface Props {
   schoolId: string
@@ -22,154 +20,94 @@ interface Props {
   dictionary: Dictionary
 }
 
+const LISTINGS: Array<{
+  key: NameContactListing
+  label: "teachers" | "students" | "parents" | "staff"
+}> = [
+  { key: "teacher", label: "teachers" },
+  { key: "student", label: "students" },
+  { key: "guardian", label: "parents" },
+  { key: "staff", label: "staff" },
+]
+
+const SAMPLE_PHONE = "+249 912 345 678"
+
 export function ConfigNameContactForm({
   schoolId,
   initial,
   dictionary,
 }: Props) {
-  const t = dictionary?.school?.configuration?.nameContact
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-lg font-medium">
-          {t?.title ?? "Contact Under Name"}
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          {t?.description ??
-            "Choose what the teachers, students, parents and staff listings show under each name"}
-        </p>
-      </div>
-      <ListingChoice
-        schoolId={schoolId}
-        listing="teacher"
-        heading={t?.teachersHeading ?? "Teachers"}
-        initialValue={initial.teacher}
-        t={t}
-      />
-      <ListingChoice
-        schoolId={schoolId}
-        listing="student"
-        heading={t?.studentsHeading ?? "Students"}
-        initialValue={initial.student}
-        t={t}
-      />
-      <ListingChoice
-        schoolId={schoolId}
-        listing="guardian"
-        heading={t?.parentsHeading ?? "Parents"}
-        initialValue={initial.guardian}
-        t={t}
-      />
-      <ListingChoice
-        schoolId={schoolId}
-        listing="staff"
-        heading={t?.staffHeading ?? "Staff"}
-        initialValue={initial.staff}
-        t={t}
-      />
-    </div>
-  )
-}
-
-function ListingChoice({
-  schoolId,
-  listing,
-  heading,
-  initialValue,
-  t,
-}: {
-  schoolId: string
-  listing: NameContactListing
-  heading: string
-  initialValue: NameContact
-  t: NameContactDict | undefined
-}) {
-  const [value, setValue] = useState<NameContact>(initialValue)
-  const [saved, setSaved] = useState<NameContact>(initialValue)
+  const t: Partial<Dictionary["schoolSettings"]["nameContact"]> =
+    dictionary?.schoolSettings?.nameContact ?? {}
+  const [values, setValues] = useState(initial)
+  // Last server-confirmed values, for rollback when a save fails.
+  const savedRef = useRef(initial)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  function handleChange(next: string) {
-    const nameContact = next as NameContact
-    setValue(nameContact)
+  function handleChange(listing: NameContactListing, nameContact: NameContact) {
+    if (values[listing] === nameContact) return
+    setValues((v) => ({ ...v, [listing]: nameContact }))
     startTransition(async () => {
       const result = await updateSchoolNameContact(schoolId, {
         listing,
         nameContact,
       })
       if (result.success) {
-        setSaved(nameContact)
-        SuccessToast(t?.updateSuccess ?? "Contact line updated")
+        savedRef.current = { ...savedRef.current, [listing]: nameContact }
+        setSavedAt(Date.now())
       } else {
-        ErrorToast(result.error || t?.updateError || "Failed to update")
-        setValue(saved)
+        setValues((v) => ({ ...v, [listing]: savedRef.current[listing] }))
+        ErrorToast(
+          result.error
+            ? resolveActionError(result.error, dictionary)
+            : (t.updateError ?? "Couldn't save. Try again.")
+        )
       }
     })
   }
 
-  const options: Array<{
-    value: NameContact
-    label: string
-    description: string
-    sample: string
-  }> = [
-    {
-      value: "email",
-      label: t?.emailLabel ?? "Email",
-      description:
-        t?.emailDescription ?? "Show the email address under the name",
-      sample: "name@school.com",
-    },
-    {
-      value: "phone",
-      label: t?.phoneLabel ?? "Phone",
-      description:
-        t?.phoneDescription ?? "Show the phone number under the name",
-      sample: "+249 912 345 678",
-    },
+  // Footer: the sentence with one LTR sample spliced in at {sample}.
+  const footerTpl =
+    t.footer ??
+    "The contact detail shown under each person in these lists, for example {sample}."
+  const [before, after = ""] = footerTpl.split("{sample}")
+
+  const options: Array<{ value: NameContact; label: string }> = [
+    { value: "email", label: t.email ?? "Email" },
+    { value: "phone", label: t.phone ?? "Phone" },
   ]
 
   return (
-    <section className="space-y-3">
-      <h4 className="font-medium">{heading}</h4>
-      <RadioGroup
-        value={value}
-        onValueChange={handleChange}
-        disabled={isPending}
-        className="grid gap-4 sm:grid-cols-2"
+    <div className="space-y-2">
+      <SettingsGroup
+        title={t.title ?? "Under each name"}
+        footer={
+          <>
+            {before}
+            <bdi dir="ltr" className="tabular-nums">
+              {SAMPLE_PHONE}
+            </bdi>
+            {after}
+          </>
+        }
       >
-        {options.map((option) => {
-          const id = `${listing}-${option.value}`
+        {LISTINGS.map(({ key, label }) => {
+          const rowLabel = t[label] ?? label
           return (
-            <label
-              key={option.value}
-              htmlFor={id}
-              className="border-border hover:border-primary/50 has-[[data-state=checked]]:border-primary flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition-colors"
-            >
-              <RadioGroupItem value={option.value} id={id} className="mt-0.5" />
-              <div className="flex-1 space-y-1">
-                <Label htmlFor={id} className="cursor-pointer font-medium">
-                  {option.label}
-                </Label>
-                <p className="text-muted-foreground text-sm">
-                  {option.description}
-                </p>
-                <div className="bg-muted mt-2 flex flex-col rounded-md p-3">
-                  <span className="text-sm font-medium">
-                    {t?.sampleName ?? "Full Name"}
-                  </span>
-                  <bdi
-                    dir="ltr"
-                    className="text-muted-foreground text-xs tabular-nums"
-                  >
-                    {option.sample}
-                  </bdi>
-                </div>
-              </div>
-            </label>
+            <SettingsRow key={key} label={rowLabel}>
+              <Segmented<NameContact>
+                value={values[key]}
+                onValueChange={(v) => handleChange(key, v)}
+                aria-label={rowLabel}
+                options={options}
+                className="w-auto"
+              />
+            </SettingsRow>
           )
         })}
-      </RadioGroup>
-    </section>
+      </SettingsGroup>
+      <SaveStatus pending={isPending} savedAt={savedAt} className="px-4" />
+    </div>
   )
 }

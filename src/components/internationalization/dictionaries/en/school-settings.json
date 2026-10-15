@@ -1,1 +1,214 @@
-{}
+{
+  "nameDisplay": {
+    "label": "Show names as",
+    "firstSecond": "First + second",
+    "firstLast": "First + last",
+    "preview": "Preview",
+    "fullName": "Full name",
+    "footer": "Used in lists and profiles. Applications, certificates and login slips always show the full name.",
+    "updateError": "Couldn't save. Try again."
+  },
+  "nameContact": {
+    "title": "Under each name",
+    "teachers": "Teachers",
+    "students": "Students",
+    "parents": "Parents",
+    "staff": "Staff",
+    "email": "Email",
+    "phone": "Phone",
+    "footer": "The contact detail shown under each person in these lists, for example {sample}.",
+    "updateError": "Couldn't save. Try again."
+  },
+  "modules": {
+    "count": {
+      "zero": "None of {total} on",
+      "one": "1 of {total} on",
+      "other": "{n} of {total} on"
+    },
+    "enableAll": "Enable all",
+    "disableAll": "Disable all",
+    "confirmTitle": "Turn off every module?",
+    "confirmDescription": "Everyone's sidebar will show only Overview, School, Profile and Settings. Nothing is deleted, and you can turn modules back on at any time.",
+    "cancel": "Cancel",
+    "confirm": "Disable all",
+    "footer": "A module that's off disappears from everyone's sidebar. Its data stays.",
+    "updateError": "Couldn't update modules. Try again.",
+    "groups": {
+      "learning": "Teaching and learning",
+      "people": "People",
+      "finance": "Finance",
+      "communication": "Communication",
+      "transport": "Transport",
+      "insights": "Reports and compliance"
+    },
+    "items": {
+      "sales": {
+        "label": "Sales",
+        "description": "Leads and enquiries from prospective families"
+      },
+      "announcements": {
+        "label": "Announcements",
+        "description": "School news for staff, students and parents"
+      },
+      "finance": {
+        "label": "Finance",
+        "description": "Fees, invoices and payments"
+      },
+      "grades": {
+        "label": "Grades",
+        "description": "Marks and report cards"
+      },
+      "subjects": {
+        "label": "Subjects",
+        "description": "The subjects taught at each level"
+      },
+      "parents": {
+        "label": "Parents",
+        "description": "Directory of parents and guardians"
+      },
+      "admission": {
+        "label": "Admission",
+        "description": "Applications from new students"
+      },
+      "students": {
+        "label": "Students",
+        "description": "Student records and profiles"
+      },
+      "teachers": {
+        "label": "Teachers",
+        "description": "Teacher records and assignments"
+      },
+      "classrooms": {
+        "label": "Classrooms",
+        "description": "Classes, sections and rooms"
+      },
+      "exams": {
+        "label": "Exams",
+        "description": "Exam schedules and results"
+      },
+      "events": {
+        "label": "Events",
+        "description": "School calendar and activities"
+      },
+      "attendance": {
+        "label": "Attendance",
+        "description": "Daily student attendance"
+      },
+      "timetable": {
+        "label": "Timetable",
+        "description": "The weekly class schedule"
+      },
+      "library": {
+        "label": "Library",
+        "description": "Books and borrowing"
+      },
+      "lumos": {
+        "label": "Lumos courses",
+        "description": "Online courses and video lessons"
+      },
+      "liveClasses": {
+        "label": "Live classes",
+        "description": "Online classes in real time"
+      },
+      "myAssignments": {
+        "label": "My assignments",
+        "description": "Homework list, for students"
+      },
+      "transportation": {
+        "label": "Bus routes",
+        "description": "Routes, buses and stops, for admins"
+      },
+      "transportationFees": {
+        "label": "Bus fees",
+        "description": "Transport charges, for accountants"
+      },
+      "transportationTrips": {
+        "label": "Bus trips",
+        "description": "Today's trips, for teachers on duty"
+      },
+      "myTransportation": {
+        "label": "My bus",
+        "description": "Route and pickup time, for students and parents"
+      },
+      "parentPortal": {
+        "label": "Parent portal",
+        "description": "Children's progress at a glance, for parents"
+      },
+      "compliance": {
+        "label": "Compliance",
+        "description": "Regulator reports for UAE schools"
+      },
+      "charts": {
+        "label": "Charts",
+        "description": "Data charts, developers only"
+      },
+      "stats": {
+        "label": "Statistics",
+        "description": "Usage statistics, developers only"
+      },
+      "billing": {
+        "label": "Billing",
+        "description": "Platform subscription, developers only"
+      }
+    }
+  },
+  "domain": {
+    "addressTitle": "Your address",
+    "addressLabel": "School address",
+    "copy": "Copy",
+    "copied": "Copied",
+    "open": "Open",
+    "addressFooter": "To change this address, go to {link}.",
+    "addressFooterLink": "School name",
+    "customTitle": "Custom domain",
+    "domainLabel": "Domain",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Anything our team should know",
+    "request": "Request",
+    "requesting": "Sending…",
+    "customFooter": "Use a domain you own, like {example}. Review takes 24–48 hours.",
+    "invalidDomain": "Enter a domain like {example}.",
+    "submitted": "Request sent. Review takes 24–48 hours.",
+    "cancelled": "Request cancelled.",
+    "cancel": "Cancel request",
+    "requestedOn": "Requested {date}",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "verified": "Live"
+    },
+    "dnsTitle": "Connect your domain",
+    "dnsStep1": "Sign in to your domain provider and open its DNS settings.",
+    "dnsStep2": "Add a record with these values:",
+    "dnsStep3": "Wait for it to take effect. This can take up to 48 hours.",
+    "dnsType": "Type",
+    "dnsName": "Name",
+    "dnsValue": "Value",
+    "history": "Previous requests",
+    "errors": {
+      "pending": "You already have a request under review.",
+      "taken": "Another school has already requested this domain.",
+      "invalid": "Enter a domain like {example}.",
+      "submit": "Couldn't send the request. Try again.",
+      "cancel": "Couldn't cancel the request. Try again."
+    }
+  },
+  "branding": {
+    "logo": "School logo",
+    "logoAlt": "School logo",
+    "removeLogo": "Remove logo",
+    "primaryColor": "Primary colour",
+    "secondaryColor": "Secondary colour",
+    "borderRadius": "Corner radius",
+    "radius": {
+      "none": "None",
+      "sm": "Small",
+      "md": "Medium",
+      "lg": "Large",
+      "xl": "Extra large",
+      "full": "Round"
+    },
+    "updateError": "Couldn't save branding. Try again."
+  }
+}
