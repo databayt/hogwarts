@@ -2,56 +2,23 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Attendance Analytics Dashboard - Client Component
+ * Attendance › Reports › Overview.
  *
- * Comprehensive attendance analytics with 7 visualization tabs:
- * - Summary stats: attendance rate, present/absent/late/excused/sick counts
- * - Trends chart: line chart of daily attendance rates over time
- * - Method usage: pie chart showing tracking methods (manual, biometric, etc.)
- * - Day-wise patterns: which days of week have lowest attendance
- * - Section comparison: ranking of sections by attendance rate
- * - Student heatmap: individual student attendance calendar
- * - Monthly comparison: how current month compares to previous months
- * - Absence reasons: breakdown of why students were absent
+ * One filter row (period segmented control + section), four quiet figures
+ * from ONE stats read, three charts (daily trend, weekday, method donut),
+ * then the section ranking and a link to the at-risk students. Export uses
+ * the same filters as the screen, so what you download is what you see.
  *
- * Data fetching strategy:
- * - Fetches 7 datasets in parallel on component mount and filter changes
- * - Each server action returns different data shape (see comments in fetchAllData)
- * - Handles mixed response formats (some return data directly, others in wrapper object)
- * - Error handling: logs to console but doesn't crash if individual queries fail
- *
- * Filters:
- * - Date range picker: default last 30 days
- * - Section selector: filter by single section or 'all'
- * - Refresh button: manual data refresh with debounce
- *
- * Multi-tenant: schoolId is passed as prop (from parent/route context)
- * i18n: Dictionary passed for label translations; locale determines date formatting
+ * Every read is a server action guarded by `canViewSchoolAnalytics`; the
+ * section ranking and at-risk list are teacher-scoped server-side.
  */
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import {
-  Activity,
-  BarChart3,
-  Calendar,
-  RefreshCw,
-  TrendingUp,
-  TriangleAlert,
-  Users,
-} from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { DateRangePicker } from "@/components/ui/date-picker"
 import {
   Select,
   SelectContent,
@@ -60,79 +27,48 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SkeletonChart, SkeletonStats } from "@/components/atom/loading"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { plural } from "@/components/school-dashboard/school/configuration/ui/format"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-// Import server actions
 import {
   getAttendanceStats,
   getAttendanceTrends,
-  getCalendarData,
   getDayWisePatterns,
   getMethodUsageStats,
-  getRecentAttendance,
   getSectionComparisonStats,
   getSectionsForSelection,
   getStudentsAtRisk,
 } from "../actions"
-import { AttendanceExport } from "../core/attendance-export"
-import { AttendancePageSkeleton } from "../loading-skeleton"
-import { phone } from "../shared/phone"
-import { AttendanceCalendarView, type CalendarData } from "./calendar-view"
-import {
-  AbsenceReasonsChart,
-  AttendanceTrendsChart,
-  ClassComparisonChart,
-  DayWisePatternChart,
-  MethodUsagePieChart,
-  MonthlyComparisonChart,
-  StudentAttendanceHeatmap,
-  TimeDistributionChart,
-} from "./charts"
+import { AttendanceReportExportButton } from "../reports/export-button"
+import { AttendanceSectionNav } from "../ui/section-nav"
+import { DailyTrendChart, MethodDonut, Panel, WeekdayChart } from "./charts"
+import { formatPercent } from "./format"
+
+type RangeKey = "week" | "month" | "term"
 
 interface AnalyticsContentProps {
   dictionary?: Dictionary
   locale?: string
-  schoolId: string
+  /** The active term's dates (ISO), when the school has one. */
+  term?: { from: string; to: string } | null
 }
 
-interface StatsData {
+interface Stats {
   total: number
   present: number
   absent: number
   late: number
-  excused: number
-  sick: number
   attendanceRate: number
 }
 
-interface TrendData {
-  date: string
-  present: number
-  absent: number
-  late: number
-  total: number
-  rate: number
+interface SectionOption {
+  id: string
+  name: string
+  gradeName: string
 }
 
-interface MethodData {
-  method: string
-  count: number
-  percentage: number
-}
-
-interface DayPattern {
-  day: string
-  dayIndex: number
-  present: number
-  absent: number
-  late: number
-  total: number
-  rate: number
-}
-
-interface SectionStats {
+interface SectionStat {
   sectionId: string
   sectionName: string
   studentCount: number
@@ -140,750 +76,325 @@ interface SectionStats {
   rate: number
 }
 
-interface AtRiskStudent {
-  studentId: string
-  name: string
-  totalDays: number
-  presentDays: number
-  absentDays: number
-  rate: number
+function rangeFor(key: RangeKey, term?: { from: string; to: string } | null) {
+  const to = new Date()
+  to.setHours(23, 59, 59, 999)
+  if (key === "term" && term) {
+    const end = new Date(term.to)
+    return { from: new Date(term.from), to: end < to ? end : to }
+  }
+  const from = new Date()
+  from.setHours(0, 0, 0, 0)
+  from.setDate(from.getDate() - (key === "week" ? 6 : 29))
+  return { from, to }
 }
 
 export default function AnalyticsContent({
   dictionary,
-  locale = "en",
-  schoolId,
+  locale = "ar",
+  term,
 }: AnalyticsContentProps) {
-  const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: new Date(),
-  })
-  const [selectedSection, setSelectedSection] = useState<string>("all")
-  const [refreshing, setRefreshing] = useState(false)
+  const lang = locale
+  const d = dictionary as any
+  const t = d?.attendanceReports?.overview ?? {}
+  const hub = d?.attendanceHub ?? {}
+
+  const [range, setRange] = useState<RangeKey>("month")
+  const [section, setSection] = useState("all")
   const [loading, setLoading] = useState(true)
 
-  // Data state
-  const [stats, setStats] = useState<StatsData | null>(null)
-  const [trends, setTrends] = useState<TrendData[]>([])
-  const [methodStats, setMethodStats] = useState<MethodData[]>([])
-  const [dayPatterns, setDayPatterns] = useState<DayPattern[]>([])
-  const [sectionStats, setSectionStats] = useState<SectionStats[]>([])
-  const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([])
-  const [sections, setSections] = useState<
-    {
-      id: string
-      name: string
-      gradeName: string
-      gradeId: string
-      teacher: string | null
-      studentCount: number
-    }[]
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [trend, setTrend] = useState<{ date: string; rate: number }[]>([])
+  const [weekdays, setWeekdays] = useState<
+    { dayIndex: number; rate: number; total: number }[]
   >([])
-  const [calendarData, setCalendarData] = useState<CalendarData | null>(null)
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(
-    null
-  )
-  const [calendarMonth, setCalendarMonth] = useState({
-    year: new Date().getFullYear(),
-    month: new Date().getMonth(),
-  })
+  const [methods, setMethods] = useState<
+    { method: string; count: number; percentage: number }[]
+  >([])
+  const [sectionStats, setSectionStats] = useState<SectionStat[]>([])
+  const [atRisk, setAtRisk] = useState(0)
+  const [sections, setSections] = useState<SectionOption[]>([])
 
-  // Fetch all analytics data in parallel
-  // Handles mixed response formats across different server actions
-  // This is necessary because different actions evolved with different return patterns
-  const fetchAllData = useCallback(async () => {
+  const dates = useMemo(() => rangeFor(range, term), [range, term])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const dateFrom = dates.from.toISOString()
+    const dateTo = dates.to.toISOString()
+    const sectionId = section !== "all" ? section : undefined
     try {
-      setLoading(true)
-
-      // Convert Date objects to ISO strings for API transmission
-      const dateFrom = dateRange.from.toISOString()
-      const dateTo = dateRange.to.toISOString()
-      const sectionFilter =
-        selectedSection !== "all" ? selectedSection : undefined
-
-      // Fetch all datasets in parallel for performance
-      // Using Promise.all means if one fails, we handle it below without crashing
-      const [
-        statsResult,
-        trendsResult,
-        methodResult,
-        dayResult,
-        sectionResult,
-        riskResult,
-        sectionsResult,
-      ] = await Promise.all([
-        getAttendanceStats({
-          dateFrom,
-          dateTo,
-          sectionId: sectionFilter,
-        }),
-        getAttendanceTrends({
-          dateFrom,
-          dateTo,
-          sectionId: sectionFilter,
-        }),
+      const [s, tr, dw, me, sc, ar] = await Promise.all([
+        getAttendanceStats({ dateFrom, dateTo, sectionId }),
+        getAttendanceTrends({ dateFrom, dateTo, sectionId }),
+        getDayWisePatterns({ dateFrom, dateTo, sectionId }),
         getMethodUsageStats({ dateFrom, dateTo }),
-        getDayWisePatterns({
-          dateFrom,
-          dateTo,
-          sectionId: sectionFilter,
-        }),
         getSectionComparisonStats({ dateFrom, dateTo }),
         getStudentsAtRisk({ threshold: 80, dateFrom, dateTo }),
-        getSectionsForSelection(),
       ])
-
-      // IMPORTANT: Response formats are inconsistent across actions (legacy code)
-      // statsResult returns StatsData directly (not wrapped in object)
-      if (
-        statsResult &&
-        !("success" in statsResult && statsResult.success === false)
-      ) {
-        setStats(statsResult as StatsData)
-      }
-
-      // trendsResult returns { trends: [...] } wrapper on success
-      if (trendsResult && "trends" in trendsResult && trendsResult.trends) {
-        setTrends(trendsResult.trends as TrendData[])
-      }
-
-      // methodResult returns { stats: [...], total: number } wrapper on success
-      if (methodResult && "stats" in methodResult && methodResult.stats) {
-        setMethodStats(methodResult.stats as MethodData[])
-      }
-
-      // dayResult returns { patterns: [...] } wrapper on success
-      if (dayResult && "patterns" in dayResult && dayResult.patterns) {
-        setDayPatterns(dayResult.patterns as DayPattern[])
-      }
-
-      // sectionResult returns { stats: [...] } wrapper on success
-      if (sectionResult && "stats" in sectionResult && sectionResult.stats) {
-        setSectionStats(sectionResult.stats as SectionStats[])
-      }
-
-      // riskResult returns { students: [...], threshold: number } wrapper on success
-      if (riskResult && "students" in riskResult && riskResult.students) {
-        setAtRiskStudents(riskResult.students as AtRiskStudent[])
-      }
-
-      // sectionsResult uses standard ActionResponse<{ sections: ... }> pattern
-      if (
-        sectionsResult &&
-        sectionsResult.success &&
-        sectionsResult.data?.sections
-      ) {
-        setSections(sectionsResult.data.sections)
-      }
+      setStats(s)
+      // Trends use the ActionResponse envelope ({ success, data }).
+      setTrend(
+        tr.success && tr.data
+          ? tr.data.trends.map((p) => ({ date: p.date, rate: p.rate }))
+          : []
+      )
+      setWeekdays("patterns" in dw && dw.patterns ? dw.patterns : [])
+      setMethods("stats" in me && me.stats ? me.stats : [])
+      setSectionStats("stats" in sc && sc.stats ? sc.stats : [])
+      setAtRisk("students" in ar && ar.students ? ar.students.length : 0)
     } catch (error) {
-      console.error("Error fetching analytics data:", error)
+      console.error("[attendance overview] load failed", error)
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedSection])
-
-  // Fetch calendar data separately (can change independently of date range)
-  const fetchCalendarData = useCallback(async () => {
-    try {
-      const sectionFilter =
-        selectedSection !== "all" ? selectedSection : undefined
-      const result = await getCalendarData({
-        year: calendarMonth.year,
-        month: calendarMonth.month,
-        sectionId: sectionFilter,
-      })
-
-      if (result.success && result.data) {
-        setCalendarData(result.data as CalendarData)
-      }
-    } catch (error) {
-      console.error("Error fetching calendar data:", error)
-    }
-  }, [calendarMonth, selectedSection])
+  }, [dates, section])
 
   useEffect(() => {
-    fetchAllData()
-  }, [fetchAllData])
+    load()
+  }, [load])
 
-  // Fetch calendar data when month or class changes
   useEffect(() => {
-    fetchCalendarData()
-  }, [fetchCalendarData])
-
-  const handleCalendarMonthChange = useCallback(
-    (year: number, month: number) => {
-      setCalendarMonth({ year, month })
-    },
-    []
-  )
-
-  const handleCalendarDateSelect = useCallback((date: Date) => {
-    setSelectedCalendarDate(date)
+    getSectionsForSelection().then((r) => {
+      if (r.success && r.data) setSections(r.data.sections)
+    })
   }, [])
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true)
-    await Promise.all([fetchAllData(), fetchCalendarData()])
-    setTimeout(() => setRefreshing(false), 500)
-  }, [fetchAllData, fetchCalendarData])
-
-  // Memoize formatted chart data to prevent recalculation on every render
-  const methodChartData = React.useMemo(
+  const methodRows = useMemo(
     () =>
-      methodStats.map((m) => ({
-        method: m.method.replace("_", " "),
-        count: m.count,
-        percentage: m.percentage,
+      methods.map((m) => ({
+        ...m,
+        label: hub.methods?.[m.method] ?? m.method.replace(/_/g, " "),
       })),
-    [methodStats]
+    [methods, hub.methods]
   )
 
-  const dayChartData = React.useMemo(
-    () =>
-      dayPatterns.map((d) => ({
-        day: d.day,
-        rate: d.rate,
-        present: d.present,
-        total: d.total,
-      })),
-    [dayPatterns]
-  )
+  const rangeOptions = [
+    { value: "week" as const, label: t.range?.week ?? "7 days" },
+    { value: "month" as const, label: t.range?.month ?? "30 days" },
+    ...(term
+      ? [{ value: "term" as const, label: t.range?.term ?? "This term" }]
+      : []),
+  ]
 
-  const classChartData = React.useMemo(
-    () =>
-      sectionStats.slice(0, 10).map((c) => ({
-        class: c.sectionName,
-        rate: c.rate,
-        students: c.studentCount,
-      })),
-    [sectionStats]
-  )
+  const selectedSectionName =
+    section !== "all" ? sections.find((s) => s.id === section)?.name : undefined
 
-  // Memoize time distribution calculation
-  const timeData = React.useMemo(
-    () => [
-      {
-        hour: "7:00",
-        checkIns: stats?.present ? Math.floor(stats.present * 0.1) : 0,
-        onTime: stats?.present ? Math.floor(stats.present * 0.09) : 0,
-        late: Math.floor((stats?.late || 0) * 0.1),
-      },
-      {
-        hour: "8:00",
-        checkIns: stats?.present ? Math.floor(stats.present * 0.5) : 0,
-        onTime: stats?.present ? Math.floor(stats.present * 0.45) : 0,
-        late: Math.floor((stats?.late || 0) * 0.3),
-      },
-      {
-        hour: "9:00",
-        checkIns: stats?.present ? Math.floor(stats.present * 0.3) : 0,
-        onTime: stats?.present ? Math.floor(stats.present * 0.2) : 0,
-        late: Math.floor((stats?.late || 0) * 0.4),
-      },
-      {
-        hour: "10:00",
-        checkIns: stats?.present ? Math.floor(stats.present * 0.08) : 0,
-        onTime: Math.floor((stats?.late || 0) * 0.1),
-        late: Math.floor((stats?.late || 0) * 0.15),
-      },
-      {
-        hour: "11:00",
-        checkIns: Math.floor((stats?.late || 0) * 0.05),
-        onTime: 0,
-        late: Math.floor((stats?.late || 0) * 0.05),
-      },
-    ],
-    [stats]
-  )
-
-  const t = dictionary?.attendance
-
-  if (loading && !stats) {
-    return (
-      <AttendancePageSkeleton label={t?.loading?.records} action>
-        {/* filter card → stat row → tab strip → overview charts */}
-        <Skeleton className="h-[88px] w-full rounded-xl" />
-        <SkeletonStats count={5} columns={cn("md:grid-cols-5", phone.panel)} />
-        <Skeleton className="h-9 w-full" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <SkeletonChart variant="line" />
-          <SkeletonChart variant="pie" />
-        </div>
-      </AttendancePageSkeleton>
-    )
-  }
+  const noData = t.noData ?? "No attendance recorded in this period."
+  const rateLabel = t.kpi?.rate ?? "Attendance rate"
+  const Chevron = lang === "ar" ? ChevronLeft : ChevronRight
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-indigo-100 p-3 max-md:hidden dark:bg-indigo-900/30">
-            <BarChart3 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <div>
-            <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              {t?.title ?? "Attendance Analytics"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {t?.subtitle ??
-                "Comprehensive insights and trends for attendance tracking"}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2 max-md:[&_button]:h-10 max-md:[&_button]:rounded-full max-md:[&_button]:px-5">
-          <AttendanceExport
-            records={[]}
-            dictionary={dictionary as unknown as Dictionary["school"]}
-          />
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={refreshing}
+    <div className="space-y-8">
+      <AttendanceSectionNav group="reports" dictionary={dictionary} />
+
+      {/* Filters + the page's one action */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={range}
+          onValueChange={setRange}
+          options={rangeOptions}
+          aria-label={t.rangeLabel ?? "Period"}
+        />
+        <Select value={section} onValueChange={setSection}>
+          <SelectTrigger
+            className="w-full rounded-full sm:w-[220px]"
+            aria-label={t.sectionLabel ?? "Section"}
           >
-            <RefreshCw
-              className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
-            />
-            {t?.emptyStates?.refresh ?? "Refresh"}
-          </Button>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t.allSections ?? "All sections"}
+            </SelectItem>
+            {sections.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.gradeName} · {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="ms-auto">
+          <AttendanceReportExportButton
+            filters={{
+              sectionId: section !== "all" ? section : undefined,
+              from: dates.from.toISOString(),
+              to: dates.to.toISOString(),
+            }}
+            sectionName={selectedSectionName}
+            locale={lang}
+          />
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className={phone.card}>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            {t?.export?.dateRange ?? "Filters"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 max-md:gap-3">
-            <div className="flex items-center gap-2 max-md:w-full max-md:flex-wrap">
-              <label className="text-sm font-medium">
-                {t?.export?.dateRange ?? "Date Range"}:
-              </label>
-              <DateRangePicker
-                from={dateRange.from}
-                to={dateRange.to}
-                onSelect={(range) =>
-                  setDateRange({
-                    from: range.from || new Date(),
-                    to: range.to || new Date(),
-                  })
-                }
-                placeholder={
-                  t?.reportsFilter?.selectDateRange ?? "Select date range"
-                }
+      {/* Four figures, one source (getAttendanceStats) */}
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4">
+        {[
+          {
+            key: "rate",
+            label: rateLabel,
+            value: stats ? formatPercent(stats.attendanceRate, lang) : "—",
+            sub: stats ? plural(t.records, stats.total, lang) : "",
+          },
+          {
+            key: "present",
+            label: t.kpi?.present ?? "Present",
+            value: stats?.present,
+          },
+          {
+            key: "absent",
+            label: t.kpi?.absent ?? "Absent",
+            value: stats?.absent,
+          },
+          { key: "late", label: t.kpi?.late ?? "Late", value: stats?.late },
+        ].map((k) => (
+          <div key={k.key} className="space-y-1">
+            <dt className="text-muted-foreground text-xs">{k.label}</dt>
+            <dd className="text-3xl font-semibold tracking-tight tabular-nums">
+              {loading && !stats ? (
+                <Skeleton className="h-9 w-20" />
+              ) : typeof k.value === "number" ? (
+                new Intl.NumberFormat("en-US").format(k.value)
+              ) : (
+                (k.value ?? "—")
+              )}
+            </dd>
+            {"sub" in k && k.sub ? (
+              <p className="text-muted-foreground text-xs">{k.sub}</p>
+            ) : null}
+          </div>
+        ))}
+      </dl>
+
+      <div
+        className={cn(
+          "space-y-6 transition-opacity",
+          loading && stats && "opacity-60"
+        )}
+      >
+        <Panel
+          title={t.trend?.title ?? "Daily attendance"}
+          subtitle={t.trend?.subtitle}
+        >
+          {loading && !stats ? (
+            <Skeleton className="h-[240px] w-full rounded-xl" />
+          ) : (
+            <DailyTrendChart
+              data={trend}
+              lang={lang}
+              rateLabel={rateLabel}
+              emptyLabel={noData}
+            />
+          )}
+        </Panel>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Panel
+            title={t.weekday?.title ?? "By weekday"}
+            subtitle={t.weekday?.subtitle}
+          >
+            {loading && !stats ? (
+              <Skeleton className="h-[220px] w-full rounded-xl" />
+            ) : (
+              <WeekdayChart
+                data={weekdays}
+                lang={lang}
+                rateLabel={rateLabel}
+                emptyLabel={noData}
               />
-            </div>
-            <Select value={selectedSection} onValueChange={setSelectedSection}>
-              <SelectTrigger
-                className={cn("w-[200px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={
-                    t?.reportsFilter?.selectSection ?? "Select section"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.reportsFilter?.allSections ?? "All Sections"}
-                </SelectItem>
-                {sections.map((sec) => (
-                  <SelectItem key={sec.id} value={sec.id}>
-                    {sec.gradeName} - {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Key Metrics */}
-      <div className={cn("grid gap-4 md:grid-cols-5", phone.panel)}>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
             )}
+          </Panel>
+          <Panel
+            title={t.methods?.title ?? "How attendance was taken"}
+            subtitle={t.methods?.subtitle}
           >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.stats?.overallAttendanceRate ?? "Overall Rate"}
-            </CardTitle>
-            <TrendingUp className="text-muted-foreground h-4 w-4 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div className={cn("text-2xl font-bold", phone.cellValue)}>
-              {stats?.attendanceRate || 0}%
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total || 0} {t?.reports?.summary ?? "total records"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
+            {loading && !stats ? (
+              <Skeleton className="h-[180px] w-full rounded-xl" />
+            ) : (
+              <MethodDonut data={methodRows} lang={lang} emptyLabel={noData} />
             )}
+          </Panel>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Section ranking — an inset grouped list */}
+          <Panel
+            title={t.sections?.title ?? "Sections"}
+            subtitle={t.sections?.subtitle}
           >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.status?.PRESENT ?? "Present"}
-            </CardTitle>
-            <Users className="h-4 w-4 text-green-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-green-600",
-                phone.cellValue
-              )}
-            >
-              {stats?.present || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total
-                ? Math.round((stats.present / stats.total) * 100)
-                : 0}
-              % {t?.stats?.vsLastPeriod ?? "of total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.status?.LATE ?? "Late"}
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-yellow-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-yellow-600",
-                phone.cellValue
-              )}
-            >
-              {stats?.late || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}%
-              {t?.stats?.vsLastPeriod ?? "of total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.status?.ABSENT ?? "Absent"}
-            </CardTitle>
-            <Activity className="h-4 w-4 text-red-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
-            >
-              {stats?.absent || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total
-                ? Math.round((stats.absent / stats.total) * 100)
-                : 0}
-              % {t?.stats?.vsLastPeriod ?? "of total"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.earlyWarning?.atRisk ?? "At Risk"}
-            </CardTitle>
-            <TriangleAlert className="h-4 w-4 text-orange-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-orange-600",
-                phone.cellValue
-              )}
-            >
-              {atRiskStudents.length}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t?.earlyWarning?.threshold ?? "Below 80% attendance"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="no-scrollbar grid w-full grid-cols-7 max-md:flex max-md:justify-start max-md:overflow-x-auto">
-          <TabsTrigger value="overview">
-            {t?.analyticsTab?.overview ?? "Overview"}
-          </TabsTrigger>
-          <TabsTrigger value="calendar">
-            {t?.analyticsTab?.calendar ?? "Calendar"}
-          </TabsTrigger>
-          <TabsTrigger value="trends">
-            {t?.analyticsTab?.trends ?? "Trends"}
-          </TabsTrigger>
-          <TabsTrigger value="patterns">
-            {t?.analyticsTab?.patterns ?? "Patterns"}
-          </TabsTrigger>
-          <TabsTrigger value="methods">
-            {t?.analyticsTab?.methods ?? "Methods"}
-          </TabsTrigger>
-          <TabsTrigger value="classes">
-            {t?.analyticsTab?.classes ?? "Classes"}
-          </TabsTrigger>
-          <TabsTrigger value="students">
-            {t?.analyticsTab?.atRisk ?? "At Risk"}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AttendanceTrendsChart
-              data={trends.map((t) => ({
-                date: t.date,
-                present: t.present,
-                absent: t.absent,
-                late: t.late,
-                rate: t.rate,
-              }))}
-            />
-            <MethodUsagePieChart data={methodChartData} />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <DayWisePatternChart data={dayChartData} />
-            <TimeDistributionChart data={timeData} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="calendar" className="space-y-4">
-          <AttendanceCalendarView
-            data={calendarData}
-            selectedDate={selectedCalendarDate}
-            onDateSelect={handleCalendarDateSelect}
-            onMonthChange={handleCalendarMonthChange}
-            locale={locale}
-          />
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-4">
-          <AttendanceTrendsChart
-            data={trends.map((t) => ({
-              date: t.date,
-              present: t.present,
-              absent: t.absent,
-              late: t.late,
-              rate: t.rate,
-            }))}
-          />
-        </TabsContent>
-
-        <TabsContent value="patterns" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <DayWisePatternChart data={dayChartData} />
-            <TimeDistributionChart data={timeData} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="methods" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <MethodUsagePieChart data={methodChartData} />
-            <Card className={phone.card}>
-              <CardHeader>
-                <CardTitle>
-                  {t?.analyticsTab?.methods ?? "Method Details"}
-                </CardTitle>
-                <CardDescription>
-                  {t?.stats?.trackingMethodDistribution ??
-                    "Breakdown of attendance marking methods"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {methodStats.map((m) => (
-                    <div
-                      key={m.method}
-                      className="flex items-center justify-between"
+            {sectionStats.filter((s) => s.totalRecords > 0).length === 0 ? (
+              <p className="text-muted-foreground py-8 text-center text-sm">
+                {t.sections?.empty ?? "No section has records in this period."}
+              </p>
+            ) : (
+              <ol className="divide-border/60 -mx-5 -mb-5 divide-y border-t">
+                {sectionStats
+                  .filter((s) => s.totalRecords > 0)
+                  .map((s, i) => (
+                    <li
+                      key={s.sectionId}
+                      className={cn(
+                        "flex items-center gap-3 px-5 py-3",
+                        s.sectionId === section && "bg-muted/50"
+                      )}
                     >
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline">
-                          {m.method.replace("_", " ")}
-                        </Badge>
-                        <span className="text-muted-foreground text-sm">
-                          {m.count} records
+                      <span className="text-muted-foreground w-5 text-xs tabular-nums">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {s.sectionName}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {plural(t.sections?.students, s.studentCount, lang)}
+                        </p>
+                      </div>
+                      <div className="flex w-28 items-center gap-2">
+                        <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+                          <div
+                            className={cn(
+                              "h-full rounded-full",
+                              s.rate >= 90
+                                ? "bg-emerald-500"
+                                : s.rate >= 80
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                            )}
+                            style={{ width: `${s.rate}%` }}
+                          />
+                        </div>
+                        <span className="w-10 text-end text-sm tabular-nums">
+                          {s.rate}%
                         </span>
                       </div>
-                      <span className="font-medium">{m.percentage}%</span>
-                    </div>
+                    </li>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+              </ol>
+            )}
+          </Panel>
 
-        <TabsContent value="classes" className="space-y-4">
-          <ClassComparisonChart data={classChartData} />
-          <Card className={phone.card}>
-            <CardHeader>
-              <CardTitle>
-                {t?.analyticsTab?.classes ?? "Class Rankings"}
-              </CardTitle>
-              <CardDescription>
-                {t?.reports?.byClass ?? "All classes sorted by attendance rate"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {sectionStats.map((cls, idx) => (
-                  <div
-                    key={cls.sectionId}
-                    className="max-md:bg-background flex items-center justify-between rounded-lg border p-3 max-md:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground text-sm font-medium">
-                        #{idx + 1}
-                      </span>
-                      <div>
-                        <p className="font-medium">{cls.sectionName}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {cls.studentCount} students
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <Badge
-                        variant={
-                          cls.rate >= 90
-                            ? "default"
-                            : cls.rate >= 80
-                              ? "secondary"
-                              : "destructive"
-                        }
-                      >
-                        {cls.rate}%
-                      </Badge>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {cls.totalRecords} records
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="students" className="space-y-4">
-          <Card className={phone.card}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TriangleAlert className="h-5 w-5 text-orange-500" />
-                {t?.earlyWarning?.atRisk ?? "Students At Risk"}
-              </CardTitle>
-              <CardDescription>
-                {t?.earlyWarning?.chronicAbsence ??
-                  "Students with attendance below 80% who need attention"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {atRiskStudents.length === 0 ? (
-                <div className="text-muted-foreground py-8 text-center">
-                  <Users className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                  <p>{t?.ai?.no_at_risk_students ?? "No students at risk"}</p>
-                  <p className="text-sm">
-                    {t?.stats?.aboveTarget ??
-                      "All students have attendance above 80%"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {atRiskStudents.map((student) => (
-                    <div
-                      key={student.studentId}
-                      className="flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-900 dark:bg-orange-900/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50">
-                          <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                            {student.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium">{student.name}</p>
-                          <p className="text-muted-foreground text-sm">
-                            {student.presentDays} of {student.totalDays} days
-                            present
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-end">
-                        <Badge variant="destructive">{student.rate}%</Badge>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          {student.absentDays} absences
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* At-risk students — the detail lives on its own tab */}
+          <Panel title={t.atRisk?.title ?? "Students below 80%"}>
+            <div className="flex flex-col items-start gap-4 py-2">
+              <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                {atRisk}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {atRisk === 0
+                  ? (t.atRisk?.none ??
+                    "Every student is at 80% or above in this period.")
+                  : plural(t.atRisk?.count, atRisk, lang)}
+              </p>
+              <Link
+                href={`/${lang}/attendance/early-warning`}
+                className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
+              >
+                {t.atRisk?.view ?? "View students"}
+                <Chevron className="size-4" />
+              </Link>
+            </div>
+          </Panel>
+        </div>
+      </div>
     </div>
   )
 }

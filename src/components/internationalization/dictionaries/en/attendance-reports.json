@@ -1,1 +1,91 @@
-{}
+{
+  "overview": {
+    "range": { "week": "7 days", "month": "30 days", "term": "This term" },
+    "rangeLabel": "Period",
+    "allSections": "All sections",
+    "sectionLabel": "Section",
+    "kpi": {
+      "rate": "Attendance rate",
+      "present": "Present",
+      "absent": "Absent",
+      "late": "Late"
+    },
+    "records": {
+      "zero": "No records",
+      "one": "1 record",
+      "two": "2 records",
+      "few": "{n} records",
+      "many": "{n} records",
+      "other": "{n} records"
+    },
+    "trend": {
+      "title": "Daily attendance",
+      "subtitle": "Share of students present or late each school day"
+    },
+    "weekday": {
+      "title": "By weekday",
+      "subtitle": "Average attendance rate for each day"
+    },
+    "methods": {
+      "title": "How attendance was taken",
+      "subtitle": "Share of records by method"
+    },
+    "rate": "Rate",
+    "sections": {
+      "title": "Sections",
+      "subtitle": "Ranked by attendance rate",
+      "empty": "No section has records in this period.",
+      "students": {
+        "zero": "No students",
+        "one": "1 student",
+        "two": "2 students",
+        "few": "{n} students",
+        "many": "{n} students",
+        "other": "{n} students"
+      }
+    },
+    "atRisk": {
+      "title": "Students below 80%",
+      "none": "Every student is at 80% or above in this period.",
+      "count": {
+        "zero": "No students below 80%",
+        "one": "1 student needs attention",
+        "two": "2 students need attention",
+        "few": "{n} students need attention",
+        "many": "{n} students need attention",
+        "other": "{n} students need attention"
+      },
+      "view": "View students"
+    },
+    "noData": "No attendance recorded in this period."
+  },
+  "records": {
+    "searchPlaceholder": "Search student or section",
+    "allStatuses": "All statuses",
+    "empty": "No records match these filters.",
+    "emptyHint": "Try a wider period or another section.",
+    "columns": {
+      "date": "Date",
+      "student": "Student",
+      "section": "Section",
+      "status": "Status",
+      "method": "Method",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "notes": "Notes"
+    }
+  },
+  "activity": {
+    "subtitle": "The latest attendance marks across the school",
+    "refresh": "Refresh",
+    "empty": "No attendance has been marked yet.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "checkIn": "Arrived {time}",
+    "showing": "Last {n} marks",
+    "markedBy": "via {method}"
+  },
+  "settings": {
+    "methodsFootnote": "These switches control the methods offered in the mobile app. The web pages keep every method available."
+  }
+}

@@ -2,7 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React from "react"
+
+/**
+ * The three overview charts — daily trend, weekday rate, method donut.
+ * Quiet by design: one series each, theme chart colours, no legends that
+ * duplicate the title. In RTL the category axis runs right-to-left
+ * (`reversed`) and the value axis sits on the right, so time reads the same
+ * way the page does.
+ */
 import {
   Area,
   AreaChart,
@@ -10,721 +17,316 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ComposedChart,
-  Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Scatter,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
 
 import { cn } from "@/lib/utils"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { useLocale } from "@/components/internationalization/use-locale"
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 
-import { phone } from "../shared/phone"
+import { formatDay, formatPercent, weekdayName } from "./format"
 
-// Define colors for charts
-const COLORS = {
-  primary: "#6366f1",
-  secondary: "#8b5cf6",
-  success: "#10b981",
-  warning: "#f59e0b",
-  danger: "#ef4444",
-  info: "#3b82f6",
-  muted: "#94a3b8",
-}
+const METHOD_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--muted-foreground)",
+]
 
-const STATUS_COLORS = {
-  PRESENT: COLORS.success,
-  ABSENT: COLORS.danger,
-  LATE: COLORS.warning,
-  EXCUSED: COLORS.info,
-  SICK: COLORS.secondary,
-  HOLIDAY: COLORS.muted,
-}
-
-interface AttendanceTrendsChartProps {
-  data: Array<{
-    date: string
-    present: number
-    absent: number
-    late: number
-    rate: number
-  }>
-  className?: string
-}
-
-export function AttendanceTrendsChart({
-  data,
+/** A titled, borderless-feeling container shared by the overview sections. */
+export function Panel({
+  title,
+  subtitle,
+  action,
   className,
-}: AttendanceTrendsChartProps) {
-  const { locale } = useLocale()
-  const { dictionary } = useDictionary()
-  const ct = (dictionary?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-
-  if (!data || data.length === 0) {
-    return (
-      <Card className={cn(phone.card, className)}>
-        <CardHeader>
-          <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
-          <CardDescription>
-            {ct?.dailyRatesOverTime || "Daily attendance rates over time"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            {ct?.noDataAvailable ||
-              "No attendance data available for the selected period"}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
-        <CardDescription>
-          {ct?.dailyRatesOverTime || "Daily attendance rates over time"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <ComposedChart
-            data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis
-              dataKey="date"
-              stroke="#64748b"
-              style={{ fontSize: 12 }}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleDateString(locale, {
-                  month: "short",
-                  day: "numeric",
-                })
-              }
-            />
-            <YAxis stroke="#64748b" style={{ fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Bar
-              dataKey="present"
-              stackId="a"
-              fill={STATUS_COLORS.PRESENT}
-              name={ct?.present || "Present"}
-            />
-            <Bar
-              dataKey="late"
-              stackId="a"
-              fill={STATUS_COLORS.LATE}
-              name={ct?.late || "Late"}
-            />
-            <Bar
-              dataKey="absent"
-              stackId="a"
-              fill={STATUS_COLORS.ABSENT}
-              name={ct?.absent || "Absent"}
-            />
-            <Line
-              type="monotone"
-              dataKey="rate"
-              stroke={COLORS.primary}
-              strokeWidth={2}
-              name={ct?.attendanceRatePercent || "Attendance Rate %"}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface MethodUsagePieChartProps {
-  data: Array<{
-    method: string
-    count: number
-    percentage: number
-  }>
+  children,
+}: {
+  title: React.ReactNode
+  subtitle?: React.ReactNode
+  action?: React.ReactNode
   className?: string
-}
-
-export function MethodUsagePieChart({
-  data,
-  className,
-}: MethodUsagePieChartProps) {
-  const { dictionary: dm } = useDictionary()
-  const ct = (dm?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-  const chartColors = [
-    COLORS.primary,
-    COLORS.secondary,
-    COLORS.success,
-    COLORS.warning,
-    COLORS.danger,
-    COLORS.info,
-    "#ec4899",
-    "#14b8a6",
-    "#f97316",
-    "#84cc16",
-  ]
-
-  if (!data || data.length === 0) {
-    return (
-      <Card className={cn(phone.card, className)}>
-        <CardHeader>
-          <CardTitle>
-            {ct?.methodDistribution || "Method Distribution"}
-          </CardTitle>
-          <CardDescription>
-            {ct?.howTracked || "How attendance is being tracked"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            {ct?.noDataAvailable ||
-              "No tracking methods used in selected period"}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
+  children: React.ReactNode
+}) {
   return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>{ct?.methodDistribution || "Method Distribution"}</CardTitle>
-        <CardDescription>
-          {ct?.howTracked || "How attendance is being tracked"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ method, percentage }) =>
-                `${method}: ${percentage.toFixed(0)}%`
-              }
-              outerRadius={120}
-              fill="#8884d8"
-              dataKey="count"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={chartColors[index % chartColors.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface DayWisePatternChartProps {
-  data: Array<{
-    day: string
-    rate: number
-    present: number
-    total: number
-  }>
-  className?: string
-}
-
-export function DayWisePatternChart({
-  data,
-  className,
-}: DayWisePatternChartProps) {
-  const { dictionary: dd } = useDictionary()
-  const ct = (dd?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-  if (!data || data.length === 0) {
-    return (
-      <Card className={cn(phone.card, className)}>
-        <CardHeader>
-          <CardTitle>
-            {ct?.weeklyPattern || "Weekly Pattern Analysis"}
-          </CardTitle>
-          <CardDescription>
-            {ct?.patternsByDay || "Attendance patterns by day of week"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-            {ct?.noDataAvailable || "No pattern data available"}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>{ct?.weeklyPattern || "Weekly Pattern Analysis"}</CardTitle>
-        <CardDescription>
-          {ct?.patternsByDay || "Attendance patterns by day of week"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <RadarChart data={data}>
-            <PolarGrid stroke="#e2e8f0" />
-            <PolarAngleAxis
-              dataKey="day"
-              stroke="#64748b"
-              style={{ fontSize: 12 }}
-            />
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, 100]}
-              stroke="#64748b"
-              style={{ fontSize: 10 }}
-            />
-            <Radar
-              name={ct?.attendanceRatePercent || "Attendance Rate"}
-              dataKey="rate"
-              stroke={COLORS.primary}
-              fill={COLORS.primary}
-              fillOpacity={0.6}
-            />
-            <Legend />
-            <Tooltip />
-          </RadarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface TimeDistributionChartProps {
-  data: Array<{
-    hour: string
-    checkIns: number
-    onTime: number
-    late: number
-  }>
-  className?: string
-}
-
-export function TimeDistributionChart({
-  data,
-  className,
-}: TimeDistributionChartProps) {
-  const { dictionary: dt } = useDictionary()
-  const ct = (dt?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-  const hasData =
-    data && data.some((d) => d.checkIns > 0 || d.onTime > 0 || d.late > 0)
-
-  if (!hasData) {
-    return (
-      <Card className={cn(phone.card, className)}>
-        <CardHeader>
-          <CardTitle>
-            {ct?.checkInTime || "Check-in Time Distribution"}
-          </CardTitle>
-          <CardDescription>
-            {ct?.whenArriving || "When students are arriving"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-            {ct?.noDataAvailable || "No check-in time data available"}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>{ct?.checkInTime || "Check-in Time Distribution"}</CardTitle>
-        <CardDescription>
-          {ct?.whenArriving || "When students are arriving"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart
-            data={data}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="hour" stroke="#64748b" style={{ fontSize: 12 }} />
-            <YAxis stroke="#64748b" style={{ fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Area
-              type="monotone"
-              dataKey="onTime"
-              stackId="1"
-              stroke={STATUS_COLORS.PRESENT}
-              fill={STATUS_COLORS.PRESENT}
-              name={ct?.onTime || "On Time"}
-            />
-            <Area
-              type="monotone"
-              dataKey="late"
-              stackId="1"
-              stroke={STATUS_COLORS.LATE}
-              fill={STATUS_COLORS.LATE}
-              name={ct?.late || "Late"}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface ClassComparisonChartProps {
-  data: Array<{
-    class: string
-    rate: number
-    students: number
-  }>
-  className?: string
-}
-
-export function ClassComparisonChart({
-  data,
-  className,
-}: ClassComparisonChartProps) {
-  const { dictionary: dc } = useDictionary()
-  const ct = (dc?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-  if (!data || data.length === 0) {
-    return (
-      <Card className={cn(phone.card, className)}>
-        <CardHeader>
-          <CardTitle>
-            {ct?.classPerformance || "Class Performance Comparison"}
-          </CardTitle>
-          <CardDescription>
-            Attendance rates across different classes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            {ct?.noDataAvailable || "No class comparison data available"}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>
-          {ct?.classPerformance || "Class Performance Comparison"}
-        </CardTitle>
-        <CardDescription>
-          Attendance rates across different classes
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart
-            data={data}
-            layout="horizontal"
-            margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis
-              type="number"
-              domain={[0, 100]}
-              stroke="#64748b"
-              style={{ fontSize: 12 }}
-            />
-            <YAxis
-              type="category"
-              dataKey="class"
-              stroke="#64748b"
-              style={{ fontSize: 12 }}
-              width={70}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
-              formatter={(value: number) => `${value.toFixed(1)}%`}
-            />
-            <Bar
-              dataKey="rate"
-              name={ct?.attendanceRatePercent || "Attendance Rate"}
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={
-                    entry.rate >= 95
-                      ? STATUS_COLORS.PRESENT
-                      : entry.rate >= 80
-                        ? STATUS_COLORS.LATE
-                        : STATUS_COLORS.ABSENT
-                  }
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface StudentAttendanceHeatmapProps {
-  data: Array<{
-    student: string
-    monday: number
-    tuesday: number
-    wednesday: number
-    thursday: number
-    friday: number
-  }>
-  className?: string
-}
-
-export function StudentAttendanceHeatmap({
-  data,
-  className,
-}: StudentAttendanceHeatmapProps) {
-  const { dictionary: ds } = useDictionary()
-  const ct = (ds?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
-  const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-
-  return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>
-          {ct?.studentHeatmap || "Student Attendance Heatmap"}
-        </CardTitle>
-        <CardDescription>
-          Weekly attendance patterns per student
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="grid grid-cols-6 gap-2 text-xs font-medium">
-            <div></div>
-            {[
-              ct?.mon || "Mon",
-              ct?.tue || "Tue",
-              ct?.wed || "Wed",
-              ct?.thu || "Thu",
-              ct?.fri || "Fri",
-            ].map((day) => (
-              <div key={day} className="text-center">
-                {day}
-              </div>
-            ))}
-          </div>
-          {data.slice(0, 10).map((student) => (
-            <div key={student.student} className="grid grid-cols-6 gap-2">
-              <div className="truncate text-xs">{student.student}</div>
-              {days.map((day) => {
-                const value = student[day as keyof typeof student] as number
-                return (
-                  <div
-                    key={day}
-                    className={cn(
-                      "flex h-8 items-center justify-center rounded text-xs font-medium",
-                      value === 100
-                        ? "bg-green-500 text-white"
-                        : value >= 80
-                          ? "bg-green-200"
-                          : value >= 60
-                            ? "bg-yellow-200"
-                            : value >= 40
-                              ? "bg-orange-200"
-                              : "bg-red-200"
-                    )}
-                  >
-                    {value}%
-                  </div>
-                )
-              })}
-            </div>
-          ))}
+    <section className={cn("bg-card rounded-2xl border p-5", className)}>
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-medium">{title}</h2>
+          {subtitle ? (
+            <p className="text-muted-foreground mt-0.5 text-xs">{subtitle}</p>
+          ) : null}
         </div>
-      </CardContent>
-    </Card>
+        {action}
+      </header>
+      {children}
+    </section>
   )
 }
 
-interface MonthlyComparisonChartProps {
-  data: Array<{
-    month: string
-    current: number
-    previous: number
-  }>
-  className?: string
-}
-
-export function MonthlyComparisonChart({
-  data,
-  className,
-}: MonthlyComparisonChartProps) {
-  const { dictionary: dm } = useDictionary()
-  const ct = (dm?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
+export function ChartEmpty({ label }: { label: string }) {
   return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>
-          {ct?.yearComparison || "Year-over-Year Comparison"}
-        </CardTitle>
-        <CardDescription>
-          Current year vs previous year attendance
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart
-            data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: 12 }} />
-            <YAxis
-              stroke="#64748b"
-              style={{ fontSize: 12 }}
-              domain={[80, 100]}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="current"
-              stroke={COLORS.primary}
-              strokeWidth={2}
-              dot={{ r: 4 }}
-              name={ct?.currentYear || "Current Year"}
-            />
-            <Line
-              type="monotone"
-              dataKey="previous"
-              stroke={COLORS.muted}
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={{ r: 4 }}
-              name={ct?.previousYear || "Previous Year"}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="text-muted-foreground flex h-[220px] items-center justify-center text-center text-sm">
+      {label}
+    </div>
   )
 }
 
-interface AbsenceReasonsChartProps {
-  data: Array<{
-    reason: string
-    count: number
-    color: string
-  }>
-  className?: string
+// ---------------------------------------------------------------------------
+
+interface TrendPoint {
+  date: string
+  rate: number
 }
 
-export function AbsenceReasonsChart({
+export function DailyTrendChart({
   data,
-  className,
-}: AbsenceReasonsChartProps) {
-  const { dictionary: da } = useDictionary()
-  const ct = (da?.school?.attendance as any)?.charts as
-    | Record<string, string>
-    | undefined
+  lang,
+  rateLabel,
+  emptyLabel,
+}: {
+  data: TrendPoint[]
+  lang: string
+  rateLabel: string
+  emptyLabel: string
+}) {
+  const rtl = lang === "ar"
+  if (data.length === 0) return <ChartEmpty label={emptyLabel} />
+
+  const config = {
+    rate: { label: rateLabel, color: "var(--chart-1)" },
+  } satisfies ChartConfig
+
   return (
-    <Card className={cn(phone.card, className)}>
-      <CardHeader>
-        <CardTitle>
-          {ct?.absenceReasons || "Absence Reasons Breakdown"}
-        </CardTitle>
-        <CardDescription>Why students are missing classes</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={data}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="reason" stroke="#64748b" style={{ fontSize: 12 }} />
-            <YAxis stroke="#64748b" style={{ fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
+    <ChartContainer config={config} className="aspect-auto h-[240px] w-full">
+      <AreaChart data={data} margin={{ top: 8, left: 4, right: 4, bottom: 0 }}>
+        <defs>
+          <linearGradient id="att-rate-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="0%"
+              stopColor="var(--color-rate)"
+              stopOpacity={0.25}
             />
-            <Bar dataKey="count" name={ct?.absent || "Absent"}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+            <stop offset="100%" stopColor="var(--color-rate)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="date"
+          reversed={rtl}
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          minTickGap={24}
+          tickFormatter={(v: string) => formatDay(v, lang)}
+        />
+        <YAxis
+          orientation={rtl ? "right" : "left"}
+          domain={[0, 100]}
+          ticks={[0, 50, 100]}
+          tickLine={false}
+          axisLine={false}
+          width={40}
+          tickFormatter={(v: number) => `${v}%`}
+        />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(_, payload) => {
+                const d = payload?.[0]?.payload?.date as string | undefined
+                return d
+                  ? formatDay(d, lang, {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })
+                  : ""
+              }}
+              formatter={(value) => (
+                <span className="flex w-full justify-between gap-4">
+                  <span className="text-muted-foreground">{rateLabel}</span>
+                  <span className="font-medium tabular-nums">
+                    {formatPercent(Number(value), lang)}
+                  </span>
+                </span>
+              )}
+            />
+          }
+        />
+        <Area
+          dataKey="rate"
+          type="monotone"
+          stroke="var(--color-rate)"
+          strokeWidth={2}
+          fill="url(#att-rate-fill)"
+        />
+      </AreaChart>
+    </ChartContainer>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+interface WeekdayPoint {
+  dayIndex: number
+  rate: number
+  total: number
+}
+
+export function WeekdayChart({
+  data,
+  lang,
+  rateLabel,
+  emptyLabel,
+}: {
+  data: WeekdayPoint[]
+  lang: string
+  rateLabel: string
+  emptyLabel: string
+}) {
+  const rtl = lang === "ar"
+  // Only days the school actually marked — weekends drop out on their own.
+  const rows = data
+    .filter((d) => d.total > 0)
+    .sort((a, b) => a.dayIndex - b.dayIndex)
+    .map((d) => ({ ...d, label: weekdayName(d.dayIndex, lang, "short") }))
+  if (rows.length === 0) return <ChartEmpty label={emptyLabel} />
+
+  const config = {
+    rate: { label: rateLabel, color: "var(--chart-2)" },
+  } satisfies ChartConfig
+
+  return (
+    <ChartContainer config={config} className="aspect-auto h-[220px] w-full">
+      <BarChart data={rows} margin={{ top: 8, left: 4, right: 4, bottom: 0 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="label"
+          reversed={rtl}
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          interval={0}
+        />
+        <YAxis
+          orientation={rtl ? "right" : "left"}
+          domain={[0, 100]}
+          ticks={[0, 50, 100]}
+          tickLine={false}
+          axisLine={false}
+          width={40}
+          tickFormatter={(v: number) => `${v}%`}
+        />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(_, payload) => {
+                const i = payload?.[0]?.payload?.dayIndex as number | undefined
+                return i == null ? "" : weekdayName(i, lang)
+              }}
+              formatter={(value) => (
+                <span className="flex w-full justify-between gap-4">
+                  <span className="text-muted-foreground">{rateLabel}</span>
+                  <span className="font-medium tabular-nums">
+                    {formatPercent(Number(value), lang)}
+                  </span>
+                </span>
+              )}
+            />
+          }
+        />
+        <Bar
+          dataKey="rate"
+          fill="var(--color-rate)"
+          radius={[6, 6, 0, 0]}
+          maxBarSize={40}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+interface MethodSlice {
+  method: string
+  label: string
+  count: number
+  percentage: number
+}
+
+export function MethodDonut({
+  data,
+  lang,
+  emptyLabel,
+}: {
+  data: MethodSlice[]
+  lang: string
+  emptyLabel: string
+}) {
+  const rows = [...data].sort((a, b) => b.count - a.count)
+  if (rows.length === 0) return <ChartEmpty label={emptyLabel} />
+
+  const config = Object.fromEntries(
+    rows.map((r, i) => [
+      r.method,
+      { label: r.label, color: METHOD_COLORS[i % METHOD_COLORS.length] },
+    ])
+  ) satisfies ChartConfig
+
+  return (
+    <div className="flex flex-col items-center gap-6 sm:flex-row">
+      <ChartContainer
+        config={config}
+        className="aspect-square h-[180px] shrink-0"
+      >
+        <PieChart>
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent nameKey="method" hideLabel />}
+          />
+          <Pie
+            data={rows}
+            dataKey="count"
+            nameKey="method"
+            innerRadius={56}
+            outerRadius={80}
+            strokeWidth={2}
+            stroke="var(--card)"
+          >
+            {rows.map((r, i) => (
+              <Cell
+                key={r.method}
+                fill={METHOD_COLORS[i % METHOD_COLORS.length]}
+              />
+            ))}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      <ul className="w-full min-w-0 flex-1 space-y-2.5">
+        {rows.map((r, i) => (
+          <li key={r.method} className="flex items-center gap-3 text-sm">
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ background: METHOD_COLORS[i % METHOD_COLORS.length] }}
+            />
+            <span className="min-w-0 flex-1 truncate">{r.label}</span>
+            <span className="text-muted-foreground tabular-nums">
+              {formatPercent(r.percentage, lang)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
