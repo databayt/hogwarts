@@ -2,30 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Attendance › Reports › Activity.
+ *
+ * The latest marks as a compact list grouped by day (Today, Yesterday, then
+ * dates). Relative times come from Intl.RelativeTimeFormat in the page's
+ * language; an absent student shows no arrival time. The layout carries the
+ * page heading — this view adds none of its own.
+ */
 import * as React from "react"
-import { useCallback, useMemo } from "react"
-import type { UserRole } from "@prisma/client"
-import { formatDistanceToNow, isValid } from "date-fns"
-import {
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  Clock,
-  RefreshCw,
-  Users,
-} from "lucide-react"
+import { RefreshCw } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -33,558 +23,227 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SkeletonList } from "@/components/atom/loading"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
+import { getRecentAttendance, getSectionsForSelection } from "../actions"
 import {
-  getAttendanceStats,
-  getRecentAttendance,
-  getSectionsForSelection,
-} from "../actions"
-import { AttendancePageSkeleton } from "../loading-skeleton"
-import { phone } from "../shared/phone"
+  dayKey,
+  formatDay,
+  formatTime,
+  relativeTime,
+} from "../analytics/format"
+import { AttendanceSectionNav } from "../ui/section-nav"
 
 interface Props {
-  dictionary?: Dictionary["school"]
+  dictionary?: Dictionary
   locale?: string
-  userRole?: UserRole
 }
 
-interface AttendanceRecord {
+interface ActivityRecord {
   id: string
-  studentId: string
   studentName: string
-  sectionId: string | null
   className: string
-  date: string
-  status: string // AttendanceStatus enum value
-  method: string // AttendanceMethod enum value
+  status: string
+  method: string
   checkInTime?: string
   markedAt: string
-  markedBy?: string | null
 }
 
-interface Stats {
-  total: number
-  present: number
-  absent: number
-  late: number
-  attendanceRate: number
+type StatusFilter = "all" | "PRESENT" | "LATE" | "ABSENT"
+
+const STATUS_DOT: Record<string, string> = {
+  PRESENT: "bg-emerald-500",
+  ABSENT: "bg-red-500",
+  LATE: "bg-amber-500",
+  EXCUSED: "bg-sky-500",
+  SICK: "bg-violet-500",
 }
 
-interface SectionOption {
-  id: string
-  name: string
-  gradeName: string
-  gradeId: string
-  teacher: string | null
-  studentCount: number
-}
+export function RecentActivityContent({ dictionary, locale = "ar" }: Props) {
+  const lang = locale
+  const d = dictionary as any
+  const t = d?.attendanceReports?.activity ?? {}
+  const hub = d?.attendanceHub ?? {}
 
-// Safe date formatting helpers
-function safeFormatDistanceToNow(
-  date: Date | string | null | undefined
-): string {
-  if (!date) return "recently"
-  try {
-    const dateObj = typeof date === "string" ? new Date(date) : date
-    if (!isValid(dateObj)) return "recently"
-    return formatDistanceToNow(dateObj, { addSuffix: true })
-  } catch {
-    return "recently"
-  }
-}
-
-function safeFormatDate(
-  date: Date | string | null | undefined,
-  locale: string = "en"
-): string {
-  if (!date) return "-"
-  try {
-    const dateObj = typeof date === "string" ? new Date(date) : date
-    if (!isValid(dateObj)) return "-"
-    return dateObj.toLocaleDateString(locale)
-  } catch {
-    return "-"
-  }
-}
-
-function safeFormatTime(
-  date: Date | string | null | undefined,
-  locale: string = "en"
-): string {
-  if (!date) return "-"
-  try {
-    const dateObj = typeof date === "string" ? new Date(date) : date
-    if (!isValid(dateObj)) return "-"
-    return dateObj.toLocaleTimeString(locale, {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  } catch {
-    return "-"
-  }
-}
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "PRESENT":
-      return <CircleCheck className="h-4 w-4 text-green-500" />
-    case "ABSENT":
-      return <CircleX className="h-4 w-4 text-red-500" />
-    case "LATE":
-      return <Clock className="h-4 w-4 text-yellow-500" />
-    case "EXCUSED":
-    case "SICK":
-      return <CircleAlert className="h-4 w-4 text-blue-500" />
-    default:
-      return <CircleAlert className="text-muted-foreground h-4 w-4" />
-  }
-}
-
-const getStatusBadgeVariant = (
-  status: string
-): "default" | "destructive" | "secondary" | "outline" => {
-  switch (status) {
-    case "PRESENT":
-      return "default"
-    case "ABSENT":
-      return "destructive"
-    case "LATE":
-      return "secondary"
-    default:
-      return "outline"
-  }
-}
-
-const getMethodDisplayName = (method: string): string => {
-  const names: Record<string, string> = {
-    MANUAL: "Manual",
-    QR_CODE: "QR Code",
-    BARCODE: "Barcode",
-    GEOFENCE: "Geofence",
-    RFID: "RFID Card",
-    NFC: "NFC",
-    BLUETOOTH: "Bluetooth",
-    BULK_UPLOAD: "Bulk Upload",
-    VIRTUAL: "Live Class",
-    KIOSK: "Kiosk",
-  }
-  return names[method] || method
-}
-
-export function RecentActivityContent({
-  dictionary,
-  locale = "en",
-  userRole,
-}: Props) {
-  const [records, setRecords] = React.useState<AttendanceRecord[]>([])
-  const [stats, setStats] = React.useState<Stats | null>(null)
-  const [sections, setSections] = React.useState<SectionOption[]>([])
-  const [filter, setFilter] = React.useState<string>("all")
-  const [selectedSection, setSelectedSection] = React.useState<string>("all")
+  const [records, setRecords] = React.useState<ActivityRecord[]>([])
+  const [sections, setSections] = React.useState<
+    { id: string; name: string; gradeName: string }[]
+  >([])
+  const [section, setSection] = React.useState("all")
+  const [status, setStatus] = React.useState<StatusFilter>("all")
   const [loading, setLoading] = React.useState(true)
-  const [refreshing, setRefreshing] = React.useState(false)
 
-  const fetchData = React.useCallback(async () => {
+  const load = React.useCallback(async () => {
+    setLoading(true)
     try {
-      const sectionFilter =
-        selectedSection !== "all" ? selectedSection : undefined
-
-      const [recordsResult, statsResult, sectionsResult] = await Promise.all([
-        getRecentAttendance({
-          limit: 100,
-          sectionId: sectionFilter,
-        }),
-        getAttendanceStats({
-          sectionId: sectionFilter,
-        }),
-        getSectionsForSelection(),
-      ])
-
-      // Map the results to match our interface types (mixed return types)
-      if (
-        !("success" in recordsResult && !recordsResult.success) &&
-        "records" in recordsResult
-      ) {
-        setRecords(
-          recordsResult.records.map((r: any) => ({
-            ...r,
-            status: String(r.status),
-            method: String(r.method),
-          }))
-        )
-      }
-      // statsResult returns raw data on success
-      if (!("success" in statsResult && !statsResult.success))
-        setStats(statsResult as any)
-      if (sectionsResult.success && sectionsResult.data)
-        setSections(sectionsResult.data.sections)
+      const res = await getRecentAttendance({
+        limit: 100,
+        sectionId: section !== "all" ? section : undefined,
+      })
+      setRecords(
+        res.records.map((r) => ({
+          id: r.id,
+          studentName: r.studentName,
+          className: r.className,
+          status: String(r.status),
+          method: String(r.method),
+          checkInTime: r.checkInTime,
+          markedAt: r.markedAt,
+        }))
+      )
     } catch (error) {
-      console.error("Error fetching recent attendance:", error)
+      console.error("[attendance activity] load failed", error)
     } finally {
       setLoading(false)
     }
-  }, [selectedSection])
+  }, [section])
 
   React.useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    load()
+  }, [load])
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true)
-    await fetchData()
-    setTimeout(() => setRefreshing(false), 500)
-  }, [fetchData])
+  React.useEffect(() => {
+    getSectionsForSelection().then((r) => {
+      if (r.success && r.data) setSections(r.data.sections)
+    })
+  }, [])
 
-  // Memoize filtered records to prevent recalculation on every render
-  const filteredRecords = React.useMemo(() => {
-    if (filter === "all") return records
-    return records.filter((r) => r.status === filter.toUpperCase())
-  }, [filter, records])
+  const groups = React.useMemo(() => {
+    const filtered =
+      status === "all" ? records : records.filter((r) => r.status === status)
+    const today = dayKey(new Date())
+    const y = new Date()
+    y.setDate(y.getDate() - 1)
+    const yesterday = dayKey(y)
+    const map = new Map<string, ActivityRecord[]>()
+    for (const r of filtered) {
+      const k = dayKey(r.markedAt)
+      const list = map.get(k) ?? []
+      list.push(r)
+      map.set(k, list)
+    }
+    return [...map.entries()].map(([k, items]) => ({
+      key: k,
+      label:
+        k === today
+          ? (t.today ?? "Today")
+          : k === yesterday
+            ? (t.yesterday ?? "Yesterday")
+            : formatDay(items[0].markedAt, lang, {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              }),
+      items,
+    }))
+  }, [records, status, lang, t.today, t.yesterday])
 
-  const dict = dictionary?.attendance || {
-    recentActivity: "Recent Activity",
-    recentActivityDescription: "Latest attendance records across all methods",
-    allRecords: "All",
-    present: "Present",
-    absent: "Absent",
-    late: "Late",
-    noRecentRecords: "No recent attendance records",
-    startMarkingAttendance: "Start Marking Attendance",
-    markedBy: "Marked by",
-    via: "via",
-  }
-
-  // Labels for the raw status / method enums on each record.
-  const recentLabels = dictionary?.attendance as
-    | {
-        present?: string
-        absent?: string
-        late?: string
-        excused?: string
-        sick?: string
-        holiday?: string
-        recentTable?: { methodLabels?: Record<string, string> }
-      }
-    | undefined
-  const statusLabel = (status: string) =>
-    ({
-      PRESENT: recentLabels?.present,
-      ABSENT: recentLabels?.absent,
-      LATE: recentLabels?.late,
-      EXCUSED: recentLabels?.excused,
-      SICK: recentLabels?.sick,
-      HOLIDAY: recentLabels?.holiday,
-    })[status] || status
-
-  if (loading) {
-    return (
-      <AttendancePageSkeleton
-        label={(dict as any)?.loadingRecent}
-        action
-        stats={4}
-        statsColumns="md:grid-cols-4"
-      >
-        <SkeletonList items={6} />
-      </AttendancePageSkeleton>
-    )
-  }
+  const statusLabel = (s: string) => hub.status?.[s] ?? s
+  const methodLabel = (m: string) =>
+    hub.methods?.[m] ?? m.replace(/_/g, " ").toLowerCase()
 
   return (
     <div className="space-y-6">
-      {/* Header with Refresh */}
-      <div className="flex items-center justify-between max-md:gap-3">
-        <div>
-          <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-            {dict.recentActivity}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {dict.recentActivityDescription}
-          </p>
-        </div>
+      <AttendanceSectionNav group="reports" dictionary={dictionary} />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={status}
+          onValueChange={setStatus}
+          options={[
+            { value: "all", label: t.all ?? "All" },
+            { value: "PRESENT", label: statusLabel("PRESENT") },
+            { value: "LATE", label: statusLabel("LATE") },
+            { value: "ABSENT", label: statusLabel("ABSENT") },
+          ]}
+        />
+        <Select value={section} onValueChange={setSection}>
+          <SelectTrigger className="w-full rounded-full sm:w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {d?.attendanceReports?.overview?.allSections ?? "All sections"}
+            </SelectItem>
+            {sections.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.gradeName} · {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className={phone.pill}
+          className="ms-auto rounded-full"
+          onClick={load}
+          disabled={loading}
         >
-          <RefreshCw
-            className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
-          />
-          Refresh
+          <RefreshCw className={cn("size-4", loading && "animate-spin")} />
+          {t.refresh ?? "Refresh"}
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {(dict as any)?.totalRecords ?? "Total Records"}
-            </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div className={cn("text-2xl font-bold", phone.cellValue)}>
-              {stats?.total || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.attendanceRate || 0}% attendance rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {dict.present}
-            </CardTitle>
-            <CircleCheck className="h-4 w-4 text-green-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-green-600",
-                phone.cellValue
-              )}
-            >
-              {stats?.present || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total
-                ? Math.round((stats.present / stats.total) * 100)
-                : 0}
-              % of total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {dict.late}
-            </CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-yellow-600",
-                phone.cellValue
-              )}
-            >
-              {stats?.late || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}%
-              of total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {dict.absent}
-            </CardTitle>
-            <CircleX className="h-4 w-4 text-red-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
-            >
-              {stats?.absent || 0}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {stats?.total
-                ? Math.round((stats.absent / stats.total) * 100)
-                : 0}
-              % of total
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Records */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <CardTitle>{dict.recentActivity}</CardTitle>
-              <CardDescription>
-                {dict.recentActivityDescription}
-              </CardDescription>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 max-md:w-full">
-              <Select
-                value={selectedSection}
-                onValueChange={setSelectedSection}
-              >
-                <SelectTrigger
-                  className={cn("w-[180px] max-md:w-full", phone.field)}
-                >
-                  <SelectValue
-                    placeholder={
-                      (dict as any)?.selectSection ?? "Select section"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {(dict as any)?.allSections ?? "All Sections"}
-                  </SelectItem>
-                  {sections.map((sec) => (
-                    <SelectItem key={sec.id} value={sec.id}>
-                      {sec.gradeName} - {sec.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-1 max-md:flex-wrap max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
-                <Button
-                  variant={filter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("all")}
-                >
-                  {dict.allRecords}
-                </Button>
-                <Button
-                  variant={filter === "present" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("present")}
-                >
-                  {dict.present}
-                </Button>
-                <Button
-                  variant={filter === "late" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("late")}
-                >
-                  {dict.late}
-                </Button>
-                <Button
-                  variant={filter === "absent" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter("absent")}
-                >
-                  {dict.absent}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredRecords.length === 0 ? (
-            <div className="text-muted-foreground py-12 text-center">
-              <Users className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>{dict.noRecentRecords}</p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[600px] max-md:h-auto">
-              <div className="space-y-2">
-                {filteredRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    className={cn(
-                      "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors",
-                      "max-md:bg-background max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:border-0 max-md:p-3"
-                    )}
-                  >
-                    <div className="flex items-center gap-4 max-md:gap-3">
-                      <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full max-md:shrink-0">
-                        {getStatusIcon(record.status)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 max-md:flex-wrap">
-                          <h4 className="font-semibold">
-                            {record.studentName}
-                          </h4>
-                          <Badge variant={getStatusBadgeVariant(record.status)}>
-                            {statusLabel(record.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground text-sm">
-                          {record.className}
-                        </p>
-                        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs max-md:flex-wrap">
-                          <span>
-                            {dict.via}{" "}
-                            {recentLabels?.recentTable?.methodLabels?.[
-                              record.method
-                            ] ?? getMethodDisplayName(record.method)}
-                          </span>
-                          {record.checkInTime && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                Check-in:{" "}
-                                {safeFormatTime(record.checkInTime, locale)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-muted-foreground text-end text-sm max-md:flex max-md:gap-2 max-md:ps-[52px] max-md:text-start max-md:text-xs">
-                      <p>{safeFormatDate(record.date, locale)}</p>
-                      <p className="text-xs">
-                        {safeFormatDistanceToNow(record.markedAt)}
+      {loading && records.length === 0 ? (
+        <div className="space-y-2 rounded-2xl border p-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : groups.length === 0 ? (
+        <p className="text-muted-foreground py-16 text-center text-sm">
+          {t.empty ?? "No attendance has been marked yet."}
+        </p>
+      ) : (
+        <div className={cn("space-y-6", loading && "opacity-60")}>
+          {groups.map((g) => (
+            <section key={g.key} className="space-y-2">
+              <h2 className="text-muted-foreground px-4 text-xs font-medium">
+                {g.label}
+              </h2>
+              <ul className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+                {g.items.map((r) => (
+                  <li key={r.id} className="flex items-center gap-3 px-4 py-3">
+                    <span
+                      className={cn(
+                        "size-2 shrink-0 rounded-full",
+                        STATUS_DOT[r.status] ?? "bg-muted-foreground"
+                      )}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {r.studentName}
+                      </p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {[
+                          statusLabel(r.status),
+                          r.className,
+                          methodLabel(r.method),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </div>
-                  </div>
+                    <div className="text-muted-foreground shrink-0 text-end text-xs">
+                      <p>{relativeTime(r.markedAt, lang)}</p>
+                      {r.checkInTime && r.status !== "ABSENT" ? (
+                        <p className="tabular-nums">
+                          {(t.checkIn ?? "Arrived {time}").replace(
+                            "{time}",
+                            formatTime(r.checkInTime, lang)
+                          )}
+                        </p>
+                      ) : null}
+                    </div>
+                  </li>
                 ))}
-              </div>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

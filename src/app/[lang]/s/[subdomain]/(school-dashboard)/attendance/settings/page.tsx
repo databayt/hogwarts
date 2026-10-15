@@ -17,11 +17,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const t = (dictionary?.school?.attendance as any)?.settingsPage
-  return {
-    title: t?.title ?? "Attendance Settings",
-    description: t?.description ?? "School-wide attendance configuration",
-  }
+  const d = dictionary as any
+  const title = d?.school?.attendance?.title ?? "Attendance"
+  const section = d?.attendanceReports?.settings?.title ?? "Settings"
+  return { title: `${title} · ${section}` }
 }
 
 interface Props {
@@ -43,6 +42,11 @@ export default async function Page({ params }: Props) {
   ])
   const att = dictionary?.school?.attendance as any
   const t = att?.settingsPage as Record<string, string> | undefined
+  const r = (dictionary as any)?.attendanceReports?.settings ?? {}
+  const methodLabels = {
+    ...(att?.overviewExtras?.methodLabels ?? {}),
+    ...((dictionary as any)?.attendanceHub?.methods ?? {}),
+  } as Record<string, string>
 
   if (!settings.success || !settings.data) {
     return (
@@ -58,7 +62,9 @@ export default async function Page({ params }: Props) {
     <AttendanceSettingsForm
       initial={initial}
       dictionary={t}
-      methodLabels={att?.overviewExtras?.methodLabels}
+      methodLabels={methodLabels}
+      methodsFootnote={r.methodsFootnote}
+      alertAfterLabel={r.alertAfter}
     />
   )
 }

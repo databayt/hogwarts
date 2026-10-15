@@ -1,15 +1,25 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { type Metadata } from "next"
 import { auth } from "@/auth"
-import { UserRole } from "@prisma/client"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { RecentActivityContent } from "@/components/school-dashboard/attendance/recent/content"
 
-export const metadata = { title: "Dashboard: Recent Attendance Activity" }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const d = (await getDictionary(lang)) as any
+  const title = d?.school?.attendance?.title ?? "Attendance"
+  const section = d?.attendanceHub?.sections?.reports?.recent ?? "Activity"
+  return { title: `${title} · ${section}` }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -18,7 +28,6 @@ interface Props {
 const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 
 export default async function Page({ params }: Props) {
-  // Independent awaits parallelized (params + auth + dictionary).
   const [{ lang }, session] = await Promise.all([params, auth()])
 
   // Recent activity surfaces every student's marking history across the
@@ -30,11 +39,5 @@ export default async function Page({ params }: Props) {
 
   const dictionary = await getDictionary(lang)
 
-  return (
-    <RecentActivityContent
-      dictionary={dictionary.school}
-      locale={lang}
-      userRole={session?.user?.role as UserRole | undefined}
-    />
-  )
+  return <RecentActivityContent dictionary={dictionary} locale={lang} />
 }
