@@ -16,12 +16,10 @@ export async function generateMetadata({
   params: Promise<{ lang: Locale }>
 }): Promise<Metadata> {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
-
-  return {
-    title: dictionary?.school?.attendance?.reports || "Attendance Reports",
-    description: "Generate and export attendance reports",
-  }
+  const d = (await getDictionary(lang)) as any
+  const title = d?.school?.attendance?.title ?? "Attendance"
+  const section = d?.attendanceHub?.sections?.reports?.records ?? "Records"
+  return { title: `${title} · ${section}` }
 }
 
 interface Props {

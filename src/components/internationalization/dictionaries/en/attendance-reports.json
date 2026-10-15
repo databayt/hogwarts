@@ -1,6 +1,11 @@
 {
   "overview": {
-    "range": { "week": "7 days", "month": "30 days", "term": "This term" },
+    "range": {
+      "week": "7 days",
+      "month": "30 days",
+      "quarter": "90 days",
+      "term": "This term"
+    },
     "rangeLabel": "Period",
     "allSections": "All sections",
     "sectionLabel": "Section",
@@ -76,16 +81,16 @@
     }
   },
   "activity": {
-    "subtitle": "The latest attendance marks across the school",
     "refresh": "Refresh",
     "empty": "No attendance has been marked yet.",
     "today": "Today",
     "yesterday": "Yesterday",
     "checkIn": "Arrived {time}",
-    "showing": "Last {n} marks",
-    "markedBy": "via {method}"
+    "all": "All"
   },
   "settings": {
-    "methodsFootnote": "These switches control the methods offered in the mobile app. The web pages keep every method available."
+    "methodsFootnote": "These switches control the methods offered in the mobile app. The web pages keep every method available.",
+    "alertAfter": "Absences before an alert",
+    "title": "Settings"
   }
 }

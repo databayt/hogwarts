@@ -174,6 +174,9 @@ interface AttendancePDFProps {
   schoolName?: string
   className?: string
   locale?: string
+  /** Translated status / method names (attendanceHub.status / .methods). */
+  statusLabels?: Record<string, string>
+  methodLabels?: Record<string, string>
 }
 
 const getStatusStyle = (status: string) => {
@@ -193,7 +196,7 @@ const getStatusStyle = (status: string) => {
 
 const formatDate = (dateStr: string, locale: string = "en") => {
   return new Date(dateStr).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
+    locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
     {
       year: "numeric",
       month: "short",
@@ -205,7 +208,7 @@ const formatDate = (dateStr: string, locale: string = "en") => {
 const formatTime = (timeStr: string | undefined, locale: string = "en") => {
   if (!timeStr) return "-"
   return new Date(timeStr).toLocaleTimeString(
-    locale === "ar" ? "ar-SA" : "en-US",
+    locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
     {
       hour: "2-digit",
       minute: "2-digit",
@@ -220,6 +223,8 @@ function AttendanceReportDocument({
   schoolName = "School",
   className,
   locale = "en",
+  statusLabels = {},
+  methodLabels = {},
 }: AttendancePDFProps) {
   const isArabic = locale === "ar"
   const itemsPerPage = 25
@@ -263,7 +268,7 @@ function AttendanceReportDocument({
                 <Text style={styles.metadata}>
                   {isArabic ? "تاريخ التصدير" : "Generated"}:{" "}
                   {new Date().toLocaleDateString(
-                    locale === "ar" ? "ar-SA" : "en-US",
+                    locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
                     {
                       year: "numeric",
                       month: "long",
@@ -355,10 +360,11 @@ function AttendanceReportDocument({
                 <Text style={styles.colStudent}>{record.studentName}</Text>
                 <Text style={styles.colClass}>{record.className}</Text>
                 <Text style={[styles.colStatus, getStatusStyle(record.status)]}>
-                  {record.status}
+                  {statusLabels[record.status] ?? record.status}
                 </Text>
                 <Text style={styles.colMethod}>
-                  {record.method.replace("_", " ")}
+                  {methodLabels[record.method] ??
+                    record.method.replace(/_/g, " ")}
                 </Text>
                 <Text style={styles.colCheckIn}>
                   {formatTime(record.checkInTime, locale)}

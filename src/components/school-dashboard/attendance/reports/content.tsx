@@ -2,32 +2,22 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Attendance › Reports › Records.
+ *
+ * The raw marks: one filter row (period, section, status, search), one
+ * table, one export. Figures live on the Overview — not repeated here.
+ * Status and method names come from `attendanceHub`, pagination strings
+ * from `attendanceHub.table`, dates are Gregorian with Latin digits.
+ */
 import * as React from "react"
-import { useCallback, useEffect, useState } from "react"
-import {
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  Clock,
-  FileSpreadsheet,
-  ListFilter,
-  RefreshCw,
-  Search,
-} from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { DateRangePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -35,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -43,15 +34,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { SkeletonDataTable } from "@/components/atom/loading"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import {
-  getAttendanceReport,
-  getAttendanceStats,
-  getSectionsForSelection,
-} from "../actions"
-import { phone } from "../shared/phone"
+import { getAttendanceReport, getSectionsForSelection } from "../actions"
+import { formatDay, formatTime } from "../analytics/format"
+import { AttendanceSectionNav } from "../ui/section-nav"
 import { AttendanceReportExportButton } from "./export-button"
 
 interface ReportRecord {
@@ -80,538 +68,350 @@ interface Props {
   }
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PRESENT:
-    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  ABSENT: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  LATE: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  EXCUSED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  SICK: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+type RangeKey = "week" | "month" | "quarter" | "custom"
+
+const STATUSES = ["PRESENT", "ABSENT", "LATE", "EXCUSED", "SICK"] as const
+
+const STATUS_DOT: Record<string, string> = {
+  PRESENT: "bg-emerald-500",
+  ABSENT: "bg-red-500",
+  LATE: "bg-amber-500",
+  EXCUSED: "bg-sky-500",
+  SICK: "bg-violet-500",
+  HOLIDAY: "bg-muted-foreground",
 }
 
-const STATUS_ICONS: Record<string, React.ReactNode> = {
-  PRESENT: <CircleCheck className="h-4 w-4" />,
-  ABSENT: <CircleX className="h-4 w-4" />,
-  LATE: <Clock className="h-4 w-4" />,
-  EXCUSED: <CircleAlert className="h-4 w-4" />,
-  SICK: <CircleAlert className="h-4 w-4" />,
+const PAGE_SIZE = 50
+
+function presetRange(key: Exclude<RangeKey, "custom">) {
+  const to = new Date()
+  to.setHours(23, 59, 59, 999)
+  const from = new Date()
+  from.setHours(0, 0, 0, 0)
+  from.setDate(
+    from.getDate() - (key === "week" ? 6 : key === "month" ? 29 : 89)
+  )
+  return { from, to }
 }
+
+const fill = (tpl: string, vars: Record<string, string | number>) =>
+  Object.entries(vars).reduce(
+    (s, [k, v]) => s.replace(`{${k}}`, String(v)),
+    tpl
+  )
 
 export function ReportsContent({
   dictionary,
-  locale = "en",
+  locale = "ar",
   initialFilters,
 }: Props) {
-  const [records, setRecords] = useState<ReportRecord[]>([])
-  const [sections, setSections] = useState<
-    {
-      id: string
-      name: string
-      gradeName: string
-      gradeId: string
-      teacher: string | null
-      studentCount: number
-    }[]
-  >([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const lang = locale
+  const d = dictionary as any
+  const t = d?.attendanceReports?.records ?? {}
+  const rangeT = d?.attendanceReports?.overview?.range ?? {}
+  const hub = d?.attendanceHub ?? {}
+  const tableT = hub.table ?? {}
+  const cols = t.columns ?? {}
 
-  // ListFilter state
-  const [dateRange, setDateRange] = useState({
-    from: initialFilters?.from
-      ? new Date(initialFilters.from)
-      : new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: initialFilters?.to ? new Date(initialFilters.to) : new Date(),
-  })
-  const [selectedSection, setSelectedSection] = useState<string>(
-    initialFilters?.sectionId || "all"
-  )
-  const [selectedStatus, setSelectedStatus] = useState<string>(
-    initialFilters?.status || "all"
-  )
-  const [searchQuery, setSearchQuery] = useState("")
+  const initialCustom =
+    initialFilters?.from || initialFilters?.to
+      ? {
+          from: initialFilters.from
+            ? new Date(initialFilters.from)
+            : presetRange("month").from,
+          to: initialFilters.to ? new Date(initialFilters.to) : new Date(),
+        }
+      : null
 
-  // Pagination
+  const [range, setRange] = useState<RangeKey>(
+    initialCustom ? "custom" : "month"
+  )
+  const [section, setSection] = useState(initialFilters?.sectionId || "all")
+  const [status, setStatus] = useState(initialFilters?.status || "all")
+  const [query, setQuery] = useState("")
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+
+  const [records, setRecords] = useState<ReportRecord[]>([])
   const [total, setTotal] = useState(0)
-  const pageSize = 50
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [sections, setSections] = useState<
+    { id: string; name: string; gradeName: string }[]
+  >([])
 
-  // Stats
-  const [stats, setStats] = useState<{
-    total: number
-    present: number
-    absent: number
-    late: number
-    attendanceRate: number
-  } | null>(null)
+  const dates = useMemo(
+    () =>
+      range === "custom" && initialCustom
+        ? initialCustom
+        : presetRange(range === "custom" ? "month" : range),
+    // initialCustom is derived from props once; range drives the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [range]
+  )
 
-  const fetchData = useCallback(async () => {
+  const load = useCallback(async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-
-      const sectionFilter =
-        selectedSection !== "all" ? selectedSection : undefined
-
-      const [reportResult, sectionsResult, statsResult] = await Promise.all([
-        getAttendanceReport({
-          dateFrom: dateRange.from.toISOString(),
-          dateTo: dateRange.to.toISOString(),
-          sectionId: sectionFilter,
-          status:
-            selectedStatus !== "all" ? [selectedStatus as any] : undefined,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-        }),
-        getSectionsForSelection(),
-        getAttendanceStats({
-          dateFrom: dateRange.from.toISOString(),
-          dateTo: dateRange.to.toISOString(),
-          sectionId: sectionFilter,
-        }),
-      ])
-
-      // Handle mixed return types
-      if (
-        !("success" in reportResult && !reportResult.success) &&
-        "records" in reportResult
-      ) {
-        if (reportResult.records) setRecords(reportResult.records as any)
-        if (reportResult.pagination?.total != null)
-          setTotal(reportResult.pagination.total)
-        if (reportResult.pagination?.totalPages != null)
-          setTotalPages(reportResult.pagination.totalPages)
+      const res = await getAttendanceReport({
+        dateFrom: dates.from.toISOString(),
+        dateTo: dates.to.toISOString(),
+        sectionId: section !== "all" ? section : undefined,
+        studentId: initialFilters?.studentId,
+        status: status !== "all" ? [status as any] : undefined,
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      })
+      if ("records" in res && res.records) {
+        setRecords(res.records as ReportRecord[])
+        setTotal(res.pagination?.total ?? 0)
+        setTotalPages(Math.max(1, res.pagination?.totalPages ?? 1))
+      } else {
+        setRecords([])
+        setTotal(0)
+        setTotalPages(1)
       }
-      if (sectionsResult.success && sectionsResult.data)
-        setSections(sectionsResult.data.sections)
-      // statsResult returns raw data on success
-      if (!("success" in statsResult && !statsResult.success))
-        setStats(statsResult as any)
     } catch (error) {
-      console.error("Error fetching report data:", error)
+      console.error("[attendance records] load failed", error)
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedSection, selectedStatus, page])
+  }, [dates, section, status, page, initialFilters?.studentId])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    load()
+  }, [load])
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true)
-    await fetchData()
-    setTimeout(() => setRefreshing(false), 500)
-  }, [fetchData])
+  useEffect(() => {
+    getSectionsForSelection().then((r) => {
+      if (r.success && r.data) setSections(r.data.sections)
+    })
+  }, [])
 
-  // Selected section's name, for the export's heading
-  const selectedSectionName =
-    selectedSection !== "all"
-      ? sections.find((c) => c.id === selectedSection)?.name
-      : undefined
-
-  // Memoize filtered records to prevent recalculation on every render
-  const filteredRecords = React.useMemo(() => {
-    if (!searchQuery) return records
-
-    const query = searchQuery.toLowerCase()
+  const shown = useMemo(() => {
+    if (!query) return records
+    const q = query.toLowerCase()
     return records.filter(
       (r) =>
-        r.studentName.toLowerCase().includes(query) ||
-        r.className.toLowerCase().includes(query)
+        r.studentName.toLowerCase().includes(q) ||
+        r.className.toLowerCase().includes(q)
     )
-  }, [records, searchQuery])
+  }, [records, query])
 
-  const t = dictionary?.attendance
+  const rangeOptions: { value: RangeKey; label: React.ReactNode }[] = [
+    { value: "week", label: rangeT.week ?? "7 days" },
+    { value: "month", label: rangeT.month ?? "30 days" },
+    { value: "quarter", label: rangeT.quarter ?? "90 days" },
+    ...(initialCustom
+      ? [
+          {
+            value: "custom" as const,
+            label: `${formatDay(initialCustom.from, lang)} – ${formatDay(initialCustom.to, lang)}`,
+          },
+        ]
+      : []),
+  ]
+
+  const statusLabel = (s: string) => hub.status?.[s] ?? s
+  const methodLabel = (m: string) =>
+    hub.methods?.[m] ?? m.replace(/_/g, " ").toLowerCase()
+
+  const resetPage =
+    <T,>(fn: (v: T) => void) =>
+    (v: T) => {
+      fn(v)
+      setPage(1)
+    }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden dark:bg-purple-900/30">
-            <FileSpreadsheet className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              {t?.reports?.title ?? "Attendance Reports"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {t?.reports?.export ??
-                "Generate and export detailed attendance reports"}
-            </p>
-          </div>
+      <AttendanceSectionNav group="reports" dictionary={dictionary} />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={range}
+          onValueChange={resetPage(setRange)}
+          options={rangeOptions}
+        />
+        <Select value={section} onValueChange={resetPage(setSection)}>
+          <SelectTrigger className="w-full rounded-full sm:w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {d?.attendanceReports?.overview?.allSections ?? "All sections"}
+            </SelectItem>
+            {sections.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.gradeName} · {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={status} onValueChange={resetPage(setStatus)}>
+          <SelectTrigger className="w-full rounded-full sm:w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t.allStatuses ?? "All statuses"}
+            </SelectItem>
+            {STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {statusLabel(s)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="relative w-full sm:w-[220px]">
+          <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.searchPlaceholder ?? "Search student or section"}
+            className="rounded-full ps-9"
+          />
         </div>
-        <div className="flex gap-2 max-md:[&_button]:h-10 max-md:[&_button]:rounded-full max-md:[&_button]:px-5">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshCw
-              className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
-            />
-            {t?.emptyStates?.refresh ?? "Refresh"}
-          </Button>
+        <div className="ms-auto">
           <AttendanceReportExportButton
             filters={{
-              sectionId:
-                selectedSection !== "all" ? selectedSection : undefined,
-              status: selectedStatus !== "all" ? selectedStatus : undefined,
-              from: dateRange.from.toISOString(),
-              to: dateRange.to.toISOString(),
+              sectionId: section !== "all" ? section : undefined,
+              studentId: initialFilters?.studentId,
+              status: status !== "all" ? status : undefined,
+              from: dates.from.toISOString(),
+              to: dates.to.toISOString(),
             }}
-            sectionName={selectedSectionName}
-            locale={locale}
+            sectionName={
+              section !== "all"
+                ? sections.find((s) => s.id === section)?.name
+                : undefined
+            }
+            locale={lang}
           />
         </div>
       </div>
 
-      {/* Summary Cards */}
-      {stats && (
-        <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
-          <Card className={phone.cell}>
-            <CardHeader
-              className={cn(
-                "flex flex-row items-center justify-between space-y-0 pb-2",
-                phone.cellHead
-              )}
+      <div className="bg-card overflow-hidden rounded-2xl border">
+        {loading && records.length === 0 ? (
+          <div className="space-y-3 p-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        ) : shown.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="text-sm font-medium">
+              {t.empty ?? "No records match these filters."}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {t.emptyHint ?? "Try a wider period or another section."}
+            </p>
+          </div>
+        ) : (
+          <Table className={cn(loading && "opacity-60")}>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="ps-5">{cols.date ?? "Date"}</TableHead>
+                <TableHead>{cols.student ?? "Student"}</TableHead>
+                <TableHead className="max-md:hidden">
+                  {cols.section ?? "Section"}
+                </TableHead>
+                <TableHead>{cols.status ?? "Status"}</TableHead>
+                <TableHead className="max-md:hidden">
+                  {cols.method ?? "Method"}
+                </TableHead>
+                <TableHead className="max-md:hidden">
+                  {cols.checkIn ?? "Check-in"}
+                </TableHead>
+                <TableHead className="max-lg:hidden">
+                  {cols.checkOut ?? "Check-out"}
+                </TableHead>
+                <TableHead className="pe-5 max-lg:hidden">
+                  {cols.notes ?? "Notes"}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {shown.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="text-muted-foreground ps-5 whitespace-nowrap tabular-nums">
+                    {formatDay(r.date, lang, {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </TableCell>
+                  <TableCell className="font-medium">{r.studentName}</TableCell>
+                  <TableCell className="text-muted-foreground max-md:hidden">
+                    {r.className || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <span
+                        className={cn(
+                          "size-2 rounded-full",
+                          STATUS_DOT[r.status] ?? "bg-muted-foreground"
+                        )}
+                      />
+                      {statusLabel(r.status)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-md:hidden">
+                    {methodLabel(r.method)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums max-md:hidden">
+                    {r.checkInTime && r.status !== "ABSENT"
+                      ? formatTime(r.checkInTime, lang)
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums max-lg:hidden">
+                    {r.checkOutTime ? formatTime(r.checkOutTime, lang) : "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[220px] truncate pe-5 max-lg:hidden">
+                    {r.notes || "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {total > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <p className="text-muted-foreground tabular-nums">
+            {fill(tableT.showingOf ?? "Showing {shown} of {total}", {
+              shown: shown.length,
+              total,
+            })}
+          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => p - 1)}
             >
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.reports?.summary ?? "Total Records"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div className={cn("text-2xl font-bold", phone.cellValue)}>
-                {stats.total}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {stats.attendanceRate}%{" "}
-                {t?.stats?.attendanceRate ?? "attendance rate"}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader
-              className={cn(
-                "flex flex-row items-center justify-between space-y-0 pb-2",
-                phone.cellHead
-              )}
+              {tableT.previous ?? "Previous"}
+            </Button>
+            <span className="text-muted-foreground tabular-nums">
+              {fill(tableT.pageOf ?? "Page {page} of {pages}", {
+                page,
+                pages: totalPages,
+              })}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
             >
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.status?.PRESENT ?? "Present"}
-              </CardTitle>
-              <CircleCheck className="h-4 w-4 text-green-500 max-md:hidden" />
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-green-600",
-                  phone.cellValue
-                )}
-              >
-                {stats.present}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader
-              className={cn(
-                "flex flex-row items-center justify-between space-y-0 pb-2",
-                phone.cellHead
-              )}
-            >
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.status?.LATE ?? "Late"}
-              </CardTitle>
-              <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-yellow-600",
-                  phone.cellValue
-                )}
-              >
-                {stats.late}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader
-              className={cn(
-                "flex flex-row items-center justify-between space-y-0 pb-2",
-                phone.cellHead
-              )}
-            >
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.status?.ABSENT ?? "Absent"}
-              </CardTitle>
-              <CircleX className="h-4 w-4 text-red-500 max-md:hidden" />
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-red-600",
-                  phone.cellValue
-                )}
-              >
-                {stats.absent}
-              </div>
-            </CardContent>
-          </Card>
+              {tableT.next ?? "Next"}
+            </Button>
+          </div>
         </div>
-      )}
-
-      {/* Filters */}
-      <Card className={phone.card}>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ListFilter className="h-4 w-4" />
-            {t?.export?.dateRange ?? "Filters"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 max-md:gap-3">
-            <div className="flex items-center gap-2 max-md:w-full max-md:flex-wrap">
-              <label className="text-sm font-medium">
-                {t?.export?.dateRange ?? "Date Range"}:
-              </label>
-              <DateRangePicker
-                from={dateRange.from}
-                to={dateRange.to}
-                onSelect={(range) => {
-                  setDateRange({
-                    from: range.from || new Date(),
-                    to: range.to || new Date(),
-                  })
-                  setPage(1)
-                }}
-                placeholder={
-                  t?.reportsFilter?.selectDateRange ?? "Select date range"
-                }
-              />
-            </div>
-            <Select
-              value={selectedSection}
-              onValueChange={(v) => {
-                setSelectedSection(v)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger
-                className={cn("w-[200px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={
-                    t?.reportsFilter?.selectSection ?? "Select section"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.reportsFilter?.allSections ?? "All Sections"}
-                </SelectItem>
-                {sections.map((sec) => (
-                  <SelectItem key={sec.id} value={sec.id}>
-                    {sec.gradeName} - {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={selectedStatus}
-              onValueChange={(v) => {
-                setSelectedStatus(v)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger
-                className={cn("w-[150px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={t?.form?.selectStatus ?? "Select status"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.reportsFilter?.allStatuses ?? "All Statuses"}
-                </SelectItem>
-                <SelectItem value="PRESENT">
-                  {t?.status?.PRESENT ?? "Present"}
-                </SelectItem>
-                <SelectItem value="ABSENT">
-                  {t?.status?.ABSENT ?? "Absent"}
-                </SelectItem>
-                <SelectItem value="LATE">
-                  {t?.status?.LATE ?? "Late"}
-                </SelectItem>
-                <SelectItem value="EXCUSED">
-                  {t?.status?.EXCUSED ?? "Excused"}
-                </SelectItem>
-                <SelectItem value="SICK">
-                  {t?.status?.SICK ?? "Sick"}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="relative min-w-[200px] flex-1 max-md:w-full max-md:min-w-0">
-              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
-              <Input
-                placeholder={
-                  t?.form?.selectStudent ?? "Search student or class..."
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn("ps-9", phone.field)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Data Table */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-            <div>
-              <CardTitle>{t?.title ?? "Attendance Records"}</CardTitle>
-              <CardDescription>
-                Showing {filteredRecords.length} of {total} records
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                {t?.form?.cancel ?? "Previous"}
-              </Button>
-              <span className="text-muted-foreground text-sm">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                {t?.form?.submit ?? "Next"}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div role="status" aria-busy="true">
-              <span className="sr-only">{dictionary?.common?.loading}</span>
-              <SkeletonDataTable
-                columns={8}
-                rows={8}
-                showToolbar={false}
-                showPagination={false}
-              />
-            </div>
-          ) : filteredRecords.length === 0 ? (
-            <div className="text-muted-foreground py-12 text-center">
-              <FileSpreadsheet className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>{t?.table?.noRecords ?? "No records found"}</p>
-              <p className="text-sm">
-                {t?.stats?.selectClassAndDate ??
-                  "Adjust filters or date range to see data"}
-              </p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t?.table?.date ?? "Date"}</TableHead>
-                    <TableHead>{t?.table?.student ?? "Student"}</TableHead>
-                    <TableHead>{t?.table?.class ?? "Class"}</TableHead>
-                    <TableHead>{t?.table?.status ?? "Status"}</TableHead>
-                    <TableHead>{t?.table?.method ?? "Method"}</TableHead>
-                    <TableHead>{t?.table?.time ?? "Check-in"}</TableHead>
-                    <TableHead>{t?.table?.time ?? "Check-out"}</TableHead>
-                    <TableHead>{t?.table?.notes ?? "Notes"}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRecords.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="font-medium">
-                        {new Date(record.date).toLocaleDateString(locale)}
-                      </TableCell>
-                      <TableCell>{record.studentName}</TableCell>
-                      <TableCell>{record.className}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={cn("gap-1", STATUS_COLORS[record.status])}
-                        >
-                          {STATUS_ICONS[record.status]}
-                          {(t?.status as Record<string, string> | undefined)?.[
-                            record.status
-                          ] ?? record.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {record.method.replace("_", " ")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {record.checkInTime
-                          ? new Date(record.checkInTime).toLocaleTimeString(
-                              locale,
-                              { hour: "2-digit", minute: "2-digit" }
-                            )
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {record.checkOutTime
-                          ? new Date(record.checkOutTime).toLocaleTimeString(
-                              locale,
-                              { hour: "2-digit", minute: "2-digit" }
-                            )
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {record.notes || "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+      ) : null}
     </div>
   )
 }

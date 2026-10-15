@@ -31,11 +31,14 @@ interface ExcelExportOptions {
   schoolName?: string
   className?: string
   locale?: string
+  /** Translated status / method names (attendanceHub.status / .methods). */
+  statusLabels?: Record<string, string>
+  methodLabels?: Record<string, string>
 }
 
 const formatDate = (dateStr: string, locale: string = "en") => {
   return new Date(dateStr).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
+    locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
     {
       year: "numeric",
       month: "short",
@@ -47,7 +50,7 @@ const formatDate = (dateStr: string, locale: string = "en") => {
 const formatTime = (timeStr: string | undefined, locale: string = "en") => {
   if (!timeStr) return "-"
   return new Date(timeStr).toLocaleTimeString(
-    locale === "ar" ? "ar-SA" : "en-US",
+    locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
     {
       hour: "2-digit",
       minute: "2-digit",
@@ -62,8 +65,12 @@ export function generateAttendanceExcel({
   schoolName = "School",
   className,
   locale = "en",
+  statusLabels = {},
+  methodLabels = {},
 }: ExcelExportOptions): Blob {
   const isArabic = locale === "ar"
+  const statusLabel = (s: string) => statusLabels[s] ?? s
+  const methodLabel = (m: string) => methodLabels[m] ?? m.replace(/_/g, " ")
   const workbook = XLSX.utils.book_new()
 
   // ============================================
@@ -80,7 +87,9 @@ export function generateAttendanceExcel({
     ],
     [
       isArabic ? "تاريخ التصدير" : "Generated",
-      new Date().toLocaleString(locale === "ar" ? "ar-SA" : "en-US"),
+      new Date().toLocaleString(
+        locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US"
+      ),
     ],
     [],
     [isArabic ? "ملخص الإحصائيات" : "Statistics Summary"],
@@ -140,8 +149,8 @@ export function generateAttendanceExcel({
       formatDate(record.date, locale),
       record.studentName,
       record.className,
-      record.status,
-      record.method.replace("_", " "),
+      statusLabel(record.status),
+      methodLabel(record.method),
       formatTime(record.checkInTime, locale),
       formatTime(record.checkOutTime, locale),
       record.notes || "",
@@ -196,7 +205,7 @@ export function generateAttendanceExcel({
       isArabic ? "النسبة" : "Percentage",
     ],
     ...Object.entries(statusCounts).map(([status, count]) => [
-      status,
+      statusLabel(status),
       count,
       `${((count / records.length) * 100).toFixed(1)}%`,
     ]),

@@ -59,6 +59,9 @@ export function AttendanceReportExportButton({
   const t = (dictionary?.school?.attendance as any)?.exportButton as
     | Record<string, string>
     | undefined
+  const hub = (dictionary as any)?.attendanceHub
+  const statusLabels = (hub?.status ?? {}) as Record<string, string>
+  const methodLabels = (hub?.methods ?? {}) as Record<string, string>
 
   const getDateRange = () => {
     const from = filters.from
@@ -79,7 +82,10 @@ export function AttendanceReportExportButton({
     setDownloading("csv")
     try {
       const csv = await getAttendanceReportCsv(filters)
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      // BOM so Excel opens the Arabic names as UTF-8.
+      const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;",
+      })
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
@@ -106,7 +112,7 @@ export function AttendanceReportExportButton({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
           sectionId: filters.sectionId,
-          status: filters.status as any,
+          status: filters.status ? [filters.status as any] : undefined,
           limit: 5000,
           offset: 0,
         }),
@@ -138,6 +144,8 @@ export function AttendanceReportExportButton({
         schoolName,
         className: sectionName,
         locale,
+        statusLabels,
+        methodLabels,
       })
 
       downloadPDF(blob, formatFilename("pdf"))
@@ -159,7 +167,7 @@ export function AttendanceReportExportButton({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
           sectionId: filters.sectionId,
-          status: filters.status as any,
+          status: filters.status ? [filters.status as any] : undefined,
           // The action caps `limit` at 5000 (actions/bulk.ts). This asked
           // for 10000, so the action threw a ZodError, the catch below logged
           // it, and Excel export produced nothing — silently. Found
@@ -194,6 +202,8 @@ export function AttendanceReportExportButton({
         schoolName,
         className: sectionName,
         locale,
+        statusLabels,
+        methodLabels,
       })
 
       downloadExcel(blob, formatFilename("xlsx"))
@@ -209,7 +219,12 @@ export function AttendanceReportExportButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="outline" disabled={isLoading}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-full"
+          disabled={isLoading}
+        >
           {isLoading ? (
             <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
