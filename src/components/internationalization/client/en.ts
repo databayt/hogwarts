@@ -7,29 +7,33 @@
 // feature namespace nested under its key. Do not edit; regenerate.
 
 import type { Dictionary } from "../dictionaries"
-import admin from "../dictionaries/en/admin.json"
-import attendance from "../dictionaries/en/attendance.json"
-import banking from "../dictionaries/en/banking.json"
-import compliance from "../dictionaries/en/compliance.json"
-import finance from "../dictionaries/en/finance.json"
-import generate from "../dictionaries/en/generate.json"
-import lab from "../dictionaries/en/lab.json"
-import library from "../dictionaries/en/library.json"
-import liveClasses from "../dictionaries/en/live-classes.json"
-import marking from "../dictionaries/en/marking.json"
-import messages from "../dictionaries/en/messages.json"
-import messaging from "../dictionaries/en/messaging.json"
-import notifications from "../dictionaries/en/notifications.json"
-import parentPortal from "../dictionaries/en/parentPortal.json"
-import profile from "../dictionaries/en/profile.json"
-import results from "../dictionaries/en/results.json"
-import sales from "../dictionaries/en/sales.json"
-import transportation from "../dictionaries/en/transportation.json"
-import whatsapp from "../dictionaries/en/whatsapp.json"
 import general from "../en.json"
+import school from "../school-en.json"
 import lumos from "../lumos-en.json"
 import operator from "../operator-en.json"
-import school from "../school-en.json"
+import library from "../dictionaries/en/library.json"
+import banking from "../dictionaries/en/banking.json"
+import marking from "../dictionaries/en/marking.json"
+import generate from "../dictionaries/en/generate.json"
+import results from "../dictionaries/en/results.json"
+import finance from "../dictionaries/en/finance.json"
+import admin from "../dictionaries/en/admin.json"
+import profile from "../dictionaries/en/profile.json"
+import notifications from "../dictionaries/en/notifications.json"
+import messages from "../dictionaries/en/messages.json"
+import lab from "../dictionaries/en/lab.json"
+import sales from "../dictionaries/en/sales.json"
+import attendance from "../dictionaries/en/attendance.json"
+import messaging from "../dictionaries/en/messaging.json"
+import whatsapp from "../dictionaries/en/whatsapp.json"
+import transportation from "../dictionaries/en/transportation.json"
+import compliance from "../dictionaries/en/compliance.json"
+import schoolConfig from "../dictionaries/en/school-config.json"
+import schoolBilling from "../dictionaries/en/school-billing.json"
+import schoolSettings from "../dictionaries/en/school-settings.json"
+import schoolConsole from "../dictionaries/en/school-console.json"
+import liveClasses from "../dictionaries/en/live-classes.json"
+import parentPortal from "../dictionaries/en/parentPortal.json"
 
 export const dictionary = {
   ...general,
@@ -53,6 +57,10 @@ export const dictionary = {
   whatsapp,
   transportation,
   compliance,
+  schoolConfig,
+  schoolBilling,
+  schoolSettings,
+  schoolConsole,
   liveClasses,
   parentPortal,
 } as unknown as Dictionary

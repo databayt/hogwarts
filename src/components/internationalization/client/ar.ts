@@ -6,30 +6,34 @@
 // server `getDictionary`: the four flat files spread in order, then every
 // feature namespace nested under its key. Do not edit; regenerate.
 
-import general from "../ar.json"
 import type { Dictionary } from "../dictionaries"
-import admin from "../dictionaries/ar/admin.json"
-import attendance from "../dictionaries/ar/attendance.json"
-import banking from "../dictionaries/ar/banking.json"
-import compliance from "../dictionaries/ar/compliance.json"
-import finance from "../dictionaries/ar/finance.json"
-import generate from "../dictionaries/ar/generate.json"
-import lab from "../dictionaries/ar/lab.json"
-import library from "../dictionaries/ar/library.json"
-import liveClasses from "../dictionaries/ar/live-classes.json"
-import marking from "../dictionaries/ar/marking.json"
-import messages from "../dictionaries/ar/messages.json"
-import messaging from "../dictionaries/ar/messaging.json"
-import notifications from "../dictionaries/ar/notifications.json"
-import parentPortal from "../dictionaries/ar/parentPortal.json"
-import profile from "../dictionaries/ar/profile.json"
-import results from "../dictionaries/ar/results.json"
-import sales from "../dictionaries/ar/sales.json"
-import transportation from "../dictionaries/ar/transportation.json"
-import whatsapp from "../dictionaries/ar/whatsapp.json"
+import general from "../ar.json"
+import school from "../school-ar.json"
 import lumos from "../lumos-ar.json"
 import operator from "../operator-ar.json"
-import school from "../school-ar.json"
+import library from "../dictionaries/ar/library.json"
+import banking from "../dictionaries/ar/banking.json"
+import marking from "../dictionaries/ar/marking.json"
+import generate from "../dictionaries/ar/generate.json"
+import results from "../dictionaries/ar/results.json"
+import finance from "../dictionaries/ar/finance.json"
+import admin from "../dictionaries/ar/admin.json"
+import profile from "../dictionaries/ar/profile.json"
+import notifications from "../dictionaries/ar/notifications.json"
+import messages from "../dictionaries/ar/messages.json"
+import lab from "../dictionaries/ar/lab.json"
+import sales from "../dictionaries/ar/sales.json"
+import attendance from "../dictionaries/ar/attendance.json"
+import messaging from "../dictionaries/ar/messaging.json"
+import whatsapp from "../dictionaries/ar/whatsapp.json"
+import transportation from "../dictionaries/ar/transportation.json"
+import compliance from "../dictionaries/ar/compliance.json"
+import schoolConfig from "../dictionaries/ar/school-config.json"
+import schoolBilling from "../dictionaries/ar/school-billing.json"
+import schoolSettings from "../dictionaries/ar/school-settings.json"
+import schoolConsole from "../dictionaries/ar/school-console.json"
+import liveClasses from "../dictionaries/ar/live-classes.json"
+import parentPortal from "../dictionaries/ar/parentPortal.json"
 
 export const dictionary = {
   ...general,
@@ -53,6 +57,10 @@ export const dictionary = {
   whatsapp,
   transportation,
   compliance,
+  schoolConfig,
+  schoolBilling,
+  schoolSettings,
+  schoolConsole,
   liveClasses,
   parentPortal,
 } as unknown as Dictionary

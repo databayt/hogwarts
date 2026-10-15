@@ -343,7 +343,7 @@ export default async function EditorLayout({ children, params }: Props) {
                 `:has()` widens the column and the footer together. Reading the
                 route from a request header does not work here: nothing in the
                 app sets `x-pathname`. */}
-            <div className="flex min-h-full flex-col items-center justify-start py-8 [--config-col:560px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
+            <div className="flex min-h-full flex-col items-start justify-start py-8 lg:ps-6 [--config-col:560px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
               <div className="w-full max-w-[var(--config-col)]">{children}</div>
               <div className="text-muted-foreground w-full max-w-[var(--config-col)] pt-8 pb-4 text-start text-sm">
                 <ReportIssue />
