@@ -3,11 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { Component, ReactNode } from "react"
-import { CircleAlert, RefreshCw } from "lucide-react"
+import { CircleAlert } from "lucide-react"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -83,59 +82,12 @@ export class AttendanceErrorBoundary extends Component<
         return <>{this.props.fallback}</>
       }
 
-      // Default error UI
       return (
-        <div className="flex min-h-[400px] items-center justify-center">
-          <Card className="w-full max-w-lg">
-            <CardHeader className="text-center">
-              <div className="bg-destructive/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-                <CircleAlert className="text-destructive h-6 w-6" />
-              </div>
-              <CardTitle className="text-xl">Something went wrong</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert variant="destructive">
-                <AlertTitle>Error Details</AlertTitle>
-                <AlertDescription className="mt-2">
-                  <p className="font-mono text-xs">
-                    {this.state.error?.message ||
-                      "An unexpected error occurred"}
-                  </p>
-                </AlertDescription>
-              </Alert>
-
-              {process.env.NODE_ENV === "development" &&
-                this.state.errorInfo && (
-                  <details className="rounded-lg border p-3">
-                    <summary className="cursor-pointer text-sm font-medium">
-                      Component Stack (Development Only)
-                    </summary>
-                    <pre className="mt-2 overflow-x-auto text-xs">
-                      {this.state.errorInfo.componentStack}
-                    </pre>
-                  </details>
-                )}
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={this.handleReset}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <RefreshCw className="me-2 h-4 w-4" />
-                  Try Again
-                </Button>
-                <Button
-                  onClick={() => window.location.reload()}
-                  variant="default"
-                  className="flex-1"
-                >
-                  Refresh Page
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <BoundaryFallback
+          message={this.state.error?.message}
+          stack={this.state.errorInfo?.componentStack ?? undefined}
+          onReset={this.handleReset}
+        />
       )
     }
 
@@ -169,4 +121,63 @@ export function useAttendanceErrorHandler() {
   const captureError = (error: Error) => setError(error)
 
   return { captureError, resetError }
+}
+
+/** The translated default fallback (a class component can't read hooks). */
+function BoundaryFallback({
+  message,
+  stack,
+  onReset,
+}: {
+  message?: string
+  stack?: string
+  onReset: () => void
+}) {
+  const { dictionary } = useDictionary()
+  const t = ((
+    dictionary as
+      | { attendanceToday?: { shell?: Record<string, string> } }
+      | undefined
+  )?.attendanceToday?.shell ?? {}) as Record<string, string>
+
+  return (
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 p-8 text-center">
+      <CircleAlert className="text-muted-foreground size-8" />
+      <div className="max-w-sm space-y-2">
+        <h2 className="text-lg font-semibold">
+          {t.errorTitle ?? "Something went wrong"}
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          {t.errorDescription ?? "This part of the page couldn't load."}
+        </p>
+        {process.env.NODE_ENV === "development" && message ? (
+          <p className="text-muted-foreground font-mono text-xs" dir="ltr">
+            {message}
+          </p>
+        ) : null}
+      </div>
+      {process.env.NODE_ENV === "development" && stack ? (
+        <details className="w-full max-w-lg rounded-lg border p-3 text-start">
+          <summary className="cursor-pointer text-sm font-medium">
+            {t.devStack ?? "Component stack (development only)"}
+          </summary>
+          <pre className="mt-2 overflow-x-auto text-xs" dir="ltr">
+            {stack}
+          </pre>
+        </details>
+      ) : null}
+      <div className="flex gap-3">
+        <Button onClick={onReset} className="rounded-full">
+          {t.tryAgain ?? "Try again"}
+        </Button>
+        <Button
+          variant="ghost"
+          className="rounded-full"
+          onClick={() => window.location.reload()}
+        >
+          {t.reload ?? "Reload the page"}
+        </Button>
+      </div>
+    </div>
+  )
 }

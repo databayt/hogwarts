@@ -7,7 +7,6 @@ import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStats } from "@/components/atom/loading"
 import {
   Table,
   TableBody,
@@ -16,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SkeletonStats } from "@/components/atom/loading"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "./shared/phone"
 
@@ -154,11 +155,24 @@ export function AttendanceChartSkeleton() {
 }
 
 // Inline loading state for buttons
-export function ButtonLoadingSkeleton({ className }: { className?: string }) {
+/** Translated "Loading…" from the attendance shell strings. */
+function useLoadingLabel(): string {
+  const { dictionary } = useDictionary()
   return (
-    <div className={`inline-flex items-center gap-2 ${className}`}>
-      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-900"></div>
-      <span>Loading...</span>
+    (
+      dictionary as
+        | { attendanceToday?: { shell?: { loading?: string } } }
+        | undefined
+    )?.attendanceToday?.shell?.loading ?? "Loading…"
+  )
+}
+
+export function ButtonLoadingSkeleton({ className }: { className?: string }) {
+  const loading = useLoadingLabel()
+  return (
+    <div className={cn("inline-flex items-center gap-2", className)}>
+      <div className="border-foreground size-4 animate-spin rounded-full border-b-2"></div>
+      <span>{loading}</span>
     </div>
   )
 }
@@ -186,15 +200,18 @@ export function AttendancePageSkeleton({
   tabs?: boolean
   children?: ReactNode
 }) {
+  const loading = useLoadingLabel()
   return (
     <div role="status" aria-busy="true" className="space-y-6">
-      <span className="sr-only">{label ?? "Loading…"}</span>
+      <span className="sr-only">{label ?? loading}</span>
       <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div className="space-y-2">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-5 w-64 max-w-full" />
         </div>
-        {action && <Skeleton className="h-9 w-32 max-md:h-10 max-md:rounded-full" />}
+        {action && (
+          <Skeleton className="h-9 w-32 max-md:h-10 max-md:rounded-full" />
+        )}
       </div>
       {stats > 0 && (
         <SkeletonStats

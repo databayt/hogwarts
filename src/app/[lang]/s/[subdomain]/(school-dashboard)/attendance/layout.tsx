@@ -7,6 +7,7 @@ import type { Role } from "@/lib/rbac/types"
 import { PageNav } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { getTabsForRole } from "@/components/school-dashboard/attendance/permissions"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
@@ -22,10 +23,16 @@ export default async function AttendanceLayout({ children, params }: Props) {
   const role = (session?.user?.role ?? null) as Role | null
 
   const attendancePages = getTabsForRole(role, lang, d)
+  // The header builds crumbs from URL slugs ("Qr-code", "Early-warning");
+  // name every attendance slug in the reader's language instead.
+  const crumbs = (
+    dictionary as { attendanceToday?: { crumbs?: Record<string, string> } }
+  )?.attendanceToday?.crumbs
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Attendance"} />
+      {crumbs ? <BreadcrumbTitle segments={crumbs} /> : null}
       <PageNav pages={attendancePages} />
 
       {children}

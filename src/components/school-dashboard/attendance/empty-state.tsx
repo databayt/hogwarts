@@ -2,28 +2,69 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Attendance empty states — one quiet centered block each. Copy comes from
+ * `attendanceToday.shell.empty`; a `dictionary` prop still overrides it.
+ * Attendance is section-based (classes were removed), so "no classes"
+ * points at section setup.
+ */
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import {
   BarChart3,
   Calendar,
   CalendarOff,
-  ChevronRight,
-  CircleAlert,
   FileText,
-  Plus,
   QrCode,
   School,
   Users,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dict = Record<string, any>
+
+function useEmptyCopy(): Dict {
+  const { dictionary } = useDictionary()
+  return ((dictionary as Dict | undefined)?.attendanceToday?.shell?.empty ??
+    {}) as Dict
+}
+
+function useLangPrefix(locale?: string): string {
+  const params = useParams<{ lang?: string }>()
+  const lang = locale ?? params?.lang
+  return lang ? `/${lang}` : ""
+}
+
+function EmptyBlock({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon?: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  action?: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      {Icon ? (
+        <span className="bg-muted flex size-12 items-center justify-center rounded-full">
+          <Icon className="text-muted-foreground size-5" />
+        </span>
+      ) : null}
+      <div className="max-w-sm space-y-1.5">
+        <h3 className="text-base font-semibold">{title}</h3>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </div>
+      {action}
+    </div>
+  )
+}
 
 interface EmptyStateProps {
   type?:
@@ -38,7 +79,7 @@ interface EmptyStateProps {
   actionHref?: string
   onAction?: () => void
   showIcon?: boolean
-  dictionary?: any
+  dictionary?: Dict
 }
 
 export function AttendanceEmptyState({
@@ -51,87 +92,81 @@ export function AttendanceEmptyState({
   showIcon = true,
   dictionary,
 }: EmptyStateProps) {
-  const emptyStates = {
+  const e = useEmptyCopy()
+  const prefix = useLangPrefix()
+  const d = dictionary ?? {}
+
+  const states = {
     "no-students": {
       icon: Users,
-      defaultTitle: dictionary?.noStudents || "No Students in Class",
-      defaultDescription:
-        dictionary?.noStudentsDesc ||
-        "This class has no enrolled students. Add students to begin tracking attendance.",
-      defaultActionLabel: dictionary?.addStudents || "Add Students",
-      defaultActionHref: "/students",
+      title: d.noStudents ?? e.noStudents ?? "No students in this section",
+      description:
+        d.noStudentsDesc ??
+        e.noStudentsDesc ??
+        "Place students in this section to start taking attendance.",
+      label: d.addStudents ?? e.manageStudents ?? "Manage students",
+      href: `${prefix}/students`,
     },
     "no-classes": {
       icon: School,
-      defaultTitle: dictionary?.noClasses || "No Classes Available",
-      defaultDescription:
-        dictionary?.noClassesDesc ||
-        "Create a class to start tracking attendance for your students.",
-      defaultActionLabel: dictionary?.createClass || "Create Class",
-      defaultActionHref: "/classrooms",
+      title: d.noClasses ?? e.noSections ?? "No sections yet",
+      description:
+        d.noClassesDesc ??
+        e.noSectionsDesc ??
+        "Attendance is taken per section. Add sections to your grades first.",
+      label: d.createClass ?? e.setUpSections ?? "Set up sections",
+      href: `${prefix}/classrooms/configure`,
     },
     "no-attendance": {
       icon: Calendar,
-      defaultTitle: dictionary?.noAttendance || "No Attendance Records",
-      defaultDescription:
-        dictionary?.noAttendanceDesc ||
-        "No attendance has been marked for this date. Start by marking attendance for students.",
-      defaultActionLabel: dictionary?.markAttendance || "Mark Attendance",
-      defaultActionHref: "#",
+      title: d.noAttendance ?? e.noAttendance ?? "No attendance for this date",
+      description:
+        d.noAttendanceDesc ??
+        e.noAttendanceDesc ??
+        "Nothing has been marked for this date yet.",
+      label: d.markAttendance ?? e.startMarking ?? "Take attendance",
+      href: `${prefix}/attendance/manual`,
     },
     "no-data": {
       icon: FileText,
-      defaultTitle: dictionary?.noData || "No Data Available",
-      defaultDescription:
-        dictionary?.noDataDesc || "There is no data to display at the moment.",
-      defaultActionLabel: dictionary?.refresh || "Refresh",
-      defaultActionHref: "#",
+      title: d.noData ?? e.noData ?? "Nothing to show yet",
+      description:
+        d.noDataDesc ?? e.noDataDesc ?? "There's no data to display right now.",
+      label: d.refresh ?? e.refresh ?? "Refresh",
+      href: null as string | null,
     },
     "no-analytics": {
       icon: BarChart3,
-      defaultTitle: dictionary?.noAnalytics || "No Analytics Data",
-      defaultDescription:
-        dictionary?.noAnalyticsDesc ||
-        "Start marking attendance to see analytics and insights.",
-      defaultActionLabel: dictionary?.viewAttendance || "View Attendance",
-      defaultActionHref: "/attendance",
+      title: d.noAnalytics ?? e.noAnalytics ?? "No insights yet",
+      description:
+        d.noAnalyticsDesc ??
+        e.noAnalyticsDesc ??
+        "Take attendance for a few days to see trends here.",
+      label: d.viewAttendance ?? e.viewAttendance ?? "Go to attendance",
+      href: `${prefix}/attendance`,
     },
   }
 
-  const currentState = emptyStates[type]
-  const Icon = currentState.icon
-  const finalTitle = title || currentState.defaultTitle
-  const finalDescription = description || currentState.defaultDescription
-  const finalActionLabel = actionLabel || currentState.defaultActionLabel
-  const finalActionHref = actionHref || currentState.defaultActionHref
+  const s = states[type]
+  const href = actionHref ?? s.href
+  const label = actionLabel ?? s.label
+  const action = href ? (
+    <Button asChild size="sm" className="rounded-full px-4">
+      <Link href={href}>{label}</Link>
+    </Button>
+  ) : onAction ? (
+    <Button size="sm" className="rounded-full px-4" onClick={onAction}>
+      {label}
+    </Button>
+  ) : null
 
   return (
-    <Card className="w-full">
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        {showIcon && (
-          <div className="bg-muted mb-4 rounded-full p-3">
-            <Icon className="text-muted-foreground h-10 w-10" />
-          </div>
-        )}
-        <h3 className="mb-2 text-lg font-semibold">{finalTitle}</h3>
-        <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          {finalDescription}
-        </p>
-        {(onAction || finalActionHref !== "#") &&
-          (finalActionHref !== "#" ? (
-            <Link href={finalActionHref}>
-              <Button size="sm">
-                {finalActionLabel}
-                <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
-              </Button>
-            </Link>
-          ) : (
-            <Button size="sm" onClick={onAction}>
-              {finalActionLabel}
-            </Button>
-          ))}
-      </CardContent>
-    </Card>
+    <EmptyBlock
+      icon={showIcon ? s.icon : undefined}
+      title={title ?? s.title}
+      description={description ?? s.description}
+      action={action}
+    />
   )
 }
 
@@ -139,36 +174,29 @@ export function NoClassesEmptyState({
   dictionary,
   locale,
 }: {
-  dictionary?: any
+  dictionary?: Dict
   locale?: string
 }) {
-  // Keys live under school.attendance.emptyStates (flat reads kept as a
-  // fallback for callers passing an older tree shape).
-  const es = dictionary?.emptyStates ?? dictionary
-  const prefix = locale ? `/${locale}` : ""
+  const e = useEmptyCopy()
+  const prefix = useLangPrefix(locale)
+  // Older callers pass school.attendance (with an emptyStates subtree).
+  const es = (dictionary?.emptyStates ?? {}) as Dict
   return (
-    <div className="flex min-h-[400px] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="bg-muted mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-            <School className="text-muted-foreground h-6 w-6" />
-          </div>
-          <CardTitle>{es?.noClasses || "No Classes Available"}</CardTitle>
-          <CardDescription className="mt-2">
-            {es?.noClassesDesc ||
-              "You need to create classes before you can track attendance."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <Link href={`${prefix}/classrooms/create`}>
-            <Button>
-              <Plus className="me-2 h-4 w-4" />
-              {es?.createFirstClass || "Create Your First Class"}
-            </Button>
+    <EmptyBlock
+      icon={School}
+      title={e.noSections ?? es.noClasses ?? "No sections yet"}
+      description={
+        e.noSectionsDesc ??
+        "Attendance is taken per section. Add sections to your grades first."
+      }
+      action={
+        <Button asChild className="rounded-full px-5">
+          <Link href={`${prefix}/classrooms/configure`}>
+            {e.setUpSections ?? "Set up sections"}
           </Link>
-        </CardContent>
-      </Card>
-    </div>
+        </Button>
+      }
+    />
   )
 }
 
@@ -176,90 +204,85 @@ export function NoStudentsEmptyState({
   dictionary,
   locale,
 }: {
-  dictionary?: any
+  dictionary?: Dict
   locale?: string
 }) {
-  const es = dictionary?.emptyStates ?? dictionary
-  const prefix = locale ? `/${locale}` : ""
+  const e = useEmptyCopy()
+  const prefix = useLangPrefix(locale)
+  const es = (dictionary?.emptyStates ?? {}) as Dict
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-4 rounded-full bg-orange-100 p-3">
-          <CircleAlert className="h-10 w-10 text-orange-600" />
-        </div>
-        <h3 className="mb-2 text-lg font-semibold">
-          {es?.noStudentsInClass || "No Students in This Section"}
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          {es?.noStudentsInClassDesc ||
-            "This section doesn't have any enrolled students yet. Add students to start tracking their attendance."}
-        </p>
-        <div className="flex gap-3">
-          {/* A section's roster is whoever is placed in it — placement happens
-              on the students list, not in a class-enrollment screen. */}
+    <EmptyBlock
+      icon={Users}
+      title={
+        e.noStudents ?? es.noStudentsInClass ?? "No students in this section"
+      }
+      description={
+        e.noStudentsDesc ??
+        "Place students in this section to start taking attendance."
+      }
+      action={
+        // A section's roster is whoever is placed in it — placement happens
+        // on the students list, not in a class-enrollment screen.
+        <Button asChild size="sm" className="rounded-full px-4">
           <Link href={`${prefix}/students`}>
-            <Button size="sm">
-              {es?.manageStudents || "Manage Students"}
-              <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
-            </Button>
+            {e.manageStudents ?? es.manageStudents ?? "Manage students"}
           </Link>
-        </div>
-      </CardContent>
-    </Card>
+        </Button>
+      }
+    />
   )
 }
 
 export function NoAttendanceDataEmptyState({
   dictionary,
 }: {
-  dictionary?: any
+  dictionary?: Dict
 }) {
+  const e = useEmptyCopy()
+  const prefix = useLangPrefix()
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-4 rounded-full bg-blue-100 p-3">
-          <CalendarOff className="h-10 w-10 text-blue-600" />
-        </div>
-        <h3 className="mb-2 text-lg font-semibold">
-          {dictionary?.noAttendanceToday || "No Attendance Marked Today"}
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          {dictionary?.noAttendanceTodayDesc ||
-            "Attendance hasn't been marked for this date yet. You can mark attendance now or view records from other dates."}
-        </p>
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm">
-            <Calendar className="me-2 h-4 w-4" />
-            {dictionary?.changDate || "Change Date"}
-          </Button>
-          <Button size="sm">
-            {dictionary?.startMarking || "Start Marking"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <EmptyBlock
+      icon={CalendarOff}
+      title={
+        dictionary?.noAttendanceToday ??
+        e.noAttendance ??
+        "No attendance for this date"
+      }
+      description={
+        dictionary?.noAttendanceTodayDesc ??
+        e.noAttendanceDesc ??
+        "Nothing has been marked for this date yet."
+      }
+      action={
+        <Button asChild size="sm" className="rounded-full px-4">
+          <Link href={`${prefix}/attendance/manual`}>
+            {dictionary?.startMarking ?? e.startMarking ?? "Take attendance"}
+          </Link>
+        </Button>
+      }
+    />
   )
 }
 
-export function QRCodeEmptyState({ dictionary }: { dictionary?: any }) {
+export function QRCodeEmptyState({ dictionary }: { dictionary?: Dict }) {
+  const e = useEmptyCopy()
+  const prefix = useLangPrefix()
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-4 rounded-full bg-purple-100 p-3">
-          <QrCode className="h-10 w-10 text-purple-600" />
-        </div>
-        <h3 className="mb-2 text-lg font-semibold">
-          {dictionary?.noQRSessions || "No Active QR Sessions"}
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          {dictionary?.noQRSessionsDesc ||
-            "Generate a QR code to allow students to mark their attendance by scanning."}
-        </p>
-        <Button>
-          <QrCode className="me-2 h-4 w-4" />
-          {dictionary?.generateQR || "Generate QR Code"}
+    <EmptyBlock
+      icon={QrCode}
+      title={dictionary?.noQRSessions ?? e.noQr ?? "No QR sessions running"}
+      description={
+        dictionary?.noQRSessionsDesc ??
+        e.noQrDesc ??
+        "Show a QR code so students can check themselves in."
+      }
+      action={
+        <Button asChild size="sm" className="rounded-full px-4">
+          <Link href={`${prefix}/attendance/qr-code`}>
+            {dictionary?.generateQR ?? e.generateQr ?? "Show a QR code"}
+          </Link>
         </Button>
-      </CardContent>
-    </Card>
+      }
+    />
   )
 }
