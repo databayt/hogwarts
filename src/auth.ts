@@ -510,6 +510,13 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           }
         }
 
+        // Suspended members can't sign in by any provider (credentials
+        // already refuse in authorize()). OAuth users carry the DB row.
+        if ((user as { isSuspended?: boolean } | undefined)?.isSuspended) {
+          authLogger.warn("SignIn: account suspended", { userId: user?.id })
+          return false
+        }
+
         authLogger.info("SignIn callback completed - allowing sign in")
         return true // Allow sign in to proceed
       },

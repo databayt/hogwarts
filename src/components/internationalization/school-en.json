@@ -11587,7 +11587,10 @@
       "requestApproved": "Request approved",
       "requestRejected": "Request rejected",
       "resetPassword": "Reset password",
-      "resetPasswordDescription": "A new temporary password replaces the current one."
+      "resetPasswordDescription": "A new temporary password replaces the current one.",
+      "manageRecord": "Manage record",
+      "removeHasAttendance": "Can't remove: this student has {count} attendance records. Suspend the account instead.",
+      "removeHasTimetable": "Can't remove: this teacher has {count} timetable periods. Reassign them or suspend the account instead."
     },
     "staffListing": {
       "title": "Staff",

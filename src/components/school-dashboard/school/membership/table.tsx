@@ -1,6 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import {
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+  useTransition,
+} from "react"
 import { useRouter } from "next/navigation"
 import { Ban, Download, ShieldCheck } from "lucide-react"
 
@@ -35,6 +41,22 @@ import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
 import type { MembershipRequestRow, UnifiedMember } from "./types"
 
+/**
+ * Fold the spellings people type interchangeably: case, Arabic diacritics,
+ * hamza forms of alef, ى/ي, ة/ه, and Arabic-Indic digits (login codes and
+ * phones are often typed on an Arabic keypad).
+ */
+function normalizeSearch(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+}
+
 interface MembershipTableProps {
   members: UnifiedMember[]
   pendingRequests: MembershipRequestRow[]
@@ -65,13 +87,10 @@ export function MembershipTable({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
-  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE)
+  // Typing stays responsive on big schools: the filter runs on the deferred
+  // value, a beat behind the input.
+  const deferredSearch = useDeferredValue(searchValue)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
-
-  // Reset visible count when search changes
-  useEffect(() => {
-    setVisibleCount(BATCH_SIZE)
-  }, [searchValue])
 
   // Dialog states
   const [roleChangeMember, setRoleChangeMember] = useState<MemberRow | null>(
@@ -89,29 +108,44 @@ export function MembershipTable({
     useState<MemberRow | null>(null)
   const [showInvite, setShowInvite] = useState(false)
 
-  // Convert members to rows with formatted dates
-  const data: MemberRow[] = useMemo(() => {
-    let filtered = members
-    if (searchValue) {
-      const q = searchValue.toLowerCase()
-      filtered = members.filter(
-        (m) =>
-          m.name.toLowerCase().includes(q) ||
-          m.email?.toLowerCase().includes(q) ||
-          m.role.toLowerCase().includes(q)
-      )
-    }
-    return filtered.map((m) => ({
+  // Rows + a search index built once per member list, not per keystroke:
+  // name, login code, email, phone, translated role, grade and details,
+  // Arabic-normalised so "احمد" finds "أحمد".
+  const { rows, searchIndex } = useMemo(() => {
+    const rows: MemberRow[] = members.map((m) => ({
       ...m,
       joinedAtStr: formatConsoleDate(m.joinedAt, lang),
     }))
-  }, [members, searchValue, lang])
+    const searchIndex = new Map(
+      rows.map((r) => [
+        r.id,
+        normalizeSearch(
+          [
+            r.name,
+            r.username,
+            r.email,
+            r.phone?.replace(/\D/g, ""),
+            roleLabel(t, r.role),
+            r.role,
+            r.gradeName,
+            r.contextInfo,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        ),
+      ])
+    )
+    return { rows, searchIndex }
+  }, [members, lang, t])
 
-  const visibleData = useMemo(
-    () => data.slice(0, visibleCount),
-    [data, visibleCount]
-  )
-  const hasMore = visibleCount < data.length
+  const data = useMemo(() => {
+    const terms = normalizeSearch(deferredSearch).split(/\s+/).filter(Boolean)
+    if (terms.length === 0) return rows
+    return rows.filter((r) => {
+      const hay = searchIndex.get(r.id) ?? ""
+      return terms.every((term) => hay.includes(term))
+    })
+  }, [rows, searchIndex, deferredSearch])
 
   const handleRefresh = useCallback(() => {
     startTransition(() => {
@@ -192,14 +226,36 @@ export function MembershipTable({
   )
 
   const { table } = useDataTable<MemberRow>({
-    data: visibleData,
+    // Every member goes in: role/status/grade filters, sorting and facet
+    // counts cover the whole school; only `pageSize` rows render.
+    data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
+    enableClientSorting: true,
+    enableClientPagination: true,
+    // Always page 0 — TanStack's auto-reset would write page=1 to the URL on
+    // every filter/sort recompute, which re-parses URL state and loops.
+    autoResetPageIndex: false,
     initialState: {
-      pagination: { pageIndex: 0, pageSize: visibleData.length || 20 },
+      pagination: { pageIndex: 0, pageSize: BATCH_SIZE },
       columnVisibility: { email: false, joinedAtStr: false },
     },
   })
+
+  // "See more" grows the page; a new search starts again from one batch.
+  const pageSize = table.getState().pagination.pageSize
+  const matchCount = table.getPrePaginationRowModel().rows.length
+  const hasMore = matchCount > pageSize
+  const visibleRows = table.getRowModel().rows
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      if (table.getState().pagination.pageSize !== BATCH_SIZE)
+        table.setPageSize(BATCH_SIZE)
+    },
+    [table]
+  )
 
   // CSV export for PlatformToolbar
   const handleGetCSV = useCallback(async () => {
@@ -288,7 +344,7 @@ export function MembershipTable({
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}
-        onSearchChange={setSearchValue}
+        onSearchChange={handleSearchChange}
         searchPlaceholder={t.searchMembers}
         onCreate={canManage ? () => setShowInvite(true) : undefined}
         getCSV={handleGetCSV}
@@ -309,9 +365,9 @@ export function MembershipTable({
 
       {/* Table / Grid View */}
       {view === "grid" ? (
-        visibleData.length > 0 ? (
+        visibleRows.length > 0 ? (
           <GridContainer columns={4}>
-            {visibleData.map((member) => (
+            {visibleRows.map(({ original: member }) => (
               <GridCard
                 key={member.id}
                 avatar={{
@@ -344,7 +400,7 @@ export function MembershipTable({
           <Button
             variant="ghost"
             className="hover:underline"
-            onClick={() => setVisibleCount((c) => c + BATCH_SIZE)}
+            onClick={() => table.setPageSize(pageSize + BATCH_SIZE)}
           >
             {t.seeMore}
           </Button>

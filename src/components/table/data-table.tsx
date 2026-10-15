@@ -66,6 +66,8 @@ function DataTableInner<TData>({
 
   React.useEffect(() => {
     if (paginationMode !== "load-more") return
+    // Client-paginated tables hold every row and grow pageSize themselves.
+    if (!table.options.manualPagination) return
     if (coreRowCount > 0 && currentPageSize !== coreRowCount) {
       table.setPageSize(coreRowCount)
     }

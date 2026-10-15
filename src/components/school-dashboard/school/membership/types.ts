@@ -7,6 +7,8 @@ import type {
 export type UnifiedMember = {
   id: string
   name: string
+  /** The login handle (the school's 6-digit code) — searchable. */
+  username: string | null
   email: string | null
   phone: string | null
   role: UserRole

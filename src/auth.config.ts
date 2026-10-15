@@ -123,6 +123,15 @@ export default {
             matches: passwordsMatch,
           })
 
+          // A suspended member keeps their password but can't sign in; the
+          // login action shows them why (ACCOUNT_SUSPENDED).
+          if (passwordsMatch && user.isSuspended) {
+            authLogger.warn("Credentials: Account suspended", {
+              userId: user.id,
+            })
+            return null
+          }
+
           if (passwordsMatch) {
             authLogger.info("Credentials: Authorization successful", {
               userId: user.id,

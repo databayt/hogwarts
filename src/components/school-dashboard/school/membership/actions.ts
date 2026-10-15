@@ -104,12 +104,35 @@ export async function changeRole(
       return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
+    // The person's real name lives on whichever role record they already
+    // have — a new record copies it rather than naming them after their
+    // 6-digit login code.
+    const nameSource =
+      targetUser.student ??
+      targetUser.teacher ??
+      targetUser.staffMember ??
+      targetUser.guardian
+    const personName = nameSource
+      ? {
+          firstName: nameSource.firstName,
+          middleName: nameSource.middleName,
+          lastName: nameSource.lastName,
+        }
+      : {
+          firstName:
+            targetUser.username || targetUser.email?.split("@")[0] || "Member",
+          middleName: null,
+          lastName: "",
+        }
+
     const provisioned = await db.$transaction(async (tx) => {
       let result: ProvisionStudentResult | null = null
       // Update user role
       await tx.user.update({
         where: { id: parsed.userId },
-        data: { role: parsed.newRole },
+        // The session caches the role for up to a day — a demoted admin must
+        // lose access now, so the change signs them out (tokenVersion).
+        data: { role: parsed.newRole, tokenVersion: { increment: 1 } },
       })
 
       // Create role-specific profile if missing
@@ -130,11 +153,7 @@ export async function changeRole(
           {
             schoolId,
             userId: parsed.userId,
-            firstName:
-              targetUser.username ||
-              targetUser.email?.split("@")[0] ||
-              "Member",
-            lastName: "",
+            ...personName,
             dateOfBirth: new Date(parsed.dateOfBirth),
             gender: parsed.gender,
             email: targetUser.email,
@@ -155,11 +174,7 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            firstName:
-              targetUser.username ||
-              targetUser.email?.split("@")[0] ||
-              "Member",
-            lastName: "",
+            ...personName,
             emailAddress: targetUser.email || "",
           },
         })
@@ -170,11 +185,7 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            firstName:
-              targetUser.username ||
-              targetUser.email?.split("@")[0] ||
-              "Member",
-            lastName: "",
+            ...personName,
             emailAddress: targetUser.email || "",
           },
         })
@@ -185,11 +196,7 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            firstName:
-              targetUser.username ||
-              targetUser.email?.split("@")[0] ||
-              "Member",
-            lastName: "",
+            ...personName,
           },
         })
       }
@@ -327,7 +334,8 @@ export async function suspendMember(
     await db.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: parsed.userId },
-        data: { isSuspended: true },
+        // tokenVersion bump signs them out now, not when the JWT expires.
+        data: { isSuspended: true, tokenVersion: { increment: 1 } },
       })
 
       // Update role-specific status
@@ -478,30 +486,33 @@ export async function removeMember(
     })
     if (!targetUser) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    // Cascade safety: check for critical dependencies
-    const deps: string[] = []
-
+    // Cascade safety: a student with attendance or a teacher on the timetable
+    // can't be unlinked — the dialog explains (codes → membership dictionary)
+    // and points to Suspend instead.
     if (targetUser.student) {
-      const attendanceCount = await db.attendance.count({
+      const count = await db.attendance.count({
         where: { studentId: targetUser.student.id, schoolId },
       })
-      if (attendanceCount > 0)
-        deps.push(`has ${attendanceCount} attendance record(s)`)
+      if (count > 0)
+        return {
+          success: false,
+          error: "REMOVE_HAS_ATTENDANCE",
+          code: "REMOVE_HAS_ATTENDANCE",
+          details: String(count),
+        }
     }
 
     if (targetUser.teacher) {
-      const timetableCount = await db.timetable.count({
+      const count = await db.timetable.count({
         where: { teacherId: targetUser.teacher.id, schoolId },
       })
-      if (timetableCount > 0)
-        deps.push(`has ${timetableCount} timetable slot(s)`)
-    }
-
-    if (deps.length > 0) {
-      return {
-        success: false,
-        error: `Cannot remove: member ${deps.join(", ")}. Reassign first.`,
-      }
+      if (count > 0)
+        return {
+          success: false,
+          error: "REMOVE_HAS_TIMETABLE",
+          code: "REMOVE_HAS_TIMETABLE",
+          details: String(count),
+        }
     }
 
     // DEVELOPER role is immutable — never downgrade
@@ -530,6 +541,8 @@ export async function removeMember(
         schoolId: null,
         role: "USER",
         isSuspended: false,
+        // Their JWT still names this school — revoke it.
+        tokenVersion: { increment: 1 },
         updatedAt: new Date(),
       },
     })
@@ -1060,7 +1073,8 @@ export async function bulkSuspend(
       await db.$transaction(async (tx) => {
         await tx.user.update({
           where: { id: user.id },
-          data: { isSuspended: true },
+          // tokenVersion bump signs them out now, not when the JWT expires.
+          data: { isSuspended: true, tokenVersion: { increment: 1 } },
         })
         if (user.student) {
           await tx.student.update({

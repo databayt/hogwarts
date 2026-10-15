@@ -109,6 +109,10 @@ export const LoginForm = ({
     TOO_MANY_ATTEMPTS:
       authErrors?.tooManyAttempts ??
       "Too many wrong attempts. Wait 15 minutes, or ask the school office to reset your password.",
+    ACCOUNT_SUSPENDED:
+      (authErrors as { accountSuspended?: string } | undefined)
+        ?.accountSuspended ??
+      "This account is suspended. Contact the school office.",
     INVALID_CODE: validationMsgs?.invalidCode ?? "Invalid code",
     CODE_EXPIRED: validationMsgs?.codeExpired ?? "Code expired",
     INVALID_FIELDS: validationMsgs?.requiredField ?? "Invalid fields",

@@ -127,6 +127,15 @@ export const login = async (
     return { error: "EMAIL_NOT_FOUND" }
   }
 
+  // Suspended: say so — but only to someone who knows the password, so the
+  // message can't be used to probe which accounts are suspended.
+  if (existingUser.isSuspended) {
+    const { compare } = await import("bcryptjs")
+    if (await compare(password, existingUser.password)) {
+      return { error: "ACCOUNT_SUSPENDED" }
+    }
+  }
+
   // Email verification gate only makes sense when:
   // (a) the user signed in with their email address (not a username), AND
   // (b) the User row actually has an email that could receive a token, AND

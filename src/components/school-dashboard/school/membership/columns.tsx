@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Check, Copy, Eye, KeyRound } from "lucide-react"
+import { Check, Copy, Eye, IdCard, KeyRound } from "lucide-react"
 
 import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -41,6 +41,37 @@ interface ColumnOptions {
   lang?: string
   gradeOptions?: { label: string; value: string }[]
 }
+
+/**
+ * The member's role page — where everything specific to being a student,
+ * teacher, parent or staff member is edited. Admins and accountants usually
+ * hold a teacher or staff record; none → no link.
+ */
+function recordHref(member: MemberRow, lang: string): string | null {
+  const byRole: Record<string, Array<[string | null, string]>> = {
+    STUDENT: [[member.studentId, "students"]],
+    TEACHER: [[member.teacherId, "teachers"]],
+    GUARDIAN: [[member.guardianId, "parents"]],
+    STAFF: [[member.staffMemberId, "staff"]],
+    ACCOUNTANT: [[member.staffMemberId, "staff"]],
+  }
+  const candidates = byRole[member.role] ?? [
+    [member.teacherId, "teachers"],
+    [member.staffMemberId, "staff"],
+  ]
+  const hit = candidates.find(([id]) => id)
+  return hit ? `/${lang}/${hit[1]}/${hit[0]}` : null
+}
+
+/** Faceted select filters hold an array — match any of the chosen values. */
+const anyOf = (
+  row: { getValue: (id: string) => unknown },
+  id: string,
+  value: unknown
+) =>
+  !Array.isArray(value) ||
+  value.length === 0 ||
+  value.includes(row.getValue(id))
 
 const statusVariant = (status: string) => {
   switch (status) {
@@ -151,6 +182,7 @@ export const getMemberColumns = (
     },
     {
       accessorKey: "role",
+      filterFn: anyOf,
       id: "role",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.role} />
@@ -177,6 +209,7 @@ export const getMemberColumns = (
     },
     {
       accessorKey: "memberStatus",
+      filterFn: anyOf,
       id: "memberStatus",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.status} />
@@ -200,6 +233,7 @@ export const getMemberColumns = (
     },
     {
       accessorKey: "gradeName",
+      filterFn: anyOf,
       id: "gradeName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.grade} />
@@ -260,6 +294,11 @@ export const getMemberColumns = (
       header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const member = row.original
+        const lang = options.lang || "en"
+        const record = recordHref(member, lang)
+        // Own row: profile + record only. Role, status, removal and password
+        // of your own account are refused server-side — don't offer them.
+        const isSelf = member.id === options.currentUserId
         return (
           <ActionMenu srLabel={t.actions}>
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
@@ -267,41 +306,56 @@ export const getMemberColumns = (
             <ActionMenuItem
               icon={Eye}
               label={t.viewProfile}
-              href={`/${options.lang || "en"}/profile/${member.id}`}
+              href={`/${lang}/profile/${member.id}`}
             />
-            {member.id !== options.currentUserId && (
+            {record && (
+              <ActionMenuItem
+                icon={IdCard}
+                label={t.manageRecord}
+                href={record}
+              />
+            )}
+            {!isSelf && (
               <ActionMenuItem
                 icon={KeyRound}
                 label={t.resetPassword}
                 onClick={() => options.onResetPassword?.(member)}
               />
             )}
-            <DropdownMenuSeparator />
-            <ActionMenuItem
-              label={t.changeRole}
-              onClick={() => options.onChangeRole?.(member)}
-            />
-            {member.role === "STUDENT" && (
-              <DropdownMenuItem onClick={() => options.onAssignGrade?.(member)}>
-                {t.assignGrade}
-              </DropdownMenuItem>
+            {isSelf ? null : (
+              <>
+                <DropdownMenuSeparator />
+                <ActionMenuItem
+                  label={t.changeRole}
+                  onClick={() => options.onChangeRole?.(member)}
+                />
+                {member.role === "STUDENT" && (
+                  <DropdownMenuItem
+                    onClick={() => options.onAssignGrade?.(member)}
+                  >
+                    {t.assignGrade}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {member.memberStatus === "suspended" ? (
+                  <DropdownMenuItem
+                    onClick={() => options.onActivate?.(member)}
+                  >
+                    {t.activate}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => options.onSuspend?.(member)}>
+                    {t.suspend}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <ActionMenuItem
+                  label={t.remove}
+                  variant="destructive"
+                  onClick={() => options.onRemove?.(member)}
+                />
+              </>
             )}
-            <DropdownMenuSeparator />
-            {member.memberStatus === "suspended" ? (
-              <DropdownMenuItem onClick={() => options.onActivate?.(member)}>
-                {t.activate}
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => options.onSuspend?.(member)}>
-                {t.suspend}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <ActionMenuItem
-              label={t.remove}
-              variant="destructive"
-              onClick={() => options.onRemove?.(member)}
-            />
           </ActionMenu>
         )
       },

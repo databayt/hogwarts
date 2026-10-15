@@ -11603,7 +11603,10 @@
       "requestApproved": "تمت الموافقة على الطلب",
       "requestRejected": "تم رفض الطلب",
       "resetPassword": "إعادة تعيين كلمة المرور",
-      "resetPasswordDescription": "ستحل كلمة مرور مؤقتة جديدة محل كلمة المرور الحالية."
+      "resetPasswordDescription": "ستحل كلمة مرور مؤقتة جديدة محل كلمة المرور الحالية.",
+      "manageRecord": "إدارة السجل",
+      "removeHasAttendance": "لا يمكن الإزالة: لهذا الطالب {count} سجل حضور. علّق الحساب بدلاً من ذلك.",
+      "removeHasTimetable": "لا يمكن الإزالة: لهذا المعلم {count} حصة في الجدول. أعد توزيعها أو علّق الحساب بدلاً من ذلك."
     },
     "staffListing": {
       "title": "الموظفون",

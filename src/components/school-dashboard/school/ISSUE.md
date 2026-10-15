@@ -35,6 +35,18 @@ Status legend: [x] done, [~] in progress, [ ] todo
       `member.password_reset` audit row, delivery in `after()`, no table refresh.
       Forgot-password resolves the account by the school host (emails are unique
       per school only) and links back to that host instead of NEXT_PUBLIC_APP_URL.
+- [x] **Membership table + admin operations (2026-10-15)** — filters and
+      sorting were dead (manual mode, no server handler, and only the first 20
+      rows were in the table): the table now holds every member with client
+      filter/sort/pagination (`enableClientPagination`, `autoResetPageIndex:false`
+      — the auto-reset looped through the URL state), "see more" grows pageSize.
+      Search indexes name, login code, email, phone, translated role, grade,
+      section; Arabic-normalised (hamza, ى/ي, ة/ه, diacritics, Arabic digits).
+      Suspend now blocks sign-in (credentials + OAuth, ACCOUNT_SUSPENDED shown only
+      after a correct password) and, like remove and role change, revokes sessions.
+      Role change copies the real name into the new record (was the login code).
+      Remove explains why it is blocked. Row menu: "Manage record" → the role
+      page; own row shows profile only. Breadcrumbs: 146 missing segment labels.
 - [x] **Bulk import returns a credentials sheet (2026-06-15)** — `bulk` CSV
       import now mints crypto-random, unguessable temp passwords (was guessable
       `student<id>`/`teacher<id>` and a shared static `parent123`) and login-valid

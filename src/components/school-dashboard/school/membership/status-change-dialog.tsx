@@ -17,6 +17,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { activateMember, removeMember, suspendMember } from "./actions"
 import type { MemberRow } from "./columns"
+import { fillT } from "./labels"
 
 interface StatusChangeDialogProps {
   member: MemberRow | null
@@ -84,7 +85,17 @@ export function StatusChangeDialog({
         onOpenChange(false)
         onSuccess()
       } else {
-        ErrorToast(t.actionFailed)
+        // Removal is refused while records depend on the member — say which.
+        const blocked: Record<string, string | undefined> = {
+          REMOVE_HAS_ATTENDANCE: t.removeHasAttendance,
+          REMOVE_HAS_TIMETABLE: t.removeHasTimetable,
+        }
+        const reason = result?.code ? blocked[result.code] : undefined
+        ErrorToast(
+          reason
+            ? fillT(reason, { count: result?.details ?? "" })
+            : t.actionFailed
+        )
       }
     })
   }

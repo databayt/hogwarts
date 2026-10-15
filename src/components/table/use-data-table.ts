@@ -96,6 +96,12 @@ interface UseDataTableProps<TData>
   enableClientFiltering?: boolean
   /** Enable client-side column sorting of loaded rows (default: false, uses server-side) */
   enableClientSorting?: boolean
+  /**
+   * Slice pages on the client (default: false). For tables handed every row
+   * up front: filters and facet counts then cover all rows while only
+   * `pageSize` of them render — grow it for "see more".
+   */
+  enableClientPagination?: boolean
   scroll?: boolean
   shallow?: boolean
   startTransition?: React.TransitionStartFunction
@@ -113,6 +119,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     enableAdvancedFilter = false,
     enableClientFiltering = false,
     enableClientSorting = false,
+    enableClientPagination = false,
     scroll = false,
     shallow = true,
     startTransition,
@@ -328,7 +335,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    manualPagination: true,
+    manualPagination: !enableClientPagination,
     manualSorting: !enableClientSorting,
     manualFiltering: !enableClientFiltering,
   })

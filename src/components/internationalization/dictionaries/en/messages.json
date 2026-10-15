@@ -424,6 +424,7 @@
     "auth": {
       "invalidCredentials": "Wrong username, email or password",
       "tooManyAttempts": "Too many wrong attempts. Wait 15 minutes, or ask the school office to reset your password.",
+      "accountSuspended": "This account is suspended. Contact the school office.",
       "accountNotFound": "Account not found",
       "accountDisabled": "Your account has been disabled",
       "accountLocked": "Account locked due to multiple failed attempts",

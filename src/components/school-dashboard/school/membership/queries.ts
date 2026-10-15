@@ -128,11 +128,8 @@ export async function getUnifiedMembers(
     // Build contextual info
     let contextInfo: string | null = null
     if (user.student) {
-      const parts: string[] = []
-      if (user.student.section?.name) parts.push(user.student.section.name)
-      else if (user.student.academicGrade?.name)
-        parts.push(user.student.academicGrade.name)
-      contextInfo = parts.length > 0 ? parts.join(" · ") : null
+      // The grade has its own column — details carry the section only.
+      contextInfo = user.student.section?.name ?? null
     } else if (user.teacher) {
       const parts: string[] = []
       const primaryDept = user.teacher.teacherDepartments[0]
@@ -146,6 +143,7 @@ export async function getUnifiedMembers(
     return {
       id: user.id,
       name,
+      username: user.username,
       email: personalEmail,
       phone,
       role: user.role,
