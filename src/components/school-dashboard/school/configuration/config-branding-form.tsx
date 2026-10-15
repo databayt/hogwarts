@@ -23,17 +23,19 @@ import {
   type UploadedFileResult,
 } from "@/components/file/upload/file-uploader"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolBranding } from "./actions"
 import { useAutoSave } from "./use-auto-save"
 
 const BORDER_RADIUS_OPTIONS = [
-  { value: "none", label: "None (0px)" },
-  { value: "sm", label: "Small (2px)" },
-  { value: "md", label: "Medium (6px)" },
-  { value: "lg", label: "Large (8px)" },
-  { value: "xl", label: "Extra Large (12px)" },
-  { value: "full", label: "Full (9999px)" },
+  { value: "none", label: "None", px: "0px" },
+  { value: "sm", label: "Small", px: "2px" },
+  { value: "md", label: "Medium", px: "6px" },
+  { value: "lg", label: "Large", px: "8px" },
+  { value: "xl", label: "Extra large", px: "12px" },
+  { value: "full", label: "Round", px: "9999px" },
 ]
 
 interface Props {
@@ -49,6 +51,10 @@ interface Props {
 
 export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
   const [, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const t: Partial<Dictionary["schoolSettings"]["branding"]> =
+    (dictionary as Dictionary | null)?.schoolSettings?.branding ?? {}
+  const radiusLabels = t.radius as Record<string, string> | undefined
   const [error, setError] = useState("")
   const [isDirty, setIsDirty] = useState(false)
   const [logo, setLogo] = useState(initialData.logoUrl)
@@ -90,7 +96,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
       if (result.success) {
         setIsDirty(false)
       } else {
-        setError(result.error || "Failed to update branding")
+        setError(t.updateError ?? "Couldn't save branding. Try again.")
       }
     })
   }
@@ -101,7 +107,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
     <div className="space-y-6">
       {/* Logo Upload */}
       <div className="space-y-2">
-        <Label>School Logo</Label>
+        <Label>{t.logo ?? "School logo"}</Label>
         <div className="h-[200px]">
           {!logo ? (
             <FileUploader
@@ -121,7 +127,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
             <div className="relative h-full overflow-hidden rounded-lg border">
               <Image
                 src={logo}
-                alt="School logo"
+                alt={t.logoAlt ?? "School logo"}
                 fill
                 className="object-contain p-8"
               />
@@ -130,6 +136,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
                 variant="destructive"
                 className="absolute end-2 top-2"
                 onClick={handleRemoveLogo}
+                aria-label={t.removeLogo ?? "Remove logo"}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -143,7 +150,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
       {/* Colors */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Primary Color</Label>
+          <Label>{t.primaryColor ?? "Primary colour"}</Label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -161,12 +168,13 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
                 setIsDirty(true)
               }}
               placeholder="#000000"
+              dir="ltr"
               className="font-mono"
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Secondary Color</Label>
+          <Label>{t.secondaryColor ?? "Secondary colour"}</Label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -184,6 +192,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
                 setIsDirty(true)
               }}
               placeholder="#ffffff"
+              dir="ltr"
               className="font-mono"
             />
           </div>
@@ -192,7 +201,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
 
       {/* Border Radius */}
       <div className="space-y-2">
-        <Label>Border Radius</Label>
+        <Label>{t.borderRadius ?? "Corner radius"}</Label>
         <Select
           value={borderRadius}
           onValueChange={(v) => {
@@ -206,7 +215,10 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
           <SelectContent>
             {BORDER_RADIUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+                {radiusLabels?.[opt.value] ?? opt.label}{" "}
+                <bdi dir="ltr" className="text-muted-foreground text-xs">
+                  ({opt.px})
+                </bdi>
               </SelectItem>
             ))}
           </SelectContent>

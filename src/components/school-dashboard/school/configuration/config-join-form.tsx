@@ -3,7 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { Check } from "lucide-react"
+
+import { SaveStatus } from "./ui/save-status"
 
 interface Props {
   schoolId: string
@@ -17,7 +18,7 @@ export function ConfigJoinForm({
   dictionary,
 }: Props) {
   const [selectedOption, setSelectedOption] = useState(initialJoinMethod)
-  const [saved, setSaved] = useState(false)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
   const dict = (dictionary as any)?.school?.onboarding || {}
 
   const options = [
@@ -42,7 +43,7 @@ export function ConfigJoinForm({
 
   const handleSelect = (optionId: string) => {
     setSelectedOption(optionId)
-    setSaved(true)
+    setSavedAt((n) => (n ?? 0) + 1)
   }
 
   return (
@@ -77,12 +78,7 @@ export function ConfigJoinForm({
         </button>
       ))}
 
-      {saved && (
-        <div className="flex items-center gap-2 text-sm text-green-500">
-          <Check className="h-4 w-4" />
-          Saved
-        </div>
-      )}
+      <SaveStatus pending={false} savedAt={savedAt} className="px-1" />
     </div>
   )
 }
