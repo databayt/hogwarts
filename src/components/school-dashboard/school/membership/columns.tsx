@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Check, Copy, Eye } from "lucide-react"
+import { Check, Copy, Eye, KeyRound } from "lucide-react"
 
 import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,6 +31,7 @@ interface ColumnOptions {
   onSuspend?: (member: MemberRow) => void
   onActivate?: (member: MemberRow) => void
   onRemove?: (member: MemberRow) => void
+  onResetPassword?: (member: MemberRow) => void
   canManage?: boolean
   /** What shows under the name: the phone (default) or the email. */
   nameContact?: NameContact
@@ -265,6 +266,11 @@ export const getMemberColumns = (
               icon={Eye}
               label={t.viewProfile}
               href={`/${options.lang || "en"}/profile/${member.id}`}
+            />
+            <ActionMenuItem
+              icon={KeyRound}
+              label={t.resetPassword}
+              onClick={() => options.onResetPassword?.(member)}
             />
             <DropdownMenuSeparator />
             <ActionMenuItem

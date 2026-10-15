@@ -11585,7 +11585,17 @@
       "copyEmail": "Copy email",
       "typeToConfirm": "Type the member's name to confirm",
       "requestApproved": "Request approved",
-      "requestRejected": "Request rejected"
+      "requestRejected": "Request rejected",
+      "resetPassword": "Reset password",
+      "resetPasswordDescription": "A new temporary password will be generated for {name}. The current password stops working, and they must set their own at next login. The new login is also sent to them by email and WhatsApp.",
+      "resetPasswordDone": "Password reset",
+      "resetPasswordDoneDescription": "Share these login details with the member. The password is shown only once.",
+      "username": "Username",
+      "tempPassword": "Temporary password",
+      "loginUrl": "Login URL",
+      "copyCredentials": "Copy login details",
+      "copied": "Copied",
+      "done": "Done"
     },
     "staffListing": {
       "title": "Staff",

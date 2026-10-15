@@ -23,6 +23,10 @@ Status legend: [x] done, [~] in progress, [ ] todo
       plaintext for ad-hoc sharing. School-scoped so the platform DEVELOPER account
       (no `schoolId`) can never be targeted. Complements `forcePasswordReset`
       (which only flips the must-change flag). Closes the student-only parity gap.
+- [x] **Reset password from the membership table (2026-10-15)** — the row
+      action menu gains "Reset password", opening `reset-password-dialog.tsx`:
+      confirm → `resetMemberPassword` → the 6-digit username + temp password shown
+      once with a copy button (delivery in-app/email/WhatsApp still runs).
 - [x] **Bulk import returns a credentials sheet (2026-06-15)** — `bulk` CSV
       import now mints crypto-random, unguessable temp passwords (was guessable
       `student<id>`/`teacher<id>` and a shared static `parent123`) and login-valid

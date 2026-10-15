@@ -29,6 +29,7 @@ import { ApprovalSection } from "./approval-section"
 import { getMemberColumns, type MemberRow } from "./columns"
 import { GradeAssignDialog } from "./grade-assign-dialog"
 import { InviteDialog } from "./invite-dialog"
+import { ResetPasswordDialog } from "./reset-password-dialog"
 import { fillT, roleLabel } from "./labels"
 import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
@@ -78,6 +79,8 @@ export function MembershipTable({
   const [statusAction, setStatusAction] = useState<
     "suspend" | "activate" | "remove" | null
   >(null)
+  const [resetPasswordMember, setResetPasswordMember] =
+    useState<MemberRow | null>(null)
   const [showInvite, setShowInvite] = useState(false)
 
   // Convert members to rows with formatted dates
@@ -134,6 +137,10 @@ export function MembershipTable({
     setStatusAction("remove")
   }, [])
 
+  const handleResetPassword = useCallback((member: MemberRow) => {
+    setResetPasswordMember(member)
+  }, [])
+
   // Build grade options for column filter
   const gradeOptions = useMemo(() => {
     const unique = new Map<string, string>()
@@ -153,6 +160,7 @@ export function MembershipTable({
         onSuspend: handleSuspend,
         onActivate: handleActivate,
         onRemove: handleRemove,
+        onResetPassword: handleResetPassword,
         canManage,
         nameContact,
         t,
@@ -166,6 +174,7 @@ export function MembershipTable({
       handleSuspend,
       handleActivate,
       handleRemove,
+      handleResetPassword,
       canManage,
       nameContact,
       t,
@@ -359,6 +368,12 @@ export function MembershipTable({
         onOpenChange={(open) => !open && setGradeAssignMember(null)}
         onSuccess={handleRefresh}
         grades={grades}
+        t={t}
+      />
+      <ResetPasswordDialog
+        member={resetPasswordMember}
+        open={!!resetPasswordMember}
+        onOpenChange={(open) => !open && setResetPasswordMember(null)}
         t={t}
       />
       <StatusChangeDialog
