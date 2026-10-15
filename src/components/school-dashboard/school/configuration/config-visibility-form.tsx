@@ -2,8 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useState, useTransition } from "react"
 
+import { ErrorToast } from "@/components/atom/toast"
+
+import { updateJoinAndSharing } from "./actions"
 import { SaveStatus } from "./ui/save-status"
 
 interface Props {
@@ -19,6 +22,7 @@ export function ConfigVisibilityForm({
 }: Props) {
   const [selectedOption, setSelectedOption] = useState(initialVisibility)
   const [savedAt, setSavedAt] = useState<number | null>(null)
+  const [isPending, startTransition] = useTransition()
   const dict = (dictionary as any)?.school?.onboarding || {}
 
   const options = [
@@ -39,8 +43,22 @@ export function ConfigVisibilityForm({
   ]
 
   const handleSelect = (optionId: string) => {
+    if (optionId === selectedOption) return
+    const previous = selectedOption
     setSelectedOption(optionId)
-    setSavedAt((n) => (n ?? 0) + 1)
+    startTransition(async () => {
+      const result = await updateJoinAndSharing(schoolId, {
+        informationSharing: optionId as "full-transparency" | "limited-sharing",
+      })
+      if (result.success) {
+        setSavedAt(Date.now())
+      } else {
+        setSelectedOption(previous)
+        ErrorToast(
+          (dictionary as any)?.schoolConfig?.status?.error ?? "Couldn't save"
+        )
+      }
+    })
   }
 
   return (
@@ -81,7 +99,7 @@ export function ConfigVisibilityForm({
         </button>
       ))}
 
-      <SaveStatus pending={false} savedAt={savedAt} className="px-1" />
+      <SaveStatus pending={isPending} savedAt={savedAt} className="px-1" />
     </div>
   )
 }

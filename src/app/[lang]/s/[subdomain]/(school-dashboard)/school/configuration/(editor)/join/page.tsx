@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next"
 
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -25,12 +26,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function JoinPage({ params }: Props) {
   const { lang } = await params
   const { schoolId } = await getTenantContext()
-  const dictionary = await getDictionary(lang)
+  const [dictionary, branding] = await Promise.all([
+    getDictionary(lang),
+    schoolId
+      ? db.schoolBranding
+          .findUnique({
+            where: { schoolId },
+            select: { allowSelfEnrollment: true, informationSharing: true },
+          })
+          .catch(() => null)
+      : null,
+  ])
 
   return (
     <ConfigJoinForm
       schoolId={schoolId || ""}
-      initialJoinMethod="invite-with-codes"
+      initialJoinMethod={branding?.allowSelfEnrollment === false ? "manual-enrollment" : "invite-with-codes"}
       dictionary={dictionary}
     />
   )

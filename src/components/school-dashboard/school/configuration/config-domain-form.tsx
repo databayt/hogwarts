@@ -43,8 +43,6 @@ interface ConfigDomainFormProps {
 
 const DOMAIN_RE = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/
 const EXAMPLE = "myschool.edu.sd"
-// The CNAME target schools point their custom domain at.
-const DNS_TARGET = "cname.databayt.org"
 
 /** Splice an LTR value into a translated sentence at `{key}`. */
 function withLtr(tpl: string, key: string, value: React.ReactNode) {
@@ -303,7 +301,7 @@ export function ConfigDomainForm({
                   {[
                     { label: t.dnsType ?? "Type", value: "CNAME" },
                     { label: t.dnsName ?? "Name", value: "www" },
-                    { label: t.dnsValue ?? "Value", value: DNS_TARGET },
+                    { label: t.dnsValue ?? "Value", value: address },
                   ].map((r) => (
                     <div
                       key={r.label}

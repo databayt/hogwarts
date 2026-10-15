@@ -822,3 +822,50 @@ export async function updateSchoolNameContact(
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
+
+// How people join the school + how much families see. Both live on
+// SchoolBranding; the editors used to show "Saved" without writing anything.
+const joinAndSharingSchema = z.object({
+  allowSelfEnrollment: z.boolean().optional(),
+  informationSharing: z
+    .enum(["full-transparency", "limited-sharing"])
+    .optional(),
+})
+
+export async function updateJoinAndSharing(
+  schoolId: string,
+  data: z.infer<typeof joinAndSharingSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = joinAndSharingSchema.parse(data)
+
+    await db.schoolBranding.upsert({
+      where: { schoolId },
+      create: { schoolId, ...validatedData },
+      update: validatedData,
+    })
+
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/join")
+    refreshPage("/school/configuration/visibility")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating join and sharing:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}

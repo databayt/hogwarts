@@ -29,8 +29,9 @@ export async function createDomainRequest(formData: FormData) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    // Only PRINCIPAL or DEVELOPER can request custom domains
+    // School admins own their address; PRINCIPAL kept for legacy sessions.
     if (
+      session.user.role !== "ADMIN" &&
       session.user.role !== "PRINCIPAL" &&
       session.user.role !== "DEVELOPER"
     ) {
