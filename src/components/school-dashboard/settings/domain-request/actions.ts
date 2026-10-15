@@ -62,10 +62,8 @@ export async function createDomainRequest(formData: FormData) {
     })
 
     if (existingRequest) {
-      return {
-        success: false,
-        error: "You already have a pending domain request",
-      }
+      // Stable code — the client translates it.
+      return { success: false, error: "DOMAIN_REQUEST_PENDING" }
     }
 
     // Create the domain request
@@ -96,6 +94,9 @@ export async function createDomainRequest(formData: FormData) {
         action: "domain_request_create_error",
       }
     )
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
