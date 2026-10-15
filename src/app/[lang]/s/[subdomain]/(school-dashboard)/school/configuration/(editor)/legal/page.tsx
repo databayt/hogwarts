@@ -2,11 +2,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
+import { auth } from "@/auth"
 import { CheckCircle2, Gavel, ShieldCheck } from "lucide-react"
 
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ConfigDangerZone } from "@/components/school-dashboard/school/configuration/config-danger-zone"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -26,6 +30,19 @@ export default async function LegalPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const t = dictionary?.school?.configuration?.legal
+  const { schoolId } = await getTenantContext()
+  const session = await auth()
+
+  // Switching the school off is DEVELOPER-only (the action enforces it too).
+  const canToggleActive = session?.user?.role === "DEVELOPER" && !!schoolId
+  const school = canToggleActive
+    ? await db.school
+        .findUnique({
+          where: { id: schoolId! },
+          select: { isActive: true },
+        })
+        .catch(() => null)
+    : null
 
   const items = [
     {
@@ -76,6 +93,14 @@ export default async function LegalPage({ params }: Props) {
           </Card>
         ))}
       </div>
+
+      {canToggleActive && school ? (
+        <ConfigDangerZone
+          schoolId={schoolId!}
+          isActive={school.isActive}
+          t={dictionary.schoolBilling}
+        />
+      ) : null}
     </div>
   )
 }

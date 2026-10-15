@@ -9,6 +9,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { PLAN_TYPES } from "@/lib/plan-type"
 import { refreshPage } from "@/lib/refresh-page"
 
 // Schema for school identity update
@@ -358,13 +359,14 @@ export async function updateSchoolPricing(
   }
 }
 
-// Schema for plan and limits update
+// Schema for plan and limits update. Partial: the plan page sends plan +
+// limits, the legal page's danger zone sends only `isActive`.
 const planLimitsSchema = z.object({
-  planType: z.enum(["basic", "premium", "enterprise"]),
-  maxStudents: z.number().min(1).max(100000),
-  maxTeachers: z.number().min(1).max(10000),
-  maxClasses: z.number().min(1).max(1000),
-  isActive: z.boolean(),
+  planType: z.enum(PLAN_TYPES).optional(),
+  maxStudents: z.number().int().min(1).max(100000).optional(),
+  maxTeachers: z.number().int().min(1).max(10000).optional(),
+  maxClasses: z.number().int().min(1).max(1000).optional(),
+  isActive: z.boolean().optional(),
 })
 
 export async function updatePlanLimits(
@@ -379,29 +381,36 @@ export async function updatePlanLimits(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    // School admins choose their own plan and limits (self-service — every
+    // plan bills the same per-student rate). Switching the whole school off
+    // stays a DEVELOPER-only operation.
     if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
-
-    // Only DEVELOPER can modify plan limits
-    if (session?.user?.role !== "DEVELOPER") {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
     const validatedData = planLimitsSchema.parse(data)
 
-    // Update school
-    const updated = await db.school.update({
-      where: { id: schoolId },
-      data: {
-        planType: validatedData.planType,
-        maxStudents: validatedData.maxStudents,
-        maxTeachers: validatedData.maxTeachers,
-        maxClasses: validatedData.maxClasses,
-        isActive: validatedData.isActive,
-      },
-    })
+    if (
+      validatedData.isActive !== undefined &&
+      session?.user?.role !== "DEVELOPER"
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const patch: Prisma.SchoolUpdateInput = {}
+    if (validatedData.planType !== undefined)
+      patch.planType = validatedData.planType
+    if (validatedData.maxStudents !== undefined)
+      patch.maxStudents = validatedData.maxStudents
+    if (validatedData.maxTeachers !== undefined)
+      patch.maxTeachers = validatedData.maxTeachers
+    if (validatedData.maxClasses !== undefined)
+      patch.maxClasses = validatedData.maxClasses
+    if (validatedData.isActive !== undefined)
+      patch.isActive = validatedData.isActive
+
+    await db.school.update({ where: { id: schoolId }, data: patch })
 
     refreshPage("/school/configuration")
     refreshPage("/school/configuration/plan")
