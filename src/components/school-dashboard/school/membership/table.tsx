@@ -44,6 +44,8 @@ interface MembershipTableProps {
   nameContact?: NameContact
   lang: Locale
   t: Record<string, string>
+  /** `school.students.credentials` — shared with the credentials dialog. */
+  credentialsLabels?: Record<string, string>
 }
 
 export function MembershipTable({
@@ -54,6 +56,7 @@ export function MembershipTable({
   nameContact = "phone",
   lang,
   t,
+  credentialsLabels,
 }: MembershipTableProps) {
   const BATCH_SIZE = 20
   const router = useRouter()
@@ -375,6 +378,7 @@ export function MembershipTable({
         open={!!resetPasswordMember}
         onOpenChange={(open) => !open && setResetPasswordMember(null)}
         t={t}
+        labels={credentialsLabels}
       />
       <StatusChangeDialog
         member={statusChangeMember}

@@ -31,6 +31,11 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
     ...((dictionary as Record<string, any>)?.school?.membership || {}),
   }
 
+  // The students/teachers credentials dialog labels — the reset dialog shares
+  // that dialog's look and words.
+  const credentialsLabels: Record<string, string> =
+    (dictionary as Record<string, any>)?.school?.students?.credentials || {}
+
   if (!schoolId) {
     return (
       <p className="text-muted-foreground py-8 text-center">
@@ -77,6 +82,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         nameContact={nameContact}
         lang={lang}
         t={t}
+        credentialsLabels={credentialsLabels}
       />
     </div>
   )
