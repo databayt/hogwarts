@@ -9565,9 +9565,9 @@
     },
     "grades": {
       "title": "الدرجات",
-      "navAll": "الكل",
+      "navAll": "سجل الدرجات",
       "navGenerate": "إنشاء",
-      "navReports": "التقارير",
+      "navReports": "بطاقات التقارير",
       "navPromotion": "الترقية",
       "navTranscripts": "كشوف الدرجات",
       "navAnalytics": "التحليلات",
@@ -9716,7 +9716,27 @@
         "rankOf": "من",
         "termLabel": "الفصل الدراسي"
       },
-      "navTemplates": "القوالب"
+      "navTemplates": "القوالب",
+      "navCertificates": "الشهادات",
+      "errorTitle": "تعذّر تحميل الدرجات",
+      "errorDetailTitle": "تعذّر تحميل الدرجة",
+      "errorDescription": "حدث خطأ أثناء تحميل هذه الصفحة. حاول مرة أخرى بعد قليل.",
+      "errorReference": "رقم الخطأ",
+      "tryAgain": "إعادة المحاولة",
+      "atAverage": "في المتوسط",
+      "sourceTypes": {
+        "HOMEWORK": "واجب منزلي",
+        "QUIZ": "اختبار قصير",
+        "TEST": "اختبار",
+        "MIDTERM": "نصفي",
+        "FINAL": "نهائي",
+        "FINAL_EXAM": "امتحان نهائي",
+        "PRACTICAL": "عملي",
+        "PROJECT": "مشروع",
+        "LAB_REPORT": "تقرير مختبر",
+        "ESSAY": "مقال",
+        "PRESENTATION": "عرض تقديمي"
+      }
     },
     "classrooms": {
       "title": "الفصول والقاعات",

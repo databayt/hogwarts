@@ -1,45 +1,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
 import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import { ReportCardsContent } from "@/components/school-dashboard/reports/content"
-import { Shell as PageContainer } from "@/components/table/shell"
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  return { title: dictionary?.school?.exams?.reportCards || "Report Cards" }
-}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
-  searchParams: Promise<{ termId?: string }>
 }
 
-export default async function ReportCardsPage({ params, searchParams }: Props) {
+/**
+ * Report cards live in the grades hub (/grades/reports). This older copy was
+ * a second, diverging implementation reachable from no tab — keep old links
+ * working by sending them to the one screen.
+ */
+export default async function ReportCardsRedirect({ params }: Props) {
   const { lang } = await params
-  const { termId } = await searchParams
-  const dictionary = await getDictionary(lang)
-
-  return (
-    <PageContainer>
-      {/* min-w-0: a grid item (the Shell is a grid) sizes to its content, and the
-          report table is wider than a phone — the column would widen with it
-          and the layout would clip the panels off the start edge. */}
-      <div className="flex flex-col gap-4 max-md:min-w-0">
-        <PageHeadingSetter
-          title={dictionary?.school?.exams?.reportCards || "Report Cards"}
-        />
-        <ReportCardsContent
-          locale={lang}
-          dictionary={dictionary}
-          termId={termId}
-        />
-      </div>
-    </PageContainer>
-  )
+  redirect(`/${lang}/grades/reports`)
 }

@@ -60,7 +60,7 @@ export async function publishReportCards(input: {
       },
     })
 
-    refreshPage("/exams/report-cards")
+    refreshPage("/grades/reports")
     refreshPage("/parent")
 
     // Fan out `report_ready` to student + guardians for every newly-published
@@ -106,7 +106,7 @@ export async function updateReportCardComments(input: {
       },
     })
 
-    refreshPage("/exams/report-cards")
+    refreshPage("/grades/reports")
     return { success: true }
   } catch (error) {
     console.error("Update comments error:", error)

@@ -12,6 +12,10 @@ type BreadcrumbItem = {
   link: string
 }
 
+// A record id (cuid / uuid) — the only segment worth resolving to a name.
+const RECORD_ID =
+  /^(?:[a-z0-9]{20,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This allows to add custom title as well
@@ -58,11 +62,7 @@ export function useBreadcrumbs(dictionary?: any) {
       { pattern: /\/announcements\/([^\/\?]+)$/, api: "announcements" },
       { pattern: /\/assignments\/([^\/\?]+)$/, api: "assignments" },
       { pattern: /\/events\/([^\/\?]+)$/, api: "events" },
-      {
-        pattern: /\/grades\/([^\/\?]+)$/,
-        api: "grades",
-        exclude: ["analytics", "reports", "generate"],
-      },
+      { pattern: /\/grades\/([^\/\?]+)$/, api: "grades" },
       {
         pattern: /\/stream\/dashboard\/[^\/]+\/([^\/\?]+)$/,
         api: "catalog-lessons",
@@ -75,8 +75,10 @@ export function useBreadcrumbs(dictionary?: any) {
         const match = pathname.match(pattern)
         if (match) {
           const id = match[1]
-          // Skip if ID matches an excluded route segment
-          if (exclude?.includes(id)) continue
+          // Skip if ID matches an excluded route segment, or is a named
+          // sub-page (/grades/reports) rather than a record — fetching it
+          // only 404s.
+          if (exclude?.includes(id) || !RECORD_ID.test(id)) continue
 
           const qs =
             typeof window !== "undefined" ? window.location.search || "" : ""
@@ -118,18 +120,26 @@ export function useBreadcrumbs(dictionary?: any) {
           })
         : filteredSegments
 
-    const items = finalSegments.map((segment, index) => {
+    // A record id in the MIDDLE of a path (/grades/add/<id>/selection) has no
+    // name to show unless the page named it — drop the crumb instead of
+    // printing the raw id.
+    const visible = finalSegments
+      .map((segment, index) => ({ segment, index }))
+      .filter(
+        ({ segment, index }) =>
+          index === finalSegments.length - 1 ||
+          !RECORD_ID.test(segment) ||
+          segment in segmentTitles
+      )
+
+    const items = visible.map(({ segment, index }) => {
       const path = `/${finalSegments.slice(0, index + 1).join("/")}`
       const isLast = index === finalSegments.length - 1
-      // A record id (cuid / uuid) is the only thing worth blanking while its
-      // name is still being fetched. The old test also caught any word of 6+
-      // letters, which blanked "courses", "timetable", "attendance" and every
-      // other ordinary section whose page provides no title.
-      const isRecordId =
-        isLast &&
-        /^(?:[a-z0-9]{20,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(
-          segment
-        )
+      // A record id is the only thing worth blanking while its name is still
+      // being fetched. The old test also caught any word of 6+ letters, which
+      // blanked "courses", "timetable", "attendance" and every other ordinary
+      // section whose page provides no title.
+      const isRecordId = isLast && RECORD_ID.test(segment)
       // usePathname() keeps segments percent-encoded; the page keys its
       // overrides by the decoded slug it got from params.
       let decoded = segment

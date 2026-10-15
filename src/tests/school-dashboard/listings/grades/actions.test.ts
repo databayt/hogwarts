@@ -121,7 +121,7 @@ describe("createResult", () => {
     if (!r.success) expect(r.error).toBe("MISSING_SCHOOL")
   })
 
-  it("blocks USER role with hardcoded permission message", async () => {
+  it("blocks USER role with the FORBIDDEN code", async () => {
     vi.mocked(auth).mockResolvedValue({
       user: { id: USER, role: "USER", schoolId: SCHOOL },
     } as any)
@@ -133,7 +133,7 @@ describe("createResult", () => {
     } as any)
     const r = await createResult(validInput)
     expect(r.success).toBe(false)
-    if (!r.success) expect(r.error.toLowerCase()).toContain("unauthorized")
+    if (!r.success) expect(r.error).toBe("FORBIDDEN")
   })
 
   it("creates a result with schoolId, computes percentage, sets gradedBy", async () => {

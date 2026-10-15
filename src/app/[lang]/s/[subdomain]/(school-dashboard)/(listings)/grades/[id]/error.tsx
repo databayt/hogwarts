@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -15,6 +16,9 @@ interface ErrorProps {
 }
 
 export default function GradeDetailError({ error, reset }: ErrorProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.grades
+
   useEffect(() => {
     console.error("Grade detail page error:", error)
   }, [error])
@@ -23,12 +27,12 @@ export default function GradeDetailError({ error, reset }: ErrorProps) {
     <div className="grid gap-8">
       <Alert variant="destructive">
         <Icons.alertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load grade details</AlertTitle>
+        <AlertTitle>{t?.errorDetailTitle}</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading the grade details.</p>
+          <p>{t?.errorDescription}</p>
           {error.digest && (
             <p className="text-muted-foreground text-xs">
-              Error reference: {error.digest}
+              {t?.errorReference}: <bdi dir="ltr">{error.digest}</bdi>
             </p>
           )}
         </AlertDescription>
@@ -37,12 +41,12 @@ export default function GradeDetailError({ error, reset }: ErrorProps) {
       <div className="flex gap-4">
         <Button onClick={reset} variant="outline" className="gap-2">
           <Icons.refresh className="h-4 w-4" />
-          Try again
+          {t?.tryAgain}
         </Button>
         <Button variant="ghost" asChild className="gap-2">
           <Link href="../">
-            <Icons.arrowLeft className="h-4 w-4" />
-            Back to grades
+            <Icons.arrowLeft className="h-4 w-4 rtl:rotate-180" />
+            {t?.backToGrades}
           </Link>
         </Button>
       </div>

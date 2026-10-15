@@ -93,6 +93,7 @@ export const resultListSelect = {
       id: true,
       title: true,
       totalPoints: true,
+      type: true,
     },
   },
   exam: {
@@ -100,6 +101,7 @@ export const resultListSelect = {
       id: true,
       title: true,
       totalMarks: true,
+      examType: true,
     },
   },
   subject: {
@@ -384,13 +386,30 @@ export async function getResultsList(
  * @returns Promise with result or null
  */
 export async function getResultDetail(schoolId: string, resultId: string) {
-  return db.result.findFirst({
+  const result = await db.result.findFirst({
     where: {
       id: resultId,
       schoolId,
     },
     select: resultDetailSelect,
   })
+  if (!result) return null
+  // Prisma Decimals can't cross to a client component or out of a server
+  // action — hand back plain numbers.
+  return {
+    ...result,
+    score: Number(result.score),
+    maxScore: Number(result.maxScore),
+    assignment: result.assignment
+      ? {
+          ...result.assignment,
+          totalPoints:
+            result.assignment.totalPoints == null
+              ? null
+              : Number(result.assignment.totalPoints),
+        }
+      : null,
+  }
 }
 
 /**
@@ -902,8 +921,10 @@ export function formatResultRow(
   return {
     id: result.id,
     studentName: formatStudentName(result, nameDisplay),
-    assignmentTitle:
-      result.assignment?.title || result.exam?.title || "Unknown",
+    assignmentTitle: result.assignment?.title || result.exam?.title || "",
+    // AssessmentType (HOMEWORK, QUIZ…) or ExamType (MIDTERM, FINAL…) — the
+    // badge label comes from the dictionary, never from the title text.
+    kind: result.assignment?.type ?? result.exam?.examType ?? null,
     className: result.section?.name || "—",
     score: Number(result.score),
     maxScore: Number(result.maxScore),

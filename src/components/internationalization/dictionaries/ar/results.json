@@ -259,13 +259,18 @@
   "reportCards": {
     "filters": {
       "selectTerm": "اختر الفصل الدراسي",
-      "term": "الفصل",
+      "term": "الفصل الدراسي",
       "allGrades": "جميع الصفوف"
     },
     "actions": {
       "generate": "إنشاء بطاقات التقارير",
       "generating": "جارٍ الإنشاء...",
-      "publish": "نشر"
+      "publish": "نشر",
+      "downloadAll": "تنزيل الكل بقالب المدرسة",
+      "publishAll": "نشر الكل ({count})",
+      "publishing": "جارٍ النشر…",
+      "published": "تم نشر {count} بطاقة — وصل إشعار للطلاب وأولياء الأمور",
+      "publishFailed": "تعذّر نشر بطاقات التقارير"
     },
     "generateDialog": {
       "title": "إنشاء بطاقات التقارير",
@@ -277,6 +282,8 @@
       "skipped": "تخطّي {count} — لا درجات لتجميعها"
     },
     "count": "بطاقة تقرير",
+    "countLabel": "عدد البطاقات: {count}",
+    "attendanceSummary": "حضور {present} · غياب {absent} · تأخّر {late}",
     "columns": {
       "rank": "الترتيب",
       "student": "الطالب",
@@ -313,12 +320,13 @@
     "generate": "إنشاء كشف الدرجات",
     "generating": "جارٍ الإنشاء...",
     "count": "كشف درجات",
+    "countLabel": "عدد الكشوف: {count}",
     "columns": {
       "number": "الرقم",
       "student": "الطالب",
       "gpa": "المعدل التراكمي",
       "credits": "الساعات المعتمدة",
-      "pdf": "PDF",
+      "pdf": "الملف",
       "date": "التاريخ"
     },
     "empty": "لا توجد كشوف درجات. أدخل رقم الطالب ثم انقر على \"إنشاء كشف الدرجات\".",

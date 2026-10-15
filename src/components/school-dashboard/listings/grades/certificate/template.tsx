@@ -372,9 +372,9 @@ function formatCertificateDate(date: Date, language: Locale): string {
   }).format(date)
 }
 
-// Get grade description
-function getGradeDescription(grade: string): string {
-  const descriptions: Record<string, string> = {
+// Get grade description, in the certificate's own language
+const GRADE_DESCRIPTIONS: Record<Locale, Record<string, string>> = {
+  en: {
     "A+": "Outstanding Achievement",
     A: "Excellent Performance",
     "A-": "Very Good Achievement",
@@ -388,8 +388,29 @@ function getGradeDescription(grade: string): string {
     D: "Minimum Pass",
     "D-": "Marginal Pass",
     F: "Did Not Pass",
-  }
-  return descriptions[grade] || "Achievement"
+  },
+  ar: {
+    "A+": "إنجاز متميّز",
+    A: "أداء ممتاز",
+    "A-": "إنجاز جيد جداً",
+    "B+": "أداء جيد",
+    B: "فوق المتوسط",
+    "B-": "مُرضٍ مرتفع",
+    "C+": "مُرضٍ",
+    C: "أداء متوسط",
+    "C-": "دون المتوسط",
+    "D+": "يحتاج إلى تحسين",
+    D: "نجاح بالحد الأدنى",
+    "D-": "نجاح هامشي",
+    F: "لم يجتز",
+  },
+}
+
+function getGradeDescription(grade: string, language: Locale): string {
+  return (
+    GRADE_DESCRIPTIONS[language]?.[grade] ??
+    (language === "ar" ? "إنجاز" : "Achievement")
+  )
 }
 
 export function GradeCertificate({
@@ -520,7 +541,7 @@ export function GradeCertificate({
               marginTop: 10,
             }}
           >
-            {getGradeDescription(data.grade)}
+            {getGradeDescription(data.grade, options.language)}
           </Text>
 
           {/* Feedback (optional) */}

@@ -6,6 +6,7 @@ import React from "react"
 import { auth } from "@/auth"
 import { renderToBuffer } from "@react-pdf/renderer"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
@@ -172,7 +173,7 @@ export async function generateCertificatePDF(
     })
 
     if (!cert) {
-      return { success: false, error: "Certificate not found" }
+      return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     }
 
     const certData = buildCertificateData(
@@ -201,7 +202,7 @@ export async function generateCertificatePDF(
     )
 
     if (!pdfUrl) {
-      return { success: false, error: "Failed to generate PDF" }
+      return { success: false, error: ACTION_ERRORS.PDF_GENERATION_FAILED }
     }
 
     await db.examCertificate.update({
@@ -244,7 +245,7 @@ export async function batchGenerateCertificatePDFs(
       where: { id: configId, schoolId },
     })
     if (!config) {
-      return { success: false, error: "Certificate config not found" }
+      return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     }
 
     // Fetch certificates that need PDFs
@@ -353,7 +354,7 @@ export async function previewCertificate(
       include: { school: true },
     })
     if (!config) {
-      return { success: false, error: "Config not found" }
+      return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     }
 
     const certData: CertificateForPaper = {

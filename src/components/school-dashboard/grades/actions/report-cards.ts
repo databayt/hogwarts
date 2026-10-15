@@ -153,7 +153,7 @@ export async function publishReportCards(input: {
                   metadata: {
                     entityType: "report_card",
                     entityId: rc.id,
-                    url: "/grades/report-cards",
+                    url: "/grades/reports",
                   },
                 }).catch((err: unknown) => {
                   console.error("[publishReportCards] notify error:", err)

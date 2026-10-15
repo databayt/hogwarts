@@ -108,7 +108,7 @@ export async function createResult(
     if (!canCreateResult(authContext.role)) {
       return {
         success: false,
-        error: "Unauthorized to create results",
+        error: ACTION_ERRORS.FORBIDDEN,
       }
     }
 
@@ -443,7 +443,7 @@ export async function getResult(input: {
       if (!isGuardian) {
         return {
           success: false,
-          error: "You can only view your children's results",
+          error: ACTION_ERRORS.FORBIDDEN,
         }
       }
     }

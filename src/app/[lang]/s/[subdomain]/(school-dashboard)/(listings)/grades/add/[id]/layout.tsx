@@ -5,8 +5,9 @@
 import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { updateGradeWizardStep } from "@/components/school-dashboard/listings/grades/wizard/actions"
-import { GRADE_WIZARD_CONFIG } from "@/components/school-dashboard/listings/grades/wizard/config"
+import { getDictGradeWizardConfig } from "@/components/school-dashboard/listings/grades/wizard/config"
 import {
   GradeWizardProvider,
   useGradeWizard,
@@ -17,16 +18,18 @@ export default function GradeWizardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { dictionary } = useDictionary()
+  const config = getDictGradeWizardConfig(dictionary?.school?.grades)
   return (
     <WizardLayout
-      config={GRADE_WIZARD_CONFIG}
+      config={config}
       dataProvider={GradeWizardProvider}
       loadHook={useGradeWizard}
       basePath="/grades/add"
       onStepChange={(entityId, step) => {
         updateGradeWizardStep(entityId, step)
       }}
-      finalLabel="Save Grade"
+      finalLabel={config.finalLabel}
     >
       {children}
     </WizardLayout>

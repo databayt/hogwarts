@@ -80,7 +80,7 @@ export function TranscriptsTable({
       </div>
 
       <div className="text-muted-foreground text-sm">
-        {data.length} {dict.count}
+        {dict.countLabel.replace("{count}", String(data.length))}
       </div>
 
       <div className="rounded-md border">

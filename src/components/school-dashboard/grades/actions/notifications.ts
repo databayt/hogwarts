@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchTemplated } from "@/lib/dispatch-notification"
@@ -71,7 +72,7 @@ export async function sendGradeNotification(input: {
       },
     })
 
-    if (!result) return { success: false, error: "Result not found" }
+    if (!result) return { success: false, error: ACTION_ERRORS.NOT_FOUND }
 
     const studentName = displayName(
       result.student,
@@ -148,7 +149,7 @@ export async function sendBatchGradeNotifications(input: {
     if (!input.termId && !input.reportCardIds) {
       return {
         success: false,
-        error: "Either termId or reportCardIds is required",
+        error: ACTION_ERRORS.VALIDATION_ERROR,
       }
     }
 

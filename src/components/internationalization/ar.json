@@ -441,7 +441,15 @@
       "SUBJECT_NOT_IN_GRADE": "هذه المادة لا تُدرَّس في هذا الصف.",
       "TEACHER_OVER_CAP": "سيتجاوز المعلم الحد الأسبوعي لحصصه.",
       "ASSIGNMENT_FAILED": "تعذر حفظ الإسناد. حاول مرة أخرى.",
-      "NO_SUBJECTS": "لا توجد مواد للمدرسة بعد. اختر موادها أولًا."
+      "NO_SUBJECTS": "لا توجد مواد للمدرسة بعد. اختر موادها أولًا.",
+      "FORBIDDEN": "ليست لديك صلاحية لتنفيذ هذا الإجراء.",
+      "GRADE_SCORE_EXCEEDS_MAX": "لا يمكن أن تتجاوز الدرجة الدرجة القصوى.",
+      "GRADE_REQUIRED": "اختر التقدير قبل الحفظ.",
+      "NO_REPORT_CARDS_FOR_STUDENT": "لا توجد بطاقات تقارير لهذا الطالب بعد. أنشئ بطاقات التقارير أولاً.",
+      "PROMOTION_BATCH_NOT_IN_REVIEW": "دفعة الترقية هذه ليست قيد المراجعة.",
+      "PROMOTION_BATCH_NOT_APPROVED": "اعتمد دفعة الترقية قبل تنفيذها.",
+      "PDF_GENERATION_FAILED": "تعذّر إنشاء ملف PDF. حاول مرة أخرى.",
+      "VERIFICATION_FAILED": "فشل التحقق."
     },
     "tryAgain": "إعادة المحاولة"
   },
@@ -2522,7 +2530,14 @@
       "discount": "الخصم",
       "legal": "القانوني",
       "plan": "الخطة",
-      "domain": "النطاق"
+      "domain": "النطاق",
+      "templates": "القوالب",
+      "promotion": "الترفيع",
+      "transcripts": "كشوف الدرجات",
+      "certificates": "الشهادات",
+      "add": "إضافة",
+      "selection": "الاختيار",
+      "scoring": "الدرجة"
     },
     "notifications": "الإشعارات",
     "messages": "الرسائل"

@@ -265,7 +265,12 @@
     "actions": {
       "generate": "Generate Report Cards",
       "generating": "Generating...",
-      "publish": "Publish"
+      "publish": "Publish",
+      "downloadAll": "Download all (school template)",
+      "publishAll": "Publish all ({count})",
+      "publishing": "Publishing…",
+      "published": "{count} report cards published — students and guardians were notified",
+      "publishFailed": "Couldn't publish the report cards"
     },
     "generateDialog": {
       "title": "Generate Report Cards",
@@ -277,6 +282,8 @@
       "skipped": "{count} skipped — no grades to aggregate"
     },
     "count": "report cards",
+    "countLabel": "{count} report cards",
+    "attendanceSummary": "Present {present} · Absent {absent} · Late {late}",
     "columns": {
       "rank": "Rank",
       "student": "Student",
@@ -313,6 +320,7 @@
     "generate": "Generate Transcript",
     "generating": "Generating...",
     "count": "transcripts",
+    "countLabel": "{count} transcripts",
     "columns": {
       "number": "Number",
       "student": "Student",

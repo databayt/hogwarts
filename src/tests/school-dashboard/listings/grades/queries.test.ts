@@ -302,13 +302,14 @@ describe("formatResultRow", () => {
     expect(row.assignmentTitle).toBe("Final Exam")
   })
 
-  it("returns 'Unknown' when both assignment and exam missing", () => {
+  it("returns an empty title when both assignment and exam missing", () => {
     const row = formatResultRow({
       ...baseRow,
       assignment: null,
       exam: null,
     } as unknown as Parameters<typeof formatResultRow>[0])
-    expect(row.assignmentTitle).toBe("Unknown")
+    // The table renders the translated "unknown" label for an empty title.
+    expect(row.assignmentTitle).toBe("")
   })
 
   it("shows a dash when the row has no section", () => {

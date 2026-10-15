@@ -186,7 +186,8 @@ export async function generateGradeCertificate(
     console.error("Certificate generation error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      // A code the client translates — never a raw exception message.
+      error: ACTION_ERRORS.PDF_GENERATION_FAILED,
     }
   }
 }

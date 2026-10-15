@@ -129,14 +129,14 @@ export async function completeGradeWizard(
     if (Number(result.score) > Number(result.maxScore)) {
       return {
         success: false,
-        error: "Score cannot exceed max score",
+        error: ACTION_ERRORS.GRADE_SCORE_EXCEEDS_MAX,
       }
     }
 
     if (!result.grade) {
       return {
         success: false,
-        error: "Grade is required before completing",
+        error: ACTION_ERRORS.GRADE_REQUIRED,
       }
     }
 

@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { checkRateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit"
@@ -68,7 +69,7 @@ export async function verifyTranscript(input: { verificationCode: string }) {
       "verify-transcript"
     )
     if (!rl.allowed) {
-      return { valid: false, error: "Verification failed" }
+      return { valid: false, error: ACTION_ERRORS.VERIFICATION_FAILED }
     }
 
     const transcript = await db.transcript.findUnique({
@@ -84,7 +85,7 @@ export async function verifyTranscript(input: { verificationCode: string }) {
     })
 
     if (!transcript) {
-      return { valid: false, error: "Transcript not found" }
+      return { valid: false, error: ACTION_ERRORS.NOT_FOUND }
     }
 
     return {
@@ -103,7 +104,7 @@ export async function verifyTranscript(input: { verificationCode: string }) {
       },
     }
   } catch {
-    return { valid: false, error: "Verification failed" }
+    return { valid: false, error: ACTION_ERRORS.VERIFICATION_FAILED }
   }
 }
 

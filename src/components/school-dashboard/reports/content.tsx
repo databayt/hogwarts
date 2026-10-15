@@ -19,9 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Ltr } from "@/components/atom/ltr"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { GenerateWithTemplateButton } from "../documents/generate-with-template-button"
+import { TemplateBulkButton } from "../grades/report-cards/template-bulk-button"
 import { GenerateButton } from "./generate-button"
 import { PublishButton } from "./publish-button"
 
@@ -38,9 +41,7 @@ export async function ReportCardsContent({
   const schoolId = session?.user?.schoolId
   const role = session?.user?.role
 
-  if (!schoolId) {
-    return <div>Unauthorized</div>
-  }
+  if (!schoolId) return null
 
   const canManage = ["DEVELOPER", "ADMIN", "TEACHER"].includes(role || "")
   const copy = dictionary?.results?.reportCards
@@ -124,10 +125,7 @@ export async function ReportCardsContent({
       {/* Term selector */}
       <div className="flex flex-wrap items-center gap-3">
         {terms.map((t) => (
-          <Link
-            key={t.id}
-            href={`/${locale}/exams/report-cards?termId=${t.id}`}
-          >
+          <Link key={t.id} href={`/${locale}/grades/reports?termId=${t.id}`}>
             <Badge
               variant={t.id === activeTerm.id ? "default" : "outline"}
               className="cursor-pointer"
@@ -191,6 +189,7 @@ export async function ReportCardsContent({
               copy={copy}
             />
           )}
+          {total > 0 && <TemplateBulkButton termId={activeTerm.id} />}
           {total > 0 && published < total && (
             <PublishButton
               reportCardIds={reportCards
@@ -242,15 +241,19 @@ export async function ReportCardsContent({
                         {displayName(rc.student, nameDisplay)}
                       </bdi>
                     </TableCell>
-                    <TableCell>{rc.student.studentId ?? "—"}</TableCell>
+                    <TableCell>
+                      <Ltr>{rc.student.studentId ?? "—"}</Ltr>
+                    </TableCell>
                     <TableCell>{rc.grades.length}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {rc.overallGrade ?? "—"}
+                        <Ltr>{rc.overallGrade ?? "—"}</Ltr>
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {rc.overallGPA ? Number(rc.overallGPA).toFixed(2) : "—"}
+                      <Ltr>
+                        {rc.overallGPA ? Number(rc.overallGPA).toFixed(2) : "—"}
+                      </Ltr>
                     </TableCell>
                     <TableCell>
                       {rc.isPublished ? (
@@ -280,6 +283,13 @@ export async function ReportCardsContent({
                               <Download className="h-4 w-4" />
                             </a>
                           </Button>
+                        )}
+                        {canManage && (
+                          <GenerateWithTemplateButton
+                            category="REPORT_CARD"
+                            entityId={rc.id}
+                            variant="ghost"
+                          />
                         )}
                       </div>
                     </TableCell>

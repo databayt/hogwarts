@@ -8,10 +8,42 @@ maturity: Built+Polish
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-10-04
+last_audited: 2026-10-15
 ---
 
 # Grades — Production Readiness Tracker
+
+## 2026-10-15 — grades hub, phase 1: nothing dead, all Arabic
+
+Plan: `~/.claude/plans/read-https-demo-balqalam-com-ar-grades-p-smooth-abelson.md`
+(phase 2 = overview hub + self-view, phase 3 = settings/share/auto-collect).
+
+- [x] Tabs 8 → 6, one per workflow step: سجل الدرجات · بطاقات التقارير · كشوف
+      الدرجات · الترقية · الشهادات · القوالب. Generate / Analytics / Settings
+      had no page and rendered a frameless 404.
+- [x] One report-card screen. `/grades/reports` renders the richer
+      `reports/content` (terms by year, stats, generate by grade/section,
+      publish → notifies), now with the school-template fill per row and for
+      all (`report-cards/template-bulk-button.tsx`). `/exams/report-cards`
+      redirects; the old `grades/report-cards` table is gone. Publish
+      notification URL fixed (`/grades/report-cards` → `/grades/reports`).
+- [x] `/grades/certificates` — same `CertificateContent` as `/exams/certificates`.
+- [x] Breadcrumbs: tab segments no longer fetch `/api/grades/<tab>` (404 on
+      every tab); a mid-path record id is dropped instead of printed.
+- [x] Arabic leaks: page titles (were "Dashboard: Grades" / "نموذج"), error
+      pages, wizard "Save Grade", type badges (now from the record's
+      AssessmentType/ExamType, were English guesses from the title: "Assgn"),
+      P/A/L attendance, publish button, certificate grade descriptions, action
+      errors → `ACTION_ERRORS` codes (`GRADE_*`, `PROMOTION_BATCH_*`, …).
+- [x] Bidi: `atom/ltr.tsx` isolates grades, percentages, scores — "A+" no
+      longer reads "+A", "100%" no longer "%100".
+- [x] Detail page: grader shows a name (was a user id); a tie with the class
+      average is no longer "below average"; charts flip for RTL; Decimals no
+      longer cross to the client; section/subject names translated; edit link
+      keeps the locale.
+- Open: student picker in the add wizard is a flat 978-row select (phase 3
+  combobox); "+" creates a draft before input; transcripts need a typed
+  student id; `|| "English"` fallbacks still in grades files (dict in parity).
 
 ## 2026-10-04 — report cards generate by grade or section (LOCAL, not pushed)
 

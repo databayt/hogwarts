@@ -9549,9 +9549,9 @@
     },
     "grades": {
       "title": "Grades",
-      "navAll": "All",
+      "navAll": "Gradebook",
       "navGenerate": "Generate",
-      "navReports": "Reports",
+      "navReports": "Report cards",
       "navPromotion": "Promotion",
       "navTranscripts": "Transcripts",
       "navAnalytics": "Analytics",
@@ -9700,7 +9700,27 @@
         "rankOf": "of",
         "termLabel": "Term"
       },
-      "navTemplates": "Templates"
+      "navTemplates": "Templates",
+      "navCertificates": "Certificates",
+      "errorTitle": "Unable to load grades",
+      "errorDetailTitle": "Unable to load the grade",
+      "errorDescription": "Something went wrong while loading this page. Try again in a moment.",
+      "errorReference": "Error reference",
+      "tryAgain": "Try again",
+      "atAverage": "At the average",
+      "sourceTypes": {
+        "HOMEWORK": "Homework",
+        "QUIZ": "Quiz",
+        "TEST": "Test",
+        "MIDTERM": "Midterm",
+        "FINAL": "Final",
+        "FINAL_EXAM": "Final exam",
+        "PRACTICAL": "Practical",
+        "PROJECT": "Project",
+        "LAB_REPORT": "Lab report",
+        "ESSAY": "Essay",
+        "PRESENTATION": "Presentation"
+      }
     },
     "classrooms": {
       "title": "Classrooms",

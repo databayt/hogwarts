@@ -441,7 +441,15 @@
       "SUBJECT_NOT_IN_GRADE": "This subject isn't taught in that grade.",
       "TEACHER_OVER_CAP": "This would take the teacher past their weekly limit.",
       "ASSIGNMENT_FAILED": "Couldn't save the assignment. Try again.",
-      "NO_SUBJECTS": "The school has no subjects yet. Choose its subjects first."
+      "NO_SUBJECTS": "The school has no subjects yet. Choose its subjects first.",
+      "FORBIDDEN": "You don't have permission to do this.",
+      "GRADE_SCORE_EXCEEDS_MAX": "The score can't be higher than the maximum score.",
+      "GRADE_REQUIRED": "Choose a grade before saving.",
+      "NO_REPORT_CARDS_FOR_STUDENT": "This student has no report cards yet. Generate report cards first.",
+      "PROMOTION_BATCH_NOT_IN_REVIEW": "This promotion batch isn't in review.",
+      "PROMOTION_BATCH_NOT_APPROVED": "Approve the promotion batch before running it.",
+      "PDF_GENERATION_FAILED": "Couldn't create the PDF. Try again.",
+      "VERIFICATION_FAILED": "Verification failed."
     },
     "tryAgain": "Try again"
   },
@@ -2522,7 +2530,14 @@
       "discount": "Discount",
       "legal": "Legal",
       "plan": "Plan",
-      "domain": "Domain"
+      "domain": "Domain",
+      "templates": "Templates",
+      "promotion": "Promotion",
+      "transcripts": "Transcripts",
+      "certificates": "Certificates",
+      "add": "Add",
+      "selection": "Selection",
+      "scoring": "Scoring"
     },
     "notifications": "Notifications",
     "messages": "Messages"

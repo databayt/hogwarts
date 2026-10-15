@@ -35,6 +35,7 @@ import {
 } from "recharts"
 
 import { displayName, initialsOf } from "@/lib/name-utils"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { Ltr } from "@/components/atom/ltr"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -75,6 +77,8 @@ interface GradeDetailContentProps {
   history: GradeHistory
   classStats: ClassStats
   studentRank: { rank: number; percentile: number; totalStudents: number }
+  /** The grader's display name, resolved server-side from `gradedBy`. */
+  gradedByName?: string | null
   dictionary: Dictionary
   lang: Locale
 }
@@ -120,6 +124,7 @@ export function GradeDetailContent({
   history,
   classStats,
   studentRank,
+  gradedByName,
   dictionary,
   lang,
 }: GradeDetailContentProps) {
@@ -133,7 +138,7 @@ export function GradeDetailContent({
   // Format student name
   const studentName = grade.student
     ? displayName(grade.student, nameDisplay)
-    : t.unknown || "Unknown"
+    : t.unknown
 
   // Get initials for avatar
   const initials = initialsOf(studentName)
@@ -150,8 +155,13 @@ export function GradeDetailContent({
   // Is passing
   const isPassing = grade.percentage >= 50
 
-  // Above/below average
-  const isAboveAverage = grade.percentage > classStats.classAverage
+  // Above / at / below the class average. A lone student (or a tie) IS the
+  // average — calling a 100% "below average" next to a 100% average was wrong.
+  const hasPeers = classStats.totalStudents > 1
+  const averageDelta = grade.percentage - classStats.classAverage
+  const averageStanding =
+    Math.abs(averageDelta) < 0.05 ? "at" : averageDelta > 0 ? "above" : "below"
+  const isRtl = lang === "ar"
 
   // Grade history chart data
   const historyChartData = useMemo(() => {
@@ -230,7 +240,9 @@ export function GradeDetailContent({
         link.click()
         document.body.removeChild(link)
       } else {
-        ErrorToast(result.error || t.downloadFailed)
+        ErrorToast(
+          actionErrorMessage(result.error, dictionary, t.downloadFailed)
+        )
       }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : t.downloadFailed)
@@ -300,7 +312,9 @@ export function GradeDetailContent({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(`/grades/add/${grade.id}/selection`)}
+              onClick={() =>
+                router.push(`/${lang}/grades/add/${grade.id}/selection`)
+              }
             >
               <Pencil className="me-2 h-4 w-4" />
               {t.editGrade}
@@ -369,7 +383,7 @@ export function GradeDetailContent({
                     {itemType === "assignment"
                       ? t.assignment
                       : itemType === "exam"
-                        ? t.exam || "Exam"
+                        ? t.exam
                         : t.grade}
                   </Badge>
                 </div>
@@ -421,7 +435,9 @@ export function GradeDetailContent({
                 {/* Score Display */}
                 <div className="bg-muted/50 flex flex-col items-center justify-center rounded-lg p-4">
                   <p className="text-4xl font-bold">
-                    {Number(grade.score)}/{Number(grade.maxScore)}
+                    <Ltr>
+                      {Number(grade.score)}/{Number(grade.maxScore)}
+                    </Ltr>
                   </p>
                   <p className="text-muted-foreground text-sm">{t.score}</p>
                 </div>
@@ -430,7 +446,7 @@ export function GradeDetailContent({
                 <div className="flex flex-col justify-center gap-2 p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-2xl font-bold">
-                      {grade.percentage.toFixed(0)}%
+                      <Ltr>{grade.percentage.toFixed(0)}%</Ltr>
                     </p>
                     <Badge variant={isPassing ? "default" : "destructive"}>
                       {isPassing ? t.passStatus : t.failStatus}
@@ -448,7 +464,7 @@ export function GradeDetailContent({
                     variant={getGradeVariant(grade.grade)}
                     className="px-4 py-2 text-2xl"
                   >
-                    {grade.grade}
+                    <Ltr>{grade.grade}</Ltr>
                   </Badge>
                   <p className="text-muted-foreground mt-2 text-sm">
                     {t.grade}
@@ -459,20 +475,30 @@ export function GradeDetailContent({
                 <div className="flex flex-col justify-center gap-2 p-4">
                   <div className="flex items-center gap-2">
                     <p className="text-lg font-semibold">
-                      {classStats.classAverage.toFixed(1)}%
+                      <Ltr>{classStats.classAverage.toFixed(1)}%</Ltr>
                     </p>
-                    <Badge variant={isAboveAverage ? "default" : "secondary"}>
-                      {isAboveAverage ? t.aboveAverage : t.belowAverage}
-                    </Badge>
+                    {hasPeers && (
+                      <Badge
+                        variant={
+                          averageStanding === "below" ? "secondary" : "default"
+                        }
+                      >
+                        {averageStanding === "above"
+                          ? t.aboveAverage
+                          : averageStanding === "below"
+                            ? t.belowAverage
+                            : t.atAverage}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-muted-foreground text-sm">
                     {t.classAverage}
                   </p>
                   {studentRank.rank > 0 && (
                     <p className="text-muted-foreground text-xs">
-                      {t.rank} #{studentRank.rank} {t.outOf}{" "}
+                      {t.rank} <Ltr>#{studentRank.rank}</Ltr> {t.outOf}{" "}
                       {studentRank.totalStudents} ({t.percentile}:{" "}
-                      {studentRank.percentile}%)
+                      <Ltr>{studentRank.percentile}%</Ltr>)
                     </p>
                   )}
                 </div>
@@ -501,9 +527,9 @@ export function GradeDetailContent({
                 )}
                 <Separator />
                 <div className="text-muted-foreground flex flex-col gap-1 text-xs">
-                  {grade.gradedBy && (
+                  {gradedByName && (
                     <p>
-                      {t.gradedBy}: {grade.gradedBy}
+                      {t.gradedBy}: <bdi dir="auto">{gradedByName}</bdi>
                     </p>
                   )}
                   <p>
@@ -533,17 +559,28 @@ export function GradeDetailContent({
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm">
-                    {t.average}: {history.average.toFixed(1)}%
+                    {t.average}: <Ltr>{history.average.toFixed(1)}%</Ltr>
                   </p>
                 </div>
 
                 {/* Mini bar chart */}
                 {historyChartData.length > 1 ? (
-                  <div className="h-[120px]">
+                  // dir="ltr" keeps recharts' SVG text unmirrored; the axes
+                  // themselves flip for Arabic (reversed x, y on the right).
+                  <div className="h-[120px]" dir="ltr">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={historyChartData}>
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10 }}
+                          reversed={isRtl}
+                        />
+                        <YAxis
+                          domain={[0, 100]}
+                          tick={{ fontSize: 10 }}
+                          width={32}
+                          orientation={isRtl ? "right" : "left"}
+                        />
                         <Tooltip
                           formatter={(value: number) => [
                             `${value}%`,
@@ -585,16 +622,28 @@ export function GradeDetailContent({
                 <div className="flex flex-col gap-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-lg font-semibold text-green-600">
-                        {classStats.highestScore.toFixed(0)}%
+                      <p
+                        className={
+                          hasPeers
+                            ? "text-lg font-semibold text-green-600"
+                            : "text-lg font-semibold"
+                        }
+                      >
+                        <Ltr>{classStats.highestScore.toFixed(0)}%</Ltr>
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {t.highestScore}
                       </p>
                     </div>
                     <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-lg font-semibold text-red-600">
-                        {classStats.lowestScore.toFixed(0)}%
+                      <p
+                        className={
+                          hasPeers
+                            ? "text-lg font-semibold text-red-600"
+                            : "text-lg font-semibold"
+                        }
+                      >
+                        <Ltr>{classStats.lowestScore.toFixed(0)}%</Ltr>
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {t.lowestScore}
@@ -608,26 +657,34 @@ export function GradeDetailContent({
                     <div className="mt-1 flex items-center gap-2">
                       <span className="text-sm">{t.yourScore}:</span>
                       <Badge variant={getGradeVariant(grade.grade)}>
-                        {grade.grade}
+                        <Ltr>{grade.grade}</Ltr>
                       </Badge>
                       <span className="text-sm">
-                        ({grade.percentage.toFixed(0)}%)
+                        (<Ltr>{grade.percentage.toFixed(0)}%</Ltr>)
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Distribution chart */}
-                <div className="h-[150px]">
+                <div className="h-[150px]" dir="ltr">
                   {distributionChartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={distributionChartData} layout="vertical">
-                        <XAxis type="number" tick={{ fontSize: 10 }} />
+                        {/* Counts read from the tooltip; a numeric axis over
+                            one or two students only drew a stray 0–1 scale. */}
+                        <XAxis
+                          type="number"
+                          hide
+                          allowDecimals={false}
+                          reversed={isRtl}
+                        />
                         <YAxis
                           dataKey="grade"
                           type="category"
                           tick={{ fontSize: 10 }}
                           width={30}
+                          orientation={isRtl ? "right" : "left"}
                         />
                         <Tooltip
                           formatter={(value: number) => [
@@ -635,7 +692,10 @@ export function GradeDetailContent({
                             t.studentsInClass,
                           ]}
                         />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                        <Bar
+                          dataKey="count"
+                          radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
+                        >
                           {distributionChartData.map((entry, index) => (
                             <Cell
                               key={`cell-${index}`}

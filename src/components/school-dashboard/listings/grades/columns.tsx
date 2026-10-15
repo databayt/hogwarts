@@ -14,55 +14,11 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
+import { Ltr } from "@/components/atom/ltr"
 import { useModal } from "@/components/atom/modal/context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
-
-// Helper to extract assignment type badge - using short labels
-function getAssignmentBadge(title: string): { name: string; type: string } {
-  const lower = title.toLowerCase()
-  if (lower.includes("homework"))
-    return {
-      name: formatWeekLabel(title.replace(/homework\s*/i, "").trim()) || "HW",
-      type: "HW",
-    }
-  if (lower.includes("quiz"))
-    return {
-      name: formatWeekLabel(title.replace(/quiz\s*/i, "").trim()) || "Quiz",
-      type: "Quiz",
-    }
-  if (lower.includes("exam"))
-    return {
-      name: formatWeekLabel(title.replace(/exam\s*/i, "").trim()) || "Exam",
-      type: "Exam",
-    }
-  if (lower.includes("project"))
-    return {
-      name: formatWeekLabel(title.replace(/project\s*/i, "").trim()) || "Proj",
-      type: "Proj",
-    }
-  if (lower.includes("test"))
-    return {
-      name: formatWeekLabel(title.replace(/test\s*/i, "").trim()) || "Test",
-      type: "Test",
-    }
-  if (lower.includes("midterm")) return { name: "Mid", type: "Mid" }
-  if (lower.includes("final")) return { name: "Final", type: "Final" }
-  return { name: formatWeekLabel(title), type: "Assgn" }
-}
-
-// Simplify week labels: "Week 1" → "W1", "Week1" → "W1", "week 10" → "W10"
-function formatWeekLabel(text: string): string {
-  if (!text) return text
-  return text
-    .replace(/\bweek\s*(\d+)\b/gi, "W$1") // "Week 1" or "week1" → "W1"
-    .replace(/\b1st\s*week\b/gi, "W1")
-    .replace(/\b2nd\s*week\b/gi, "W2")
-    .replace(/\b3rd\s*week\b/gi, "W3")
-    .replace(/\b(\d+)(st|nd|rd|th)\s*week\b/gi, "W$1")
-    .trim()
-}
 
 // Helper to extract class badge info
 function getClassBadge(className: string): { name: string; section?: string } {
@@ -86,6 +42,8 @@ export type ResultRow = {
   id: string
   studentName: string
   assignmentTitle: string
+  /** AssessmentType or ExamType of the graded item, null when unknown. */
+  kind?: string | null
   className: string
   score: number
   maxScore: number
@@ -123,15 +81,20 @@ export const resultColumns = (
       meta: { label: t.assignment, variant: "text" },
       id: "assignmentTitle",
       enableColumnFilter: true,
-      cell: ({ getValue }) => {
+      cell: ({ row, getValue }) => {
         const title = getValue<string>() || ""
-        const { name, type } = getAssignmentBadge(title)
+        const kind = row.original.kind
+        const kindLabel = kind
+          ? (t.sourceTypes as Record<string, string>)[kind]
+          : undefined
         return (
           <div className="flex items-center gap-2">
-            <span>{name}</span>
-            <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
-              {type}
-            </Badge>
+            <span>{title || t.unknown}</span>
+            {kindLabel && (
+              <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                {kindLabel}
+              </Badge>
+            )}
           </div>
         )
       },
@@ -199,12 +162,14 @@ export const resultColumns = (
       cell: ({ getValue }) => {
         const value = getValue<number>() || 0
         return (
-          <small className="tabular-nums">
-            {new Intl.NumberFormat(locale, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            }).format(value)}
-            %
+          <small>
+            <Ltr>
+              {new Intl.NumberFormat(locale, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(value)}
+              %
+            </Ltr>
           </small>
         )
       },
@@ -219,7 +184,11 @@ export const resultColumns = (
       enableColumnFilter: true,
       cell: ({ getValue }) => {
         const grade = getValue<string>() || ""
-        return <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
+        return (
+          <Badge variant={getGradeVariant(grade)}>
+            <Ltr>{grade}</Ltr>
+          </Badge>
+        )
       },
     },
     {

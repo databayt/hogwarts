@@ -26,6 +26,7 @@
  */
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
@@ -117,7 +118,7 @@ export async function computeReportCards(
     where: { id: input.termId, schoolId },
     select: { id: true, startDate: true, endDate: true },
   })
-  if (!term) return { ok: false, error: "Term not found" }
+  if (!term) return { ok: false, error: ACTION_ERRORS.NOT_FOUND }
 
   const gradingConfig = await db.schoolGradingConfig.findUnique({
     where: { schoolId },
@@ -199,7 +200,6 @@ export async function computeReportCards(
     academic.map((a) => [a.id, a.yearLevelId ?? null])
   )
   const inCohort = new Set(studentIds)
-
 
   const key = (studentId: string, subjectId: string) =>
     `${studentId}:${subjectId}`

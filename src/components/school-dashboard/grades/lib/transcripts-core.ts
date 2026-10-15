@@ -19,6 +19,7 @@
  */
 import crypto from "crypto"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
@@ -86,7 +87,8 @@ export async function generateTranscriptCore(
       where: { id: input.studentId, schoolId },
       select: { id: true, firstName: true, middleName: true, lastName: true },
     })
-    if (!student) return { success: false, error: "Student not found" }
+    if (!student)
+      return { success: false, error: ACTION_ERRORS.STUDENT_NOT_FOUND }
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -106,7 +108,10 @@ export async function generateTranscriptCore(
     })
 
     if (reportCards.length === 0) {
-      return { success: false, error: "No report cards found for this student" }
+      return {
+        success: false,
+        error: ACTION_ERRORS.NO_REPORT_CARDS_FOR_STUDENT,
+      }
     }
 
     const yearMap = new Map<string, TranscriptYearData>()

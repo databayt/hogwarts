@@ -12,6 +12,7 @@ import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, TextareaField } from "@/components/form"
@@ -70,12 +71,16 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
       const data = form.getValues()
       const saveResult = await updateGradeScoring(resultId, data)
       if (!saveResult.success) {
-        ErrorToast(saveResult.error || d?.failedToSave || "")
+        ErrorToast(
+          actionErrorMessage(saveResult.error, dict, d?.failedToSave || "")
+        )
         throw new Error(saveResult.error)
       }
       const completeResult = await completeGradeWizard(resultId)
       if (!completeResult.success) {
-        ErrorToast(completeResult.error || d?.failedToSave || "")
+        ErrorToast(
+          actionErrorMessage(completeResult.error, dict, d?.failedToSave || "")
+        )
         throw new Error(completeResult.error)
       }
       router.push("/grades")

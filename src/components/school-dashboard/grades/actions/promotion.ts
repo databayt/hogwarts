@@ -435,9 +435,12 @@ export async function overridePromotionDecision(input: {
       where: { id: input.candidateId, schoolId },
       include: { batch: true },
     })
-    if (!candidate) return { success: false, error: "Candidate not found" }
+    if (!candidate) return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     if (candidate.batch.status !== "READY_FOR_REVIEW") {
-      return { success: false, error: "Batch is not in review status" }
+      return {
+        success: false,
+        error: ACTION_ERRORS.PROMOTION_BATCH_NOT_IN_REVIEW,
+      }
     }
 
     await db.promotionCandidate.update({
@@ -479,11 +482,11 @@ export async function approvePromotionBatch(
     const batch = await db.promotionBatch.findFirst({
       where: { id: batchId, schoolId },
     })
-    if (!batch) return { success: false, error: "Batch not found" }
+    if (!batch) return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     if (batch.status !== "READY_FOR_REVIEW") {
       return {
         success: false,
-        error: "Batch must be in review status to approve",
+        error: ACTION_ERRORS.PROMOTION_BATCH_NOT_IN_REVIEW,
       }
     }
 
@@ -536,11 +539,11 @@ export async function executePromotions(
     const batch = await db.promotionBatch.findFirst({
       where: { id: batchId, schoolId },
     })
-    if (!batch) return { success: false, error: "Batch not found" }
+    if (!batch) return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     if (batch.status !== "APPROVED") {
       return {
         success: false,
-        error: "Batch must be approved before execution",
+        error: ACTION_ERRORS.PROMOTION_BATCH_NOT_APPROVED,
       }
     }
 
