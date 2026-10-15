@@ -24,6 +24,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import { enumLabel } from "@/components/school-dashboard/school/format"
 
 import { createTemplate, updateTemplate } from "./actions"
 
@@ -56,6 +58,8 @@ export function TemplateFormDialog({
   lang,
 }: Props) {
   const isEditing = !!template
+  const dictionary = useDictionaryFallback()
+  const t = dictionary.schoolConsole.templates
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
 
@@ -84,7 +88,8 @@ export function TemplateFormDialog({
         }
         onOpenChange(false)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred")
+        console.error("template save failed:", err)
+        setError(t.saveFailed)
       }
     })
   }
@@ -94,14 +99,14 @@ export function TemplateFormDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Template" : "Create Template"}
+            {isEditing ? t.editTemplate : t.createTemplate}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Notification Type</Label>
+              <Label htmlFor="type">{t.notificationType}</Label>
               <Select
                 name="type"
                 defaultValue={template?.type || "announcement"}
@@ -112,7 +117,7 @@ export function TemplateFormDialog({
                 <SelectContent>
                   {NOTIFICATION_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.replace(/_/g, " ")}
+                      {enumLabel(t.types, type)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -120,7 +125,7 @@ export function TemplateFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="channel">Channel</Label>
+              <Label htmlFor="channel">{t.channel}</Label>
               <Select
                 name="channel"
                 defaultValue={template?.channel || "email"}
@@ -131,7 +136,7 @@ export function TemplateFormDialog({
                 <SelectContent>
                   {CHANNELS.map((ch) => (
                     <SelectItem key={ch} value={ch}>
-                      {ch.replace(/_/g, " ")}
+                      {enumLabel(t.channels, ch)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -140,45 +145,45 @@ export function TemplateFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t.titleLabel}</Label>
             <Input
               id="title"
               name="title"
               defaultValue={template?.title || ""}
-              placeholder="Notification title (supports {{variable}} placeholders)"
+              placeholder={t.titlePlaceholder}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="body">Body</Label>
+            <Label htmlFor="body">{t.body}</Label>
             <Textarea
               id="body"
               name="body"
               defaultValue={template?.body || ""}
-              placeholder="Notification body text..."
+              placeholder={t.bodyPlaceholder}
               rows={4}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="emailSubject">Email Subject (optional)</Label>
+            <Label htmlFor="emailSubject">{t.emailSubject}</Label>
             <Input
               id="emailSubject"
               name="emailSubject"
               defaultValue={template?.emailSubject || ""}
-              placeholder="Custom email subject line"
+              placeholder={t.emailSubjectPlaceholder}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="emailBody">Email Body (optional)</Label>
+            <Label htmlFor="emailBody">{t.emailBody}</Label>
             <Textarea
               id="emailBody"
               name="emailBody"
               defaultValue={template?.emailBody || ""}
-              placeholder="Custom HTML email body..."
+              placeholder={t.emailBodyPlaceholder}
               rows={3}
             />
           </div>
@@ -191,7 +196,7 @@ export function TemplateFormDialog({
               name="active"
               defaultChecked={template?.active ?? true}
             />
-            <Label htmlFor="active">Active</Label>
+            <Label htmlFor="active">{t.active}</Label>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -202,14 +207,14 @@ export function TemplateFormDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending
-                ? "Saving..."
+                ? t.saving
                 : isEditing
-                  ? "Update Template"
-                  : "Create Template"}
+                  ? t.updateTemplate
+                  : t.createTemplate}
             </Button>
           </div>
         </form>

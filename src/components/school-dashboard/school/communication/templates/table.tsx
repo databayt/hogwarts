@@ -27,6 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import {
+  enumLabel,
+  fill,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 import { deleteTemplate } from "./actions"
 import { TemplateFormDialog } from "./form"
@@ -37,18 +43,26 @@ interface Props {
 }
 
 export function TemplateTable({ templates, lang }: Props) {
+  const dictionary = useDictionaryFallback()
+  const t = dictionary.schoolConsole.templates
   const [editTemplate, setEditTemplate] = useState<NotificationTemplate | null>(
     null
   )
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
   const [isPending, startTransition] = useTransition()
 
   const handleDelete = () => {
     if (!deleteId) return
     startTransition(async () => {
-      await deleteTemplate(deleteId)
-      setDeleteId(null)
+      try {
+        await deleteTemplate(deleteId)
+        setDeleteId(null)
+      } catch (err) {
+        console.error("deleteTemplate failed:", err)
+        setDeleteError(t.deleteFailed)
+      }
     })
   }
 
@@ -56,14 +70,16 @@ export function TemplateTable({ templates, lang }: Props) {
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Notification Templates</h3>
+          <h3 className="text-lg font-semibold">{t.heading}</h3>
           <p className="text-muted-foreground text-sm">
-            {templates.length} templates configured
+            {fill(t.configuredCount, {
+              count: formatConsoleNumber(templates.length, lang),
+            })}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="me-2 h-4 w-4" />
-          Create Template
+          {t.createTemplate}
         </Button>
       </div>
 
@@ -71,11 +87,11 @@ export function TemplateTable({ templates, lang }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Channel</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead>{t.columns.type}</TableHead>
+              <TableHead>{t.columns.channel}</TableHead>
+              <TableHead>{t.columns.title}</TableHead>
+              <TableHead>{t.columns.status}</TableHead>
+              <TableHead className="w-[100px]">{t.columns.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,24 +101,26 @@ export function TemplateTable({ templates, lang }: Props) {
                   colSpan={5}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No templates yet. Create your first template.
+                  {t.empty}
                 </TableCell>
               </TableRow>
             ) : (
               templates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">
-                    {template.type.replace(/_/g, " ")}
+                    {enumLabel(t.types, template.type)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{template.channel}</Badge>
+                    <Badge variant="outline">
+                      {enumLabel(t.channels, template.channel)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate">
                     {template.title}
                   </TableCell>
                   <TableCell>
                     <Badge variant={template.active ? "default" : "secondary"}>
-                      {template.active ? "Active" : "Inactive"}
+                      {template.active ? t.active : t.inactive}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -111,13 +129,20 @@ export function TemplateTable({ templates, lang }: Props) {
                         variant="ghost"
                         size="icon"
                         onClick={() => setEditTemplate(template)}
+                        aria-label={t.editTemplate}
+                        title={t.editTemplate}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setDeleteId(template.id)}
+                        onClick={() => {
+                          setDeleteError("")
+                          setDeleteId(template.id)
+                        }}
+                        aria-label={t.deleteTemplate}
+                        title={t.deleteTemplate}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -154,16 +179,16 @@ export function TemplateTable({ templates, lang }: Props) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this template? This action cannot
-              be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t.deleteTemplate}</AlertDialogTitle>
+            <AlertDialogDescription>{t.deleteConfirm}</AlertDialogDescription>
+            {deleteError && (
+              <p className="text-sm text-red-500">{deleteError}</p>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              {isPending ? "Deleting..." : "Delete"}
+              {isPending ? t.deleting : t.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

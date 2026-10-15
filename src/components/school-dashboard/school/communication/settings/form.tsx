@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateAnnouncementConfig } from "./actions"
 
@@ -36,10 +37,14 @@ interface Props {
 export function SettingsForm({ config, lang }: Props) {
   const [isPending, startTransition] = useTransition()
   const [success, setSuccess] = useState(false)
+  const [error, setError] = useState("")
+  const dictionary = useDictionaryFallback()
+  const t = dictionary.schoolConsole.notificationSettings
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSuccess(false)
+    setError("")
     const formData = new FormData(e.currentTarget)
 
     const data = {
@@ -59,8 +64,13 @@ export function SettingsForm({ config, lang }: Props) {
     }
 
     startTransition(async () => {
-      await updateAnnouncementConfig(data as any)
-      setSuccess(true)
+      try {
+        await updateAnnouncementConfig(data as any)
+        setSuccess(true)
+      } catch (err) {
+        console.error("updateAnnouncementConfig failed:", err)
+        setError(t.saveFailed)
+      }
     })
   }
 
@@ -71,31 +81,29 @@ export function SettingsForm({ config, lang }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Publishing Defaults
+            {t.publishing.title}
           </CardTitle>
-          <CardDescription>
-            Default settings for new announcements
-          </CardDescription>
+          <CardDescription>{t.publishing.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Default Scope</Label>
+              <Label>{t.publishing.defaultScope}</Label>
               <Select name="defaultScope" defaultValue={config.defaultScope}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="school">Whole School</SelectItem>
-                  <SelectItem value="grade">Grade</SelectItem>
-                  <SelectItem value="section">Section</SelectItem>
-                  <SelectItem value="role">Role</SelectItem>
+                  <SelectItem value="school">{t.scope.school}</SelectItem>
+                  <SelectItem value="grade">{t.scope.grade}</SelectItem>
+                  <SelectItem value="section">{t.scope.section}</SelectItem>
+                  <SelectItem value="role">{t.scope.role}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Default Priority</Label>
+              <Label>{t.publishing.defaultPriority}</Label>
               <Select
                 name="defaultPriority"
                 defaultValue={config.defaultPriority}
@@ -104,10 +112,10 @@ export function SettingsForm({ config, lang }: Props) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="low">{t.priority.low}</SelectItem>
+                  <SelectItem value="normal">{t.priority.normal}</SelectItem>
+                  <SelectItem value="high">{t.priority.high}</SelectItem>
+                  <SelectItem value="urgent">{t.priority.urgent}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -115,16 +123,16 @@ export function SettingsForm({ config, lang }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label>Auto-Publish</Label>
+              <Label>{t.publishing.autoPublish}</Label>
               <p className="text-muted-foreground text-xs">
-                Publish announcements immediately without review
+                {t.publishing.autoPublishHint}
               </p>
             </div>
             <Switch name="autoPublish" defaultChecked={config.autoPublish} />
           </div>
 
           <div className="space-y-2">
-            <Label>Default Expiry (days)</Label>
+            <Label>{t.publishing.defaultExpiry}</Label>
             <Input
               name="defaultExpiryDays"
               type="number"
@@ -139,17 +147,15 @@ export function SettingsForm({ config, lang }: Props) {
       {/* Notification Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Notification Delivery</CardTitle>
-          <CardDescription>
-            How announcements are delivered to users
-          </CardDescription>
+          <CardTitle>{t.delivery.title}</CardTitle>
+          <CardDescription>{t.delivery.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label>Email on Publish</Label>
+              <Label>{t.delivery.emailOnPublish}</Label>
               <p className="text-muted-foreground text-xs">
-                Send email notifications when announcements are published
+                {t.delivery.emailOnPublishHint}
               </p>
             </div>
             <Switch
@@ -160,9 +166,9 @@ export function SettingsForm({ config, lang }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label>Push Notifications</Label>
+              <Label>{t.delivery.push}</Label>
               <p className="text-muted-foreground text-xs">
-                Send push notifications (when available)
+                {t.delivery.pushHint}
               </p>
             </div>
             <Switch
@@ -173,7 +179,7 @@ export function SettingsForm({ config, lang }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Quiet Hours Start</Label>
+              <Label>{t.delivery.quietStart}</Label>
               <Input
                 name="quietHoursStart"
                 type="time"
@@ -181,7 +187,7 @@ export function SettingsForm({ config, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Quiet Hours End</Label>
+              <Label>{t.delivery.quietEnd}</Label>
               <Input
                 name="quietHoursEnd"
                 type="time"
@@ -191,7 +197,7 @@ export function SettingsForm({ config, lang }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Digest Frequency</Label>
+            <Label>{t.delivery.digest}</Label>
             <Select
               name="digestFrequency"
               defaultValue={config.digestFrequency}
@@ -200,9 +206,9 @@ export function SettingsForm({ config, lang }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="none">{t.digest.none}</SelectItem>
+                <SelectItem value="daily">{t.digest.daily}</SelectItem>
+                <SelectItem value="weekly">{t.digest.weekly}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -212,24 +218,22 @@ export function SettingsForm({ config, lang }: Props) {
       {/* Retention Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Data & Retention</CardTitle>
-          <CardDescription>
-            Tracking and data retention policies
-          </CardDescription>
+          <CardTitle>{t.retention.title}</CardTitle>
+          <CardDescription>{t.retention.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label>Read Tracking</Label>
+              <Label>{t.retention.readTracking}</Label>
               <p className="text-muted-foreground text-xs">
-                Track which users have read announcements
+                {t.retention.readTrackingHint}
               </p>
             </div>
             <Switch name="readTracking" defaultChecked={config.readTracking} />
           </div>
 
           <div className="space-y-2">
-            <Label>Retention Period (days)</Label>
+            <Label>{t.retention.period}</Label>
             <Input
               name="retentionDays"
               type="number"
@@ -241,16 +245,16 @@ export function SettingsForm({ config, lang }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label>Auto-Archive</Label>
+              <Label>{t.retention.autoArchive}</Label>
               <p className="text-muted-foreground text-xs">
-                Automatically archive old announcements
+                {t.retention.autoArchiveHint}
               </p>
             </div>
             <Switch name="autoArchive" defaultChecked={config.autoArchive} />
           </div>
 
           <div className="space-y-2">
-            <Label>Archive After (days)</Label>
+            <Label>{t.retention.archiveAfter}</Label>
             <Input
               name="archiveAfterDays"
               type="number"
@@ -262,13 +266,12 @@ export function SettingsForm({ config, lang }: Props) {
         </CardContent>
       </Card>
 
-      {success && (
-        <p className="text-sm text-green-600">Settings saved successfully!</p>
-      )}
+      {success && <p className="text-sm text-green-600">{t.saved}</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <Button type="submit" disabled={isPending}>
         <Save className="me-2 h-4 w-4" />
-        {isPending ? "Saving..." : "Save Settings"}
+        {isPending ? t.saving : t.save}
       </Button>
     </form>
   )

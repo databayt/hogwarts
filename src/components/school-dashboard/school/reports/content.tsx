@@ -21,6 +21,8 @@ interface Props {
 }
 
 export default async function ReportsContent({ dictionary, lang }: Props) {
+  const t = dictionary.schoolConsole.reports
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -29,16 +31,16 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-500" />
-              Academic Reports
+              {t.academic.title}
             </CardTitle>
-            <CardDescription>Student performance analytics</CardDescription>
+            <CardDescription>{t.academic.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Analyze student grades, exam results, and academic progress.
+              {t.academic.description}
             </p>
             <Button asChild>
-              <Link href={`/${lang}/exams/result`}>View Academic Reports</Link>
+              <Link href={`/${lang}/exams/result`}>{t.academic.action}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -48,18 +50,17 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-green-500" />
-              Attendance Reports
+              {t.attendance.title}
             </CardTitle>
-            <CardDescription>Attendance patterns and trends</CardDescription>
+            <CardDescription>{t.attendance.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              View attendance records, absence patterns, and class
-              participation.
+              {t.attendance.description}
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/attendance/reports`}>
-                View Attendance Reports
+                {t.attendance.action}
               </Link>
             </Button>
           </CardContent>
@@ -70,17 +71,17 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-purple-500" />
-              Financial Reports
+              {t.financial.title}
             </CardTitle>
-            <CardDescription>Revenue and expense analysis</CardDescription>
+            <CardDescription>{t.financial.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Track revenue, expenses, and financial performance metrics.
+              {t.financial.description}
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/finance/reports`}>
-                View Financial Reports
+                {t.financial.action}
               </Link>
             </Button>
           </CardContent>

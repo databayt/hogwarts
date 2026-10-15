@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { formatNumber } from "@/components/school-dashboard/finance/lib/format-money"
 
 interface Props {
   dictionary: Dictionary
@@ -31,7 +32,9 @@ interface Props {
 
 export default async function AnalysisContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
-  const isArabic = lang === "ar"
+  const t = dictionary.schoolConsole.analysis
+  const num = (v: number, opts?: Intl.NumberFormatOptions) =>
+    formatNumber(v, lang, opts)
 
   // Fetch analytics data
   let totalStudents = 0
@@ -67,20 +70,17 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
 
   const studentTeacherRatio =
     totalTeachers > 0 ? Math.round(totalStudents / totalTeachers) : 0
+  // Percent figures arrive as 0-100; Intl's percent style expects a fraction.
+  const pct = (v: number) =>
+    num(v / 100, { style: "percent", maximumFractionDigits: 1 })
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {isArabic ? "تحليل المدرسة" : "School Analysis"}
-          </CardTitle>
-          <CardDescription>
-            {isArabic
-              ? "تحليلات ورؤى حول أداء المدرسة والحضور والمقاييس الأكاديمية."
-              : "Analytics and insights about your school performance, attendance, and academic metrics."}
-          </CardDescription>
+          <CardTitle>{t.title}</CardTitle>
+          <CardDescription>{t.description}</CardDescription>
         </CardHeader>
       </Card>
 
@@ -89,54 +89,56 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Students
+              {t.totalStudents}
             </CardTitle>
             <GraduationCap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {totalStudents.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">Enrolled students</p>
+            <div className="text-2xl font-bold">{num(totalStudents)}</div>
+            <p className="text-muted-foreground text-xs">
+              {t.enrolledStudents}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Teachers
+              {t.totalTeachers}
             </CardTitle>
             <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalTeachers}</div>
-            <p className="text-muted-foreground text-xs">Active faculty</p>
+            <div className="text-2xl font-bold">{num(totalTeachers)}</div>
+            <p className="text-muted-foreground text-xs">{t.activeFaculty}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Student:Teacher
+              {t.studentTeacher}
             </CardTitle>
             <Target className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{studentTeacherRatio}:1</div>
-            <p className="text-muted-foreground text-xs">Ratio</p>
+            <div className="text-2xl font-bold" dir="ltr">
+              {num(studentTeacherRatio)}:1
+            </div>
+            <p className="text-muted-foreground text-xs">{t.ratio}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Attendance Rate
+              {t.attendanceRate}
             </CardTitle>
             <Activity className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{attendanceRate}%</div>
-            <p className="text-muted-foreground text-xs">Average this term</p>
+            <div className="text-2xl font-bold">{pct(attendanceRate)}</div>
+            <p className="text-muted-foreground text-xs">{t.averageThisTerm}</p>
           </CardContent>
         </Card>
       </div>
@@ -149,8 +151,8 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
             <div className="flex items-center gap-2">
               <TrendingUp className="text-primary h-5 w-5" />
               <div>
-                <CardTitle>Enrollment Trends</CardTitle>
-                <CardDescription>Student enrollment over time</CardDescription>
+                <CardTitle>{t.enrollmentTrends}</CardTitle>
+                <CardDescription>{t.enrollmentOverTime}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -159,7 +161,7 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
               <div className="text-center">
                 <BarChart3 className="text-muted-foreground mx-auto mb-2 h-10 w-10" />
                 <p className="text-muted-foreground text-sm">
-                  Chart coming soon
+                  {t.chartComingSoon}
                 </p>
               </div>
             </div>
@@ -172,8 +174,8 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
             <div className="flex items-center gap-2">
               <PieChart className="text-primary h-5 w-5" />
               <div>
-                <CardTitle>Grade Distribution</CardTitle>
-                <CardDescription>Students by year level</CardDescription>
+                <CardTitle>{t.gradeDistribution}</CardTitle>
+                <CardDescription>{t.studentsByLevel}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -196,10 +198,8 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
           <div className="flex items-center gap-2">
             <Calendar className="text-primary h-5 w-5" />
             <div>
-              <CardTitle>Academic Performance</CardTitle>
-              <CardDescription>
-                Key academic metrics and insights
-              </CardDescription>
+              <CardTitle>{t.academicPerformance}</CardTitle>
+              <CardDescription>{t.academicPerformanceDesc}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -207,21 +207,23 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
           <div className="grid gap-4 md:grid-cols-4">
             <div className="rounded-lg border p-4">
               <div className="text-2xl font-bold text-green-600">
-                {passRate}%
+                {pct(passRate)}
               </div>
-              <p className="text-muted-foreground text-sm">Pass Rate</p>
+              <p className="text-muted-foreground text-sm">{t.passRate}</p>
             </div>
             <div className="rounded-lg border p-4">
-              <div className="text-2xl font-bold">{totalSubjects}</div>
-              <p className="text-muted-foreground text-sm">Subjects Offered</p>
+              <div className="text-2xl font-bold">{num(totalSubjects)}</div>
+              <p className="text-muted-foreground text-sm">
+                {t.subjectsOffered}
+              </p>
             </div>
             <div className="rounded-lg border p-4">
-              <div className="text-2xl font-bold">{totalClasses}</div>
-              <p className="text-muted-foreground text-sm">Active Classes</p>
+              <div className="text-2xl font-bold">{num(totalClasses)}</div>
+              <p className="text-muted-foreground text-sm">{t.activeClasses}</p>
             </div>
             <div className="rounded-lg border p-4">
               <div className="text-2xl font-bold">-</div>
-              <p className="text-muted-foreground text-sm">Avg. GPA</p>
+              <p className="text-muted-foreground text-sm">{t.avgGpa}</p>
             </div>
           </div>
         </CardContent>
@@ -237,9 +239,9 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {totalStudents + totalTeachers}
+                  {num(totalStudents + totalTeachers)}
                 </p>
-                <p className="text-muted-foreground text-sm">Total People</p>
+                <p className="text-muted-foreground text-sm">{t.totalPeople}</p>
               </div>
             </div>
           </CardContent>
@@ -252,9 +254,9 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
                 <Target className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{attendanceRate}%</p>
+                <p className="text-2xl font-bold">{pct(attendanceRate)}</p>
                 <p className="text-muted-foreground text-sm">
-                  Attendance Goal Met
+                  {t.attendanceGoalMet}
                 </p>
               </div>
             </div>
@@ -268,9 +270,9 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
                 <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{passRate}%</p>
+                <p className="text-2xl font-bold">{pct(passRate)}</p>
                 <p className="text-muted-foreground text-sm">
-                  Academic Success
+                  {t.academicSuccess}
                 </p>
               </div>
             </div>

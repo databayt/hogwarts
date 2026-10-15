@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Bell, Mail, Megaphone, Send } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +16,12 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  enumLabel,
+  fill,
+  formatConsoleDate,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 interface Props {
   dictionary: Dictionary
@@ -28,6 +33,8 @@ export default async function CommunicationContent({
   lang,
 }: Props) {
   const { schoolId } = await getTenantContext()
+  const t = dictionary.schoolConsole.communication
+  const num = (v: number) => formatConsoleNumber(v, lang)
 
   let totalAnnouncements = 0
   let activeAnnouncements = 0
@@ -93,14 +100,14 @@ export default async function CommunicationContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Announcements
+              {t.stats.totalAnnouncements}
             </CardTitle>
             <Megaphone className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAnnouncements}</div>
+            <div className="text-2xl font-bold">{num(totalAnnouncements)}</div>
             <p className="text-muted-foreground text-xs">
-              {activeAnnouncements} active
+              {fill(t.stats.activeCount, { count: num(activeAnnouncements) })}
             </p>
           </CardContent>
         </Card>
@@ -108,14 +115,14 @@ export default async function CommunicationContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Email Templates
+              {t.stats.emailTemplates}
             </CardTitle>
             <Mail className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalTemplates}</div>
+            <div className="text-2xl font-bold">{num(totalTemplates)}</div>
             <p className="text-muted-foreground text-xs">
-              Configured templates
+              {t.stats.configuredTemplates}
             </p>
           </CardContent>
         </Card>
@@ -123,28 +130,30 @@ export default async function CommunicationContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Notifications Sent
+              {t.stats.notificationsSent}
             </CardTitle>
             <Send className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {sentThisMonth.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">This month</p>
+            <div className="text-2xl font-bold">{num(sentThisMonth)}</div>
+            <p className="text-muted-foreground text-xs">{t.stats.thisMonth}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Recent Broadcasts
+              {t.stats.recentBroadcasts}
             </CardTitle>
             <Bell className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{recentBatches.length}</div>
-            <p className="text-muted-foreground text-xs">Last 5 batches</p>
+            <div className="text-2xl font-bold">
+              {num(recentBatches.length)}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              {t.stats.lastBatches}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -156,20 +165,17 @@ export default async function CommunicationContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
-              Email Templates
+              {t.tools.templates.title}
             </CardTitle>
-            <CardDescription>
-              Customizable notification templates
-            </CardDescription>
+            <CardDescription>{t.tools.templates.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Design and manage notification templates for various system
-              events.
+              {t.tools.templates.description}
             </p>
             <Button asChild>
               <Link href={`/${lang}/school/communication/templates`}>
-                Manage Templates
+                {t.tools.templates.action}
               </Link>
             </Button>
           </CardContent>
@@ -180,17 +186,17 @@ export default async function CommunicationContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Send className="h-5 w-5 text-green-500" />
-              Broadcast Messages
+              {t.tools.broadcast.title}
             </CardTitle>
-            <CardDescription>Mass messaging by role or class</CardDescription>
+            <CardDescription>{t.tools.broadcast.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Send bulk notifications to specific user groups.
+              {t.tools.broadcast.description}
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/school/communication/broadcast`}>
-                Send Broadcast
+                {t.tools.broadcast.action}
               </Link>
             </Button>
           </CardContent>
@@ -201,17 +207,17 @@ export default async function CommunicationContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-purple-500" />
-              Notification Settings
+              {t.tools.settings.title}
             </CardTitle>
-            <CardDescription>Configure delivery preferences</CardDescription>
+            <CardDescription>{t.tools.settings.subtitle}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Set up notification preferences, quiet hours, and digest settings.
+              {t.tools.settings.description}
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/school/communication/settings`}>
-                Configure Settings
+                {t.tools.settings.action}
               </Link>
             </Button>
           </CardContent>
@@ -222,7 +228,7 @@ export default async function CommunicationContent({
       {recentBatches.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Broadcast Activity</CardTitle>
+            <CardTitle>{t.recentActivity}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -234,8 +240,11 @@ export default async function CommunicationContent({
                   <div>
                     <p className="font-medium">{batch.title}</p>
                     <p className="text-muted-foreground text-xs">
-                      {new Date(batch.createdAt).toLocaleDateString()} &middot;{" "}
-                      {batch.sentCount}/{batch.totalCount} sent
+                      {formatConsoleDate(batch.createdAt, lang)} &middot;{" "}
+                      {fill(t.sentOf, {
+                        sent: num(batch.sentCount),
+                        total: num(batch.totalCount),
+                      })}
                     </p>
                   </div>
                   <span
@@ -247,7 +256,7 @@ export default async function CommunicationContent({
                           : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {batch.status}
+                    {enumLabel(t.batchStatus, batch.status)}
                   </span>
                 </div>
               ))}

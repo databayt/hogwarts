@@ -6,7 +6,6 @@ import { useState, useTransition } from "react"
 import type { NotificationBatch } from "@prisma/client"
 import { CheckCircle, Clock, Send, XCircle } from "lucide-react"
 
-import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,16 +26,22 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import {
+  fill,
+  formatConsoleDate,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 import { sendBroadcast } from "./actions"
 
 const ROLES = [
-  { value: "TEACHER", label: "Teachers" },
-  { value: "STUDENT", label: "Students" },
-  { value: "GUARDIAN", label: "Guardians" },
-  { value: "STAFF", label: "Staff" },
-  { value: "ADMIN", label: "Admins" },
-  { value: "ACCOUNTANT", label: "Accountants" },
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "STAFF",
+  "ADMIN",
+  "ACCOUNTANT",
 ] as const
 
 interface Props {
@@ -53,6 +58,9 @@ interface Props {
 }
 
 export function BroadcastForm({ grades, recentBatches, lang }: Props) {
+  const dictionary = useDictionaryFallback()
+  const t = dictionary.schoolConsole.broadcast
+  const num = (v: number) => formatConsoleNumber(v, lang)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -83,14 +91,12 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
     startTransition(async () => {
       try {
         const batch = await sendBroadcast(data as any)
-        setSuccess(
-          `Broadcast sent! ${batch.totalCount || 0} notifications created.`
-        )
+        setSuccess(fill(t.sent, { count: num(batch.totalCount || 0) }))
         ;(e.target as HTMLFormElement).reset()
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to send broadcast"
-        )
+        // Server errors are English codes; show the translated message.
+        console.error("sendBroadcast failed:", err)
+        setError(t.sendFailed)
       }
     })
   }
@@ -102,44 +108,48 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Send className="h-5 w-5" />
-            Send Broadcast
+            {t.sendTitle}
           </CardTitle>
-          <CardDescription>
-            Send a notification to a group of users by role, grade or section
-          </CardDescription>
+          <CardDescription>{t.sendDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Notification Type</Label>
+              <Label htmlFor="type">{t.notificationType}</Label>
               <Select name="type" defaultValue="announcement">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="announcement">Announcement</SelectItem>
-                  <SelectItem value="system_alert">System Alert</SelectItem>
-                  <SelectItem value="event_reminder">Event Reminder</SelectItem>
+                  <SelectItem value="announcement">
+                    {t.types.announcement}
+                  </SelectItem>
+                  <SelectItem value="system_alert">
+                    {t.types.system_alert}
+                  </SelectItem>
+                  <SelectItem value="event_reminder">
+                    {t.types.event_reminder}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t.titleLabel}</Label>
               <Input
                 id="title"
                 name="title"
-                placeholder="Broadcast title"
+                placeholder={t.titlePlaceholder}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="body">Message</Label>
+              <Label htmlFor="body">{t.message}</Label>
               <Textarea
                 id="body"
                 name="body"
-                placeholder="Type your broadcast message..."
+                placeholder={t.messagePlaceholder}
                 rows={4}
                 required
               />
@@ -147,15 +157,15 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="targetRole">Target Role (optional)</Label>
+                <Label htmlFor="targetRole">{t.targetRole}</Label>
                 <Select name="targetRole">
                   <SelectTrigger>
-                    <SelectValue placeholder="All roles" />
+                    <SelectValue placeholder={t.allRoles} />
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        {role.label}
+                      <SelectItem key={role} value={role}>
+                        {t.roles[role]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -163,10 +173,10 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="target">Grade or section (optional)</Label>
+                <Label htmlFor="target">{t.gradeOrSection}</Label>
                 <Select name="target">
                   <SelectTrigger id="target">
-                    <SelectValue placeholder="Whole school" />
+                    <SelectValue placeholder={t.wholeSchool} />
                   </SelectTrigger>
                   <SelectContent>
                     {grades.flatMap((grade) => [
@@ -189,7 +199,7 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               <Send className="me-2 h-4 w-4" />
-              {isPending ? "Sending..." : "Send Broadcast"}
+              {isPending ? t.sending : t.sendTitle}
             </Button>
           </form>
         </CardContent>
@@ -198,13 +208,13 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
       {/* Recent Batches */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Broadcasts</CardTitle>
-          <CardDescription>Last 10 broadcast messages</CardDescription>
+          <CardTitle>{t.recentTitle}</CardTitle>
+          <CardDescription>{t.recentDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           {recentBatches.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              No broadcasts sent yet
+              {t.empty}
             </p>
           ) : (
             <div className="space-y-3">
@@ -216,16 +226,21 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{batch.title}</p>
                     <p className="text-muted-foreground text-xs">
-                      {batch.creator?.username || batch.creator?.email} &middot;{" "}
-                      {new Date(batch.createdAt).toLocaleDateString()}
+                      <bdi dir="auto">
+                        {batch.creator?.username || batch.creator?.email}
+                      </bdi>{" "}
+                      &middot; {formatConsoleDate(batch.createdAt, lang)}
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {batch.sentCount}/{batch.totalCount} sent
+                      {fill(t.sentOf, {
+                        sent: num(batch.sentCount),
+                        total: num(batch.totalCount),
+                      })}
                       {batch.failedCount > 0 &&
-                        ` (${batch.failedCount} failed)`}
+                        ` (${fill(t.failedCount, { count: num(batch.failedCount) })})`}
                     </p>
                   </div>
-                  <StatusBadge status={batch.status} />
+                  <StatusBadge status={batch.status} labels={t.status} />
                 </div>
               ))}
             </div>
@@ -236,30 +251,36 @@ export function BroadcastForm({ grades, recentBatches, lang }: Props) {
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({
+  status,
+  labels,
+}: {
+  status: string
+  labels: { done: string; processing: string; failed: string; pending: string }
+}) {
   switch (status) {
     case "completed":
       return (
         <Badge variant="default" className="gap-1">
-          <CheckCircle className="h-3 w-3" /> Done
+          <CheckCircle className="h-3 w-3" /> {labels.done}
         </Badge>
       )
     case "processing":
       return (
         <Badge variant="secondary" className="gap-1">
-          <Clock className="h-3 w-3" /> Processing
+          <Clock className="h-3 w-3" /> {labels.processing}
         </Badge>
       )
     case "failed":
       return (
         <Badge variant="destructive" className="gap-1">
-          <XCircle className="h-3 w-3" /> Failed
+          <XCircle className="h-3 w-3" /> {labels.failed}
         </Badge>
       )
     default:
       return (
         <Badge variant="outline" className="gap-1">
-          <Clock className="h-3 w-3" /> Pending
+          <Clock className="h-3 w-3" /> {labels.pending}
         </Badge>
       )
   }
