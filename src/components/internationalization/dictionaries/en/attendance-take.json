@@ -1,1 +1,26 @@
-{}
+{
+  "meta": {
+    "manual": "Attendance · Class list",
+    "qr": "Attendance · QR code",
+    "barcode": "Attendance · ID cards",
+    "kiosk": "Attendance · Self check-in kiosk",
+    "upload": "Attendance · Upload a file",
+    "geo": "Attendance · Location check-in",
+    "hallPass": "Attendance · Hall passes",
+    "description": "Take attendance for a section"
+  },
+  "manual": {
+    "section": "Section",
+    "now": "Now",
+    "today": "Today",
+    "otherDay": "Another day",
+    "date": "Date",
+    "summary": "{present} present · {absent} absent · {late} late",
+    "markAllPresent": "Mark all present",
+    "shortcuts": "Shortcuts: P everyone present · A absent · L late · Ctrl+S save",
+    "unsaved": "{n} not saved yet",
+    "allSaved": "Everyone is saved for this day",
+    "save": "Save",
+    "failed": "Couldn't save. Try again."
+  }
+}

@@ -8,7 +8,6 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AttendanceContent } from "@/components/school-dashboard/attendance/content"
-import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 
 export async function generateMetadata({
   params,
@@ -17,10 +16,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const t = dictionary?.attendanceTake?.meta
 
   return {
-    title: dictionary?.school?.attendance?.manual || "Manual Attendance",
-    description: "Mark attendance manually for your class",
+    title: t?.manual ?? "Attendance · Class list",
+    description: t?.description,
   }
 }
 
@@ -39,9 +39,5 @@ export default async function Page({ params, searchParams }: Props) {
     return <AttendanceAccessDenied lang={lang} />
   }
 
-  return (
-    <AttendanceProvider initialMethod="MANUAL">
-      <AttendanceContent lang={lang} initialSectionId={sectionId} />
-    </AttendanceProvider>
-  )
+  return <AttendanceContent lang={lang} initialSectionId={sectionId} />
 }

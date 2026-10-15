@@ -1,47 +1,25 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+/** Mirrors the class list: pill nav, one row of choices, the inset list. */
 export default function ManualAttendanceLoading() {
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-16 w-16 rounded-lg" />
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
+      <Skeleton className="h-9 w-72 rounded-full" />
+      <div className="flex flex-wrap gap-3">
+        <Skeleton className="h-9 w-64 rounded-full" />
+        <Skeleton className="h-9 w-48 rounded-full" />
       </div>
-
-      {/* Controls */}
-      <Card className="p-4">
-        <CardContent className="p-0">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Skeleton className="h-8 w-56" />
-            <Skeleton className="h-8 w-44" />
-            <div className="ms-auto flex gap-2">
-              <Skeleton className="h-8 w-28" />
-              <Skeleton className="h-8 w-28" />
-              <Skeleton className="h-8 w-24" />
-            </div>
+      <div className="divide-border/60 divide-y overflow-hidden rounded-2xl border">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="ms-auto h-8 w-56 rounded-full" />
           </div>
-          <Skeleton className="h-8 w-32" />
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card className="p-4">
-        <CardContent className="p-0">
-          <div className="space-y-3">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
     </div>
   )
 }
