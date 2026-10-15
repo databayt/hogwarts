@@ -17,6 +17,7 @@ import {
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
+import { fillT, roleLabel } from "./labels"
 import type { UnifiedMember } from "./types"
 
 export type MemberRow = UnifiedMember & {
@@ -46,7 +47,13 @@ const statusVariant = (status: string) => {
   }
 }
 
-function CopyEmailCell({ email }: { email: string | null }) {
+function CopyEmailCell({
+  email,
+  label,
+}: {
+  email: string | null
+  label: string
+}) {
   const [copied, setCopied] = useState(false)
 
   if (!email) return <span className="text-muted-foreground">-</span>
@@ -59,12 +66,16 @@ function CopyEmailCell({ email }: { email: string | null }) {
 
   return (
     <div className="flex items-center gap-1">
-      <span className="text-muted-foreground">{email}</span>
+      <span className="text-muted-foreground" dir="ltr">
+        {email}
+      </span>
       <Button
         variant="ghost"
         size="icon"
         className="h-6 w-6"
         onClick={handleCopy}
+        aria-label={label}
+        title={label}
       >
         {copied ? (
           <Check className="h-3 w-3 text-green-500" />
@@ -86,7 +97,7 @@ export const getMemberColumns = (
       accessorKey: "name",
       id: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.name || "Name"} />
+        <DataTableColumnHeader column={column} title={t.name} />
       ),
       cell: ({ row }) => {
         const member = row.original
@@ -108,75 +119,43 @@ export const getMemberColumns = (
           </div>
         )
       },
-      meta: { label: t.name || "Name", variant: "text" },
+      meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "email",
       id: "email",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.email || "Email"} />
+        <DataTableColumnHeader column={column} title={t.email} />
       ),
-      cell: ({ row }) => <CopyEmailCell email={row.original.email} />,
-      meta: { label: t.email || "Email", variant: "text" },
+      cell: ({ row }) => (
+        <CopyEmailCell email={row.original.email} label={t.copyEmail} />
+      ),
+      meta: { label: t.email, variant: "text" },
     },
     {
       accessorKey: "role",
       id: "role",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.role || "Role"} />
+        <DataTableColumnHeader column={column} title={t.role} />
       ),
       cell: ({ getValue }) => {
         const role = getValue<string>()
-        const roleLabels: Record<string, string> =
-          options?.lang === "ar"
-            ? {
-                ADMIN: "مدير",
-                TEACHER: "معلم",
-                STUDENT: "طالب",
-                GUARDIAN: "ولي أمر",
-                STAFF: "موظف",
-                ACCOUNTANT: "محاسب",
-              }
-            : {
-                ADMIN: "Admin",
-                TEACHER: "Teacher",
-                STUDENT: "Student",
-                GUARDIAN: "Guardian",
-                STAFF: "Staff",
-                ACCOUNTANT: "Accountant",
-              }
-        return <Badge variant="secondary">{roleLabels[role] || role}</Badge>
+        return <Badge variant="secondary">{roleLabel(t, role)}</Badge>
       },
       meta: {
-        label: t.role || "Role",
+        label: t.role,
         variant: "select",
-        options: [
-          {
-            label: options?.lang === "ar" ? "مدير" : "Admin",
-            value: "ADMIN",
-          },
-          {
-            label: options?.lang === "ar" ? "معلم" : "Teacher",
-            value: "TEACHER",
-          },
-          {
-            label: options?.lang === "ar" ? "طالب" : "Student",
-            value: "STUDENT",
-          },
-          {
-            label: options?.lang === "ar" ? "ولي أمر" : "Guardian",
-            value: "GUARDIAN",
-          },
-          {
-            label: options?.lang === "ar" ? "موظف" : "Staff",
-            value: "STAFF",
-          },
-          {
-            label: options?.lang === "ar" ? "محاسب" : "Accountant",
-            value: "ACCOUNTANT",
-          },
-        ],
+        options: (
+          [
+            "ADMIN",
+            "TEACHER",
+            "STUDENT",
+            "GUARDIAN",
+            "STAFF",
+            "ACCOUNTANT",
+          ] as const
+        ).map((value) => ({ label: roleLabel(t, value), value })),
       },
       enableColumnFilter: true,
     },
@@ -184,7 +163,7 @@ export const getMemberColumns = (
       accessorKey: "memberStatus",
       id: "memberStatus",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.status || "Status"} />
+        <DataTableColumnHeader column={column} title={t.status} />
       ),
       cell: ({ getValue }) => {
         const status = getValue<string>()
@@ -193,12 +172,12 @@ export const getMemberColumns = (
         )
       },
       meta: {
-        label: t.status || "Status",
+        label: t.status,
         variant: "select",
         options: [
-          { label: t.active || "Active", value: "active" },
-          { label: t.suspended || "Suspended", value: "suspended" },
-          { label: t.inactive || "Inactive", value: "inactive" },
+          { label: t.active, value: "active" },
+          { label: t.suspended, value: "suspended" },
+          { label: t.inactive, value: "inactive" },
         ],
       },
       enableColumnFilter: true,
@@ -207,7 +186,7 @@ export const getMemberColumns = (
       accessorKey: "gradeName",
       id: "gradeName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.grade || "Grade"} />
+        <DataTableColumnHeader column={column} title={t.grade} />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground">
@@ -215,7 +194,7 @@ export const getMemberColumns = (
         </span>
       ),
       meta: {
-        label: t.grade || "Grade",
+        label: t.grade,
         variant: gradeOptions && gradeOptions.length > 0 ? "select" : "text",
         ...(gradeOptions &&
           gradeOptions.length > 0 && { options: gradeOptions }),
@@ -226,70 +205,77 @@ export const getMemberColumns = (
       accessorKey: "contextInfo",
       id: "contextInfo",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.details || "Details"} />
+        <DataTableColumnHeader column={column} title={t.details} />
       ),
-      cell: ({ getValue }) => {
-        const info = getValue<string | null>()
+      cell: ({ row }) => {
+        const { contextInfo, classCount, childCount } = row.original
+        const parts = [
+          classCount > 0 ? fillT(t.classesCount, { count: classCount }) : null,
+          childCount > 0 ? fillT(t.childrenCount, { count: childCount }) : null,
+          contextInfo,
+        ].filter(Boolean)
         return (
-          <span className="text-muted-foreground text-xs">{info || "-"}</span>
+          <span className="text-muted-foreground text-xs">
+            {parts.length > 0 ? parts.join(" · ") : "-"}
+          </span>
         )
       },
-      meta: { label: t.details || "Details", variant: "text" },
+      meta: { label: t.details, variant: "text" },
       enableSorting: false,
     },
     {
       accessorKey: "joinedAtStr",
       id: "joinedAtStr",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.joined || "Joined"} />
+        <DataTableColumnHeader column={column} title={t.joined} />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
           {getValue<string>()}
         </span>
       ),
-      meta: { label: t.joined || "Joined", variant: "text" },
+      meta: { label: t.joined, variant: "text" },
     },
   ]
 
   if (canManage) {
     columns.push({
       id: "actions",
-      header: () => <span className="sr-only">{t.actions || "Actions"}</span>,
+      header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const member = row.original
         return (
-          <ActionMenu srLabel={t.actions || "Actions"}>
-            <DropdownMenuLabel>{t.actions || "Actions"}</DropdownMenuLabel>
+          <ActionMenu srLabel={t.actions}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <ActionMenuItem
               icon={Eye}
-              label={t.viewProfile || "View Profile"}
+              label={t.viewProfile}
               href={`/${options.lang || "en"}/profile/${member.id}`}
             />
             <DropdownMenuSeparator />
             <ActionMenuItem
-              label={t.changeRole || "Change Role"}
+              label={t.changeRole}
               onClick={() => options.onChangeRole?.(member)}
             />
             {member.role === "STUDENT" && (
               <DropdownMenuItem onClick={() => options.onAssignGrade?.(member)}>
-                {t.assignGrade || "Assign Grade"}
+                {t.assignGrade}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             {member.memberStatus === "suspended" ? (
               <DropdownMenuItem onClick={() => options.onActivate?.(member)}>
-                {t.activate || "Activate"}
+                {t.activate}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => options.onSuspend?.(member)}>
-                {t.suspend || "Suspend"}
+                {t.suspend}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <ActionMenuItem
-              label={t.remove || "Remove"}
+              label={t.remove}
               variant="destructive"
               onClick={() => options.onRemove?.(member)}
             />

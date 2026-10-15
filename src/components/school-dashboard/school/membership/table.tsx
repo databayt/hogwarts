@@ -9,6 +9,7 @@ import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { formatConsoleDate } from "@/components/school-dashboard/school/format"
 import {
   GridCard,
   GridContainer,
@@ -28,6 +29,7 @@ import { ApprovalSection } from "./approval-section"
 import { getMemberColumns, type MemberRow } from "./columns"
 import { GradeAssignDialog } from "./grade-assign-dialog"
 import { InviteDialog } from "./invite-dialog"
+import { fillT, roleLabel } from "./labels"
 import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
 import type { MembershipRequestRow, UnifiedMember } from "./types"
@@ -89,9 +91,7 @@ export function MembershipTable({
     }
     return filtered.map((m) => ({
       ...m,
-      joinedAtStr: m.joinedAt.toLocaleDateString(
-        lang === "ar" ? "ar-SA" : "en-US"
-      ),
+      joinedAtStr: formatConsoleDate(m.joinedAt, lang),
     }))
   }, [members, searchValue, lang])
 
@@ -193,7 +193,7 @@ export function MembershipTable({
     () => [
       {
         id: "bulk-suspend",
-        label: t.bulkSuspend || "Suspend",
+        label: t.bulkSuspend,
         icon: <Ban className="h-4 w-4" />,
         variant: "destructive" as const,
         onClick: async (rows) => {
@@ -201,7 +201,7 @@ export function MembershipTable({
           const result = await bulkSuspend({ userIds: ids })
           if (result.success) {
             SuccessToast(
-              `${result.data?.count || 0} ${t.memberSuspended || "members suspended"}`
+              fillT(t.membersSuspended, { count: result.data?.count || 0 })
             )
             table.toggleAllPageRowsSelected(false)
             handleRefresh()
@@ -210,7 +210,7 @@ export function MembershipTable({
       },
       {
         id: "bulk-activate",
-        label: t.bulkActivate || "Activate",
+        label: t.bulkActivate,
         icon: <ShieldCheck className="h-4 w-4" />,
         variant: "default" as const,
         onClick: async (rows) => {
@@ -218,7 +218,7 @@ export function MembershipTable({
           const result = await bulkActivate({ userIds: ids })
           if (result.success) {
             SuccessToast(
-              `${result.data?.count || 0} ${t.memberActivated || "members activated"}`
+              fillT(t.membersActivated, { count: result.data?.count || 0 })
             )
             table.toggleAllPageRowsSelected(false)
             handleRefresh()
@@ -227,14 +227,14 @@ export function MembershipTable({
       },
       {
         id: "bulk-export",
-        label: t.export || "Export",
+        label: t.export,
         icon: <Download className="h-4 w-4" />,
         variant: "outline" as const,
         onClick: async (rows) => {
-          const header = "Name,Email,Role,Status"
+          const header = [t.name, t.email, t.role, t.status].join(",")
           const csvRows = rows.map(
             (r) =>
-              `"${r.name}","${r.email || ""}","${r.role}","${r.memberStatus}"`
+              `"${r.name}","${r.email || ""}","${roleLabel(t, r.role)}","${t[r.memberStatus] ?? r.memberStatus}"`
           )
           const csv = [header, ...csvRows].join("\n")
           const blob = new Blob([csv], { type: "text/csv" })
@@ -267,21 +267,21 @@ export function MembershipTable({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={setSearchValue}
-        searchPlaceholder={t.searchMembers || "Search members..."}
+        searchPlaceholder={t.searchMembers}
         onCreate={canManage ? () => setShowInvite(true) : undefined}
         getCSV={handleGetCSV}
         entityName="members"
         translations={{
-          search: t.searchMembers || "Search members...",
-          create: t.inviteMember || "Invite",
-          reset: t.reset || "Reset",
-          export: t.export || "Export",
-          exportCSV: t.exportCSV || "Export CSV",
-          exporting: t.exporting || "Exporting...",
-          view: t.view || "View",
-          searchColumns: t.searchColumns || "Search columns...",
-          noColumns: t.noColumns || "No columns found.",
-          all: t.all || "All",
+          search: t.searchMembers,
+          create: t.inviteMember,
+          reset: t.reset,
+          export: t.export,
+          exportCSV: t.exportCSV,
+          exporting: t.exporting,
+          view: t.view,
+          searchColumns: t.searchColumns,
+          noColumns: t.noColumns,
+          all: t.all,
         }}
       />
 
@@ -297,7 +297,7 @@ export function MembershipTable({
                   fallback: initialsOf(member.name),
                 }}
                 title={member.name}
-                description={member.role}
+                description={roleLabel(t, member.role)}
                 subtitle={member.email || undefined}
                 href={`/${lang}/profile/${member.id}`}
               />
@@ -305,10 +305,8 @@ export function MembershipTable({
           </GridContainer>
         ) : (
           <GridEmptyState
-            title={t.noMembers || "No members found"}
-            description={
-              t.noMembersDescription || "Try adjusting your search or filters"
-            }
+            title={t.noMembers}
+            description={t.noMembersDescription}
           />
         )
       ) : (
@@ -326,7 +324,7 @@ export function MembershipTable({
             className="hover:underline"
             onClick={() => setVisibleCount((c) => c + BATCH_SIZE)}
           >
-            {t.seeMore || "See More"}
+            {t.seeMore}
           </Button>
         </div>
       )}

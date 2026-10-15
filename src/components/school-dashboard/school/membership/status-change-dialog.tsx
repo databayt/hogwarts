@@ -39,27 +39,21 @@ export function StatusChangeDialog({
   const [confirmText, setConfirmText] = useState("")
 
   const titles: Record<string, string> = {
-    suspend: t.suspendMember || "Suspend Member",
-    activate: t.activateMember || "Activate Member",
-    remove: t.removeMember || "Remove Member",
+    suspend: t.suspendMember,
+    activate: t.activateMember,
+    remove: t.removeMember,
   }
 
   const descriptions: Record<string, string> = {
-    suspend:
-      t.suspendDescription ||
-      `Are you sure you want to suspend ${member?.name}? They will not be able to access the platform.`,
-    activate:
-      t.activateDescription ||
-      `Are you sure you want to activate ${member?.name}? Their access will be restored.`,
-    remove:
-      t.removeDescription ||
-      `Are you sure you want to remove ${member?.name} from this school? This will unlink them from the school.`,
+    suspend: t.suspendDescription,
+    activate: t.activateDescription,
+    remove: t.removeDescription,
   }
 
   const successMessages: Record<string, string> = {
-    suspend: t.memberSuspended || "Member suspended",
-    activate: t.memberActivated || "Member activated",
-    remove: t.memberRemoved || "Member removed",
+    suspend: t.memberSuspended,
+    activate: t.memberActivated,
+    remove: t.memberRemoved,
   }
 
   const isRemove = action === "remove"
@@ -90,7 +84,7 @@ export function StatusChangeDialog({
         onOpenChange(false)
         onSuccess()
       } else {
-        ErrorToast(result?.error || t.actionFailed || "Action failed")
+        ErrorToast(t.actionFailed)
       }
     })
   }
@@ -113,8 +107,10 @@ export function StatusChangeDialog({
         {isRemove && (
           <div className="space-y-2 py-2">
             <Label className="text-muted-foreground text-sm">
-              {t.typeToConfirm || "Type the member's name to confirm"}:{" "}
-              <span className="font-medium">{member?.name}</span>
+              {t.typeToConfirm}:{" "}
+              <bdi dir="auto" className="font-medium">
+                {member?.name}
+              </bdi>
             </Label>
             <Input
               value={confirmText}
@@ -126,16 +122,14 @@ export function StatusChangeDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t.cancel}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isPending || !confirmMatch}
             variant={action === "remove" ? "destructive" : "default"}
           >
-            {isPending
-              ? t.processing || "Processing..."
-              : t.confirm || "Confirm"}
+            {isPending ? t.processing : t.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>

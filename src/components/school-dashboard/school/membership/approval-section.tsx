@@ -29,12 +29,17 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import {
+  formatConsoleDate,
+  formatConsoleNumber,
+} from "@/components/school-dashboard/school/format"
 
 import {
   approveMemberRequest,
   rejectMemberRequest,
   resendInvitation,
 } from "./actions"
+import { fillT, joinMethodLabel, roleLabel } from "./labels"
 import type { MembershipRequestRow } from "./types"
 
 interface ApprovalSectionProps {
@@ -64,16 +69,18 @@ function getExpiryStatus(
 function ExpiryBadge({
   request,
   t,
+  lang,
 }: {
   request: MembershipRequestRow
   t: Record<string, string>
+  lang?: string
 }) {
   const status = getExpiryStatus(request)
   if (!status) return null
 
   switch (status) {
     case "expired":
-      return <Badge variant="destructive">{t.expired || "Expired"}</Badge>
+      return <Badge variant="destructive">{t.expired}</Badge>
     case "expiring_soon": {
       const now = new Date()
       const daysLeft = Math.ceil(
@@ -82,7 +89,9 @@ function ExpiryBadge({
       )
       return (
         <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-          {t.expiringSoon || `Expires in ${daysLeft}d`}
+          {fillT(t.expiringSoon, {
+            days: formatConsoleNumber(daysLeft, lang ?? "ar"),
+          })}
         </Badge>
       )
     }
@@ -107,10 +116,10 @@ export function ApprovalSection({
     startTransition(async () => {
       const result = await approveMemberRequest({ requestId })
       if (result.success) {
-        SuccessToast(t.requestApproved || "Request approved")
+        SuccessToast(t.requestApproved)
         onSuccess()
       } else {
-        ErrorToast(result.error || t.failedToApprove || "Failed to approve")
+        ErrorToast(t.failedToApprove)
       }
     })
   }
@@ -124,12 +133,12 @@ export function ApprovalSection({
         reason: rejectReason.trim(),
       })
       if (result.success) {
-        SuccessToast(t.requestRejected || "Request rejected")
+        SuccessToast(t.requestRejected)
         setRejectingId(null)
         setRejectReason("")
         onSuccess()
       } else {
-        ErrorToast(result.error || t.failedToReject || "Failed to reject")
+        ErrorToast(t.failedToReject)
       }
     })
   }
@@ -138,12 +147,10 @@ export function ApprovalSection({
     startTransition(async () => {
       const result = await resendInvitation({ requestId })
       if (result.success) {
-        SuccessToast(t.invitationResent || "Invitation resent")
+        SuccessToast(t.invitationResent)
         onSuccess()
       } else {
-        ErrorToast(
-          result.error || t.failedToResend || "Failed to resend invitation"
-        )
+        ErrorToast(t.failedToResend)
       }
     })
   }
@@ -155,13 +162,12 @@ export function ApprovalSection({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                {t.pendingRequests || "Pending Requests"}
-                <Badge variant="secondary">{requests.length}</Badge>
+                {t.pendingRequests}
+                <Badge variant="secondary">
+                  {formatConsoleNumber(requests.length, lang ?? "ar")}
+                </Badge>
               </CardTitle>
-              <CardDescription>
-                {t.pendingRequestsDescription ||
-                  "Members waiting for approval to join"}
-              </CardDescription>
+              <CardDescription>{t.pendingRequestsDescription}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -169,37 +175,35 @@ export function ApprovalSection({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t.name || "Name"}</TableHead>
-                <TableHead>{t.email || "Email"}</TableHead>
-                <TableHead>{t.requestedRole || "Requested Role"}</TableHead>
-                <TableHead>{t.joinMethod || "Method"}</TableHead>
-                <TableHead>{t.status || "Status"}</TableHead>
-                <TableHead>{t.date || "Date"}</TableHead>
-                <TableHead className="text-end">
-                  {t.actions || "Actions"}
-                </TableHead>
+                <TableHead>{t.name}</TableHead>
+                <TableHead>{t.email}</TableHead>
+                <TableHead>{t.requestedRole}</TableHead>
+                <TableHead>{t.joinMethod}</TableHead>
+                <TableHead>{t.status}</TableHead>
+                <TableHead>{t.date}</TableHead>
+                <TableHead className="text-end">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {requests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>{request.name || "-"}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-muted-foreground" dir="ltr">
                     {request.email}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{request.requestedRole}</Badge>
+                    <Badge variant="outline">
+                      {roleLabel(t, request.requestedRole)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
-                    {request.joinMethod}
+                    {joinMethodLabel(t, request.joinMethod)}
                   </TableCell>
                   <TableCell>
-                    <ExpiryBadge request={request} t={t} />
+                    <ExpiryBadge request={request} t={t} lang={lang} />
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs tabular-nums">
-                    {request.createdAt.toLocaleDateString(
-                      lang === "ar" ? "ar-SA" : "en-US"
-                    )}
+                    {formatConsoleDate(request.createdAt, lang ?? "ar")}
                   </TableCell>
                   <TableCell className="text-end">
                     <div className="flex justify-end gap-2">
@@ -208,7 +212,7 @@ export function ApprovalSection({
                         onClick={() => handleApprove(request.id)}
                         disabled={isPending}
                       >
-                        {t.approve || "Approve"}
+                        {t.approve}
                       </Button>
                       {request.joinMethod === "INVITATION" && (
                         <Button
@@ -218,11 +222,11 @@ export function ApprovalSection({
                           disabled={isPending || request.resentCount >= 5}
                           title={
                             request.resentCount >= 5
-                              ? t.maxResendsReached || "Maximum resends reached"
+                              ? t.maxResendsReached
                               : undefined
                           }
                         >
-                          {t.resend || "Resend"}
+                          {t.resend}
                         </Button>
                       )}
                       <Button
@@ -234,7 +238,7 @@ export function ApprovalSection({
                         }}
                         disabled={isPending}
                       >
-                        {t.reject || "Reject"}
+                        {t.reject}
                       </Button>
                     </div>
                   </TableCell>
@@ -257,17 +261,14 @@ export function ApprovalSection({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.rejectMember || "Reject Request"}</DialogTitle>
+            <DialogTitle>{t.rejectMember}</DialogTitle>
             <DialogDescription>
-              {t.rejectionReasonDescription ||
-                "Please provide a reason for rejecting this membership request."}
+              {t.rejectionReasonDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Textarea
-              placeholder={
-                t.rejectionReasonPlaceholder || "Enter rejection reason..."
-              }
+              placeholder={t.rejectionReasonPlaceholder}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={3}
@@ -281,16 +282,14 @@ export function ApprovalSection({
                 setRejectReason("")
               }}
             >
-              {t.cancel || "Cancel"}
+              {t.cancel}
             </Button>
             <Button
               variant="destructive"
               onClick={handleRejectSubmit}
               disabled={isPending || !rejectReason.trim()}
             >
-              {isPending
-                ? t.processing || "Processing..."
-                : t.reject || "Reject"}
+              {isPending ? t.processing : t.reject}
             </Button>
           </DialogFooter>
         </DialogContent>

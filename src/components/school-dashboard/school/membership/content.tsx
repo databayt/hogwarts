@@ -5,6 +5,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { formatConsoleNumber } from "@/components/school-dashboard/school/format"
 import { getLabels } from "@/components/translation/person"
 
 import { canManageMembers } from "./authorization"
@@ -26,12 +27,17 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
   const session = await auth()
   const userRole = session?.user?.role
 
-  const t = (dictionary as Record<string, any>)?.school?.membership || {}
+  // The shared school dictionary wins; schoolConsole fills the keys it lacks.
+  const t: Record<string, string> = {
+    ...(dictionary.schoolConsole.membership as Record<string, string>),
+    ...((dictionary as Record<string, any>)?.school?.membership || {}),
+  }
+  const num = (v: number) => formatConsoleNumber(v, lang)
 
   if (!schoolId) {
     return (
       <p className="text-muted-foreground py-8 text-center">
-        No school context
+        {t.noSchoolContext}
       </p>
     )
   }
@@ -69,10 +75,10 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         <Card className="p-6 py-4">
           <CardContent className="p-0">
             <span className="text-foreground text-3xl font-semibold">
-              {stats.total.toLocaleString()}
+              {num(stats.total)}
             </span>
             <p className="text-muted-foreground mt-1 text-sm font-medium">
-              {t.totalMembers || "Total Members"}
+              {t.totalMembers}
             </p>
           </CardContent>
         </Card>
@@ -80,10 +86,10 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         <Card className="p-6 py-4">
           <CardContent className="p-0">
             <span className="text-foreground text-3xl font-semibold">
-              {stats.active.toLocaleString()}
+              {num(stats.active)}
             </span>
             <p className="text-muted-foreground mt-1 text-sm font-medium">
-              {t.activeMembers || "Active Members"}
+              {t.activeMembers}
             </p>
           </CardContent>
         </Card>
@@ -91,10 +97,10 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         <Card className="p-6 py-4">
           <CardContent className="p-0">
             <span className="text-foreground text-3xl font-semibold">
-              {stats.suspended.toLocaleString()}
+              {num(stats.suspended)}
             </span>
             <p className="text-muted-foreground mt-1 text-sm font-medium">
-              {t.suspended || "Suspended"}
+              {t.suspended}
             </p>
           </CardContent>
         </Card>
@@ -102,10 +108,10 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         <Card className="p-6 py-4">
           <CardContent className="p-0">
             <span className="text-foreground text-3xl font-semibold">
-              {stats.pending.toLocaleString()}
+              {num(stats.pending)}
             </span>
             <p className="text-muted-foreground mt-1 text-sm font-medium">
-              {t.pendingRequests || "Pending Requests"}
+              {t.pendingRequests}
             </p>
           </CardContent>
         </Card>

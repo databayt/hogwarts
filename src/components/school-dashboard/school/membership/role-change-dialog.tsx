@@ -25,6 +25,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { changeRole } from "./actions"
 import type { MemberRow } from "./columns"
+import { roleLabel } from "./labels"
 
 interface RoleChangeDialogProps {
   member: MemberRow | null
@@ -35,12 +36,12 @@ interface RoleChangeDialogProps {
 }
 
 const AVAILABLE_ROLES = [
-  { value: "ADMIN", label: "Admin" },
-  { value: "TEACHER", label: "Teacher" },
-  { value: "STUDENT", label: "Student" },
-  { value: "GUARDIAN", label: "Guardian" },
-  { value: "ACCOUNTANT", label: "Accountant" },
-  { value: "STAFF", label: "Staff" },
+  "ADMIN",
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "ACCOUNTANT",
+  "STAFF",
 ] as const
 
 export function RoleChangeDialog({
@@ -78,16 +79,14 @@ export function RoleChangeDialog({
       })
 
       if (result.success) {
-        SuccessToast(t.roleChanged || "Role changed")
+        SuccessToast(t.roleChanged)
         onOpenChange(false)
         setSelectedRole("")
         setDateOfBirth("")
         setGender("")
         onSuccess()
       } else {
-        ErrorToast(
-          result.error || t.failedToChangeRole || "Failed to change role"
-        )
+        ErrorToast(t.failedToChangeRole)
       }
     })
   }
@@ -96,30 +95,27 @@ export function RoleChangeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t.changeRole || "Change Role"}</DialogTitle>
-          <DialogDescription>
-            {t.changeRoleDescription ||
-              `Change role for ${member?.name || "member"}`}
-          </DialogDescription>
+          <DialogTitle>{t.changeRole}</DialogTitle>
+          <DialogDescription>{t.changeRoleDescription}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>{t.currentRole || "Current Role"}</Label>
-            <Badge variant="outline">{member?.role}</Badge>
+            <Label>{t.currentRole}</Label>
+            <Badge variant="outline">{roleLabel(t, member?.role)}</Badge>
           </div>
 
           <div className="space-y-2">
-            <Label>{t.newRole || "New Role"}</Label>
+            <Label>{t.newRole}</Label>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger>
-                <SelectValue placeholder={t.selectRole || "Select role"} />
+                <SelectValue placeholder={t.selectRole} />
               </SelectTrigger>
               <SelectContent>
-                {AVAILABLE_ROLES.filter((r) => r.value !== member?.role).map(
+                {AVAILABLE_ROLES.filter((r) => r !== member?.role).map(
                   (role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
+                    <SelectItem key={role} value={role}>
+                      {roleLabel(t, role)}
                     </SelectItem>
                   )
                 )}
@@ -130,7 +126,7 @@ export function RoleChangeDialog({
           {needsStudentFields && (
             <>
               <div className="space-y-2">
-                <Label>{t.dateOfBirth || "Date of Birth"}</Label>
+                <Label>{t.dateOfBirth}</Label>
                 <Input
                   type="date"
                   value={dateOfBirth}
@@ -138,18 +134,14 @@ export function RoleChangeDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t.gender || "Gender"}</Label>
+                <Label>{t.gender}</Label>
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={t.selectGender || "Select gender"}
-                    />
+                    <SelectValue placeholder={t.selectGender} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="male">{t.male || "Male"}</SelectItem>
-                    <SelectItem value="female">
-                      {t.female || "Female"}
-                    </SelectItem>
+                    <SelectItem value="male">{t.male}</SelectItem>
+                    <SelectItem value="female">{t.female}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -159,7 +151,7 @@ export function RoleChangeDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t.cancel}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -169,7 +161,7 @@ export function RoleChangeDialog({
               (needsStudentFields && (!dateOfBirth || !gender))
             }
           >
-            {isPending ? t.saving || "Saving..." : t.confirm || "Confirm"}
+            {isPending ? t.saving : t.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>

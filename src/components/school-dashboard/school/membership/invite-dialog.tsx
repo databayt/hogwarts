@@ -23,22 +23,15 @@ import {
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { inviteMember } from "./actions"
+import { roleLabel } from "./labels"
 
 const ROLE_OPTIONS = [
-  { value: "STAFF", label: "Staff", description: "General staff member" },
-  { value: "TEACHER", label: "Teacher", description: "Teaching faculty" },
-  { value: "ADMIN", label: "Admin", description: "School administrator" },
-  {
-    value: "ACCOUNTANT",
-    label: "Accountant",
-    description: "Financial management",
-  },
-  { value: "STUDENT", label: "Student", description: "Enrolled student" },
-  {
-    value: "GUARDIAN",
-    label: "Guardian",
-    description: "Parent or guardian",
-  },
+  "STAFF",
+  "TEACHER",
+  "ADMIN",
+  "ACCOUNTANT",
+  "STUDENT",
+  "GUARDIAN",
 ] as const
 
 interface InviteDialogProps {
@@ -76,14 +69,14 @@ export function InviteDialog({
       })
 
       if (result.success) {
-        SuccessToast(t.inviteSent || "Invitation sent")
+        SuccessToast(t.inviteSent)
         setEmail("")
         setRole("STAFF")
         setName("")
         onOpenChange(false)
         onSuccess()
       } else {
-        ErrorToast(result.error || t.failedToInvite || "Failed to send invite")
+        ErrorToast(t.failedToInvite)
       }
     })
   }
@@ -92,47 +85,46 @@ export function InviteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t.inviteMember || "Invite Member"}</DialogTitle>
-          <DialogDescription>
-            {t.inviteDescription ||
-              "Send an invitation to join this school portal."}
-          </DialogDescription>
+          <DialogTitle>{t.inviteMember}</DialogTitle>
+          <DialogDescription>{t.inviteDescription}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="invite-email">
-              {t.email || "Email"} <span className="text-destructive">*</span>
+              {t.email} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="invite-email"
               type="email"
-              placeholder={t.emailPlaceholder || "Email address"}
+              dir="ltr"
+              className="text-start"
+              placeholder={t.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="invite-name">{t.name || "Name"}</Label>
+            <Label htmlFor="invite-name">{t.name}</Label>
             <Input
               id="invite-name"
-              placeholder={t.namePlaceholder || "Full name (optional)"}
+              placeholder={t.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>{t.role || "Role"}</Label>
+            <Label>{t.role}</Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger>
-                <SelectValue placeholder={t.selectRole || "Select role"} />
+                <SelectValue placeholder={t.selectRole} />
               </SelectTrigger>
               <SelectContent>
                 {ROLE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                  <SelectItem key={opt} value={opt}>
+                    {roleLabel(t, opt)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -142,12 +134,10 @@ export function InviteDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !email}>
-            {isPending
-              ? t.processing || "Processing..."
-              : t.sendInvite || "Send Invite"}
+            {isPending ? t.processing : t.sendInvite}
           </Button>
         </DialogFooter>
       </DialogContent>

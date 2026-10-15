@@ -115,16 +115,12 @@ export async function getUnifiedMembers(
       contextInfo = parts.length > 0 ? parts.join(" · ") : null
     } else if (user.teacher) {
       const parts: string[] = []
-      if (user.teacher._count.subjectTeachers > 0)
-        parts.push(`${user.teacher._count.subjectTeachers} classes`)
       const primaryDept = user.teacher.teacherDepartments[0]
       if (primaryDept) parts.push(primaryDept.department.departmentName)
       contextInfo = parts.length > 0 ? parts.join(" · ") : null
     } else if (user.staffMember) {
       contextInfo = user.staffMember.position || null
     } else if (user.guardian) {
-      if (user.guardian._count.studentGuardians > 0)
-        contextInfo = `${user.guardian._count.studentGuardians} children`
     }
 
     return {
@@ -144,6 +140,8 @@ export async function getUnifiedMembers(
       gradeName: user.student?.academicGrade?.name ?? null,
       academicGradeId: user.student?.academicGradeId ?? null,
       contextInfo,
+      classCount: user.teacher?._count.subjectTeachers ?? 0,
+      childCount: user.guardian?._count.studentGuardians ?? 0,
     }
   })
 }

@@ -21,6 +21,9 @@ export type UnifiedMember = {
   gradeName: string | null
   academicGradeId: string | null
   contextInfo: string | null
+  /** Teaching load / family size, formatted (and translated) by the column. */
+  classCount: number
+  childCount: number
 }
 
 export type MembershipStats = {

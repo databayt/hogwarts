@@ -56,14 +56,12 @@ export function GradeAssignDialog({
       })
 
       if (result.success) {
-        SuccessToast(t.gradeAssigned || "Grade assigned")
+        SuccessToast(t.gradeAssigned)
         onOpenChange(false)
         setSelectedGrade("")
         onSuccess()
       } else {
-        ErrorToast(
-          result.error || t.failedToAssignGrade || "Failed to assign grade"
-        )
+        ErrorToast(t.failedToAssignGrade)
       }
     })
   }
@@ -72,19 +70,16 @@ export function GradeAssignDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t.assignGrade || "Assign Grade"}</DialogTitle>
-          <DialogDescription>
-            {t.assignGradeDescription ||
-              `Assign a grade to ${member?.name || "student"}`}
-          </DialogDescription>
+          <DialogTitle>{t.assignGrade}</DialogTitle>
+          <DialogDescription>{t.assignGradeDescription}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>{t.grade || "Grade"}</Label>
+            <Label>{t.grade}</Label>
             <Select value={selectedGrade} onValueChange={setSelectedGrade}>
               <SelectTrigger>
-                <SelectValue placeholder={t.selectGrade || "Select grade"} />
+                <SelectValue placeholder={t.selectGrade} />
               </SelectTrigger>
               <SelectContent>
                 {grades.map((grade) => (
@@ -99,10 +94,10 @@ export function GradeAssignDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !selectedGrade}>
-            {isPending ? t.saving || "Saving..." : t.confirm || "Confirm"}
+            {isPending ? t.saving : t.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>
