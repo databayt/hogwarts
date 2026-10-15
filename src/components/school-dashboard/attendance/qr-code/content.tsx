@@ -2,26 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useState } from "react"
-import {
-  CircleAlert,
-  QrCode,
-  RefreshCw,
-  Scan,
-  Settings,
-  Users,
-} from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+/**
+ * QR code check-in: staff put a section's code on the board and students
+ * scan it from the mobile app. The web page is the display side only — a
+ * scan resolves the signed-in user to their student record, and only staff
+ * open this page, so a web "Scan" tab could never succeed.
+ */
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { QrCode } from "lucide-react"
+
 import {
   Select,
   SelectContent,
@@ -29,354 +19,174 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/components/ui/use-toast"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { getSectionsForSelection } from "../actions"
-import { useAttendanceContext } from "../core/attendance-context"
-import { AttendanceStats } from "../core/attendance-stats"
-import { phone } from "../shared/phone"
+import { getAttendanceList, getSectionsForSelection } from "../actions"
+import { localCalendarDay } from "../core/local-date"
+import { AttendanceSectionNav } from "../ui/section-nav"
 import { QRGenerator } from "./qr-generator"
-import { QRScanner } from "./qr-scanner"
 
-interface QRCodeAttendanceContentProps {
-  dictionary?: Dictionary
+interface Props {
   locale?: string
-  schoolId: string
 }
 
-export default function QRCodeAttendanceContent({
-  dictionary,
-  locale = "en",
-  schoolId,
-}: QRCodeAttendanceContentProps) {
-  const { dictionary: contextDict } = useDictionary()
-  const activeDict = dictionary || contextDict
-  const attendanceDict = activeDict?.attendance as
-    | Record<string, any>
-    | undefined
-  const t = attendanceDict?.qrCode as Record<string, string> | undefined
-  const statusDict = attendanceDict?.status as
-    | Record<string, string>
-    | undefined
+interface Scan {
+  studentId: string
+  name: string
+  at?: Date
+}
 
-  const [activeTab, setActiveTab] = useState<"generate" | "scan" | "manage">(
-    "generate"
-  )
-  const [isTeacherMode, setIsTeacherMode] = useState(true) // Should come from auth/role
-  // QR sessions are for a section: its students are the ones who may scan.
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
-    []
-  )
-  const [loadingClasses, setLoadingClasses] = useState(true)
-  const [selectedClass, setSelectedClass] = useState<string | null>(null)
+export default function QRCodeAttendanceContent({ locale = "ar" }: Props) {
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.attendanceTake?.qr ?? {}) as Record<string, string>
+  const [sections, setSections] = useState<
+    Array<{ id: string; name: string; gradeName: string }>
+  >([])
+  const [loading, setLoading] = useState(true)
+  const [sectionId, setSectionId] = useState<string>("")
+  const [scans, setScans] = useState<Scan[]>([])
 
-  const { selectedDate, attendance, stats, fetchAttendance, setCurrentMethod } =
-    useAttendanceContext()
-
-  useEffect(() => {
-    // Set the current method to QR_CODE when component mounts
-    setCurrentMethod("QR_CODE")
-  }, [setCurrentMethod])
-
-  // Load the sections and open on the first one
   useEffect(() => {
     let alive = true
     getSectionsForSelection()
       .then((res) => {
         if (!alive || !res.success || !res.data?.sections) return
-        const sections = res.data.sections
-        setClasses(sections)
-        setSelectedClass((current) => current ?? sections[0]?.id ?? null)
+        setSections(res.data.sections)
+        setSectionId((cur) => cur || res.data!.sections[0]?.id || "")
       })
-      .catch((e) => console.error("Failed to load sections for QR:", e))
-      .finally(() => {
-        if (alive) setLoadingClasses(false)
-      })
+      .finally(() => alive && setLoading(false))
     return () => {
       alive = false
     }
   }, [])
 
+  // Who has scanned today — refreshed every 10 seconds while the code is up.
+  const loadScans = useCallback(async () => {
+    if (!sectionId) return
+    const res = await getAttendanceList({
+      sectionId,
+      date: localCalendarDay(),
+      lang: locale,
+    })
+    if (!res.success || !res.data) return
+    setScans(
+      res.data.rows
+        .filter((r) => r.method === "QR_CODE")
+        .map((r) => ({
+          studentId: r.studentId,
+          name: r.name,
+          at: r.checkInTime,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.at ?? 0).getTime() - new Date(a.at ?? 0).getTime()
+        )
+    )
+  }, [sectionId, locale])
+
   useEffect(() => {
-    // Fetch attendance when the section or date changes
-    if (selectedClass && selectedDate) {
-      fetchAttendance({
-        schoolId,
-        sectionId: selectedClass,
-        dateFrom: selectedDate,
-        dateTo: selectedDate,
-      })
+    const first = window.setTimeout(() => void loadScans(), 0)
+    const id = window.setInterval(() => void loadScans(), 10_000)
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(id)
     }
-  }, [selectedClass, selectedDate, schoolId, fetchAttendance])
+  }, [loadScans])
+
+  const time = useMemo(
+    () =>
+      new Intl.DateTimeFormat(
+        locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+        { hour: "numeric", minute: "2-digit" }
+      ),
+    [locale]
+  )
+  const num = new Intl.NumberFormat(
+    locale === "ar" ? "ar-SA-u-nu-latn" : "en-US"
+  )
+  const section = sections.find((s) => s.id === sectionId)
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden">
-            <QrCode className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">
-              {t?.title || "QR Code Attendance"}
-            </h2>
-            <p className="text-muted-foreground">
-              {isTeacherMode
-                ? t?.teacherDescription ||
-                  "Generate and display QR codes for students to scan"
-                : t?.studentDescription ||
-                  "Scan the QR code displayed by your teacher"}
-            </p>
-          </div>
-        </div>
+      <AttendanceSectionNav group="take" />
 
-        {/* Class Selector Dropdown */}
-        <div className="flex items-center gap-3">
-          {classes.length > 0 && (
+      {loading ? null : sections.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <QrCode className="text-muted-foreground size-8" />
+          <p className="text-muted-foreground text-sm">
+            {t.noSections ?? "You have no sections to show a code for."}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
             <Select
-              value={selectedClass || ""}
-              onValueChange={(val) => setSelectedClass(val)}
+              value={sectionId}
+              onValueChange={(id) => {
+                setScans([])
+                setSectionId(id)
+              }}
             >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={t?.selectClass || "اختر الفصل"} />
+              <SelectTrigger
+                className="h-9 w-full rounded-full sm:w-64"
+                aria-label={t.section ?? "Section"}
+              >
+                <SelectValue placeholder={t.section ?? "Section"} />
               </SelectTrigger>
               <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name}
+                {sections.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-          <Badge variant="outline" className="shrink-0 text-purple-600">
-            <QrCode className="me-1 h-3 w-3" />
-            {t?.modeActive || "QR Mode Active"}
-          </Badge>
-        </div>
-      </div>
+            <p className="text-muted-foreground text-sm">
+              {t.hint ?? "Students scan it from the school app."}
+            </p>
+          </div>
 
-      {/* Statistics */}
-      {stats && (
-        <AttendanceStats
-          stats={stats}
-          records={attendance}
-          showDetails={false}
-          dictionary={activeDict as any}
-        />
-      )}
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="generate" disabled={!isTeacherMode}>
-            <QrCode className="me-2 h-4 w-4" />
-            {t?.generateQr || "Generate QR"}
-          </TabsTrigger>
-          <TabsTrigger value="scan">
-            <Scan className="me-2 h-4 w-4" />
-            {t?.scanQr || "Scan QR"}
-          </TabsTrigger>
-          <TabsTrigger value="manage" disabled={!isTeacherMode}>
-            <Users className="me-2 h-4 w-4" />
-            {t?.manage || "Manage"}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Generate Tab - For Teachers */}
-        <TabsContent value="generate" className="space-y-4">
-          {!selectedClass ? (
-            <Card className={phone.card}>
-              <CardHeader>
-                <CardTitle>
-                  {t?.noClassSelected || "No Class Selected"}
-                </CardTitle>
-                <CardDescription>
-                  {t?.selectClassMessage ||
-                    "Please select a class to generate QR codes"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center gap-4 py-6">
-                  <CircleAlert className="text-muted-foreground h-12 w-12" />
-                  {classes.length > 0 ? (
-                    <Select
-                      value={selectedClass || ""}
-                      onValueChange={(val) => setSelectedClass(val)}
-                    >
-                      <SelectTrigger className={cn("w-[240px]", phone.field)}>
-                        <SelectValue
-                          placeholder={t?.selectClass || "اختر الفصل"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {classes.map((cls) => (
-                          <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : loadingClasses ? (
-                    <p className="text-muted-foreground text-sm">
-                      {attendanceDict?.loading?.classes ||
-                        "جاري تحميل الفصول..."}
-                    </p>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
+          {sectionId ? (
             <QRGenerator
-              sectionId={selectedClass}
-              sectionName={
-                classes.find((c) => c.id === selectedClass)?.name ?? ""
-              }
-              dictionary={activeDict || undefined}
-              locale={locale}
+              key={sectionId}
+              sectionId={sectionId}
+              sectionName={section?.name ?? ""}
+              t={t}
+              lang={locale}
             />
-          )}
-        </TabsContent>
+          ) : null}
 
-        {/* Scan Tab - For Students/Teachers */}
-        <TabsContent value="scan" className="space-y-4">
-          <QRScanner
-            onScanSuccess={(data) => {
-              toast({
-                title: t?.qrCodeScanned || "QR Code Scanned",
-                description:
-                  t?.attendanceMarked ||
-                  "Attendance has been marked successfully",
-              })
-            }}
-            dictionary={activeDict || undefined}
-            locale={locale}
-          />
-        </TabsContent>
-
-        {/* Manage Tab - For Teachers */}
-        <TabsContent value="manage" className="space-y-4">
-          <Card className={phone.card}>
-            <CardHeader>
-              <CardTitle>{t?.recentScans || "Recent QR Scans"}</CardTitle>
-              <CardDescription>
-                {t?.scansWillAppear ||
-                  "QR code scans will appear here as students check in"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {attendance.length === 0 ? (
-                <div className="py-8 text-center">
-                  <Users className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                  <p className="text-muted-foreground">
-                    {t?.noScansYet || "No QR scans recorded yet"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {attendance
-                    .filter((record) => record.method === "QR_CODE")
-                    .map((record) => (
-                      <div
-                        key={record.id}
-                        className="bg-secondary max-md:bg-background flex items-center justify-between rounded-lg px-3 py-2"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-                            <span className="text-sm font-medium text-purple-600">
-                              {record.studentName?.charAt(0) || "S"}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {record.studentName || "Student"}
-                            </p>
-                            <p className="text-muted-foreground text-sm">
-                              {t?.studentIdPrefix || "ID"}: {record.studentId}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-end">
-                          <Badge
-                            variant={
-                              record.status === "PRESENT"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {statusDict?.[record.status] || record.status}
-                          </Badge>
-                          <p className="text-muted-foreground mt-1 text-xs">
-                            {record.checkInTime
-                              ? new Date(record.checkInTime).toLocaleTimeString(
-                                  locale
-                                )
-                              : ""}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+          <section className="space-y-2">
+            <h3 className="text-muted-foreground px-4 text-xs font-medium">
+              {(t.scanned ?? "Checked in by QR today · {n}").replace(
+                "{n}",
+                num.format(scans.length)
               )}
-            </CardContent>
-          </Card>
-
-          {/* QR Settings */}
-          <Card className={phone.card}>
-            <CardHeader>
-              <CardTitle>{t?.settings || "QR Code Settings"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
-                    {t?.autoRefresh || "Auto-refresh QR codes"}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {t?.autoRefreshDesc ||
-                      "Generate new QR codes automatically at set intervals"}
-                  </p>
-                </div>
-                <Button size="sm" variant="outline">
-                  <RefreshCw className="me-2 h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
-                    {t?.requireLocation || "Require location verification"}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {t?.requireLocationDesc ||
-                      "Students must be within school bounds to scan"}
-                  </p>
-                </div>
-                <Button size="sm" variant="outline">
-                  <Settings className="me-2 h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
-                    {t?.preventScreenshot || "Prevent screenshot sharing"}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {t?.preventScreenshotDesc ||
-                      "Add dynamic elements to prevent QR code sharing"}
-                  </p>
-                </div>
-                <Button size="sm" variant="outline">
-                  <CircleAlert className="me-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </h3>
+            {scans.length === 0 ? (
+              <p className="bg-card text-muted-foreground rounded-2xl border px-4 py-6 text-center text-sm">
+                {t.noScans ?? "No one has scanned yet."}
+              </p>
+            ) : (
+              <ul className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+                {scans.map((s) => (
+                  <li
+                    key={s.studentId}
+                    className="flex min-h-12 items-center gap-3 px-4 py-2.5"
+                  >
+                    <span className="flex-1 truncate text-sm font-medium">
+                      {s.name}
+                    </span>
+                    <span className="text-muted-foreground text-xs tabular-nums">
+                      {s.at ? time.format(new Date(s.at)) : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
     </div>
   )
 }

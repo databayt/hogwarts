@@ -60,9 +60,9 @@ const fill = (tpl: string, vars: Record<string, string | number>) =>
 
 export function AttendanceContent({ lang = "ar", initialSectionId }: Props) {
   const { dictionary } = useDictionary()
-  const d = dictionary as any
-  const t = d?.attendanceTake?.manual ?? {}
-  const hubStatus = d?.attendanceHub?.status ?? {}
+  const d = dictionary
+  const t = (d?.attendanceTake?.manual ?? {}) as Record<string, string>
+  const hubStatus = (d?.attendanceHub?.status ?? {}) as Record<string, string>
   const labels: Record<AttendanceStatusValue, string> = {
     present: hubStatus.PRESENT ?? "Present",
     absent: hubStatus.ABSENT ?? "Absent",

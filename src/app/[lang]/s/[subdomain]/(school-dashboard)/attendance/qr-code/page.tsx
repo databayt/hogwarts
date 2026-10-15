@@ -7,7 +7,6 @@ import { auth } from "@/auth"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
-import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 import QRCodeAttendanceContent from "@/components/school-dashboard/attendance/qr-code/content"
 
 export async function generateMetadata({
@@ -17,12 +16,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const t = dictionary?.attendanceTake?.meta
 
   return {
-    title: dictionary?.attendance?.qrCode?.title || "QR Code Attendance",
-    description:
-      dictionary?.attendance?.qrCode?.teacherDescription ||
-      "Generate and display QR codes for students to scan",
+    title: t?.qr ?? "Attendance · QR code",
+    description: t?.description,
   }
 }
 
@@ -32,7 +30,7 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
+  const session = await auth()
 
   // Staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
@@ -40,13 +38,5 @@ export default async function Page({ params }: Props) {
     return <AttendanceAccessDenied lang={lang} />
   }
 
-  return (
-    <AttendanceProvider initialMethod="QR_CODE">
-      <QRCodeAttendanceContent
-        dictionary={dictionary}
-        locale={lang}
-        schoolId={session?.user?.schoolId!}
-      />
-    </AttendanceProvider>
-  )
+  return <QRCodeAttendanceContent locale={lang} />
 }

@@ -2,31 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useState } from "react"
-import {
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  CreditCard,
-  Download,
-  Pencil,
-  Plus,
-  Printer,
-  Search,
-  Trash2,
-  Upload,
-} from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+/**
+ * ID cards (admin): which card belongs to which student. One inset list
+ * with search, "Add a card" (pick the section, then the student), export,
+ * and import from a CSV through bulkImportBarcodes.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { CreditCard, Download, Plus, Trash2, Upload } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -34,154 +19,126 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { toast } from "@/components/ui/use-toast"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
-import { useAttendanceContext } from "../core/attendance-context"
-import { phone } from "../shared/phone"
-import type { StudentIdentifier } from "../shared/types"
+import {
+  addStudentIdentifier,
+  deleteStudentIdentifier,
+  getAttendanceList,
+  getSectionsForSelection,
+  getStudentIdentifiers,
+} from "../actions"
+import { localCalendarDay } from "../core/local-date"
+import { bulkImportBarcodes } from "./actions"
 
-interface StudentCardsProps {
-  dictionary?: Dictionary
-  locale?: string
-  schoolId: string
+interface Card {
+  id: string
+  studentId: string
+  studentName?: string
+  value: string
+  isActive: boolean
+  expiresAt?: string
 }
 
-export function StudentCards({
-  dictionary,
-  locale = "en",
-  schoolId,
-}: StudentCardsProps) {
-  const t = dictionary?.attendance?.barcodeCards
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [editingCard, setEditingCard] = useState<StudentIdentifier | null>(null)
-  const [newCard, setNewCard] = useState({
-    studentId: "",
-    barcode: "",
-    expiryDate: "",
-  })
-  const [cards, setCards] = useState<StudentIdentifier[]>([])
+interface StudentCardsProps {
+  t: Record<string, string>
+  lang: string
+}
 
-  const {
-    studentIdentifiers,
-    fetchStudentIdentifiers,
-    addStudentIdentifier,
-    removeStudentIdentifier,
-  } = useAttendanceContext()
+const fill = (tpl: string, vars: Record<string, string | number>) =>
+  tpl.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""))
+
+/**
+ * A suggested card number. There is no server generator; uniqueness is
+ * enforced when the card is saved ("already assigned" otherwise).
+ */
+function suggestCode(): string {
+  const n = new Uint32Array(1)
+  crypto.getRandomValues(n)
+  return `STU${String(n[0] % 1_000_000_000).padStart(9, "0")}`
+}
+
+export function StudentCards({ t, lang }: StudentCardsProps) {
+  const [cards, setCards] = useState<Card[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState("")
+  const [adding, setAdding] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const num = new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-US")
+  const dateFmt = new Intl.DateTimeFormat(
+    lang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+    { dateStyle: "medium" }
+  )
+
+  const load = useCallback(async () => {
+    const res = await getStudentIdentifiers()
+    if ("identifiers" in res && res.identifiers) {
+      setCards(
+        res.identifiers
+          .filter((i) => i.type === "BARCODE")
+          .map((i) => ({
+            id: i.id,
+            studentId: i.studentId,
+            studentName: i.studentName,
+            value: i.value,
+            isActive: i.isActive,
+            expiresAt: i.expiresAt,
+          }))
+      )
+    }
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    fetchStudentIdentifiers()
-  }, [fetchStudentIdentifiers])
+    void load()
+  }, [load])
 
-  useEffect(() => {
-    // ListFilter for barcode type identifiers
-    setCards(studentIdentifiers.filter((id) => id.type === "BARCODE"))
-  }, [studentIdentifiers])
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return cards
+    return cards.filter(
+      (c) =>
+        c.value.toLowerCase().includes(q) ||
+        c.studentName?.toLowerCase().includes(q)
+    )
+  }, [cards, query])
 
-  const handleAddCard = async () => {
-    if (!newCard.studentId || !newCard.barcode) {
-      toast({
-        title: "Error",
-        description: t?.fillRequired ?? "Please fill in all required fields",
-      })
+  const remove = async (card: Card) => {
+    const res = await deleteStudentIdentifier(card.id)
+    if (res && "success" in res && res.success === false) {
+      ErrorToast(t.removeFailed ?? "Couldn't remove the card.")
       return
     }
-
-    try {
-      await addStudentIdentifier({
-        schoolId,
-        studentId: newCard.studentId,
-        type: "BARCODE",
-        value: newCard.barcode,
-        isActive: true,
-        issuedAt: new Date().toISOString(),
-        expiresAt: newCard.expiryDate || undefined,
-      })
-
-      toast({
-        title: "Success",
-        description: t?.cardAdded ?? "Card added successfully",
-      })
-
-      setIsAddDialogOpen(false)
-      setNewCard({ studentId: "", barcode: "", expiryDate: "" })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: t?.addFailed ?? "Failed to add card",
-      })
-    }
+    setCards((c) => c.filter((x) => x.id !== card.id))
   }
 
-  const handleDeleteCard = async (cardId: string) => {
-    try {
-      await removeStudentIdentifier(cardId)
-      toast({
-        title: "Success",
-        description: t?.cardRemoved ?? "Card removed successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: t?.removeFailed ?? "Failed to remove card",
-      })
-    }
-  }
-
-  const generateBarcode = () => {
-    // Generate a random barcode
-    const prefix = "STU"
-    const random = Math.floor(Math.random() * 1000000000)
-    const barcode = `${prefix}${random.toString().padStart(9, "0")}`
-    setNewCard((prev) => ({ ...prev, barcode }))
-  }
-
-  const printCard = (card: StudentIdentifier) => {
-    // In production, this would generate a printable card
-    toast({
-      title: "Print Card",
-      description: `Printing card for ${card.studentName || card.studentId}`,
-    })
-  }
-
-  const exportCards = () => {
-    // Export cards to CSV
-    const csv = [
-      [
-        "Student ID",
-        "Student Name",
-        "Barcode",
-        "Status",
-        "Issued Date",
-        "Expiry Date",
-      ],
-      ...cards.map((card) => [
-        card.studentId,
-        card.studentName || "",
-        card.value,
-        card.isActive ? "Active" : "Inactive",
-        card.issuedAt,
-        card.expiresAt || "Never",
+  const exportCsv = () => {
+    const rows = [
+      ["student", "barcode", "expiry_date"],
+      ...cards.map((c) => [
+        c.studentName ?? c.studentId,
+        c.value,
+        c.expiresAt?.slice(0, 10) ?? "",
       ]),
     ]
-      .map((row) => row.join(","))
+    const csv = rows
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
       .join("\n")
-
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
+    const url = URL.createObjectURL(
+      new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" })
+    )
     const a = document.createElement("a")
     a.href = url
     a.download = "student-cards.csv"
@@ -189,309 +146,320 @@ export function StudentCards({
     URL.revokeObjectURL(url)
   }
 
-  const filteredCards = cards.filter(
-    (card) =>
-      card.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (card.studentName &&
-        card.studentName.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  const importCsv = async (file: File) => {
+    setImporting(true)
+    try {
+      const res = await bulkImportBarcodes(await file.text())
+      if (!res.success || !("data" in res) || !res.data) {
+        ErrorToast(t.importFailed ?? "Couldn't import the file.")
+        return
+      }
+      const { successful, failed } = res.data
+      ;(failed ? ErrorToast : SuccessToast)(
+        fill(t.importResult ?? "{ok} cards added · {failed} skipped", {
+          ok: num.format(successful),
+          failed: num.format(failed),
+        })
+      )
+      await load()
+    } finally {
+      setImporting(false)
+      if (fileRef.current) fileRef.current.value = ""
+    }
+  }
+
+  const now = Date.now()
 
   return (
-    <div className="space-y-4">
-      {/* Header Card */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-            <div>
-              <CardTitle>{t?.title ?? "Student ID Cards"}</CardTitle>
-              <CardDescription>
-                {t?.description ??
-                  "Manage barcode assignments for student identification"}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={exportCards}>
-                <Download className="me-2 h-4 w-4" />
-                {t?.export ?? "Export"}
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="me-2 h-4 w-4" />
-                    {t?.addCard ?? "Add Card"}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {t?.dialogTitle ?? "Add Student Card"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {t?.dialogDescription ??
-                        "Assign a barcode to a student for attendance tracking"}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>{t?.studentId ?? "Student ID"}</Label>
-                      <Input
-                        placeholder={
-                          t?.studentIdPlaceholder ?? "Enter student ID..."
-                        }
-                        value={newCard.studentId}
-                        onChange={(e) =>
-                          setNewCard((prev) => ({
-                            ...prev,
-                            studentId: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t?.barcodeLabel ?? "Barcode"}</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder={
-                            t?.barcodePlaceholder ??
-                            "Enter or generate barcode..."
-                          }
-                          value={newCard.barcode}
-                          onChange={(e) =>
-                            setNewCard((prev) => ({
-                              ...prev,
-                              barcode: e.target.value,
-                            }))
-                          }
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={generateBarcode}
-                        >
-                          {t?.generate ?? "Generate"}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t?.expiryDate ?? "Expiry Date (Optional)"}</Label>
-                      <Input
-                        type="date"
-                        value={newCard.expiryDate}
-                        onChange={(e) =>
-                          setNewCard((prev) => ({
-                            ...prev,
-                            expiryDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddDialogOpen(false)}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t.search ?? "Search by name or card number"}
+          aria-label={t.search ?? "Search by name or card number"}
+          className="h-9 w-full rounded-full sm:w-72"
+        />
+        <div className="ms-auto flex gap-2">
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+          >
+            <Upload className="size-4" />
+            {t.import ?? "Import"}
+          </Button>
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={exportCsv}
+            disabled={cards.length === 0}
+          >
+            <Download className="size-4" />
+            {t.export ?? "Export"}
+          </Button>
+          <Button className="rounded-full" onClick={() => setAdding(true)}>
+            <Plus className="size-4" />
+            {t.add ?? "Add a card"}
+          </Button>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) void importCsv(f)
+          }}
+        />
+      </div>
+
+      <section className="space-y-2">
+        <h3 className="text-muted-foreground px-4 text-xs font-medium">
+          {fill(t.count ?? "{n} cards", { n: num.format(cards.length) })}
+        </h3>
+        {loading ? null : filtered.length === 0 ? (
+          <div className="bg-card flex flex-col items-center gap-2 rounded-2xl border px-4 py-10 text-center">
+            <CreditCard className="text-muted-foreground size-6" />
+            <p className="text-muted-foreground text-sm">
+              {query
+                ? (t.noMatch ?? "No card matches your search.")
+                : (t.empty ?? "No cards yet. Add one, or import a file.")}
+            </p>
+          </div>
+        ) : (
+          <ul className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+            {filtered.map((c) => {
+              const expired = c.expiresAt
+                ? new Date(c.expiresAt).getTime() < now
+                : false
+              return (
+                <li
+                  key={c.id}
+                  className="flex min-h-14 items-center gap-3 px-4 py-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {c.studentName ?? c.studentId}
+                    </p>
+                    <p
+                      className="text-muted-foreground font-mono text-xs"
+                      dir="ltr"
                     >
-                      {t?.cancel ?? "Cancel"}
-                    </Button>
-                    <Button onClick={handleAddCard}>
-                      {t?.addCard ?? "Add Card"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                      {c.value}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      expired || !c.isActive
+                        ? "text-destructive text-xs"
+                        : "text-muted-foreground text-xs"
+                    }
+                  >
+                    {expired
+                      ? (t.expired ?? "Expired")
+                      : !c.isActive
+                        ? (t.inactive ?? "Inactive")
+                        : c.expiresAt
+                          ? fill(t.until ?? "Until {date}", {
+                              date: dateFmt.format(new Date(c.expiresAt)),
+                            })
+                          : (t.active ?? "Active")}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => void remove(c)}
+                    aria-label={t.remove ?? "Remove card"}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        <p className="text-muted-foreground px-4 text-xs">
+          {t.importHint ??
+            "Import a CSV with columns: register number, card number, expiry date (optional)."}
+        </p>
+      </section>
+
+      <AddCardDialog
+        open={adding}
+        onOpenChange={setAdding}
+        t={t}
+        lang={lang}
+        onAdded={() => void load()}
+      />
+    </div>
+  )
+}
+
+function AddCardDialog({
+  open,
+  onOpenChange,
+  t,
+  lang,
+  onAdded,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  t: Record<string, string>
+  lang: string
+  onAdded: () => void
+}) {
+  const [sections, setSections] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
+  const [sectionId, setSectionId] = useState("")
+  const [students, setStudents] = useState<
+    Array<{ studentId: string; name: string }>
+  >([])
+  const [studentId, setStudentId] = useState("")
+  const [value, setValue] = useState("")
+  const [expiresAt, setExpiresAt] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!open || sections.length) return
+    void getSectionsForSelection().then((res) => {
+      if (res.success && res.data) setSections(res.data.sections)
+    })
+  }, [open, sections.length])
+
+  useEffect(() => {
+    setStudentId("")
+    setStudents([])
+    if (!sectionId) return
+    void getAttendanceList({
+      sectionId,
+      date: localCalendarDay(),
+      lang,
+    }).then((res) => {
+      if (res.success && res.data) setStudents(res.data.rows)
+    })
+  }, [sectionId, lang])
+
+  const save = async () => {
+    if (!studentId || !value.trim()) return
+    setSaving(true)
+    try {
+      const res = await addStudentIdentifier({
+        studentId,
+        type: "BARCODE",
+        value: value.trim(),
+        isActive: true,
+        expiresAt: expiresAt || undefined,
+      })
+      if (!res.success) {
+        ErrorToast(
+          res.error?.toLowerCase().includes("unique")
+            ? (t.duplicate ?? "That card number is already in use.")
+            : (t.addFailed ?? "Couldn't add the card.")
+        )
+        return
+      }
+      onOpenChange(false)
+      setValue("")
+      setExpiresAt("")
+      setStudentId("")
+      onAdded()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t.add ?? "Add a card"}</DialogTitle>
+          <DialogDescription>
+            {t.addDesc ?? "Give a student a card they can scan at the desk."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t.section ?? "Section"}</Label>
+            <Select value={sectionId} onValueChange={setSectionId}>
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={t.pickSection ?? "Choose a section"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t.student ?? "Student"}</Label>
+            <Select
+              value={studentId}
+              onValueChange={setStudentId}
+              disabled={!sectionId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={t.pickStudent ?? "Choose a student"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {students.map((s) => (
+                  <SelectItem key={s.studentId} value={s.studentId}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t.cardNumber ?? "Card number"}</Label>
+            <div className="flex gap-2">
+              <Input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="font-mono"
+                dir="ltr"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setValue(suggestCode())}
+              >
+                {t.suggest ?? "Suggest"}
+              </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {/* Search Bar */}
-          <div className="mb-4 flex items-center gap-2">
-            <Search className="text-muted-foreground h-4 w-4" />
+          <div className="space-y-2">
+            <Label>{t.expiry ?? "Expires (optional)"}</Label>
             <Input
-              placeholder={
-                t?.searchPlaceholder ??
-                "Search by student ID, name, or barcode..."
-              }
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("max-w-sm", phone.field)}
+              type="date"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
             />
           </div>
-
-          {/* Statistics */}
-          <div className="mb-4 grid grid-cols-4 gap-4 max-md:grid-cols-2 max-md:gap-2">
-            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold">{cards.length}</p>
-              <p className="text-muted-foreground text-xs">
-                {t?.totalCards ?? "Total Cards"}
-              </p>
-            </div>
-            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {cards.filter((c) => c.isActive).length}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t?.active ?? "Active"}
-              </p>
-            </div>
-            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-red-600">
-                {cards.filter((c) => !c.isActive).length}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t?.inactive ?? "Inactive"}
-              </p>
-            </div>
-            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-orange-600">
-                {
-                  cards.filter(
-                    (c) => c.expiresAt && new Date(c.expiresAt) < new Date()
-                  ).length
-                }
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t?.expired ?? "Expired"}
-              </p>
-            </div>
-          </div>
-
-          {/* Cards Table */}
-          {filteredCards.length === 0 ? (
-            <div className="py-8 text-center">
-              <CreditCard className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-              <p className="text-muted-foreground">
-                {searchQuery
-                  ? "No cards found matching your search"
-                  : "No cards assigned yet"}
-              </p>
-              {!searchQuery && (
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Click "Add Card" to assign barcodes to students
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="max-md:bg-background rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>{t?.barcodeLabel ?? "Barcode"}</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Issued</TableHead>
-                    <TableHead>Expires</TableHead>
-                    <TableHead className="text-end">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCards.map((card) => {
-                    const isExpired =
-                      card.expiresAt && new Date(card.expiresAt) < new Date()
-                    return (
-                      <TableRow key={card.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {card.studentName || "Unknown"}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {card.studentId}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <code className="bg-secondary rounded px-2 py-1 text-xs">
-                            {card.value}
-                          </code>
-                        </TableCell>
-                        <TableCell>
-                          {isExpired ? (
-                            <Badge variant="destructive">
-                              <CircleX className="me-1 h-3 w-3" />
-                              {t?.expired ?? "Expired"}
-                            </Badge>
-                          ) : card.isActive ? (
-                            <Badge variant="default">
-                              <CircleCheck className="me-1 h-3 w-3" />
-                              {t?.active ?? "Active"}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">
-                              <CircleAlert className="me-1 h-3 w-3" />
-                              {t?.inactive ?? "Inactive"}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(card.issuedAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {card.expiresAt
-                            ? new Date(card.expiresAt).toLocaleDateString()
-                            : "Never"}
-                        </TableCell>
-                        <TableCell className="text-end">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => printCard(card)}
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setEditingCard(card)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteCard(card.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Bulk Import Card */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle>Bulk Import</CardTitle>
-          <CardDescription>
-            Import multiple cards from a CSV file
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center rounded-lg border-2 border-dashed px-4 py-8">
-            <div className="text-center">
-              <Upload className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-              <p className="text-muted-foreground mb-3 text-sm">
-                Drop your CSV file here or click to browse
-              </p>
-              <Button variant="outline">
-                <Upload className="me-2 h-4 w-4" />
-                Select File
-              </Button>
-              <p className="text-muted-foreground mt-3 text-xs">
-                CSV format: student_id, barcode, expiry_date
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t.cancel ?? "Cancel"}
+          </Button>
+          <Button
+            onClick={() => void save()}
+            disabled={saving || !studentId || !value.trim()}
+          >
+            {t.save ?? "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
