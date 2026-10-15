@@ -1,1 +1,102 @@
-{}
+{
+  "errors": {
+    "saveFailed": "Couldn't save. Try again."
+  },
+  "price": {
+    "label": "Annual tuition per student",
+    "placeholder": "0",
+    "amountAria": "Tuition amount",
+    "settings": "Billing",
+    "currency": "Currency",
+    "currencyDescription": "Shown with every amount families see.",
+    "schedule": "Payment schedule",
+    "scheduleDescription": "How often families pay this tuition.",
+    "currencies": {
+      "SDG": "SDG",
+      "SAR": "SAR",
+      "USD": "USD",
+      "EGP": "EGP"
+    },
+    "schedules": {
+      "annual": "Annual",
+      "termly": "Per term",
+      "monthly": "Monthly"
+    },
+    "guideTitle": "About this fee",
+    "guide": "This is the headline tuition for one student for a full year. Families see it when they ask the school assistant about fees. What each student is actually billed — instalments, transport, uniform — comes from the fee structures in Finance.",
+    "guideLink": "Set up fee structures"
+  },
+  "plan": {
+    "plansLabel": "Plan",
+    "currentPlan": "Current plan",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "who": "For small schools getting started.",
+        "price": "Free up to 100 students",
+        "features": [
+          "Up to 100 students, free forever",
+          "Up to 10 teachers",
+          "Admissions, attendance, exams, fees and timetable",
+          "Community support"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "who": "For growing schools — pay only beyond 100 students.",
+        "price": "{rate} per student per year",
+        "priceLocal": "About {amount} per student per year",
+        "features": [
+          "The first 100 students free",
+          "Unlimited teachers",
+          "Custom branding and advanced analytics",
+          "Support by WhatsApp and email"
+        ]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "who": "For school networks and government contracts.",
+        "price": "1,000+ students — contact us",
+        "features": [
+          "Same per-student rate, dedicated contract",
+          "Dedicated account manager",
+          "99.9% uptime SLA",
+          "SSO and custom integrations"
+        ]
+      }
+    },
+    "limits": {
+      "title": "Limits",
+      "footer": "Choosing Free sets 100 students and 10 teachers. Other plans keep the limits you set here.",
+      "students": "Maximum students",
+      "teachers": "Maximum teachers",
+      "classes": "Maximum class sections",
+      "usage": "{used} of {max}",
+      "invalid": "Enter a whole number from 1 to {max}."
+    },
+    "summary": {
+      "title": "Annual estimate",
+      "forStudents": "For {students} students, {billable} of them billable.",
+      "allFree": "Your first 100 students are free, so there is nothing to pay.",
+      "reference": "About {amount}",
+      "vat": "Excludes 15% VAT.",
+      "schedule": "{signing} at signing, then four payments of {instalment} at months 3, 6, 9 and 12.",
+      "enterprise": "Above 1,000 students we sign a dedicated contract at the same rate."
+    }
+  },
+  "dangerZone": {
+    "title": "Danger zone",
+    "footer": "A deactivated school stays saved, but no one — staff, students or families — can sign in until it is reactivated.",
+    "statusActive": "School is active",
+    "statusInactive": "School is deactivated",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "deactivateDescription": "Stop everyone from accessing the school.",
+    "reactivateDescription": "Let everyone sign in to the school again.",
+    "confirmDeactivateTitle": "Deactivate this school?",
+    "confirmDeactivateBody": "Every user will be signed out and blocked until you reactivate the school. No data is deleted.",
+    "confirmReactivateTitle": "Reactivate this school?",
+    "confirmReactivateBody": "Staff, students and families will be able to sign in again.",
+    "cancel": "Cancel"
+  }
+}

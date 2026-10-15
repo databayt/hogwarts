@@ -294,12 +294,21 @@ export async function updateSchoolLocation(
 }
 
 // Schema for school pricing update
+// Every field is optional: only what the caller sends is written, so saving
+// the tuition never wipes the registration/application fees, the currency or
+// the schedule. `termly` is the editor's "per term" (the sidebar reads it);
+// `quarterly`/`semester` stay valid for rows written before it.
 const schoolPricingSchema = z.object({
   tuitionFee: z.number().min(0).optional().nullable(),
   registrationFee: z.number().min(0).optional().nullable(),
   applicationFee: z.number().min(0).optional().nullable(),
-  currency: z.string().default("USD"),
-  paymentSchedule: z.enum(["monthly", "quarterly", "semester", "annual"]),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/, "Invalid currency")
+    .optional(),
+  paymentSchedule: z
+    .enum(["monthly", "termly", "quarterly", "semester", "annual"])
+    .optional(),
 })
 
 export async function updateSchoolPricing(
@@ -320,19 +329,22 @@ export async function updateSchoolPricing(
 
     const validatedData = schoolPricingSchema.parse(data)
 
-    const updated = await db.school.update({
-      where: { id: schoolId },
-      data: {
-        tuitionFee: validatedData.tuitionFee ?? null,
-        registrationFee: validatedData.registrationFee ?? null,
-        applicationFee: validatedData.applicationFee ?? null,
-        currency: validatedData.currency,
-        paymentSchedule: validatedData.paymentSchedule,
-      },
-    })
+    const patch: Prisma.SchoolUpdateInput = {}
+    if (validatedData.tuitionFee !== undefined)
+      patch.tuitionFee = validatedData.tuitionFee
+    if (validatedData.registrationFee !== undefined)
+      patch.registrationFee = validatedData.registrationFee
+    if (validatedData.applicationFee !== undefined)
+      patch.applicationFee = validatedData.applicationFee
+    if (validatedData.currency !== undefined)
+      patch.currency = validatedData.currency
+    if (validatedData.paymentSchedule !== undefined)
+      patch.paymentSchedule = validatedData.paymentSchedule
+
+    await db.school.update({ where: { id: schoolId }, data: patch })
 
     refreshPage("/school/configuration")
-    refreshPage("/school/configuration/pricing")
+    refreshPage("/school/configuration/price")
     return { success: true }
   } catch (error) {
     console.error("Error updating school pricing:", error)

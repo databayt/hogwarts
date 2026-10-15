@@ -32,7 +32,14 @@ export default async function PricePage({ params }: Props) {
     ? await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { tuitionFee: true },
+          select: {
+            tuitionFee: true,
+            currency: true,
+            registrationFee: true,
+            applicationFee: true,
+            paymentSchedule: true,
+            country: true,
+          },
         })
         .catch(() => null)
     : null
@@ -40,8 +47,21 @@ export default async function PricePage({ params }: Props) {
   return (
     <ConfigPriceForm
       schoolId={schoolId || ""}
-      initialPrice={school?.tuitionFee ? Number(school.tuitionFee) : 158}
-      dictionary={dictionary}
+      initial={{
+        tuitionFee:
+          school?.tuitionFee != null ? Number(school.tuitionFee) : null,
+        currency: school?.currency ?? null,
+        registrationFee:
+          school?.registrationFee != null
+            ? Number(school.registrationFee)
+            : null,
+        applicationFee:
+          school?.applicationFee != null ? Number(school.applicationFee) : null,
+        paymentSchedule: school?.paymentSchedule ?? null,
+        country: school?.country ?? null,
+      }}
+      lang={lang}
+      t={dictionary.schoolBilling}
     />
   )
 }
