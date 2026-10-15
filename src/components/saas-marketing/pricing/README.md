@@ -12,6 +12,9 @@ From the pricing rationale (6,000 SAR a year for 250 students), as one weight pe
 - `exchange-rates.ts` — live SAR → USD/SDG/EGP from open.er-api.com, cached a day, pinned `FALLBACK_RATES` when it fails.
 - `currency.tsx` — one currency for the page (SAR · USD · SDG · EGP), remembered per browser via `useSyncExternalStore`.
 - `calculator.tsx` — slider steps by one student; annual, monthly, effective per-student cost and the instalment plan, live.
+- `card.tsx` — fixed anatomy so the three cards line up: four header rows (name · price · one-line description · one-line note), an "Includes" / "Everything in Free, plus" / "Everything in Pro, plus" list (4 / 5 / 6 rows), and one footer (sm button + "More info ↗") pinned with `mt-auto`. Equal heights come from the grid's `items-stretch`.
+- `billing-toggle.tsx` — Monthly / Yearly (2026-10-15): display only — the same rate read per month (÷ 12) or per year, no yearly discount. Sits beside the currency toggle.
+- Plan names: Free · Pro · **Ultra** — the third plan's id stays `enterprise` (Stripe ids, `lib/subscription`); only its title says Ultra.
 - `config.ts` — what each plan *includes*; its `prices` are a derived legacy USD unit kept only for the Stripe subscription code, which this page no longer launches (CTAs go to `/onboarding` or the sales mailto).
 
 ### File Structure
@@ -19,7 +22,8 @@ From the pricing rationale (6,000 SAR a year for 250 students), as one weight pe
 ```
 src/components/saas-marketing/pricing/
 ├── content.tsx                     # Main pricing page composition
-├── card.tsx                        # Plan card component
+├── card.tsx                        # Plan card — fixed header rows, pinned footer
+├── billing-toggle.tsx              # Monthly / Yearly display toggle
 ├── pricing-header.tsx              # Page header
 ├── pricing-faqs.tsx                # Pricing FAQ (dictionary-driven)
 ├── calculator.tsx                  # Per-student price calculator (live, multi-currency)

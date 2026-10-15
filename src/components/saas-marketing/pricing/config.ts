@@ -84,21 +84,19 @@ export const getCtaLabel = (id: PlanId, pricing?: PricingDict): string =>
 // lib/subscription): one billable student per month at today's SAR peg.
 // The page, calculator and chatbot price from rates.ts, never from this.
 const PER_STUDENT_USD_MONTH =
-  Math.round(
-    ((RATE_SAR_PER_STUDENT_YEAR * FALLBACK_RATES.USD) / 12) * 10000
-  ) / 10000
+  Math.round(((RATE_SAR_PER_STUDENT_YEAR * FALLBACK_RATES.USD) / 12) * 10000) /
+  10000
 
 export const pricingData: SubscriptionPlan[] = [
   {
     // lib/subscription.ts falls back to pricingData[0] — Free stays first.
     id: "free",
     title: "Free",
-    description: "Great for small schools getting started",
+    description: "For small schools getting started",
     benefits: [
       "Up to 100 students",
       "Up to 10 teachers",
-      "Core features — admissions, attendance, exams, fees, timetable",
-      "1 GB storage",
+      "Attendance, exams, fees, timetable",
       "Community support",
     ],
     limitations: [],
@@ -115,14 +113,13 @@ export const pricingData: SubscriptionPlan[] = [
   {
     id: "pro",
     title: "Pro",
-    description: "For growing schools — pay only for students beyond 100",
+    description: "For growing schools ready to scale",
     benefits: [
-      "Unlimited students — the first 100 free, then 24 SAR per student a year",
-      "Unlimited teachers",
-      "Hosting, support and updates included",
-      "Support by WhatsApp and email, Sunday to Thursday",
+      "Unlimited students & teachers",
       "Custom branding",
-      "Advanced analytics & parent push notifications",
+      "Advanced analytics",
+      "Parent push notifications",
+      "WhatsApp & email support",
     ],
     limitations: [],
     prices: {
@@ -140,15 +137,16 @@ export const pricingData: SubscriptionPlan[] = [
     // The card headline renders "Custom" (see getPriceDisplay), but these
     // unit prices are REAL consumers' inputs: the chatbot quotes them and the
     // calculator estimates from them. Don't remove them as "unused".
-    title: "Enterprise",
-    description: "For networks and government contracts, 1,000+ students",
+    // Displayed as "Ultra"; the id stays "enterprise" for Stripe + subscription.
+    title: "Ultra",
+    description: "For networks and large institutions",
     benefits: [
-      "Unlimited storage & API",
+      "Multi-campus networks",
       "Dedicated account manager",
       "99.9% uptime SLA",
       "White-label branding",
       "SSO (SAML/OAuth)",
-      "Custom integrations",
+      "Custom integrations & API",
     ],
     limitations: [],
     prices: {
