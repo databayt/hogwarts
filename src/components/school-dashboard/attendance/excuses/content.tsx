@@ -2,35 +2,23 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
-import { AlertCircle, Calendar, FileText } from "lucide-react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { getParentAttendanceSummary } from "@/components/school-dashboard/attendance/actions/dashboard"
 import {
   getExcusesForStudent,
   getUnexcusedAbsences,
 } from "@/components/school-dashboard/attendance/actions/excuses"
-import { getGuardianChildrenAttendance } from "@/components/school-dashboard/attendance/actions/records"
 import { ExcuseReviewList } from "@/components/school-dashboard/attendance/excuses/excuse-review"
-import {
-  ExcuseForm,
-  ExcuseStatusBadge,
-  UnexcusedAbsenceCard,
-} from "@/components/school-dashboard/parent-portal/attendance/excuse-form"
+import { ExcuseForm } from "@/components/school-dashboard/parent-portal/attendance/excuse-form"
 
-import { phone } from "../shared/phone"
+import { fill, formatDay } from "../overview/format"
+import { AttendanceSectionNav } from "../ui/section-nav"
 
 interface Props {
   locale: Locale
@@ -42,24 +30,24 @@ const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 
 export function ExcusesContent({ locale, role }: Props) {
   const isStaff = STAFF_ROLES.includes(role)
+  // Planned absences are filed by guardians and reviewed by staff, so both
+  // get the Excuses | Planned absences bar; students only see their excuses.
+  const showNav = isStaff || role === "GUARDIAN"
 
-  if (isStaff) {
-    return <StaffExcusesView locale={locale} />
-  }
-
-  return <GuardianExcusesView locale={locale} />
-}
-
-// --- Staff view: review pending excuses ---
-function StaffExcusesView({ locale }: { locale: Locale }) {
   return (
-    <div className="space-y-6">
-      <ExcuseReviewList locale={locale} />
+    <div className="max-w-3xl space-y-6">
+      {showNav ? <AttendanceSectionNav group="excuses" /> : null}
+      {isStaff ? (
+        <ExcuseReviewList locale={locale} />
+      ) : (
+        <FamilyExcusesView locale={locale} />
+      )}
     </div>
   )
 }
 
-// --- Guardian/Student view: see unexcused absences + submit excuses + history ---
+// --- Guardian/Student: absences without an excuse, then the history ---
+
 type UnexcusedAbsence = {
   id: string
   studentId: string
@@ -72,234 +60,180 @@ type UnexcusedAbsence = {
 
 type ExcuseRecord = {
   id: string
-  attendanceId: string
   date: string
   className: string
   reason: string
-  description: string | null
   status: string
   submittedAt: string
-  reviewedAt: string | null
   reviewNotes: string | null
+  studentName?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Dict = Record<string, any>
 
-function GuardianExcusesView({ locale }: { locale: Locale }) {
+function FamilyExcusesView({ locale }: { locale: Locale }) {
   const { dictionary } = useDictionary()
-  const d = dictionary?.school?.attendance as Dict | undefined
+  const t = ((dictionary as Dict | undefined)?.attendanceToday?.excuses ??
+    {}) as Dict
   const [isPending, startTransition] = useTransition()
+  const [absences, setAbsences] = useState<UnexcusedAbsence[] | null>(null)
+  const [history, setHistory] = useState<ExcuseRecord[]>([])
+  const [multiChild, setMultiChild] = useState(false)
+  const [selected, setSelected] = useState<UnexcusedAbsence | null>(null)
 
-  const [absences, setAbsences] = useState<UnexcusedAbsence[]>([])
-  const [excuseHistory, setExcuseHistory] = useState<ExcuseRecord[]>([])
-  const [studentIds, setStudentIds] = useState<string[]>([])
-  const [selectedAbsence, setSelectedAbsence] =
-    useState<UnexcusedAbsence | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
+  const load = useCallback(() => {
     startTransition(async () => {
-      // Get children IDs first
-      const childrenResult = await getGuardianChildrenAttendance()
-      if (!childrenResult.success || !childrenResult.data?.students.length) {
-        // Might be a student — fetch their own unexcused
-        const ownResult = await getUnexcusedAbsences()
-        if (ownResult.success && ownResult.data) {
-          setAbsences(ownResult.data.absences)
-        } else {
-          setError(
-            (!ownResult.success ? ownResult.error : undefined) ||
-              "Unable to load data"
-          )
-        }
-        return
-      }
-
-      const ids = childrenResult.data.students.map((s) => s.id)
-      setStudentIds(ids)
-
-      // Fetch unexcused absences and excuse history in parallel
-      const [absenceResult, ...excuseResults] = await Promise.all([
-        getUnexcusedAbsences(),
-        ...ids.map((id) => getExcusesForStudent(id)),
+      const [open, family] = await Promise.all([
+        getUnexcusedAbsences().catch(() => null),
+        getParentAttendanceSummary().catch(() => null),
       ])
+      setAbsences(open?.success && open.data ? open.data.absences : [])
 
-      if (absenceResult.success && absenceResult.data) {
-        setAbsences(absenceResult.data.absences)
-      }
-
-      const allExcuses = excuseResults.flatMap((r) =>
-        r.success && r.data ? r.data.excuses : []
-      )
-      setExcuseHistory(
-        allExcuses.sort(
-          (a, b) =>
-            new Date(b.submittedAt).getTime() -
-            new Date(a.submittedAt).getTime()
+      const children =
+        family?.success && family.data ? family.data.children : []
+      setMultiChild(children.length > 1)
+      const results = await Promise.all(
+        children.map((c) =>
+          getExcusesForStudent(c.studentId)
+            .then((r) =>
+              r.success && r.data
+                ? r.data.excuses.map((e) => ({
+                    ...e,
+                    studentName: c.studentName,
+                  }))
+                : []
+            )
+            .catch(() => [])
         )
+      )
+      setHistory(
+        results
+          .flat()
+          .sort(
+            (a, b) =>
+              new Date(b.submittedAt).getTime() -
+              new Date(a.submittedAt).getTime()
+          )
       )
     })
   }, [])
 
-  const handleExcuseSubmitted = () => {
-    setSelectedAbsence(null)
-    // Refresh data
-    startTransition(async () => {
-      const absenceResult = await getUnexcusedAbsences()
-      if (absenceResult.success && absenceResult.data) {
-        setAbsences(absenceResult.data.absences)
-      }
-      const excuseResults = await Promise.all(
-        studentIds.map((id) => getExcusesForStudent(id))
-      )
-      const allExcuses = excuseResults.flatMap((r) =>
-        r.success && r.data ? r.data.excuses : []
-      )
-      setExcuseHistory(
-        allExcuses.sort(
-          (a, b) =>
-            new Date(b.submittedAt).getTime() -
-            new Date(a.submittedAt).getTime()
-        )
-      )
-    })
-  }
+  useEffect(() => {
+    load()
+  }, [load])
 
-  if (isPending && absences.length === 0 && excuseHistory.length === 0) {
+  if (absences === null) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-lg" />
-          ))}
-        </div>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-40 w-full rounded-2xl" />
       </div>
     )
   }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-        <AlertCircle className="text-muted-foreground h-12 w-12" />
-        <p className="text-muted-foreground">{error}</p>
-      </div>
-    )
-  }
-
-  const ex = (dictionary?.school?.attendance as any)?.excusesExtra as
-    | Record<string, string>
-    | undefined
 
   return (
-    <div className="space-y-6">
-      {/* Unexcused Absences */}
-      {absences.length > 0 && (
-        <Card className={cn("border-red-200", phone.card)}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="h-5 w-5" />
-              {d?.pendingExcuses || "Unexcused Absences"}
-            </CardTitle>
-            <CardDescription>
-              {ex?.needsExcuse || "These absences need an excuse submitted"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {absences.map((absence) => (
-              <UnexcusedAbsenceCard
-                key={absence.id}
-                absence={{
-                  id: absence.id,
-                  studentId: absence.studentId,
-                  studentName: absence.studentName,
-                  sectionId: absence.sectionId,
-                  className: absence.className,
-                  date: absence.date,
-                  status: absence.status,
-                }}
-                onSubmitExcuse={() => setSelectedAbsence(absence)}
-                locale={locale}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {absences.length === 0 && (
-        <Card className={phone.card}>
-          <CardContent className="py-8 text-center">
-            <FileText className="text-muted-foreground mx-auto mb-3 h-12 w-12 opacity-50" />
-            <p className="text-muted-foreground">
-              {ex?.noUnexcused || "No unexcused absences"}
+    <div className="space-y-8">
+      <section className="space-y-2">
+        <h2 className="text-muted-foreground px-4 text-xs font-medium">
+          {t.toExcuse ?? "Absences without an excuse"}
+        </h2>
+        <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+          {absences.length === 0 ? (
+            <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+              {t.noUnexcused ?? "Every absence has an excuse."}
             </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Excuse History */}
-      {excuseHistory.length > 0 && (
-        <Card className={phone.card}>
-          <CardHeader>
-            <CardTitle>{ex?.excuseHistory || "Excuse History"}</CardTitle>
-            <CardDescription>
-              {ex?.previouslySubmitted || "Previously submitted excuses"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {excuseHistory.map((excuse) => (
-                <div
-                  key={excuse.id}
-                  className="flex items-center justify-between border-b pb-3 last:border-0"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="text-muted-foreground h-4 w-4" />
-                      <span className="text-sm">
-                        {new Date(excuse.date).toLocaleDateString(locale)}
-                      </span>
-                      <Badge variant="outline">{excuse.className}</Badge>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      {excuse.reason}
-                      {excuse.description ? ` - ${excuse.description}` : ""}
-                    </p>
-                    {excuse.reviewNotes && (
-                      <p className="text-xs italic">
-                        {ex?.note || "Note:"} {excuse.reviewNotes}
-                      </p>
-                    )}
-                  </div>
-                  <ExcuseStatusBadge status={excuse.status} />
+          ) : (
+            absences.map((a) => (
+              <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    {formatDay(a.date, locale, {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {[a.studentName, a.className].filter(Boolean).join(" · ")}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                <Button
+                  size="sm"
+                  className="rounded-full px-4"
+                  onClick={() => setSelected(a)}
+                  disabled={isPending}
+                >
+                  {t.submit ?? "Submit excuse"}
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
 
-      {/* Excuse Form Dialog */}
-      {selectedAbsence && (
+      {history.length > 0 ? (
+        <section className="space-y-2">
+          <h2 className="text-muted-foreground px-4 text-xs font-medium">
+            {t.history ?? "Submitted excuses"}
+          </h2>
+          <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+            {history.map((e) => (
+              <div key={e.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    {formatDay(e.date, locale)}
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {[
+                      multiChild ? e.studentName : null,
+                      t.reasons?.[e.reason] ?? e.reason,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  {e.reviewNotes ? (
+                    <p className="text-muted-foreground truncate text-xs">
+                      {fill(
+                        t.reviewNote,
+                        { note: e.reviewNotes },
+                        e.reviewNotes
+                      )}
+                    </p>
+                  ) : null}
+                </div>
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                    e.status === "APPROVED"
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                      : e.status === "REJECTED"
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {t.status?.[e.status] ?? e.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {selected ? (
         <ExcuseForm
-          absence={{
-            id: selectedAbsence.id,
-            studentId: selectedAbsence.studentId,
-            studentName: selectedAbsence.studentName,
-            sectionId: selectedAbsence.sectionId,
-            className: selectedAbsence.className,
-            date: selectedAbsence.date,
-            status: selectedAbsence.status,
-          }}
-          open={!!selectedAbsence}
+          absence={selected}
+          open={!!selected}
           onOpenChange={(open: boolean) => {
-            if (!open) setSelectedAbsence(null)
+            if (!open) setSelected(null)
           }}
-          onSuccess={handleExcuseSubmitted}
+          onSuccess={() => {
+            setSelected(null)
+            load()
+          }}
           locale={locale}
         />
-      )}
+      ) : null}
     </div>
   )
 }

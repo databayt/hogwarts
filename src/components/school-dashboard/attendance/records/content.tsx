@@ -2,125 +2,174 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
-import { AlertCircle } from "lucide-react"
 
+/**
+ * Records — the full attendance history for a student or a guardian's
+ * children, one row per mark. Today holds the summary; this is the ledger.
+ */
+import { useMemo, useState } from "react"
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import {
-  getGuardianChildrenAttendance,
-  getStudentOwnAttendance,
-} from "@/components/school-dashboard/attendance/actions/records"
-import { AttendanceView } from "@/components/school-dashboard/parent-portal/attendance/view"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
+
+import { STATUS_TONE, useFamilyAttendance } from "../overview/family"
+import { formatCount, formatDay, plural } from "../overview/format"
 
 interface Props {
   locale: Locale
   subdomain: string
 }
 
-// Match the Student/Attendance types expected by AttendanceView
-type Attendance = {
-  id: string
-  date: Date
-  status: string
-  classId: string
-  className: string
-  notes: string | null
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dict = Record<string, any>
+type Filter = "all" | "absent" | "late"
 
-type Student = {
-  id: string
-  name: string
-  email: string | null
-  classes: Array<{ id: string; name: string; teacher: string }>
-  attendances: Attendance[]
-}
+const PAGE = 40
 
 export function RecordsContent({ locale }: Props) {
   const { dictionary } = useDictionary()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const d = dictionary?.school?.attendance as Record<string, any> | undefined
-  const [isPending, startTransition] = useTransition()
-  const [students, setStudents] = useState<Student[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const root = (dictionary as Dict | undefined)?.attendanceToday as
+    | Dict
+    | undefined
+  const t = (root?.records ?? {}) as Dict
+  const status = ((dictionary as Dict | undefined)?.attendanceHub?.status ??
+    {}) as Record<string, string>
+  const { loading, people, unexcused, isGuardian, failed } =
+    useFamilyAttendance()
+  const [personId, setPersonId] = useState<string | null>(null)
+  const [filter, setFilter] = useState<Filter>("all")
+  const [limit, setLimit] = useState(PAGE)
 
-  useEffect(() => {
-    startTransition(async () => {
-      // Try guardian first (multiple children)
-      const guardianResult = await getGuardianChildrenAttendance()
-      if (guardianResult.success && guardianResult.data?.students.length) {
-        setStudents(
-          guardianResult.data.students.map((s) => ({
-            ...s,
-            attendances: s.attendances.map((a) => ({
-              id: a.id,
-              date: new Date(a.date),
-              status: a.status,
-              // The view's class filter has no options in the section
-              // model (parent portal, class removal S14).
-              classId: "",
-              className: a.className,
-              notes: a.notes,
-            })),
-          }))
-        )
-        return
-      }
+  const person = people?.find((p) => p.id === personId) ?? people?.[0]
+  const rows = useMemo(() => {
+    const all = [...(person?.records ?? [])].sort((a, b) =>
+      b.date.localeCompare(a.date)
+    )
+    if (filter === "absent") return all.filter((r) => r.status === "ABSENT")
+    if (filter === "late") return all.filter((r) => r.status === "LATE")
+    return all
+  }, [person, filter])
 
-      // Try student (own records)
-      const studentResult = await getStudentOwnAttendance()
-      if (studentResult.success && studentResult.data) {
-        const { records } = studentResult.data
-        setStudents([
-          {
-            id: "self",
-            name: d?.myRecords || "My Records",
-            email: null,
-            classes: [],
-            attendances: records.map((r) => ({
-              id: r.id,
-              date: new Date(r.date),
-              status: r.status,
-              classId: "",
-              className: r.className || "",
-              notes: r.notes,
-            })),
-          },
-        ])
-        return
-      }
-
-      setError(
-        (!studentResult.success ? studentResult.error : undefined) ||
-          (!guardianResult.success ? guardianResult.error : undefined) ||
-          "Unable to load records"
-      )
-    })
-  }, [d])
-
-  if (isPending || (!students && !error)) {
+  if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-lg" />
-          ))}
+      <div className="max-w-3xl space-y-4">
+        <Skeleton className="h-8 w-64 rounded-full" />
+        <Skeleton className="h-96 w-full rounded-2xl" />
+      </div>
+    )
+  }
+
+  if (failed || !people || !person) {
+    return (
+      <p className="text-muted-foreground py-16 text-center text-sm">
+        {root?.family?.loadFailed ?? "Attendance couldn't load."}
+      </p>
+    )
+  }
+
+  const visible = rows.slice(0, limit)
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {people.length > 1 ? (
+          <Segmented
+            value={person.id}
+            onValueChange={(v) => {
+              setPersonId(v)
+              setLimit(PAGE)
+            }}
+            options={people.map((p) => ({
+              value: p.id,
+              label: p.name ?? "",
+            }))}
+          />
+        ) : null}
+        <Segmented<Filter>
+          value={filter}
+          onValueChange={(v) => {
+            setFilter(v)
+            setLimit(PAGE)
+          }}
+          options={[
+            { value: "all", label: t.all ?? "All" },
+            { value: "absent", label: t.absent ?? "Absences" },
+            { value: "late", label: t.late ?? "Late" },
+          ]}
+        />
+      </div>
+
+      <section className="space-y-2">
+        <h2 className="text-muted-foreground px-4 text-xs font-medium">
+          {plural(t.count, rows.length, locale)}
+        </h2>
+        <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+          {visible.length === 0 ? (
+            <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+              {t.empty ?? "Nothing to show here."}
+            </p>
+          ) : (
+            visible.map((r) => {
+              const needsExcuse = isGuardian && unexcused.has(r.id)
+              return (
+                <div
+                  key={r.id}
+                  className="flex min-h-12 items-center gap-3 px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {formatDay(r.date, locale, {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                    {r.sectionName ? (
+                      <p className="text-muted-foreground truncate text-xs">
+                        {r.sectionName}
+                      </p>
+                    ) : null}
+                  </div>
+                  {needsExcuse ? (
+                    <Link
+                      href={`/${locale}/attendance/excuses`}
+                      className="text-primary text-xs font-medium hover:underline"
+                    >
+                      {t.submitExcuse ?? "Submit excuse"}
+                    </Link>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                      STATUS_TONE[r.status]?.pill ??
+                        "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {status[r.status] ?? r.status}
+                  </span>
+                </div>
+              )
+            })
+          )}
         </div>
-        <Skeleton className="h-64 w-full rounded-lg" />
-      </div>
-    )
-  }
-
-  if (error || !students) {
-    return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-        <AlertCircle className="text-muted-foreground h-12 w-12" />
-        <p className="text-muted-foreground">{error}</p>
-      </div>
-    )
-  }
-
-  return <AttendanceView students={students} locale={locale} />
+        {rows.length > limit ? (
+          <div className="px-4">
+            <button
+              type="button"
+              onClick={() => setLimit(rows.length)}
+              className="text-primary text-xs font-medium hover:underline"
+            >
+              {root?.today?.showAll ?? "Show all"} (
+              {formatCount(rows.length, locale)})
+            </button>
+          </div>
+        ) : null}
+      </section>
+    </div>
+  )
 }

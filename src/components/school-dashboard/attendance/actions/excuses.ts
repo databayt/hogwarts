@@ -434,6 +434,8 @@ export async function getExcusesForStudent(studentId: string): Promise<
 export async function getPendingExcuses(input?: {
   sectionId?: string
   limit?: number
+  /** Defaults to PENDING (the review queue); the others are the history. */
+  status?: "PENDING" | "APPROVED" | "REJECTED"
 }): Promise<
   ActionResponse<{
     excuses: Array<{
@@ -449,6 +451,9 @@ export async function getPendingExcuses(input?: {
       submittedBy: string
       submitterName: string | null
       submittedAt: string
+      status: string
+      reviewNotes: string | null
+      reviewedAt: string | null
     }>
   }>
 > {
@@ -473,7 +478,7 @@ export async function getPendingExcuses(input?: {
 
     const where: Prisma.AttendanceExcuseWhereInput = {
       schoolId,
-      status: "PENDING",
+      status: input?.status ?? "PENDING",
     }
 
     // A teacher reviews their own sections' excuses; a section filter is
@@ -544,6 +549,9 @@ export async function getPendingExcuses(input?: {
           submittedBy: e.submittedBy,
           submitterName: userMap.get(e.submittedBy) || null,
           submittedAt: e.submittedAt.toISOString(),
+          status: e.status,
+          reviewNotes: e.reviewNotes,
+          reviewedAt: e.reviewedAt?.toISOString() ?? null,
         })),
       },
     }

@@ -2,30 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
-import { format } from "date-fns"
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Loader2,
-  Paperclip,
-  User,
-  XCircle,
-} from "lucide-react"
 
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+/**
+ * Staff excuse queue: pending first, approved and rejected one tap away.
+ * One inset list; a row opens the review dialog (pending) or shows the
+ * decision (history).
+ */
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { Paperclip } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -34,59 +21,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import {
-  getExcuseById,
-  getPendingExcuses,
-  reviewExcuse,
-} from "@/components/school-dashboard/attendance/actions"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import { phone } from "../shared/phone"
+import { getPendingExcuses, reviewExcuse } from "../actions"
+import { fill, formatDay, formatInstant } from "../overview/format"
 
-// Fallback labels when dictionary is not loaded
-const EXCUSE_REASON_FALLBACK: Record<string, string> = {
-  MEDICAL: "Medical",
-  FAMILY_EMERGENCY: "Family Emergency",
-  RELIGIOUS: "Religious",
-  SCHOOL_ACTIVITY: "School Activity",
-  TRANSPORTATION: "Transportation",
-  WEATHER: "Weather",
-  OTHER: "Other",
-}
+type Status = "PENDING" | "APPROVED" | "REJECTED"
 
-// Map reason codes to dictionary keys
-const EXCUSE_REASON_KEY_MAP: Record<string, string> = {
-  MEDICAL: "medical",
-  FAMILY_EMERGENCY: "familyEmergency",
-  RELIGIOUS: "religious",
-  SCHOOL_ACTIVITY: "schoolActivity",
-  TRANSPORTATION: "transportation",
-  WEATHER: "weather",
-  OTHER: "other",
-}
-
-interface PendingExcuse {
+interface ExcuseRow {
   id: string
-  attendanceId: string
-  studentId: string
   studentName: string
   className: string
   date: string
   reason: string
   description: string | null
   attachments: string[]
-  submittedBy: string
   submitterName: string | null
   submittedAt: string
+  status: string
+  reviewNotes: string | null
+  reviewedAt: string | null
 }
 
 interface ExcuseReviewListProps {
@@ -95,364 +52,275 @@ interface ExcuseReviewListProps {
   locale?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dict = Record<string, any>
+
 export function ExcuseReviewList({
   sectionId,
-  locale = "en",
+  locale = "ar",
 }: ExcuseReviewListProps) {
-  const [excuses, setExcuses] = useState<PendingExcuse[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedExcuse, setSelectedExcuse] = useState<PendingExcuse | null>(
-    null
-  )
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false)
-  const [reviewNotes, setReviewNotes] = useState("")
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-
   const { dictionary } = useDictionary()
-  const t = (dictionary?.school?.attendance as any)?.excuseReview as
-    | Record<string, any>
-    | undefined
-  const reasonsDict = t?.excuseReasons as Record<string, string> | undefined
+  const t = ((dictionary as Dict | undefined)?.attendanceToday?.excuses ??
+    {}) as Dict
+  const [status, setStatus] = useState<Status>("PENDING")
+  const [rows, setRows] = useState<ExcuseRow[] | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [selected, setSelected] = useState<ExcuseRow | null>(null)
+  const [notes, setNotes] = useState("")
+  const [reviewError, setReviewError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
-  // Fetch pending excuses
+  const load = useCallback(
+    (s: Status) => {
+      getPendingExcuses({ sectionId, status: s })
+        .then((r) => {
+          if (r.success && r.data) setRows(r.data.excuses)
+          else setFailed(true)
+        })
+        .catch(() => setFailed(true))
+    },
+    [sectionId]
+  )
+
   useEffect(() => {
-    const fetchExcuses = async () => {
-      setIsLoading(true)
-      const result = await getPendingExcuses({ sectionId })
-      if (result.success && result.data) {
-        setExcuses(result.data.excuses)
-      }
-      setIsLoading(false)
-    }
-    fetchExcuses()
-  }, [sectionId])
+    load(status)
+  }, [load, status])
 
-  const handleReview = (excuse: PendingExcuse) => {
-    setSelectedExcuse(excuse)
-    setReviewNotes("")
-    setError(null)
-    setIsReviewDialogOpen(true)
-  }
+  const reasonLabel = (r: string) => t.reasons?.[r] ?? r
 
-  const handleSubmitReview = (status: "APPROVED" | "REJECTED") => {
-    if (!selectedExcuse) return
-
+  function decide(decision: "APPROVED" | "REJECTED") {
+    if (!selected) return
+    setReviewError(null)
     startTransition(async () => {
       const result = await reviewExcuse({
-        excuseId: selectedExcuse.id,
-        status,
-        reviewNotes: reviewNotes || undefined,
-      })
-
-      if (result.success) {
-        // Remove from list
-        setExcuses((prev) => prev.filter((e) => e.id !== selectedExcuse.id))
-        setIsReviewDialogOpen(false)
-        setSelectedExcuse(null)
+        excuseId: selected.id,
+        status: decision,
+        reviewNotes: notes.trim() || undefined,
+      }).catch(() => null)
+      if (result?.success) {
+        setRows((prev) => prev?.filter((e) => e.id !== selected.id) ?? null)
+        setSelected(null)
       } else {
-        setError(result.error)
+        setReviewError(t.reviewFailed ?? "The decision couldn't be saved.")
       }
     })
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return locale === "ar"
-      ? date.toLocaleDateString(locale, {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : format(date, "PPP")
-  }
-
-  if (isLoading) {
-    return (
-      <Card className={phone.card}>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="mt-2 h-4 w-64" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    )
-  }
+  const emptyText =
+    status === "PENDING"
+      ? (t.emptyPending ?? "No excuses are waiting.")
+      : status === "APPROVED"
+        ? (t.emptyApproved ?? "No approved excuses yet.")
+        : (t.emptyRejected ?? "No rejected excuses.")
 
   return (
-    <>
-      <Card className={phone.card}>
-        <CardHeader>
-          <div className="flex items-center justify-between max-md:gap-3">
-            <div>
-              <CardTitle>
-                {t?.pendingRequests || "Pending Excuse Requests"}
-              </CardTitle>
-              <CardDescription>
-                {t?.reviewDescription ||
-                  "Review excuse requests submitted by parents"}
-              </CardDescription>
-            </div>
-            {excuses.length > 0 && (
-              <Badge variant="secondary" className="px-3 py-1 text-lg">
-                {excuses.length}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {excuses.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              <CheckCircle className="mx-auto mb-3 h-12 w-12 text-green-500 opacity-50" />
-              <p>{t?.noRequests || "No pending excuse requests"}</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {excuses.map((excuse) => (
-                <div
-                  key={excuse.id}
-                  className="hover:bg-muted/50 max-md:bg-background rounded-lg border p-4 transition-colors max-md:border-0 max-md:p-3"
-                >
-                  <div className="flex items-start justify-between max-md:gap-3">
-                    <div className="space-y-1 max-md:min-w-0">
-                      <div className="flex items-center gap-2 max-md:flex-wrap">
-                        <User className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">
-                          {excuse.studentName}
-                        </span>
-                        <Badge variant="outline">{excuse.className}</Badge>
-                      </div>
-                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(excuse.date)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FileText className="text-muted-foreground h-4 w-4" />
-                        <Badge>
-                          {reasonsDict?.[
-                            EXCUSE_REASON_KEY_MAP[excuse.reason]
-                          ] ||
-                            EXCUSE_REASON_FALLBACK[excuse.reason] ||
-                            excuse.reason}
-                        </Badge>
-                      </div>
-                      {excuse.description && (
-                        <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
-                          {excuse.description}
-                        </p>
-                      )}
-                      {excuse.attachments.length > 0 && (
-                        <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                          <Paperclip className="h-3 w-3" />
-                          <span>
-                            {(
-                              t?.attachmentCount || "{count} attachment(s)"
-                            ).replace(
-                              "{count}",
-                              String(excuse.attachments.length)
-                            )}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      onClick={() => handleReview(excuse)}
-                      size="sm"
-                      className="max-md:rounded-full max-md:px-4"
-                    >
-                      {t?.review || "Review"}
-                    </Button>
-                  </div>
-                  <div className="text-muted-foreground mt-2 border-t pt-2 text-xs">
-                    {t?.submittedBy || "Submitted by:"}{" "}
-                    {excuse.submitterName || "Unknown"} -{" "}
-                    {formatDate(excuse.submittedAt)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <div className="space-y-5">
+      <Segmented<Status>
+        value={status}
+        onValueChange={(s) => {
+          // Reset in the handler, not the effect, so the list shows its
+          // skeleton while the next filter loads.
+          setRows(null)
+          setFailed(false)
+          setStatus(s)
+        }}
+        options={[
+          { value: "PENDING", label: t.pending ?? "Pending" },
+          { value: "APPROVED", label: t.approved ?? "Approved" },
+          { value: "REJECTED", label: t.rejected ?? "Rejected" },
+        ]}
+      />
 
-      {/* Review Dialog */}
-      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-        <DialogContent
-          className="sm:max-w-[500px]"
-          dir={locale === "ar" ? "rtl" : "ltr"}
-        >
+      <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+        {rows === null && !failed ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-2 px-4 py-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-64" />
+            </div>
+          ))
+        ) : failed ? (
+          <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+            {t.loadFailed ?? "Excuses couldn't load."}
+          </p>
+        ) : rows!.length === 0 ? (
+          <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+            {emptyText}
+          </p>
+        ) : (
+          rows!.map((e) => (
+            <div key={e.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <p className="truncate text-sm font-medium">{e.studentName}</p>
+                <p className="text-muted-foreground truncate text-xs">
+                  {[
+                    e.className,
+                    formatDay(e.date, locale),
+                    reasonLabel(e.reason),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  {e.attachments.length > 0 ? (
+                    <Paperclip className="ms-1.5 inline size-3 align-[-2px]" />
+                  ) : null}
+                </p>
+                {e.status !== "PENDING" && e.reviewNotes ? (
+                  <p className="text-muted-foreground truncate text-xs">
+                    {fill(t.reviewNote, { note: e.reviewNotes }, e.reviewNotes)}
+                  </p>
+                ) : null}
+              </div>
+              {e.status === "PENDING" ? (
+                <Button
+                  size="sm"
+                  className="rounded-full px-4"
+                  onClick={() => {
+                    setSelected(e)
+                    setNotes("")
+                    setReviewError(null)
+                  }}
+                >
+                  {t.review ?? "Review"}
+                </Button>
+              ) : (
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                    e.status === "APPROVED"
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                      : "bg-destructive/10 text-destructive"
+                  )}
+                >
+                  {t.status?.[e.status] ?? e.status}
+                </span>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (!open) setSelected(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {t?.reviewTitle || "Review Excuse Request"}
-            </DialogTitle>
+            <DialogTitle>{t.reviewTitle ?? "Review excuse"}</DialogTitle>
             <DialogDescription>
-              {"Review the details and decide to approve or reject"}
+              {t.reviewDescription ??
+                "Read the reason, then approve or reject it."}
             </DialogDescription>
           </DialogHeader>
 
-          {selectedExcuse && (
+          {selected ? (
             <div className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">
-                    {t?.student || "Student:"}
-                  </span>
-                  <p className="font-medium">{selectedExcuse.studentName}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">
-                    {t?.class || "Class:"}
-                  </span>
-                  <p className="font-medium">{selectedExcuse.className}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">
-                    {t?.absenceDate || "Absence Date:"}
-                  </span>
-                  <p className="font-medium">
-                    {formatDate(selectedExcuse.date)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">
-                    {t?.reason || "Reason:"}
-                  </span>
-                  <p className="font-medium">
-                    {reasonsDict?.[
-                      EXCUSE_REASON_KEY_MAP[selectedExcuse.reason]
-                    ] ||
-                      EXCUSE_REASON_FALLBACK[selectedExcuse.reason] ||
-                      selectedExcuse.reason}
-                  </p>
-                </div>
-              </div>
-
-              {selectedExcuse.description && (
-                <div>
-                  <span className="text-muted-foreground text-sm">
-                    {t?.description || "Description:"}
-                  </span>
-                  <p className="bg-muted mt-1 rounded-lg p-3 text-sm">
-                    {selectedExcuse.description}
-                  </p>
-                </div>
-              )}
-
-              {selectedExcuse.attachments.length > 0 && (
-                <div>
-                  <span className="text-muted-foreground text-sm">
-                    {t?.attachments || "Attachments:"}
-                  </span>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {selectedExcuse.attachments.map((url, i) => (
-                      <a
-                        key={i}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary flex items-center gap-1 text-sm hover:underline"
-                      >
-                        <Paperclip className="h-3 w-3" />
-                        {t?.attachment || "Attachment"} {i + 1}
-                      </a>
-                    ))}
+              <dl className="bg-muted/50 divide-border/60 divide-y rounded-xl text-sm">
+                {[
+                  [t.student ?? "Student", selected.studentName],
+                  [t.section ?? "Section", selected.className],
+                  [t.date ?? "Absence date", formatDay(selected.date, locale)],
+                  [t.reason ?? "Reason", reasonLabel(selected.reason)],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-4 px-3 py-2"
+                  >
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="truncate font-medium">{value}</dd>
                   </div>
-                </div>
-              )}
+                ))}
+              </dl>
 
-              <div>
-                <span className="text-muted-foreground text-sm">
-                  {t?.reviewNotes || "Review Notes (Optional):"}
-                </span>
+              {selected.description ? (
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-xs">
+                    {t.details ?? "Details"}
+                  </p>
+                  <p className="text-sm leading-relaxed">
+                    {selected.description}
+                  </p>
+                </div>
+              ) : null}
+
+              {selected.attachments.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {selected.attachments.map((url, i) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
+                    >
+                      <Paperclip className="size-3.5" />
+                      {fill(t.attachment, { n: i + 1 }, `#${i + 1}`)}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
+
+              <p className="text-muted-foreground text-xs">
+                {fill(
+                  t.from,
+                  {
+                    name: selected.submitterName ?? t.unknownSender ?? "",
+                    date: formatInstant(selected.submittedAt, locale),
+                  },
+                  ""
+                )}
+              </p>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="excuse-review-notes"
+                  className="text-muted-foreground text-xs"
+                >
+                  {t.notes ?? "Note to the family (optional)"}
+                </label>
                 <Textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder={
-                    t?.reviewNotesPlaceholder ||
-                    "Add notes about your review decision..."
-                  }
-                  className="mt-1"
-                  rows={3}
+                  id="excuse-review-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder={t.notesPlaceholder}
+                  rows={2}
                 />
               </div>
-            </div>
-          )}
 
-          <DialogFooter className="flex gap-2 sm:gap-0">
+              {reviewError ? (
+                <p className="text-destructive text-sm">{reviewError}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setSelected(null)}
+              disabled={isPending}
+            >
+              {t.cancel ?? "Cancel"}
+            </Button>
             <Button
               variant="outline"
-              onClick={() => setIsReviewDialogOpen(false)}
+              className="text-destructive rounded-full"
+              onClick={() => decide("REJECTED")}
               disabled={isPending}
             >
-              {t?.cancel || "Cancel"}
+              {t.reject ?? "Reject"}
             </Button>
             <Button
-              variant="destructive"
-              onClick={() => handleSubmitReview("REJECTED")}
+              className="rounded-full"
+              onClick={() => decide("APPROVED")}
               disabled={isPending}
             >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <XCircle className="me-2 h-4 w-4" />
-                  {t?.rejectExcuse || "Reject"}
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() => handleSubmitReview("APPROVED")}
-              disabled={isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle className="me-2 h-4 w-4" />
-                  {t?.approveExcuse || "Approve"}
-                </>
-              )}
+              {t.approve ?? "Approve"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  )
-}
-
-// Compact pending excuses badge for sidebar/dashboard
-interface PendingExcusesBadgeProps {
-  count: number
-  onClick?: () => void
-}
-
-export function PendingExcusesBadge({
-  count,
-  onClick,
-}: PendingExcusesBadgeProps) {
-  if (count === 0) return null
-
-  return (
-    <Button variant="ghost" size="sm" onClick={onClick} className="relative">
-      <FileText className="h-5 w-5" />
-      <Badge
-        variant="destructive"
-        className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-xs"
-      >
-        {count > 9 ? "9+" : count}
-      </Badge>
-    </Button>
+    </div>
   )
 }

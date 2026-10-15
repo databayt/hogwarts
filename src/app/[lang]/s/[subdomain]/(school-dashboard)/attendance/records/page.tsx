@@ -18,10 +18,10 @@ export async function generateMetadata({
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return {
-    title: dictionary?.school?.attendance?.records || "My Attendance Records",
-    description: "View your attendance records",
-  }
+  const meta = (
+    dictionary as { attendanceToday?: { meta?: Record<string, string> } }
+  )?.attendanceToday?.meta
+  return { title: meta?.records || "Attendance · Records" }
 }
 
 interface Props {

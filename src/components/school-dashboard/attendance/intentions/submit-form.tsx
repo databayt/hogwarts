@@ -2,26 +2,17 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Absence Intention Submit Form
- *
- * Form for students/parents to submit planned absence notifications.
+ * Plan an absence — a guardian (or student) tells the school ahead of time.
+ * Approved intentions auto-excuse the days when attendance is marked.
  */
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Check, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import {
   Popover,
@@ -37,7 +28,9 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { formatInstant, plural } from "../overview/format"
 import { submitAbsenceIntention } from "./actions"
 import { excuseReasonValues, type ExcuseReasonType } from "./validation"
 
@@ -48,104 +41,92 @@ interface SubmitFormProps {
   onSuccess?: () => void
 }
 
-// Reason labels
-const reasonLabels: Record<string, { en: string; ar: string }> = {
-  MEDICAL: { en: "Medical", ar: "طبي" },
-  FAMILY_EMERGENCY: { en: "Family Emergency", ar: "طوارئ عائلية" },
-  RELIGIOUS: { en: "Religious", ar: "ديني" },
-  SCHOOL_ACTIVITY: { en: "School Activity", ar: "نشاط مدرسي" },
-  TRANSPORTATION: { en: "Transportation", ar: "مواصلات" },
-  WEATHER: { en: "Weather", ar: "طقس" },
-  OTHER: { en: "Other", ar: "أخرى" },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dict = Record<string, any>
+
+function startOfToday(): Date {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return today
 }
 
 export function IntentionSubmitForm({
-  locale = "en",
+  locale = "ar",
   studentId: initialStudentId,
   students = [],
   onSuccess,
 }: SubmitFormProps) {
-  const router = useRouter()
+  const { dictionary } = useDictionary()
+  const root = ((dictionary as Dict | undefined)?.attendanceToday?.intentions ??
+    {}) as Dict
+  const t = (root.form ?? {}) as Dict
+  const errors = (t.errors ?? {}) as Dict
+
   const [submitting, setSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
 
-  // Form state
-  const [studentId, setStudentId] = React.useState(initialStudentId || "")
+  const [studentId, setStudentId] = React.useState(
+    initialStudentId || (students.length === 1 ? students[0].id : "")
+  )
   const [dateFrom, setDateFrom] = React.useState<Date | undefined>()
   const [dateTo, setDateTo] = React.useState<Date | undefined>()
   const [reason, setReason] = React.useState<ExcuseReasonType | "">("")
   const [description, setDescription] = React.useState("")
   const [notifyTeachers, setNotifyTeachers] = React.useState(true)
-  const [notifyGuardians, setNotifyGuardians] = React.useState(true)
 
-  const isRTL = locale === "ar"
+  const showDate = (d: Date) =>
+    formatInstant(d, locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Basic validation
-    if (!studentId && students.length === 0) {
-      setError("Student is required")
-      return
-    }
-    if (!dateFrom) {
-      setError("Start date is required")
-      return
-    }
-    if (!dateTo) {
-      setError("End date is required")
-      return
-    }
-    if (!reason) {
-      setError("Reason is required")
-      return
-    }
+    const target = studentId || initialStudentId || ""
+    if (!target) return setError(errors.student ?? "Choose a student.")
+    if (!dateFrom) return setError(errors.from ?? "Choose the first day.")
+    if (!dateTo) return setError(errors.to ?? "Choose the last day.")
+    if (!reason) return setError(errors.reason ?? "Choose a reason.")
 
     setSubmitting(true)
     setError(null)
-
     try {
       const result = await submitAbsenceIntention({
-        studentId: studentId || initialStudentId || "",
+        studentId: target,
         dateFrom,
         dateTo,
         reason: reason as ExcuseReasonType,
         description: description || undefined,
         attachments: [],
         notifyTeachers,
-        notifyGuardians,
+        notifyGuardians: true,
       })
-
       if (result.success) {
         setSuccess(true)
-        // Reset form
         setDateFrom(undefined)
         setDateTo(undefined)
         setReason("")
         setDescription("")
         onSuccess?.()
-        // Refresh after success
-        setTimeout(() => {
-          router.refresh()
-        }, 2000)
       } else {
-        setError(result.error)
+        setError(errors.failed ?? "It couldn't be sent. Try again.")
       }
     } catch {
-      setError("An unexpected error occurred")
+      setError(errors.failed ?? "It couldn't be sent. Try again.")
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Calculate days count when dates change
+  // Mirrors the server's count (calculateSchoolDays in ./actions).
   const daysCount = React.useMemo(() => {
     if (!dateFrom || !dateTo) return 0
     let count = 0
     const current = new Date(dateFrom)
-    const end = new Date(dateTo)
-    while (current <= end) {
+    while (current <= dateTo) {
       const day = current.getDay()
       if (day !== 0 && day !== 6) count++
       current.setDate(current.getDate() + 1)
@@ -155,208 +136,176 @@ export function IntentionSubmitForm({
 
   if (success) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <svg
-                className="h-6 w-6 text-green-600 dark:text-green-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h3 className="mb-2 text-lg font-semibold">Intention Submitted</h3>
-            <p className="text-muted-foreground text-sm">
-              Your absence intention has been submitted and is awaiting review.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-card flex flex-col items-center gap-3 rounded-2xl border px-6 py-10 text-center">
+        <span className="flex size-10 items-center justify-center rounded-full bg-emerald-500/10">
+          <Check className="size-5 text-emerald-600 dark:text-emerald-400" />
+        </span>
+        <div className="space-y-1">
+          <p className="font-medium">{t.successTitle ?? "Sent"}</p>
+          <p className="text-muted-foreground text-sm">
+            {t.successDesc ?? "The school will review your planned absence."}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          className="rounded-full"
+          onClick={() => setSuccess(false)}
+        >
+          {t.another ?? "Plan another"}
+        </Button>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Submit Absence Intention</CardTitle>
-        <CardDescription>
-          Notify the school about a planned absence in advance
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} className="space-y-6">
-          {/* Student Selection (if multiple students) */}
-          {students.length > 0 && (
-            <div className="space-y-2">
-              <Label>Student</Label>
-              <Select value={studentId} onValueChange={setStudentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Date Range */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col space-y-2">
-              <Label>Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full ps-3 text-start font-normal",
-                      !dateFrom && "text-muted-foreground"
-                    )}
-                  >
-                    {dateFrom ? (
-                      dateFrom.toLocaleDateString(isRTL ? "ar-SA" : "en-US")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    disabled={(date) => {
-                      const today = new Date()
-                      today.setHours(0, 0, 0, 0)
-                      return date < today
-                    }}
-                    autoFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="flex flex-col space-y-2">
-              <Label>End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full ps-3 text-start font-normal",
-                      !dateTo && "text-muted-foreground"
-                    )}
-                  >
-                    {dateTo ? (
-                      dateTo.toLocaleDateString(isRTL ? "ar-SA" : "en-US")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    disabled={(date) => {
-                      if (dateFrom) return date < dateFrom
-                      const today = new Date()
-                      today.setHours(0, 0, 0, 0)
-                      return date < today
-                    }}
-                    autoFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Days count indicator */}
-          {daysCount > 0 && (
-            <div className="bg-muted/50 rounded-lg p-3 text-sm">
-              School days affected: <strong>{daysCount}</strong>{" "}
-              {daysCount === 1 ? "day" : "days"}
-            </div>
-          )}
-
-          {/* Reason */}
-          <div className="space-y-2">
-            <Label>Reason</Label>
-            <Select
-              value={reason}
-              onValueChange={(v) => setReason(v as ExcuseReasonType)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select reason" />
-              </SelectTrigger>
-              <SelectContent>
-                {excuseReasonValues.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {reasonLabels[r][isRTL ? "ar" : "en"]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label>
-              Additional Details{" "}
-              <span className="text-muted-foreground">(optional)</span>
-            </Label>
-            <Textarea
-              placeholder="Provide any additional information that may be helpful..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          {/* Notification Preferences */}
-          <div className="space-y-4">
-            <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label className="text-base">Notify Teachers</Label>
-                <p className="text-muted-foreground text-sm">
-                  Automatically notify homeroom teachers about this absence
-                </p>
-              </div>
-              <Switch
-                checked={notifyTeachers}
-                onCheckedChange={setNotifyTeachers}
+    <form
+      onSubmit={onSubmit}
+      className="bg-card space-y-5 rounded-2xl border p-5"
+      noValidate
+    >
+      {students.length > 1 && (
+        <div className="space-y-2">
+          <Label>{t.student ?? "Student"}</Label>
+          <Select value={studentId} onValueChange={setStudentId}>
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={t.selectStudent ?? "Choose a student"}
               />
-            </div>
+            </SelectTrigger>
+            <SelectContent>
+              {students.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  {student.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {(
+          [
+            {
+              key: "from",
+              label: t.from ?? "First day",
+              value: dateFrom,
+              set: setDateFrom,
+              disabled: (date: Date) => date < startOfToday(),
+            },
+            {
+              key: "to",
+              label: t.to ?? "Last day",
+              value: dateTo,
+              set: setDateTo,
+              disabled: (date: Date) => date < (dateFrom ?? startOfToday()),
+            },
+          ] as const
+        ).map((field) => (
+          <div key={field.key} className="flex flex-col gap-2">
+            <Label>{field.label}</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-between font-normal",
+                    !field.value && "text-muted-foreground"
+                  )}
+                >
+                  {field.value
+                    ? showDate(field.value)
+                    : (t.pickDate ?? "Pick a date")}
+                  <CalendarIcon className="size-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.set}
+                  disabled={field.disabled}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
+        ))}
+      </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
+      {daysCount > 0 && (
+        <p className="text-muted-foreground text-sm">
+          {t.schoolDays ?? "School days affected"}:{" "}
+          <span className="text-foreground font-medium">
+            {plural(root.days, daysCount, locale)}
+          </span>
+        </p>
+      )}
 
-          {/* Submit button */}
-          <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            {submitting ? "Submitting..." : "Submit Intention"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="space-y-2">
+        <Label>{t.reason ?? "Reason"}</Label>
+        <Select
+          value={reason}
+          onValueChange={(v) => setReason(v as ExcuseReasonType)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t.selectReason ?? "Choose a reason"} />
+          </SelectTrigger>
+          <SelectContent>
+            {excuseReasonValues.map((r) => (
+              <SelectItem key={r} value={r}>
+                {root.reasons?.[r] ?? r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>
+          {t.details ?? "Details"}{" "}
+          <span className="text-muted-foreground font-normal">
+            ({t.optional ?? "optional"})
+          </span>
+        </Label>
+        <Textarea
+          placeholder={t.detailsPlaceholder}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-0.5">
+          <Label htmlFor="intention-notify">
+            {t.notifyTeachers ?? "Tell the teachers"}
+          </Label>
+          <p className="text-muted-foreground text-xs">
+            {t.notifyTeachersDesc ??
+              "The section's teachers get a notice about this absence."}
+          </p>
+        </div>
+        <Switch
+          id="intention-notify"
+          checked={notifyTeachers}
+          onCheckedChange={setNotifyTeachers}
+        />
+      </div>
+
+      {error && <p className="text-destructive text-sm">{error}</p>}
+
+      <Button
+        type="submit"
+        className="w-full rounded-full"
+        disabled={submitting}
+      >
+        {submitting && <Loader2 className="me-2 size-4 animate-spin" />}
+        {submitting
+          ? (t.submitting ?? "Sending…")
+          : (t.submit ?? "Send to school")}
+      </Button>
+    </form>
   )
 }

@@ -2,29 +2,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Absence Intentions Content Component
- *
- * Main dashboard for managing pre-absence notifications.
- * Features:
- * - List of all intentions with filtering
- * - Quick approve/reject actions
- * - Status badges and statistics
+ * Planned absences. Staff review the school's queue (pending first);
+ * guardians plan an absence for their children and follow its status.
  */
 "use client"
 
 import * as React from "react"
-import { CalendarClock, Check, Clock, FileText, Filter, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -33,479 +19,427 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import { phone } from "../shared/phone"
-import { getAbsenceIntentions, reviewAbsenceIntention } from "./actions"
-import { intentionStatusValues } from "./validation"
+import { getParentAttendanceSummary } from "../actions/dashboard"
+import { formatInstant, plural } from "../overview/format"
+import { AttendanceSectionNav } from "../ui/section-nav"
+import {
+  getAbsenceIntentions,
+  getStudentIntentions,
+  reviewAbsenceIntention,
+} from "./actions"
+import { IntentionSubmitForm } from "./submit-form"
 
 interface IntentionsContentProps {
   locale?: string
   schoolId: string
+  /** STAFF roles review; GUARDIAN plans. */
+  mode?: "staff" | "guardian"
 }
 
 interface Intention {
   id: string
-  studentId: string
-  studentName: string
+  studentName?: string
   dateFrom: Date
   dateTo: Date
   daysCount: number
   reason: string
   description: string | null
   status: string
-  submittedAt: Date
-  reviewedAt: Date | null
   reviewNotes: string | null
 }
 
-// Format date for display
-function formatDate(date: Date, locale: string): string {
-  return new Date(date).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
-    {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }
+type Filter = "ALL" | "PENDING" | "APPROVED" | "REJECTED"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dict = Record<string, any>
+
+export default function IntentionsContent({
+  locale = "ar",
+  mode = "staff",
+}: IntentionsContentProps) {
+  return (
+    <div className="max-w-3xl space-y-6">
+      <AttendanceSectionNav group="excuses" />
+      {mode === "staff" ? (
+        <StaffIntentions locale={locale} />
+      ) : (
+        <GuardianIntentions locale={locale} />
+      )}
+    </div>
   )
 }
 
-// Get status badge variant
-function getStatusVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "APPROVED":
-      return "default"
-    case "REJECTED":
-      return "destructive"
-    case "PENDING":
-    default:
-      return "secondary"
-  }
+function useT(): Dict {
+  const { dictionary } = useDictionary()
+  return ((dictionary as Dict | undefined)?.attendanceToday?.intentions ??
+    {}) as Dict
 }
 
-export default function IntentionsContent({
-  locale = "en",
-}: IntentionsContentProps) {
-  const { dictionary } = useDictionary()
-  const t = (dictionary?.school?.attendance as any)?.intentions as
-    | Record<string, any>
-    | undefined
-  const reasons = t?.reasons as Record<string, string> | undefined
+function dateRange(i: Intention, locale: string): string {
+  const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" }
+  const from = formatInstant(i.dateFrom, locale, opts)
+  const to = formatInstant(i.dateTo, locale, opts)
+  return from === to ? from : `${from} – ${to}`
+}
 
-  const [intentions, setIntentions] = React.useState<Intention[]>([])
-  const [loading, setLoading] = React.useState(true)
-  const [statusFilter, setStatusFilter] = React.useState<string>("ALL")
-  const [selectedIntention, setSelectedIntention] =
-    React.useState<Intention | null>(null)
-  const [reviewDialogOpen, setReviewDialogOpen] = React.useState(false)
-  const [reviewNotes, setReviewNotes] = React.useState("")
-  const [reviewAction, setReviewAction] = React.useState<
-    "APPROVED" | "REJECTED"
-  >("APPROVED")
-  const [processing, setProcessing] = React.useState(false)
+function StatusPill({ status, t }: { status: string; t: Dict }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap",
+        status === "APPROVED"
+          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+          : status === "REJECTED"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-muted text-muted-foreground"
+      )}
+    >
+      {t.status?.[status] ?? status}
+    </span>
+  )
+}
 
-  // Get reason display label
-  function getReasonLabel(reason: string): string {
-    const defaultLabels: Record<string, string> = {
-      MEDICAL: "Medical",
-      FAMILY_EMERGENCY: "Family Emergency",
-      RELIGIOUS: "Religious",
-      SCHOOL_ACTIVITY: "School Activity",
-      TRANSPORTATION: "Transportation",
-      WEATHER: "Weather",
-      OTHER: "Other",
-    }
-    const key = reason.toLowerCase().replace(/_/g, "") as string
-    // Try dictionary reasons first (medical, family, travel, etc.)
-    if (reasons) {
-      const dictKey =
-        reason === "FAMILY_EMERGENCY" ? "family" : reason.toLowerCase()
-      if (reasons[dictKey]) return reasons[dictKey]
-    }
-    return defaultLabels[reason] || reason
-  }
+function IntentionRow({
+  intention,
+  locale,
+  t,
+  trailing,
+}: {
+  intention: Intention
+  locale: string
+  t: Dict
+  trailing: React.ReactNode
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        {intention.studentName ? (
+          <p className="truncate text-sm font-medium">
+            {intention.studentName}
+          </p>
+        ) : null}
+        <p
+          className={cn(
+            "truncate",
+            intention.studentName
+              ? "text-muted-foreground text-xs"
+              : "text-sm font-medium"
+          )}
+        >
+          {[
+            dateRange(intention, locale),
+            plural(t.days, intention.daysCount, locale),
+            t.reasons?.[intention.reason] ?? intention.reason,
+          ].join(" · ")}
+        </p>
+        {intention.description ? (
+          <p className="text-muted-foreground line-clamp-2 text-xs">
+            {intention.description}
+          </p>
+        ) : null}
+        {intention.reviewNotes ? (
+          <p className="text-muted-foreground truncate text-xs">
+            {intention.reviewNotes}
+          </p>
+        ) : null}
+      </div>
+      {trailing}
+    </div>
+  )
+}
 
-  // Stats
-  const pendingCount = intentions.filter((i) => i.status === "PENDING").length
-  const approvedCount = intentions.filter((i) => i.status === "APPROVED").length
-  const rejectedCount = intentions.filter((i) => i.status === "REJECTED").length
+// --- Staff: the review queue ---
 
-  // Fetch intentions
-  const fetchIntentions = React.useCallback(async () => {
-    setLoading(true)
-    try {
-      const filterStatus =
-        statusFilter !== "ALL"
-          ? (statusFilter as "PENDING" | "APPROVED" | "REJECTED")
-          : undefined
+function StaffIntentions({ locale }: { locale: string }) {
+  const t = useT()
+  const [filter, setFilter] = React.useState<Filter>("PENDING")
+  const [rows, setRows] = React.useState<Intention[] | null>(null)
+  const [failed, setFailed] = React.useState(false)
+  const [selected, setSelected] = React.useState<Intention | null>(null)
+  const [action, setAction] = React.useState<"APPROVED" | "REJECTED">(
+    "APPROVED"
+  )
+  const [notes, setNotes] = React.useState("")
+  const [reviewError, setReviewError] = React.useState<string | null>(null)
+  const [processing, startTransition] = React.useTransition()
 
-      const result = await getAbsenceIntentions(
-        filterStatus ? { status: filterStatus } : undefined
-      )
-
-      if (result.success && result.data) {
-        setIntentions(result.data.intentions)
-      }
-    } catch (error) {
-      console.error("Error fetching intentions:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [statusFilter])
+  const load = React.useCallback((f: Filter) => {
+    setRows(null)
+    setFailed(false)
+    getAbsenceIntentions(f === "ALL" ? undefined : { status: f })
+      .then((r) => {
+        if (r.success && r.data) setRows(r.data.intentions)
+        else setFailed(true)
+      })
+      .catch(() => setFailed(true))
+  }, [])
 
   React.useEffect(() => {
-    fetchIntentions()
-  }, [fetchIntentions])
+    load(filter)
+  }, [load, filter])
 
-  // Handle review action
-  const handleReview = (
-    intention: Intention,
-    action: "APPROVED" | "REJECTED"
-  ) => {
-    setSelectedIntention(intention)
-    setReviewAction(action)
-    setReviewNotes("")
-    setReviewDialogOpen(true)
+  function open(i: Intention, a: "APPROVED" | "REJECTED") {
+    setSelected(i)
+    setAction(a)
+    setNotes("")
+    setReviewError(null)
   }
 
-  const confirmReview = async () => {
-    if (!selectedIntention) return
-
-    setProcessing(true)
-    try {
+  function confirm() {
+    if (!selected) return
+    startTransition(async () => {
       const result = await reviewAbsenceIntention({
-        intentionId: selectedIntention.id,
-        status: reviewAction,
-        reviewNotes: reviewNotes || undefined,
-      })
-
-      if (result.success) {
-        setReviewDialogOpen(false)
-        fetchIntentions()
+        intentionId: selected.id,
+        status: action,
+        reviewNotes: notes.trim() || undefined,
+      }).catch(() => null)
+      if (result?.success) {
+        setSelected(null)
+        load(filter)
+      } else {
+        setReviewError(t.reviewFailed ?? "The decision couldn't be saved.")
       }
-    } catch (error) {
-      console.error("Error reviewing intention:", error)
-    } finally {
-      setProcessing(false)
-    }
+    })
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden dark:bg-purple-900/30">
-            <CalendarClock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              {t?.title || "Absence Intentions"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {t?.description ||
-                "Review planned absence notifications from students and parents"}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-5">
+      <Segmented<Filter>
+        value={filter}
+        onValueChange={setFilter}
+        options={[
+          { value: "PENDING", label: t.pending ?? "Pending" },
+          { value: "APPROVED", label: t.approved ?? "Approved" },
+          { value: "REJECTED", label: t.rejected ?? "Rejected" },
+          { value: "ALL", label: t.all ?? "All" },
+        ]}
+      />
 
-      {/* Stats Cards */}
-      <div className={cn("grid gap-4 md:grid-cols-3", phone.panel)}>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.pending || "Pending"}
-            </CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-yellow-600",
-                phone.cellValue
-              )}
-            >
-              {pendingCount}
+      <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+        {rows === null && !failed ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-2 px-4 py-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-64" />
             </div>
-            <p className="text-muted-foreground text-xs">
-              {t?.awaitingReview || "Awaiting review"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.approved || "Approved"}
-            </CardTitle>
-            <Check className="h-4 w-4 text-green-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn(
-                "text-2xl font-bold text-green-600",
-                phone.cellValue
-              )}
-            >
-              {approvedCount}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t?.thisPeriod || "This period"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={phone.cell}>
-          <CardHeader
-            className={cn(
-              "flex flex-row items-center justify-between space-y-0 pb-2",
-              phone.cellHead
-            )}
-          >
-            <CardTitle
-              className={cn(
-                "text-sm font-medium",
-                phone.cellLabel,
-                "max-md:text-muted-foreground"
-              )}
-            >
-              {t?.rejected || "Rejected"}
-            </CardTitle>
-            <X className="h-4 w-4 text-red-500 max-md:hidden" />
-          </CardHeader>
-          <CardContent className={phone.cellBody}>
-            <div
-              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
-            >
-              {rejectedCount}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t?.thisPeriod || "This period"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className={phone.card}>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Filter className="h-4 w-4" />
-            {t?.filters || "Filters"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className={cn("w-[180px] max-md:w-full", phone.field)}
-              >
-                <SelectValue placeholder={t?.allStatuses || "All Statuses"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">
-                  {t?.allStatuses || "All Statuses"}
-                </SelectItem>
-                <SelectItem value="PENDING">
-                  {t?.statusPending || "Pending"}
-                </SelectItem>
-                <SelectItem value="APPROVED">
-                  {t?.statusApproved || "Approved"}
-                </SelectItem>
-                <SelectItem value="REJECTED">
-                  {t?.statusRejected || "Rejected"}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Intentions List */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle>{t?.intentionsLabel || "Intentions"}</CardTitle>
-          <CardDescription>
-            {t?.preSubmitted || "Pre-submitted absence notifications"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-muted-foreground py-8 text-center">
-              {t?.loading || "Loading..."}
-            </div>
-          ) : intentions.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>{t?.noIntentions || "No intentions found"}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {intentions.map((intention) => (
-                <div
-                  key={intention.id}
-                  className={cn(
-                    "flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between",
-                    intention.status === "PENDING"
-                      ? "border-yellow-200 bg-yellow-50/50 dark:border-yellow-900 dark:bg-yellow-900/10"
-                      : "max-md:bg-background max-md:border-0"
-                  )}
-                >
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">
-                        {intention.studentName}
-                      </span>
-                      <Badge variant={getStatusVariant(intention.status)}>
-                        {(
-                          {
-                            PENDING: t?.statusPending,
-                            APPROVED: t?.statusApproved,
-                            REJECTED: t?.statusRejected,
-                          } as Record<string, string | undefined>
-                        )[intention.status] || intention.status}
-                      </Badge>
-                      <Badge variant="outline">
-                        {getReasonLabel(intention.reason)}
-                      </Badge>
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {formatDate(intention.dateFrom, locale)}
-                      {intention.daysCount > 1 &&
-                        ` - ${formatDate(intention.dateTo, locale)}`}
-                      <span className="ms-2 text-xs">
-                        ({intention.daysCount} day
-                        {intention.daysCount > 1 ? "s" : ""})
-                      </span>
-                    </p>
-                    {intention.description && (
-                      <p className="text-muted-foreground text-sm">
-                        {intention.description}
-                      </p>
-                    )}
-                    {intention.reviewNotes && (
-                      <p className="text-muted-foreground text-xs italic">
-                        {intention.reviewNotes}
-                      </p>
-                    )}
+          ))
+        ) : failed ? (
+          <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+            {t.loadFailed ?? "Planned absences couldn't load."}
+          </p>
+        ) : rows!.length === 0 ? (
+          <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+            {t.none ?? "No planned absences."}
+          </p>
+        ) : (
+          rows!.map((i) => (
+            <IntentionRow
+              key={i.id}
+              intention={i}
+              locale={locale}
+              t={t}
+              trailing={
+                i.status === "PENDING" ? (
+                  <div className="flex shrink-0 gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive rounded-full"
+                      onClick={() => open(i, "REJECTED")}
+                    >
+                      {t.reject ?? "Reject"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="rounded-full px-4"
+                      onClick={() => open(i, "APPROVED")}
+                    >
+                      {t.approve ?? "Approve"}
+                    </Button>
                   </div>
+                ) : (
+                  <StatusPill status={i.status} t={t} />
+                )
+              }
+            />
+          ))
+        )}
+      </div>
 
-                  {intention.status === "PENDING" && (
-                    <div className="flex gap-2 max-md:[&_button]:h-9 max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleReview(intention, "APPROVED")}
-                      >
-                        <Check className="me-1 h-4 w-4" />
-                        {t?.approve || "Approve"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => handleReview(intention, "REJECTED")}
-                      >
-                        <X className="me-1 h-4 w-4" />
-                        {t?.reject || "Reject"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Review Dialog */}
-      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-        <DialogContent>
+      <Dialog
+        open={!!selected}
+        onOpenChange={(o) => {
+          if (!o) setSelected(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {reviewAction === "APPROVED"
-                ? t?.approveTitle || "Approve Intention"
-                : t?.rejectTitle || "Reject Intention"}
+              {action === "APPROVED"
+                ? (t.approveTitle ?? "Approve this planned absence?")
+                : (t.rejectTitle ?? "Reject this planned absence?")}
             </DialogTitle>
             <DialogDescription>
-              {selectedIntention && (
-                <>
-                  {reviewAction === "APPROVED"
-                    ? t?.approveDescription ||
-                      "Are you sure you want to approve this absence intention?"
-                    : t?.rejectDescription ||
-                      "Are you sure you want to reject this absence intention?"}
-                </>
-              )}
+              {selected
+                ? `${selected.studentName ?? ""} · ${dateRange(selected, locale)}`
+                : null}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <label className="text-sm font-medium">
-              {t?.notesOptional || "Notes (optional)"}
+          <p className="text-muted-foreground text-sm">
+            {action === "APPROVED" ? t.approveDescription : t.rejectDescription}
+          </p>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="intention-review-notes"
+              className="text-muted-foreground text-xs"
+            >
+              {t.notes ?? "Note (optional)"}
             </label>
             <Textarea
-              className="mt-2"
-              placeholder={
-                t?.notesPlaceholder || "Add any notes about your decision..."
-              }
-              value={reviewNotes}
-              onChange={(e) => setReviewNotes(e.target.value)}
+              id="intention-review-notes"
+              placeholder={t.notesPlaceholder}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
             />
           </div>
-          <DialogFooter>
+          {reviewError ? (
+            <p className="text-destructive text-sm">{reviewError}</p>
+          ) : null}
+          <DialogFooter className="gap-2">
             <Button
-              variant="outline"
-              onClick={() => setReviewDialogOpen(false)}
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setSelected(null)}
               disabled={processing}
             >
-              {t?.cancel || "Cancel"}
+              {t.cancel ?? "Cancel"}
             </Button>
             <Button
-              onClick={confirmReview}
+              className="rounded-full"
+              variant={action === "APPROVED" ? "default" : "destructive"}
+              onClick={confirm}
               disabled={processing}
-              variant={reviewAction === "APPROVED" ? "default" : "destructive"}
             >
               {processing
-                ? t?.processing || "Processing..."
-                : reviewAction === "APPROVED"
-                  ? t?.confirmApprove || "Approve"
-                  : t?.confirmReject || "Reject"}
+                ? (t.processing ?? "Saving…")
+                : action === "APPROVED"
+                  ? (t.approve ?? "Approve")
+                  : (t.reject ?? "Reject")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+// --- Guardian: plan an absence, follow the ones already sent ---
+
+function GuardianIntentions({ locale }: { locale: string }) {
+  const t = useT()
+  const [children, setChildren] = React.useState<Array<{
+    id: string
+    name: string
+  }> | null>(null)
+  const [rows, setRows] = React.useState<Intention[]>([])
+
+  const load = React.useCallback(async () => {
+    const family = await getParentAttendanceSummary().catch(() => null)
+    const kids =
+      family?.success && family.data
+        ? family.data.children.map((c) => ({
+            id: c.studentId,
+            name: c.studentName,
+          }))
+        : []
+    setChildren(kids)
+    const lists = await Promise.all(
+      kids.map((k) =>
+        getStudentIntentions(k.id)
+          .then((r) =>
+            r.success && r.data
+              ? r.data.intentions.map((i) => ({
+                  ...i,
+                  studentName: kids.length > 1 ? k.name : undefined,
+                }))
+              : []
+          )
+          .catch(() => [])
+      )
+    )
+    setRows(
+      lists
+        .flat()
+        .sort(
+          (a, b) =>
+            new Date(b.dateFrom).getTime() - new Date(a.dateFrom).getTime()
+        )
+    )
+  }, [])
+
+  React.useEffect(() => {
+    load()
+  }, [load])
+
+  if (children === null) {
+    return <Skeleton className="h-80 w-full rounded-2xl" />
+  }
+
+  if (children.length === 0) {
+    return (
+      <p className="text-muted-foreground py-16 text-center text-sm">
+        {t.none ?? "No planned absences."}
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      <section className="space-y-2">
+        <div className="px-4">
+          <h2 className="text-sm font-medium">
+            {t.planAbsence ?? "Plan an absence"}
+          </h2>
+          <p className="text-muted-foreground text-xs">
+            {t.planAbsenceDesc ??
+              "Tell the school ahead of time so the day is excused."}
+          </p>
+        </div>
+        <IntentionSubmitForm
+          locale={locale}
+          students={children}
+          onSuccess={() => load()}
+        />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-muted-foreground px-4 text-xs font-medium">
+          {t.mine ?? "Your planned absences"}
+        </h2>
+        <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+          {rows.length === 0 ? (
+            <p className="text-muted-foreground px-4 py-10 text-center text-sm">
+              {t.none ?? "No planned absences."}
+            </p>
+          ) : (
+            rows.map((i) => (
+              <IntentionRow
+                key={i.id}
+                intention={i}
+                locale={locale}
+                t={t}
+                trailing={<StatusPill status={i.status} t={t} />}
+              />
+            ))
+          )}
+        </div>
+      </section>
     </div>
   )
 }
