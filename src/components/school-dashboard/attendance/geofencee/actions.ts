@@ -62,6 +62,9 @@ type ActionResult<T = unknown> = {
  * @param data Location data from GPS
  * @returns Success status and processed event IDs
  */
+// Who may look at zones and the live map (editing stays ADMIN/TEACHER).
+const GEO_VIEW_ROLES: string[] = ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"]
+
 export async function submitLocation(
   data: LocationInput
 ): Promise<ActionResult<{ eventIds: string[] }>> {
@@ -447,7 +450,7 @@ export async function getGeofences(): Promise<
     const role = session.user.role
 
     // Check permissions
-    if (role !== "ADMIN" && role !== "TEACHER") {
+    if (!GEO_VIEW_ROLES.includes(role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -520,7 +523,7 @@ export async function getLiveStudentLocations(
     const role = session.user.role
 
     // Check permissions
-    if (role !== "ADMIN" && role !== "TEACHER") {
+    if (!GEO_VIEW_ROLES.includes(role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 

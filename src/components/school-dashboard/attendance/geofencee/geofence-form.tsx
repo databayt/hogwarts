@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createCircularGeofence } from "./actions"
 import {
@@ -84,7 +85,13 @@ const PRESET_COLORS: { value: string; key: ColorKey }[] = [
 ]
 
 export function GeofenceForm({ onSuccess, dictionary }: GeofenceFormProps) {
-  const t = dictionary?.attendance as Record<string, unknown> | undefined
+  // The strings live in the top-level `attendance` namespace; a passed
+  // dictionary wins, else the provider's (it was never passed, so the form
+  // was always English).
+  const { dictionary: ctx } = useDictionary()
+  const t = (dictionary?.attendance ?? ctx?.attendance) as
+    | Record<string, unknown>
+    | undefined
   const geofenceDict = t?.geofence as Record<string, unknown> | undefined
   const formDict = t?.geofenceForm as Record<string, string> | undefined
   const colorsDict = t?.colors as Record<string, string> | undefined

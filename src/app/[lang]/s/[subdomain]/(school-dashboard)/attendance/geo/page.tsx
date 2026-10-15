@@ -11,9 +11,11 @@
  * authenticated through `/api/mobile/...`.
  */
 
+import type { Metadata } from "next"
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { GeofenceContent } from "@/components/school-dashboard/attendance/geofencee/content"
 
@@ -35,7 +37,16 @@ export default async function GeofencePage({ params }: Props) {
   return <GeofenceContent lang={lang} />
 }
 
-export const metadata = {
-  title: "Geofence Tracking | balqalam",
-  description: "Automatic attendance tracking using GPS location",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const t = dictionary?.attendanceTake?.meta
+  return {
+    title: t?.geo ?? "Attendance · Location check-in",
+    description: t?.description,
+  }
 }

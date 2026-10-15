@@ -103,6 +103,7 @@ const typeConfig: Record<
 export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.attendance
+  const g = dictionary?.attendanceTake?.geo
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGeofence, setSelectedGeofence] = useState<Geofence | null>(
     null
@@ -138,7 +139,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
     try {
       const result = await deleteGeofence(selectedGeofence.id)
       if (result.success) {
-        DeleteToast(t?.contextActions?.attendanceDeleted ?? "Geofence deleted")
+        DeleteToast(g?.deleted ?? "Zone deleted")
         onRefresh?.()
       } else {
         toast.error(
@@ -160,11 +161,11 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <MapPin className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {t?.geofenceForm?.createGeofence ?? "No Geofences Created"}
+            {g?.emptyTitle ?? "No zones yet"}
           </h3>
           <p className="text-muted-foreground mb-4 text-center text-sm">
-            {t?.geofenceForm?.dialogDescription ??
-              "Create your first geofence to enable automatic attendance tracking when students enter designated areas."}
+            {g?.emptyDescription ??
+              "Add a zone around the school so arrivals are marked automatically."}
           </p>
         </CardContent>
       </Card>
@@ -231,12 +232,12 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                         {geofence.isActive ? (
                           <>
                             <PowerOff className="me-2 h-4 w-4" />
-                            {t?.mtss?.pending ?? "Deactivate"}
+                            {g?.deactivate ?? "Turn off"}
                           </>
                         ) : (
                           <>
                             <Power className="me-2 h-4 w-4" />
-                            {t?.gamification?.active ?? "Activate"}
+                            {g?.activate ?? "Turn on"}
                           </>
                         )}
                       </DropdownMenuItem>
@@ -260,14 +261,15 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                 {geofence.centerLat && geofence.centerLon && (
                   <div className="text-muted-foreground space-y-1 text-xs">
                     <p>
-                      {t?.geofenceForm?.latitude ?? "Center"}:{" "}
-                      {geofence.centerLat.toFixed(4)},{" "}
+                      {g?.center ?? "Center"}: {geofence.centerLat.toFixed(4)},{" "}
                       {geofence.centerLon.toFixed(4)}
                     </p>
                     {geofence.radiusMeters && (
                       <p>
-                        {t?.geofenceForm?.radius ?? "Radius"}:{" "}
-                        {geofence.radiusMeters}m
+                        {(g?.radius ?? "Radius {n} m").replace(
+                          "{n}",
+                          String(geofence.radiusMeters)
+                        )}
                       </p>
                     )}
                   </div>
@@ -283,8 +285,8 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                     />
                     <span className="text-sm">
                       {geofence.isActive
-                        ? (t?.gamification?.active ?? "Active")
-                        : (t?.barcodeCards?.inactive ?? "Inactive")}
+                        ? (g?.active ?? "On")
+                        : (g?.inactive ?? "Off")}
                     </span>
                   </div>
                   <Switch
@@ -299,8 +301,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                   <div className="flex items-center gap-2 rounded-lg bg-green-50 p-2 text-xs text-green-700">
                     <CircleAlert className="h-3 w-3" />
                     <span>
-                      {t?.geofenceForm?.typeDescription ??
-                        "Auto-marks attendance on entry (6-10 AM)"}
+                      {g?.autoMark ?? "Marks arrivals present (6–10 AM)"}
                     </span>
                   </div>
                 )}

@@ -2,19 +2,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Geofence Content - Main Server Component
- * Combines student tracking and admin live map views
+ * Location check-in (staff): the live map of students on campus and the
+ * zones that mark arrivals automatically. Students share their location
+ * from the mobile app; this page is the school's side of it.
  */
 
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { AttendanceSectionNav } from "../ui/section-nav"
 import { getGeofences, getLiveStudentLocations } from "./actions"
 import { GeoLiveMap } from "./geo-live-map"
-import { GeoTracker } from "./geo-tracker"
 import { GeofenceForm } from "./geofence-form"
 import { GeofenceList } from "./geofence-list"
 
@@ -22,126 +22,61 @@ interface GeofenceContentProps {
   lang?: string
 }
 
-export async function GeofenceContent({ lang = "en" }: GeofenceContentProps) {
+/** Zone editing — the create/update/delete actions allow these roles. */
+const EDIT_ROLES = ["ADMIN", "TEACHER"]
+
+export async function GeofenceContent({ lang = "ar" }: GeofenceContentProps) {
   const session = await auth()
-
-  if (!session?.user?.schoolId) {
-    redirect("/auth/signin")
-  }
-
-  const schoolId = session.user.schoolId
-  const role = session.user.role
+  const schoolId = session?.user?.schoolId ?? ""
+  const role = session?.user?.role ?? ""
+  const canEdit = EDIT_ROLES.includes(role)
 
   const dictionary = await getDictionary(lang as "en" | "ar")
-  const t = (dictionary.school.attendance as any)?.geofence as
-    | Record<string, string>
-    | undefined
+  const t = (dictionary.attendanceTake?.geo ?? {}) as Record<string, string>
 
-  // Determine user permissions
-  const isStudent = role === "STUDENT"
-  const canManage = role === "ADMIN" || role === "TEACHER"
-
-  // Fetch initial data for admin/teacher view
-  let initialGeofences: any[] = []
-  let initialLocations: any[] = []
-
-  if (canManage) {
-    const [geofencesResult, locationsResult] = await Promise.all([
-      getGeofences(),
-      getLiveStudentLocations(5),
-    ])
-
-    if (geofencesResult.success && geofencesResult.data) {
-      initialGeofences = geofencesResult.data
-    }
-
-    if (locationsResult.success && locationsResult.data) {
-      initialLocations = locationsResult.data
-    }
-  }
+  const [geofencesResult, locationsResult] = await Promise.all([
+    getGeofences(),
+    getLiveStudentLocations(5),
+  ])
+  const geofences =
+    geofencesResult.success && geofencesResult.data ? geofencesResult.data : []
+  const locations =
+    locationsResult.success && locationsResult.data ? locationsResult.data : []
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2>{t?.title || "Geofence Attendance Tracking"}</h2>
-        <p className="text-muted-foreground">
-          {t?.description ||
-            "Automatic attendance marking using GPS location tracking"}
-        </p>
-      </div>
+      <AttendanceSectionNav group="take" />
 
-      {isStudent && (
-        <div className="space-y-4">
-          <GeoTracker />
-          <div className="text-muted-foreground max-md:bg-muted rounded-lg border p-4 text-sm max-md:border-0">
-            <p className="mb-2 font-medium">
-              {t?.howItWorks || "How it works:"}
+      <Tabs defaultValue="map" className="space-y-4">
+        <TabsList className="rounded-full">
+          <TabsTrigger value="map" className="rounded-full">
+            {t.liveMap ?? "Live map"}
+          </TabsTrigger>
+          <TabsTrigger value="zones" className="rounded-full">
+            {t.zones ?? "Zones"}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="map" className="space-y-4">
+          <GeoLiveMap
+            schoolId={schoolId}
+            initialLocations={locations}
+            initialGeofences={geofences}
+            t={{ ...t, locale: lang }}
+          />
+        </TabsContent>
+
+        <TabsContent value="zones" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-muted-foreground text-sm">
+              {t.zonesDescription ??
+                "Areas that mark a student present when they arrive."}
             </p>
-            <ul className="list-inside list-disc space-y-1">
-              <li>
-                {t?.step1 ||
-                  "Your school admin defines geofence boundaries on the map"}
-              </li>
-              <li>
-                {t?.step2 ||
-                  "Students enable location tracking on their devices"}
-              </li>
-              <li>
-                {t?.step3 ||
-                  "When a student enters a geofence, attendance is automatically marked"}
-              </li>
-              <li>
-                {t?.step4 ||
-                  "Administrators can monitor real-time student locations"}
-              </li>
-            </ul>
+            {canEdit ? <GeofenceForm /> : null}
           </div>
-        </div>
-      )}
-
-      {canManage && (
-        <Tabs defaultValue="map" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="map">{t?.liveMap || "Live Map"}</TabsTrigger>
-            <TabsTrigger value="geofences">
-              {t?.manageGeofences || "Manage Geofences"}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="map" className="space-y-4">
-            <GeoLiveMap
-              schoolId={schoolId}
-              initialLocations={initialLocations}
-              initialGeofences={initialGeofences}
-            />
-          </TabsContent>
-
-          <TabsContent value="geofences" className="space-y-4">
-            <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-3">
-              <div>
-                <h3>{t?.geofences || "Geofences"}</h3>
-                <p className="text-muted-foreground">
-                  {t?.defineAreas ||
-                    "Define areas that trigger automatic attendance"}
-                </p>
-              </div>
-              <GeofenceForm />
-            </div>
-
-            {/* Geofence List with Management */}
-            <GeofenceList geofences={initialGeofences} />
-          </TabsContent>
-        </Tabs>
-      )}
-
-      {!isStudent && !canManage && (
-        <div className="text-muted-foreground py-12 text-center">
-          <p>
-            {t?.permissionDenied ||
-              "You do not have permission to manage geofence settings."}
-          </p>
-        </div>
-      )}
+          <GeofenceList geofences={geofences} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

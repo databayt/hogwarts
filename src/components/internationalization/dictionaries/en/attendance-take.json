@@ -178,5 +178,30 @@
       "yesterday": "Yesterday",
       "daysAgo": "days ago"
     }
+  },
+  "geo": {
+    "liveMap": "Live map",
+    "zones": "Zones",
+    "zonesDescription": "Areas that mark a student present when they arrive.",
+    "liveTitle": "Live student locations",
+    "liveDescription": "Students on campus, updated every few seconds",
+    "lastUpdate": "Updated {time}",
+    "refresh": "Refresh",
+    "fetchFailed": "Couldn't load locations",
+    "radius": "Radius {n} m",
+    "accuracy": "Accuracy ±{n} m",
+    "battery": "Battery {n}%",
+    "inZones": "In {n} zone(s)",
+    "noStudents": "No students on the map right now",
+    "noStudentsHint": "Students appear here once they turn on location in the app.",
+    "emptyTitle": "No zones yet",
+    "emptyDescription": "Add a zone around the school so arrivals are marked automatically.",
+    "deactivate": "Turn off",
+    "activate": "Turn on",
+    "active": "On",
+    "inactive": "Off",
+    "center": "Center",
+    "autoMark": "Marks arrivals present (6–10 AM)",
+    "deleted": "Zone deleted"
   }
 }

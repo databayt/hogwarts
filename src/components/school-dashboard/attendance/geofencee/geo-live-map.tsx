@@ -31,6 +31,7 @@ import {
 import { SuccessToast } from "@/components/atom/toast"
 
 import { phone } from "../shared/phone"
+import { getLiveStudentLocations } from "./actions"
 
 // Dynamically import Leaflet components (SSR compatibility)
 const MapContainer = dynamic(
@@ -86,7 +87,8 @@ interface GeoLiveMapProps {
   center?: [number, number] // Default map center [lat, lon]
   zoom?: number // Default zoom level
   pollingInterval?: number // Fallback polling interval (ms, default: 10000)
-  useWebSocket?: boolean // Enable WebSocket (default: true)
+  useWebSocket?: boolean // Opt in to WebSocket (no /api/geo/ws server exists yet)
+  t?: Record<string, string>
 }
 
 // ============================================================================
@@ -100,8 +102,11 @@ export function GeoLiveMap({
   center = [24.7136, 46.6753], // Riyadh, Saudi Arabia default
   zoom = 13,
   pollingInterval = 10000, // 10 seconds
-  useWebSocket = true,
+  useWebSocket = false,
+  t = {},
 }: GeoLiveMapProps) {
+  const timeLocale = t.locale === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US"
+
   // State
   const [locations, setLocations] =
     useState<StudentLocation[]>(initialLocations)
@@ -129,28 +134,23 @@ export function GeoLiveMap({
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(
-        `/api/geo/live?schoolId=${schoolId}&maxAgeMinutes=5`
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data.success && data.data) {
+      // The server action shares the view roles with this page (the
+      // /api/geo/live route answers ADMIN/TEACHER only).
+      const result = await getLiveStudentLocations(5)
+      if (result.success && result.data) {
         setLocations(
-          data.data.map((loc: any) => ({
+          result.data.map((loc) => ({
             ...loc,
             timestamp: new Date(loc.timestamp),
           }))
         )
         setLastUpdate(new Date())
+      } else {
+        throw new Error("fetch failed")
       }
     } catch (error) {
       console.error("Error fetching locations:", error)
-      setError("Failed to fetch locations")
+      setError(t.fetchFailed ?? "Couldn't load locations")
     } finally {
       setIsLoading(false)
     }
@@ -372,20 +372,14 @@ export function GeoLiveMap({
           <div>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Live Student Locations
+              {t.liveTitle ?? "Live student locations"}
             </CardTitle>
             <CardDescription>
-              Real-time tracking of students on campus
+              {t.liveDescription ??
+                "Students on campus, updated every few seconds"}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={isConnected ? "default" : "secondary"}>
-              {connectionType === "websocket" && (
-                <>{isConnected ? "🟢" : "🔴"} WebSocket</>
-              )}
-              {connectionType === "polling" && "🟡 Polling"}
-              {!connectionType && "Connecting..."}
-            </Badge>
             <Badge variant="outline">
               <Users className="me-1 h-3 w-3" />
               {locations.length}
@@ -398,7 +392,12 @@ export function GeoLiveMap({
         <div className="flex items-center justify-between">
           <div className="text-muted-foreground text-sm">
             {lastUpdate && (
-              <span>Last update: {lastUpdate.toLocaleTimeString()}</span>
+              <span>
+                {(t.lastUpdate ?? "Updated {time}").replace(
+                  "{time}",
+                  lastUpdate.toLocaleTimeString(timeLocale)
+                )}
+              </span>
             )}
           </div>
           <Button
@@ -412,7 +411,7 @@ export function GeoLiveMap({
             ) : (
               <RefreshCw className="me-2 h-4 w-4" />
             )}
-            Refresh
+            {t.refresh ?? "Refresh"}
           </Button>
         </div>
 
@@ -461,7 +460,10 @@ export function GeoLiveMap({
                         {geofence.type}
                       </p>
                       <p className="text-xs">
-                        Radius: {geofence.radiusMeters}m
+                        {(t.radius ?? "Radius {n} m").replace(
+                          "{n}",
+                          String(geofence.radiusMeters)
+                        )}
                       </p>
                     </div>
                   </Popup>
@@ -478,19 +480,30 @@ export function GeoLiveMap({
                   <div className="space-y-1 text-sm">
                     <p className="font-medium">{location.studentName}</p>
                     <p className="text-muted-foreground text-xs">
-                      {location.timestamp.toLocaleTimeString()}
+                      {location.timestamp.toLocaleTimeString(timeLocale)}
                     </p>
                     {location.accuracy && (
                       <p className="text-xs">
-                        Accuracy: ±{Math.round(location.accuracy)}m
+                        {(t.accuracy ?? "Accuracy ±{n} m").replace(
+                          "{n}",
+                          String(Math.round(location.accuracy))
+                        )}
                       </p>
                     )}
                     {location.battery !== null && (
-                      <p className="text-xs">Battery: {location.battery}%</p>
+                      <p className="text-xs">
+                        {(t.battery ?? "Battery {n}%").replace(
+                          "{n}",
+                          String(location.battery)
+                        )}
+                      </p>
                     )}
                     {location.currentGeofences.length > 0 && (
                       <p className="text-xs">
-                        In {location.currentGeofences.length} geofence(s)
+                        {(t.inZones ?? "In {n} zone(s)").replace(
+                          "{n}",
+                          String(location.currentGeofences.length)
+                        )}
                       </p>
                     )}
                   </div>
@@ -504,9 +517,10 @@ export function GeoLiveMap({
         {locations.length === 0 && (
           <div className="text-muted-foreground py-8 text-center">
             <MapPin className="mx-auto mb-2 h-12 w-12 opacity-20" />
-            <p>No students currently tracked</p>
+            <p>{t.noStudents ?? "No students on the map right now"}</p>
             <p className="text-sm">
-              Student locations will appear when they enable tracking
+              {t.noStudentsHint ??
+                "Students appear here once they turn on location in the app."}
             </p>
           </div>
         )}
