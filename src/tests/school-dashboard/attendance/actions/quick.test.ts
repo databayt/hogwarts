@@ -13,6 +13,7 @@ import {
 
 vi.mock("@/lib/db", () => ({
   db: {
+    school: { findUnique: vi.fn() },
     teacher: { findFirst: vi.fn() },
     section: { findMany: vi.fn(), findFirst: vi.fn() },
     timetable: { findMany: vi.fn() },
@@ -57,6 +58,9 @@ function mockAuth(role = "TEACHER", schoolId: string | null = SCHOOL) {
 beforeEach(() => {
   vi.clearAllMocks()
   mockAuth("TEACHER")
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    timezone: "Africa/Khartoum",
+  } as never)
   vi.mocked(db.schoolWeekConfig.findMany).mockResolvedValue([] as never)
   vi.mocked(db.timetable.findMany).mockResolvedValue([] as never)
   vi.mocked(db.attendance.groupBy).mockResolvedValue([] as never)
@@ -69,6 +73,36 @@ describe("getQuickMarkingContext", () => {
     mockAuth("STUDENT")
     const result = await getQuickMarkingContext()
     expect(result.success).toBe(false)
+  })
+
+  it("resolves today in the school's timezone, not the server's", async () => {
+    // 22:30 UTC on Oct 14 is 00:30 on Oct 15 in Khartoum (UTC+2): the mark
+    // belongs to the 15th (stored as midnight UTC of that date), a Thursday.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-10-14T22:30:00.000Z"))
+    try {
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+      vi.mocked(db.section.findMany).mockResolvedValue([
+        {
+          id: "sec-a",
+          name: "A",
+          grade: { name: "G1" },
+          _count: { students: 3 },
+        },
+      ] as never)
+      const result = await getQuickMarkingContext()
+      expect(result.success).toBe(true)
+      if (!result.success) return
+      expect(result.data!.today).toBe("2026-10-15T00:00:00.000Z")
+      const slotWhere = vi.mocked(db.timetable.findMany).mock.calls[0][0]!
+        .where!
+      expect(slotWhere.dayOfWeek).toBe(4)
+      const markedWhere = vi.mocked(db.attendance.groupBy).mock.calls[0][0]
+        .where as { date: Date }
+      expect(markedWhere.date.toISOString()).toBe("2026-10-15T00:00:00.000Z")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("returns empty sections for a TEACHER with no teacher row", async () => {

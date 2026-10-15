@@ -75,6 +75,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { localCalendarDay } from "@/components/school-dashboard/attendance/core/local-date"
 
 import {
   bulkUploadAttendance,
@@ -136,8 +137,8 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     }[]
   >([])
   const [selectedSection, setSelectedSection] = useState<string>("")
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    localCalendarDay()
   )
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([])
   const [loadingData, setLoadingData] = useState(true)

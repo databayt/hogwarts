@@ -137,11 +137,17 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
 
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }),
+      new Intl.DateTimeFormat(
+        locale === "ar" ? "ar-u-ca-gregory-nu-latn" : "en",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          // `today` is midnight UTC of the school's day — read it in UTC so a
+          // browser west of UTC doesn't show yesterday.
+          timeZone: "UTC",
+        }
+      ),
     [locale]
   )
 

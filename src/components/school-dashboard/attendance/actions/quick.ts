@@ -6,6 +6,12 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { schoolTimeStringOf } from "@/lib/timezone"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfInstant,
+  schoolDayOfWeek,
+} from "@/components/school-dashboard/live/day-window"
 
 import type { ActionResponse } from "./core"
 import { guardAttendance } from "./helpers"
@@ -66,9 +72,20 @@ export async function getQuickMarkingContext(): Promise<
     if (!g.ok) return g.error
     const { schoolId, userId, role } = g
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const dayOfWeek = today.getDay()
+    // "Today" is the SCHOOL's calendar day, never the server's: setHours /
+    // getDay read the server zone, so on a server east of UTC (or for a
+    // school east of a UTC server, just after midnight) every quick mark
+    // landed on the previous day. Marks are stored at midnight UTC of the
+    // calendar date (what the manual page sends), so `today` is that instant.
+    const now = new Date()
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    })
+    const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
+    const todayDay = schoolDayOfInstant(timeZone, now) // "YYYY-MM-DD"
+    const today = new Date(`${todayDay}T00:00:00.000Z`)
+    const dayOfWeek = schoolDayOfWeek(timeZone, now)
 
     // Teacher identity + scoping
     let teacherId: string | null = null
@@ -164,10 +181,7 @@ export async function getQuickMarkingContext(): Promise<
 
     // Slot lookup: earliest slot per section; current-period detection via
     // wall-clock HH:mm against the period's Time window.
-    const now = new Date()
-    const nowHHmm = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`
+    const nowHHmm = schoolTimeStringOf(now, timeZone)
     const slotBySection = new Map<
       string,
       { name: string; start: string | null; end: string | null }

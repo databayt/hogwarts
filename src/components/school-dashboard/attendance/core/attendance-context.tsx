@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 
 import { toast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { localCalendarDay } from "@/components/school-dashboard/attendance/core/local-date"
 
 import {
   addStudentIdentifier as addIdentifierAction,
@@ -203,11 +204,9 @@ export function AttendanceProvider({
   const [methods] = useState<AttendanceMethodConfig[]>(ATTENDANCE_METHODS)
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [stats, setStats] = useState<AttendanceStats | null>(null)
-  const [selectedSection, setSelectedSection] = useState<string | null>(
-    null
-  )
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+  const [selectedSection, setSelectedSection] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    localCalendarDay()
   )
   const [studentIdentifiers, setStudentIdentifiers] = useState<
     StudentIdentifier[]
