@@ -2,475 +2,272 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * MTSS Tiered Interventions Content
- *
- * Dashboard for viewing students by MTSS tier and managing interventions.
+ * Support tiers (MTSS). Same students and thresholds as the at-risk list —
+ * Tier 1 watch / Tier 2 targeted / Tier 3 intensive — so the three counts
+ * add up to "All at risk" there. Tap a student to start a tiered action.
  */
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import Image from "next/image"
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { toast } from "sonner"
 
 import { displayName } from "@/lib/name-utils"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
+import { formatCount } from "@/components/school-dashboard/school/configuration/ui/format"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import { phone } from "../../shared/phone"
+import { BAND_TONE, formatRate, tierBand } from "../../early-warning/risk"
+import {
+  pick,
+  useRiskDict,
+  type RiskDict,
+} from "../../early-warning/use-risk-dict"
+import { AttendanceSectionNav } from "../../ui/section-nav"
 import {
   createTieredIntervention,
   getMTSSStats,
   getStudentsByTier,
 } from "./actions"
-import {
-  getRecommendedActions,
-  TIER_THRESHOLDS,
-  type TierLevel,
-} from "./validation"
+import { getRecommendedActions, type TierLevel } from "./validation"
 
 interface Student {
   id: string
   firstName: string
   middleName?: string | null
   lastName: string
-  grNumber: string | null
-  profilePhotoUrl: string | null
-  absenceRate: number
+  sectionName: string | null
+  rate: number
   totalDays: number
   absentDays: number
   tier: TierLevel
   hasActiveIntervention: boolean
-  studentYearLevels: Array<{
-    yearLevel: { levelName: string } | null
-  }>
-}
-
-interface TierData {
-  students: Student[]
-  count: number
-  threshold: { min: number; max: number }
 }
 
 interface Stats {
   pending: number
-  scheduled: number
-  inProgress: number
   completedThisMonth: number
   escalatedThisMonth: number
   overdue: number
 }
 
-const tierConfig: Record<
-  TierLevel,
-  { label: { en: string; ar: string }; color: string; bgColor: string }
-> = {
-  TIER_1: {
-    label: { en: "Tier 1 - Universal", ar: "المستوى 1 - شامل" },
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-  },
-  TIER_2: {
-    label: { en: "Tier 2 - Targeted", ar: "المستوى 2 - موجه" },
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-  },
-  TIER_3: {
-    label: { en: "Tier 3 - Intensive", ar: "المستوى 3 - مكثف" },
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-  },
-}
+const TIERS: TierLevel[] = ["TIER_3", "TIER_2", "TIER_1"]
+const STEP = 25
 
-const actionLabels: Record<string, { en: string; ar: string }> = {
-  WELCOME_MESSAGE: { en: "Welcome Message", ar: "رسالة ترحيب" },
-  POSITIVE_RECOGNITION: { en: "Positive Recognition", ar: "تقدير إيجابي" },
-  ATTENDANCE_INCENTIVE: { en: "Attendance Incentive", ar: "حافز الحضور" },
-  CLASS_COMPETITION: { en: "Class Competition", ar: "مسابقة الفصل" },
-  PERFECT_ATTENDANCE_CERTIFICATE: {
-    en: "Perfect Attendance Certificate",
-    ar: "شهادة حضور مثالي",
-  },
-  PARENT_PHONE_CALL: { en: "Parent Phone Call", ar: "اتصال ولي الأمر" },
-  PARENT_EMAIL: { en: "Parent Email", ar: "بريد ولي الأمر" },
-  COUNSELOR_CHECK_IN: { en: "Counselor Check-in", ar: "متابعة المرشد" },
-  ACADEMIC_SUPPORT_REFERRAL: { en: "Academic Support", ar: "دعم أكاديمي" },
-  ATTENDANCE_LETTER_1: { en: "Attendance Letter 1", ar: "رسالة الحضور 1" },
-  MENTOR_ASSIGNMENT: { en: "Mentor Assignment", ar: "تعيين موجه" },
-  PARENT_CONFERENCE_REQUEST: {
-    en: "Parent Conference",
-    ar: "اجتماع ولي الأمر",
-  },
-  HOME_VISIT_SCHEDULED: { en: "Home Visit", ar: "زيارة منزلية" },
-  SOCIAL_WORKER_REFERRAL: {
-    en: "Social Worker Referral",
-    ar: "إحالة للأخصائي",
-  },
-  ATTENDANCE_CONTRACT: { en: "Attendance Contract", ar: "عقد الحضور" },
-  ATTENDANCE_LETTER_2: { en: "Attendance Letter 2", ar: "رسالة الحضور 2" },
-  ATTENDANCE_LETTER_3: { en: "Attendance Letter 3", ar: "رسالة الحضور 3" },
-  TRUANCY_REFERRAL: { en: "Truancy Referral", ar: "إحالة للتغيب" },
-  ADMINISTRATOR_MEETING: { en: "Administrator Meeting", ar: "اجتماع الإدارة" },
-  COMMUNITY_RESOURCE_CONNECTION: {
-    en: "Community Resources",
-    ar: "موارد مجتمعية",
-  },
-  LEGAL_NOTICE: { en: "Legal Notice", ar: "إشعار قانوني" },
-}
-
-interface MTSSContentProps {
-  locale: string
-}
-
-export function MTSSContent({ locale }: MTSSContentProps) {
-  const { dictionary } = useDictionary()
+export function MTSSContent({ locale }: { locale: string }) {
+  const lang = locale
   const nameDisplay = useNameDisplay()
-  const t = dictionary?.attendance?.mtss
-  const isRTL = locale === "ar"
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedTier, setSelectedTier] = useState<TierLevel>("TIER_2")
-  const [tierData, setTierData] = useState<Record<TierLevel, TierData>>({
-    TIER_1: { students: [], count: 0, threshold: TIER_THRESHOLDS.TIER_1 },
-    TIER_2: { students: [], count: 0, threshold: TIER_THRESHOLDS.TIER_2 },
-    TIER_3: { students: [], count: 0, threshold: TIER_THRESHOLDS.TIER_3 },
+  const { t } = useRiskDict()
+  const tp: NonNullable<RiskDict["tiersPage"]> = t.tiersPage ?? {}
+
+  const [loading, setLoading] = useState(true)
+  const [tier, setTier] = useState<TierLevel>("TIER_3")
+  const [data, setData] = useState<Record<TierLevel, Student[]>>({
+    TIER_1: [],
+    TIER_2: [],
+    TIER_3: [],
   })
   const [stats, setStats] = useState<Stats | null>(null)
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [isActionLoading, setIsActionLoading] = useState(false)
+  const [open, setOpen] = useState<string | null>(null)
+  const [shown, setShown] = useState(STEP)
+  const [isPending, startTransition] = useTransition()
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    const [tierResult, statsResult] = await Promise.all([
-      getStudentsByTier(),
-      getMTSSStats(),
-    ])
-
-    if (tierResult.success && tierResult.data) {
-      const data = tierResult.data as {
-        tier1: TierData
-        tier2: TierData
-        tier3: TierData
-      }
-      setTierData({
-        TIER_1: data.tier1,
-        TIER_2: data.tier2,
-        TIER_3: data.tier3,
-      })
-    }
-
-    if (statsResult.success && statsResult.data) {
-      setStats(statsResult.data as Stats)
-    }
-
-    setIsLoading(false)
-  }, [])
+  const [, startLoading] = useTransition()
+  const load = useCallback(
+    () =>
+      startLoading(async () => {
+        const [tierResult, statsResult] = await Promise.all([
+          getStudentsByTier(),
+          getMTSSStats(),
+        ])
+        if (tierResult.success && tierResult.data) {
+          const d = tierResult.data as Record<string, { students: Student[] }>
+          setData({
+            TIER_1: d.tier1.students,
+            TIER_2: d.tier2.students,
+            TIER_3: d.tier3.students,
+          })
+        }
+        if (statsResult.success && statsResult.data) {
+          setStats(statsResult.data as Stats)
+        }
+        setLoading(false)
+      }),
+    []
+  )
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    load()
+  }, [load])
 
-  const handleCreateIntervention = async (student: Student, action: string) => {
-    setIsActionLoading(true)
-    const result = await createTieredIntervention({
-      studentId: student.id,
-      tier: student.tier,
-      action,
-      title: `${actionLabels[action]?.[isRTL ? "ar" : "en"] || action} - ${displayName(student, nameDisplay)}`,
-      priority:
-        student.tier === "TIER_3" ? 4 : student.tier === "TIER_2" ? 3 : 2,
-      parentNotify: student.tier !== "TIER_1",
+  const act = (student: Student, action: string) =>
+    startTransition(async () => {
+      const label = pick(tp.actions, action) ?? action
+      const result = await createTieredIntervention({
+        studentId: student.id,
+        tier: student.tier,
+        action,
+        title: `${label} · ${displayName(student, nameDisplay)}`,
+        priority:
+          student.tier === "TIER_3" ? 4 : student.tier === "TIER_2" ? 3 : 2,
+        parentNotify: student.tier !== "TIER_1",
+      })
+      if (result.success) {
+        toast.success(t.create?.done)
+        setOpen(null)
+        load()
+      } else {
+        toast.error(t.create?.failed)
+      }
     })
 
-    if (result.success) {
-      loadData()
-      setSelectedStudent(null)
-    }
-    setIsActionLoading(false)
-  }
+  const figures = stats
+    ? [
+        { label: tp.pending, value: stats.pending },
+        { label: tp.completedThisMonth, value: stats.completedThisMonth },
+        { label: tp.escalations, value: stats.escalatedThisMonth },
+        { label: tp.overdue, value: stats.overdue, alert: stats.overdue > 0 },
+      ]
+    : null
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
-  }
+  const list = data[tier]
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">
-          {t?.title || "MTSS Intervention System"}
-        </h1>
-        <p className="text-muted-foreground">
-          {t?.subtitle || "Multi-tiered system of supports for attendance"}
+      <AttendanceSectionNav group="risk" />
+
+      {figures ? (
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          {figures.map((f) => (
+            <div key={f.label} className="space-y-1">
+              <dt className="text-muted-foreground text-xs">{f.label}</dt>
+              <dd
+                className={cn(
+                  "text-2xl font-semibold tracking-tight tabular-nums",
+                  f.alert && "text-red-600 dark:text-red-400"
+                )}
+              >
+                {formatCount(f.value, lang)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      <div className="space-y-2">
+        <Segmented
+          value={tier}
+          onValueChange={(v) => {
+            setTier(v)
+            setOpen(null)
+            setShown(STEP)
+          }}
+          options={TIERS.map((v) => ({
+            value: v,
+            label: (
+              <span className="flex items-center gap-1.5">
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    BAND_TONE[tierBand(v)].dot
+                  )}
+                  aria-hidden
+                />
+                {t.tiers?.[v]} · {t.tierNames?.[v]}
+                {!loading ? (
+                  <span className="text-muted-foreground tabular-nums">
+                    {formatCount(data[v].length, lang)}
+                  </span>
+                ) : null}
+              </span>
+            ),
+          }))}
+          className="overflow-x-auto"
+        />
+        <p className="text-muted-foreground px-1 text-xs">
+          {t.tierHints?.[tier]}
         </p>
       </div>
 
-      {/* Stats Overview */}
-      {stats && (
-        <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
-          <Card className={phone.cell}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
+      {loading ? (
+        <div className="space-y-2 rounded-2xl border p-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      ) : list.length === 0 ? (
+        <div className="bg-card rounded-2xl border px-6 py-16 text-center font-medium">
+          {tp.empty}
+        </div>
+      ) : (
+        <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+          {list.slice(0, shown).map((s) => (
+            <div key={s.id}>
+              <button
+                type="button"
+                onClick={() => setOpen(open === s.id ? null : s.id)}
+                aria-expanded={open === s.id}
+                className="hover:bg-muted/40 flex w-full items-center gap-4 px-4 py-3 text-start transition-colors"
               >
-                {t?.pending || "Pending"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div className={cn("text-2xl font-bold", phone.cellValue)}>
-                {stats.pending}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.completed_this_month || "Completed This Month"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-green-600",
-                  phone.cellValue
-                )}
-              >
-                {stats.completedThisMonth}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className={phone.cell}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.escalations || "Escalations"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-yellow-600",
-                  phone.cellValue
-                )}
-              >
-                {stats.escalatedThisMonth}
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className={cn(
-              stats.overdue > 0 ? "border-destructive" : "",
-              phone.cell
-            )}
-          >
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.overdue || "Overdue"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold",
-                  phone.cellValue,
-                  stats.overdue > 0 && "text-destructive"
-                )}
-              >
-                {stats.overdue}
-              </div>
-            </CardContent>
-          </Card>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    <bdi>{displayName(s, nameDisplay)}</bdi>
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    {s.sectionName ? (
+                      <>
+                        <bdi>{s.sectionName}</bdi> ·{" "}
+                      </>
+                    ) : null}
+                    {(tp.days ?? "")
+                      .replace("{absent}", formatCount(s.absentDays, lang))
+                      .replace("{total}", formatCount(s.totalDays, lang))}
+                    {s.hasActiveIntervention ? ` · ${tp.active}` : ""}
+                  </p>
+                </div>
+                <span className="text-sm font-medium tabular-nums">
+                  {formatRate(s.rate, lang)}
+                </span>
+              </button>
+              {open === s.id ? (
+                <div className="bg-muted/30 px-4 pt-1 pb-3">
+                  <p className="text-muted-foreground mb-2 text-xs">
+                    {tp.pickAction}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {getRecommendedActions(s.tier).map((action) => (
+                      <Button
+                        key={action}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full"
+                        disabled={isPending}
+                        onClick={() => act(s, action)}
+                      >
+                        {pick(tp.actions, action) ?? action}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Tier Tabs */}
-      <Tabs
-        value={selectedTier}
-        onValueChange={(v) => setSelectedTier(v as TierLevel)}
-      >
-        <TabsList className="no-scrollbar grid w-full grid-cols-3 max-md:flex max-md:justify-start max-md:overflow-x-auto">
-          {(["TIER_1", "TIER_2", "TIER_3"] as TierLevel[]).map((tier) => (
-            <TabsTrigger
-              key={tier}
-              value={tier}
-              className={cn(
-                "data-[state=active]:bg-opacity-20",
-                tierConfig[tier].color
-              )}
-            >
-              <span className="flex items-center gap-2">
-                {tierConfig[tier].label[isRTL ? "ar" : "en"]}
-                <Badge variant="secondary">{tierData[tier].count}</Badge>
-              </span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {(["TIER_1", "TIER_2", "TIER_3"] as TierLevel[]).map((tier) => (
-          <TabsContent key={tier} value={tier} className="mt-4">
-            {/* Tier description */}
-            <div
-              className={cn(
-                "mb-4 rounded-lg p-4 max-md:p-3 max-md:text-sm",
-                tierConfig[tier].bgColor,
-                tierConfig[tier].color
-              )}
-            >
-              <p className="font-medium">
-                {tier === "TIER_1" &&
-                  (t?.tier1_desc ||
-                    "Students with <10% absence rate - Focus on prevention and positive reinforcement")}
-                {tier === "TIER_2" &&
-                  (t?.tier2_desc ||
-                    "Students with 10-19% absence rate - Need early intervention and targeted support")}
-                {tier === "TIER_3" &&
-                  (t?.tier3_desc ||
-                    "Students with 20%+ absence rate - Need intensive support and urgent intervention")}
-              </p>
-            </div>
-
-            {/* Student list */}
-            {tierData[tier].students.length === 0 ? (
-              <Card className={phone.card}>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">
-                    {t?.no_students_in_tier || "No students in this tier"}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {tierData[tier].students.map((student) => (
-                  <Card
-                    key={student.id}
-                    className={cn(
-                      "hover:bg-accent cursor-pointer transition-colors",
-                      phone.card,
-                      selectedStudent?.id === student.id &&
-                        "ring-primary ring-2"
-                    )}
-                    onClick={() =>
-                      setSelectedStudent(
-                        selectedStudent?.id === student.id ? null : student
-                      )
-                    }
-                  >
-                    <CardContent className="flex items-center justify-between py-4 max-md:gap-3 max-md:px-4">
-                      <div className="flex items-center gap-4 max-md:min-w-0 max-md:gap-3">
-                        {/* Photo */}
-                        <div className="bg-muted max-md:bg-background h-12 w-12 overflow-hidden rounded-full max-md:shrink-0">
-                          {student.profilePhotoUrl ? (
-                            <Image
-                              src={student.profilePhotoUrl}
-                              alt={displayName(student, nameDisplay)}
-                              width={48}
-                              height={48}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-lg">
-                              {student.firstName.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        {/* Info */}
-                        <div className="max-md:min-w-0">
-                          <p className="font-medium">
-                            <bdi dir="auto">
-                              {displayName(student, nameDisplay)}
-                            </bdi>
-                          </p>
-                          <p className="text-muted-foreground text-sm">
-                            {student.grNumber} •{" "}
-                            {student.studentYearLevels[0]?.yearLevel?.levelName}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-4">
-                        <div className="text-end">
-                          <p
-                            className={cn(
-                              "text-lg font-bold",
-                              tierConfig[tier].color
-                            )}
-                          >
-                            {student.absenceRate}%
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {student.absentDays}/{student.totalDays}{" "}
-                            {t?.days || "days"}
-                          </p>
-                        </div>
-                        {student.hasActiveIntervention && (
-                          <Badge variant="outline">
-                            {t?.active || "Active"}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-
-                    {/* Expanded actions */}
-                    {selectedStudent?.id === student.id && (
-                      <div className="border-t px-4 py-3">
-                        <p className="text-muted-foreground mb-2 text-sm">
-                          {t?.select_intervention ||
-                            "Select intervention action:"}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {getRecommendedActions(tier).map((action) => (
-                            <Button
-                              key={action}
-                              variant="outline"
-                              size="sm"
-                              disabled={isActionLoading}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleCreateIntervention(student, action)
-                              }}
-                            >
-                              {actionLabels[action]?.[isRTL ? "ar" : "en"] ||
-                                action}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+      {list.length > shown ? (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => setShown((n) => n + STEP)}
+          >
+            {tp.showMore}
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

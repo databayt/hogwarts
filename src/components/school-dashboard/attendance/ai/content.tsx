@@ -8,7 +8,7 @@
  */
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
@@ -18,22 +18,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-
-import { phone } from "../shared/phone"
-import { AttendancePageSkeleton } from "../loading-skeleton"
 import { SkeletonList } from "@/components/atom/loading"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { formatCount } from "@/components/school-dashboard/school/configuration/ui/format"
+
+import { BAND_TONE } from "../early-warning/risk"
+import { useRiskDict, type RiskDict } from "../early-warning/use-risk-dict"
+import { AttendancePageSkeleton } from "../loading-skeleton"
+import { phone } from "../shared/phone"
+import { AttendanceSectionNav } from "../ui/section-nav"
 import {
   createInterventionFromRecommendation,
   getAtRiskStudents,
   runRiskPredictions,
   translateMessage,
 } from "./actions"
-import {
-  RISK_LEVELS,
-  type AtRiskStudent,
-  type PredictionSummary,
-} from "./validation"
+import { type AtRiskStudent, type PredictionSummary } from "./validation"
 
 interface AIContentProps {
   locale: string
@@ -42,6 +42,8 @@ interface AIContentProps {
 export function AIContent({ locale }: AIContentProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.attendance?.ai
+  const tr: NonNullable<RiskDict["ai"]> = useRiskDict().t.ai ?? {}
+  const levels = (tr.levels ?? {}) as Record<string, string>
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(true)
   const [isRunningPredictions, setIsRunningPredictions] = useState(false)
@@ -58,20 +60,24 @@ export function AIContent({ locale }: AIContentProps) {
   const [isTranslating, setIsTranslating] = useState(false)
   const [targetLang, setTargetLang] = useState<"ar" | "en">(isRTL ? "en" : "ar")
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    const result = await getAtRiskStudents()
+  const [, startLoading] = useTransition()
+  const loadData = useCallback(
+    () =>
+      startLoading(async () => {
+        const result = await getAtRiskStudents()
 
-    if (result.success && result.data) {
-      const data = result.data as {
-        students: AtRiskStudent[]
-        summary: PredictionSummary
-      }
-      setStudents(data.students)
-      setSummary(data.summary)
-    }
-    setIsLoading(false)
-  }, [])
+        if (result.success && result.data) {
+          const data = result.data as {
+            students: AtRiskStudent[]
+            summary: PredictionSummary
+          }
+          setStudents(data.students)
+          setSummary(data.summary)
+        }
+        setIsLoading(false)
+      }),
+    []
+  )
 
   useEffect(() => {
     loadData()
@@ -124,18 +130,14 @@ export function AIContent({ locale }: AIContentProps) {
     setIsTranslating(false)
   }
 
-  const getRiskBadgeColor = (level: string) => {
-    switch (level) {
-      case "CRITICAL":
-        return "bg-red-500 text-white"
-      case "HIGH":
-        return "bg-orange-500 text-white"
-      case "MODERATE":
-        return "bg-yellow-500 text-black"
-      default:
-        return "bg-green-500 text-white"
-    }
-  }
+  const LEVEL_BAND = {
+    CRITICAL: "critical",
+    HIGH: "high",
+    MODERATE: "moderate",
+    LOW: "ok",
+  } as const
+  const getRiskBadgeColor = (level: string) =>
+    BAND_TONE[LEVEL_BAND[level as keyof typeof LEVEL_BAND] ?? "ok"].badge
 
   if (isLoading) {
     return (
@@ -153,136 +155,60 @@ export function AIContent({ locale }: AIContentProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{t?.title || "AI Analytics"}</h1>
-          <p className="text-muted-foreground">
-            {t?.subtitle || "Risk predictions and auto-translation"}
-          </p>
-        </div>
+      <AttendanceSectionNav group="risk" />
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        {summary ? (
+          <dl className="grid flex-1 grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-5">
+            {[
+              { label: tr.summary, value: summary.total, dot: null },
+              {
+                label: levels.CRITICAL,
+                value: summary.critical,
+                dot: BAND_TONE.critical.dot,
+              },
+              {
+                label: levels.HIGH,
+                value: summary.high,
+                dot: BAND_TONE.high.dot,
+              },
+              {
+                label: levels.MODERATE,
+                value: summary.moderate,
+                dot: BAND_TONE.moderate.dot,
+              },
+              {
+                label: tr.avgScore,
+                value: Math.round(summary.averageRiskScore),
+                dot: null,
+              },
+            ].map((f) => (
+              <div key={f.label} className="space-y-1">
+                <dt className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  {f.dot ? (
+                    <span className={cn("size-1.5 rounded-full", f.dot)} />
+                  ) : null}
+                  {f.label}
+                </dt>
+                <dd className="text-2xl font-semibold tracking-tight tabular-nums">
+                  {formatCount(f.value, locale)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <div />
+        )}
         <Button
           onClick={handleRunPredictions}
           disabled={isRunningPredictions}
-          className={phone.pill}
+          className="rounded-full"
         >
           {isRunningPredictions
             ? t?.analyzing || "Analyzing..."
             : t?.run_predictions || "Run Predictions"}
         </Button>
       </div>
-
-      {/* Summary Cards */}
-      {summary && (
-        <div className={cn("grid gap-4 md:grid-cols-5", phone.panel)}>
-          <Card className={phone.cell}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.total_at_risk || "Total At-Risk"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div className={cn("text-2xl font-bold", phone.cellValue)}>
-                {summary.total}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn("border-red-200 bg-red-50", phone.cell)}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium text-red-700",
-                  phone.cellLabel
-                )}
-              >
-                {RISK_LEVELS.CRITICAL.label[isRTL ? "ar" : "en"]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-red-700",
-                  phone.cellValue
-                )}
-              >
-                {summary.critical}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn("border-orange-200 bg-orange-50", phone.cell)}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium text-orange-700",
-                  phone.cellLabel
-                )}
-              >
-                {RISK_LEVELS.HIGH.label[isRTL ? "ar" : "en"]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-orange-700",
-                  phone.cellValue
-                )}
-              >
-                {summary.high}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn("border-yellow-200 bg-yellow-50", phone.cell)}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium text-yellow-700",
-                  phone.cellLabel
-                )}
-              >
-                {RISK_LEVELS.MODERATE.label[isRTL ? "ar" : "en"]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div
-                className={cn(
-                  "text-2xl font-bold text-yellow-700",
-                  phone.cellValue
-                )}
-              >
-                {summary.moderate}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={phone.cell}>
-            <CardHeader className={cn("pb-2", phone.cellHead)}>
-              <CardTitle
-                className={cn(
-                  "text-sm font-medium",
-                  phone.cellLabel,
-                  "max-md:text-muted-foreground"
-                )}
-              >
-                {t?.avg_risk_score || "Avg. Risk Score"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={phone.cellBody}>
-              <div className={cn("text-2xl font-bold", phone.cellValue)}>
-                {summary.averageRiskScore.toFixed(0)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -381,11 +307,7 @@ export function AIContent({ locale }: AIContentProps) {
                         </div>
 
                         <Badge className={getRiskBadgeColor(student.riskLevel)}>
-                          {
-                            RISK_LEVELS[student.riskLevel].label[
-                              isRTL ? "ar" : "en"
-                            ]
-                          }
+                          {levels[student.riskLevel]}
                         </Badge>
 
                         {student.hasActiveIntervention && (

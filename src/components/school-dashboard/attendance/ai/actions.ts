@@ -29,6 +29,7 @@ import { translate } from "@/components/translation/actions"
 import { detectLang } from "@/components/translation/util"
 
 import { isStaffRole } from "../authorization"
+import { atRiskRows, computeStudentRisk } from "../early-warning/queries"
 import {
   getRiskLevelFromScore,
   runPredictionSchema,
@@ -305,76 +306,58 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
   }
 
   try {
-    // Get students with high absence rates as a quick filter
-    const now = new Date()
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
+    // Baseline = the shared risk computation (early-warning/queries.ts), so
+    // this list is the same students, same levels, as the at-risk list.
+    // "Run predictions" layers the model's score on top.
+    const rows = atRiskRows(await computeStudentRisk(schoolId))
     const students = await db.student.findMany({
-      where: {
-        schoolId,
-        status: "ACTIVE" as StudentStatus,
-      },
+      where: { schoolId, id: { in: rows.map((r) => r.studentId) } },
       include: {
         studentYearLevels: {
           orderBy: { createdAt: "desc" },
           take: 1,
           include: { yearLevel: true },
         },
-        attendances: {
-          where: {
-            deletedAt: null,
-            date: { gte: thirtyDaysAgo },
-          },
-          select: { status: true },
-        },
         attendanceStreak: true,
         attendanceInterventions: {
-          where: { status: { not: "COMPLETED" } },
+          where: { status: { in: ["SCHEDULED", "IN_PROGRESS", "ESCALATED"] } },
           take: 1,
         },
       },
     })
-
+    const byId = new Map(students.map((s) => [s.id, s]))
     const nameDisplay = await schoolNameDisplay(schoolId)
+    const LEVEL = {
+      critical: "CRITICAL",
+      high: "HIGH",
+      moderate: "MODERATE",
+    } as const
 
-    // Calculate risk scores using simple statistical method
-    const atRiskStudents: AtRiskStudent[] = students
-      .map((student) => {
-        const attendanceRecords = student.attendances as {
-          status: AttendanceStatus
-        }[]
-        const totalDays = attendanceRecords.length
-        const absentDays = attendanceRecords.filter(
-          (a: { status: AttendanceStatus }) => a.status === "ABSENT"
-        ).length
-        const absenceRate = totalDays > 0 ? (absentDays / totalDays) * 100 : 0
-
-        // Simple risk score calculation
-        let riskScore = Math.min(absenceRate * 2.5, 100)
-
-        // Adjust for active intervention
-        if (student.attendanceInterventions.length > 0) {
-          riskScore = Math.max(riskScore - 10, 0)
-        }
-
-        return {
-          id: student.id,
-          name: displayName(student, nameDisplay),
-          grNumber: student.grNumber,
-          yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName || null,
-          profilePhotoUrl: student.profilePhotoUrl,
-          riskScore: Math.round(riskScore),
-          riskLevel: getRiskLevelFromScore(riskScore),
-          confidence: 0.7,
-          absenceRate: Math.round(absenceRate * 10) / 10,
-          currentStreak: student.attendanceStreak?.currentStreak || 0,
-          factors: [],
-          recommendations: [],
-          predictedAbsences30Days: Math.round((absenceRate / 100) * 30),
-          hasActiveIntervention: student.attendanceInterventions.length > 0,
-        }
+    const atRiskStudents: AtRiskStudent[] = rows
+      .flatMap((r) => {
+        const student = byId.get(r.studentId)
+        if (!student) return []
+        const absenceRate = 100 - r.rate
+        return [
+          {
+            id: student.id,
+            name: displayName(student, nameDisplay),
+            grNumber: student.grNumber,
+            yearLevel:
+              student.studentYearLevels[0]?.yearLevel?.levelName || null,
+            profilePhotoUrl: student.profilePhotoUrl,
+            riskScore: Math.round(Math.min(absenceRate * 2.5, 100)),
+            riskLevel: LEVEL[r.band as keyof typeof LEVEL],
+            confidence: 0.7,
+            absenceRate: Math.round(absenceRate * 10) / 10,
+            currentStreak: student.attendanceStreak?.currentStreak || 0,
+            factors: [],
+            recommendations: [],
+            predictedAbsences30Days: Math.round((absenceRate / 100) * 30),
+            hasActiveIntervention: student.attendanceInterventions.length > 0,
+          },
+        ]
       })
-      .filter((s) => s.riskScore >= 26) // Only moderate+ risk
       .sort((a, b) => b.riskScore - a.riskScore)
 
     const summary: PredictionSummary = {

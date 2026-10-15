@@ -2,18 +2,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Compliance Letters Content
- *
- * UI for generating and managing attendance compliance letters.
+ * Letters — pick a letter type (Segmented), tick students who need it
+ * (shared risk thresholds, see early-warning/risk.ts), preview, then one
+ * primary "Generate" action. `?student=<id>&band=<band>` (from the at-risk
+ * list) preselects a fitting letter and that student.
  */
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
@@ -23,401 +24,317 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatCount } from "@/components/school-dashboard/school/configuration/ui/format"
+import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
-import { phone } from "../shared/phone"
-import { SkeletonList } from "@/components/atom/loading"
+import { formatRate } from "../early-warning/risk"
+import { pick, pl, useRiskDict, type RiskDict } from "../early-warning/use-risk-dict"
+import { AttendanceSectionNav } from "../ui/section-nav"
 import {
   bulkGenerateLetters,
   getStudentsNeedingLetters,
   previewLetter,
 } from "./actions"
-import {
-  letterTemplates,
-  letterTypes,
-  type DeliveryMethod,
-  type LetterType,
-} from "./validation"
+import { type DeliveryMethod, type LetterType } from "./validation"
 
 interface StudentForLetter {
   id: string
   name: string
-  grNumber: string | null
-  yearLevel?: string
-  absenceRate: number
+  sectionName: string | null
+  rate: number
   absentDays: number
   totalDays: number
-  guardianEmail?: string | null
   hasGuardianEmail: boolean
 }
 
-const letterTypeLabels: Record<LetterType, { en: string; ar: string }> = {
-  ATTENDANCE_NOTICE_1: { en: "First Notice", ar: "الإشعار الأول" },
-  ATTENDANCE_NOTICE_2: { en: "Second Notice", ar: "الإشعار الثاني" },
-  ATTENDANCE_NOTICE_3: { en: "Final Notice", ar: "الإشعار النهائي" },
-  TRUANCY_WARNING: { en: "Truancy Warning", ar: "تحذير التغيب" },
-  ATTENDANCE_CONTRACT: { en: "Attendance Contract", ar: "عقد الحضور" },
-  ATTENDANCE_IMPROVEMENT: { en: "Improvement Recognition", ar: "تقدير التحسن" },
-  PERFECT_ATTENDANCE: { en: "Perfect Attendance", ar: "الحضور المثالي" },
+const WARNINGS: LetterType[] = [
+  "ATTENDANCE_NOTICE_1",
+  "ATTENDANCE_NOTICE_2",
+  "ATTENDANCE_NOTICE_3",
+  "TRUANCY_WARNING",
+  "ATTENDANCE_CONTRACT",
+]
+const POSITIVE: LetterType[] = ["ATTENDANCE_IMPROVEMENT", "PERFECT_ATTENDANCE"]
+
+const AUDIENCE: Record<
+  LetterType,
+  "high" | "critical" | "improving" | "perfect"
+> = {
+  ATTENDANCE_NOTICE_1: "high",
+  ATTENDANCE_NOTICE_2: "high",
+  ATTENDANCE_NOTICE_3: "critical",
+  TRUANCY_WARNING: "critical",
+  ATTENDANCE_CONTRACT: "critical",
+  ATTENDANCE_IMPROVEMENT: "improving",
+  PERFECT_ATTENDANCE: "perfect",
 }
 
-const tierColors: Record<string, string> = {
-  TIER_1: "bg-green-100 text-green-700",
-  TIER_2: "bg-yellow-100 text-yellow-700",
-  TIER_3: "bg-red-100 text-red-700",
-}
+const METHODS: DeliveryMethod[] = ["EMAIL", "PRINT", "PORTAL"]
+const STEP = 25
 
-interface LettersContentProps {
-  locale: string
-}
+export function LettersContent({ locale }: { locale: string }) {
+  const lang = locale
+  const params = useSearchParams()
+  const focusStudent = params.get("student")
+  const focusBand = params.get("band")
 
-export function LettersContent({ locale }: LettersContentProps) {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.attendance?.letters
-  const isRTL = locale === "ar"
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedLetterType, setSelectedLetterType] = useState<LetterType | "">(
-    ""
+  const { t: dict } = useRiskDict()
+  const t: NonNullable<RiskDict["letters"]> = dict.letters ?? {}
+
+  const [group, setGroup] = useState<"warning" | "positive">("warning")
+  const [type, setType] = useState<LetterType>(
+    focusBand === "critical" ? "ATTENDANCE_NOTICE_3" : "ATTENDANCE_NOTICE_1"
   )
+  const [method, setMethod] = useState<DeliveryMethod>("EMAIL")
   const [students, setStudents] = useState<StudentForLetter[]>([])
-  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
-    new Set()
-  )
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("EMAIL")
-
-  // Preview state
-  const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewStudent, setPreviewStudent] = useState<StudentForLetter | null>(
-    null
-  )
-  const [previewContent, setPreviewContent] = useState<{
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [shown, setShown] = useState(STEP)
+  const [isSending, startSending] = useTransition()
+  const [preview, setPreview] = useState<{
+    name: string
     subject: string
     body: string
   } | null>(null)
 
-  // Sending state
-  const [isSending, setIsSending] = useState(false)
-  const [sendResult, setSendResult] = useState<{
-    succeeded: number
-    failed: number
-  } | null>(null)
-
-  const loadStudents = useCallback(async () => {
-    if (!selectedLetterType) {
-      setStudents([])
-      return
-    }
-
-    setIsLoading(true)
-    const result = await getStudentsNeedingLetters(selectedLetterType)
-    if (result.success && result.data) {
-      setStudents(result.data as StudentForLetter[])
-    }
-    setIsLoading(false)
-    setSelectedStudents(new Set())
-  }, [selectedLetterType])
+  const [, startLoading] = useTransition()
+  const load = useCallback(
+    () =>
+      startLoading(async () => {
+        setLoading(true)
+        const result = await getStudentsNeedingLetters(type)
+        const list =
+          result.success && result.data
+            ? (result.data as StudentForLetter[])
+            : []
+        setStudents(list)
+        setSelected(
+          new Set(
+            focusStudent && list.some((s) => s.id === focusStudent)
+              ? [focusStudent]
+              : []
+          )
+        )
+        setShown(STEP)
+        setLoading(false)
+      }),
+    [type, focusStudent]
+  )
 
   useEffect(() => {
-    loadStudents()
-  }, [loadStudents])
+    load()
+  }, [load])
 
-  const handlePreview = async (student: StudentForLetter) => {
-    if (!selectedLetterType) return
+  const types = group === "warning" ? WARNINGS : POSITIVE
 
-    const result = await previewLetter(
-      student.id,
-      selectedLetterType,
-      isRTL ? "ar" : "en"
-    )
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const allSelected = students.length > 0 && selected.size === students.length
 
-    if (result.success && result.data) {
-      const data = result.data as { subject: string; body: string }
-      setPreviewStudent(student)
-      setPreviewContent({ subject: data.subject, body: data.body })
-      setPreviewOpen(true)
+  const openPreview = async (s: StudentForLetter) => {
+    const r = await previewLetter(s.id, type, lang === "ar" ? "ar" : "en")
+    if (r.success && r.data) {
+      const d = r.data as { subject: string; body: string }
+      setPreview({ name: s.name, subject: d.subject, body: d.body })
     }
   }
 
-  const handleSendLetters = async () => {
-    if (!selectedLetterType || selectedStudents.size === 0) return
-
-    setIsSending(true)
-    const result = await bulkGenerateLetters(
-      Array.from(selectedStudents),
-      selectedLetterType,
-      deliveryMethod
-    )
-
-    if (result.success && result.data) {
-      const data = result.data as { succeeded: number; failed: number }
-      setSendResult(data)
-      loadStudents() // Refresh list
-    }
-    setIsSending(false)
-  }
-
-  const toggleStudent = (studentId: string) => {
-    const newSelected = new Set(selectedStudents)
-    if (newSelected.has(studentId)) {
-      newSelected.delete(studentId)
-    } else {
-      newSelected.add(studentId)
-    }
-    setSelectedStudents(newSelected)
-  }
-
-  const toggleAll = () => {
-    if (selectedStudents.size === students.length) {
-      setSelectedStudents(new Set())
-    } else {
-      setSelectedStudents(new Set(students.map((s) => s.id)))
-    }
-  }
-
-  const template = selectedLetterType
-    ? letterTemplates[selectedLetterType]
-    : null
+  const generate = () =>
+    startSending(async () => {
+      const r = await bulkGenerateLetters([...selected], type, method)
+      const d = r.data as { succeeded: number; failed: number } | undefined
+      if (d) {
+        const msg = pl(t.done, d.succeeded, lang)
+        if (d.failed > 0)
+          toast.warning(
+            `${msg} · ${(t.someFailed ?? "").replace("{n}", formatCount(d.failed, lang))}`
+          )
+        else toast.success(msg)
+        load()
+      }
+    })
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">
-          {t?.title || "Attendance Letters"}
-        </h1>
-        <p className="text-muted-foreground">
-          {t?.subtitle || "Generate and send attendance compliance letters"}
+      <AttendanceSectionNav group="risk" />
+
+      <div className="space-y-3">
+        <Segmented
+          value={group}
+          onValueChange={(g) => {
+            setGroup(g)
+            setType(g === "warning" ? "ATTENDANCE_NOTICE_1" : POSITIVE[0])
+          }}
+          options={[
+            { value: "warning", label: t.groups?.warning },
+            { value: "positive", label: t.groups?.positive },
+          ]}
+        />
+        <Segmented
+          value={type}
+          onValueChange={setType}
+          options={types.map((v) => ({ value: v, label: t.types?.[v] ?? v }))}
+          className="overflow-x-auto"
+        />
+        <p className="text-muted-foreground px-1 text-xs">
+          {t.for?.[AUDIENCE[type]]}
         </p>
       </div>
 
-      {/* Letter Type Selection */}
-      <Card className={phone.card}>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {t?.select_letter_type || "Select Letter Type"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Select
-            value={selectedLetterType}
-            onValueChange={(v) => setSelectedLetterType(v as LetterType)}
-          >
-            <SelectTrigger className={phone.field}>
-              <SelectValue
-                placeholder={t?.choose_letter_type || "Choose letter type..."}
+      {loading ? (
+        <div className="space-y-2 rounded-2xl border p-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      ) : students.length === 0 ? (
+        <div className="bg-card flex flex-col items-center gap-1 rounded-2xl border px-6 py-16 text-center">
+          <p className="font-medium">{t.empty}</p>
+          <p className="text-muted-foreground max-w-sm text-sm">
+            {t.emptyHint}
+          </p>
+        </div>
+      ) : (
+        <div className="bg-card divide-border/60 divide-y overflow-hidden rounded-2xl border">
+          <label className="flex cursor-pointer items-center gap-3 px-4 py-2.5">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() =>
+                setSelected(
+                  allSelected ? new Set() : new Set(students.map((s) => s.id))
+                )
+              }
+            />
+            <span className="text-muted-foreground text-xs">{t.selectAll}</span>
+          </label>
+          {students.slice(0, shown).map((s) => (
+            <div
+              key={s.id}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 transition-colors",
+                selected.has(s.id) && "bg-muted/40"
+              )}
+            >
+              <Checkbox
+                checked={selected.has(s.id)}
+                onCheckedChange={() => toggle(s.id)}
+                aria-label={s.name}
               />
-            </SelectTrigger>
-            <SelectContent>
-              {letterTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={tierColors[letterTemplates[type].tier]}
-                    >
-                      {letterTemplates[type].tier.replace("_", " ")}
-                    </Badge>
-                    {letterTypeLabels[type][isRTL ? "ar" : "en"]}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {template && (
-            <div className={cn("rounded-lg p-4", tierColors[template.tier])}>
-              <p className="text-sm">
-                {template.tier === "TIER_1"
-                  ? t?.tier_desc_1 ||
-                    "This letter is for students with <10% absence rate"
-                  : template.tier === "TIER_2"
-                    ? t?.tier_desc_2 ||
-                      "This letter is for students with 10-19% absence rate"
-                    : t?.tier_desc_3 ||
-                      "This letter is for students with 20%+ absence rate"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Students List */}
-      {selectedLetterType && (
-        <Card className={phone.card}>
-          <CardHeader className="flex flex-row items-center justify-between max-md:flex-wrap max-md:gap-3">
-            <CardTitle className="text-base">
-              {t?.eligible_students || "Eligible Students"}
-              <Badge variant="secondary" className="ms-2">
-                {students.length}
-              </Badge>
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Select
-                value={deliveryMethod}
-                onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}
+              <button
+                type="button"
+                className="min-w-0 flex-1 text-start"
+                onClick={() => toggle(s.id)}
               >
-                <SelectTrigger className={cn("w-32", phone.field)}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EMAIL">{t?.email || "Email"}</SelectItem>
-                  <SelectItem value="PRINT">{t?.print || "Print"}</SelectItem>
-                  <SelectItem value="PORTAL">
-                    {t?.portal || "Portal"}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleSendLetters}
-                disabled={selectedStudents.size === 0 || isSending}
-                className="max-md:rounded-full max-md:px-5"
-              >
-                {isSending
-                  ? t?.sending || "Sending..."
-                  : (t?.send_count || "Send ({count})").replace(
-                      "{count}",
-                      String(selectedStudents.size)
-                    )}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div role="status" aria-busy="true">
-                <span className="sr-only">{dictionary?.common?.loading}</span>
-                <SkeletonList items={4} showAvatar={false} />
-              </div>
-            ) : students.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center">
-                {t?.no_students_need_letter || "No students need this letter"}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {/* Select all header */}
-                <div className="flex items-center gap-3 border-b pb-2">
-                  <Checkbox
-                    checked={selectedStudents.size === students.length}
-                    onCheckedChange={toggleAll}
-                  />
-                  <span className="text-muted-foreground text-sm">
-                    {t?.select_all || "Select all"}
-                  </span>
-                </div>
-
-                {/* Student rows */}
-                {students.map((student) => (
-                  <div
-                    key={student.id}
-                    className={cn(
-                      "hover:bg-accent flex items-center justify-between rounded-lg p-3 transition-colors max-md:gap-2 max-md:px-2",
-                      selectedStudents.has(student.id) &&
-                        "bg-accent max-md:bg-background"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 max-md:min-w-0">
-                      <Checkbox
-                        checked={selectedStudents.has(student.id)}
-                        onCheckedChange={() => toggleStudent(student.id)}
-                      />
-                      <div>
-                        <p className="font-medium">{student.name}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {student.grNumber} • {student.yearLevel}
-                          {!student.hasGuardianEmail && (
-                            <span className="text-destructive ms-2">
-                              {t?.no_email || "(No email)"}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 max-md:gap-1">
-                      <div className="text-end">
-                        <p className="font-bold text-red-600">
-                          {student.absenceRate}%
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {student.absentDays}/{student.totalDays}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePreview(student)}
-                      >
-                        {t?.preview || "Preview"}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Send Result */}
-      {sendResult && (
-        <Card className="max-md:bg-muted border-green-500">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <p>
-                {(
-                  t?.sent_success || "Successfully sent {count} letters"
-                ).replace("{count}", String(sendResult.succeeded))}
-                {sendResult.failed > 0 && (
-                  <span className="text-destructive ms-2">
-                    ({sendResult.failed} {t?.failed || "failed"})
-                  </span>
-                )}
-              </p>
+                <p className="truncate text-sm font-medium">
+                  <bdi>{s.name}</bdi>
+                </p>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  {s.sectionName ? (
+                    <>
+                      <bdi>{s.sectionName}</bdi> ·{" "}
+                    </>
+                  ) : null}
+                  {(t.missed ?? "")
+                    .replace("{absent}", formatCount(s.absentDays, lang))
+                    .replace("{total}", formatCount(s.totalDays, lang))}
+                  {!s.hasGuardianEmail && method === "EMAIL" ? (
+                    <span className="text-amber-700 dark:text-amber-400">
+                      {" · "}
+                      {t.noEmail}
+                    </span>
+                  ) : null}
+                </p>
+              </button>
+              <span className="text-sm font-medium tabular-nums">
+                {formatRate(s.rate, lang)}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSendResult(null)}
+                className="rounded-full"
+                onClick={() => openPreview(s)}
               >
-                {t?.dismiss || "Dismiss"}
+                {t.preview}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       )}
 
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+      {students.length > shown ? (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => setShown((n) => n + STEP)}
+          >
+            {t.showMore}
+          </Button>
+        </div>
+      ) : null}
+
+      {students.length > 0 ? (
+        <div className="bg-background/80 sticky bottom-4 flex flex-col gap-3 rounded-2xl border p-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground text-xs">{t.delivery}</span>
+            <Segmented
+              value={method}
+              onValueChange={setMethod}
+              options={METHODS.map((m) => ({
+                value: m,
+                label: pick(t.methods, m) ?? m,
+              }))}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground text-sm tabular-nums">
+              {pl(t.selected, selected.size, lang)}
+            </span>
+            <Button
+              className="rounded-full px-6"
+              disabled={selected.size === 0 || isSending}
+              onClick={generate}
+            >
+              {isSending
+                ? t.generating
+                : (t.generate ?? "{n}").replace(
+                    "{n}",
+                    formatCount(selected.size, lang)
+                  )}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t?.letter_preview || "Letter Preview"}</DialogTitle>
-            <DialogDescription>{previewStudent?.name}</DialogDescription>
+            <DialogTitle>{t.previewTitle}</DialogTitle>
+            <DialogDescription>
+              <bdi>{preview?.name}</bdi>
+            </DialogDescription>
           </DialogHeader>
-          {previewContent && (
-            <div className="space-y-4">
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-muted-foreground mb-1 text-sm">
-                  {t?.subject || "Subject:"}
-                </p>
-                <p className="font-medium">{previewContent.subject}</p>
-              </div>
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-muted-foreground mb-2 text-sm">
-                  {t?.body || "Body:"}
-                </p>
-                <pre className="font-sans text-sm whitespace-pre-wrap">
-                  {previewContent.body}
-                </pre>
-              </div>
+          {preview ? (
+            <div className="space-y-3">
+              <p className="font-medium">{preview.subject}</p>
+              <pre className="bg-muted/50 rounded-xl p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap">
+                {preview.body}
+              </pre>
             </div>
-          )}
+          ) : null}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              {t?.close || "Close"}
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => setPreview(null)}
+            >
+              {t.close}
             </Button>
           </DialogFooter>
         </DialogContent>

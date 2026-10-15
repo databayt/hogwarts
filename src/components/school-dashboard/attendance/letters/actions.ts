@@ -19,6 +19,8 @@ import { refreshPage } from "@/lib/refresh-page"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { isStaffRole } from "../authorization"
+import { computeStudentRisk, riskWindowStart } from "../early-warning/queries"
+import { tierBand } from "../early-warning/risk"
 import {
   letterTemplates,
   type DeliveryMethod,
@@ -71,14 +73,6 @@ export async function generateLetter(
           },
         },
         section: { select: { name: true } },
-        attendances: {
-          where: {
-            deletedAt: null,
-            date: {
-              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            },
-          },
-        },
       },
     })
 
@@ -101,12 +95,14 @@ export async function generateLetter(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Calculate attendance stats
-    const totalDays = student.attendances.length
-    const absentDays = student.attendances.filter(
-      (a) => a.status === "ABSENT"
-    ).length
-    const absenceRate = totalDays > 0 ? (absentDays / totalDays) * 100 : 0
+    // Attendance stats over the shared risk window (same numbers the
+    // at-risk list shows)
+    const [risk] = await computeStudentRisk(schoolId, {
+      studentIds: [studentId],
+    })
+    const totalDays = risk?.recordedDays ?? 0
+    const absentDays = risk ? risk.recordedDays - risk.attendedDays : 0
+    const absenceRate = risk ? 100 - risk.rate : 0
 
     // Get template
     const template = letterTemplates[letterType]
@@ -282,7 +278,15 @@ export async function getStudentLetterHistory(
 }
 
 /**
- * Get students who need letters based on tier
+ * Students who need a given letter, from the shared risk computation
+ * (early-warning/queries.ts) so letters agree with the at-risk list and the
+ * support tiers:
+ *   Tier 3 letters (final notice, truancy, contract) → critical (< 80%)
+ *   Tier 2 notices                                   → high (80–90%)
+ *   Improvement recognition                          → at risk and improving
+ *   Perfect attendance                               → no missed day
+ * Students with too few recorded days, or who already got this letter in
+ * the risk window, are left out.
  */
 export async function getStudentsNeedingLetters(
   letterType: LetterType
@@ -303,91 +307,68 @@ export async function getStudentsNeedingLetters(
       return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
-    // Get date range for current month
-    const startOfMonth = new Date(
-      new Date().getFullYear(),
-      new Date().getMonth(),
-      1
-    )
+    const rows = (await computeStudentRisk(schoolId)).filter((r) => {
+      if (r.insufficient) return false
+      if (letterType === "PERFECT_ATTENDANCE")
+        return r.absentDays === 0 && r.excusedDays === 0
+      if (letterType === "ATTENDANCE_IMPROVEMENT")
+        return r.band !== "ok" && r.trend === "improving"
+      return r.band === tierBand(template.tier)
+    })
 
-    // Get students with their attendance
-    const students = await db.student.findMany({
+    const sent = await db.attendanceIntervention.findMany({
       where: {
         schoolId,
-        status: "ACTIVE",
+        studentId: { in: rows.map((r) => r.studentId) },
+        tags: { has: letterType },
+        createdAt: { gte: riskWindowStart() },
       },
-      include: {
+      select: { studentId: true },
+    })
+    const alreadySent = new Set(sent.map((x) => x.studentId))
+    const eligible = rows
+      .filter((r) => !alreadySent.has(r.studentId))
+      .sort((a, b) => a.rate - b.rate)
+
+    const students = await db.student.findMany({
+      where: { schoolId, id: { in: eligible.map((r) => r.studentId) } },
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        grNumber: true,
+        section: { select: { name: true } },
         studentGuardians: {
           where: { isPrimary: true },
-          include: { guardian: true },
-        },
-        studentYearLevels: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          include: { yearLevel: true },
-        },
-        attendances: {
-          where: {
-            deletedAt: null,
-            date: { gte: startOfMonth },
-          },
-        },
-        attendanceInterventions: {
-          where: {
-            tags: { has: letterType },
-          },
-          take: 1,
+          select: { guardian: { select: { emailAddress: true } } },
         },
       },
     })
-
+    const byId = new Map(students.map((s) => [s.id, s]))
     const nameDisplay = await schoolNameDisplay(schoolId)
-
-    // Filter based on tier threshold
-    const thresholds = {
-      TIER_1: { min: 0, max: 9.99 },
-      TIER_2: { min: 10, max: 19.99 },
-      TIER_3: { min: 20, max: 100 },
-    }
-
-    const threshold = thresholds[template.tier]
-
-    const eligibleStudents = students
-      .map((student) => {
-        const totalDays = student.attendances.length
-        const absentDays = student.attendances.filter(
-          (a) => a.status === "ABSENT"
-        ).length
-        const absenceRate = totalDays > 0 ? (absentDays / totalDays) * 100 : 0
-
-        return {
-          ...student,
-          absenceRate,
-          totalDays,
-          absentDays,
-          alreadySent: student.attendanceInterventions.length > 0,
-        }
-      })
-      .filter(
-        (s) =>
-          s.absenceRate >= threshold.min &&
-          s.absenceRate <= threshold.max &&
-          !s.alreadySent
-      )
 
     return {
       success: true,
-      data: eligibleStudents.map((s) => ({
-        id: s.id,
-        name: displayName(s, nameDisplay),
-        grNumber: s.grNumber,
-        yearLevel: s.studentYearLevels[0]?.yearLevel?.levelName,
-        absenceRate: Math.round(s.absenceRate * 10) / 10,
-        absentDays: s.absentDays,
-        totalDays: s.totalDays,
-        guardianEmail: s.studentGuardians[0]?.guardian?.emailAddress,
-        hasGuardianEmail: !!s.studentGuardians[0]?.guardian?.emailAddress,
-      })),
+      data: eligible.flatMap((r) => {
+        const s = byId.get(r.studentId)
+        if (!s) return []
+        const email = s.studentGuardians[0]?.guardian?.emailAddress
+        return [
+          {
+            id: s.id,
+            name: displayName(s, nameDisplay),
+            grNumber: s.grNumber,
+            sectionName: s.section?.name ?? null,
+            rate: r.rate,
+            absenceRate: Math.round((100 - r.rate) * 10) / 10,
+            absentDays: r.recordedDays - r.attendedDays,
+            totalDays: r.recordedDays,
+            guardianEmail: email,
+            hasGuardianEmail: !!email,
+          },
+        ]
+      }),
     }
   } catch (error) {
     console.error("Error getting students needing letters:", error)
@@ -477,14 +458,6 @@ export async function previewLetter(
           include: { guardian: true },
         },
         section: { select: { name: true } },
-        attendances: {
-          where: {
-            deletedAt: null,
-            date: {
-              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            },
-          },
-        },
       },
     })
 
@@ -506,12 +479,13 @@ export async function previewLetter(
       return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
-    // Calculate stats
-    const totalDays = student.attendances.length
-    const absentDays = student.attendances.filter(
-      (a) => a.status === "ABSENT"
-    ).length
-    const absenceRate = totalDays > 0 ? (absentDays / totalDays) * 100 : 0
+    // Same window + rules as the at-risk list
+    const [risk] = await computeStudentRisk(schoolId, {
+      studentIds: [studentId],
+    })
+    const totalDays = risk?.recordedDays ?? 0
+    const absentDays = risk ? risk.recordedDays - risk.attendedDays : 0
+    const absenceRate = risk ? 100 - risk.rate : 0
 
     const guardian = student.studentGuardians[0]?.guardian
 

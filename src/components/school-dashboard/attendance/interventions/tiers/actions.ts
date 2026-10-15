@@ -21,10 +21,12 @@ import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
+import { getTeacherSectionIds, sectionScopeWhere } from "../../actions/helpers"
 import { isStaffRole } from "../../authorization"
+import { atRiskRows, computeStudentRisk } from "../../early-warning/queries"
+import { bandTier, type AtRiskBand } from "../../early-warning/risk"
 import {
   getRecommendedActions,
-  getTierFromAbsenceRate,
   TIER_THRESHOLDS,
   type CreateTieredInterventionInput,
   type TierLevel,
@@ -63,7 +65,12 @@ const actionToInterventionType: Record<string, InterventionType> = {
 }
 
 /**
- * Get students grouped by MTSS tier
+ * Get students grouped by MTSS tier.
+ *
+ * Same source as the students list (early-warning/queries.ts), so the three
+ * tier counts add up to "All at risk" there: Tier 3 = critical (< 80%),
+ * Tier 2 = high (80–90%), Tier 1 = moderate / watch (90–95%). Students
+ * attending ≥ 95%, or with too few recorded days, are in no tier list.
  */
 export async function getStudentsByTier(): Promise<ActionResult> {
   const session = await auth()
@@ -77,24 +84,18 @@ export async function getStudentsByTier(): Promise<ActionResult> {
   }
 
   try {
-    // Get date range for current month
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-    // Calculate school days in month (simplified - should use school calendar)
-    const schoolDays = Math.floor(
-      ((endOfMonth.getTime() - startOfMonth.getTime()) /
-        (1000 * 60 * 60 * 24 * 7)) *
-        5
+    const teacherSectionIds =
+      role === "TEACHER" && session?.user?.id
+        ? await getTeacherSectionIds(schoolId, session.user.id)
+        : null
+    const rows = atRiskRows(
+      await computeStudentRisk(schoolId, {
+        sectionWhere: sectionScopeWhere({ teacherSectionIds }),
+      })
     )
 
-    // Get all active students with their attendance
     const students = await db.student.findMany({
-      where: {
-        schoolId,
-        status: "ACTIVE",
-      },
+      where: { schoolId, id: { in: rows.map((r) => r.studentId) } },
       select: {
         id: true,
         firstName: true,
@@ -102,84 +103,61 @@ export async function getStudentsByTier(): Promise<ActionResult> {
         lastName: true,
         grNumber: true,
         profilePhotoUrl: true,
-        studentYearLevels: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          include: { yearLevel: true },
-        },
-        attendances: {
-          where: {
-            date: { gte: startOfMonth, lte: endOfMonth },
-            deletedAt: null,
-          },
-          select: { status: true },
-        },
+        section: { select: { name: true } },
         attendanceInterventions: {
-          where: { status: { not: "COMPLETED" } },
-          orderBy: { createdAt: "desc" },
+          where: { status: { in: ["SCHEDULED", "IN_PROGRESS", "ESCALATED"] } },
+          select: { id: true },
           take: 1,
         },
       },
     })
+    const byId = new Map(students.map((s) => [s.id, s]))
 
-    // Group students by tier
-    const tier1: typeof students = []
-    const tier2: typeof students = []
-    const tier3: typeof students = []
-
-    for (const student of students) {
-      const totalRecords = student.attendances.length
-      const absentCount = student.attendances.filter(
-        (a) => a.status === "ABSENT"
-      ).length
-
-      const absenceRate =
-        totalRecords > 0 ? (absentCount / totalRecords) * 100 : 0
-      const tier = getTierFromAbsenceRate(absenceRate)
-
-      // Add calculated fields
-      const enrichedStudent = {
-        ...student,
-        absenceRate: Math.round(absenceRate * 10) / 10,
-        totalDays: totalRecords,
-        absentDays: absentCount,
+    const tiers: Record<TierLevel, Array<Record<string, unknown>>> = {
+      TIER_1: [],
+      TIER_2: [],
+      TIER_3: [],
+    }
+    for (const r of rows.sort((a, b) => a.rate - b.rate)) {
+      const s = byId.get(r.studentId)
+      if (!s) continue
+      const tier = bandTier(r.band as AtRiskBand)
+      tiers[tier].push({
+        id: s.id,
+        firstName: s.firstName,
+        middleName: s.middleName,
+        lastName: s.lastName,
+        grNumber: s.grNumber,
+        profilePhotoUrl: s.profilePhotoUrl,
+        sectionName: s.section?.name ?? null,
+        rate: r.rate,
+        absenceRate: Math.round((100 - r.rate) * 10) / 10,
+        totalDays: r.recordedDays,
+        absentDays: r.recordedDays - r.attendedDays,
         tier,
-        hasActiveIntervention: student.attendanceInterventions.length > 0,
-      }
-
-      switch (tier) {
-        case "TIER_1":
-          tier1.push(enrichedStudent as (typeof students)[0])
-          break
-        case "TIER_2":
-          tier2.push(enrichedStudent as (typeof students)[0])
-          break
-        case "TIER_3":
-          tier3.push(enrichedStudent as (typeof students)[0])
-          break
-      }
+        hasActiveIntervention: s.attendanceInterventions.length > 0,
+      })
     }
 
     return {
       success: true,
       data: {
         tier1: {
-          students: tier1,
-          count: tier1.length,
+          students: tiers.TIER_1,
+          count: tiers.TIER_1.length,
           threshold: TIER_THRESHOLDS.TIER_1,
         },
         tier2: {
-          students: tier2,
-          count: tier2.length,
+          students: tiers.TIER_2,
+          count: tiers.TIER_2.length,
           threshold: TIER_THRESHOLDS.TIER_2,
         },
         tier3: {
-          students: tier3,
-          count: tier3.length,
+          students: tiers.TIER_3,
+          count: tiers.TIER_3.length,
           threshold: TIER_THRESHOLDS.TIER_3,
         },
-        totalStudents: students.length,
-        schoolDays,
+        totalStudents: rows.length,
       },
     }
   } catch (error) {
