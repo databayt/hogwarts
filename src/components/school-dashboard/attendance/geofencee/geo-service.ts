@@ -10,6 +10,7 @@
 import type { Decimal } from "@prisma/client/runtime/library"
 
 import { db } from "@/lib/db"
+import { schoolToday } from "@/components/school-dashboard/attendance/core/school-day"
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -290,8 +291,7 @@ export async function processGeofenceEvents(
           const sectionId = student?.sectionId
 
           if (sectionId) {
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
+            const { day: today } = await schoolToday(schoolId)
 
             // Create attendance only if not already marked for today.
             //

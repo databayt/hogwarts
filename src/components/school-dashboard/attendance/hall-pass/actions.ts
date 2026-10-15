@@ -24,6 +24,7 @@ import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
+import { schoolToday } from "@/components/school-dashboard/attendance/core/school-day"
 
 import type { CreateHallPassInput, ReturnHallPassInput } from "./validation"
 
@@ -388,10 +389,8 @@ export async function getHallPassStats(
   const { schoolId } = guard
 
   try {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    // The school's day, not the server's
+    const { start: today, end: tomorrow } = await schoolToday(schoolId)
 
     const where = {
       schoolId,

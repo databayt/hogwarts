@@ -17,8 +17,15 @@ import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
+import { schoolToday } from "@/components/school-dashboard/attendance/core/school-day"
 
 import type { KioskAction, KioskMethod } from "./validation"
+
+/** Minutes since midnight of a school wall time "HH:mm". */
+function wallMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number)
+  return h * 60 + m
+}
 
 /**
  * Kiosk operations run inside a staff/admin-supervised session (the kiosk page
@@ -132,11 +139,8 @@ export async function lookupStudent(
       return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
-    // Get today's date range
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    // Today's window in the SCHOOL's timezone
+    const sd = await schoolToday(schoolId)
 
     // Get last kiosk log to determine next action
     const lastLog = await db.kioskLog.findFirst({
@@ -144,8 +148,8 @@ export async function lookupStudent(
         studentId: student.id,
         schoolId,
         timestamp: {
-          gte: today,
-          lt: tomorrow,
+          gte: sd.start,
+          lt: sd.end,
         },
       },
       orderBy: { timestamp: "desc" },
@@ -157,7 +161,7 @@ export async function lookupStudent(
     const schoolStartMinute = 30
     const lateThresholdMinutes = 15
 
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+    const currentMinutes = wallMinutes(sd.wallTime)
     const schoolStartMinutes = schoolStartHour * 60 + schoolStartMinute
     const isLate = currentMinutes > schoolStartMinutes + lateThresholdMinutes
 
@@ -223,11 +227,10 @@ export async function processKioskCheck(
 
     const now = new Date()
 
-    // Get today's date range
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    // Today in the SCHOOL's timezone; attendance rows sit at midnight UTC of it
+    const sd = await schoolToday(schoolId, now)
+    const today = sd.day
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
 
     // The day is recorded on the student's own section (scoped by schoolId)
     const student = await db.student.findFirst({
@@ -246,7 +249,7 @@ export async function processKioskCheck(
     if (action === "CHECK_IN") {
       const schoolStartMinutes = 7 * 60 + 30 // 7:30 AM
       const lateThresholdMinutes = 15
-      const currentMinutes = now.getHours() * 60 + now.getMinutes()
+      const currentMinutes = wallMinutes(sd.wallTime)
       if (currentMinutes > schoolStartMinutes + lateThresholdMinutes) {
         status = "LATE"
       }

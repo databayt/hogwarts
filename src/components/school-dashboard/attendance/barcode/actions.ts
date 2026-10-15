@@ -11,6 +11,8 @@ import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
+import { guardAttendance } from "@/components/school-dashboard/attendance/actions/helpers"
+import { schoolToday } from "@/components/school-dashboard/attendance/core/school-day"
 
 import {
   checkRateLimit,
@@ -133,7 +135,8 @@ export async function processBarcodeScan(
     // Check if attendance already marked today. Find soft-deleted rows too: the
     // unique tuple still reserves their key, so a create() would collide — we
     // revive the row instead of falsely reporting "already marked".
-    const today = new Date(new Date().toDateString()) // midnight, no time
+    // Midnight UTC of the SCHOOL's day — not the server's midnight.
+    const { day: today } = await schoolToday(schoolId)
     const existingAttendance = await db.attendance.findFirst({
       where: {
         schoolId,
@@ -516,22 +519,15 @@ export async function deleteBarcode(identifierId: string) {
  */
 export async function bulkImportBarcodes(csvData: string) {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      throw new Error("Unauthorized")
-    }
-
-    // Check permissions
-    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
-      throw new Error("Insufficient permissions")
-    }
-
-    const { schoolId } = await getTenantContext()
-
-    if (!schoolId) {
-      throw new Error("School ID is required")
-    }
-    const rows = csvData.split("\n").slice(1) // Skip header
+    // Cards map a student to a scan token — the same admin gate as the
+    // identifier actions (it used to let any TEACHER import cards).
+    const g = await guardAttendance("manage_settings")
+    if (!g.ok) return g.error
+    const { schoolId, userId } = g
+    const rows = csvData
+      .replace(/^\uFEFF/, "")
+      .split(/\r?\n/)
+      .slice(1) // Skip header
     const results = {
       successful: 0,
       failed: 0,
@@ -539,16 +535,22 @@ export async function bulkImportBarcodes(csvData: string) {
     }
 
     for (const row of rows) {
-      const [studentId, barcode, expiryDate] = row
+      const [studentRef, barcode, expiryDate] = row
         .split(",")
-        .map((s) => s.trim())
+        .map((s) => s.trim().replace(/^"|"$/g, ""))
+      const studentId = studentRef
 
       if (!studentId || !barcode) continue
 
       try {
         // Check if student exists
+        // The first column is the student's register number (GR) or id
         const student = await db.student.findFirst({
-          where: { id: studentId, schoolId },
+          where: {
+            schoolId,
+            OR: [{ id: studentRef }, { grNumber: studentRef }],
+          },
+          select: { id: true },
         })
 
         if (!student) {
@@ -572,11 +574,11 @@ export async function bulkImportBarcodes(csvData: string) {
         await db.studentIdentifier.create({
           data: {
             schoolId,
-            studentId,
+            studentId: student.id,
             type: "BARCODE",
             value: barcode,
             isActive: true,
-            issuedBy: session.user.id,
+            issuedBy: userId,
             expiresAt: expiryDate ? new Date(expiryDate) : undefined,
           },
         })

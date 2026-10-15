@@ -9,6 +9,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
+import { schoolToday } from "@/components/school-dashboard/attendance/core/school-day"
 
 import { getOwnedStudentIds } from "../actions/helpers"
 import {
@@ -265,8 +266,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     // daily record already exists for this student/section/day, update it instead
     // of creating a duplicate row (the [schoolId,studentId,sectionId,date,periodId]
     // tuple is not DB-unique for NULL periodId in Postgres, so dedupe in code).
-    const attendanceDate = new Date()
-    attendanceDate.setHours(0, 0, 0, 0)
+    const { day: attendanceDate } = await schoolToday(schoolId)
     const scanNotes = `Scanned via QR_CODE at ${new Date(scannedAt).toISOString()}${location ? ` (${location.lat},${location.lon})` : ""}`
 
     // Upsert lookup must find soft-deleted rows too: the unique tuple still
