@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Toggle } from "@/components/ui/toggle"
 
+import { useBillingText } from "./use-billing-text"
+
 export interface UpdatePlanCardProps {
   currentPlan: Plan
   plans: Plan[]
@@ -31,6 +33,7 @@ export function UpdatePlanCard({
   className,
   title,
 }: UpdatePlanCardProps) {
+  const b = useBillingText()
   const [isYearly, setIsYearly] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(
     undefined
@@ -54,7 +57,7 @@ export function UpdatePlanCard({
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold">
-          {title || "Upgrade Plan"}
+          {title || b.updatePlan.upgradePlan}
         </CardTitle>
         <div className="flex items-center gap-2 text-sm">
           <Toggle
@@ -63,14 +66,14 @@ export function UpdatePlanCard({
             onPressedChange={(pressed) => setIsYearly(!pressed)}
             className="px-3"
           >
-            Monthly
+            {b.common.monthly}
           </Toggle>
           <Toggle
             pressed={isYearly}
             onPressedChange={(pressed) => setIsYearly(pressed)}
             className="px-3"
           >
-            Yearly
+            {b.common.yearly}
           </Toggle>
         </div>
       </CardHeader>
@@ -160,7 +163,7 @@ export function UpdatePlanCard({
                           : getCurrentPrice(plan)}
                       </div>
                       <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
-                        /{isYearly ? "year" : "month"}
+                        /{isYearly ? b.common.perYear : b.common.perMonth}
                       </div>
                     </div>
                   </div>
@@ -214,8 +217,8 @@ export function UpdatePlanCard({
                           }}
                         >
                           {selectedPlan === currentPlan.id
-                            ? "Current Plan"
-                            : "Upgrade"}
+                            ? b.common.currentPlan
+                            : b.common.upgrade}
                         </Button>
                       </motion.div>
                     </motion.div>

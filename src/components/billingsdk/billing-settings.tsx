@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useId } from "react"
 import { ChevronDown, CreditCard, Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -15,13 +16,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
+import { fill } from "@/components/school-dashboard/school/format"
 
-const tabs = [
-  { id: "general", label: "General" },
-  { id: "payment", label: "Payment" },
-  { id: "invoices", label: "Invoices" },
-  { id: "limits", label: "Limits" },
-]
+import { useBillingText } from "./use-billing-text"
+
+const TAB_IDS = ["general", "payment", "invoices", "limits"] as const
 
 interface CardInfo {
   id: string
@@ -72,7 +71,7 @@ function SettingItem({
   checked,
   onCheckedChange,
 }: SettingItemProps) {
-  const switchId = `switch-${title.toLowerCase().replace(/\s+/g, "-")}`
+  const switchId = `switch-${useId()}`
 
   return (
     <div className="flex items-center justify-between gap-4 py-4">
@@ -101,19 +100,20 @@ interface TabNavigationProps {
 }
 
 function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
+  const b = useBillingText()
   return (
     <div className="bg-muted text-muted-foreground inline-flex h-9 w-full items-center justify-center gap-1 rounded-lg p-1">
-      {tabs.map((tab) => (
+      {TAB_IDS.map((id) => (
         <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
+          key={id}
+          onClick={() => onTabChange(id)}
           className={`ring-offset-background focus-visible:ring-ring inline-flex flex-1 items-center justify-center rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 sm:px-3 sm:text-sm ${
-            activeTab === tab.id
+            activeTab === id
               ? "bg-background text-foreground shadow"
               : "hover:bg-background/50 hover:text-foreground"
           }`}
         >
-          {tab.label}
+          {b.settings.tabs[id]}
         </button>
       ))}
     </div>
@@ -140,23 +140,24 @@ export function BillingSettings({
   onUsageLimitAlertsChange,
   className,
 }: BillingSettingsProps) {
+  const b = useBillingText()
   const renderGeneralContent = () => (
     <div className="divide-border space-y-0 divide-y">
       <SettingItem
-        title="Email notifications"
-        description="Receive billing updates via email"
+        title={b.settings.emailNotifications}
+        description={b.settings.emailNotificationsHint}
         checked={emailNotifications}
         onCheckedChange={onEmailNotificationsChange}
       />
       <SettingItem
-        title="Usage alerts"
-        description="Get notified when approaching limits"
+        title={b.settings.usageAlerts}
+        description={b.settings.usageAlertsHint}
         checked={usageAlerts}
         onCheckedChange={onUsageAlertsChange}
       />
       <SettingItem
-        title="Invoice reminders"
-        description="Remind me before auto-renewal"
+        title={b.settings.invoiceReminders}
+        description={b.settings.invoiceRemindersHint}
         checked={invoiceReminders}
         onCheckedChange={onInvoiceRemindersChange}
       />
@@ -175,10 +176,13 @@ export function BillingSettings({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-sm">•••• {card.last4}</span>
-                {card.primary && <Badge variant="secondary">Primary</Badge>}
+                {card.primary && (
+                  <Badge variant="secondary">{b.settings.primary}</Badge>
+                )}
               </div>
               <p className="text-muted-foreground text-sm">
-                {card.brand} • Expires {card.expiry}
+                {card.brand} •{" "}
+                {fill(b.settings.expires, { expiry: card.expiry })}
               </p>
             </div>
           </div>
@@ -186,7 +190,7 @@ export function BillingSettings({
       ))}
       <Button variant="outline" className="w-full" onClick={onAddCard}>
         <Plus className="me-2 h-4 w-4" />
-        Add new card
+        {b.settings.addCard}
       </Button>
     </div>
   )
@@ -195,9 +199,9 @@ export function BillingSettings({
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex-1 space-y-0.5">
-          <h3 className="text-sm font-medium">Invoice format</h3>
+          <h3 className="text-sm font-medium">{b.settings.invoiceFormat}</h3>
           <p className="text-muted-foreground text-sm">
-            Choose PDF or HTML format
+            {b.settings.invoiceFormatHint}
           </p>
         </div>
         <DropdownMenu>
@@ -219,9 +223,9 @@ export function BillingSettings({
       </div>
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex-1 space-y-0.5">
-          <h3 className="text-sm font-medium">Billing address</h3>
+          <h3 className="text-sm font-medium">{b.settings.billingAddress}</h3>
           <p className="text-muted-foreground text-sm">
-            Update your billing address
+            {b.settings.billingAddressHint}
           </p>
         </div>
         <Button
@@ -230,7 +234,7 @@ export function BillingSettings({
           className="w-full sm:w-auto"
           onClick={onEditBillingAddress}
         >
-          Edit
+          {b.settings.edit}
         </Button>
       </div>
     </div>
@@ -239,14 +243,14 @@ export function BillingSettings({
   const renderLimitsContent = () => (
     <div className="divide-border space-y-0 divide-y">
       <SettingItem
-        title="Overage protection"
-        description="Prevent accidental overages"
+        title={b.settings.overage}
+        description={b.settings.overageHint}
         checked={overageProtection}
         onCheckedChange={onOverageProtectionChange}
       />
       <SettingItem
-        title="Usage limit alerts"
-        description="Alert at 80% and 95% usage"
+        title={b.settings.limitAlerts}
+        description={b.settings.limitAlertsHint}
         checked={usageLimitAlerts}
         onCheckedChange={onUsageLimitAlertsChange}
       />
@@ -272,7 +276,7 @@ export function BillingSettings({
     <div className={cn("w-full", className)}>
       <Card className="mx-auto w-full max-w-2xl">
         <CardHeader className="px-4 sm:px-6">
-          <CardTitle>Billing Settings</CardTitle>
+          <CardTitle>{b.settings.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 px-4 sm:px-6">
           <TabNavigation activeTab={activeTab} onTabChange={onTabChange} />

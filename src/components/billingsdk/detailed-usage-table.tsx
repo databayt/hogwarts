@@ -41,7 +41,9 @@ export function DetailedUsageTable({
     | undefined
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num)
+    return new Intl.NumberFormat(undefined, { numberingSystem: "latn" }).format(
+      num
+    )
   }
 
   const getPercentageBar = (percentage: number) => {

@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+import { useBillingText } from "./use-billing-text"
+
 type PaymentMethod = "cards" | "digital-wallets" | "upi" | "bnpl-services"
 
 interface PaymentOption {
@@ -110,6 +112,7 @@ export interface PaymentMethodSelectorProps {
 export function PaymentMethodSelector({
   onProceed,
 }: PaymentMethodSelectorProps) {
+  const b = useBillingText()
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
     null
   )
@@ -150,7 +153,7 @@ export function PaymentMethodSelector({
                   htmlFor="cardNumber"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Card Number
+                  {b.paymentMethods.cardNumber}
                 </Label>
                 <Input
                   id="cardNumber"
@@ -168,7 +171,7 @@ export function PaymentMethodSelector({
                   htmlFor="expiryDate"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Expiry Date
+                  {b.paymentMethods.expiryDate}
                 </Label>
                 <Input
                   id="expiryDate"
@@ -186,7 +189,7 @@ export function PaymentMethodSelector({
                   htmlFor="cvv"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  CVV
+                  {b.paymentMethods.cvv}
                 </Label>
                 <Input
                   id="cvv"
@@ -204,12 +207,12 @@ export function PaymentMethodSelector({
                   htmlFor="cardholderName"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Cardholder Name
+                  {b.paymentMethods.cardholder}
                 </Label>
                 <Input
                   id="cardholderName"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={b.paymentMethods.cardholderPlaceholder}
                   value={formData.cardholderName || ""}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleInputChange("cardholderName", e.target.value)
@@ -240,11 +243,12 @@ export function PaymentMethodSelector({
                   htmlFor="email"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Email Address
+                  {b.paymentMethods.email}
                 </Label>
                 <Input
                   id="email"
                   type="email"
+                  dir="ltr"
                   placeholder="john@example.com"
                   value={formData.email || ""}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -258,7 +262,7 @@ export function PaymentMethodSelector({
                   htmlFor="phone"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Phone Number
+                  {b.paymentMethods.phone}
                 </Label>
                 <Input
                   id="phone"
@@ -274,8 +278,7 @@ export function PaymentMethodSelector({
             </div>
             <div className="bg-muted/20 border-border/30 rounded-lg border p-3">
               <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-                You'll be redirected to your selected wallet app to complete the
-                payment securely.
+                {b.paymentMethods.walletNote}
               </p>
             </div>
           </motion.div>
@@ -299,7 +302,7 @@ export function PaymentMethodSelector({
                 htmlFor="upiId"
                 className="text-foreground text-xs font-medium sm:text-sm"
               >
-                UPI ID
+                {b.paymentMethods.upiId}
               </Label>
               <Input
                 id="upiId"
@@ -314,8 +317,7 @@ export function PaymentMethodSelector({
             </div>
             <div className="bg-muted/20 border-border/30 rounded-lg border p-3">
               <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-                Enter your UPI ID to receive a payment request. Complete the
-                payment in your UPI app.
+                {b.paymentMethods.upiNote}
               </p>
             </div>
           </motion.div>
@@ -340,11 +342,12 @@ export function PaymentMethodSelector({
                   htmlFor="bnplEmail"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Email Address
+                  {b.paymentMethods.email}
                 </Label>
                 <Input
                   id="bnplEmail"
                   type="email"
+                  dir="ltr"
                   placeholder="john@example.com"
                   value={formData.email || ""}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -358,7 +361,7 @@ export function PaymentMethodSelector({
                   htmlFor="bnplPhone"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Phone Number
+                  {b.paymentMethods.phone}
                 </Label>
                 <Input
                   id="bnplPhone"
@@ -376,12 +379,12 @@ export function PaymentMethodSelector({
                   htmlFor="income"
                   className="text-foreground text-xs font-medium sm:text-sm"
                 >
-                  Annual Income
+                  {b.paymentMethods.income}
                   <Badge
                     variant="secondary"
                     className="px-1.5 py-0.5 text-[10px]"
                   >
-                    Optional
+                    {b.paymentMethods.optional}
                   </Badge>
                 </Label>
                 <Input
@@ -398,8 +401,7 @@ export function PaymentMethodSelector({
             </div>
             <div className="bg-muted/20 border-border/30 rounded-lg border p-3">
               <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-                You'll be redirected to complete a quick eligibility check and
-                set up your payment plan.
+                {b.paymentMethods.bnplNote}
               </p>
             </div>
           </motion.div>
@@ -414,10 +416,10 @@ export function PaymentMethodSelector({
     <Card className="mx-auto w-full max-w-lg overflow-hidden text-start shadow-lg">
       <CardHeader className="px-4 pb-2 sm:px-6">
         <CardTitle className="text-base font-semibold">
-          Payment Methods
+          {b.paymentMethods.title}
         </CardTitle>
         <p className="text-muted-foreground text-sm">
-          Choose your preferred payment method to continue
+          {b.paymentMethods.subtitle}
         </p>
       </CardHeader>
 
@@ -475,10 +477,10 @@ export function PaymentMethodSelector({
                           : "text-foreground hover:text-primary"
                       }`}
                     >
-                      {option.name}
+                      {b.paymentMethods.options[option.id].name}
                     </h3>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {option.description}
+                      {b.paymentMethods.options[option.id].description}
                     </p>
                   </div>
                 </div>
@@ -514,7 +516,7 @@ export function PaymentMethodSelector({
               }}
             >
               <Button disabled className="mt-4 w-full">
-                <span>Select Payment Method</span>
+                <span>{b.paymentMethods.select}</span>
                 <span>→</span>
               </Button>
             </motion.div>
@@ -536,7 +538,7 @@ export function PaymentMethodSelector({
                   if (onProceed) onProceed(selectedMethod, formData)
                 }}
               >
-                <span>Proceed with Payment</span>
+                <span>{b.paymentMethods.proceed}</span>
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </motion.div>

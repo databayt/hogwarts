@@ -25,6 +25,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { fill } from "@/components/school-dashboard/school/format"
+
+import { useBillingText } from "./use-billing-text"
 
 export type UsageBasedPricingProps = {
   className?: string
@@ -42,15 +45,18 @@ export type UsageBasedPricingProps = {
   unitPricePerCredit?: number
   title?: string
   subtitle?: string
+  /** Unit noun shown beside the amount (defaults to "credits"). */
+  unitLabel?: string
 }
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(Math.max(v, min), max)
 }
 function formatNumber(n: number) {
-  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(
-    n
-  )
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 0,
+    numberingSystem: "latn",
+  }).format(n)
 }
 
 export function UsageBasedPricing({
@@ -66,9 +72,11 @@ export function UsageBasedPricing({
   currency = "$",
   basePrice = 39.99,
   includedCredits = 4000,
-  title = "Pay as you use pricing",
-  subtitle = "Start with a flat monthly rate that includes 4,000 credits.",
+  title,
+  subtitle,
+  unitLabel,
 }: UsageBasedPricingProps) {
+  const b = useBillingText()
   const isControlled = typeof valueProp === "number"
   const [uncontrolled, setUncontrolled] = useState(
     clamp(defaultValue, min, max)
@@ -253,8 +261,9 @@ export function UsageBasedPricing({
   // Positions for labels centered under first and last 1000-multiple dots
   const firstThousand = useMemo(() => Math.ceil(min / 1000) * 1000, [min])
   const lastThousand = useMemo(() => Math.floor(max / 1000) * 1000, [max])
-  const startLabel = `${formatNumber(firstThousand)} credits`
-  const endLabel = `${formatNumber(lastThousand)} credits`
+  const unit = unitLabel ?? b.usage.credits
+  const startLabel = `${formatNumber(firstThousand)} ${unit}`
+  const endLabel = `${formatNumber(lastThousand)} ${unit}`
 
   // Keyboard Accessibility
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -289,8 +298,8 @@ export function UsageBasedPricing({
   return (
     <Card className={cn("mx-auto w-full max-w-3xl min-w-lg", className)}>
       <CardHeader className="text-start">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{subtitle}</CardDescription>
+        <CardTitle>{title ?? b.usage.title}</CardTitle>
+        <CardDescription>{subtitle ?? b.usage.subtitle}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mt-4 flex flex-col items-center gap-2">
@@ -299,10 +308,15 @@ export function UsageBasedPricing({
               {currency}
               {priceText}
             </span>
-            <span className="text-muted-foreground text-sm">/mo</span>
+            <span className="text-muted-foreground text-sm">
+              {b.usage.perMonthShort}
+            </span>
           </div>
           <p className="text-muted-foreground text-xs">
-            {formatNumber(value)} credits per month
+            {fill(b.usage.unitPerMonth, {
+              count: formatNumber(value),
+              unit,
+            })}
           </p>
         </div>
 
@@ -390,7 +404,10 @@ export function UsageBasedPricing({
                       key={`dot-${v}`}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${v.toLocaleString()} credits`}
+                      aria-label={fill(b.usage.unitAria, {
+                        count: formatNumber(v),
+                        unit,
+                      })}
                       onClick={() => {
                         animateTo(v)
                       }}
@@ -425,7 +442,10 @@ export function UsageBasedPricing({
                 aria-valuemin={min}
                 aria-valuemax={max}
                 aria-valuenow={value}
-                aria-valuetext={`${formatNumber(value)} credits`}
+                aria-valuetext={fill(b.usage.unitAria, {
+                  count: formatNumber(value),
+                  unit,
+                })}
                 tabIndex={0}
                 onKeyDown={handleKeyDown}
                 className="sr-only"

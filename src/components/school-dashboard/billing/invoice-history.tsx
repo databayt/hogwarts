@@ -14,6 +14,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useBillingText } from "@/components/billingsdk/use-billing-text"
+import { useLocale } from "@/components/internationalization/use-locale"
+import {
+  fill,
+  formatConsoleDate,
+} from "@/components/school-dashboard/school/format"
 
 import { formatCurrency } from "./config"
 import type { InvoiceWithDetails, PaymentMethodWithUser } from "./types"
@@ -27,11 +33,13 @@ export function InvoiceHistory({
   invoices,
   paymentMethods,
 }: InvoiceHistoryProps) {
+  const b = useBillingText().invoiceHistory
+  const { locale } = useLocale()
   return (
     <Tabs defaultValue="invoices" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="invoices">Invoices</TabsTrigger>
-        <TabsTrigger value="payments">Payment Methods</TabsTrigger>
+        <TabsTrigger value="invoices">{b.heading}</TabsTrigger>
+        <TabsTrigger value="payments">{b.paymentMethods}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="invoices" className="space-y-4">
@@ -39,14 +47,12 @@ export function InvoiceHistory({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Invoices</CardTitle>
-                <CardDescription>
-                  Your billing and invoice history
-                </CardDescription>
+                <CardTitle>{b.recent}</CardTitle>
+                <CardDescription>{b.recentDescription}</CardDescription>
               </div>
               <Button variant="outline" size="sm">
                 <Download className="me-2 h-4 w-4" />
-                Export All
+                {b.exportAll}
               </Button>
             </div>
           </CardHeader>
@@ -54,7 +60,7 @@ export function InvoiceHistory({
             <div className="space-y-4">
               {invoices.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center">
-                  No invoices yet
+                  {b.empty}
                 </p>
               ) : (
                 invoices.slice(0, 5).map((invoice) => (
@@ -66,11 +72,13 @@ export function InvoiceHistory({
                       <Receipt className="text-muted-foreground h-8 w-8" />
                       <div>
                         <p className="font-medium">
-                          Invoice #{invoice.stripeInvoiceId.slice(-8)}
+                          {fill(b.invoiceNo, {
+                            number: invoice.stripeInvoiceId.slice(-8),
+                          })}
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          {new Date(invoice.periodStart).toLocaleDateString()} -{" "}
-                          {new Date(invoice.periodEnd).toLocaleDateString()}
+                          {formatConsoleDate(invoice.periodStart, locale)} -{" "}
+                          {formatConsoleDate(invoice.periodEnd, locale)}
                         </p>
                       </div>
                     </div>
@@ -88,7 +96,12 @@ export function InvoiceHistory({
                           {invoice.status}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={b.downloadInvoice}
+                        title={b.downloadInvoice}
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
                     </div>
@@ -105,12 +118,12 @@ export function InvoiceHistory({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Payment Methods</CardTitle>
-                <CardDescription>Manage your payment methods</CardDescription>
+                <CardTitle>{b.paymentMethods}</CardTitle>
+                <CardDescription>{b.paymentMethodsDescription}</CardDescription>
               </div>
               <Button size="sm">
                 <Plus className="me-2 h-4 w-4" />
-                Add Payment Method
+                {b.add}
               </Button>
             </div>
           </CardHeader>
@@ -118,7 +131,7 @@ export function InvoiceHistory({
             <div className="space-y-4">
               {paymentMethods.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center">
-                  No payment methods added
+                  {b.emptyMethods}
                 </p>
               ) : (
                 paymentMethods.map((method) => (
@@ -129,7 +142,7 @@ export function InvoiceHistory({
                     <div className="flex items-center gap-4">
                       <CreditCard className="text-muted-foreground h-8 w-8" />
                       <div>
-                        <p className="font-medium">
+                        <p className="font-medium" dir="ltr">
                           {method.cardBrand
                             ? `${method.cardBrand.toUpperCase()} •••• ${method.cardLast4}`
                             : method.type}
@@ -140,9 +153,9 @@ export function InvoiceHistory({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {method.isDefault && <Badge>Default</Badge>}
+                      {method.isDefault && <Badge>{b.default}</Badge>}
                       <Button variant="ghost" size="sm">
-                        Remove
+                        {b.remove}
                       </Button>
                     </div>
                   </div>

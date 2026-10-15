@@ -83,6 +83,317 @@
       "reference": "Error reference",
       "tryAgain": "Try again",
       "contactSupport": "Contact Support"
+    },
+    "sdk": {
+      "common": {
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "perMonth": "month",
+        "perYear": "year",
+        "currentPlan": "Current Plan",
+        "upgrade": "Upgrade",
+        "close": "Close",
+        "na": "N/A",
+        "free": "Free",
+        "none": "None",
+        "unlimited": "unlimited"
+      },
+      "statuses": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "past_due": "Past due",
+        "cancelled": "Cancelled",
+        "canceled": "Cancelled",
+        "trialing": "Trial",
+        "incomplete": "Incomplete",
+        "unpaid": "Unpaid"
+      },
+      "subscription": {
+        "title": "Current Subscription",
+        "description": "Manage your billing and subscription settings",
+        "planSuffix": "{plan} Plan",
+        "perMonthBadge": "{price}/month",
+        "perYearBadge": "{price}/year",
+        "billingInfo": "Billing Information",
+        "nextBillingDate": "Next billing date",
+        "paymentMethod": "Payment method",
+        "features": "Current Plan Features"
+      },
+      "updatePlan": {
+        "update": "Update Plan",
+        "upgradePlan": "Upgrade Plan",
+        "noPlans": "No plans available"
+      },
+      "cancel": {
+        "trigger": "Cancel Subscription",
+        "currentSubscription": "Current subscription",
+        "perMonthly": "{price}/monthly",
+        "processing": "Processing...",
+        "keep": "Keep My Subscription",
+        "continue": "Continue Cancellation",
+        "finalTitle": "Final Confirmation",
+        "finalSubtitle": "Are you sure you want to cancel your subscription?",
+        "finalWarning": "This action cannot be undone and you'll lose access to all premium features.",
+        "goBack": "Go Back",
+        "cancelling": "Cancelling...",
+        "confirm": "Yes, Cancel Subscription",
+        "cancelFailed": "Failed to cancel the subscription",
+        "keepFailed": "Failed to keep the subscription"
+      },
+      "trial": {
+        "upgradeNow": "Upgrade Now",
+        "processing": "Processing...",
+        "expired": "Expired",
+        "expiringSoon": "Expiring Soon",
+        "active": "Active",
+        "included": "Included with upgrade",
+        "days": "Days",
+        "hours": "Hours",
+        "min": "Min",
+        "sec": "Sec",
+        "remainingAria": "Trial time remaining: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds",
+        "defaultFeatures": [
+          "Unlimited projects",
+          "Priority support",
+          "Advanced analytics",
+          "Custom integrations"
+        ]
+      },
+      "upcoming": {
+        "nextBillingDate": "Next Billing Date",
+        "total": "Total",
+        "breakdown": "Breakdown",
+        "prorated": "Prorated",
+        "recurring": "Recurring",
+        "oneTime": "One-time",
+        "unknown": "Unknown"
+      },
+      "usage": {
+        "perMonthShort": "/mo",
+        "unitPerMonth": "{count} {unit} per month",
+        "credits": "credits",
+        "unitAria": "{count} {unit}",
+        "title": "Pay as you use pricing",
+        "subtitle": "Start with a flat monthly rate that includes 4,000 credits."
+      },
+      "settings": {
+        "title": "Billing Settings",
+        "tabs": {
+          "general": "General",
+          "payment": "Payment",
+          "invoices": "Invoices",
+          "limits": "Limits"
+        },
+        "emailNotifications": "Email notifications",
+        "emailNotificationsHint": "Receive billing updates via email",
+        "usageAlerts": "Usage alerts",
+        "usageAlertsHint": "Get notified when approaching limits",
+        "invoiceReminders": "Invoice reminders",
+        "invoiceRemindersHint": "Remind me before auto-renewal",
+        "primary": "Primary",
+        "expires": "Expires {expiry}",
+        "addCard": "Add new card",
+        "invoiceFormat": "Invoice format",
+        "invoiceFormatHint": "Choose PDF or HTML format",
+        "billingAddress": "Billing address",
+        "billingAddressHint": "Update your billing address",
+        "edit": "Edit",
+        "overage": "Overage protection",
+        "overageHint": "Prevent accidental overages",
+        "limitAlerts": "Usage limit alerts",
+        "limitAlertsHint": "Alert at 80% and 95% usage"
+      },
+      "preferences": {
+        "title": "Billing Preferences",
+        "subtitle": "Manage your billing preferences and settings",
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "School Admin",
+        "billingEmail": "Billing Email",
+        "billingEmailHint": "Invoices will be sent to this email address",
+        "taxId": "Tax ID (Optional)",
+        "taxIdHint": "For VAT or other tax purposes",
+        "autoRenewal": "Auto-Renewal",
+        "autoRenewalHint": "Automatically renew your subscription",
+        "invoiceEmails": "Invoice Emails",
+        "invoiceEmailsHint": "Receive emails when invoices are generated",
+        "promoEmails": "Promotional Emails",
+        "promoEmailsHint": "Receive occasional updates about new features and offers",
+        "currency": "Currency",
+        "selectCurrency": "Select currency",
+        "save": "Save Changes",
+        "cancel": "Cancel",
+        "invalidEmail": "Please enter a valid email address",
+        "required": "{field} is required",
+        "invalidFormat": "Invalid format for {field}",
+        "minLength": "{field} must be at least {min} characters",
+        "maxLength": "{field} must be no more than {max} characters",
+        "currencyRequired": "Please select a currency"
+      },
+      "paymentCard": {
+        "orderSummary": "Order Summary",
+        "subtotal": "Subtotal",
+        "total": "Total",
+        "included": "What's Included",
+        "defaultFeature": "Payment & Invoice",
+        "defaultFeatureDesc": "Automated billing and detailed transaction records",
+        "defaultFeature2": "Priority Support",
+        "defaultFeature2Desc": "Faster response times and technical support",
+        "title": "Complete your payment",
+        "description": "Enter your card details to finalize your subscription",
+        "cardNumber": "Card number",
+        "expiry": "Expiry date",
+        "cvc": "CVC",
+        "discount": "Discount code (optional)",
+        "enterCode": "Enter code",
+        "apply": "Apply",
+        "pay": "Pay {amount}",
+        "cardAlt": "Card",
+        "errCard": "Card number must be 16 digits and only numbers.",
+        "errExpiry": "Enter a valid expiry date (MM/YY).",
+        "errExpiryPast": "Expiry date cannot be in the past.",
+        "errCvc": "CVC must be 3 or 4 digits."
+      },
+      "paymentMethods": {
+        "title": "Payment Methods",
+        "subtitle": "Choose your preferred payment method to continue",
+        "select": "Select Payment Method",
+        "proceed": "Proceed with Payment",
+        "cardNumber": "Card Number",
+        "expiryDate": "Expiry Date",
+        "cvv": "CVV",
+        "cardholder": "Cardholder Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "upiId": "UPI ID",
+        "income": "Annual Income",
+        "optional": "Optional",
+        "walletNote": "You'll be redirected to your selected wallet app to complete the payment securely.",
+        "upiNote": "Enter your UPI ID to receive a payment request. Complete the payment in your UPI app.",
+        "bnplNote": "You'll be redirected to complete a quick eligibility check and set up your payment plan.",
+        "cardholderPlaceholder": "Full name",
+        "options": {
+          "cards": {
+            "name": "Cards",
+            "description": "Visa, Mastercard, etc."
+          },
+          "digital-wallets": {
+            "name": "Digital Wallets",
+            "description": "Apple Pay, Google Pay, etc."
+          },
+          "upi": {
+            "name": "UPI",
+            "description": "Unified Payments Interface"
+          },
+          "bnpl-services": {
+            "name": "Buy Now, Pay Later",
+            "description": "Klarna, Affirm, Afterpay"
+          }
+        }
+      },
+      "plans": {
+        "hobby": {
+          "description": "Get started for free",
+          "features": [
+            "Up to 100 students",
+            "Up to 10 teachers",
+            "Core features",
+            "Basic analytics",
+            "Community support"
+          ]
+        },
+        "pro": {
+          "description": "For growing schools",
+          "badge": "Most popular",
+          "features": [
+            "Up to 500 students",
+            "Unlimited teachers",
+            "Advanced reports and exports",
+            "Custom branding",
+            "Priority support"
+          ]
+        },
+        "ultra": {
+          "description": "For large organizations",
+          "features": [
+            "Unlimited students and teachers",
+            "Custom integrations",
+            "Advanced analytics",
+            "White-label options",
+            "24/7 dedicated support"
+          ]
+        }
+      },
+      "dashboard": {
+        "loading": "Loading billing...",
+        "noPaymentMethod": "No payment method",
+        "noSubscriptionTitle": "No Subscription Found",
+        "noSubscriptionBody": "Your school does not have an active subscription. Contact your administrator to set up billing.",
+        "choosePlan": "Choose a Plan",
+        "changePlan": "Change Plan",
+        "cancelTitle": "Cancel Subscription",
+        "cancelDescription": "We're sorry to see you go. Your subscription will remain active until the end of the billing period.",
+        "upgradeYourPlan": "Upgrade Your Plan",
+        "trialTitle": "Trial Period",
+        "trialDescription": "Your trial is ending soon. Upgrade to keep access to all features.",
+        "upgradeNow": "Upgrade Now",
+        "trialFeatures": [
+          "Full access to all premium features",
+          "Up to {students} students",
+          "Advanced analytics dashboard",
+          "Priority customer support"
+        ],
+        "planStatus": "Plan Status",
+        "nextBilling": "Next billing: {date}",
+        "totalSpent": "Total spent: {amount}",
+        "studentUsage": "Student Usage",
+        "studentsUsed": "{used} of {limit} students used",
+        "students": "students",
+        "upcomingCharges": "Upcoming Charges",
+        "upcomingDescription": "Preview of your next billing cycle",
+        "planMonthly": "{name} Plan (Monthly)",
+        "resourceUsage": "Resource Usage",
+        "resourceDescription": "Current usage across your school's resources",
+        "resources": {
+          "students": "Students",
+          "teachers": "Teachers",
+          "classes": "Classes",
+          "storage": "Storage"
+        },
+        "units": {
+          "users": "users",
+          "classes": "classes",
+          "mb": "MB"
+        },
+        "invoiceHistory": "Invoice History",
+        "invoiceDescription": "Your past invoices and payment receipts.",
+        "noInvoices": "No invoices yet",
+        "invoiceNumber": "Invoice {number}",
+        "card": "Card",
+        "completePayment": "Complete your payment",
+        "completePaymentDescription": "Enter your card details to finalize your subscription",
+        "fullAccess": "Full Access",
+        "planFeatures": "{name} plan features",
+        "prioritySupport": "Priority Support",
+        "supportDescription": "Get help within 24 hours from our support team",
+        "securePayment": "Secure payment",
+        "encryption": "256-bit encryption",
+        "pciCompliant": "PCI compliant"
+      },
+      "invoiceHistory": {
+        "heading": "Invoices",
+        "paymentMethods": "Payment Methods",
+        "recent": "Recent Invoices",
+        "recentDescription": "Your billing and invoice history",
+        "exportAll": "Export All",
+        "empty": "No invoices yet",
+        "invoiceNo": "Invoice #{number}",
+        "paymentMethodsDescription": "Manage your payment methods",
+        "add": "Add Payment Method",
+        "emptyMethods": "No payment methods added",
+        "default": "Default",
+        "remove": "Remove",
+        "downloadInvoice": "Download invoice"
+      }
     }
   },
   "membership": {

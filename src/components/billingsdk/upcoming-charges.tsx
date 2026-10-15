@@ -14,6 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import { useBillingText } from "./use-billing-text"
+
 export interface ChargeItem {
   id: string
   description: string
@@ -33,29 +35,30 @@ export interface UpcomingChargesProps {
 
 export function UpcomingCharges({
   className,
-  title = "Upcoming Charges",
+  title,
   description,
   nextBillingDate,
   totalAmount,
   charges,
 }: UpcomingChargesProps) {
+  const b = useBillingText()
   const getChargeTypeBadge = (type: ChargeItem["type"]) => {
     switch (type) {
       case "prorated":
-        return <Badge variant="secondary">Prorated</Badge>
+        return <Badge variant="secondary">{b.upcoming.prorated}</Badge>
       case "recurring":
-        return <Badge variant="default">Recurring</Badge>
+        return <Badge variant="default">{b.upcoming.recurring}</Badge>
       case "one-time":
-        return <Badge variant="outline">One-time</Badge>
+        return <Badge variant="outline">{b.upcoming.oneTime}</Badge>
       default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant="outline">{b.upcoming.unknown}</Badge>
     }
   }
 
   return (
     <Card className={cn("mx-auto w-full max-w-2xl", className)}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>{title ?? b.dashboard.upcomingCharges}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-6">
@@ -65,20 +68,22 @@ export function UpcomingCharges({
               <Calendar className="text-muted-foreground h-5 w-5" />
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Next Billing Date
+                  {b.upcoming.nextBillingDate}
                 </p>
                 <p className="font-semibold">{nextBillingDate}</p>
               </div>
             </div>
             <div className="text-end">
-              <p className="text-muted-foreground text-sm">Total</p>
+              <p className="text-muted-foreground text-sm">
+                {b.upcoming.total}
+              </p>
               <p className="text-2xl font-bold tabular-nums">{totalAmount}</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold">Breakdown</h3>
+          <h3 className="text-sm font-semibold">{b.upcoming.breakdown}</h3>
           <div className="space-y-2">
             {charges.map((charge) => (
               <div

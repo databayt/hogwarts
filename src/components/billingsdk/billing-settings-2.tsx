@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import currencyCodes from "currency-codes"
 
 import { cn } from "@/lib/utils"
@@ -18,6 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { useLocale } from "@/components/internationalization/use-locale"
+import { fill } from "@/components/school-dashboard/school/format"
+
+import { useBillingText } from "./use-billing-text"
 
 // Define types for our props
 export interface FeatureToggle {
@@ -70,18 +74,24 @@ export interface BillingSettings2Props {
 }
 
 // Validation helper functions
-const validateEmail = (email: string): string | null => {
+type PrefText = ReturnType<typeof useBillingText>["preferences"]
+
+const validateEmail = (email: string, p: PrefText): string | null => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) {
-    return "Please enter a valid email address"
+    return p.invalidEmail
   }
   return null
 }
 
-const validateField = (value: string, field: InputField): string | null => {
+const validateField = (
+  value: string,
+  field: InputField,
+  p: PrefText
+): string | null => {
   // Check required validation
   if (field.required && !value.trim()) {
-    return `${field.label} is required`
+    return fill(p.required, { field: field.label })
   }
 
   // Skip other validations if field is empty and not required
@@ -91,7 +101,7 @@ const validateField = (value: string, field: InputField): string | null => {
 
   // Check email validation
   if (field.type === "email") {
-    return validateEmail(value)
+    return validateEmail(value, p)
   }
 
   // Check custom validation
@@ -101,7 +111,7 @@ const validateField = (value: string, field: InputField): string | null => {
 
   // Check pattern validation
   if (field.validation?.pattern && !field.validation.pattern.test(value)) {
-    return `Invalid ${field.label.toLowerCase()} format`
+    return fill(p.invalidFormat, { field: field.label })
   }
 
   // Check length validations
@@ -109,14 +119,20 @@ const validateField = (value: string, field: InputField): string | null => {
     field.validation?.minLength &&
     value.length < field.validation.minLength
   ) {
-    return `${field.label} must be at least ${field.validation.minLength} characters`
+    return fill(p.minLength, {
+      field: field.label,
+      min: field.validation.minLength,
+    })
   }
 
   if (
     field.validation?.maxLength &&
     value.length > field.validation.maxLength
   ) {
-    return `${field.label} must be no more than ${field.validation.maxLength} characters`
+    return fill(p.maxLength, {
+      field: field.label,
+      max: field.validation.maxLength,
+    })
   }
 
   return null
@@ -124,38 +140,55 @@ const validateField = (value: string, field: InputField): string | null => {
 
 export function BillingSettings2({
   className,
-  title = "Billing Settings",
-  features = [
+  title,
+  features: featuresProp,
+  inputFields: inputFieldsProp,
+  onSave = () => {},
+  onCancel = () => {},
+  saveButtonText,
+  cancelButtonText,
+  currencies, // Array of specific currency codes to show
+  currencyOptions, // Custom currency options override
+  defaultCurrency = "USD",
+  onCurrencyChange = () => {},
+  enableValidation = true,
+  currencyRequired = true,
+}: BillingSettings2Props) {
+  const bt = useBillingText()
+  const p = bt.preferences
+  const { locale } = useLocale()
+  const noop = () => {}
+  const features: FeatureToggle[] = featuresProp ?? [
     {
       id: "auto-renewal",
-      label: "Auto-Renewal",
-      description: "Automatically renew your subscription",
+      label: p.autoRenewal,
+      description: p.autoRenewalHint,
       enabled: true,
-      onToggle: () => {},
+      onToggle: noop,
     },
     {
       id: "invoice-emails",
-      label: "Invoice Emails",
-      description: "Receive emails when invoices are generated",
+      label: p.invoiceEmails,
+      description: p.invoiceEmailsHint,
       enabled: true,
-      onToggle: () => {},
+      onToggle: noop,
     },
     {
       id: "promotional-emails",
-      label: "Promotional Emails",
-      description: "Receive occasional updates about new features and offers",
+      label: p.promoEmails,
+      description: p.promoEmailsHint,
       enabled: true,
-      onToggle: () => {},
+      onToggle: noop,
     },
-  ],
-  inputFields = [
+  ]
+  const inputFields: InputField[] = inputFieldsProp ?? [
     {
       id: "fullName",
       name: "fullName",
       defaultValue: "",
-      placeholder: "John Doe",
-      onChange: () => {},
-      label: "Full Name",
+      placeholder: p.fullNamePlaceholder,
+      onChange: noop,
+      label: p.fullName,
       type: "text",
       required: true,
     },
@@ -164,9 +197,9 @@ export function BillingSettings2({
       name: "billingEmail",
       defaultValue: "",
       placeholder: "user@example.com",
-      onChange: () => {},
-      label: "Billing Email",
-      helperText: "Invoices will be sent to this email address",
+      onChange: noop,
+      label: p.billingEmail,
+      helperText: p.billingEmailHint,
       type: "email",
       required: true,
     },
@@ -175,27 +208,32 @@ export function BillingSettings2({
       name: "taxId",
       defaultValue: "",
       placeholder: "EU123456789",
-      onChange: () => {},
-      label: "Tax ID (Optional)",
-      helperText: "For VAT or other tax purposes",
+      onChange: noop,
+      label: p.taxId,
+      helperText: p.taxIdHint,
       type: "text",
     },
-  ],
-  onSave = () => {},
-  onCancel = () => {},
-  saveButtonText = "Save Changes",
-  cancelButtonText = "Cancel",
-  currencies, // Array of specific currency codes to show
-  currencyOptions, // Custom currency options override
-  defaultCurrency = "USD",
-  onCurrencyChange = () => {},
-  enableValidation = true,
-  currencyRequired = true,
-}: BillingSettings2Props) {
+  ]
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
     []
   )
   const [currencyError, setCurrencyError] = useState<string | null>(null)
+
+  // Currency names come from Intl so they follow the page language.
+  const currencyName = useCallback(
+    (code: string, fallback: string) => {
+      try {
+        return (
+          new Intl.DisplayNames(locale === "ar" ? "ar" : "en", {
+            type: "currency",
+          }).of(code.toUpperCase()) ?? fallback
+        )
+      } catch {
+        return fallback
+      }
+    },
+    [locale]
+  )
 
   // Generate currency options from currency-codes package
   const generatedCurrencyOptions = useMemo(() => {
@@ -217,7 +255,7 @@ export function BillingSettings2({
           return currency
             ? {
                 value: currency.code.toLowerCase(),
-                label: `${currency.code} - ${currency.currency}`,
+                label: `${currency.code} - ${currencyName(currency.code, currency.currency)}`,
               }
             : null
         })
@@ -229,10 +267,10 @@ export function BillingSettings2({
       .filter((currency) => currency.code && currency.currency) // Filter out invalid entries
       .map((currency) => ({
         value: currency.code.toLowerCase(),
-        label: `${currency.code} - ${currency.currency}`,
+        label: `${currency.code} - ${currencyName(currency.code, currency.currency)}`,
       }))
       .sort((a, b) => a.label.localeCompare(b.label)) // Sort alphabetically
-  }, [currencies, currencyOptions])
+  }, [currencies, currencyOptions, currencyName])
 
   // Normalize the defaultCurrency to lowercase to match generated options
   const normalizedDefaultCurrency = defaultCurrency?.toLowerCase()
@@ -248,7 +286,7 @@ export function BillingSettings2({
     inputFields.forEach((field) => {
       const value =
         field.value !== undefined ? field.value : field.defaultValue || ""
-      const error = validateField(value, field)
+      const error = validateField(value, field, p)
       if (error) {
         errors.push({ field: field.id, message: error })
       }
@@ -256,7 +294,7 @@ export function BillingSettings2({
 
     // Validate currency if required
     if (currencyRequired && !normalizedDefaultCurrency) {
-      setCurrencyError("Please select a currency")
+      setCurrencyError(p.currencyRequired)
       hasCurrencyError = true
     } else {
       setCurrencyError(null)
@@ -315,12 +353,10 @@ export function BillingSettings2({
   return (
     <Card className={cn("mx-auto max-w-2xl", className)}>
       <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg">{title ?? bt.settings.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <p className="text-muted-foreground text-sm">
-          Manage your billing preferences and settings
-        </p>
+        <p className="text-muted-foreground text-sm">{p.subtitle}</p>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {inputFields.map((field) => {
@@ -344,6 +380,11 @@ export function BillingSettings2({
                     handleInputChange(field.id, e.target.value, field.onChange)
                   }
                   type={field.type || "text"}
+                  dir={
+                    field.type === "email" || field.type === "tel"
+                      ? "ltr"
+                      : undefined
+                  }
                   aria-describedby={
                     field.helperText ? `${field.id}-help` : undefined
                   }
@@ -365,7 +406,7 @@ export function BillingSettings2({
 
           <div className="min-w-0 space-y-2">
             <Label id="currency-label">
-              Currency
+              {p.currency}
               {currencyRequired && <span className="ms-1 text-red-500">*</span>}
             </Label>
             <Select
@@ -377,12 +418,12 @@ export function BillingSettings2({
               <SelectTrigger
                 aria-labelledby="currency-label"
                 className={cn(
-                  "w-[280px] flex-shrink-0",
+                  "w-[280px] max-w-full flex-shrink-0",
                   currencyError ? "border-red-500 focus:border-red-500" : ""
                 )}
               >
                 <SelectValue
-                  placeholder="Select currency"
+                  placeholder={p.selectCurrency}
                   className="truncate overflow-hidden text-ellipsis whitespace-nowrap"
                 />
               </SelectTrigger>
@@ -432,7 +473,7 @@ export function BillingSettings2({
 
         <div className="flex items-center justify-end gap-3 pt-2">
           <Button variant="outline" onClick={onCancel}>
-            {cancelButtonText}
+            {cancelButtonText ?? p.cancel}
           </Button>
           <Button
             onClick={handleSave}
@@ -441,7 +482,7 @@ export function BillingSettings2({
               (validationErrors.length > 0 || !!currencyError)
             }
           >
-            {saveButtonText}
+            {saveButtonText ?? p.save}
           </Button>
         </div>
       </CardContent>

@@ -74,7 +74,7 @@ export default async function BillingContent({
     <Suspense
       fallback={
         <div className="text-muted-foreground py-8 text-center">
-          Loading billing...
+          {dictionary.schoolConsole.billing.sdk.dashboard.loading}
         </div>
       }
     >

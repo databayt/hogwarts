@@ -22,6 +22,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Toggle } from "@/components/ui/toggle"
 
+import { useBillingText } from "./use-billing-text"
+
 export interface UpdatePlanDialogProps {
   currentPlan: Plan
   plans: Plan[]
@@ -41,6 +43,7 @@ export function UpdatePlanDialog({
   title,
   triggerText,
 }: UpdatePlanDialogProps) {
+  const b = useBillingText()
   const [isYearly, setIsYearly] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(
     undefined
@@ -68,7 +71,7 @@ export function UpdatePlanDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>{triggerText || "Update Plan"}</Button>
+        <Button>{triggerText || b.updatePlan.update}</Button>
       </DialogTrigger>
       <DialogContent
         className={cn(
@@ -81,7 +84,7 @@ export function UpdatePlanDialog({
       >
         <DialogHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pb-0">
           <DialogTitle className="text-lg font-semibold sm:text-xl">
-            {title || "Upgrade Plan"}
+            {title || b.updatePlan.upgradePlan}
           </DialogTitle>
           <div className="flex items-center gap-1.5 text-sm sm:gap-2">
             <Toggle
@@ -90,7 +93,7 @@ export function UpdatePlanDialog({
               onPressedChange={(pressed) => setIsYearly(!pressed)}
               className="h-9 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
             >
-              Monthly
+              {b.common.monthly}
             </Toggle>
             <Toggle
               size="sm"
@@ -98,7 +101,7 @@ export function UpdatePlanDialog({
               onPressedChange={(pressed) => setIsYearly(pressed)}
               className="h-9 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
             >
-              Yearly
+              {b.common.yearly}
             </Toggle>
           </div>
         </DialogHeader>
@@ -112,7 +115,7 @@ export function UpdatePlanDialog({
           {plans.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-center">
               <p className="text-muted-foreground text-sm">
-                No plans available
+                {b.updatePlan.noPlans}
               </p>
             </div>
           ) : (
@@ -207,7 +210,7 @@ export function UpdatePlanDialog({
                               : getCurrentPrice(plan)}
                           </div>
                           <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
-                            /{isYearly ? "year" : "month"}
+                            /{isYearly ? b.common.perYear : b.common.perMonth}
                           </div>
                         </div>
                       </div>
@@ -262,8 +265,8 @@ export function UpdatePlanDialog({
                               }}
                             >
                               {selectedPlan === currentPlan.id
-                                ? "Current Plan"
-                                : "Upgrade"}
+                                ? b.common.currentPlan
+                                : b.common.upgrade}
                             </Button>
                           </motion.div>
                         </motion.div>

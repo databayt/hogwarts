@@ -18,6 +18,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { fill } from "@/components/school-dashboard/school/format"
+
+import { useBillingText } from "./use-billing-text"
 
 export interface CancelSubscriptionDialogProps {
   title: string
@@ -60,6 +63,7 @@ export function CancelSubscriptionDialog({
   onDialogClose,
   className,
 }: CancelSubscriptionDialogProps) {
+  const b = useBillingText()
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -79,9 +83,8 @@ export function CancelSubscriptionDialog({
       await onCancel(plan.id)
       handleDialogClose()
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to cancel subscription"
-      )
+      console.error("cancel subscription failed:", err)
+      setError(b.cancel.cancelFailed)
     } finally {
       setIsLoading(false)
     }
@@ -96,9 +99,8 @@ export function CancelSubscriptionDialog({
       }
       handleDialogClose()
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to keep subscription"
-      )
+      console.error("keep subscription failed:", err)
+      setError(b.cancel.keepFailed)
     } finally {
       setIsLoading(false)
     }
@@ -145,7 +147,7 @@ export function CancelSubscriptionDialog({
     >
       <DialogTrigger asChild>
         <Button variant="outline">
-          {triggerButtonText || "Cancel Subscription"}
+          {triggerButtonText || b.cancel.trigger}
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -162,14 +164,14 @@ export function CancelSubscriptionDialog({
           onClick={handleDialogClose}
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{b.common.close}</span>
         </DialogClose>
         {leftPanelImageUrl && (
           <div className="relative hidden min-h-[500px] w-full overflow-hidden md:block md:w-1/2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={leftPanelImageUrl}
-              alt="Cancel Subscription"
+              alt={b.cancel.trigger}
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="via-background/30 to-background/90 absolute inset-0 hidden bg-gradient-to-r from-transparent dark:block"></div>
@@ -200,16 +202,19 @@ export function CancelSubscriptionDialog({
               <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
                   <span className="text-lg font-semibold">
-                    {plan.title} Plan
+                    {fill(b.subscription.planSuffix, { plan: plan.title })}
                   </span>
                   <span className="text-muted-foreground text-sm">
-                    Current subscription
+                    {b.cancel.currentSubscription}
                   </span>
                 </div>
                 <Badge variant="secondary">
-                  {parseFloat(plan.monthlyPrice) >= 0
-                    ? `${plan.currency}${plan.monthlyPrice}/monthly`
-                    : `${plan.monthlyPrice}/monthly`}
+                  {fill(b.cancel.perMonthly, {
+                    price:
+                      parseFloat(plan.monthlyPrice) >= 0
+                        ? `${plan.currency}${plan.monthlyPrice}`
+                        : plan.monthlyPrice,
+                  })}
                 </Badge>
               </div>
               <div className="flex flex-col gap-2">
@@ -247,8 +252,8 @@ export function CancelSubscriptionDialog({
                 disabled={isLoading}
               >
                 {isLoading
-                  ? "Processing..."
-                  : keepButtonText || "Keep My Subscription"}
+                  ? b.cancel.processing
+                  : keepButtonText || b.cancel.keep}
               </Button>
               <Button
                 variant="destructive"
@@ -256,22 +261,20 @@ export function CancelSubscriptionDialog({
                 onClick={handleContinueCancellation}
                 disabled={isLoading}
               >
-                {continueButtonText || "Continue Cancellation"}
+                {continueButtonText || b.cancel.continue}
               </Button>
             </div>
           ) : (
             <div className="mt-auto flex flex-col gap-4">
               <div className="bg-muted/50 rounded-lg p-4 text-center">
                 <h3 className="text-foreground mb-2 font-semibold">
-                  {finalTitle || "Final Confirmation"}
+                  {finalTitle || b.cancel.finalTitle}
                 </h3>
                 <p className="text-muted-foreground mb-2 text-sm">
-                  {finalSubtitle ||
-                    "Are you sure you want to cancel your subscription?"}
+                  {finalSubtitle || b.cancel.finalSubtitle}
                 </p>
                 <p className="text-destructive text-sm">
-                  {finalWarningText ||
-                    "This action cannot be undone and you'll lose access to all premium features."}
+                  {finalWarningText || b.cancel.finalWarning}
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -281,7 +284,7 @@ export function CancelSubscriptionDialog({
                   onClick={handleGoBack}
                   disabled={isLoading}
                 >
-                  {goBackButtonText || "Go Back"}
+                  {goBackButtonText || b.cancel.goBack}
                 </Button>
                 <Button
                   variant="destructive"
@@ -290,8 +293,8 @@ export function CancelSubscriptionDialog({
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? "Cancelling..."
-                    : confirmButtonText || "Yes, Cancel Subscription"}
+                    ? b.cancel.cancelling
+                    : confirmButtonText || b.cancel.confirm}
                 </Button>
               </div>
             </div>

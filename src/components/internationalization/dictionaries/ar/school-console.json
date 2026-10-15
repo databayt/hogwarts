@@ -83,6 +83,317 @@
       "reference": "مرجع الخطأ",
       "tryAgain": "إعادة المحاولة",
       "contactSupport": "التواصل مع الدعم"
+    },
+    "sdk": {
+      "common": {
+        "monthly": "شهريًا",
+        "yearly": "سنويًا",
+        "perMonth": "شهر",
+        "perYear": "سنة",
+        "currentPlan": "الخطة الحالية",
+        "upgrade": "ترقية",
+        "close": "إغلاق",
+        "na": "غير متاح",
+        "free": "مجاني",
+        "none": "لا يوجد",
+        "unlimited": "غير محدود"
+      },
+      "statuses": {
+        "active": "فعّال",
+        "inactive": "غير فعّال",
+        "past_due": "متأخر السداد",
+        "cancelled": "ملغى",
+        "canceled": "ملغى",
+        "trialing": "تجريبي",
+        "incomplete": "غير مكتمل",
+        "unpaid": "غير مسدد"
+      },
+      "subscription": {
+        "title": "الاشتراك الحالي",
+        "description": "أدر إعدادات الفوترة والاشتراك",
+        "planSuffix": "خطة {plan}",
+        "perMonthBadge": "{price}/شهريًا",
+        "perYearBadge": "{price}/سنويًا",
+        "billingInfo": "معلومات الفوترة",
+        "nextBillingDate": "تاريخ الفوترة القادم",
+        "paymentMethod": "طريقة الدفع",
+        "features": "مزايا الخطة الحالية"
+      },
+      "updatePlan": {
+        "update": "تحديث الخطة",
+        "upgradePlan": "ترقية الخطة",
+        "noPlans": "لا توجد خطط متاحة"
+      },
+      "cancel": {
+        "trigger": "إلغاء الاشتراك",
+        "currentSubscription": "الاشتراك الحالي",
+        "perMonthly": "{price}/شهريًا",
+        "processing": "جارٍ المعالجة...",
+        "keep": "الاحتفاظ باشتراكي",
+        "continue": "متابعة الإلغاء",
+        "finalTitle": "التأكيد النهائي",
+        "finalSubtitle": "هل أنت متأكد من رغبتك في إلغاء الاشتراك؟",
+        "finalWarning": "لا يمكن التراجع عن هذا الإجراء وستفقد الوصول إلى جميع المزايا المميزة.",
+        "goBack": "رجوع",
+        "cancelling": "جارٍ الإلغاء...",
+        "confirm": "نعم، إلغاء الاشتراك",
+        "cancelFailed": "تعذّر إلغاء الاشتراك",
+        "keepFailed": "تعذّر الاحتفاظ بالاشتراك"
+      },
+      "trial": {
+        "upgradeNow": "الترقية الآن",
+        "processing": "جارٍ المعالجة...",
+        "expired": "منتهية",
+        "expiringSoon": "تنتهي قريبًا",
+        "active": "فعّالة",
+        "included": "ما تشمله الترقية",
+        "days": "أيام",
+        "hours": "ساعات",
+        "min": "دقائق",
+        "sec": "ثوانٍ",
+        "remainingAria": "الوقت المتبقي للفترة التجريبية: {days} يوم و{hours} ساعة و{minutes} دقيقة و{seconds} ثانية",
+        "defaultFeatures": [
+          "مشاريع غير محدودة",
+          "دعم ذو أولوية",
+          "تحليلات متقدمة",
+          "تكاملات مخصصة"
+        ]
+      },
+      "upcoming": {
+        "nextBillingDate": "تاريخ الفوترة القادم",
+        "total": "الإجمالي",
+        "breakdown": "التفاصيل",
+        "prorated": "تناسبي",
+        "recurring": "متكرر",
+        "oneTime": "مرة واحدة",
+        "unknown": "غير معروف"
+      },
+      "usage": {
+        "perMonthShort": "/شهر",
+        "unitPerMonth": "{count} {unit} في الشهر",
+        "credits": "رصيد",
+        "unitAria": "{count} {unit}",
+        "title": "تسعير حسب الاستخدام",
+        "subtitle": "ابدأ بسعر شهري ثابت يشمل 4,000 رصيد."
+      },
+      "settings": {
+        "title": "إعدادات الفوترة",
+        "tabs": {
+          "general": "عام",
+          "payment": "الدفع",
+          "invoices": "الفواتير",
+          "limits": "الحدود"
+        },
+        "emailNotifications": "إشعارات البريد الإلكتروني",
+        "emailNotificationsHint": "استلام تحديثات الفوترة عبر البريد الإلكتروني",
+        "usageAlerts": "تنبيهات الاستخدام",
+        "usageAlertsHint": "تلقَّ إشعارًا عند الاقتراب من الحدود",
+        "invoiceReminders": "تذكيرات الفواتير",
+        "invoiceRemindersHint": "ذكّرني قبل التجديد التلقائي",
+        "primary": "أساسية",
+        "expires": "تنتهي في {expiry}",
+        "addCard": "إضافة بطاقة جديدة",
+        "invoiceFormat": "صيغة الفاتورة",
+        "invoiceFormatHint": "اختر صيغة PDF أو HTML",
+        "billingAddress": "عنوان الفوترة",
+        "billingAddressHint": "حدّث عنوان الفوترة",
+        "edit": "تعديل",
+        "overage": "الحماية من تجاوز الحد",
+        "overageHint": "منع التجاوزات غير المقصودة",
+        "limitAlerts": "تنبيهات حد الاستخدام",
+        "limitAlertsHint": "تنبيه عند بلوغ 80% و95% من الاستخدام"
+      },
+      "preferences": {
+        "title": "تفضيلات الفوترة",
+        "subtitle": "أدر تفضيلات الفوترة وإعداداتها",
+        "fullName": "الاسم الكامل",
+        "fullNamePlaceholder": "مدير المدرسة",
+        "billingEmail": "بريد الفوترة",
+        "billingEmailHint": "سترسل الفواتير إلى هذا البريد الإلكتروني",
+        "taxId": "الرقم الضريبي (اختياري)",
+        "taxIdHint": "لأغراض ضريبة القيمة المضافة أو الضرائب الأخرى",
+        "autoRenewal": "التجديد التلقائي",
+        "autoRenewalHint": "تجديد اشتراكك تلقائيًا",
+        "invoiceEmails": "رسائل الفواتير",
+        "invoiceEmailsHint": "استلام رسائل بريد عند إصدار الفواتير",
+        "promoEmails": "رسائل ترويجية",
+        "promoEmailsHint": "استلام تحديثات عرضية عن المزايا والعروض الجديدة",
+        "currency": "العملة",
+        "selectCurrency": "اختر العملة",
+        "save": "حفظ التغييرات",
+        "cancel": "إلغاء",
+        "invalidEmail": "يرجى إدخال بريد إلكتروني صحيح",
+        "required": "حقل {field} مطلوب",
+        "invalidFormat": "صيغة {field} غير صحيحة",
+        "minLength": "يجب ألا يقل {field} عن {min} أحرف",
+        "maxLength": "يجب ألا يزيد {field} على {max} حرفًا",
+        "currencyRequired": "يرجى اختيار العملة"
+      },
+      "paymentCard": {
+        "orderSummary": "ملخص الطلب",
+        "subtotal": "المجموع الفرعي",
+        "total": "الإجمالي",
+        "included": "ما يشمله الاشتراك",
+        "defaultFeature": "الدفع والفواتير",
+        "defaultFeatureDesc": "فوترة تلقائية وسجلات معاملات تفصيلية",
+        "defaultFeature2": "دعم ذو أولوية",
+        "defaultFeature2Desc": "استجابة أسرع ودعم فني",
+        "title": "أكمل عملية الدفع",
+        "description": "أدخل بيانات بطاقتك لإتمام الاشتراك",
+        "cardNumber": "رقم البطاقة",
+        "expiry": "تاريخ الانتهاء",
+        "cvc": "رمز التحقق (CVC)",
+        "discount": "رمز الخصم (اختياري)",
+        "enterCode": "أدخل الرمز",
+        "apply": "تطبيق",
+        "pay": "ادفع {amount}",
+        "cardAlt": "بطاقة",
+        "errCard": "يجب أن يتكون رقم البطاقة من 16 رقمًا.",
+        "errExpiry": "أدخل تاريخ انتهاء صحيحًا (MM/YY).",
+        "errExpiryPast": "لا يمكن أن يكون تاريخ الانتهاء في الماضي.",
+        "errCvc": "يجب أن يتكون رمز التحقق من 3 أو 4 أرقام."
+      },
+      "paymentMethods": {
+        "title": "طرق الدفع",
+        "subtitle": "اختر طريقة الدفع المفضلة للمتابعة",
+        "select": "اختر طريقة الدفع",
+        "proceed": "متابعة الدفع",
+        "cardNumber": "رقم البطاقة",
+        "expiryDate": "تاريخ الانتهاء",
+        "cvv": "رمز التحقق (CVV)",
+        "cardholder": "اسم حامل البطاقة",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الهاتف",
+        "upiId": "معرّف UPI",
+        "income": "الدخل السنوي",
+        "optional": "اختياري",
+        "walletNote": "ستُحوَّل إلى تطبيق المحفظة الذي اخترته لإتمام الدفع بأمان.",
+        "upiNote": "أدخل معرّف UPI لتلقي طلب الدفع، ثم أكمل الدفع من تطبيق UPI.",
+        "bnplNote": "ستُحوَّل لإجراء فحص أهلية سريع وإعداد خطة الدفع.",
+        "cardholderPlaceholder": "الاسم الكامل",
+        "options": {
+          "cards": {
+            "name": "البطاقات",
+            "description": "فيزا وماستركارد وغيرها"
+          },
+          "digital-wallets": {
+            "name": "المحافظ الرقمية",
+            "description": "Apple Pay وGoogle Pay وغيرها"
+          },
+          "upi": {
+            "name": "UPI",
+            "description": "واجهة المدفوعات الموحدة"
+          },
+          "bnpl-services": {
+            "name": "اشترِ الآن وادفع لاحقًا",
+            "description": "Klarna وAffirm وAfterpay"
+          }
+        }
+      },
+      "plans": {
+        "hobby": {
+          "description": "ابدأ مجانًا",
+          "features": [
+            "حتى 100 طالب",
+            "حتى 10 معلمين",
+            "المزايا الأساسية",
+            "تحليلات أساسية",
+            "دعم المجتمع"
+          ]
+        },
+        "pro": {
+          "description": "للمدارس المتنامية",
+          "badge": "الأكثر شيوعًا",
+          "features": [
+            "حتى 500 طالب",
+            "معلمون بلا حد",
+            "تقارير وتصدير متقدمان",
+            "هوية بصرية مخصصة",
+            "دعم ذو أولوية"
+          ]
+        },
+        "ultra": {
+          "description": "للمؤسسات الكبيرة",
+          "features": [
+            "طلاب ومعلمون بلا حد",
+            "تكاملات مخصصة",
+            "تحليلات متقدمة",
+            "خيارات العلامة البيضاء",
+            "دعم مخصص على مدار الساعة"
+          ]
+        }
+      },
+      "dashboard": {
+        "loading": "جارٍ تحميل الفوترة...",
+        "noPaymentMethod": "لا توجد طريقة دفع",
+        "noSubscriptionTitle": "لا يوجد اشتراك",
+        "noSubscriptionBody": "ليس لدى مدرستك اشتراك فعّال. تواصل مع المسؤول لإعداد الفوترة.",
+        "choosePlan": "اختر خطة",
+        "changePlan": "تغيير الخطة",
+        "cancelTitle": "إلغاء الاشتراك",
+        "cancelDescription": "يؤسفنا رحيلك. سيظل اشتراكك فعّالًا حتى نهاية فترة الفوترة.",
+        "upgradeYourPlan": "ارتقِ بخطتك",
+        "trialTitle": "الفترة التجريبية",
+        "trialDescription": "تقترب فترتك التجريبية من نهايتها. قم بالترقية للاحتفاظ بجميع المزايا.",
+        "upgradeNow": "الترقية الآن",
+        "trialFeatures": [
+          "وصول كامل إلى جميع المزايا المميزة",
+          "حتى {students} طالب",
+          "لوحة تحليلات متقدمة",
+          "دعم عملاء ذو أولوية"
+        ],
+        "planStatus": "حالة الخطة",
+        "nextBilling": "الفوترة القادمة: {date}",
+        "totalSpent": "إجمالي المدفوع: {amount}",
+        "studentUsage": "استخدام الطلاب",
+        "studentsUsed": "استُخدم {used} من {limit} طالب",
+        "students": "طلاب",
+        "upcomingCharges": "الرسوم القادمة",
+        "upcomingDescription": "معاينة لدورة الفوترة القادمة",
+        "planMonthly": "خطة {name} (شهرية)",
+        "resourceUsage": "استخدام الموارد",
+        "resourceDescription": "الاستخدام الحالي لموارد مدرستك",
+        "resources": {
+          "students": "الطلاب",
+          "teachers": "المعلمون",
+          "classes": "الفصول",
+          "storage": "التخزين"
+        },
+        "units": {
+          "users": "مستخدم",
+          "classes": "فصل",
+          "mb": "ميغابايت"
+        },
+        "invoiceHistory": "سجل الفواتير",
+        "invoiceDescription": "فواتيرك السابقة وإيصالات الدفع.",
+        "noInvoices": "لا توجد فواتير بعد",
+        "invoiceNumber": "فاتورة {number}",
+        "card": "بطاقة",
+        "completePayment": "أكمل عملية الدفع",
+        "completePaymentDescription": "أدخل بيانات بطاقتك لإتمام الاشتراك",
+        "fullAccess": "وصول كامل",
+        "planFeatures": "مزايا خطة {name}",
+        "prioritySupport": "دعم ذو أولوية",
+        "supportDescription": "احصل على المساعدة خلال 24 ساعة من فريق الدعم",
+        "securePayment": "دفع آمن",
+        "encryption": "تشفير 256 بت",
+        "pciCompliant": "متوافق مع PCI"
+      },
+      "invoiceHistory": {
+        "heading": "الفواتير",
+        "paymentMethods": "طرق الدفع",
+        "recent": "أحدث الفواتير",
+        "recentDescription": "سجل الفوترة والفواتير",
+        "exportAll": "تصدير الكل",
+        "empty": "لا توجد فواتير بعد",
+        "invoiceNo": "فاتورة رقم {number}",
+        "paymentMethodsDescription": "أدر طرق الدفع الخاصة بك",
+        "add": "إضافة طريقة دفع",
+        "emptyMethods": "لم تُضف أي طريقة دفع",
+        "default": "الافتراضية",
+        "remove": "إزالة",
+        "downloadInvoice": "تنزيل الفاتورة"
+      }
     }
   },
   "membership": {

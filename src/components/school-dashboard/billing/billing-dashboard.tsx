@@ -5,7 +5,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-import { plans } from "@/lib/billingsdk-config"
+import { plans as basePlans, type Plan } from "@/lib/billingsdk-config"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BillingSettings } from "@/components/billingsdk/billing-settings"
 import { BillingSettings2 } from "@/components/billingsdk/billing-settings-2"
@@ -18,7 +18,9 @@ import { TrialExpiryCard } from "@/components/billingsdk/trial-expiry-card"
 import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges"
 import { UpdatePlanCard } from "@/components/billingsdk/update-plan-card"
 import { UsageBasedPricing } from "@/components/billingsdk/usage-based-pricing"
+import { useBillingText } from "@/components/billingsdk/use-billing-text"
 import type { Locale } from "@/components/internationalization/config"
+import { fill } from "@/components/school-dashboard/school/format"
 
 import {
   addPaymentMethod,
@@ -40,30 +42,36 @@ interface BillingDashboardProps {
 
 function mapSubscriptionToPlan(sub: SubscriptionWithTier) {
   const tier = sub.subscriptionTier
-  const matched = plans.find(
+  const matched = basePlans.find(
     (p) =>
       p.title.toLowerCase() === tier.name.toLowerCase() ||
       p.id === tier.name.toLowerCase()
   )
   if (matched) return matched
-  return plans[0]
+  return basePlans[0]
 }
 
-function formatDate(date: string | Date | null, locale: string = "ar"): string {
-  if (!date) return "N/A"
-  return new Intl.DateTimeFormat(locale, {
+/** Latin digits in both languages; the locale picks month names and order. */
+const bcp47 = (lang: string) => (lang === "ar" ? "ar-SA" : "en-US")
+
+function formatDate(
+  date: string | Date | null,
+  lang: string,
+  fallback: string
+): string {
+  if (!date) return fallback
+  return new Intl.DateTimeFormat(bcp47(lang), {
+    numberingSystem: "latn",
+    calendar: "gregory",
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(new Date(date))
 }
 
-function formatAmount(
-  amount: number,
-  currency = "USD",
-  locale: string = "ar"
-): string {
-  return new Intl.NumberFormat(locale, {
+function formatAmount(amount: number, lang: string, currency = "USD"): string {
+  return new Intl.NumberFormat(bcp47(lang), {
+    numberingSystem: "latn",
     style: "currency",
     currency,
     minimumFractionDigits: 0,
@@ -82,6 +90,32 @@ export function BillingDashboard({
 }: BillingDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const b = useBillingText()
+  const t = b.dashboard
+  const na = b.common.na
+  const fmtDate = (date: string | Date | null) => formatDate(date, lang, na)
+  const fmtAmount = (amount: number) => formatAmount(amount, lang)
+  const num = (v: number) =>
+    new Intl.NumberFormat(bcp47(lang), { numberingSystem: "latn" }).format(v)
+  const statusLabel = (status: string) =>
+    (b.statuses as Record<string, string>)[status] ?? status
+
+  // Plan names stay as brand tiers; descriptions, badges and features follow
+  // the page language.
+  const localizePlan = (plan: Plan): Plan => {
+    const text = (b.plans as Record<string, any>)[plan.id]
+    if (!text) return plan
+    return {
+      ...plan,
+      description: text.description ?? plan.description,
+      badge: plan.badge ? (text.badge ?? plan.badge) : plan.badge,
+      features: plan.features.map((f, i) => ({
+        ...f,
+        name: text.features?.[i] ?? f.name,
+      })),
+    }
+  }
+  const plans = basePlans.map(localizePlan)
 
   // Settings state
   const [activeTab, setActiveTab] = useState("general")
@@ -121,21 +155,21 @@ export function BillingDashboard({
   const [credits, setCredits] = useState(stats?.currentUsage?.students ?? 0)
 
   // Map subscription to plan
-  const currentPlan = subscription
-    ? mapSubscriptionToPlan(subscription)
-    : plans[0]
+  const currentPlan = localizePlan(
+    subscription ? mapSubscriptionToPlan(subscription) : basePlans[0]
+  )
 
   // Build current plan data for SubscriptionManagement
   const currentPlanData = subscription
     ? {
         plan: currentPlan,
         type: "monthly" as const,
-        price: formatAmount(subscription.subscriptionTier.monthlyPrice),
-        nextBillingDate: formatDate(subscription.currentPeriodEnd),
+        price: fmtAmount(subscription.subscriptionTier.monthlyPrice),
+        nextBillingDate: fmtDate(subscription.currentPeriodEnd),
         paymentMethod:
           paymentMethods.length > 0
             ? `${paymentMethods[0].type} ****${paymentMethods[0].stripePaymentMethodId?.slice(-4) ?? "****"}`
-            : "No payment method",
+            : t.noPaymentMethod,
         status: (subscription.status === "active"
           ? "active"
           : subscription.status === "past_due"
@@ -147,17 +181,17 @@ export function BillingDashboard({
     : {
         plan: plans[0],
         type: "monthly" as const,
-        price: "Free",
-        nextBillingDate: "N/A",
-        paymentMethod: "None",
+        price: b.common.free,
+        nextBillingDate: na,
+        paymentMethod: b.common.none,
         status: "active" as const,
       }
 
   // Map invoices to InvoiceHistory format
   const invoiceItems = invoices.map((inv: any) => ({
     id: inv.id,
-    date: formatDate(inv.createdAt),
-    amount: formatAmount(inv.amountDue),
+    date: fmtDate(inv.createdAt),
+    amount: fmtAmount(inv.amountDue),
     status: (inv.status === "paid"
       ? "paid"
       : inv.status === "void"
@@ -166,39 +200,42 @@ export function BillingDashboard({
           ? "open"
           : "paid") as "paid" | "refunded" | "open" | "void",
     description:
-      inv.description || `Invoice ${inv.invoiceNumber || inv.id.slice(0, 8)}`,
+      inv.description ||
+      fill(t.invoiceNumber, {
+        number: inv.invoiceNumber || inv.id.slice(0, 8),
+      }),
   }))
 
   // Map usage stats to resources
   const usageResources = stats
     ? [
         {
-          name: "Students",
+          name: t.resources.students,
           used: stats.currentUsage.students,
           limit: stats.limits.students,
           percentage: stats.usagePercentages.students,
-          unit: "users",
+          unit: t.units.users,
         },
         {
-          name: "Teachers",
+          name: t.resources.teachers,
           used: stats.currentUsage.teachers,
           limit: stats.limits.teachers,
           percentage: stats.usagePercentages.teachers,
-          unit: "users",
+          unit: t.units.users,
         },
         {
-          name: "Classes",
+          name: t.resources.classes,
           used: stats.currentUsage.classes,
           limit: stats.limits.classes,
           percentage: stats.usagePercentages.classes,
-          unit: "classes",
+          unit: t.units.classes,
         },
         {
-          name: "Storage",
+          name: t.resources.storage,
           used: stats.currentUsage.storage,
           limit: stats.limits.storage,
           percentage: stats.usagePercentages.storage,
-          unit: "MB",
+          unit: t.units.mb,
         },
       ]
     : []
@@ -208,9 +245,11 @@ export function BillingDashboard({
     ? [
         {
           id: "1",
-          description: `${subscription.subscriptionTier.name} Plan (Monthly)`,
-          amount: formatAmount(subscription.subscriptionTier.monthlyPrice),
-          date: formatDate(subscription.currentPeriodEnd),
+          description: fill(t.planMonthly, {
+            name: subscription.subscriptionTier.name,
+          }),
+          amount: fmtAmount(subscription.subscriptionTier.monthlyPrice),
+          date: fmtDate(subscription.currentPeriodEnd),
           type: "recurring" as const,
         },
       ]
@@ -220,8 +259,8 @@ export function BillingDashboard({
   const settingsCards = paymentMethods.map((pm: any) => ({
     id: pm.id,
     last4: pm.stripePaymentMethodId?.slice(-4) ?? "****",
-    brand: pm.type === "CARD" ? "Card" : pm.type,
-    expiry: "N/A",
+    brand: pm.type === "CARD" ? t.card : pm.type,
+    expiry: na,
     primary: pm.isDefault,
   }))
 
@@ -278,13 +317,10 @@ export function BillingDashboard({
       <div className="flex flex-col gap-8 py-4 pb-14">
         <Card>
           <CardHeader>
-            <CardTitle>No Subscription Found</CardTitle>
+            <CardTitle>{t.noSubscriptionTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              Your school does not have an active subscription. Contact your
-              administrator to set up billing.
-            </p>
+            <p className="text-muted-foreground">{t.noSubscriptionBody}</p>
           </CardContent>
         </Card>
 
@@ -293,7 +329,7 @@ export function BillingDashboard({
             currentPlan={plans[0]}
             plans={plans}
             onPlanChange={handlePlanChange}
-            title="Choose a Plan"
+            title={t.choosePlan}
           />
           <PaymentMethodSelector
             onProceed={(method, data) =>
@@ -314,13 +350,12 @@ export function BillingDashboard({
           updatePlan={{
             currentPlan,
             plans,
-            triggerText: "Change Plan",
+            triggerText: t.changePlan,
             onPlanChange: handlePlanChange,
           }}
           cancelSubscription={{
-            title: "Cancel Subscription",
-            description:
-              "We're sorry to see you go. Your subscription will remain active until the end of the billing period.",
+            title: t.cancelTitle,
+            description: t.cancelDescription,
             plan: currentPlan,
             onCancel: handleCancel,
           }}
@@ -333,37 +368,43 @@ export function BillingDashboard({
           currentPlan={currentPlan}
           plans={plans}
           onPlanChange={handlePlanChange}
-          title="Upgrade Your Plan"
+          title={t.upgradeYourPlan}
         />
         {isTrial && trialEndDate ? (
           <TrialExpiryCard
             trialEndDate={trialEndDate}
             onUpgrade={() => handlePlanChange("pro")}
-            title="Trial Period"
-            description="Your trial is ending soon. Upgrade to keep access to all features."
-            upgradeButtonText="Upgrade Now"
-            features={[
-              "Full access to all premium features",
-              `Up to ${currentPlan.limits?.students ?? "unlimited"} students`,
-              "Advanced analytics dashboard",
-              "Priority customer support",
-            ]}
+            title={t.trialTitle}
+            description={t.trialDescription}
+            upgradeButtonText={t.upgradeNow}
+            features={t.trialFeatures.map((feature) =>
+              fill(feature, {
+                students:
+                  currentPlan.limits && currentPlan.limits.students >= 0
+                    ? num(currentPlan.limits.students)
+                    : b.common.unlimited,
+              })
+            )}
           />
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Plan Status</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t.planStatus}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold capitalize">
-                {subscription.status}
+              <div className="text-2xl font-bold">
+                {statusLabel(subscription.status)}
               </div>
               <p className="text-muted-foreground text-xs">
-                Next billing: {formatDate(subscription.currentPeriodEnd)}
+                {fill(t.nextBilling, {
+                  date: fmtDate(subscription.currentPeriodEnd),
+                })}
               </p>
               {stats && (
                 <p className="text-muted-foreground mt-2 text-xs">
-                  Total spent: {formatAmount(stats.totalSpent)}
+                  {fill(t.totalSpent, { amount: fmtAmount(stats.totalSpent) })}
                 </p>
               )}
             </CardContent>
@@ -382,14 +423,21 @@ export function BillingDashboard({
           currency="$"
           basePrice={subscription.subscriptionTier.monthlyPrice}
           includedCredits={currentPlan.limits?.students ?? 100}
-          title="Student Usage"
-          subtitle={`${stats?.currentUsage?.students ?? 0} of ${currentPlan.limits?.students ?? "unlimited"} students used`}
+          title={t.studentUsage}
+          unitLabel={t.students}
+          subtitle={fill(t.studentsUsed, {
+            used: num(stats?.currentUsage?.students ?? 0),
+            limit:
+              currentPlan.limits && currentPlan.limits.students >= 0
+                ? num(currentPlan.limits.students)
+                : b.common.unlimited,
+          })}
         />
         <UpcomingCharges
-          title="Upcoming Charges"
-          description="Preview of your next billing cycle"
-          nextBillingDate={formatDate(subscription.currentPeriodEnd)}
-          totalAmount={formatAmount(subscription.subscriptionTier.monthlyPrice)}
+          title={t.upcomingCharges}
+          description={t.upcomingDescription}
+          nextBillingDate={fmtDate(subscription.currentPeriodEnd)}
+          totalAmount={fmtAmount(subscription.subscriptionTier.monthlyPrice)}
           charges={upcomingCharges}
         />
       </section>
@@ -398,8 +446,8 @@ export function BillingDashboard({
       {usageResources.length > 0 && (
         <section>
           <DetailedUsageTable
-            title="Resource Usage"
-            description="Current usage across your school's resources"
+            title={t.resourceUsage}
+            description={t.resourceDescription}
             resources={usageResources}
           />
         </section>
@@ -408,18 +456,18 @@ export function BillingDashboard({
       {/* Section 5: Invoice History */}
       <section>
         <InvoiceHistory
-          title="Invoice History"
-          description="Your past invoices and payment receipts."
+          title={t.invoiceHistory}
+          description={t.invoiceDescription}
           invoices={
             invoiceItems.length > 0
               ? invoiceItems
               : [
                   {
                     id: "none",
-                    date: "N/A",
-                    amount: "$0",
+                    date: na,
+                    amount: fmtAmount(0),
                     status: "paid" as const,
-                    description: "No invoices yet",
+                    description: t.noInvoices,
                   },
                 ]
           }
@@ -443,17 +491,19 @@ export function BillingDashboard({
           }}
         />
         <PaymentCard
-          title="Complete your payment"
-          description="Enter your card details to finalize your subscription"
+          title={t.completePayment}
+          description={t.completePaymentDescription}
           price={String(subscription.subscriptionTier.monthlyPrice)}
-          feature="Full Access"
-          featuredescription={`${subscription.subscriptionTier.name} plan features`}
-          feature2="Priority Support"
-          feature2description="Get help within 24 hours from our support team"
+          feature={t.fullAccess}
+          featuredescription={fill(t.planFeatures, {
+            name: subscription.subscriptionTier.name,
+          })}
+          feature2={t.prioritySupport}
+          feature2description={t.supportDescription}
           finalText={[
-            { text: "Secure payment" },
-            { text: "256-bit encryption" },
-            { text: "PCI compliant" },
+            { text: t.securePayment },
+            { text: t.encryption },
+            { text: t.pciCompliant },
           ]}
           onPay={async (data) => {
             console.log("Payment submitted:", data)
@@ -485,15 +535,15 @@ export function BillingDashboard({
           onUsageLimitAlertsChange={setUsageLimitAlerts}
         />
         <BillingSettings2
-          title="Billing Preferences"
+          title={b.preferences.title}
           inputFields={[
             {
               id: "fullName",
               name: "fullName",
               value: fullName,
-              placeholder: "School Admin",
+              placeholder: b.preferences.fullNamePlaceholder,
               onChange: setFullName,
-              label: "Full Name",
+              label: b.preferences.fullName,
               type: "text",
               required: true,
             },
@@ -503,8 +553,8 @@ export function BillingDashboard({
               value: billingEmail,
               placeholder: "billing@school.edu",
               onChange: setBillingEmail,
-              label: "Billing Email",
-              helperText: "Invoices will be sent to this email address",
+              label: b.preferences.billingEmail,
+              helperText: b.preferences.billingEmailHint,
               type: "email",
               required: true,
             },
@@ -514,31 +564,30 @@ export function BillingDashboard({
               value: taxId,
               placeholder: "EU123456789",
               onChange: setTaxId,
-              label: "Tax ID (Optional)",
-              helperText: "For VAT or other tax purposes",
+              label: b.preferences.taxId,
+              helperText: b.preferences.taxIdHint,
               type: "text",
             },
           ]}
           features={[
             {
               id: "auto-renewal",
-              label: "Auto-Renewal",
-              description: "Automatically renew your subscription",
+              label: b.preferences.autoRenewal,
+              description: b.preferences.autoRenewalHint,
               enabled: autoRenewal,
               onToggle: setAutoRenewal,
             },
             {
               id: "invoice-emails",
-              label: "Invoice Emails",
-              description: "Receive emails when invoices are generated",
+              label: b.preferences.invoiceEmails,
+              description: b.preferences.invoiceEmailsHint,
               enabled: invoiceEmails,
               onToggle: setInvoiceEmails,
             },
             {
               id: "promotional-emails",
-              label: "Promotional Emails",
-              description:
-                "Receive occasional updates about new features and offers",
+              label: b.preferences.promoEmails,
+              description: b.preferences.promoEmailsHint,
               enabled: promotionalEmails,
               onToggle: setPromotionalEmails,
             },
@@ -548,8 +597,8 @@ export function BillingDashboard({
           onCurrencyChange={setCurrency}
           onSave={handleSavePreferences}
           onCancel={() => router.refresh()}
-          saveButtonText="Save Changes"
-          cancelButtonText="Cancel"
+          saveButtonText={b.preferences.save}
+          cancelButtonText={b.preferences.cancel}
         />
       </section>
     </div>

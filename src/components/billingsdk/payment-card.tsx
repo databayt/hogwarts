@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { fill } from "@/components/school-dashboard/school/format"
+
+import { useBillingText } from "./use-billing-text"
 
 export interface finalTextProps {
   text: string
@@ -51,6 +54,7 @@ export function PaymentCard({
   onPay,
   className,
 }: PaymentCardProps) {
+  const b = useBillingText()
   const [cardNumber, setCardNumber] = useState("")
   const [expiry, setExpiry] = useState("")
   const [cvc, setCvc] = useState("")
@@ -66,24 +70,24 @@ export function PaymentCard({
 
     // Card number validation
     if (!/^[0-9 ]{16,19}$/.test(cardNumber)) {
-      newErrors.card = "Card number must be 16 digits and only numbers."
+      newErrors.card = b.paymentCard.errCard
     }
 
     // Expiry validation
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-      newErrors.expiry = "Enter a valid expiry date (MM/YY)."
+      newErrors.expiry = b.paymentCard.errExpiry
     } else {
       const [month, year] = expiry.split("/").map(Number)
       const now = new Date()
       const expDate = new Date(2000 + year, month - 1)
       if (expDate < now) {
-        newErrors.expiry = "Expiry date cannot be in the past."
+        newErrors.expiry = b.paymentCard.errExpiryPast
       }
     }
 
     // CVC validation
     if (!/^[0-9]{3,4}$/.test(cvc)) {
-      newErrors.cvc = "CVC must be 3 or 4 digits."
+      newErrors.cvc = b.paymentCard.errCvc
     }
 
     setErrors(newErrors)
@@ -121,16 +125,18 @@ export function PaymentCard({
             {/* Price Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>{b.paymentCard.orderSummary}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">
+                      {b.paymentCard.subtotal}
+                    </span>
                     <span className="tabular-nums">${price || "320"}.00</span>
                   </div>
                   <div className="flex items-center justify-between border-t pt-2">
-                    <span className="font-medium">Total</span>
+                    <span className="font-medium">{b.paymentCard.total}</span>
                     <span className="text-xl font-semibold tabular-nums">
                       ${price || "320"}.00
                     </span>
@@ -142,7 +148,7 @@ export function PaymentCard({
             {/* Features */}
             <Card>
               <CardHeader>
-                <CardTitle>What's Included</CardTitle>
+                <CardTitle>{b.paymentCard.included}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -150,11 +156,10 @@ export function PaymentCard({
                     <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <div className="space-y-1">
                       <p className="text-sm leading-none font-medium">
-                        {feature || "Payment & Invoice"}
+                        {feature || b.paymentCard.defaultFeature}
                       </p>
                       <p className="text-muted-foreground text-sm">
-                        {featuredescription ||
-                          "Automated billing and detailed transaction records"}
+                        {featuredescription || b.paymentCard.defaultFeatureDesc}
                       </p>
                     </div>
                   </div>
@@ -163,11 +168,11 @@ export function PaymentCard({
                     <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <div className="space-y-1">
                       <p className="text-sm leading-none font-medium">
-                        {feature2 || "Priority Support"}
+                        {feature2 || b.paymentCard.defaultFeature2}
                       </p>
                       <p className="text-muted-foreground text-sm">
                         {feature2description ||
-                          "Faster response times and technical support"}
+                          b.paymentCard.defaultFeature2Desc}
                       </p>
                     </div>
                   </div>
@@ -180,16 +185,15 @@ export function PaymentCard({
         {/* Payment Form */}
         <Card className="order-1 md:order-2">
           <CardHeader>
-            <CardTitle>{title || "Complete your payment"}</CardTitle>
+            <CardTitle>{title || b.paymentCard.title}</CardTitle>
             <CardDescription>
-              {description ||
-                "Enter your card details to finalize your subscription"}
+              {description || b.paymentCard.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Card Number */}
             <div className="space-y-2">
-              <Label htmlFor="cardNumber">Card number</Label>
+              <Label htmlFor="cardNumber">{b.paymentCard.cardNumber}</Label>
               <div className="relative">
                 <div className="absolute start-3 top-1/2 z-10 flex h-6 w-8 -translate-y-1/2 items-center justify-center overflow-hidden">
                   <AnimatePresence mode="wait">
@@ -203,7 +207,7 @@ export function PaymentCard({
                           "https://img.icons8.com/color/48/rupay.png",
                         ][index % 4]
                       }
-                      alt="card"
+                      alt={b.paymentCard.cardAlt}
                       className="h-6 w-6"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -216,7 +220,8 @@ export function PaymentCard({
                   id="cardNumber"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="ps-14 font-mono tracking-wider"
+                  dir="ltr"
+                  className="ps-14 text-start font-mono tracking-wider"
                   placeholder="1234 5678 9012 3456"
                   maxLength={19}
                 />
@@ -229,12 +234,13 @@ export function PaymentCard({
             {/* Expiry and CVC */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="expiry">Expiry date</Label>
+                <Label htmlFor="expiry">{b.paymentCard.expiry}</Label>
                 <Input
                   id="expiry"
                   value={expiry}
                   onChange={(e) => setExpiry(e.target.value)}
-                  className="font-mono"
+                  dir="ltr"
+                  className="text-start font-mono"
                   placeholder="MM/YY"
                   maxLength={5}
                 />
@@ -243,13 +249,14 @@ export function PaymentCard({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cvc">CVC</Label>
+                <Label htmlFor="cvc">{b.paymentCard.cvc}</Label>
                 <Input
                   id="cvc"
                   type="password"
                   value={cvc}
                   onChange={(e) => setCvc(e.target.value)}
-                  className="font-mono"
+                  dir="ltr"
+                  className="text-start font-mono"
                   placeholder="123"
                   maxLength={4}
                 />
@@ -261,23 +268,23 @@ export function PaymentCard({
 
             {/* Discount Code */}
             <div className="space-y-2">
-              <Label htmlFor="discount">Discount code (optional)</Label>
+              <Label htmlFor="discount">{b.paymentCard.discount}</Label>
               <div className="flex gap-2">
                 <Input
                   id="discount"
-                  placeholder="Enter code"
+                  placeholder={b.paymentCard.enterCode}
                   maxLength={12}
                   className="flex-1"
                 />
                 <Button variant="secondary" type="button">
-                  Apply
+                  {b.paymentCard.apply}
                 </Button>
               </div>
             </div>
 
             {/* Pay Button */}
             <Button className="mt-2 w-full" onClick={handlePay}>
-              Pay ${price || "320"}.00
+              {fill(b.paymentCard.pay, { amount: `$${price || "320"}.00` })}
               <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
           </CardContent>

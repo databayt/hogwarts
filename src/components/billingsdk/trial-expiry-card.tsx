@@ -15,6 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { fill } from "@/components/school-dashboard/school/format"
+
+import { useBillingText } from "./use-billing-text"
 
 export interface TrialExpiryCardProps {
   trialEndDate?: Date | string | number
@@ -79,16 +82,12 @@ export function TrialExpiryCard({
   daysRemaining: propDaysRemaining,
   onUpgrade,
   className,
-  title = "Trial Period",
+  title,
   description,
-  upgradeButtonText = "Upgrade Now",
-  features = [
-    "Unlimited projects",
-    "Priority support",
-    "Advanced analytics",
-    "Custom integrations",
-  ],
+  upgradeButtonText,
+  features,
 }: TrialExpiryCardProps) {
+  const b = useBillingText()
   const [isLoading, setIsLoading] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() => {
     if (trialEndDate) {
@@ -121,18 +120,22 @@ export function TrialExpiryCard({
   }
 
   const getStatusBadge = () => {
-    if (daysRemaining <= 0) return <Badge variant="destructive">Expired</Badge>
+    if (daysRemaining <= 0)
+      return <Badge variant="destructive">{b.trial.expired}</Badge>
     if (daysRemaining <= 2)
-      return <Badge variant="destructive">Expiring Soon</Badge>
-    if (daysRemaining <= 6) return <Badge variant="secondary">Active</Badge>
-    return <Badge variant="default">Active</Badge>
+      return <Badge variant="destructive">{b.trial.expiringSoon}</Badge>
+    if (daysRemaining <= 6)
+      return <Badge variant="secondary">{b.trial.active}</Badge>
+    return <Badge variant="default">{b.trial.active}</Badge>
   }
 
   return (
     <Card className={cn("w-full max-w-md", className)}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-medium">{title}</CardTitle>
+          <CardTitle className="text-base font-medium">
+            {title ?? b.dashboard.trialTitle}
+          </CardTitle>
           {getStatusBadge()}
         </div>
         {description && <CardDescription>{description}</CardDescription>}
@@ -145,33 +148,40 @@ export function TrialExpiryCard({
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            aria-label={`Trial time remaining: ${timeRemaining.days} days, ${timeRemaining.hours} hours, ${timeRemaining.minutes} minutes, ${timeRemaining.seconds} seconds`}
+            aria-label={fill(b.trial.remainingAria, {
+              days: timeRemaining.days,
+              hours: timeRemaining.hours,
+              minutes: timeRemaining.minutes,
+              seconds: timeRemaining.seconds,
+            })}
           >
             <div className="flex items-center justify-center gap-2 sm:gap-4">
-              <TimeUnit value={timeRemaining.days} label="Days" />
+              <TimeUnit value={timeRemaining.days} label={b.trial.days} />
               <span className="text-muted-foreground">:</span>
-              <TimeUnit value={timeRemaining.hours} label="Hours" />
+              <TimeUnit value={timeRemaining.hours} label={b.trial.hours} />
               <span className="text-muted-foreground">:</span>
-              <TimeUnit value={timeRemaining.minutes} label="Min" />
+              <TimeUnit value={timeRemaining.minutes} label={b.trial.min} />
               <span className="text-muted-foreground">:</span>
-              <TimeUnit value={timeRemaining.seconds} label="Sec" />
+              <TimeUnit value={timeRemaining.seconds} label={b.trial.sec} />
             </div>
           </div>
         )}
 
         {/* Features */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold">Included with upgrade</h3>
+          <h3 className="text-sm font-semibold">{b.trial.included}</h3>
           <div className="space-y-2">
-            {features.slice(0, 4).map((feature, index) => (
-              <div
-                key={index}
-                className="text-muted-foreground flex items-center gap-2 text-sm"
-              >
-                <Check className="text-primary h-4 w-4" />
-                <span>{feature}</span>
-              </div>
-            ))}
+            {(features ?? b.trial.defaultFeatures)
+              .slice(0, 4)
+              .map((feature, index) => (
+                <div
+                  key={index}
+                  className="text-muted-foreground flex items-center gap-2 text-sm"
+                >
+                  <Check className="text-primary h-4 w-4" />
+                  <span>{feature}</span>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -183,7 +193,9 @@ export function TrialExpiryCard({
             className="w-full"
             size="lg"
           >
-            {isLoading ? "Processing..." : upgradeButtonText}
+            {isLoading
+              ? b.trial.processing
+              : (upgradeButtonText ?? b.trial.upgradeNow)}
           </Button>
         )}
       </CardContent>
