@@ -1,191 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { type Metadata } from "next"
-import Link from "next/link"
-import { auth } from "@/auth"
-import { Barcode, MapPin, Pencil, QrCode, Upload } from "lucide-react"
+import { redirect } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
-
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Bulk Attendance",
-    description: "Take attendance using various methods",
-  }
-}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-const methods = [
-  {
-    id: "manual",
-    icon: Pencil,
-    href: "manual",
-    color: "bg-emerald-100 text-emerald-600",
-    recommended: true,
-  },
-  {
-    id: "qr",
-    icon: QrCode,
-    href: "qr-code",
-    color: "bg-purple-100 text-purple-600",
-    recommended: false,
-  },
-  {
-    id: "barcode",
-    icon: Barcode,
-    href: "barcode",
-    color: "bg-blue-100 text-blue-600",
-    recommended: false,
-  },
-  {
-    id: "upload",
-    icon: Upload,
-    href: "bulk-upload",
-    color: "bg-orange-100 text-orange-600",
-    recommended: false,
-  },
-  {
-    id: "geo",
-    icon: MapPin,
-    href: "geo",
-    color: "bg-pink-100 text-pink-600",
-    recommended: false,
-  },
-]
-
+/**
+ * The old method chooser. The "Take attendance" section nav now lists every
+ * method, so this address just opens the class list.
+ */
 export default async function Page({ params }: Props) {
-  const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
-  const dictionary = await getDictionary(lang)
-
-  // Staff only
-  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
-  if (!staffRoles.includes(session?.user?.role ?? "")) {
-    return <AttendanceAccessDenied lang={lang} />
-  }
-
-  const basePath = `/${lang}/attendance`
-
-  // Define method metadata
-  const methodLabels = dictionary?.attendance?.method
-  const methodMeta = {
-    manual: {
-      title: methodLabels?.MANUAL || "Manual Entry",
-      description:
-        "Mark attendance manually for a class by selecting students and their status",
-    },
-    qr: {
-      title: methodLabels?.QR_CODE || "QR Code",
-      description:
-        "Generate QR codes for students to scan and check-in automatically",
-    },
-    barcode: {
-      title: methodLabels?.BARCODE || "Barcode Scanner",
-      description: "Scan student ID barcodes for quick check-in",
-    },
-    upload: {
-      title: methodLabels?.BULK_UPLOAD || "Bulk Upload",
-      description: "Import attendance records from CSV or Excel files",
-    },
-    geo: {
-      title: methodLabels?.GEOFENCE || "Geofence",
-      description: "Automatic check-in when students enter school premises",
-    },
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2>Take Attendance</h2>
-        <p className="text-muted-foreground">
-          Choose a method to record attendance
-        </p>
-      </div>
-
-      {/* Method Cards */}
-      <div className="grid gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {methods.map((method) => {
-          const meta = methodMeta[method.id as keyof typeof methodMeta]
-          const Icon = method.icon
-
-          return (
-            <Card
-              key={method.id}
-              className="max-md:bg-muted relative overflow-hidden transition-shadow hover:shadow-md max-md:border-0 max-md:hover:shadow-none"
-            >
-              {method.recommended && (
-                <div className="absolute end-3 top-3">
-                  <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                    Recommended
-                  </span>
-                </div>
-              )}
-              <CardHeader className="pb-3 max-md:p-5 max-md:pb-2">
-                <div
-                  className={`h-12 w-12 rounded-lg ${method.color} mb-3 flex items-center justify-center max-md:mb-2 max-md:h-10 max-md:w-10`}
-                >
-                  <Icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-lg">{meta.title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {meta.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="max-md:px-5 max-md:pb-5">
-                <Button
-                  asChild
-                  className="w-full max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
-                >
-                  <Link href={`${basePath}/${method.href}`}>Start</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      {/* Quick Tips */}
-      <Card className="bg-muted/50 max-md:bg-muted max-md:border-0">
-        <CardHeader>
-          <CardTitle className="text-base">Quick Tips</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="text-muted-foreground space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              Use Manual Entry for small classes or when taking attendance for
-              the first time
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              QR Code is great for large classes - students scan on entry
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              Barcode scanning is fastest for schools with ID cards
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              Bulk Upload is ideal for importing historical data or external
-              records
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  const { lang } = await params
+  redirect(`/${lang}/attendance/manual`)
 }

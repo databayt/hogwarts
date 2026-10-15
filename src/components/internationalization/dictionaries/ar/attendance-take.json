@@ -115,5 +115,68 @@
       "appointment": "موعد",
       "other": "أخرى"
     }
+  },
+  "upload": {
+    "noPermission": {
+      "title": "رفع الملفات غير متاح لدورك",
+      "description": "اطلب من معلم أو من الإدارة رفع الملف، أو سجّل الحضور من قائمة الفصل."
+    },
+    "toasts": {
+      "parsed": "تمت قراءة {count} سجل من الملف",
+      "rowsHadIssues": "{count} صفوف بها مشكلات",
+      "parseFailed": "تعذّرت قراءة الملف",
+      "noValidRecords": "لا توجد سجلات صالحة للحفظ",
+      "selectSection": "اختر الشعبة",
+      "selectDate": "اختر التاريخ",
+      "processed": "تم حفظ {count} سجل",
+      "processingFailed": "تعذّر الحفظ"
+    },
+    "results": {
+      "success": "تم حفظ الحضور.",
+      "failed": "تعذّر الحفظ. حاول مرة أخرى.",
+      "total": "السجلات: {count}",
+      "successful": "المحفوظة: {count}",
+      "failedCount": "الفاشلة: {count}",
+      "errors": "الأخطاء:",
+      "recordsProcessed": "سجلات محفوظة"
+    },
+    "instructions": {
+      "title": "طريقة العمل",
+      "description": "خمس خطوات من الجدول إلى الحضور",
+      "step1": "نزّل النموذج أدناه",
+      "step2": "املأ صفاً لكل طالب وفق النموذج",
+      "step3": "احفظه بصيغة CSV أو Excel",
+      "step4": "ارفعه لشعبة واحدة ويوم واحد",
+      "step5": "راجع النتائج وصحّح الصفوف الفاشلة"
+    },
+    "template": {
+      "title": "النموذج",
+      "description": "ملف جاهز بالأعمدة الصحيحة",
+      "download": "تنزيل النموذج"
+    },
+    "upload": {
+      "title": "رفع ملف",
+      "description": "شعبة واحدة، يوم واحد",
+      "selectSection": "الشعبة",
+      "selectSectionPlaceholder": "اختر الشعبة",
+      "noSections": "لا توجد شعب بعد",
+      "selectDate": "التاريخ",
+      "fileUploaded": "الملف: ",
+      "changeFile": "تغيير الملف",
+      "parseErrors": "تنبيهات:",
+      "processing": "جارٍ الحفظ…",
+      "processButton": "حفظ الحضور",
+      "selectFile": "اختر ملف CSV أو Excel",
+      "selectButton": "اختيار ملف",
+      "dialogTitle": "رفع ملف"
+    },
+    "recentUploads": {
+      "title": "آخر الملفات المرفوعة",
+      "description": "الملفات المرفوعة مؤخراً",
+      "noUploads": "لا توجد ملفات مرفوعة بعد",
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "daysAgo": "أيام مضت"
+    }
   }
 }

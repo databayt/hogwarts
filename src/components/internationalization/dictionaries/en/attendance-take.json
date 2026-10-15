@@ -115,5 +115,68 @@
       "appointment": "Appointment",
       "other": "Other"
     }
+  },
+  "upload": {
+    "noPermission": {
+      "title": "Uploading isn't available for your role",
+      "description": "Ask a teacher or an administrator to upload the file, or take attendance from the class list."
+    },
+    "toasts": {
+      "parsed": "Read {count} records from the file",
+      "rowsHadIssues": "{count} rows had issues",
+      "parseFailed": "Couldn't read the file",
+      "noValidRecords": "No valid records to save",
+      "selectSection": "Choose a section",
+      "selectDate": "Choose a date",
+      "processed": "Saved {count} records",
+      "processingFailed": "Couldn't save"
+    },
+    "results": {
+      "success": "Attendance saved.",
+      "failed": "Couldn't save. Try again.",
+      "total": "Records: {count}",
+      "successful": "Saved: {count}",
+      "failedCount": "Failed: {count}",
+      "errors": "Errors:",
+      "recordsProcessed": "Records saved"
+    },
+    "instructions": {
+      "title": "How it works",
+      "description": "Five steps from spreadsheet to attendance",
+      "step1": "Download the template below",
+      "step2": "Fill in one row per student, following the template",
+      "step3": "Save it as CSV or Excel",
+      "step4": "Upload it for one section and day",
+      "step5": "Check the results and fix any rows that failed"
+    },
+    "template": {
+      "title": "Template",
+      "description": "A ready-made file with the right columns",
+      "download": "Download the template"
+    },
+    "upload": {
+      "title": "Upload a file",
+      "description": "One section, one day",
+      "selectSection": "Section",
+      "selectSectionPlaceholder": "Choose a section",
+      "noSections": "No sections yet",
+      "selectDate": "Date",
+      "fileUploaded": "File: ",
+      "changeFile": "Change file",
+      "parseErrors": "Warnings:",
+      "processing": "Saving…",
+      "processButton": "Save attendance",
+      "selectFile": "Choose a CSV or Excel file",
+      "selectButton": "Choose file",
+      "dialogTitle": "Upload a file"
+    },
+    "recentUploads": {
+      "title": "Recent uploads",
+      "description": "Files uploaded lately",
+      "noUploads": "No uploads yet",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "days ago"
+    }
   }
 }

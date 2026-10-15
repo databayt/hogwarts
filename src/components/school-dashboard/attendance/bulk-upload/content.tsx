@@ -40,7 +40,6 @@ import {
   FileText,
   LoaderCircle,
   Upload,
-  Users,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -75,6 +74,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { localCalendarDay } from "@/components/school-dashboard/attendance/core/local-date"
 
 import {
@@ -82,11 +82,12 @@ import {
   getRecentBulkUploads,
   getSectionsForSelection,
 } from "../actions"
-import { useAttendanceContext } from "../core/attendance-context"
 import { phone } from "../shared/phone"
+import { AttendanceSectionNav } from "../ui/section-nav"
 
 interface BulkUploadContentProps {
-  dictionary?: any
+  /** STAFF may open the page but lack the bulk_upload permission. */
+  canUpload?: boolean
 }
 
 interface ParsedRecord {
@@ -106,7 +107,9 @@ interface RecentUpload {
   failed: number
 }
 
-export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
+export function BulkUploadContent({
+  canUpload = true,
+}: BulkUploadContentProps) {
   const [uploadedFile, setUploadedFile] = useState<UploadedFileResult | null>(
     null
   )
@@ -143,10 +146,9 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
-  const { stats, refreshStats } = useAttendanceContext()
-
-  // Dictionary shorthand
-  const d = dictionary?.school?.attendance?.bulkUpload
+  // Every string on this page lives in attendanceTake.upload
+  const { dictionary: ctxDict } = useDictionary()
+  const d = ctxDict?.attendanceTake?.upload
 
   // Fetch sections and recent uploads on mount
   useEffect(() => {
@@ -248,7 +250,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
         // Fetch and parse the CSV file
         try {
-          const fileUrl = file.cdnUrl || (file as any).url
+          const fileUrl = file.cdnUrl || (file as { url?: string }).url
           if (fileUrl) {
             const response = await fetch(fileUrl)
             const content = await response.text()
@@ -337,9 +339,6 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         setParsedRecords([])
         setParseErrors([])
 
-        // Refresh data
-        refreshStats?.()
-
         // Refresh recent uploads
         const uploadsResult = await getRecentBulkUploads(5)
         setRecentUploads(uploadsResult.uploads)
@@ -366,7 +365,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     } finally {
       setIsUploading(false)
     }
-  }, [parsedRecords, selectedSection, selectedDate, refreshStats, d])
+  }, [parsedRecords, selectedSection, selectedDate, d])
 
   const downloadTemplate = useCallback(() => {
     // In real implementation, this would download a template file
@@ -385,8 +384,28 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     window.URL.revokeObjectURL(url)
   }, [])
 
+  if (!canUpload) {
+    return (
+      <div className="space-y-6">
+        <AttendanceSectionNav group="take" />
+        <div className="bg-card mx-auto max-w-md space-y-2 rounded-2xl border p-8 text-center">
+          <p className="font-medium">
+            {d?.noPermission?.title ??
+              "Uploading isn't available for your role"}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {d?.noPermission?.description ??
+              "Ask a teacher or an administrator to upload the file."}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      <AttendanceSectionNav group="take" />
+
       {/* Instructions Card */}
       <Card className={phone.card}>
         <CardHeader>
@@ -677,7 +696,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         <CardContent>
           {loadingData ? (
             <div role="status" aria-busy="true">
-              <span className="sr-only">{dictionary?.common?.loading}</span>
+              <span className="sr-only">{ctxDict?.common?.loading}</span>
               <SkeletonList items={3} showAvatar={false} showCards />
             </div>
           ) : recentUploads.length === 0 ? (
@@ -742,59 +761,6 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           )}
         </CardContent>
       </Card>
-
-      {/* Stats Summary */}
-      {stats && (
-        <Card className={phone.card}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {d?.summary?.title || "Current Attendance Summary"}
-            </CardTitle>
-            <CardDescription>
-              {d?.summary?.description ||
-                "Overall attendance statistics after bulk uploads"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-4">
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary?.school?.attendance?.stats?.totalStudents ||
-                    "Total Students"}
-                </p>
-                <p className="text-2xl font-bold max-md:text-lg max-md:tabular-nums">
-                  {stats.total}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary?.school?.attendance?.present || "Present Today"}
-                </p>
-                <p className="text-2xl font-bold text-green-600 max-md:text-lg max-md:tabular-nums">
-                  {stats.present}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary?.school?.attendance?.absent || "Absent Today"}
-                </p>
-                <p className="text-2xl font-bold text-red-600 max-md:text-lg max-md:tabular-nums">
-                  {stats.absent}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary?.school?.attendance?.late || "Late Today"}
-                </p>
-                <p className="text-2xl font-bold text-yellow-600 max-md:text-lg max-md:tabular-nums">
-                  {stats.late}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* File Upload Dialog */}
       <Dialog open={showUploader} onOpenChange={setShowUploader}>
