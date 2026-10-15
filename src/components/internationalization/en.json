@@ -2537,7 +2537,8 @@
       "certificates": "Certificates",
       "add": "Add",
       "selection": "Selection",
-      "scoring": "Scoring"
+      "scoring": "Scoring",
+      "book": "Gradebook"
     },
     "notifications": "Notifications",
     "messages": "Messages"

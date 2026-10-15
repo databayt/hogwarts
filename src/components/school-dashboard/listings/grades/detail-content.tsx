@@ -208,7 +208,7 @@ export function GradeDetailContent({
 
       await deleteResult({ id: grade.id })
       DeleteToast()
-      router.push(`/${lang}/grades`)
+      router.push(`/${lang}/grades/book`)
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : t.failedToUpdate)
     }
@@ -268,7 +268,7 @@ export function GradeDetailContent({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/${lang}/grades`}>
+              <Link href={`/${lang}/grades/book`}>
                 <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
                 {t.backToGrades}
               </Link>

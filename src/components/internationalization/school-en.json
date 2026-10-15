@@ -9720,6 +9720,55 @@
         "LAB_REPORT": "Lab report",
         "ESSAY": "Essay",
         "PRESENTATION": "Presentation"
+      },
+      "navOverview": "Overview",
+      "overview": {
+        "termLabel": "Term {number}",
+        "termWithYear": "{year} · Term {number}",
+        "averageLabel": "Average score",
+        "resultsCount": "{count} grades recorded",
+        "noTerm": "No terms yet. Add the school's terms in settings first.",
+        "noGrades": "No grades for this term yet.",
+        "step": "Step {n}",
+        "collect": {
+          "title": "Collect",
+          "examsAwaiting": "Exams without marks: {count}",
+          "submissionsToGrade": "Submissions to grade: {count}",
+          "done": "Everything is collected.",
+          "cta": "Open marking"
+        },
+        "review": {
+          "title": "Review",
+          "graded": "Students with grades: {graded} of {total}",
+          "atRisk": "Need attention: {count}",
+          "cta": "Open the gradebook"
+        },
+        "reportCards": {
+          "title": "Report cards",
+          "status": "Published {published} · Draft {drafts}",
+          "none": "Not generated yet.",
+          "cta": "Generate and publish"
+        },
+        "certificates": {
+          "title": "Certificates",
+          "issued": "Issued: {count}",
+          "cta": "Issue certificates"
+        },
+        "distribution": "Grade distribution",
+        "needsAttention": "Needs attention",
+        "needsAttentionHint": "Students averaging under {threshold}% this term.",
+        "needsAttentionEmpty": "No student is under {threshold}% this term.",
+        "self": {
+          "subjects": "Subjects",
+          "reportCards": "Report cards",
+          "certificates": "Certificates",
+          "noGrades": "No grades yet.",
+          "noReportCards": "No report card published yet.",
+          "noCertificates": "No certificates yet.",
+          "download": "Download",
+          "allGrades": "All grades",
+          "entries": "{count} grades"
+        }
       }
     },
     "classrooms": {

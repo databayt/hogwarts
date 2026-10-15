@@ -350,6 +350,7 @@
         "/grades/[id]",
         "/grades/add/[id]/scoring",
         "/grades/add/[id]/selection",
+        "/grades/book",
         "/grades/certificates",
         "/grades/promotion",
         "/grades/reports",

@@ -26,6 +26,8 @@ export default function GradeWizardLayout({
       dataProvider={GradeWizardProvider}
       loadHook={useGradeWizard}
       basePath="/grades/add"
+      closeDestination="/grades/book"
+      finalDestination="/grades/book"
       onStepChange={(entityId, step) => {
         updateGradeWizardStep(entityId, step)
       }}

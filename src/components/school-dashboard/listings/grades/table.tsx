@@ -183,7 +183,7 @@ function ResultsTableInner({
   // Handle view
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/grades/${id}`)
+      router.push(`/${lang}/grades/${id}`)
     },
     [router]
   )

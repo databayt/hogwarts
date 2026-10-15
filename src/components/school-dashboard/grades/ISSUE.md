@@ -13,6 +13,26 @@ last_audited: 2026-10-15
 
 # Grades — Production Readiness Tracker
 
+## 2026-10-15 — grades hub, phase 2: the overview and the self view
+
+- [x] `/grades` is the hub. Staff: the term's average as the headline, term
+      pills, four step tiles with live counts and one action each — collect
+      (exams without marks → /exams/mark, submissions to grade →
+      /assignments), review (students graded of active, under-50% count),
+      report cards (published / draft), certificates (issued) — then grade
+      distribution and the five students most in need of attention (each
+      links to `/grades/book?studentId=`). Reads: `grades/lib/overview.ts`,
+      one parallel round, legacy rows without `termId` placed by date.
+- [x] The gradebook moved to `/grades/book` (wizard close/finish, detail back
+      and delete land there).
+- [x] Students and guardians get their own `/grades`: subject averages for
+      the term, published report cards and certificates to download, then
+      every grade below. Staff tabs stay hidden.
+- Open: the merged report-card screen renders a whole term (975 rows on demo)
+  without paging; the student-number column is "—" on demo; a filtered
+  gradebook shows no "filtered by" chip; `/exams/mark` still has English
+  ("Auto-Grade All", "Answer Key") and passes Decimals to the client.
+
 ## 2026-10-15 — grades hub, phase 1: nothing dead, all Arabic
 
 Plan: `~/.claude/plans/read-https-demo-balqalam-com-ar-grades-p-smooth-abelson.md`

@@ -9736,6 +9736,55 @@
         "LAB_REPORT": "تقرير مختبر",
         "ESSAY": "مقال",
         "PRESENTATION": "عرض تقديمي"
+      },
+      "navOverview": "نظرة عامة",
+      "overview": {
+        "termLabel": "الفصل الدراسي {number}",
+        "termWithYear": "{year} · الفصل الدراسي {number}",
+        "averageLabel": "متوسط الدرجات",
+        "resultsCount": "الدرجات المسجّلة: {count}",
+        "noTerm": "لا توجد فصول دراسية بعد. أضف فصول المدرسة من الإعدادات أولاً.",
+        "noGrades": "لا توجد درجات لهذا الفصل بعد.",
+        "step": "الخطوة {n}",
+        "collect": {
+          "title": "جمع الدرجات",
+          "examsAwaiting": "اختبارات بلا درجات: {count}",
+          "submissionsToGrade": "تسليمات تنتظر التصحيح: {count}",
+          "done": "كل الدرجات مجموعة.",
+          "cta": "افتح التصحيح"
+        },
+        "review": {
+          "title": "المراجعة",
+          "graded": "طلاب لديهم درجات: {graded} من {total}",
+          "atRisk": "يحتاجون متابعة: {count}",
+          "cta": "افتح سجل الدرجات"
+        },
+        "reportCards": {
+          "title": "بطاقات التقارير",
+          "status": "منشورة {published} · مسودة {drafts}",
+          "none": "لم تُنشأ بعد.",
+          "cta": "إنشاء ونشر"
+        },
+        "certificates": {
+          "title": "الشهادات",
+          "issued": "الصادرة: {count}",
+          "cta": "إصدار الشهادات"
+        },
+        "distribution": "توزيع التقديرات",
+        "needsAttention": "يحتاجون متابعة",
+        "needsAttentionHint": "طلاب متوسطهم أقل من {threshold}٪ في هذا الفصل.",
+        "needsAttentionEmpty": "لا يوجد طالب دون {threshold}٪ في هذا الفصل.",
+        "self": {
+          "subjects": "المواد",
+          "reportCards": "بطاقات التقارير",
+          "certificates": "الشهادات",
+          "noGrades": "لا توجد درجات بعد.",
+          "noReportCards": "لم تُنشر بطاقة تقرير بعد.",
+          "noCertificates": "لا توجد شهادات بعد.",
+          "download": "تنزيل",
+          "allGrades": "كل الدرجات",
+          "entries": "عدد الدرجات: {count}"
+        }
       }
     },
     "classrooms": {

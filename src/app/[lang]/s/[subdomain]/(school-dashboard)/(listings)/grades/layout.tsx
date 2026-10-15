@@ -31,13 +31,14 @@ export default async function GradesLayout({ children, params }: Props) {
   // staff-only in routes.ts, so the tab row would be all dead links.
   const selfView = role === "STUDENT" || role === "GUARDIAN"
 
-  // One tab per step of the school's grade workflow: record the marks, turn
-  // them into report cards and transcripts, promote, certify, then the
-  // templates the documents are filled from.
+  // The hub, then one tab per step of the school's grade workflow: record
+  // the marks, turn them into report cards and transcripts, promote,
+  // certify, then the templates the documents are filled from.
   const gradesPages: PageNavItem[] = [
+    { name: d.navOverview, href: `/${lang}/grades`, exact: true },
     {
       name: d.navAll,
-      href: `/${lang}/grades`,
+      href: `/${lang}/grades/book`,
       // The gradebook owns its record pages and the add-grade wizard.
       matchPrefix: `/${lang}/grades`,
     },

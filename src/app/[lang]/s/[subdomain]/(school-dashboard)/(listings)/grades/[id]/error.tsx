@@ -44,7 +44,8 @@ export default function GradeDetailError({ error, reset }: ErrorProps) {
           {t?.tryAgain}
         </Button>
         <Button variant="ghost" asChild className="gap-2">
-          <Link href="../">
+          {/* Relative to /<lang>/grades/<id> — lands on the gradebook. */}
+          <Link href="./book">
             <Icons.arrowLeft className="h-4 w-4 rtl:rotate-180" />
             {t?.backToGrades}
           </Link>
