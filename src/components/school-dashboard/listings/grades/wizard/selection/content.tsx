@@ -22,14 +22,23 @@ export default function SelectionContent() {
   const { dictionary: dict } = useDictionary()
   const d = dict?.school?.grades as Record<string, any> | undefined
 
+  // A fresh draft is stored against a placeholder student (the column is
+  // required). Until the selection is saved — which always sets the
+  // subject — show no student, so nobody grades the placeholder by
+  // clicking Next.
+  const studentId =
+    data && !(data.wizardStep === "selection" && !data.subjectId)
+      ? data.studentId
+      : ""
+
   // Set initial validity from loaded data
   useEffect(() => {
     if (data) {
       setIsValid(
-        data.studentId.trim().length >= 1 && (data.subjectId ?? "").length >= 1
+        studentId.trim().length >= 1 && (data.subjectId ?? "").length >= 1
       )
     }
-  }, [data])
+  }, [data, studentId])
 
   return (
     <WizardStep
@@ -53,7 +62,7 @@ export default function SelectionContent() {
           initialData={
             data
               ? {
-                  studentId: data.studentId,
+                  studentId,
                   subjectId: data.subjectId ?? "",
                   assignmentId: data.assignmentId ?? undefined,
                   examId: data.examId ?? undefined,

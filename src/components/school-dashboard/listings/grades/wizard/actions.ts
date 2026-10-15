@@ -170,12 +170,39 @@ export async function updateGradeWizardStep(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return
 
+    // Only a draft tracks its step. The gradebook hides every row with a
+    // wizardStep, so stamping one on a finished grade being edited made it
+    // vanish from the list the moment the editor moved a step.
     await db.result.updateMany({
-      where: { id: resultId, schoolId },
+      where: { id: resultId, schoolId, wizardStep: { not: null } },
       data: { wizardStep: step },
     })
   } catch {
     // Non-critical, don't throw
+  }
+}
+
+/**
+ * Closing the add-grade wizard: drop the draft if nothing was chosen yet
+ * (no subject — the selection step always sets one). A draft with a saved
+ * selection is kept to resume; a finished grade is never touched.
+ */
+export async function discardEmptyGradeDraft(resultId: string): Promise<void> {
+  try {
+    const session = await auth()
+    if (!session?.user) return
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return
+    await db.result.deleteMany({
+      where: {
+        id: resultId,
+        schoolId,
+        wizardStep: { not: null },
+        subjectId: null,
+      },
+    })
+  } catch {
+    // Closing must always close.
   }
 }
 
