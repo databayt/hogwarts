@@ -12,8 +12,31 @@ import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfInstant,
+} from "@/components/school-dashboard/live/day-window"
 
 import { getTeacherSectionIds } from "./actions/helpers"
+
+/**
+ * "Today" is the SCHOOL's calendar day, never the server's. Marks are stored
+ * at midnight UTC of the calendar date (what the manual page and quick
+ * attendance send), so today is that instant — `setHours(0,0,0,0)` read the
+ * server's zone and, on any server not at UTC, matched no rows at all
+ * (the overview showed 0 present while reports showed thousands).
+ */
+async function schoolToday(schoolId: string): Promise<Date> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  const day = schoolDayOfInstant(
+    school?.timezone || DEFAULT_SCHOOL_TZ,
+    new Date()
+  )
+  return new Date(`${day}T00:00:00.000Z`)
+}
 
 export interface AttendanceViewer {
   schoolId: string
@@ -38,12 +61,16 @@ export type TodaysAttendanceDashboard = {
     attendanceRate: number
     classesTotal: number
     classesMarked: number
+    /** Excuses awaiting review (scoped to a teacher's sections). */
+    pendingExcuses: number
   }
   unmarkedClasses: Array<{
     id: string
     name: string
     studentCount: number
     scheduledTime?: string
+    /** The section's homeroom teacher, when one is assigned. */
+    teacherName?: string
   }>
   followUpNeeded: Array<{
     studentId: string
@@ -99,9 +126,10 @@ export async function loadTodaysAttendanceDashboard(
   input: AttendanceViewer
 ): Promise<TodaysAttendanceDashboard> {
   const { schoolId, userId, role } = input
-  const nameDisplay = await schoolNameDisplay(schoolId)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const [nameDisplay, today] = await Promise.all([
+    schoolNameDisplay(schoolId),
+    schoolToday(schoolId),
+  ])
   const dayNames = [
     "Sunday",
     "Monday",
@@ -127,6 +155,9 @@ export async function loadTodaysAttendanceDashboard(
         id: true,
         name: true,
         _count: { select: { students: true } },
+        homeroomTeacher: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
       },
       orderBy: { name: "asc" },
     }),
@@ -143,7 +174,7 @@ export async function loadTodaysAttendanceDashboard(
     weekConfigs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0]
   // workingDays uses JS getDay() convention: [0,1,2,3,4] = Sun–Thu.
   const isSchoolDay = weekConfig
-    ? weekConfig.workingDays.includes(today.getDay())
+    ? weekConfig.workingDays.includes(today.getUTCDay())
     : true
 
   // Get today's attendance records (scoped)
@@ -153,6 +184,16 @@ export async function loadTodaysAttendanceDashboard(
     deletedAt: null,
   }
   if (teacherSectionIds) attendanceWhere.sectionId = { in: teacherSectionIds }
+
+  const pendingExcuses = await db.attendanceExcuse.count({
+    where: {
+      schoolId,
+      status: "PENDING",
+      ...(teacherSectionIds
+        ? { attendance: { sectionId: { in: teacherSectionIds } } }
+        : {}),
+    },
+  })
 
   // PERF: stats only need ids/status — don't join student/section names for
   // the whole day's roster (recent activity below joins names for 10 rows).
@@ -187,7 +228,7 @@ export async function loadTodaysAttendanceDashboard(
 
   // Get students with consecutive absences (3+ days)
   const threeDaysAgo = new Date(today)
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+  threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3)
 
   const absenceWhere: Prisma.AttendanceWhereInput = {
     schoolId,
@@ -299,7 +340,7 @@ export async function loadTodaysAttendanceDashboard(
   return {
     today: {
       date: today.toISOString().split("T")[0],
-      dayName: dayNames[today.getDay()],
+      dayName: dayNames[today.getUTCDay()],
       isSchoolDay,
     },
     stats: {
@@ -318,6 +359,7 @@ export async function loadTodaysAttendanceDashboard(
           : 0,
       classesTotal: withStudents.length,
       classesMarked: withStudents.length - unmarkedSections.length,
+      pendingExcuses,
     },
     // On a non-school day an all-sections-unmarked list is pure noise —
     // suppress it so the client can show a neutral "no school today" note.
@@ -326,6 +368,9 @@ export async function loadTodaysAttendanceDashboard(
           id: c.id,
           name: c.name,
           studentCount: c._count.students,
+          teacherName: c.homeroomTeacher
+            ? displayName(c.homeroomTeacher, nameDisplay)
+            : undefined,
         }))
       : [],
     followUpNeeded: followUpNeeded.slice(0, 5), // Top 5 priority
@@ -341,14 +386,15 @@ export async function loadAttendanceFollowUp(
   input: AttendanceViewer & { limit?: number }
 ): Promise<AttendanceFollowUp> {
   const { schoolId, userId, role } = input
-  const nameDisplay = await schoolNameDisplay(schoolId)
+  const [nameDisplay, today] = await Promise.all([
+    schoolNameDisplay(schoolId),
+    schoolToday(schoolId),
+  ])
   // Teacher scoping
   const teacherSectionIds =
     role === "TEACHER" ? await getTeacherSectionIds(schoolId, userId) : null
 
   const limit = input.limit || 20
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
 
   const results: Array<{
     studentId: string
@@ -364,7 +410,7 @@ export async function loadAttendanceFollowUp(
 
   // 1. Get students with recent absences for consecutive check
   const sevenDaysAgo = new Date(today)
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7)
 
   const followUpAbsenceWhere: Prisma.AttendanceWhereInput = {
     schoolId,
@@ -430,7 +476,8 @@ export async function loadAttendanceFollowUp(
         severity: consecutive >= 5 ? "critical" : "warning",
         details: `Absent ${consecutive} consecutive days`,
         count: consecutive,
-        actionUrl: `/students/${studentId}`,
+        // The Students-at-risk tab is where an absence streak is acted on.
+        actionUrl: `/attendance/early-warning`,
       })
     }
   }

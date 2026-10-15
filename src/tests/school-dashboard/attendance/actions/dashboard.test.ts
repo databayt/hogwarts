@@ -44,6 +44,13 @@ vi.mock("@/lib/db", () => ({
     schoolWeekConfig: {
       findMany: vi.fn(),
     },
+    school: {
+      findUnique: vi.fn(),
+    },
+    attendanceExcuse: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+    },
     attendanceIntervention: {
       findMany: vi.fn(),
     },

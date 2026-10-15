@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import { intlLocale } from "../overview/format"
 import type { AttendanceMethod, AttendanceStatus } from "../shared/types"
 
 interface RecentAttendanceRecord {
@@ -28,7 +29,11 @@ interface RecentAttendanceRecord {
 interface RecentTableProps {
   data: RecentAttendanceRecord[]
   limit?: number
+  /** Page language — dates/times format in it (Gregorian, Latin digits). */
+  locale?: string
   dictionary?: {
+    today?: string
+    yesterday?: string
     status?: Record<string, string>
     method?: Record<string, string>
     columns?: {
@@ -84,13 +89,20 @@ const methodLabels: Record<AttendanceMethod, string> = {
   KIOSK: "Kiosk",
 }
 
-function formatTime(date: Date | string | undefined): string {
+function formatTime(date: Date | string | undefined, locale: string): string {
   if (!date) return "-"
   const d = new Date(date)
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d)
 }
 
-function formatDate(date: Date | string | null | undefined): string {
+function formatDate(
+  date: Date | string | null | undefined,
+  locale: string,
+  labels: { today?: string; yesterday?: string }
+): string {
   if (!date) return "-"
   try {
     const d = new Date(date)
@@ -101,12 +113,15 @@ function formatDate(date: Date | string | null | undefined): string {
     yesterday.setDate(yesterday.getDate() - 1)
 
     if (d.toDateString() === today.toDateString()) {
-      return "Today"
+      return labels.today ?? "Today"
     }
     if (d.toDateString() === yesterday.toDateString()) {
-      return "Yesterday"
+      return labels.yesterday ?? "Yesterday"
     }
-    return d.toLocaleDateString([], { month: "short", day: "numeric" })
+    return new Intl.DateTimeFormat(intlLocale(locale), {
+      month: "short",
+      day: "numeric",
+    }).format(d)
   } catch {
     return "-"
   }
@@ -115,6 +130,7 @@ function formatDate(date: Date | string | null | undefined): string {
 export function RecentTable({
   data,
   limit = 10,
+  locale = "ar",
   dictionary,
 }: RecentTableProps) {
   const records = data.slice(0, limit)
@@ -161,11 +177,14 @@ export function RecentTable({
               </TableCell>
               <TableCell className="text-muted-foreground">
                 <span className="text-foreground">
-                  {formatDate(record.date)}
+                  {formatDate(record.date, locale, {
+                    today: dictionary?.today,
+                    yesterday: dictionary?.yesterday,
+                  })}
                 </span>
                 {record.checkInTime && (
                   <span className="ms-1 text-xs">
-                    {formatTime(record.checkInTime)}
+                    {formatTime(record.checkInTime, locale)}
                   </span>
                 )}
               </TableCell>
