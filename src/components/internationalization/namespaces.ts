@@ -113,6 +113,30 @@ export const featureDictionaries = {
     ar: () =>
       import("./dictionaries/ar/compliance.json").then((m) => m.default),
   },
+  schoolConfig: {
+    en: () =>
+      import("./dictionaries/en/school-config.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/school-config.json").then((m) => m.default),
+  },
+  schoolBilling: {
+    en: () =>
+      import("./dictionaries/en/school-billing.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/school-billing.json").then((m) => m.default),
+  },
+  schoolSettings: {
+    en: () =>
+      import("./dictionaries/en/school-settings.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/school-settings.json").then((m) => m.default),
+  },
+  schoolConsole: {
+    en: () =>
+      import("./dictionaries/en/school-console.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/school-console.json").then((m) => m.default),
+  },
   liveClasses: {
     en: () =>
       import("./dictionaries/en/live-classes.json").then((m) => m.default),

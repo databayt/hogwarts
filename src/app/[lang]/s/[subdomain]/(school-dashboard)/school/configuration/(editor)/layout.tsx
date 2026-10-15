@@ -6,7 +6,14 @@ import { parseEnabledModules } from "@/lib/enabled-modules"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { normalizePlanType } from "@/lib/plan-type"
 import { ReportIssue } from "@/components/report-issue"
+import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
+import { formatMoney } from "@/components/school-dashboard/finance/lib/format-money"
+import {
+  joinList,
+  plural,
+} from "@/components/school-dashboard/school/configuration/ui/format"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
@@ -103,31 +110,26 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
   ])
 
-  const SECTION_KEYS = [
-    "title",
-    "description",
-    "location",
-    "capacity",
-    "schedule",
-    "academic",
-    "live-classes",
-    "branding",
-    "hero",
-    "name-format",
-    "name-display",
-    "name-contact",
-    "join",
-    "visibility",
-    "modules",
-    "price",
-    "discount",
-    "legal",
-    "plan",
-    "domain",
+  // Apple-Settings-style groups — the order a new admin fills things in:
+  // who the school is, how it teaches, how people appear, how families
+  // join and pay, then the account (plan, address, legal).
+  const SECTION_GROUPS = [
+    {
+      key: "identity",
+      items: ["title", "description", "branding", "hero", "location"],
+    },
+    {
+      key: "academic",
+      items: ["academic", "schedule", "capacity", "live-classes", "modules"],
+    },
+    { key: "people", items: ["name-format", "name-display", "name-contact"] },
+    { key: "admissions", items: ["join", "visibility", "price", "discount"] },
+    { key: "account", items: ["plan", "domain", "legal"] },
   ] as const
 
-  // Build dynamic descriptions from live data using dictionary strings
-  // Async to support on-demand translation for user-facing content
+  const sc = dictionary?.schoolConfig as Record<string, any> | undefined
+  const counts = (sc?.counts ?? {}) as Record<string, Record<string, string>>
+  const count = (key: string, n: number) => plural(counts[key], n, lang)
 
   async function getDynamicDescription(key: string): Promise<string | null> {
     if (!school) return null
@@ -164,76 +166,67 @@ export default async function EditorLayout({ children, params }: Props) {
             parts.map((p) => getText(p as string, detected, lang, schoolId))
           )
         }
-        return parts.length > 0 ? parts.join(", ") : null
+        // ISO country codes ("SD") read as a name in the page language.
+        if (school.country && /^[A-Z]{2}$/.test(school.country)) {
+          try {
+            const names = new Intl.DisplayNames([lang], { type: "region" })
+            parts = parts.map((p) =>
+              p === school.country ? (names.of(p as string) ?? p) : p
+            )
+          } catch {}
+        }
+        return parts.length > 0 ? joinList(parts as string[], lang) : null
       }
       case "branding": {
-        const logoLabel = (cs?.logo as string) ?? "Logo"
         const parts = [
-          school.logoUrl ? logoLabel : null,
-          branding?.primaryColor,
+          school.logoUrl ? (sc?.logo ?? "Logo") : null,
+          branding?.primaryColor ? (sc?.colour ?? "Brand colour") : null,
         ].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
       }
       case "hero":
         return branding?.heroImageUrl
-          ? ((cs?.heroConfigured as string) ?? "Custom image set")
-          : ((cs?.heroDefault as string) ?? "Default image")
+          ? (sc?.heroCustom ?? "Custom image")
+          : (sc?.heroDefault ?? "Default image")
 
       case "plan": {
-        if (!school.planType && !school.maxStudents) return null
-        const studentsLabel = (cs?.students as string) ?? "students"
-        const translatedPlan = school.planType
-          ? (plans[school.planType] ?? school.planType)
-          : null
+        const planId = normalizePlanType(school.planType)
         const planParts = [
-          translatedPlan,
-          school.maxStudents ? `${school.maxStudents} ${studentsLabel}` : null,
+          plans[planId] ?? planId,
+          school.maxStudents ? count("student", school.maxStudents) : null,
         ].filter(Boolean)
         return planParts.join(" · ")
       }
       case "capacity": {
-        const studentsLabel = (cs?.students as string) ?? "students"
-        const teachersLabel = (cs?.teachers as string) ?? "teachers"
         const capParts = [
-          school.maxStudents ? `${school.maxStudents} ${studentsLabel}` : null,
-          school.maxTeachers ? `${school.maxTeachers} ${teachersLabel}` : null,
-        ].filter(Boolean)
-        return capParts.length > 0 ? capParts.join(", ") : null
+          school.maxStudents ? count("student", school.maxStudents) : null,
+          school.maxTeachers ? count("teacher", school.maxTeachers) : null,
+        ].filter(Boolean) as string[]
+        return capParts.length > 0 ? joinList(capParts, lang) : null
       }
       case "price": {
         if (!school.tuitionFee) return null
-        const priceParts = [
-          school.currency,
-          Number(school.tuitionFee).toLocaleString(),
-          school.paymentSchedule ? `/${school.paymentSchedule}` : null,
-        ].filter(Boolean)
-        return priceParts.join(" ")
+        const period: Record<string, string | undefined> = {
+          annual: sc?.perYear,
+          termly: sc?.perTerm,
+          monthly: sc?.perMonth,
+        }
+        return [
+          formatMoney(Number(school.tuitionFee), school.currency || "USD", lang),
+          period[school.paymentSchedule ?? ""] ?? null,
+        ]
+          .filter(Boolean)
+          .join(" ")
       }
-      case "schedule": {
-        const yearLabel =
-          yearCount === 1
-            ? ((cs?.year as string) ?? "year")
-            : ((cs?.years as string) ?? "years")
-        const termLabel =
-          termCount === 1
-            ? ((cs?.term as string) ?? "term")
-            : ((cs?.terms as string) ?? "terms")
-        return `${yearCount} ${yearLabel}, ${termCount} ${termLabel}`
-      }
-      case "academic": {
-        // Aggregate counts across the 4 entities the academic editor manages.
-        const yearWord =
-          yearCount === 1
-            ? ((cs?.year as string) ?? "year")
-            : ((cs?.years as string) ?? "years")
-        const termWord =
-          termCount === 1
-            ? ((cs?.term as string) ?? "term")
-            : ((cs?.terms as string) ?? "terms")
-        const levelWord = (cs?.yearLevels as string) ?? "levels"
-        const gradeWord = (cs?.gradingScales as string) ?? "grades"
-        return `${yearCount} ${yearWord} · ${termCount} ${termWord} · ${levelCount} ${levelWord} · ${gradeCount} ${gradeWord}`
-      }
+      case "schedule":
+        return joinList([count("year", yearCount), count("term", termCount)], lang)
+      case "academic":
+        return [
+          count("year", yearCount),
+          count("term", termCount),
+          count("level", levelCount),
+          count("grade", gradeCount),
+        ].join(" · ")
       case "join":
         return branding?.allowSelfEnrollment
           ? ((cs?.selfEnrollment as string) ?? "Self-enrollment with codes")
@@ -243,26 +236,19 @@ export default async function EditorLayout({ children, params }: Props) {
           ? ((cs?.fullTransparency as string) ?? "Full transparency")
           : ((cs?.limitedSharing as string) ?? "Limited sharing")
       case "discount":
-        if (discountCount > 0) {
-          const discountLabel =
-            discountCount === 1
-              ? ((cs?.activeDiscount as string) ?? "active discount")
-              : ((cs?.activeDiscounts as string) ?? "active discounts")
-          return `${discountCount} ${discountLabel}`
-        }
-        return (cs?.noActiveDiscounts as string) ?? "No active discounts"
+        return count("discount", discountCount)
       case "legal": {
         if (!school.planType) return null
-        const translatedPlan = plans[school.planType] ?? school.planType
-        const planWord = (cs?.planWord as string) ?? "plan"
-        return `${translatedPlan} ${planWord}`
+        const planId = normalizePlanType(school.planType)
+        return lang === "ar"
+          ? `${sc?.planSuffix ?? "خطة"} ${plans[planId] ?? planId}`
+          : `${plans[planId] ?? planId} ${sc?.planSuffix ?? "plan"}`
       }
       case "modules": {
         const em = parseEnabledModules(school.enabledModules)
         if (!em)
           return (cs?.allModulesEnabled as string) ?? "All modules enabled"
-        const modulesLabel = (cs?.modulesEnabled as string) ?? "modules enabled"
-        return `${em.length} ${modulesLabel}`
+        return count("module", em.length)
       }
       case "live-classes": {
         const lc = cs?.["live-classes"] as Record<string, string> | undefined
@@ -310,26 +296,46 @@ export default async function EditorLayout({ children, params }: Props) {
     }
   }
 
-  const sectionLinks = await Promise.all(
-    SECTION_KEYS.map(async (key) => {
-      const section = d?.[key] as
-        | { title: string; description: string }
-        | undefined
-      const dynamicDesc = await getDynamicDescription(key)
-
-      return {
-        key,
-        title: section?.title ?? key,
-        description: dynamicDesc ?? section?.description ?? "",
-      }
-    })
+  const groups = await Promise.all(
+    SECTION_GROUPS.map(async (group) => ({
+      key: group.key,
+      title: (sc?.groups?.[group.key] as string) ?? group.key,
+      items: await Promise.all(
+        group.items.map(async (key) => {
+          const section = d?.[key] as
+            | { title: string; description: string }
+            | undefined
+          const dynamicDesc = await getDynamicDescription(key)
+          return {
+            key,
+            title: section?.title ?? key,
+            description: dynamicDesc ?? section?.description ?? "",
+          }
+        })
+      ),
+    }))
   )
+
+  // Breadcrumb segments use the same titles as the list, so the trail reads
+  // "الإعدادات › الاسم", never a raw slug or a second, different word.
+  const segmentTitles: Record<string, string> = {
+    configuration:
+      (dictionary?.school?.schoolAdmin?.navigation as any)?.configuration ??
+      "Configuration",
+  }
+  for (const g of groups)
+    for (const item of g.items) segmentTitles[item.key] = item.title
 
   return (
     <div className="h-[calc(100vh-15rem)] overflow-hidden">
       <div className="mx-auto h-full max-w-7xl">
         <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-[auto_1fr]">
-          <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
+          <BreadcrumbTitle segments={segmentTitles} />
+          <ConfigSidebar
+            lang={lang}
+            groups={groups}
+            notSet={sc?.notSet ?? "Not set"}
+          />
           <div className="lg:overflow-y-auto">
             {/* Editors are a narrow 400px column by default. A page opts out
                 by marking its own root — `data-wide` for the tabbed academic
@@ -337,7 +343,7 @@ export default async function EditorLayout({ children, params }: Props) {
                 `:has()` widens the column and the footer together. Reading the
                 route from a request header does not work here: nothing in the
                 app sets `x-pathname`. */}
-            <div className="flex min-h-full flex-col items-center justify-start py-8 [--config-col:400px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
+            <div className="flex min-h-full flex-col items-center justify-start py-8 [--config-col:560px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
               <div className="w-full max-w-[var(--config-col)]">{children}</div>
               <div className="text-muted-foreground w-full max-w-[var(--config-col)] pt-8 pb-4 text-start text-sm">
                 <ReportIssue />

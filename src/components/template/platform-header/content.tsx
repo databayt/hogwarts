@@ -116,7 +116,7 @@ export default function PlatformHeader({
                         {index !== breadcrumbItems.length - 1 && (
                           <BreadcrumbItem className="flex items-center">
                             <BreadcrumbLink
-                              href={item.link}
+                              href={`/${locale}${item.link}`}
                               className="flex items-center"
                             >
                               {translatedTitle}

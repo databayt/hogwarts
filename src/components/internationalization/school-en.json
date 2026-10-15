@@ -775,7 +775,8 @@
           "free": "Free",
           "starter": "Starter",
           "premium": "Premium",
-          "enterprise": "Enterprise"
+          "enterprise": "Enterprise",
+          "pro": "Pro"
         },
         "firstSecondName": "First + second name",
         "firstLastName": "First + last name"

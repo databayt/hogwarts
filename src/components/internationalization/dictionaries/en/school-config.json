@@ -1,0 +1,34 @@
+{
+  "groups": {
+    "identity": "Identity",
+    "academic": "Academic",
+    "people": "People",
+    "admissions": "Admissions",
+    "account": "Account"
+  },
+  "status": {
+    "saving": "Saving…",
+    "saved": "Saved",
+    "error": "Couldn't save. Try again."
+  },
+  "notSet": "Not set",
+  "listSeparator": ", ",
+  "heroDefault": "Default image",
+  "heroCustom": "Custom image",
+  "logo": "Logo",
+  "colour": "Brand colour",
+  "perYear": "per year",
+  "perTerm": "per term",
+  "perMonth": "per month",
+  "planSuffix": "plan",
+  "counts": {
+    "year": { "one": "1 year", "other": "{n} years" },
+    "term": { "one": "1 term", "other": "{n} terms" },
+    "level": { "one": "1 level", "other": "{n} levels" },
+    "grade": { "one": "1 grading scale", "other": "{n} grading scales" },
+    "student": { "one": "1 student", "other": "{n} students" },
+    "teacher": { "one": "1 teacher", "other": "{n} teachers" },
+    "module": { "one": "1 module on", "other": "{n} modules on" },
+    "discount": { "one": "1 active discount", "other": "{n} active discounts" }
+  }
+}

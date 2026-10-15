@@ -19,10 +19,13 @@ export function getTabsForRole(
   d?: Record<string, any>
 ): PageNavItem[] {
   if (!isRoleIn(role, VIEW_ROLES)) return []
-  const isDev = role === "DEVELOPER"
   const n = d?.navigation || d
   const base = `/${lang}/school`
 
+  // Settings first, then people and outreach, then money, safety and
+  // insight. "Academic" is a configuration section (configuration/academic),
+  // not a tab — the old tab pointed at a /school/academic page that never
+  // existed and 404'd.
   const tabs: PageNavItem[] = [
     { name: n?.overview || "Overview", href: base },
     {
@@ -30,9 +33,7 @@ export function getTabsForRole(
       href: `${base}/configuration/title`,
       matchPrefix: `${base}/configuration`,
     },
-    { name: n?.academic || "Academic", href: `${base}/academic` },
     { name: n?.membership || "Membership", href: `${base}/membership` },
-    { name: n?.bulk || "Bulk", href: `${base}/bulk` },
     {
       name: n?.communication || "Communication",
       href: `${base}/communication`,
@@ -41,6 +42,7 @@ export function getTabsForRole(
     { name: n?.security || "Security", href: `${base}/security` },
     { name: n?.reports || "Reports", href: `${base}/reports` },
     { name: n?.analysis || "Analysis", href: `${base}/analysis` },
+    { name: n?.bulk || "Bulk", href: `${base}/bulk` },
   ]
   return tabs
 }

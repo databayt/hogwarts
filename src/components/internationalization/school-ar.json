@@ -775,7 +775,8 @@
           "free": "مجاني",
           "starter": "أساسي",
           "premium": "متميز",
-          "enterprise": "مؤسسي"
+          "enterprise": "مؤسسي",
+          "pro": "احترافي"
         },
         "firstSecondName": "الاسم الأول + اسم الأب",
         "firstLastName": "الاسم الأول + اسم العائلة"
