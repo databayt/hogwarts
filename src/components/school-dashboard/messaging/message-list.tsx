@@ -23,6 +23,17 @@ import {
 } from "./mobile"
 import type { ConversationType, MessageDTO } from "./types"
 
+
+/** First-paint height guess for one bubble; the virtualizer measures after. */
+function estimateMessageHeight(m: MessageDTO): number {
+  if (m.contentType === "voice" || m.contentType === "audio") return 72
+  if (m.attachments?.some((a) => /^(image|video)\//.test(a.fileType || "")))
+    return 260
+  if (m.attachments?.length) return 84
+  const lines = Math.ceil((m.content?.length || 1) / 48)
+  return 40 + Math.min(lines, 12) * 20 + (m.replyTo ? 48 : 0)
+}
+
 export interface MessageListProps {
   messages: MessageDTO[]
   currentUserId: string
@@ -239,8 +250,10 @@ export function MessageList({
       if (item.type === "loader") return 36
       if (item.type === "unread-divider") return 36
       if (item.type === "encryption-notice") return 64
-      // 80px per message: more realistic for media bubbles to reduce scroll jumps
-      return item.messages.length * 80
+      // Per-kind guesses, so the first paint is close to the measured size
+      // and history doesn't jump as rows come into view: a one-line text is
+      // ~56px, a long one grows by line, media and voice are fixed cards.
+      return item.messages.reduce((sum, m) => sum + estimateMessageHeight(m), 0)
     },
     overscan: 5,
     enabled: enableVirtualization,

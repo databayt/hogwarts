@@ -135,3 +135,25 @@ export function mergeServerMessages(
   }
   return changed ? next : prev
 }
+
+/**
+ * Swap in the server's copy of rows the thread already holds — an edit, a
+ * delete, a reaction or a tick that the polling fallback picked up. Rows the
+ * thread does not hold are left for `mergeServerMessages`; returns `prev`
+ * itself when nothing matched, so an idle poll re-renders nothing.
+ */
+export function replaceServerMessages(
+  prev: MessageDTO[],
+  incoming: MessageDTO[]
+): MessageDTO[] {
+  if (incoming.length === 0) return prev
+  const byId = new Map(incoming.map((m) => [m.id, m]))
+  let changed = false
+  const next = prev.map((m) => {
+    const fresh = byId.get(m.id)
+    if (!fresh) return m
+    changed = true
+    return fresh
+  })
+  return changed ? next : prev
+}

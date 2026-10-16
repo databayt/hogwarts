@@ -889,39 +889,124 @@ export function MessagingClient({
     [handleOptimisticSend, performSend]
   )
 
+  // Edit, delete and react land in the thread the moment they are made, as
+  // they do in WhatsApp, and roll back if the server says no. Without this
+  // they waited on the socket echo — and production has no socket server,
+  // so they only showed after a reload.
+  const patchActive = useCallback(
+    (fn: (m: MessageDTO) => MessageDTO, match: (m: MessageDTO) => boolean) => {
+      const conv = activeConversationRef.current
+      if (!conv) return () => {}
+      let before: MessageDTO | null = null
+      updateCachedMessages(conv.id, (prev) =>
+        prev.map((m) => {
+          if (!match(m)) return m
+          before = m
+          return fn(m)
+        })
+      )
+      return () => {
+        const original = before
+        if (!original) return
+        updateCachedMessages(conv.id, (prev) =>
+          prev.map((m) => (m.id === (original as MessageDTO).id ? original : m))
+        )
+      }
+    },
+    [updateCachedMessages]
+  )
+
   const handleEditMessage = useCallback(
     async (messageId: string, content: string) => {
+      const rollback = patchActive(
+        (m) => ({ ...m, content, isEdited: true, editedAt: new Date() }),
+        (m) => m.id === messageId
+      )
       const result = await editMessage({ messageId, content })
       if (!result.success) {
+        rollback()
         throw new Error(resolveMessagingError(result.error, mRef.current))
       }
     },
-    []
+    [patchActive]
   )
 
-  const handleDeleteMessage = useCallback(async (messageId: string) => {
-    const result = await deleteMessage({ messageId })
-    if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, mRef.current))
-    }
-  }, [])
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      const rollback = patchActive(
+        (m) => ({ ...m, isDeleted: true, deletedAt: new Date() }),
+        (m) => m.id === messageId
+      )
+      const result = await deleteMessage({ messageId })
+      if (!result.success) {
+        rollback()
+        throw new Error(resolveMessagingError(result.error, mRef.current))
+      }
+    },
+    [patchActive]
+  )
 
   const handleReactToMessage = useCallback(
     async (messageId: string, emoji: string) => {
+      const tempId = `temp-reaction-${messageId}-${emoji}`
+      const rollback = patchActive(
+        (m) =>
+          m.reactions.some(
+            (r) => r.userId === currentUserId && r.emoji === emoji
+          )
+            ? m
+            : {
+                ...m,
+                reactions: [
+                  ...m.reactions,
+                  {
+                    id: tempId,
+                    messageId,
+                    userId: currentUserId,
+                    user: { id: currentUserId, username: null, image: null },
+                    emoji,
+                    createdAt: new Date(),
+                  },
+                ],
+              },
+        (m) => m.id === messageId
+      )
       const result = await addReaction({ messageId, emoji })
       if (!result.success) {
+        rollback()
+        throw new Error(resolveMessagingError(result.error, mRef.current))
+      }
+      const realId = result.data.id
+      patchActive(
+        (m) => ({
+          ...m,
+          reactions: m.reactions.map((r) =>
+            r.id === tempId ? { ...r, id: realId } : r
+          ),
+        }),
+        (m) => m.id === messageId
+      )
+    },
+    [patchActive, currentUserId]
+  )
+
+  const handleRemoveReaction = useCallback(
+    async (reactionId: string) => {
+      const rollback = patchActive(
+        (m) => ({
+          ...m,
+          reactions: m.reactions.filter((r) => r.id !== reactionId),
+        }),
+        (m) => m.reactions.some((r) => r.id === reactionId)
+      )
+      const result = await removeReaction({ reactionId })
+      if (!result.success) {
+        rollback()
         throw new Error(resolveMessagingError(result.error, mRef.current))
       }
     },
-    []
+    [patchActive]
   )
-
-  const handleRemoveReaction = useCallback(async (reactionId: string) => {
-    const result = await removeReaction({ reactionId })
-    if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, mRef.current))
-    }
-  }, [])
 
   // --- Typing (outbound) -----------------------------------------------------
   const handleTypingStart = useCallback(() => {

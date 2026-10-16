@@ -7,7 +7,11 @@ import { useCallback, useEffect, useRef } from "react"
 import socketService from "@/lib/websocket/socket-service"
 
 import { markConversationAsRead, pollNewMessages } from "../actions"
-import { buildMessageFromSocket, isTempId } from "../socket-message"
+import {
+  buildMessageFromSocket,
+  isTempId,
+  replaceServerMessages,
+} from "../socket-message"
 import type { MessageDTO } from "../types"
 
 /** Poll cadence while the reader is looking at the thread. */
@@ -142,6 +146,9 @@ export function useThreadSync({
     })
 
     const offReaction = socketService.on("message:reaction", (data) => {
+      // Our own reactions were applied optimistically when made; the echo
+      // is a toggle and would undo them.
+      if (data.userId === currentUserId) return
       updateRef.current(id, (prev) =>
         prev.map((m) => {
           if (m.id !== data.messageId) return m
@@ -226,6 +233,9 @@ export function useThreadSync({
     let cancelled = false
     let inFlight = false
     let timer: ReturnType<typeof setTimeout> | null = null
+    // The server's clock at the previous poll: rows changed after it come
+    // back as `changed` (edits, deletes, reactions, ticks).
+    let changedSince: string | undefined
 
     const schedule = (delay: number) => {
       if (timer) clearTimeout(timer)
@@ -242,9 +252,14 @@ export function useThreadSync({
           const cursor = getCursorRef.current(id)
           const result = await pollNewMessages(
             cursor
-              ? { conversationId: id, afterMessageId: cursor }
-              : { conversationId: id, since: openedAtRef.current }
+              ? { conversationId: id, afterMessageId: cursor, changedSince }
+              : { conversationId: id, since: openedAtRef.current, changedSince }
           )
+          if (!cancelled && result.success) {
+            changedSince = result.data.serverTime ?? changedSince
+            const changed = (result.data.changed ?? []) as MessageDTO[]
+            if (changed.length > 0) updateRef.current(id, (prev) => replaceServerMessages(prev, changed))
+          }
           if (!cancelled && result.success && result.data.items.length > 0) {
             const items = result.data.items as MessageDTO[]
             mergeRef.current(id, items)

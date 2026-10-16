@@ -977,7 +977,9 @@ export async function editMessage(
       }
     ).catch((err) => console.error("[editMessage] Audit log error:", err))
 
-    revalidatePath(MESSAGES_PATH)
+    // No revalidatePath: the client applies the change optimistically and the
+    // socket / poll `changedSince` sweep carries it to the others. A page
+    // revalidate only re-sent the whole /messages tree on every edit.
     revalidateTag(`messages-${message.conversationId}`, "max")
     revalidateTag(`message-${parsed.messageId}`, "max")
 
@@ -1061,7 +1063,9 @@ export async function deleteMessage(
       }
     ).catch((err) => console.error("[deleteMessage] Audit log error:", err))
 
-    revalidatePath(MESSAGES_PATH)
+    // No revalidatePath: the client applies the change optimistically and the
+    // socket / poll `changedSince` sweep carries it to the others. A page
+    // revalidate only re-sent the whole /messages tree on every edit.
     revalidateTag(`messages-${message.conversationId}`, "max")
     revalidateTag(`message-${parsed.messageId}`, "max")
 
@@ -1407,7 +1411,7 @@ export async function removeParticipant(
  */
 export async function addReaction(
   input: z.infer<typeof addReactionSchema>
-): Promise<ActionResponse<void>> {
+): Promise<ActionResponse<{ id: string }>> {
   try {
     const session = await auth()
     const authContext = getAuthContext(session)
@@ -1439,21 +1443,30 @@ export async function addReaction(
     }
 
     // Create or update reaction
-    await db.messageReaction.upsert({
-      where: {
-        messageId_userId_emoji: {
+    // Touch the message so the polling fallback's `changedSince` sweep
+    // carries the reaction to the other side.
+    const [reaction] = await Promise.all([
+      db.messageReaction.upsert({
+        where: {
+          messageId_userId_emoji: {
+            messageId: parsed.messageId,
+            userId: authContext.userId,
+            emoji: parsed.emoji,
+          },
+        },
+        create: {
           messageId: parsed.messageId,
           userId: authContext.userId,
           emoji: parsed.emoji,
         },
-      },
-      create: {
-        messageId: parsed.messageId,
-        userId: authContext.userId,
-        emoji: parsed.emoji,
-      },
-      update: {},
-    })
+        update: {},
+        select: { id: true },
+      }),
+      db.message.updateMany({
+        where: { id: parsed.messageId },
+        data: { updatedAt: new Date() },
+      }),
+    ])
 
     // Broadcast reaction via Socket.IO (non-blocking)
     emitSocketEvent(message.conversationId, "message:reaction", {
@@ -1464,7 +1477,9 @@ export async function addReaction(
 
     revalidateTag(`message-${parsed.messageId}`, "max")
 
-    return { success: true, data: undefined }
+    // The id lets the client swap its optimistic row for the real one, so a
+    // tap to remove it right away names a reaction the server knows.
+    return { success: true, data: { id: reaction.id } }
   } catch (error) {
     console.error("[addReaction] Error:", error)
     return actionError(
@@ -1512,13 +1527,20 @@ export async function removeReaction(
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
-    // Delete reaction
-    await db.messageReaction.delete({
-      where: {
-        id: parsed.reactionId,
-        userId: authContext.userId,
-      },
-    })
+    // Delete reaction, and touch the message so the polling fallback's
+    // `changedSince` sweep carries the removal to the other side.
+    await Promise.all([
+      db.messageReaction.delete({
+        where: {
+          id: parsed.reactionId,
+          userId: authContext.userId,
+        },
+      }),
+      db.message.updateMany({
+        where: { id: reaction.messageId },
+        data: { updatedAt: new Date() },
+      }),
+    ])
 
     // Broadcast reaction removal via Socket.IO (non-blocking)
     emitSocketEvent(reaction.message.conversationId, "message:reaction", {
@@ -2120,7 +2142,15 @@ export async function pollNewMessages(input: {
    * cursor existed until something arrived.
    */
   since?: string
-}): Promise<ActionResponse<{ items: any[] }>> {
+  /**
+   * ISO instant (from the previous poll's `serverTime`): also return the
+   * messages that CHANGED after it — edits, deletes, reactions, ticks — so
+   * the polling fallback shows them without a socket or a reload.
+   */
+  changedSince?: string
+}): Promise<
+  ActionResponse<{ items: any[]; changed?: any[]; serverTime?: string }>
+> {
   try {
     const session = await auth()
     const authContext = getAuthContext(session)
@@ -2143,6 +2173,30 @@ export async function pollNewMessages(input: {
     }
 
     const { serializeMessages } = await import("./serialization")
+    const serverTime = new Date().toISOString()
+
+    // Rows that changed since the last poll. Scoped like the main query; the
+    // conversation index narrows it and threads are small, so no index of
+    // its own (and no migration).
+    const changedSince = input.changedSince
+      ? new Date(input.changedSince)
+      : null
+    const changedPromise =
+      changedSince && !Number.isNaN(changedSince.getTime())
+        ? db.message.findMany({
+            where: {
+              conversationId: input.conversationId,
+              updatedAt: { gt: changedSince },
+              conversation: {
+                schoolId,
+                participants: { some: { userId: authContext.userId } },
+              },
+            },
+            orderBy: [{ updatedAt: "asc" }],
+            take: 50,
+            select: messageListSelect,
+          })
+        : Promise.resolve([])
 
     if (!input.afterMessageId) {
       const fresh = await db.message.findMany({
@@ -2158,10 +2212,16 @@ export async function pollNewMessages(input: {
         take: 50,
         select: messageListSelect,
       })
+      const [changedRows, nameDisplay] = await Promise.all([
+        changedPromise,
+        schoolNameDisplay(schoolId),
+      ])
       return {
         success: true,
         data: {
-          items: serializeMessages(fresh, await schoolNameDisplay(schoolId)),
+          items: serializeMessages(fresh, nameDisplay),
+          changed: serializeMessages(changedRows, nameDisplay),
+          serverTime,
         },
       }
     }
@@ -2188,13 +2248,16 @@ export async function pollNewMessages(input: {
       select: messageListSelect,
     })
 
+    const [changedRows, nameDisplay] = await Promise.all([
+      changedPromise,
+      schoolNameDisplay(schoolId),
+    ])
     return {
       success: true,
       data: {
-        items: serializeMessages(
-          newMessages,
-          await schoolNameDisplay(schoolId)
-        ),
+        items: serializeMessages(newMessages, nameDisplay),
+        changed: serializeMessages(changedRows, nameDisplay),
+        serverTime,
       },
     }
   } catch (error) {
