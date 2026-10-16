@@ -26,7 +26,10 @@ export interface DashboardHero {
  */
 export async function loadDashboardHero(
   locale: string,
-  { weather = true }: { weather?: boolean } = {}
+  // Off by default since 2026-10-15: the flip-card + weather hero that read
+  // it was replaced at every width by the home block in `content.tsx`. The
+  // principal renders weather of its own and fetches it beside its data.
+  { weather = false }: { weather?: boolean } = {}
 ): Promise<DashboardHero> {
   const [weatherResult, schoolResult] = await Promise.allSettled([
     weather ? getWeatherData("metric", locale) : Promise.resolve(null),

@@ -366,3 +366,88 @@ export function getSecondaryQuickActions(
       ]
   }
 }
+
+/**
+ * Hrefs the home block's 2x2 cluster already links to (`home-block-client.tsx`
+ * TILES). Top-up tiles skip them so the dashboard never shows the same app
+ * twice within one screen; a role's own primary four are kept as written.
+ */
+const HOME_BLOCK_HREFS = new Set([
+  "/notifications",
+  "/messages",
+  "/lumos",
+  "/subjects",
+])
+
+/**
+ * Places every role can open, in the order they top a short list up. Each has
+ * Android tile art (`quick-actions.tsx` tileByLabel) and a dictionary label.
+ */
+const SHARED_ACTIONS: QuickAction[] = [
+  {
+    iconName: "Announcement",
+    label: "Announcements",
+    description: "View announcements",
+    href: "/announcements",
+  },
+  {
+    iconName: "Calendar",
+    label: "Events",
+    description: "View upcoming events",
+    href: "/events",
+  },
+  {
+    iconName: "Calendar",
+    label: "Schedule",
+    description: "View the timetable",
+    href: "/timetable",
+  },
+  {
+    iconName: "Checklist",
+    label: "Attendance",
+    description: "View attendance",
+    href: "/attendance",
+  },
+  {
+    iconName: "Book",
+    label: "Library",
+    description: "Browse library",
+    href: "/library",
+  },
+  {
+    iconName: "Users",
+    label: "Profile",
+    description: "View your profile",
+    href: "/profile",
+  },
+  {
+    iconName: "Gear",
+    label: "Settings",
+    description: "Account settings",
+    href: "/settings",
+  },
+]
+
+/**
+ * The dashboard's tile row: the role's primary four, then its secondary
+ * actions, then the shared list, deduplicated by href and label, up to
+ * `count`. The school dashboard asks for four (the home grid's half is 4x2).
+ */
+export function getDashboardTileActions(
+  role: string,
+  count = 8
+): QuickAction[] {
+  const out = [...getQuickActionsByRole(role)]
+  const seen = new Set(out.flatMap((a) => [a.href, a.label]))
+
+  for (const action of [...getSecondaryQuickActions(role), ...SHARED_ACTIONS]) {
+    if (out.length >= count) break
+    if (HOME_BLOCK_HREFS.has(action.href ?? "")) continue
+    if (seen.has(action.href) || seen.has(action.label)) continue
+    out.push(action)
+    seen.add(action.href)
+    seen.add(action.label)
+  }
+
+  return out.slice(0, count)
+}

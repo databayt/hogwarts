@@ -23,11 +23,8 @@ import {
 } from "./lazy-charts"
 import { MetricCard } from "./metric-card"
 import { ProgressCard } from "./progress-card"
-import { QuickActions } from "./quick-actions"
-import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { SectionHeading } from "./section-heading"
 import { Upcoming } from "./upcoming"
 import { Weather } from "./weather"
 import { getWeatherData } from "./weather-actions"
@@ -224,21 +221,6 @@ export async function PrincipalDashboard({
           subdomain={school?.domain || ""}
           data={quickLookData}
         />
-
-        {/* Section 3: Quick Actions (4 focused actions) — from `md` up only.
-            Below it the phone dashboard shows this same section near the
-            top instead (`phone-quick-actions.tsx`), where a thumb reaches
-            it; two copies at once would be the same four tiles twice. */}
-        <section className="hidden md:block">
-          <SectionHeading title="Quick Actions" />
-          <QuickActions
-            actions={getQuickActionsByRole(
-              "PRINCIPAL",
-              school?.domain ?? undefined
-            )}
-            locale={locale}
-          />
-        </section>
 
         {/* Section 4: Resource Usage */}
         <ResourceUsageSection role="PRINCIPAL" />

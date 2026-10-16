@@ -71,7 +71,10 @@ const tileByLabel: Record<string, string> = {
   Profile: "contacts",
   Staff: "students",
   Children: "students",
-  Classrooms: "students",
+  // Drawn for this row (2026-10-15), not lifted from Android: "students" is
+  // the contacts book Staff already shows, and two identical tiles side by
+  // side read as one place twice.
+  Classrooms: "classroom",
   Subjects: "subject",
   Reports: "exams",
 }
@@ -150,12 +153,21 @@ function toCamelCase(str: string): string {
 interface QuickActionsProps {
   actions: QuickAction[]
   locale?: string
+  /**
+   * The row of app tiles at EVERY width, not only below `sm`. The school
+   * dashboard asks for it so its laptop row matches the home block above it
+   * the SaaS dashboard keeps the cards. With `tiles`, up to eight actions
+   * render (four on phones, all of them from `md` up) — where the row dissolves
+   * (`contents`) into the parent's grid, so the parent sets the columns.
+   */
+  tiles?: boolean
   className?: string
 }
 
 export function QuickActions({
   actions,
   locale = "en",
+  tiles = false,
   className,
 }: QuickActionsProps) {
   const { dictionary } = useDictionary()
@@ -163,12 +175,12 @@ export function QuickActions({
     | Record<string, string>
     | undefined
 
-  const visible = actions.slice(0, 4)
+  const visible = actions.slice(0, tiles ? 8 : 4)
   const labelOf = (action: QuickAction) =>
     dict?.[toCamelCase(action.label)] || action.label
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full", tiles && "md:contents", className)}>
       {/* Phones: one row of four tiles, sharing the home block's grid exactly —
           32px columns, tiles that fill their cell rather than a fixed 64px. On
           the Android home screen the 2x2 cluster beside the widget sits on the
@@ -177,7 +189,12 @@ export function QuickActions({
           here if this row uses the block's gap and lets the cell set the size.
           At a phone width the cell lands at ~65px, which is the Android tile's
           64dp; on a wide phone both grids grow together. */}
-      <div className="grid grid-cols-4 gap-x-8 sm:hidden">
+      <div
+        className={cn(
+          "grid grid-cols-4 gap-x-8",
+          tiles ? "md:contents" : "sm:hidden"
+        )}
+      >
         {visible.map((action, index) => {
           const tile = tileByLabel[action.label]
           const label = labelOf(action)
@@ -192,7 +209,11 @@ export function QuickActions({
             <Link
               key={`${action.label}-${index}`}
               href={`/${locale}${action.href ?? ""}`}
-              className="flex flex-col items-center gap-[5px] focus:outline-none"
+              className={cn(
+                "flex flex-col items-center gap-[5px] focus:outline-none",
+                // Phones keep one row of four; tiles 5–8 join from md up.
+                index >= 4 && "max-md:hidden"
+              )}
             >
               {tile ? (
                 <BlurImage
@@ -201,7 +222,7 @@ export function QuickActions({
                   alt=""
                   width={64}
                   height={64}
-                  sizes="25vw"
+                  sizes={tiles ? "(min-width: 768px) 10vw, 25vw" : "25vw"}
                   className="aspect-square w-full rounded-[29.2%] object-cover shadow-md"
                 />
               ) : (
@@ -217,7 +238,7 @@ export function QuickActions({
                   />
                 </div>
               )}
-              <span className="text-foreground max-w-full truncate text-[13px] leading-4 font-semibold">
+              <span className="text-foreground max-w-full truncate text-[13px] leading-4 font-semibold md:max-w-none md:overflow-visible">
                 {label}
               </span>
             </Link>
@@ -225,7 +246,12 @@ export function QuickActions({
         })}
       </div>
 
-      <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
+      <div
+        className={cn(
+          "hidden grid-cols-2 gap-3 sm:grid-cols-4",
+          !tiles && "sm:grid"
+        )}
+      >
         {actions.slice(0, 4).map((action, index) => {
           // Get icon component from map, fallback to Notebook if not found
           const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook

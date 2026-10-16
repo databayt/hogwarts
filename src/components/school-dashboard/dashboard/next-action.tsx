@@ -8,14 +8,20 @@ import { NextActionCard } from "./next-action-client"
 import { rankNextActions } from "./next-action-rank"
 
 /**
- * Server half of the phone dashboard's next-action banner: read the role, pull
+ * Server half of the dashboard's next-action banner: read the role, pull
  * the same upcoming payload the Upcoming flip card already uses, rank it, and
  * hand the ordered list to the client for the rotation.
  *
  * Best-effort — an empty or failed read renders nothing rather than an empty
  * green banner announcing that there is nothing to announce.
  */
-export async function NextAction({ locale }: { locale: string }) {
+export async function NextAction({
+  locale,
+  className,
+}: {
+  locale: string
+  className?: string
+}) {
   let actions
 
   try {
@@ -30,5 +36,7 @@ export async function NextAction({ locale }: { locale: string }) {
 
   if (!actions?.length) return null
 
-  return <NextActionCard actions={actions} locale={locale} />
+  return (
+    <NextActionCard actions={actions} locale={locale} className={className} />
+  )
 }

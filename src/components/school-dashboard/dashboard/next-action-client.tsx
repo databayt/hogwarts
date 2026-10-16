@@ -11,7 +11,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type { NextAction } from "./next-action-rank"
 
 /**
- * The phone dashboard's next-action banner, and the third copy of the green
+ * The dashboard's next-action banner, and the third copy of the green
  * hero object — the same ground, geometry, type and pills as
  * `school-dashboard/live/landing/status-hero.tsx` and
  * `components/library/hero.tsx`. When one changes, change all three: the hex,
@@ -40,10 +40,10 @@ import type { NextAction } from "./next-action-rank"
  * with black. Nothing here may use `primary-foreground`: on this ground that
  * token is white in light mode and black in dark, which is exactly backwards.
  *
- * What is NOT carried over is the marginalia art. Both siblings hide it below
- * `md`, where the card stacks and it would sit under the headline instead of
- * beside it — and this card only ever renders below `md`, so the art would be
- * hidden at every width it can be seen at.
+ * From `md` up it IS the /live banner: full width, the marginalia art at the
+ * inline end, `sm:px-12`, a 259px floor and the 38px headline at `lg`. Below
+ * `md` the art hides, as it does on both siblings, because the card stacks
+ * and it would sit under the headline instead of beside it.
  *
  * The card states ONE action, the most important the role has, and flips to the
  * next on a timer. Ranking is the server's (`rankNextActions`); this component
@@ -270,8 +270,19 @@ export function NextActionCard({
   if (!action) return null
 
   return (
-    <section className={cn("md:hidden", className)}>
-      <div className="relative isolate overflow-hidden rounded-[36px] bg-[#00bc6d] px-8 py-12 text-[#050505]">
+    <section className={cn("flex flex-col", className)}>
+      <div className="relative isolate flex flex-1 flex-col justify-center overflow-hidden rounded-[36px] bg-[#00bc6d] px-8 py-12 text-[#050505] sm:px-12 lg:min-h-[259px]">
+        {/* The /live banner's mark — `live/landing/status-hero.tsx` BannerArt,
+            same file, size and offset; read its note before changing it. */}
+        <img
+          src="/anthropic/marginalia-media-alpha.svg"
+          alt=""
+          decoding="async"
+          draggable={false}
+          aria-hidden="true"
+          className="pointer-events-none absolute end-12 hidden size-[150px] object-contain md:block lg:size-[168px]"
+        />
+
         {/* The siblings' headline, at their mobile size: ~7 words over two
             lines in a ~16ch measure, the emphasis carried by WEIGHT inside an
             otherwise light line rather than by a highlight.
@@ -301,7 +312,7 @@ export function NextActionCard({
 
             "Acknowledge" is a LOCAL dismissal — see `dismissed` above. It is
             a button, not a link, because it goes nowhere. */}
-        <div className="mt-7 flex flex-wrap items-center gap-2">
+        <div className="relative mt-7 flex flex-wrap items-center gap-2">
           <Link className={pill("default")} href={`/${locale}${action.href}`}>
             {dict?.cta || "Open"}
           </Link>
@@ -423,7 +434,7 @@ function SortingHeadline({
     <h2
       aria-label={plain}
       className={cn(
-        "h-[2.7em] max-w-[16ch] overflow-hidden text-3xl leading-[1.35] font-light text-balance",
+        "relative h-[2.7em] max-w-[16ch] overflow-hidden text-3xl leading-[1.35] font-light text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]",
         // `translate`, not `transform` — Tailwind v4 sets the standalone CSS
         // property, so a transition list naming `transform` animates the blur
         // and snaps the lift.

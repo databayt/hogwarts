@@ -145,16 +145,24 @@ export default async function DashboardContent({
       }
     }
 
-    // On phones the dashboard opens with the Android home screen's top block —
-    // the calendar widget and the four-app cluster — then the one thing to do,
-    // then today's classes, then the four places the role goes most, above
-    // whatever its own dashboard renders. All four hide themselves from md up.
+    // The dashboard opens on the /live page's banner shape: the one thing to
+    // do, as a full-width green card. Under it, from md up, one 8-column app
+    // grid two tiles tall: the calendar widget across half of it (4x2), and
+    // the home cluster plus four quick actions as 8 tiles in the other half
+    // (both `contents` there, so their tiles
+    // are this grid's items). On phones the same pieces stack in DOM order —
+    // home block, card, today's classes, the quick-action row.
     return (
       <div className="space-y-6">
-        <HomeBlock locale={locale} />
-        <NextAction locale={locale} />
-        <TodayTimetable locale={locale} dictionary={dictionary} />
-        <PhoneQuickActions role={user.role || "USER"} locale={locale} />
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-8 md:gap-x-8 md:gap-y-5">
+          <HomeBlock locale={locale} />
+          <NextAction
+            locale={locale}
+            className="md:col-span-full md:row-start-1 md:mb-3"
+          />
+          <TodayTimetable locale={locale} dictionary={dictionary} />
+          <PhoneQuickActions role={user.role || "USER"} locale={locale} />
+        </div>
         {renderDashboard()}
       </div>
     )

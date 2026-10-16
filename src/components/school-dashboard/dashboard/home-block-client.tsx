@@ -9,8 +9,9 @@ import { BlurImage } from "@/components/atom/blur-image"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 /**
- * The phone dashboard's first two rows, ported from the Android app's home
- * screen (feature/dashboard `HomeGrid` → `TopBlockLayout`).
+ * The dashboard's opening block, ported from the Android app's home screen
+ * (feature/dashboard `HomeGrid` → `TopBlockLayout`). Full-bleed on phones;
+ * from md up it merges into the 8-column app grid with the quick actions.
  *
  * Android splits its top block into two equal slots separated by a 14dp gap:
  * an icon column carrying a 2x2 tile cluster, then a widget column carrying
@@ -140,11 +141,17 @@ export function HomeBlockClient({
        dashboard's `space-y-6`, and a `py` here would stack with it. */
     <div
       className={cn(
-        "grid grid-cols-2 gap-x-8 px-4 md:hidden",
+        "grid grid-cols-2 gap-x-8 px-4",
         // Full bleed: the dashboard container is centred in the viewport, so
         // half its own width less half the viewport is exactly the inset to
         // give back on each side. Symmetric, so it needs no logical variant.
         "mx-[calc(50%-50vw)]",
+        // From md up the block dissolves (`contents`) into the dashboard's
+        // one 8-column app grid (content.tsx), two tiles tall: the widget takes
+        // half the width (4 columns x 2 rows) and 8 tiles — the cluster's four
+        // and the role's first four quick actions — fill the other half exactly, so the
+        // calendar, the cluster and the quick actions read as one home screen.
+        "md:contents",
         className
       )}
       // suppressHydrationWarning: the day number is read from the clock, so a
@@ -153,19 +160,19 @@ export function HomeBlockClient({
     >
       {/* Widget column — card on top, its own label at the bottom, so the label
           lines up with the labels of the cluster's second row. */}
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-[5px] md:col-span-4 md:row-span-2">
         <div className="flex flex-1 flex-col rounded-[28px] bg-[#9fe5b1] p-4 shadow-md">
-          <p className="truncate text-[20px] leading-7 font-bold text-[#FF3B30]">
+          <p className="truncate text-[20px] leading-7 font-bold text-[#FF3B30] md:text-[28px] md:leading-9">
             {weekday}
           </p>
           <p
-            className="text-[84px] leading-[84px] font-bold tracking-[-4px] text-[#050505]"
+            className="text-[84px] leading-[84px] font-bold tracking-[-4px] text-[#050505] md:text-[120px] md:leading-[120px] md:tracking-[-6px]"
             suppressHydrationWarning
           >
             {now.getDate()}
           </p>
           <div className="flex-1" />
-          <p className="text-[13px] leading-4 font-medium text-[#050505]/55">
+          <p className="text-[13px] leading-4 font-medium text-[#050505]/55 md:text-sm">
             {eventsLine}
           </p>
         </div>
@@ -176,7 +183,7 @@ export function HomeBlockClient({
       {/* Icon cluster — 2x2. Columns are 32px, matching the channel to the
           widget rather than Android's tighter 14dp, so every horizontal gap in
           the block is the same; rows keep Android's 20dp. */}
-      <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-5 md:contents">
         {TILES.map((tile) => (
           <Link
             key={tile.key}
@@ -189,10 +196,10 @@ export function HomeBlockClient({
               alt=""
               width={ICON_PX}
               height={ICON_PX}
-              sizes="25vw"
+              sizes="(min-width: 768px) 92px, 25vw"
               className="aspect-square w-full rounded-[29.2%] object-cover shadow-md"
             />
-            <span className="text-foreground max-w-full truncate text-[13px] leading-4 font-semibold">
+            <span className="text-foreground max-w-full truncate text-[13px] leading-4 font-semibold md:max-w-none md:overflow-visible">
               {dict?.tiles?.[tile.key] || tile.fallback}
             </span>
           </Link>

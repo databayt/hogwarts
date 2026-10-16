@@ -3,36 +3,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cn } from "@/lib/utils"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { QuickActions } from "./quick-actions"
-import { getQuickActionsByRole } from "./quick-actions-config"
-import { SectionHeading } from "./section-heading"
+import { getDashboardTileActions } from "./quick-actions-config"
 
 /**
- * The role's four quick actions, hoisted to the top of the PHONE dashboard.
+ * The role's quick actions as app tiles, with no heading of their own — the
+ * tiles carry their labels, and the row reads as the home screen continued.
  *
- * Every role's own dashboard already renders this section, but four screens
- * down, under the charts — which on a phone means nobody reaches it. Here it
- * sits under the day timetable, or directly under the next-action banner on a
- * day with no classes, so the top of the phone dashboard reads: what today is
- * (home block) → the one thing to do (next-action) → today's classes → the four
- * places you go most (this). Each role dashboard's
- * copy is `hidden md:block` for exactly this reason; if you delete this
- * component, take that class off all seven or the section vanishes on phones.
- *
- * No ground of its own: the tiles carry their own artwork, and a muted band
- * behind them was a second tinted rectangle under a page that already has the
- * green banner. The heading and the row read as a section without one.
- *
- * It bleeds to the viewport edges and pays 16px back as inner padding — the
- * home block's exact geometry, because this row is that block's grid continued.
- * Four columns at the block's 32px gap put tiles 3 and 4 directly beneath the
- * cluster's tiles, which is the relationship the Android home screen has
- * between its widget row and the 4-up rows under it. Symmetric, so it needs no
- * logical-property mirroring under RTL, and safe below `md`, where the sidebar
- * is off-canvas and the content really is the full viewport; the section is
- * hidden from `md` up, where each role dashboard renders its own copy.
+ * Phones: one full-bleed row of four under today's classes, on the home
+ * block's 32px column rhythm, so tiles 3 and 4 sit beneath the cluster's.
+ * From `md` up: the same four, dissolved (`contents`) into the dashboard's
+ * 8-column app grid beside the calendar widget and the home cluster
+ * (content.tsx). It is the ONLY quick-actions section on the school dashboard
+ * — the role dashboards' coloured-card copies were removed on 2026-10-15.
  */
 export function PhoneQuickActions({
   role,
@@ -43,16 +27,13 @@ export function PhoneQuickActions({
   locale: string
   className?: string
 }) {
-  const { dictionary } = useDictionary()
-  const dict = dictionary?.school?.dashboard?.quickActionsSection
-  const actions = getQuickActionsByRole(role)
+  const actions = getDashboardTileActions(role, 4)
 
   if (actions.length === 0) return null
 
   return (
-    <section className={cn("mx-[calc(50%-50vw)] px-4 md:hidden", className)}>
-      <SectionHeading title={dict?.title || "Quick Actions"} />
-      <QuickActions actions={actions} locale={locale} />
+    <section className={cn("mx-[calc(50%-50vw)] px-4 md:contents", className)}>
+      <QuickActions actions={actions} locale={locale} tiles />
     </section>
   )
 }

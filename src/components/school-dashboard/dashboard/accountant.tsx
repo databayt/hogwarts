@@ -13,15 +13,11 @@ import { getFinancialSummary } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { EmptyState } from "./empty-state"
 import { loadDashboardHero } from "./hero-data"
-import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection, PerformanceGauge } from "./lazy-charts"
 import { MetricCard } from "./metric-card"
 import { ProgressCard } from "./progress-card"
-import { QuickActions } from "./quick-actions"
-import { getQuickActionsByRole } from "./quick-actions-config"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { SectionHeading } from "./section-heading"
 
 interface AccountantDashboardProps {
   user: {
@@ -201,35 +197,12 @@ export async function AccountantDashboard({
     return (
       <div className="space-y-8">
         {/* ============ SHARED SECTIONS (the student dashboard's order) ======
-            The hero opens the dashboard again from `md` up (`DashboardHero` —
-            this role's flip card beside the school's weather); below `md` the
-            phone block in `content.tsx` opens the page instead. The Quick Look
+            The page opens on the home block in `content.tsx` at every width —
+            calendar widget, four tiles and the next-action card. The Quick Look
             row of announcements / events / notifications / messages stays
             hidden — restore it by putting its JSX back and re-importing
             `QuickLookSection` and `getQuickLookData`. */}
         <div className="space-y-6">
-          <DashboardHero
-            role="ACCOUNTANT"
-            locale={locale}
-            subdomain={school?.domain || ""}
-            weatherData={weatherData}
-          />
-
-          {/* Quick Actions — from `md` up only. Below it the phone dashboard
-              shows this same section near the top instead
-              (`phone-quick-actions.tsx`), where a thumb reaches it; two copies
-              at once would be the same four tiles twice. */}
-          <section className="hidden md:block">
-            <SectionHeading title="Quick Actions" />
-            <QuickActions
-              actions={getQuickActionsByRole(
-                "ACCOUNTANT",
-                school?.domain ?? undefined
-              )}
-              locale={locale}
-            />
-          </section>
-
           {/* Analytics, directly under the quick actions rather than below the
               two tables — the order the student dashboard settled on. */}
           <ChartSection role="ACCOUNTANT" />

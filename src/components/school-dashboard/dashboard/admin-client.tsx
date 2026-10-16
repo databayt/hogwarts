@@ -2,17 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-
 import type { QuickLookData } from "./actions"
-import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection } from "./lazy-charts"
-import { QuickActions } from "./quick-actions"
-import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { SectionHeading } from "./section-heading"
 import type { WeatherData } from "./weather-actions"
 
 // ============================================================================
@@ -45,28 +39,6 @@ export interface AdminDashboardClientProps {
 // SECTION: Quick Actions (Using unified component)
 // ============================================================================
 
-function QuickActionsSection({
-  locale,
-  subdomain,
-}: {
-  locale: string
-  subdomain: string
-}) {
-  const { dictionary } = useDictionary()
-  const dict = dictionary?.school?.dashboard?.quickActionsSection
-  const actions = getQuickActionsByRole("ADMIN", subdomain)
-
-  return (
-    // From `md` up only — below it the phone dashboard shows this same
-    // section near the top instead (`phone-quick-actions.tsx`), where a
-    // thumb reaches it; two copies at once would be the same four tiles twice.
-    <section className="hidden md:block">
-      <SectionHeading title={dict?.title || "Quick Actions"} />
-      <QuickActions actions={actions} locale={locale} />
-    </section>
-  )
-}
-
 // ============================================================================
 // MAIN CLIENT COMPONENT
 // ============================================================================
@@ -80,25 +52,16 @@ export function AdminDashboardClient({
   return (
     <div className="space-y-8">
       {/* ============ SHARED SECTIONS (the student dashboard's order) ========
-          The hero opens the dashboard again from `md` up (`DashboardHero` —
-          the role's flip card beside the school's weather); below `md` the
-          phone block in `content.tsx` opens the page instead. The Quick Look
+          The page opens on the home block in `content.tsx` at every width —
+          calendar widget, four tiles and the next-action card. The Quick Look
           row of announcements / events / notifications / messages stays
           hidden, and `admin.tsx` still does not fetch for it. */}
       <div className="space-y-6">
-        <DashboardHero
-          role="ADMIN"
-          locale={locale}
-          subdomain={subdomain}
-          weatherData={weatherData}
-        />
         {/* <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}
         /> */}
-
-        <QuickActionsSection locale={locale} subdomain={subdomain} />
 
         {/* Analytics, directly under the quick actions rather than below the
             two tables — the order the student dashboard settled on. */}

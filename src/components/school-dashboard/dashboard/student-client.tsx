@@ -14,16 +14,12 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type { QuickLookData } from "./actions"
 import { periodLabel, periodMinutes, useNowMinutes } from "./day-clock"
 import { EmptyState } from "./empty-state"
-import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection } from "./lazy-charts"
 import { MetricCard } from "./metric-card"
-import { QuickActions } from "./quick-actions"
-import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { ScheduleItem } from "./schedule-item"
-import { SectionHeading } from "./section-heading"
 import { TodayLiveAction } from "./today-live-action"
 import type { StudentDashboardData } from "./types"
 import type { WeatherData } from "./weather-actions"
@@ -57,27 +53,6 @@ function useStudentDict() {
 // ============================================================================
 // SECTION: Quick Actions
 // ============================================================================
-
-function QuickActionsSection({
-  locale,
-  subdomain,
-}: {
-  locale: string
-  subdomain: string
-}) {
-  const { quickActionsTitle } = useStudentDict()
-  const actions = getQuickActionsByRole("STUDENT", subdomain || undefined)
-
-  return (
-    // From `md` up only — below it the phone dashboard shows this same
-    // section near the top instead (`phone-quick-actions.tsx`), where a
-    // thumb reaches it; two copies at once would be the same four tiles twice.
-    <section className="hidden md:block">
-      <SectionHeading title={quickActionsTitle || "Quick Actions"} />
-      <QuickActions actions={actions} locale={locale} />
-    </section>
-  )
-}
 
 // ============================================================================
 // SECTION: Key Metrics
@@ -241,16 +216,6 @@ export function StudentDashboardClient({
     <div className="space-y-8">
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
-        {/* Section 1: the hero — the student's flip card beside the school's
-            weather. `md` and up only (`DashboardHero`); below it the phone
-            block in `content.tsx` opens the page instead. */}
-        <DashboardHero
-          role="STUDENT"
-          locale={locale}
-          subdomain={subdomain}
-          weatherData={weatherData}
-        />
-
         {/* Section 2, the Quick Look row of announcements / events /
             notifications / messages, is still hidden. Restore by
             un-commenting here and passing `quickLookData` from
@@ -261,13 +226,9 @@ export function StudentDashboardClient({
           data={quickLookData}
         /> */}
 
-        {/* Section 3: Quick Actions (4 focused actions) */}
-        <QuickActionsSection locale={locale} subdomain={subdomain} />
-
         {/* Section 4: Analytics Charts. Directly under the quick actions, ahead
-            of the two tables, since 2026-09-09. On phones that row is the one
-            `phone-quick-actions.tsx` renders further up, so this is the first
-            section of this file the student meets at either width. */}
+            of the two tables, since 2026-09-09. The quick-action tiles
+            themselves render once, above every role, from `content.tsx`. */}
         <ChartSection role="STUDENT" />
 
         {/* Section 5: Resource Usage */}

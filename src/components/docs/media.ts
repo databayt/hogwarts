@@ -4,8 +4,10 @@
 /**
  * Typed access to media-manifest.json: the CDN-hosted videos and screenshots
  * the docs and marketing pages render. Media tooling writes entries in exactly
- * this shape; every URL is content-hashed and served immutable, so a re-encode
- * is a new URL rather than an invalidation.
+ * this shape. Flow media lives at short stable keys grouped by block
+ * (hogwarts/students/add.mp4, hogwarts/students/add/list@2x.avif); each URL
+ * carries ?v=<sha8>, so a re-encode reaches browsers as a new URL while the
+ * publisher invalidates the edge copy.
  *
  * Import this from server components only. A client component that imports it
  * ships the whole manifest in its bundle, so pass it the one entry it needs as
