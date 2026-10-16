@@ -30,6 +30,15 @@ vi.mock("@livekit/components-react", () => ({
   useConnectionState: () => "connected",
   useRemoteParticipants: () => [],
   RoomAudioRenderer: () => null,
+  useChat: () => ({ chatMessages: [], send: async () => ({}), isSending: false }),
+  useParticipants: () => [],
+}))
+vi.mock("@/components/school-dashboard/live/actions/chat", () => ({
+  getRoomChat: vi.fn(async () => ({
+    success: true,
+    data: { messages: [], hasMore: false },
+  })),
+  recordChatMessage: vi.fn(async () => ({ success: true })),
 }))
 vi.mock("@/components/school-dashboard/live/room/stage", () => ({
   Stage: () => null,

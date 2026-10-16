@@ -89,6 +89,8 @@ interface ControlsProps {
   panel: PanelTab | null
   onPanel: (tab: PanelTab | null) => void
   tools: RoomTools
+  /** Others' chat messages not yet seen — counted on the discussion disc. */
+  chatUnread?: number
 }
 
 /**
@@ -102,6 +104,7 @@ export function ClassControls({
   panel,
   onPanel,
   tools,
+  chatUnread = 0,
 }: ControlsProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const canPublish = role !== "OBSERVER"
@@ -109,7 +112,7 @@ export function ClassControls({
   const hands = channel.hands.length
   // The host's hands have their own disc when the tool is on; otherwise they
   // still count on the discussion disc, whose panel lists them.
-  const badge = unanswered + (isHost && !tools.hands ? hands : 0)
+  const badge = unanswered + chatUnread + (isHost && !tools.hands ? hands : 0)
   const pollOpen = Boolean(channel.state.poll?.open)
   const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
   const discussionOpen = Boolean(panel) && panel !== "hands"

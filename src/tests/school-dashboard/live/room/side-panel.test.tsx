@@ -10,7 +10,8 @@
  *
  * Rendered with `tab="questions"`: the one tab whose content
  * (`QuestionsTab`) reads only `channel.state`, so the strip is exercised
- * without mocking `useChat`/`useParticipants`.
+ * without mocking `useParticipants`. The chat tab stays mounted (hidden) and
+ * takes its state as a prop, so a stub chat is enough.
  */
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
@@ -42,6 +43,15 @@ const channel: ClassChannel = {
   clearHand: async () => {},
 }
 
+const chat = {
+  messages: [],
+  send: () => {},
+  retry: () => {},
+  unread: 0,
+  hasMore: false,
+  loadOlder: async () => {},
+}
+
 function renderPanel() {
   return render(
     <SidePanel
@@ -54,6 +64,9 @@ function renderPanel() {
       tools={tools}
       localIdentity="me"
       labels={labels}
+      chat={chat}
+      locale="en"
+      open
     />
   )
 }

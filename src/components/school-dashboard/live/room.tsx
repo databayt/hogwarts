@@ -362,6 +362,7 @@ export function RoomClient({
             config={ticket.roomConfig}
             clock={{ startsAtMs: card.startsAtMs, endsAtMs: card.endsAtMs }}
             viewerEmail={viewerEmail}
+            locale={locale}
           />
         </LayoutContextProvider>
       </LiveKitRoom>

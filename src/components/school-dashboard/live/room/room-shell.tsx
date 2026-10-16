@@ -49,6 +49,7 @@ import { Stage } from "./stage"
 import { useAdaptiveDelivery } from "./use-adaptive-delivery"
 import { useAutoHide } from "./use-auto-hide"
 import { useClassChannel } from "./use-class-channel"
+import { useLiveChat } from "./use-live-chat"
 
 interface RoomShellProps {
   sessionId: string
@@ -69,6 +70,8 @@ interface RoomShellProps {
   clock: { startsAtMs: number | null; endsAtMs: number | null }
   /** The viewer's email for the watermark's visible mark. */
   viewerEmail?: string | null
+  /** Day pills and dates in the chat. */
+  locale?: string
 }
 
 /** A chrome layer's motion in and out, and its absence. */
@@ -109,6 +112,7 @@ export function RoomShell({
   config,
   clock,
   viewerEmail,
+  locale = "en",
 }: RoomShellProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const channel = useClassChannel({ hostIdentity, isHost })
@@ -116,6 +120,15 @@ export function RoomShell({
   const room = useRoomContext()
   const { localParticipant } = useLocalParticipant()
   const [panel, setPanel] = useState<PanelTab | null>(null)
+  // Lives here, not in the panel: history, the outbox and the unread count
+  // survive the panel closing and every tab switch.
+  const chat = useLiveChat({
+    sessionId,
+    selfId: localParticipant.identity,
+    enabled: config.tools.chat,
+    visible: panel === "chat",
+  })
+  const chatLocale = locale === "ar" ? "ar" : "en"
   // Recording consent: shown once per join, dismissible; the school can
   // replace the sentence.
   const [consentSeen, setConsentSeen] = useState(false)
@@ -469,15 +482,22 @@ export function RoomShell({
                 panel={panel}
                 onPanel={setPanel}
                 tools={config.tools}
+                chatUnread={config.tools.chat ? chat.unread : 0}
               />
             </div>
           </div>
         </main>
 
-        {panel && (
-          <div className="absolute inset-y-0 end-0 z-30 sm:static sm:z-auto">
+        {/* Kept mounted while closed (hidden): reopening the chat lands
+            where the reader left it, with no remount or refetch. */}
+        <div
+          className={cn(
+            "absolute inset-y-0 end-0 z-30 sm:static sm:z-auto",
+            !panel && "hidden"
+          )}
+        >
             <SidePanel
-              tab={panel}
+              tab={panel ?? (config.tools.chat ? "chat" : "questions")}
               onTab={setPanel}
               onClose={() => setPanel(null)}
               channel={channel}
@@ -488,9 +508,11 @@ export function RoomShell({
               labels={labels}
               onPollClosed={isHost ? onPollClosed : undefined}
               onQuestion={isHost ? onQuestion : undefined}
+              chat={chat}
+              locale={chatLocale}
+              open={Boolean(panel)}
             />
-          </div>
-        )}
+        </div>
       </div>
       <RoomAudioRenderer muted={audioMuted} />
     </div>

@@ -2,19 +2,22 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, useState } from "react"
-import { useChat, useParticipants } from "@livekit/components-react"
-import { Check, Hand, Send, X } from "lucide-react"
+import { useState } from "react"
+import { useParticipants } from "@livekit/components-react"
+import { Check, Hand, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { glassPill } from "@/components/lumos/shared/video-player/glass"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
+import { InputBar } from "@/components/school-dashboard/messaging/mobile"
 
+import { ChatTab } from "./chat-tab"
 import type { Poll } from "./class-channel"
 import type { RoomLabels } from "./labels"
 import type { ClassChannel } from "./use-class-channel"
+import type { LiveChat } from "./use-live-chat"
 
 export type PanelTab = "chat" | "questions" | "poll" | "hands"
 
@@ -28,6 +31,10 @@ interface SidePanelProps {
   tools: RoomTools
   localIdentity: string
   labels: RoomLabels
+  chat: LiveChat
+  locale: "ar" | "en"
+  /** The panel is on screen (it stays mounted, hidden, while closed). */
+  open: boolean
   onPollClosed?: (poll: Poll) => void
   onQuestion?: (id: string, text: string, from: string) => void
 }
@@ -35,7 +42,12 @@ interface SidePanelProps {
 export function SidePanel(props: SidePanelProps) {
   const { tab, onTab, onClose, labels, isHost, channel, tools } = props
   const tabs: Array<{ id: PanelTab; label: string; badge?: number }> = []
-  if (tools.chat) tabs.push({ id: "chat", label: labels.chat })
+  if (tools.chat)
+    tabs.push({
+      id: "chat",
+      label: labels.chat,
+      badge: props.chat.unread || undefined,
+    })
   tabs.push({
     id: "questions",
     label: labels.questions,
@@ -96,90 +108,20 @@ export function SidePanel(props: SidePanelProps) {
         </Button>
       </div>
       <div className="min-h-0 flex-1">
-        {tab === "chat" && (
-          <ChatTab labels={labels} localIdentity={props.localIdentity} />
+        {tools.chat && (
+          <ChatTab
+            chat={props.chat}
+            selfId={props.localIdentity}
+            locale={props.locale}
+            labels={labels}
+            active={props.open && tab === "chat"}
+          />
         )}
         {tab === "questions" && <QuestionsTab {...props} />}
         {tab === "poll" && <PollTab {...props} />}
         {tab === "hands" && <HandsTab {...props} />}
       </div>
     </aside>
-  )
-}
-
-// ---------------------------------------------------------------------------
-
-function ChatTab({
-  labels,
-  localIdentity,
-}: {
-  labels: RoomLabels
-  localIdentity: string
-}) {
-  const { chatMessages, send, isSending } = useChat()
-  const [text, setText] = useState("")
-  const endRef = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" })
-  }, [chatMessages.length])
-
-  const submit = async () => {
-    const t = text.trim()
-    if (!t || isSending) return
-    setText("")
-    await send(t)
-  }
-
-  return (
-    <div className="flex h-full flex-col">
-      <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
-        {chatMessages.length === 0 && (
-          <li className="text-white/60">{labels.noMessages}</li>
-        )}
-        {chatMessages.map((m) => {
-          const mine = m.from?.identity === localIdentity
-          return (
-            <li key={m.id} className={mine ? "text-end" : ""}>
-              <div className="text-[11px] text-white/60">
-                {mine ? labels.you : m.from?.name || m.from?.identity || "?"}
-              </div>
-              <div
-                className={
-                  "inline-block max-w-[85%] rounded-lg px-2.5 py-1.5 " +
-                  (mine ? "bg-sky-600" : "bg-white/10")
-                }
-              >
-                {m.message}
-              </div>
-            </li>
-          )
-        })}
-        <div ref={endRef} />
-      </ul>
-      <form
-        className="flex gap-2 border-t border-white/10 p-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void submit()
-        }}
-      >
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={labels.messagePlaceholder}
-          className="border-white/20 bg-white/5 text-white placeholder:text-white/40"
-          maxLength={1000}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!text.trim() || isSending}
-          aria-label={labels.send}
-        >
-          <Send className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
-        </Button>
-      </form>
-    </div>
   )
 }
 
@@ -192,14 +134,11 @@ function QuestionsTab({
   labels,
   localIdentity,
 }: SidePanelProps) {
-  const [text, setText] = useState("")
   const { questions } = channel.state
-  const ask = async () => {
-    const t = text.trim()
+  const ask = (raw: string) => {
+    const t = raw.trim().slice(0, 500)
     if (!t) return
-    const id = crypto.randomUUID()
-    setText("")
-    await channel.send({ t: "q", id, text: t, at: Date.now() })
+    void channel.send({ t: "q", id: crypto.randomUUID(), text: t, at: Date.now() })
   }
 
   return (
@@ -241,29 +180,16 @@ function QuestionsTab({
         ))}
       </ul>
       {canAsk && (
-        <form
-          className="flex gap-2 border-t border-white/10 p-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            void ask()
-          }}
-        >
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={labels.questionPlaceholder}
-            className="border-white/20 bg-white/5 text-white placeholder:text-white/40"
+        <div className="dark">
+          <InputBar
+            textOnly
             maxLength={500}
+            onSend={ask}
+            placeholder={labels.questionPlaceholder}
+            labels={{ send: labels.askQuestion }}
+            className="bg-transparent backdrop-blur-none"
           />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!text.trim()}
-            aria-label={labels.askQuestion}
-          >
-            <Send className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
-          </Button>
-        </form>
+        </div>
       )}
     </div>
   )
