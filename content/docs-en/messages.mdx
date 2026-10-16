@@ -104,6 +104,12 @@ unread map, and refetches everything only on every eighth tick. Without a
 socket server a sent message shows a single tick until it is read; the double
 "delivered" tick can only come from the server's `message:delivered`.
 
+Edits, deletes and reactions appear on the sender's screen the moment they
+are made and roll back if the server refuses. Each thread poll also asks for
+the rows that **changed** since the previous poll (the server's own clock is
+the cursor), so the other side sees an edit, a delete or a reaction within
+one poll — no socket and no reload needed.
+
 ## WhatsApp integration
 
 When the school has an active WhatsApp session, in-app messages auto-dispatch via Evolution API. Bidirectional — incoming replies bridge back via webhook.

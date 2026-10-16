@@ -4,6 +4,37 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Room chat on the WhatsApp thread, with history — 2026-10-16
+
+- [x] **One chat UI.** `room/chat-tab.tsx` renders through the messaging
+      block's `useStickToBottom`, `renderChatItem`, `toThreadItems` and
+      `InputBar textOnly` — bubbles, tails, ticks, day pills, the jump button
+      with a count. The hand-rolled `<ul>` (unconditional scroll-to-end that
+      yanked readers out of the history) is gone; the questions composer is
+      the same `InputBar`.
+- [x] **Instant send.** `room/use-live-chat.ts` shows the bubble with a clock
+      on Send, swaps it for LiveKit's echo, and turns it red with tap-to-retry
+      if the send throws.
+- [x] **History.** Each sender saves its own message as a `ConferenceEvent`
+      (`eventType: "chat"`, `eventId lc:<session>:chat:<livekit id>`) — no
+      migration. `getRoomChat` pages 50 back; late joiners and reloads open on
+      the conversation so far. Both actions require a participant row for the
+      session and the school's chat switch — the switch is now a server rule
+      for history (the data channel itself is still UI-gated, :1114). The
+      saved name is the server's, never the client's.
+- [x] **Survives the panel.** The side panel stays mounted (hidden) while
+      closed and the chat tab while another tab shows; unread counts on the
+      Chat tab and the discussion disc.
+- Verified locally: two sends → bubbles + day pill + run tail; rows in
+  `live_class_events`; reload → history back.
+
+### Found while here, NOT fixed
+
+- `detail.test.tsx` (3 cases) fails on `notFound()` — pre-existing, untouched.
+- The room page logs `[TENANT] Query without schoolId: Lesson.findMany`.
+- Replay of saved chat on the class/recording page is not built yet.
+- Android native room still has no chat.
+
 ## Capture protection in the room and on recordings — 2026-09-14
 
 With the lumos pass (`87d62ee9e`; details in `lumos/ISSUE.md`).

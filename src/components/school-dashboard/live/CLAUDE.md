@@ -1042,8 +1042,10 @@ Rejoin). Everything inside the call is `room/`:
 
 - `room-shell.tsx` composes header (quality dot, title, hand count), `stage.tsx`
   (whiteboard > slides > screen share > camera grid, cameras in a side strip
-  when something else has focus), `side-panel.tsx` (chat via `useChat`,
-  questions, polls, hands), `control-bar.tsx` (role-aware), and the overlays.
+  when something else has focus), `side-panel.tsx` (chat, questions, polls,
+  hands — chat is `chat-tab.tsx`, drawn with the messaging block's WhatsApp
+  thread parts; its state is `use-live-chat.ts`, owned by the shell so it
+  survives tab switches and a closed panel; history is `actions/chat.ts`), `control-bar.tsx` (role-aware), and the overlays.
 - `adaptive-delivery.ts` is a PURE ladder (tests pin the hysteresis);
   `use-adaptive-delivery.ts` applies the tier to every remote CAMERA
   publication — screen shares are never touched. It needs

@@ -13,6 +13,28 @@ last_audited: 2026-05-25
 
 # Messaging — Production Readiness Tracker
 
+## 2026-10-16 — instant edits, polling carries changes, shared thread parts
+
+- [x] **Edit / delete / react are optimistic** (`messaging-client.tsx`
+      `patchActive`), rolled back on failure. They used to wait for a socket
+      echo — with no socket server in production they showed only after a
+      reload. `addReaction` returns the reaction id so a quick remove works;
+      own `message:reaction` echoes are ignored (the event toggles).
+- [x] **The poll carries changes.** `pollNewMessages({ changedSince })`
+      also returns rows whose `updatedAt` moved since the server's previous
+      tick (`serverTime`); reactions touch the message's `updatedAt` so adds
+      and removes travel. Applied with `replaceServerMessages`.
+- [x] `editMessage` / `deleteMessage` no longer `revalidatePath` the page.
+- [x] Desktop virtualizer guesses heights per kind (text by length, media,
+      voice, reply) instead of a flat 80px.
+- [x] The phone thread's scroll contract, row renderer and day/tail grouping
+      are now shared parts (`chat/use-stick-to-bottom.ts`,
+      `chat/thread-parts.tsx`, `chat/thread-items.ts`) — the live-class room
+      chat renders through them.
+- Not done: windowing the phone thread. `content-visibility` was considered
+  and dropped — iOS Safari has no `overflow-anchor`, and estimated row
+  heights would make history jump while scrolling up.
+
 ## 2026-09-12 — performance, interaction and fidelity pass (phone first)
 
 Read the iPhone captures in `public/whatsapp/IMG_26*.PNG` as the single
