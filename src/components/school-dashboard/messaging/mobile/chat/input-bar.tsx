@@ -29,6 +29,12 @@ type Props = {
   onTypingStop?: () => void
   replyDraft?: ReplyDraft | null
   placeholder?: string
+  /**
+   * Text only: no attach, sticker, camera or mic — the send disc is always
+   * shown (dimmed while empty). Used by the live-class chat.
+   */
+  textOnly?: boolean
+  maxLength?: number
   labels?: {
     attach?: string
     stickers?: string
@@ -65,6 +71,8 @@ export const InputBar = memo(function InputBar({
   onTypingStop,
   replyDraft,
   placeholder = "Message",
+  textOnly = false,
+  maxLength,
   labels,
   className,
 }: Props) {
@@ -210,19 +218,26 @@ export const InputBar = memo(function InputBar({
         </div>
       )}
 
-      <div className="flex w-full items-end gap-[8px] py-[5.5px] ps-[7px] pe-[9px]">
-        <button
-          type="button"
-          onClick={onAttach}
-          onPointerDown={keepFocus}
-          aria-label={labels?.attach ?? "Attach"}
-          className="size-[32px] shrink-0"
-        >
-          <WaIcon
-            name="ic-wa-plus-input-32"
-            className="size-[32px] text-[color:var(--wa-text-primary)]"
-          />
-        </button>
+      <div
+        className={cn(
+          "flex w-full items-end gap-[8px] py-[5.5px] pe-[9px]",
+          textOnly ? "ps-[9px]" : "ps-[7px]"
+        )}
+      >
+        {!textOnly && (
+          <button
+            type="button"
+            onClick={onAttach}
+            onPointerDown={keepFocus}
+            aria-label={labels?.attach ?? "Attach"}
+            className="size-[32px] shrink-0"
+          >
+            <WaIcon
+              name="ic-wa-plus-input-32"
+              className="size-[32px] text-[color:var(--wa-text-primary)]"
+            />
+          </button>
+        )}
 
         <div className="flex min-w-0 flex-1 items-end gap-[16px] overflow-clip rounded-[15px] border-[0.33px] border-[color:var(--wa-border-input-chat)] bg-[color:var(--wa-surface-input-chat)] ps-[10px] pe-[9px] pt-[3px] pb-[2px]">
           <textarea
@@ -238,30 +253,34 @@ export const InputBar = memo(function InputBar({
             autoCapitalize="sentences"
             autoCorrect="on"
             enterKeyHint="enter"
+            maxLength={maxLength}
             className="min-h-[25px] min-w-0 flex-1 resize-none bg-transparent pb-[3px] text-[16px] leading-[21px] tracking-[-0.32px] text-[color:var(--wa-text-primary)] caret-[color:var(--wa-surface-product)] placeholder:text-[color:var(--wa-text-secondary-alpha)] focus:outline-none"
           />
-          <button
-            type="button"
-            onClick={onSticker}
-            onPointerDown={keepFocus}
-            aria-label={labels?.stickers ?? "Stickers"}
-            className="size-[24px] self-center"
-          >
-            <WaIcon
-              name="ic-wa-sticker-24"
-              className="size-[24px] text-[color:var(--wa-text-secondary)]"
-            />
-          </button>
+          {!textOnly && (
+            <button
+              type="button"
+              onClick={onSticker}
+              onPointerDown={keepFocus}
+              aria-label={labels?.stickers ?? "Stickers"}
+              className="size-[24px] self-center"
+            >
+              <WaIcon
+                name="ic-wa-sticker-24"
+                className="size-[24px] text-[color:var(--wa-text-secondary)]"
+              />
+            </button>
+          )}
         </div>
 
         <div className="flex shrink-0 items-start gap-[7px] ps-[6px]">
-          {hasText ? (
+          {hasText || textOnly ? (
             <button
               type="button"
               onClick={send}
               onPointerDown={keepFocus}
+              disabled={!hasText}
               aria-label={labels?.send ?? "Send"}
-              className="flex size-[32px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] active:opacity-80"
+              className="flex size-[32px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] active:opacity-80 disabled:opacity-40"
             >
               <WaIcon
                 name="ic-wa-send-24"

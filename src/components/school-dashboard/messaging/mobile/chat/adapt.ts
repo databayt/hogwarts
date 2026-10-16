@@ -40,10 +40,10 @@ export function bubbleTime(d: Date | string): string {
 }
 
 /** The pill above the first message of each day. */
-function daySeparatorLabel(
+export function daySeparatorLabel(
   d: Date,
   locale: "ar" | "en",
-  L: AdaptLabels
+  L: Pick<AdaptLabels, "today" | "yesterday">
 ): string {
   const now = new Date()
   if (d.toDateString() === now.toDateString()) return L.today

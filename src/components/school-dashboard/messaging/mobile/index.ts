@@ -35,3 +35,11 @@ export { ReactionCluster } from "./chat/reaction-cluster"
 export { ReplyBubble } from "./chat/reply-bubble"
 export { TopContactHeader } from "./chat/top-contact-header"
 export { VoiceNoteBubble } from "./chat/voice-note-bubble"
+export {
+  JumpToBottomButton,
+  OlderSpinner,
+  renderChatItem,
+  type ChatItemContext,
+} from "./chat/thread-parts"
+export { toThreadItems, type ThreadMessage } from "./chat/thread-items"
+export { useStickToBottom } from "./chat/use-stick-to-bottom"
