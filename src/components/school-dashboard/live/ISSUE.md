@@ -4,6 +4,55 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The board, raised hands, one icon size, class tools — 2026-10-17
+
+- [x] **One icon size.** Every disc in the row is 48px with a 22pt glyph at
+      every width; the top row stays 44px / 20pt on desktop too (the `sm:`
+      shrink is gone). Share shows only where `getDisplayMedia` exists, so a
+      host's phone row is six discs at 390px; on a phone it moves into the
+      class-tools card as a note.
+- [x] **The board** (`room/board/`) — a fixed 16:9 page that never stretches,
+      two canvases (committed strokes repaint only on change; a live layer for
+      strokes in progress), smooth quadratic strokes with coalesced events.
+      Pen · highlighter · line · arrow · rectangle · circle · text (Arabic
+      right-anchored) · object eraser, 8 inks × 3 widths, undo/redo (⌘Z /
+      ⇧⌘Z), two-tap Clear. A glass rail of 44px targets down the reading edge
+      (under the page on an upright phone), clear of the room's chrome. Others
+      watch a stroke form (`wb.draft`, lossy, ~20 Hz). Drawing no longer
+      flashes the room's controls. The teacher stays visible on a phone as a
+      floating tile.
+- [x] **Students draw** when the host hands them the pen (`wb.grant` — one
+      student via "Give the floor", or everyone). The reducer stamps each
+      stroke's author; a student erases/undoes only their own.
+- [x] **Board saved** (`actions/board.ts`, `ConferenceEvent` `eventType:
+      "board"`, one upserted row) — the host's reload restores it. Closes the
+      "strokes are room-scoped" item below.
+- [x] **Raise hand** — amber disc with a breathing ring and "#2 in line" for
+      the student; the host gets a toast with Give the floor / Lower and a
+      soft chime, an amber ✋ + place on the student's tile, and a hands panel
+      with avatars, waited time, Give the floor, Lower and Lower all.
+      "Give the floor" spotlights the student for everyone and lowers the hand.
+- [x] **Class tools** (host ✨ disc): reactions, a countdown (1/3/5/10 min,
+      pause, stop; clock-skew safe — receivers count from receipt), Mute
+      everyone (server: `muteAll` / `muteParticipant`, teachers judged from
+      the DB, never from client attributes), Lower all, who can draw.
+      Students get a 😊 disc. Reactions float up the stage with the sender's
+      first name.
+- [x] **Render storm fixed before it shipped**: a `useParticipants()` in the
+      room shell re-rendered the whole room ~58×/s on speaking events; names
+      are now read from the room on demand.
+- Verified locally: teacher at 1440px + student at 390px (`/en` and `/ar`)
+  on LiveKit cloud — every tool, live stroke both ways, late joiner gets the
+  board and the pen, reload restores the board, toast, tile badge, floor,
+  reactions, timer, mute everyone.
+
+### Found while here, NOT fixed
+
+- `title-card.tsx:217` sets state inside an effect (lint error, untouched).
+- The class progress clock reads `278:xx:xx` for a session whose slot passed
+  long ago (local test data, not new).
+- A student's hand order is local to each client (first seen), unchanged.
+
 ## Room chat on the WhatsApp thread, with history — 2026-10-16
 
 - [x] **One chat UI.** `room/chat-tab.tsx` renders through the messaging
@@ -1186,9 +1235,8 @@ Deferred, with reasons:
 - [ ] **`adaptiveStream` is off by design** — with it on the SDK ignores
       `setVideoQuality`/`setEnabled`. Consequence: without the ladder stepping
       down, a viewer receives the highest layer their tile can show.
-- [ ] **Whiteboard strokes are room-scoped.** Nothing persists them; a host
-      who leaves and returns starts with a blank board. Persist to
-      `ConferenceEvent` on `wb.clear`/end if a school asks for it.
+- [x] **Whiteboard strokes are room-scoped.** Fixed 2026-10-17: the host
+      saves the board as one `ConferenceEvent` row and restores it on return.
 - [ ] **Egress failure is terminal.** LiveKit does not retain media from a
       failed egress; `failed` is shown honestly and cannot be retried.
 - [ ] **Observers (guardians) cannot raise hands or ask questions** — no

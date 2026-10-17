@@ -49,7 +49,10 @@ conference/
 │   ├── shelves.tsx       everything under it — the section's classes, bonus content, related, cast & crew
 │   ├── room-shell.tsx     the call itself: File.png's phone chrome over an edge-to-edge stage —
 │   │                      ✕ · pill (people · fit · share) · speaker, centre discs, bottom block
-│   ├── control-bar.tsx    ClassTransport (camera · MIC · hand|share) · ClassCapsules · ClassMoreMenu (⋯ card)
+│   ├── control-bar.tsx    ClassControls (one row of 48px discs + the class-tools card) · ClassMoreMenu (⋯ card)
+│   ├── board/             the board: 16:9 page, two canvases, tool rail, save/restore (`use-board-memory.ts`)
+│   ├── toasts.tsx · use-class-notices.ts   the room's notices (hands, the pen, the floor, mute)
+│   ├── reactions-overlay.tsx · class-timer.tsx · chime.ts   reactions, the countdown, the soft chime
 │   ├── class-progress.tsx the clock row: read-only class progress, elapsed · −left, ticks alone
 │   ├── use-auto-hide.ts   fades 3s after the last touch; a stage tap toggles; menus/panel/focus pin
 │   ├── glyph.ts           the bare-glyph control class the pills and the card share

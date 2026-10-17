@@ -1493,3 +1493,43 @@ the centre trio and the capsule row recorded just above.
   participant's AND `localParticipant.isCameraEnabled` is false. A reader who
   turns their camera on while alone still sees themselves. Others in the room
   with cameras off still get LiveKit's placeholders.
+
+## The board, hands, one icon size, class tools (2026-10-17)
+
+Abdout: the board "not handy nor beautiful", polish raise-hand, icons the same
+size on mobile and desktop, more tools for an interactive class. Supersedes the
+"48px on a phone and 40px from `sm`" rule above.
+
+- **One size.** Row discs `size-12` + 22pt glyphs at every width; top row
+  `size-11` + 20pt at every width. Don't add `sm:` size variants back.
+  Share renders only when `navigator.mediaDevices.getDisplayMedia` exists
+  (`useCanShareScreen`), which keeps a host phone row at six discs.
+- **Rows:** host camera · mic · hands · board · ✨ class tools · share* ·
+  discussion; student camera · mic · hand · 😊 react · share* · discussion.
+- **Board = `room/board/`.** `board-canvas.ts` is pure (page rect, drawing,
+  hit-testing — tested). Points are 0..1 of a fixed 16:9 page; width is
+  thousandths of the page width. Base canvas repaints only when strokes or the
+  page change; the live canvas paints drafts in a rAF. The page and the rail
+  stop click propagation (drawing must not toggle the chrome); the dark
+  surround still toggles it. Rail is vertical at the reading edge, horizontal
+  under the page when the stage is portrait. Flyouts need `w-max` (an absolute
+  box inside a 44px button shrinks to 44px).
+- **Protocol additions** (`class-channel.ts`): `wb.draft` (lossy, never
+  stored; pen drafts append, shape drafts replace), `wb.remove`, `wb.grant`,
+  `spotlight`, `timer` / `timer.stop` (send time LEFT, receivers set `endsAt`
+  on their own clock), `react` (lossy), `hand.clearAll`, `muted`. `sync.state`
+  carries grant/spotlight/timer. The reducer stamps `stroke.by` from the
+  sender (a host's replay keeps the original author).
+- **Ephemeral events never touch React state of the room**: drafts,
+  reactions, "hand lowered", "muted" go through `channel.subscribe`. Depend on
+  `channel.subscribe` (stable), never on `channel` (a new object each render).
+- **Never call `useParticipants()` in the room shell or the board** — it
+  re-renders on every speaking/quality event (~58×/s measured). Read names
+  from `room.remoteParticipants` when needed.
+- **Moderation** (`actions/moderation.ts`): `muteAll` / `muteParticipant`
+  require a HOST/CO_HOST participant row; teachers are skipped by DB role, not
+  by participant attributes (students can rewrite their own attributes).
+- **Board memory**: `actions/board.ts` upserts `lc:<session>:board`
+  (`eventType "board"`, ≤400 strokes, validated); `use-board-memory.ts`
+  restores on the host's return when the room's board is empty, saves 4s
+  after the last change.
