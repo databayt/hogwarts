@@ -7,7 +7,6 @@ import {
   Award,
   BookOpen,
   Calendar,
-  CreditCard,
   Download,
   EllipsisVertical,
   FileText,
@@ -53,7 +52,6 @@ import { AcademicTab } from "./tabs/academic-tab"
 import { AchievementsTab } from "./tabs/achievements-tab"
 import { AttendanceTab } from "./tabs/attendance-tab"
 import { DocumentsTab } from "./tabs/documents-tab"
-import { FeesTab } from "./tabs/fees-tab"
 import { GuardianTab } from "./tabs/guardian-tab"
 import { HealthTab } from "./tabs/health-tab"
 // Import tab components
@@ -383,13 +381,6 @@ export function StudentProfile({
                 <Calendar className="me-2 h-4 w-4" />
                 {tabs?.attendance || "Attendance"}
               </TabsTrigger>
-              <TabsTrigger
-                value="fees"
-                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
-              >
-                <CreditCard className="me-2 h-4 w-4" />
-                {tabs?.fees || "Fees"}
-              </TabsTrigger>
             </TabsList>
 
             <div className="p-6">
@@ -426,14 +417,6 @@ export function StudentProfile({
 
               <TabsContent value="attendance" className="mt-0">
                 <AttendanceTab student={student} dictionary={p?.attendance} />
-              </TabsContent>
-
-              <TabsContent value="fees" className="mt-0">
-                <FeesTab
-                  studentId={student.id}
-                  lang={lang}
-                  dictionary={p?.fees}
-                />
               </TabsContent>
             </div>
           </Tabs>
