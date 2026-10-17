@@ -28,6 +28,10 @@ export const maxDuration = 60
 // stranded. Generous so a class running slightly over is never cut short.
 const STALE_GRACE_MINUTES = 30
 
+// Hours a recording may sit pending/processing after its class ended before
+// we stop waiting for LiveKit's egress_ended webhook.
+const STUCK_RECORDING_HOURS = 3
+
 export async function GET(req: Request) {
   if (!isAuthorizedCron(req, "end-stale-live-classes")) {
     return new NextResponse("unauthorized", { status: 401 })
@@ -90,11 +94,32 @@ export async function GET(req: Request) {
     if (count > 0) cancelled++
   }
 
+  // Third arm: recordings whose egress_ended webhook never came. Without it a
+  // row sits "preparing" on the class page forever; `failed` lets the page say
+  // so. Only once the class itself is over and the row has been quiet a while —
+  // a long class keeps its egress `processing` for as long as it runs.
+  const recordingCutoff = new Date(
+    Date.now() - STUCK_RECORDING_HOURS * 60 * 60 * 1000
+  )
+  const { count: recordingsFailed } = await db.conferenceRecording.updateMany({
+    where: {
+      status: { in: ["pending", "processing"] },
+      deletedAt: null,
+      updatedAt: { lt: recordingCutoff },
+      session: { status: { in: ["ended", "cancelled"] } },
+    },
+    data: {
+      status: "failed",
+      failureReason: `no egress result within ${STUCK_RECORDING_HOURS}h`,
+    },
+  })
+
   return NextResponse.json({
     ok: true,
     scanned: stale.length,
     ended,
     abandoned: abandoned.length,
     cancelled,
+    recordingsFailed,
   })
 }

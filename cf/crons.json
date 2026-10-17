@@ -1,12 +1,13 @@
 {
-  "_note": "Generated from vercel.crons.full.json minus the 7 jobs that run on GitHub Actions (.github/workflows/*-crons.yml). Keyed by cron expression (UTC) → cron route paths.",
+  "_note": "Generated from vercel.crons.full.json minus the 4 admission/finance jobs that run on GitHub Actions (.github/workflows/admission-crons.yml). The 3 conference jobs moved here on 2026-10-17 (their GitHub bridge pinged ed.databayt.org, which 301s, so they had silently not run since the cutover). Keyed by cron expression (UTC) \u2192 cron route paths.",
   "schedules": {
     "*/15 * * * *": [
       "/api/cron/publish-announcements",
       "/api/cron/process-push-notifications",
       "/api/cron/process-whatsapp-notifications",
       "/api/cron/process-broadcast-batches",
-      "/api/cron/exam-lifecycle"
+      "/api/cron/exam-lifecycle",
+      "/api/cron/live-class-reminders"
     ],
     "0 * * * *": [
       "/api/cron/expire-announcements"
@@ -14,7 +15,8 @@
     "*/30 * * * *": [
       "/api/cron/process-report-card-pdfs",
       "/api/cron/process-transcript-pdfs",
-      "/api/cron/absence-followup"
+      "/api/cron/absence-followup",
+      "/api/cron/end-stale-live-classes"
     ],
     "0 3 * * *": [
       "/api/cron/term-end-report-cards",
@@ -22,7 +24,8 @@
     ],
     "0 2 * * *": [
       "/api/cron/cleanup-notifications",
-      "/api/cron/purge-empty-drafts"
+      "/api/cron/purge-empty-drafts",
+      "/api/cron/expire-live-recordings"
     ],
     "0 8 * * *": [
       "/api/cron/event-reminders",
