@@ -94,7 +94,7 @@ export async function getRoomQuizzes(sessionId: string) {
     },
   })
 
-  const linked: RoomQuizItem[] = resources.flatMap((r) =>
+  const linked: RoomQuizItem[] = resources.flatMap((r): RoomQuizItem[] =>
     r.quickAssessment
       ? [{ ...r.quickAssessment, kind: "quick" as const, linked: true }]
       : r.schoolExam

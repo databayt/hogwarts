@@ -29,10 +29,27 @@ vi.mock("next/link", () => ({
   ),
 }))
 
+// The page reads through detail-load → readLiveClass (the plain module the
+// action and the mobile route share), not the getLiveClass action.
 const { getLiveClass } = vi.hoisted(() => ({ getLiveClass: vi.fn() }))
+vi.mock("@/components/school-dashboard/live/actions/read-live-class", () => ({
+  readLiveClass: getLiveClass,
+}))
 vi.mock("@/components/school-dashboard/live/actions/sessions", () => ({
-  getLiveClass,
   endLiveClass: vi.fn(),
+}))
+vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
+  requireContext: vi.fn(),
+}))
+vi.mock("@/lib/school-name-format", () => ({
+  schoolNameDisplay: vi.fn().mockResolvedValue("first-last"),
+}))
+// Async server sections with their own reads — out of scope for these cases.
+vi.mock("@/components/school-dashboard/live/attendance-review", () => ({
+  AttendanceReview: () => null,
+}))
+vi.mock("@/components/school-dashboard/live/class-work", () => ({
+  ClassWork: () => null,
 }))
 
 vi.mock("@/lib/tenant-context", () => ({

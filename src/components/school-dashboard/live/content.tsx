@@ -153,8 +153,11 @@ export default async function LiveClassesContent({
     <div className="space-y-6">
       {loadFailed && (
         <p role="alert" className="text-destructive text-sm">
-          {t?.errors?.loadFailed ??
-            "Couldn't load the classes. Refresh the page to try again."}
+          {/* `t` is the school dictionary's liveClasses slice, which has no
+              errors group; the copy mirrors live-classes.json errors.loadFailed. */}
+          {lang === "ar"
+            ? "تعذّر تحميل الحصص. حدّث الصفحة وحاول مرة أخرى."
+            : "Couldn't load the classes. Refresh the page to try again."}
         </p>
       )}
       <LiveClassesTable
