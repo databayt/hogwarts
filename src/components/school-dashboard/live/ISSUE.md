@@ -4,6 +4,50 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Quizzes and homework around the class — 2026-10-17 (Phase 4)
+
+Part of the ship-to-client pass on #402.
+
+- [x] **Quick quizzes graded on the server** (`ad215ff5e`). `submitQuickResponse`
+      only scored when the browser sent `isCorrect` — the take screen never
+      did, so no quick check ever reached the gradebook (and a forged flag
+      would have). Answers are marked against `QuestionBank` (`exams/quick/grading.ts`),
+      scored out of the keyed questions. `getQuickAssessment` never returned
+      the `questions` the take screen maps over (it crashed); it now does,
+      option texts only. Results show real question/option text.
+- [x] **A class links a quick check** (`2917eca33`). `ConferenceResource.quickAssessmentId`
+      (+ FK, index) — migration `20261017120000_live_class_quick_assessment`,
+      additive; **prod DDL owed before deploy**. Wizard References step has a
+      picker; the wizard now carries rows it has no picker for (it replaced
+      the whole set on save and would have deleted end-of-class homework).
+- [x] **Quiz tab in the room** (`86d293e1b`, host only): the class's linked
+      quick checks + exams and the subject's other quick checks; Launch goes
+      through the exams actions, then `quiz.open` on the channel (host-only,
+      in the snapshot); answers stream in (polled 4s); End closes it.
+      Students get a sheet over the stage — a quick check answers in place,
+      an exam opens its player. `quiz_launched` / `quiz_closed` events.
+- [x] **Homework as the class ends** (`a9e8f7ca3`): End class → `?homework=1`
+      → the page asks; `setClassHomework` files a PUBLISHED HOMEWORK
+      assignment under the class's section/grade/subject/term and links it.
+- [x] **Class work on `/live/[id]`** (`2e0de1380`): homework + quick checks
+      with the student's own status (staff: counts), the closed polls read
+      back at last, Set homework for the host. Catch-up cards say
+      "Homework due".
+
+### Open, not done
+
+- The Quiz tab is reachable only from the panel's tab row (open chat or
+  questions, then Quiz) — no disc of its own in the control bar.
+- No quick check can be AUTHORED in the room (needs bank questions); the
+  teacher links an existing one.
+- Launching an exam starts it (PLANNED → IN_PROGRESS) but ending the quiz in
+  the room does not complete it — marking stays on the exams page.
+- Homework sends no notification of its own; students see it on the class
+  page, in their assignments and via the daily assignment-reminders cron.
+- Guardians see no per-child status in Class work.
+- The quick-check take sheet is the stock exams component (light card) on
+  the dark room; not verified on a phone in a live room.
+
 ## Recording key + attendance decisions + after-class register — 2026-10-17 (Phases 2–3)
 
 Part of the ship-to-client pass on #402.
@@ -117,7 +161,7 @@ Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
       student via "Give the floor", or everyone). The reducer stamps each
       stroke's author; a student erases/undoes only their own.
 - [x] **Board saved** (`actions/board.ts`, `ConferenceEvent` `eventType:
-  "board"`, one upserted row) — the host's reload restores it. Closes the
+"board"`, one upserted row) — the host's reload restores it. Closes the
       "strokes are room-scoped" item below.
 - [x] **Raise hand** — amber disc with a breathing ring and "#2 in line" for
       the student; the host gets a toast with Give the floor / Lower and a
