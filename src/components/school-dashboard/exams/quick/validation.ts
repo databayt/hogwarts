@@ -27,8 +27,8 @@ export const submitQuickResponseSchema = z.object({
   responses: z.array(
     z.object({
       questionId: z.string(),
+      // No isCorrect: the server marks answers against the bank
       answer: z.unknown(),
-      isCorrect: z.boolean().optional(),
     })
   ),
 })

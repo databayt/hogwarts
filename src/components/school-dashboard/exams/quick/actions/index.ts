@@ -22,6 +22,7 @@ import {
   quickAssessmentUpdateSchema,
   submitQuickResponseSchema,
 } from "../validation"
+import { gradeQuickResponses, toTakeQuestions } from "../grading"
 import type {
   ActionResponse,
   QuickAssessmentResults,
@@ -272,7 +273,7 @@ export async function getQuickAssessment(id: string) {
     const schoolId = await getSchoolId()
     if (!schoolId) return null
 
-    return await db.quickAssessment.findFirst({
+    const assessment = await db.quickAssessment.findFirst({
       where: { id, schoolId, ...(await viewerAudienceWhere(schoolId)) },
       include: {
         section: { select: { name: true } },
@@ -281,6 +282,22 @@ export async function getQuickAssessment(id: string) {
         _count: { select: { responses: true } },
       },
     })
+    if (!assessment) return null
+
+    // The questions the take screen renders — option texts only, never the key
+    const bank = await db.questionBank.findMany({
+      where: { schoolId, id: { in: assessment.questionIds } },
+      select: {
+        id: true,
+        questionText: true,
+        questionType: true,
+        options: true,
+      },
+    })
+    return {
+      ...assessment,
+      questions: toTakeQuestions(assessment.questionIds, bank),
+    }
   } catch (error) {
     console.error("Error fetching quick assessment:", error)
     return null
@@ -355,12 +372,28 @@ export async function submitQuickResponse(
       }
     }
 
+    // Correctness comes from the bank, never from the browser
+    const bank = await db.questionBank.findMany({
+      where: { schoolId, id: { in: assessment.questionIds } },
+      select: {
+        id: true,
+        questionText: true,
+        questionType: true,
+        options: true,
+      },
+    })
+    const { graded, correct, gradable } = gradeQuickResponses(
+      assessment.questionIds,
+      bank,
+      parsed.responses
+    )
+
     await db.quickAssessmentResponse.create({
       data: {
         schoolId,
         assessmentId: parsed.assessmentId,
         studentId,
-        responses: parsed.responses as any,
+        responses: graded as any,
         startedAt: new Date(),
         completedAt: new Date(),
       },
@@ -369,22 +402,16 @@ export async function submitQuickResponse(
     // Write to unified gradebook for non-anonymous, identified students.
     if (studentId && !assessment.isAnonymous) {
       try {
-        const responses = parsed.responses as Array<{
-          questionId: string
-          answer: unknown
-          isCorrect?: boolean
-        }>
-        // Only grade if at least one response carries an isCorrect flag.
-        const hasCorrectFlags = responses.some((r) => r.isCorrect !== undefined)
-        const max = responses.length
+        // Scored out of the assessment's keyed questions; open-only ones
+        // leave the gradebook alone
+        const max = gradable
         // Filed under the student's section, grade and term for the subject
         const ctx = await resolveStudentSubjectContext(
           schoolId,
           studentId,
           assessment.subjectId
         )
-        if (hasCorrectFlags && max > 0 && ctx) {
-          const correct = responses.filter((r) => r.isCorrect === true).length
+        if (max > 0 && ctx) {
           await upsertGradebookResult({
             schoolId,
             studentId,
@@ -445,8 +472,22 @@ export async function getQuickAssessmentResults(
       }
     }
 
+    const bank = await db.questionBank.findMany({
+      where: { schoolId, id: { in: assessment.questionIds } },
+      select: {
+        id: true,
+        questionText: true,
+        questionType: true,
+        options: true,
+      },
+    })
+    const takeQuestions = new Map(
+      toTakeQuestions(assessment.questionIds, bank).map((q) => [q.id, q])
+    )
+
     // Aggregate results per question
     const questionResults = assessment.questionIds.map((questionId) => {
+      const question = takeQuestions.get(questionId)
       const responses = assessment.responses
         .map((r) => {
           const responseData = r.responses as Array<{
@@ -476,13 +517,19 @@ export async function getQuickAssessmentResults(
 
       return {
         questionId,
-        questionText: `Question ${questionId}`, // TODO: Fetch actual question text from QBank
+        questionText: question?.questionText ?? questionId,
         responses: Array.from(answerCounts.entries()).map(
-          ([answerKey, data]) => ({
-            answer: JSON.parse(answerKey),
-            count: data.count,
-            isCorrect: data.isCorrect,
-          })
+          ([answerKey, data]) => {
+            const answer = JSON.parse(answerKey)
+            // A choice answer is an option index — show the option's text
+            const option =
+              question?.options?.[Number.parseInt(String(answer), 10)]
+            return {
+              answer: option ? option.text : answer,
+              count: data.count,
+              isCorrect: data.isCorrect,
+            }
+          }
         ),
       }
     })

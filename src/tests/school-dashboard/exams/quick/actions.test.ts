@@ -15,6 +15,10 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getStudentScopes } from "@/lib/teaching-scope"
 import {
+  resolveStudentSubjectContext,
+  upsertGradebookResult,
+} from "@/components/school-dashboard/grades/lib/gradebook"
+import {
   closeQuickAssessment,
   createQuickAssessment,
   getQuickAssessment,
@@ -33,6 +37,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
     },
     quickAssessmentResponse: { findUnique: vi.fn(), create: vi.fn() },
+    questionBank: { findMany: vi.fn() },
     student: { findFirst: vi.fn(), findMany: vi.fn() },
     studentGuardian: { findMany: vi.fn() },
   },
@@ -212,6 +217,77 @@ describe("Quick Assessment Actions — multi-tenant safety", () => {
       expect(db.quickAssessmentResponse.create).not.toHaveBeenCalled()
     })
 
+    it("marks answers against the bank, ignoring a forged isCorrect", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
+      vi.mocked(getStudentScopes).mockResolvedValue([
+        { studentId: "stu-1", sectionId: "7a", gradeId: "g7" },
+      ])
+      vi.mocked(db.quickAssessment.findFirst).mockResolvedValue({
+        id: "qa-1",
+        subjectId: "subject-1",
+        termId: "t1",
+        title: "Pop quiz",
+        isAnonymous: false,
+        questionIds: ["q-1", "q-2", "q-3"],
+      } as never)
+      vi.mocked(db.quickAssessmentResponse.findUnique).mockResolvedValue(null)
+      vi.mocked(db.questionBank.findMany).mockResolvedValue([
+        {
+          id: "q-1",
+          questionText: "2+2",
+          questionType: "MULTIPLE_CHOICE",
+          options: [
+            { text: "3", isCorrect: false },
+            { text: "4", isCorrect: true },
+          ],
+        },
+        {
+          id: "q-2",
+          questionText: "Sky is green",
+          questionType: "TRUE_FALSE",
+          options: [
+            { text: "True", isCorrect: false },
+            { text: "False", isCorrect: true },
+          ],
+        },
+        {
+          id: "q-3",
+          questionText: "Explain",
+          questionType: "SHORT_ANSWER",
+          options: null,
+        },
+      ] as never)
+      vi.mocked(resolveStudentSubjectContext).mockResolvedValue({
+        sectionId: "7a",
+        academicGradeId: "g7",
+        termId: "t1",
+      } as never)
+
+      const result = await submitQuickResponse({
+        assessmentId: "qa-1",
+        responses: [
+          { questionId: "q-1", answer: "1" },
+          // wrong, but the browser claims otherwise
+          { questionId: "q-2", answer: "0", isCorrect: true },
+          { questionId: "q-3", answer: "because" },
+          // not a question of this assessment
+          { questionId: "q-x", answer: "0" },
+        ],
+      })
+
+      expect(result.success).toBe(true)
+      const saved = vi.mocked(db.quickAssessmentResponse.create).mock
+        .calls[0][0]!.data.responses
+      expect(saved).toEqual([
+        { questionId: "q-1", answer: "1", isCorrect: true },
+        { questionId: "q-2", answer: "0", isCorrect: false },
+        { questionId: "q-3", answer: "because" },
+      ])
+      expect(upsertGradebookResult).toHaveBeenCalledWith(
+        expect.objectContaining({ score: 1, maxScore: 2, studentId: "stu-1" })
+      )
+    })
+
     it("refuses someone who is not a student", async () => {
       vi.mocked(db.student.findFirst).mockResolvedValue(null)
 
@@ -340,6 +416,51 @@ describe("Quick Assessment Actions — multi-tenant safety", () => {
           }),
         })
       )
+    })
+
+    it("hands the take screen option texts only, never the key", async () => {
+      vi.mocked(db.quickAssessment.findFirst).mockResolvedValue({
+        id: "qa-1",
+        questionIds: ["q-2", "q-1"],
+      } as never)
+      vi.mocked(db.questionBank.findMany).mockResolvedValue([
+        {
+          id: "q-1",
+          questionText: "2+2",
+          questionType: "MULTIPLE_CHOICE",
+          options: [
+            { text: "3", isCorrect: false },
+            { text: "4", isCorrect: true, explanation: "sum" },
+          ],
+        },
+        {
+          id: "q-2",
+          questionText: "Explain",
+          questionType: "SHORT_ANSWER",
+          options: null,
+        },
+      ] as never)
+
+      const result = await getQuickAssessment("qa-1")
+
+      expect(result?.questions).toEqual([
+        {
+          id: "q-2",
+          questionText: "Explain",
+          questionType: "SHORT_ANSWER",
+          options: null,
+        },
+        {
+          id: "q-1",
+          questionText: "2+2",
+          questionType: "MULTIPLE_CHOICE",
+          options: [{ text: "3" }, { text: "4" }],
+        },
+      ])
+      expect(JSON.stringify(result)).not.toContain("isCorrect")
+      expect(
+        vi.mocked(db.questionBank.findMany).mock.calls[0][0]!.where
+      ).toMatchObject({ schoolId: SCHOOL_ID })
     })
 
     it("does not leak data from another school", async () => {

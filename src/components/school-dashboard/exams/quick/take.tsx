@@ -16,7 +16,7 @@ interface QuestionData {
   id: string
   questionText: string
   questionType: string
-  options: { text: string; isCorrect?: boolean }[] | null
+  options: { text: string }[] | null
 }
 
 interface QuickAssessmentTakeProps {
