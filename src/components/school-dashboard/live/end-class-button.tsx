@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Square } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,7 @@ export function EndClassButton({
   errorLabel: string
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [pending, startTransition] = useTransition()
   const [armed, setArmed] = useState(false)
 
@@ -49,7 +50,9 @@ export function EndClassButton({
       const res = await endLiveClass({ id: sessionId })
       if ("success" in res && res.success) {
         // The action revalidates; refresh so the page re-renders as `ended`
-        // (Join disappears, recordings appear).
+        // (Join disappears, recordings appear) — and lands on `?homework=1`,
+        // which has the class page ask the host for homework right away.
+        router.replace(`${pathname}?homework=1`, { scroll: false })
         router.refresh()
         setArmed(false)
       } else {
