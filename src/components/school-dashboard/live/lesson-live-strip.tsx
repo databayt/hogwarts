@@ -82,9 +82,12 @@ export async function LessonLiveStrip({
                 size: "sm",
                 variant: isLive ? "default" : "outline",
               })}
-              // The detail page owns the provider-aware Join (in-app room vs
-              // vendor link) — one place, not a second copy here.
-              href={`/${lang}/live/${s.id}`}
+              // A running class opens its room in one tap — the room page is
+              // itself provider-aware (an external session redirects to its
+              // vendor link). An upcoming one opens the detail page.
+              href={
+                isLive ? `/${lang}/live/${s.id}/room` : `/${lang}/live/${s.id}`
+              }
             >
               {isLive ? labels.join : labels.open}
             </Link>

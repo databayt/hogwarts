@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useEffect, useState } from "react"
+
 import { type Locale } from "@/components/internationalization/config"
 import {
   isRowLiveJoinable,
@@ -36,6 +38,14 @@ export function TodayLiveAction({
   joinLabel: string
   onlineLabel: string
 }) {
+  // Re-read the clock every 30 s: a dashboard opened at 07:40 for an 08:00
+  // class must grow its Join button without a reload.
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   if (!liveClass) return null
   return (
     <span className="flex shrink-0 items-center gap-2">
