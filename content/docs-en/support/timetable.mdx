@@ -1,0 +1,41 @@
+---
+title: "Timetable"
+description: The weekly timetable, generated for every section, edited by click, and checked for clashes.
+summary: "The weekly timetable: generating it, editing a lesson, fixing clashes"
+keywords: ["timetable", "time table", "schedule", "class schedule", "weekly schedule", "period", "periods", "lesson time", "clash", "conflict", "double booked", "working days", "school day"]
+roles: ["admin", "teacher", "parent"]
+flow: view-timetable
+---
+
+## Steps
+
+1. Open **Timetable** from the sidebar. Admins see the whole school's week grid, with filters by class and teacher.
+2. Set the school day once in **Timetable → Settings**: **Working Days**, the periods and **Break & Lunch**.
+3. To build the week automatically, open **Generate**, choose the term, check the **Hard Constraints** and **Workload Limits**, then click **Generate Preview**.
+4. Review the preview. Click **Merge** to keep your current lessons and fill the gaps, or **Replace All** to start fresh.
+5. To change one lesson, click its cell in the grid, pick the subject, teacher and room, and save.
+6. Open **Conflicts** and click **Scan for Conflicts** to find any teacher or room booked twice in the term.
+
+## Good to know
+
+- Every school starts with a week already filled from its grades and subjects. A slot with no free teacher shows as **Unassigned**.
+- Saving a lesson is refused if it would put a teacher, a room or a class in two places in the same period.
+- Teachers see their own teaching week (**Today** and **Week View**), students see their class's week, and parents see each child's week.
+- Print the timetable on A4 from the browser.
+- Who teaches what comes from the **Teachers** tab and each teacher's subjects.
+
+## Troubleshooting
+
+- **A lesson shows Unassigned** — no teacher of that subject was free. Give a teacher that subject in their **Expertise**, then generate again with **Merge**.
+- **"Generation Partial" or Unplaced Classes** — check teacher availability and room capacity, or relax **Max Periods/Day** in **Workload Limits**, then **Regenerate**.
+- **"Conflict Detected" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.
+- **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.
+- **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term.
+
+## Related
+
+- [Exams](/docs/support/exams)
+- [Add a teacher](/docs/support/add-teacher)
+- [Academic setup](/docs/support/academics)
+
+<FlowMedia flow="view-timetable" lang="en" only="stills" title="Screenshots" />
