@@ -17,6 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getChildTodaySchedule } from "@/components/school-dashboard/timetable/actions"
@@ -75,9 +77,19 @@ export async function ChildTimetableView({
   //
   // Best-effort: a failure here must leave the weekly timetable standing. A
   // parent who cannot see the Join strip still needs to see the schedule.
-  const [{ timetable }, today] = await Promise.all([
+  const { schoolId } = await getTenantContext()
+  const [{ timetable }, today, school] = await Promise.all([
     getChildTimetable({ studentId }),
     getChildTodaySchedule({ childId: studentId }).catch(() => null),
+    // A guardian joins a class only as an observer, and only where the school
+    // allows it — the same rule join-core enforces. Without it the strip
+    // showed a Join button the room then refused.
+    schoolId
+      ? db.school.findUnique({
+          where: { id: schoolId },
+          select: { conferenceGuardiansObserve: true },
+        })
+      : null,
   ])
 
   // Group timetable entries by day
@@ -107,6 +119,7 @@ export async function ChildTimetableView({
           rows={today.schedule as ChildTodayRow[]}
           closure={today.closure ?? null}
           lang={lang}
+          canJoin={school?.conferenceGuardiansObserve ?? false}
           labels={{
             title: t?.todayTitle ?? "Today",
             description:

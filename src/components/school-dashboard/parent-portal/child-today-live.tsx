@@ -35,6 +35,9 @@ interface Props {
   rows: ChildTodayRow[]
   closure: SchoolClosureInfo
   lang: Locale
+  /** The school lets guardians observe live classes. Off → the Online marker
+   *  stays (it is still true) but there is no Join to be refused at. */
+  canJoin: boolean
   labels: {
     title: string
     description: string
@@ -65,7 +68,13 @@ function formatTime(value: Date | string): string {
  * strip sits above that table and closes the gap without duplicating it: today
  * only, because that is the only day a live session can exist for.
  */
-export function ChildTodayLive({ rows, closure, lang, labels }: Props) {
+export function ChildTodayLive({
+  rows,
+  closure,
+  lang,
+  canJoin,
+  labels,
+}: Props) {
   const teaching = rows.filter((r) => !r.isBreak && r.subject)
 
   return (
@@ -98,7 +107,7 @@ export function ChildTodayLive({ rows, closure, lang, labels }: Props) {
                     label={labels.online}
                   />
                 </span>
-                {isRowLiveJoinable(row.startTime, row.endTime) && (
+                {canJoin && isRowLiveJoinable(row.startTime, row.endTime) && (
                   <LiveJoinButton
                     liveClass={row.liveClass}
                     lang={lang}
