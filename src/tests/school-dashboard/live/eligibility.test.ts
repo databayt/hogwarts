@@ -51,6 +51,7 @@ vi.mock("@/lib/db", () => ({
     school: { findUnique: vi.fn() },
     student: { findFirst: vi.fn() },
     guardian: { findFirst: vi.fn() },
+    teacher: { findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
   },
 }))
@@ -168,12 +169,22 @@ describe("joinLiveClass eligibility", () => {
     expect(addRoomHost).toHaveBeenCalledWith(ROOM_NAME, TEACHER_USER_ID)
   })
 
-  it("teacher in same school but different session → CO_HOST", async () => {
+  it("another teacher of the class's section → CO_HOST", async () => {
     mockUser("u-other-teacher", "TEACHER")
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t-2" } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(true)
     if (!("success" in result) || !result.success) return
     expect(result.data.role).toBe("CO_HOST")
+  })
+
+  it("a teacher with no slot or homeroom in the section → PARTICIPANT_DENIED", async () => {
+    mockUser("u-other-teacher", "TEACHER")
+    vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_PARTICIPANT_DENIED")
   })
 
   it("admin in same school → CO_HOST (any session)", async () => {

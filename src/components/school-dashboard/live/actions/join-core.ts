@@ -57,7 +57,27 @@ async function resolveParticipantRole(
   if (userRole === "DEVELOPER") return "HOST"
   if (userRole === "ADMIN") return "CO_HOST"
   if (userRole === "TEACHER") {
-    return sessionTeacherUserId === userId ? "HOST" : "CO_HOST"
+    if (sessionTeacherUserId === userId) return "HOST"
+    // Another teacher co-hosts only a class of a section they teach (a
+    // timetable slot there, or its homeroom). Any teacher of the school used to
+    // be CO_HOST on ANY session — kick, mute-all and the board over a section
+    // they have nothing to do with. An open (school-visibility) room still
+    // admits them, as a participant.
+    if (sessionSectionId) {
+      const teachesSection = await db.teacher.findFirst({
+        where: {
+          schoolId,
+          userId,
+          OR: [
+            { timetables: { some: { schoolId, sectionId: sessionSectionId } } },
+            { homeroomSections: { some: { id: sessionSectionId } } },
+          ],
+        },
+        select: { id: true },
+      })
+      if (teachesSection) return "CO_HOST"
+    }
+    return sessionVisibility === "school" ? "PARTICIPANT" : null
   }
   if (sessionVisibility === "school") {
     if (userRole === "STUDENT") {

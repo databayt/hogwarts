@@ -39,6 +39,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     conference: { findFirst: vi.fn() },
     conferenceParticipant: { upsert: vi.fn(), findUnique: vi.fn() },
+    teacher: { findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
   },
 }))
@@ -118,7 +119,8 @@ describe("performLiveClassJoin — JWT actor branch", () => {
     expect(result.data.role).toBe("HOST")
   })
 
-  it("a different school TEACHER via actor → CO_HOST, matching resolveParticipantRole's unconditional co-teaching rule", async () => {
+  it("another TEACHER of the section via actor → CO_HOST, matching resolveParticipantRole", async () => {
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t-2" } as never)
     const result = await performLiveClassJoin(SESSION_ID, {
       actor: {
         userId: "u-other-teacher",

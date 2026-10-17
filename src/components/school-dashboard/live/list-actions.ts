@@ -500,6 +500,13 @@ export async function createLiveClass(
       select: { id: true, userId: true },
     })
     if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
+    // A teacher schedules only classes they host — the picker is open in the
+    // wizard and a server action is a public endpoint, so without this a
+    // teacher could put a class (and its notifications) on a colleague's
+    // calendar. Admins schedule for anyone (authorization.ts).
+    if (role === "TEACHER" && teacher.userId !== session.user.id) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Honor the school recording default AND the per-section opt-out (mirrors
     // actions/sessions.ts) so a section flagged "never record" stays off.
@@ -840,6 +847,21 @@ export async function updateLiveClass(
       }),
     ])
     if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
+    // A teacher edits only their own class, and cannot hand it to someone
+    // else; admins edit any (same rule as create).
+    if (role === "TEACHER") {
+      const own = await db.teacher.findFirst({
+        where: { schoolId, userId: session.user.id },
+        select: { id: true },
+      })
+      if (
+        !own ||
+        existing.teacherId !== own.id ||
+        (d.teacherId !== undefined && d.teacherId !== own.id)
+      ) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
     const schoolTz = schoolRow?.timezone || DEFAULT_SCHOOL_TZ
 
     // Build the update payload only from provided fields. Typed `any` (matching

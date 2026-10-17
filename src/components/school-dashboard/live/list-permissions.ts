@@ -12,7 +12,11 @@ import {
 import type { PageNavItem } from "@/components/atom/page-nav"
 
 // Roles allowed to create/edit live classes (write access without delete/import).
-const WRITE_ROLES: readonly Role[] = ["STAFF", "TEACHER"] as const
+// A TEACHER only their own classes (enforced in list-actions). STAFF was here
+// too, which gave the office a create button the rest of the block refused —
+// no Schedule tab, no /live/schedule, and `manage_live_class` is ADMIN-only in
+// authorization.ts. One rule now: STAFF reads.
+const WRITE_ROLES: readonly Role[] = ["TEACHER"] as const
 
 /** Shape of the slice of the conference dictionary the tab labels read. */
 export interface LiveNavDictionary {
@@ -79,7 +83,7 @@ export function getTabsForRole(
  * Resolve the UI permission flags for a role.
  *
  * - ADMIN / DEVELOPER → full (create, edit, delete)
- * - STAFF / TEACHER    → create + edit (no delete, no import, no bulk)
+ * - TEACHER            → create + edit own (no delete, no import, no bulk)
  * - everyone else      → read-only
  */
 export function getUIConfigForRole(
@@ -103,7 +107,7 @@ export function getUIConfigForRole(
 
 /**
  * Server-side guard: can this role create/edit live classes?
- * ADMIN, DEVELOPER, STAFF, TEACHER may manage.
+ * ADMIN and DEVELOPER manage any class; TEACHER manages their own.
  */
 export function canManageLiveClasses(role: Role | null | undefined): boolean {
   if (!role) return false
