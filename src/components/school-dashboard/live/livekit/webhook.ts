@@ -58,6 +58,40 @@ function truncatePayload(event: WebhookEvent): Record<string, unknown> {
  * a `ConferenceEvent` row for audit + idempotency. Returns `true` if the
  * event was new, `false` if it was a duplicate (already seen by eventId).
  */
+/**
+ * The S3 object key an ended egress wrote, from its FileInfo.
+ *
+ * For S3 output LiveKit reports `filename` as the storage path we asked for
+ * (`schools/…/x.mp4`), and `location` as the object's full URL. Never verified
+ * against a real file in production, so this does not trust either blindly: a
+ * bare basename (no `/`) would sign playback URLs against the bucket root, so
+ * it falls back to the key inside `location`. Returns "" when neither carries
+ * a usable key — the caller treats that as "no file produced".
+ */
+export function egressObjectKey(
+  fileInfo: { filename?: string; location?: string } | null | undefined
+): string {
+  const filename = fileInfo?.filename ?? ""
+  if (filename.includes("/")) return filename.replace(/^\/+/, "")
+  const location = fileInfo?.location ?? ""
+  if (location) {
+    try {
+      // Virtual-hosted (bucket.s3.region.amazonaws.com/key) → the path is the
+      // key. Path-style URLs carry the bucket first; s3:// carries it as host.
+      const url = new URL(location)
+      let path = decodeURIComponent(url.pathname).replace(/^\/+/, "")
+      const bucket = process.env.LIVEKIT_RECORDING_BUCKET
+      if (bucket && path.startsWith(`${bucket}/`)) {
+        path = path.slice(bucket.length + 1)
+      }
+      if (path.includes("/")) return path
+    } catch {
+      // not a URL — fall through
+    }
+  }
+  return filename
+}
+
 export async function handleWebhookEvent(
   event: WebhookEvent
 ): Promise<boolean> {
@@ -300,7 +334,7 @@ export async function handleWebhookEvent(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const info = event.egressInfo as any
         const fileInfo = info?.fileResults?.[0] ?? info?.file
-        const filename = fileInfo?.filename ?? ""
+        const filename = egressObjectKey(fileInfo)
         // size is an int64 (bigint) in the LiveKit SDK — convert directly to
         // BigInt; the Number() round-trip was lossy above 2^53 bytes.
         const fileSizeBytes =

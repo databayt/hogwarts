@@ -10,7 +10,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { handleWebhookEvent } from "@/components/school-dashboard/live/livekit/webhook"
+import {
+  egressObjectKey,
+  handleWebhookEvent,
+} from "@/components/school-dashboard/live/livekit/webhook"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -494,5 +497,43 @@ describe("handleWebhookEvent — idempotency + safety", () => {
         }),
       })
     )
+  })
+})
+
+describe("egressObjectKey", () => {
+  it("keeps a full storage path as the key", () => {
+    expect(
+      egressObjectKey({ filename: "schools/s/live-class/l/1.mp4" })
+    ).toBe("schools/s/live-class/l/1.mp4")
+  })
+
+  it("falls back to the key inside location when filename is a basename", () => {
+    expect(
+      egressObjectKey({
+        filename: "1.mp4",
+        location:
+          "https://rec.s3.us-east-1.amazonaws.com/schools/s/live-class/l/1.mp4",
+      })
+    ).toBe("schools/s/live-class/l/1.mp4")
+  })
+
+  it("strips the bucket from a path-style location", () => {
+    const prev = process.env.LIVEKIT_RECORDING_BUCKET
+    process.env.LIVEKIT_RECORDING_BUCKET = "rec"
+    try {
+      expect(
+        egressObjectKey({
+          filename: "",
+          location: "https://s3.amazonaws.com/rec/schools/s/live-class/l/1.mp4",
+        })
+      ).toBe("schools/s/live-class/l/1.mp4")
+    } finally {
+      process.env.LIVEKIT_RECORDING_BUCKET = prev
+    }
+  })
+
+  it("returns empty when nothing names an object", () => {
+    expect(egressObjectKey(undefined)).toBe("")
+    expect(egressObjectKey({ filename: "", location: "" })).toBe("")
   })
 })
