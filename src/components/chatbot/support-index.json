@@ -325,6 +325,7 @@
   },
   {
     "slug": "fees",
+    "flow": "set-fees",
     "roles": [
       "admin",
       "parent"
@@ -427,6 +428,7 @@
   },
   {
     "slug": "timetable",
+    "flow": "view-timetable",
     "roles": [
       "admin",
       "teacher",
@@ -581,6 +583,7 @@
   },
   {
     "slug": "attendance",
+    "flow": "mark-attendance",
     "roles": [
       "teacher",
       "admin"
@@ -631,6 +634,7 @@
   },
   {
     "slug": "parents",
+    "flow": "parent-portal",
     "roles": [
       "parent",
       "admin"
@@ -674,6 +678,7 @@
   },
   {
     "slug": "login",
+    "flow": "login",
     "roles": [
       "admin",
       "teacher",

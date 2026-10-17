@@ -1647,5 +1647,221 @@
         "default": true
       }
     ]
+  },
+  "login/login-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة تسجيل الدخول",
+      "en": "The sign-in page"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/login.avif?v=8cf8dac6",
+      "2400": "https://cdn.databayt.org/hogwarts/login/login@2x.avif?v=80f9cee1"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/login.webp?v=6209fc4d",
+      "2400": "https://cdn.databayt.org/hogwarts/login/login@2x.webp?v=73a3d39c"
+    }
+  },
+  "login/login-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة تسجيل الدخول",
+      "en": "The sign-in page"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/login-en.avif?v=d97df513",
+      "2400": "https://cdn.databayt.org/hogwarts/login/login-en@2x.avif?v=3e98f59d"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/login-en.webp?v=bd2a1a10",
+      "2400": "https://cdn.databayt.org/hogwarts/login/login-en@2x.webp?v=5d22be08"
+    }
+  },
+  "login/reset-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "استعادة كلمة المرور بالبريد",
+      "en": "Resetting a password by email"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/reset.avif?v=f96baae2",
+      "2400": "https://cdn.databayt.org/hogwarts/login/reset@2x.avif?v=350a01b2"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/reset.webp?v=e7aa891c",
+      "2400": "https://cdn.databayt.org/hogwarts/login/reset@2x.webp?v=ee655ca5"
+    }
+  },
+  "login/reset-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "استعادة كلمة المرور بالبريد",
+      "en": "Resetting a password by email"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/reset-en.avif?v=39f11c2d",
+      "2400": "https://cdn.databayt.org/hogwarts/login/reset-en@2x.avif?v=a5843af2"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/login/reset-en.webp?v=ca013e40",
+      "2400": "https://cdn.databayt.org/hogwarts/login/reset-en@2x.webp?v=0b60f8ed"
+    }
+  },
+  "mark-attendance/manual-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "التحضير من قائمة الفصل",
+      "en": "Taking attendance from the class list"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual.avif?v=1355d095",
+      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual@2x.avif?v=0db998b6"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual.webp?v=ff241d0f",
+      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual@2x.webp?v=66ce0ce8"
+    }
+  },
+  "mark-attendance/manual-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "التحضير من قائمة الفصل",
+      "en": "Taking attendance from the class list"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en.avif?v=f521bffc",
+      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en@2x.avif?v=48671b53"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en.webp?v=63dd2003",
+      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en@2x.webp?v=35636c07"
+    }
+  },
+  "set-fees/overview-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "نظرة عامة على الرسوم",
+      "en": "The fees overview"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview.avif?v=75d80776",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview@2x.avif?v=b5311641"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview.webp?v=cd3b6d1e",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview@2x.webp?v=b148edcf"
+    }
+  },
+  "set-fees/overview-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "نظرة عامة على الرسوم",
+      "en": "The fees overview"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en.avif?v=f782cf3b",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en@2x.avif?v=eaffe5fb"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en.webp?v=642f46a9",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en@2x.webp?v=a16343a1"
+    }
+  },
+  "set-fees/payments-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المدفوعات المسجّلة",
+      "en": "Recorded payments"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments.avif?v=31a07a30",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments@2x.avif?v=9b67d4d0"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments.webp?v=1d3f4afc",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments@2x.webp?v=6d25907d"
+    }
+  },
+  "set-fees/payments-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المدفوعات المسجّلة",
+      "en": "Recorded payments"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en.avif?v=00c65979",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en@2x.avif?v=0474f983"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en.webp?v=efa05cd8",
+      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en@2x.webp?v=e7a4041d"
+    }
+  },
+  "parent-portal/children-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار أحد الأبناء في بوابة ولي الأمر",
+      "en": "Choosing a child in the parent portal"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children.avif?v=6ea04460",
+      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children@2x.avif?v=516ce14e"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children.webp?v=e3372440",
+      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children@2x.webp?v=07f9a71f"
+    }
+  },
+  "parent-portal/children-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "اختيار أحد الأبناء في بوابة ولي الأمر",
+      "en": "Choosing a child in the parent portal"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children-en.avif?v=2ac5b414",
+      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children-en@2x.avif?v=f6df5441"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children-en.webp?v=96f13df5",
+      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children-en@2x.webp?v=dd6027d1"
+    }
   }
 }

@@ -55,10 +55,8 @@ A parent wants to know when admissions open or what the fees are, so they call t
 
 - "AI receptionist", "replaces your front office" or "answers anything." It answers only from the information given to it, keeps answers short, and can be wrong. It is not a person.
 - "Remembers your conversation." Conversations are not saved; a page reload starts over. [README.md "Known gaps"]
-- "Inside the school dashboard" or "helps teachers with grades." It lives only on public websites.
+- "Helps teachers with grades" as in doing the work. Inside the dashboard it is a how-to desk: it explains the steps from the help guides; it does not enter marks, take attendance or change anything.
 - "Books a demo" or "takes payment" in the chat. It points to next steps; it does not book or charge.
-- "Open source" or "Databayt" as the brand: the assistant's own instructions still describe the product as open-source Databayt, which is off-message. Do not screenshot or quote its self-description until the wording is updated. [internationalization ar.json / en.json "saasPromptTemplate"]
-- "85+ features" — the assistant's instructions carry that figure, but the approved number is "~60 listed on the features page". [marketing-brief.mdx]
 - Anything about reply accuracy, response times or conversation counts; none are measured.
 
 ## Post angles

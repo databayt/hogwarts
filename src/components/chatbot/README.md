@@ -5,13 +5,23 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot
 
-A floating AI assistant mounted on the **public marketing layouts** (no auth).
-It runs in two modes from the same component, decided by `promptType`:
+A floating AI assistant mounted on the **public marketing layouts** (no auth)
+and, as a tech-support desk, in the **school dashboard** (signed in). It runs in
+three modes from the same component, decided by `promptType`:
 
 | Mode            | `promptType`    | Mounted at                                               | Audience                          |
 | --------------- | --------------- | -------------------------------------------------------- | --------------------------------- |
 | **SaaS**        | `saasMarketing` | `app/[lang]/(saas-marketing)/layout.tsx`                 | School owners evaluating Databayt |
 | **School site** | `schoolSite`    | `app/[lang]/s/[subdomain]/(school-marketing)/layout.tsx` | Prospective parents/students      |
+| **Support desk** | `schoolSupport` | `app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx` | Signed-in admins, teachers, parents |
+
+The support desk (2026-10-17) re-reads the member's role and school from
+`auth()` on every message (`supportMember` in `actions.ts`) — the client's
+`supportRole` prop only picks the quick asks. It matches up to 3 guides with a
+boost for the member's audience (`matchTopics(texts, n, role)`), lists only that
+audience's guides, never captures or asks for contact details, rate-limits per
+user, and points uncovered problems to **Report an issue**. Help-center links
+carry the main-domain origin: a school subdomain has no `/docs` route.
 
 Answers come from Groq (`openai/gpt-oss-20b`, override `GROQ_CHAT_MODEL`; `llama-3.1-8b-instant` was retired by Groq) via the AI SDK. The **system
 prompt _is_ the knowledge base** — it's assembled server-side and never shipped
@@ -153,6 +163,12 @@ files) — this block adds **zero** new violations.
 - No `chatbot.mdx` docs page yet (user-facing — candidate for `content/docs-en/`).
 - Tests: `capture.test.ts` + `support.test.ts` (topic matching, help-index
   detection, manifest → resource cards). Mode selection is still untested.
+- Guides with screenshots on the CDN: add/bulk student/teacher (stills +
+  video); login, attendance, fees, parents (stills only, shot 2026-10-17).
+  Timetable, Quick Attendance, the QR code, fee structures/assignments and
+  the child's tabs wait on better demo data (media-qa 2026-10-17: weekend
+  date, empty timetable, implausible fees, a child with no records); tutorial
+  videos are still owed via `/record`.
 - Topic matching is keywords, not embeddings: a phrasing no keyword covers
   falls through to the general prompt — add the phrase to the topic.
 - Conversation is not persisted across reloads (`enablePersistence` is wired in
