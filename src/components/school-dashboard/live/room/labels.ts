@@ -162,12 +162,29 @@ export const DEFAULT_ROOM_LABELS = {
   aloneInRoom: "You're alone in this room",
   /** The pre-join card's link to the connection check, under a refusal. */
   testConnection: "Test my camera and connection",
+  /** The Quiz tab (host) and the quiz sheet over the stage (students). */
+  quiz: "Quiz",
+  quizEmpty:
+    "No quick checks for this class yet. Link one from the class settings.",
+  quizLinked: "This class",
+  quizMore: "More from this subject",
+  quizLaunch: "Launch",
+  quizEnd: "End quiz",
+  quizLive: "Live",
+  quizAnswered: "{n} answered",
+  quizFailed: "Couldn't do that. Try again.",
+  quizNoAnswers: "No answers yet",
+  quizOpen: "Open the quiz",
+  quizExamHint: "The exam opens in its own window.",
+  quizClosed: "The teacher ended the quiz.",
+  quizClose: "Close",
   /** Device notices over the room; `{device}` is deviceCamera / deviceMic. */
   deviceCamera: "camera",
   deviceMic: "microphone",
   deviceDenied:
     "Your browser blocked the {device}. Allow it from the icon in the address bar, then rejoin — you can keep listening meanwhile.",
-  deviceMissing: "No {device} was found on this device. You can still listen and chat.",
+  deviceMissing:
+    "No {device} was found on this device. You can still listen and chat.",
   deviceInUse: "Another app is using your {device}. Close it, then rejoin.",
   deviceFailed: "Your {device} could not start. You can still listen and chat.",
 } as const

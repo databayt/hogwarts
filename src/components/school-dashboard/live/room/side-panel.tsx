@@ -22,10 +22,11 @@ import { InputBar } from "@/components/school-dashboard/messaging/mobile"
 import { ChatTab } from "./chat-tab"
 import type { Poll } from "./class-channel"
 import type { RoomLabels } from "./labels"
+import { QuizTab } from "./quiz"
 import type { ClassChannel } from "./use-class-channel"
 import type { LiveChat } from "./use-live-chat"
 
-export type PanelTab = "chat" | "questions" | "poll" | "hands"
+export type PanelTab = "chat" | "questions" | "poll" | "quiz" | "hands"
 
 interface SidePanelProps {
   tab: PanelTab
@@ -45,6 +46,8 @@ interface SidePanelProps {
   onQuestion?: (id: string, text: string, from: string) => void
   /** Host: lower the hand and spotlight the student. */
   onGiveFloor?: (identity: string) => void
+  /** The session, for the host's Quiz tab (launch, live results). */
+  sessionId?: string
 }
 
 export function SidePanel(props: SidePanelProps) {
@@ -63,6 +66,12 @@ export function SidePanel(props: SidePanelProps) {
       channel.state.questions.filter((q) => !q.answered).length || undefined,
   })
   if (tools.polls) tabs.push({ id: "poll", label: labels.poll })
+  if (isHost && props.sessionId)
+    tabs.push({
+      id: "quiz",
+      label: labels.quiz,
+      badge: channel.state.quiz ? 1 : undefined,
+    })
   if (isHost && tools.hands)
     tabs.push({
       id: "hands",
@@ -127,6 +136,13 @@ export function SidePanel(props: SidePanelProps) {
         )}
         {tab === "questions" && <QuestionsTab {...props} />}
         {tab === "poll" && <PollTab {...props} />}
+        {tab === "quiz" && props.sessionId && (
+          <QuizTab
+            channel={channel}
+            labels={labels}
+            sessionId={props.sessionId}
+          />
+        )}
         {tab === "hands" && <HandsTab {...props} />}
       </div>
     </aside>

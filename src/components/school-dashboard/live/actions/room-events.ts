@@ -9,7 +9,13 @@ import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
 
-const KINDS = new Set(["poll_closed", "question", "whiteboard_cleared"])
+const KINDS = new Set([
+  "poll_closed",
+  "question",
+  "whiteboard_cleared",
+  "quiz_launched",
+  "quiz_closed",
+])
 
 /**
  * The host's client persists what the room produced — a closed poll with its
@@ -22,7 +28,12 @@ const KINDS = new Set(["poll_closed", "question", "whiteboard_cleared"])
  */
 export async function recordClassEvent(input: {
   sessionId: string
-  kind: "poll_closed" | "question" | "whiteboard_cleared"
+  kind:
+    | "poll_closed"
+    | "question"
+    | "whiteboard_cleared"
+    | "quiz_launched"
+    | "quiz_closed"
   /** Stable id from the room (poll id, question id). */
   key: string
   payload: Record<string, unknown>

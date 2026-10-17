@@ -51,6 +51,7 @@ import { ClassControls, ClassMoreMenu } from "./control-bar"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
 import { ReactionsOverlay } from "./reactions-overlay"
+import { QuizSheet } from "./quiz"
 import { SidePanel, type PanelTab } from "./side-panel"
 import type { SlideOption } from "./slide-options"
 import { Stage } from "./stage"
@@ -578,8 +579,15 @@ export function RoomShell({
             locale={chatLocale}
             open={Boolean(panel)}
             onGiveFloor={isHost ? giveFloor : undefined}
+            sessionId={sessionId}
           />
         </div>
+        <QuizSheet
+          channel={channel}
+          labels={labels}
+          locale={locale}
+          canAnswer={role !== "OBSERVER"}
+        />
       </div>
       <RoomAudioRenderer muted={audioMuted} />
     </div>

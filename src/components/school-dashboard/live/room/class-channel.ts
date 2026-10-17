@@ -3,7 +3,8 @@
 
 /**
  * The classroom data channel — everything in the room that is not audio or
- * video: questions, polls, whiteboard strokes, which slide is showing.
+ * video: questions, polls, a launched quiz, whiteboard strokes, which slide
+ * is showing.
  *
  * One LiveKit data topic (`lc`), JSON messages, reliable delivery. The host
  * holds the authoritative state; everyone else mirrors it, and a late joiner
@@ -96,6 +97,17 @@ export interface Poll {
   open: boolean
 }
 
+/**
+ * A quiz the host launched in the room: a quick check students answer in a
+ * sheet over the stage, or a full exam that opens its own player. Answers
+ * never ride this channel — they go to the exams actions, which mark them.
+ */
+export interface LiveQuiz {
+  id: string
+  title: string
+  kind: "quick" | "exam"
+}
+
 export interface Slides {
   url: string
   title: string
@@ -109,6 +121,8 @@ export type ClassMessage =
   | { t: "poll.vote"; id: string; option: number }
   | { t: "poll.tally"; id: string; counts: number[]; total: number }
   | { t: "poll.close"; id: string }
+  | { t: "quiz.open"; quiz: LiveQuiz }
+  | { t: "quiz.close"; id: string }
   | { t: "wb.stroke"; stroke: Stroke }
   | { t: "wb.draft"; draft: DraftStroke }
   | { t: "wb.remove"; ids: string[] }
@@ -136,6 +150,7 @@ export type ClassMessage =
       grant?: BoardGrant
       spotlight?: string | null
       timer?: { remainingMs: number; totalMs: number; running: boolean } | null
+      quiz?: LiveQuiz | null
     }
 
 export interface ClassState {
@@ -149,6 +164,7 @@ export interface ClassState {
   grant: BoardGrant
   spotlight: string | null
   timer: ClassTimer | null
+  quiz: LiveQuiz | null
 }
 
 export function initialClassState(): ClassState {
@@ -162,6 +178,7 @@ export function initialClassState(): ClassState {
     grant: null,
     spotlight: null,
     timer: null,
+    quiz: null,
   }
 }
 
@@ -309,6 +326,27 @@ export function applyMessage(
     case "poll.close":
       if (!from.isHost || !state.poll || state.poll.id !== msg.id) return state
       return { ...state, poll: { ...state.poll, open: false } }
+    case "quiz.open": {
+      if (!from.isHost) return state
+      const q = msg.quiz
+      if (
+        !q ||
+        typeof q.id !== "string" ||
+        (q.kind !== "quick" && q.kind !== "exam")
+      )
+        return state
+      return {
+        ...state,
+        quiz: {
+          id: q.id,
+          title: String(q.title ?? "").slice(0, 200),
+          kind: q.kind,
+        },
+      }
+    }
+    case "quiz.close":
+      if (!from.isHost || !state.quiz || state.quiz.id !== msg.id) return state
+      return { ...state, quiz: null }
     case "wb.stroke": {
       // The host replays every stroke to a late joiner, so a host's copy
       // keeps the original author; anyone else is the author of their own.
@@ -378,6 +416,7 @@ export function applyMessage(
         grant: msg.grant ?? null,
         spotlight: msg.spotlight ?? null,
         timer: msg.timer ? timerFrom(msg.timer, now) : null,
+        quiz: msg.quiz ?? null,
       }
     // Ephemeral or addressed: handled by the hook, never stored.
     case "wb.draft":
@@ -411,5 +450,6 @@ export function snapshotOf(
           running: state.timer.running,
         }
       : null,
+    quiz: state.quiz,
   }
 }
