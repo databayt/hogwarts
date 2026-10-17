@@ -49,6 +49,8 @@ export function ParticipantsPanel({
   labels,
   variant = "pill",
   onOpenChange,
+  onMute,
+  muteLabel,
 }: {
   sessionId: string
   canModerate: boolean
@@ -56,6 +58,9 @@ export function ParticipantsPanel({
   variant?: "pill" | "glyph"
   /** The list is open — the chrome it sits in must not auto-hide under it. */
   onOpenChange?: (open: boolean) => void
+  /** Host: mute one participant's microphone. */
+  onMute?: (identity: string) => void
+  muteLabel?: string
 }) {
   const participants = useRemoteParticipants()
   const [open, setOpen] = useState(false)
@@ -156,7 +161,7 @@ export function ParticipantsPanel({
           // One 54px slot of the top pill (File.png: 163 = 3 × 54), the
           // reference's symbol, and the head count as a corner badge rather
           // than a word that would widen the slot.
-          className={cn(glyph, "relative h-11 w-[54px] sm:h-9 sm:w-11")}
+          className={cn(glyph, "relative h-11 w-[54px]")}
           aria-expanded={open}
           aria-controls="conference-participants-panel"
           aria-label={`${labels.title} (${visible.length})`}
@@ -215,14 +220,26 @@ export function ParticipantsPanel({
                   key={p.identity}
                   className="flex items-center justify-between gap-2"
                 >
-                  <span className="truncate text-sm text-white">
+                  <span className="min-w-0 flex-1 truncate text-sm text-white">
                     {p.name || p.identity}
                   </span>
+                  {onMute && muteLabel && p.isMicrophoneEnabled && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-9 px-2 text-white hover:bg-white/10 hover:text-white"
+                      aria-label={`${muteLabel}: ${p.name || p.identity}`}
+                      onClick={() => onMute(p.identity)}
+                    >
+                      {muteLabel}
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-7 px-2 text-red-400 hover:bg-white/10 hover:text-red-300"
+                    className="h-9 px-2 text-red-400 hover:bg-white/10 hover:text-red-300"
                     aria-label={`${labels.remove}: ${p.name || p.identity}`}
                     disabled={pending.has(p.identity)}
                     onClick={() => onRemove(p.identity)}

@@ -41,6 +41,14 @@ const channel: ClassChannel = {
   handUp: false,
   setHand: async () => {},
   clearHand: async () => {},
+  handsSince: new Map(),
+  clearAllHands: async () => {},
+  canDraw: false,
+  sendDraft: () => {},
+  sendReaction: () => {},
+  setGrant: async () => {},
+  subscribe: () => () => {},
+  localIdentity: "me",
 }
 
 const chat = {

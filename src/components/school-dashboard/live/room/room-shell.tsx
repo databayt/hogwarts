@@ -17,6 +17,7 @@ import {
   glassScrim,
   glassSurface,
 } from "@/components/lumos/shared/video-player/glass"
+import { useCaptureDeterrents } from "@/components/lumos/shared/video-player/hooks/use-capture-deterrents"
 import {
   arrowDownRightAndArrowUpLeft,
   arrowUpLeftAndArrowDownRight,
@@ -26,8 +27,11 @@ import {
   squareAndArrowUp,
   xmark,
 } from "@/components/lumos/shared/video-player/sf-symbols"
-import { useCaptureDeterrents } from "@/components/lumos/shared/video-player/hooks/use-capture-deterrents"
 import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
+import {
+  muteAll,
+  muteParticipant,
+} from "@/components/school-dashboard/live/actions/moderation"
 import { recordClassEvent } from "@/components/school-dashboard/live/actions/room-events"
 import {
   ParticipantsPanel,
@@ -38,17 +42,23 @@ import type {
   RoomConfig,
 } from "@/components/school-dashboard/live/types"
 
+import { useBoardMemory } from "./board/use-board-memory"
+import { chime } from "./chime"
 import type { Poll } from "./class-channel"
 import { ClassProgress } from "./class-progress"
+import { ClassTimerPill } from "./class-timer"
 import { ClassControls, ClassMoreMenu } from "./control-bar"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
+import { ReactionsOverlay } from "./reactions-overlay"
 import { SidePanel, type PanelTab } from "./side-panel"
 import type { SlideOption } from "./slide-options"
 import { Stage } from "./stage"
+import { RoomToastStack, useRoomToasts } from "./toasts"
 import { useAdaptiveDelivery } from "./use-adaptive-delivery"
 import { useAutoHide } from "./use-auto-hide"
 import { useClassChannel } from "./use-class-channel"
+import { useClassNotices } from "./use-class-notices"
 import { useLiveChat } from "./use-live-chat"
 
 interface RoomShellProps {
@@ -138,8 +148,9 @@ export function RoomShell({
   const [morePinned, setMorePinned] = useState(false)
   const [peoplePinned, setPeoplePinned] = useState(false)
   const [focusPinned, setFocusPinned] = useState(false)
+  const [rowPinned, setRowPinned] = useState(false)
   const hide = useAutoHide(
-    Boolean(panel) || morePinned || peoplePinned || focusPinned
+    Boolean(panel) || morePinned || peoplePinned || focusPinned || rowPinned
   )
   const hidden = !hide.visible
   const onFocusCapture = useCallback(() => setFocusPinned(true), [])
@@ -194,6 +205,54 @@ export function RoomShell({
   // control is a mute — of the class's audio on THIS device, which
   // `RoomAudioRenderer` also stops the SFU from sending while it is on.
   const [audioMuted, setAudioMuted] = useState(false)
+
+  // The room's notices, and the moves the host makes from them.
+  const toasts = useRoomToasts()
+  const pushToast = toasts.push
+  const giveFloor = useCallback(
+    (identity: string) => {
+      // Spotlight first: the student's client then knows the lowered hand
+      // means "you have the floor", not "put your hand down".
+      void channel.send({ t: "spotlight", identity })
+      void channel.clearHand(identity)
+      if (channel.state.whiteboard && config.tools.whiteboard)
+        void channel.setGrant(identity)
+    },
+    [channel, config.tools.whiteboard]
+  )
+  const onMuteAll = useCallback(() => {
+    void muteAll(sessionId).then((res) => {
+      if (res && "success" in res && res.success) {
+        void channel.send({ t: "muted" })
+        pushToast({ id: "muted-all", text: labels.mutedAll })
+      }
+    })
+  }, [sessionId, channel, pushToast, labels.mutedAll])
+  const onMuteOne = useCallback(
+    (identity: string) => {
+      void muteParticipant(sessionId, identity).then((res) => {
+        if (res && "success" in res && res.success)
+          void channel.send({ t: "muted" }, [identity])
+      })
+    },
+    [sessionId, channel]
+  )
+  useClassNotices({
+    channel,
+    labels,
+    toasts,
+    onGiveFloor: giveFloor,
+    soundOn: !audioMuted,
+  })
+  useBoardMemory({
+    sessionId,
+    channel,
+    enabled: isHost && config.tools.whiteboard,
+  })
+  const onTimerDone = useCallback(() => {
+    if (!audioMuted) chime("done")
+    pushToast({ id: "timer-done", text: `⏰ ${labels.timerDone}`, ttl: 5000 })
+  }, [audioMuted, pushToast, labels.timerDone])
 
   // The pill's third slot: the class page (not this room) to the OS share
   // sheet, or the clipboard where there is no sheet.
@@ -280,6 +339,7 @@ export function RoomShell({
           <div className="absolute inset-0">
             <Stage channel={channel} labels={labels} />
           </div>
+          <ReactionsOverlay channel={channel} />
           {/* Forensic mark over the whole stage: a recording or screenshot
               of the class carries who was watching. No time or date stamp
               on a live call (Abdout, 2026-09-13). */}
@@ -316,16 +376,16 @@ export function RoomShell({
               type="button"
               className={cn(
                 glassButton,
-                "flex size-11 shrink-0 items-center justify-center text-white sm:size-9"
+                "flex size-11 shrink-0 items-center justify-center text-white"
               )}
               style={glassSurface}
               aria-label={labels.leave}
               onClick={() => void room.disconnect()}
             >
-              <SfSymbol glyph={xmark} pt={20} className="sm:size-3.5" />
+              <SfSymbol glyph={xmark} pt={20} />
             </button>
             <div
-              className={cn(glassPill, "flex h-11 items-center sm:h-9")}
+              className={cn(glassPill, "flex h-11 items-center")}
               style={glassSurface}
             >
               <ParticipantsPanel
@@ -333,12 +393,14 @@ export function RoomShell({
                 sessionId={sessionId}
                 canModerate={isHost}
                 labels={participantsLabels}
+                onMute={onMuteOne}
+                muteLabel={labels.muteOne}
                 onOpenChange={setPeoplePinned}
               />
               <button
                 type="button"
                 className={cn(
-                  "flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60 sm:h-9 sm:w-11",
+                  "flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60",
                   aspectOn && "bg-white/25"
                 )}
                 aria-pressed={aspectOn}
@@ -353,28 +415,23 @@ export function RoomShell({
                       : arrowUpLeftAndArrowDownRight
                   }
                   pt={20}
-                  className="sm:size-4"
                 />
               </button>
               <button
                 type="button"
-                className="flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60 sm:h-9 sm:w-11"
+                className="flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60"
                 aria-label={labels.shareClass}
                 title={labels.shareClass}
                 onClick={onShare}
               >
-                <SfSymbol
-                  glyph={squareAndArrowUp}
-                  pt={20}
-                  className="sm:size-4"
-                />
+                <SfSymbol glyph={squareAndArrowUp} pt={20} />
               </button>
             </div>
             <button
               type="button"
               className={cn(
                 glassButton,
-                "ms-auto flex size-11 shrink-0 items-center justify-center text-white sm:size-9"
+                "ms-auto flex size-11 shrink-0 items-center justify-center text-white"
               )}
               style={glassSurface}
               aria-pressed={audioMuted}
@@ -384,7 +441,6 @@ export function RoomShell({
               <SfSymbol
                 glyph={audioMuted ? speakerSlashFill : speakerWave3Fill}
                 pt={20}
-                className="sm:size-4"
               />
             </button>
           </div>
@@ -392,7 +448,15 @@ export function RoomShell({
           {/* Status, centred under the top pills — a floating notice rather
               than a full-width strip, so nothing below it shifts when it
               appears. */}
-          <div className="pointer-events-none absolute inset-x-0 top-16 z-20 flex flex-col items-center gap-2 px-3">
+          <div className="pointer-events-none absolute inset-x-0 top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem))] z-20 flex flex-col items-center gap-2 px-3">
+            {channel.state.timer && (
+              <ClassTimerPill
+                timer={channel.state.timer}
+                label={labels.timer}
+                onDone={onTimerDone}
+              />
+            )}
+            <RoomToastStack toasts={toasts.toasts} dismiss={toasts.dismiss} />
             <AudioOnlyBanner on={adaptive.tier === "audio"} labels={labels} />
 
             {config.recording && !consentSeen && (
@@ -483,6 +547,8 @@ export function RoomShell({
                 onPanel={setPanel}
                 tools={config.tools}
                 chatUnread={config.tools.chat ? chat.unread : 0}
+                onPinned={setRowPinned}
+                onMuteAll={isHost ? onMuteAll : undefined}
               />
             </div>
           </div>
@@ -496,22 +562,23 @@ export function RoomShell({
             !panel && "hidden"
           )}
         >
-            <SidePanel
-              tab={panel ?? (config.tools.chat ? "chat" : "questions")}
-              onTab={setPanel}
-              onClose={() => setPanel(null)}
-              channel={channel}
-              canAsk={role !== "OBSERVER"}
-              tools={config.tools}
-              isHost={isHost}
-              localIdentity={localParticipant.identity}
-              labels={labels}
-              onPollClosed={isHost ? onPollClosed : undefined}
-              onQuestion={isHost ? onQuestion : undefined}
-              chat={chat}
-              locale={chatLocale}
-              open={Boolean(panel)}
-            />
+          <SidePanel
+            tab={panel ?? (config.tools.chat ? "chat" : "questions")}
+            onTab={setPanel}
+            onClose={() => setPanel(null)}
+            channel={channel}
+            canAsk={role !== "OBSERVER"}
+            tools={config.tools}
+            isHost={isHost}
+            localIdentity={localParticipant.identity}
+            labels={labels}
+            onPollClosed={isHost ? onPollClosed : undefined}
+            onQuestion={isHost ? onQuestion : undefined}
+            chat={chat}
+            locale={chatLocale}
+            open={Boolean(panel)}
+            onGiveFloor={isHost ? giveFloor : undefined}
+          />
         </div>
       </div>
       <RoomAudioRenderer muted={audioMuted} />

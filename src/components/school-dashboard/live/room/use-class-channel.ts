@@ -14,16 +14,26 @@ import { parseRoomHostsMetadata } from "@/components/school-dashboard/live/types
 
 import {
   applyMessage,
+  canDrawOn,
   CLASS_TOPIC,
   decodeMessage,
   encodeMessage,
   fitStroke,
   initialClassState,
   snapshotOf,
+  type BoardGrant,
   type ClassMessage,
   type ClassState,
+  type DraftStroke,
   type Stroke,
 } from "./class-channel"
+
+/** What the channel carries that is never state: watched, then gone. */
+export type EphemeralEvent =
+  | { kind: "draft"; draft: DraftStroke; from: string }
+  | { kind: "react"; emoji: string; from: string; name: string }
+  | { kind: "handLowered" }
+  | { kind: "muted" }
 
 export const HAND_ATTRIBUTE = "hand"
 
@@ -37,10 +47,23 @@ export interface ClassChannel {
   sendStroke: (stroke: Stroke) => Promise<void>
   /** Identities with a raised hand, in the order they raised it. */
   hands: string[]
+  /** When this client first saw each hand go up (local clock). */
+  handsSince: ReadonlyMap<string, number>
   handUp: boolean
   setHand: (up: boolean) => Promise<void>
   /** Host: ask a student to lower their hand. */
   clearHand: (identity: string) => Promise<void>
+  /** Host: every raised hand down at once. */
+  clearAllHands: () => Promise<void>
+  /** May this participant draw on the board right now? */
+  canDraw: boolean
+  /** A stroke in progress — lossy, so a dropped frame costs nothing. */
+  sendDraft: (draft: DraftStroke) => void
+  sendReaction: (emoji: string) => void
+  setGrant: (to: BoardGrant) => Promise<void>
+  /** Drafts, reactions, a hand lowered by the host: listen, don't store. */
+  subscribe: (listener: (e: EphemeralEvent) => void) => () => void
+  localIdentity: string
 }
 
 /**
@@ -59,7 +82,24 @@ export function useClassChannel(opts: {
   const sendRef = useRef<(msg: ClassMessage, to?: string[]) => Promise<void>>(
     async () => {}
   )
+  // The data handler is declared before `answerSync` exists; it calls
+  // through this ref, filled once the callback is.
+  const answerSyncRef = useRef<(identity: string) => Promise<void>>(
+    async () => {}
+  )
   const { hostIdentity, isHost } = opts
+  // Ephemeral events go to listeners directly — a stroke streaming at 20 Hz
+  // must not re-render the room.
+  const listenersRef = useRef(new Set<(e: EphemeralEvent) => void>())
+  const emit = useCallback((e: EphemeralEvent) => {
+    for (const l of listenersRef.current) l(e)
+  }, [])
+  const subscribe = useCallback((listener: (e: EphemeralEvent) => void) => {
+    listenersRef.current.add(listener)
+    return () => {
+      listenersRef.current.delete(listener)
+    }
+  }, [])
 
   // ---- host trust: ROOM metadata (`{ hosts: string[] }`), published
   // server-side (`livekit/rooms.ts addRoomHost`, called from
@@ -104,12 +144,38 @@ export function useClassChannel(opts: {
       from.identity === hostIdentity || roomHosts.includes(from.identity)
 
     if (msg.t === "sync.request") {
-      if (isHost) void answerSync(from.identity)
+      if (isHost) void answerSyncRef.current(from.identity)
       return
     }
-    if (msg.t === "hand.clear") {
-      if (fromIsHost)
+    if (msg.t === "hand.clear" || msg.t === "hand.clearAll") {
+      if (fromIsHost) {
+        const wasUp = localParticipant.attributes?.[HAND_ATTRIBUTE] === "1"
         void localParticipant.setAttributes({ [HAND_ATTRIBUTE]: "" })
+        if (wasUp) emit({ kind: "handLowered" })
+      }
+      return
+    }
+    if (msg.t === "muted") {
+      if (fromIsHost) emit({ kind: "muted" })
+      return
+    }
+    if (msg.t === "wb.draft") {
+      const st = stateRef.current
+      if (
+        st.whiteboard &&
+        (fromIsHost || st.grant === "*" || st.grant === from.identity)
+      )
+        emit({ kind: "draft", draft: msg.draft, from: from.identity })
+      return
+    }
+    if (msg.t === "react") {
+      if (typeof msg.emoji === "string" && msg.emoji.length <= 8)
+        emit({
+          kind: "react",
+          emoji: msg.emoji,
+          from: from.identity,
+          name: from.name ?? from.identity,
+        })
       return
     }
     // Votes are addressed to the host; a stray copy elsewhere must not tally.
@@ -157,7 +223,9 @@ export function useClassChannel(opts: {
     },
     [sendRaw, localParticipant, isHost]
   )
-  sendRef.current = send
+  useEffect(() => {
+    sendRef.current = send
+  }, [send])
 
   const answerSync = useCallback(
     async (identity: string) => {
@@ -175,6 +243,9 @@ export function useClassChannel(opts: {
     },
     [sendRaw]
   )
+  useEffect(() => {
+    answerSyncRef.current = answerSync
+  }, [answerSync])
 
   // Late joiner: ask the host for the state of the room. The hook mounts
   // before the room is connected, so the first ask would be thrown away —
@@ -209,6 +280,9 @@ export function useClassChannel(opts: {
 
   // ---- hands: participant attributes, so late joiners see them for free
   const [hands, setHands] = useState<string[]>([])
+  const [handsSince, setHandsSince] = useState<ReadonlyMap<string, number>>(
+    () => new Map()
+  )
   const orderRef = useRef<Map<string, number>>(new Map())
   useEffect(() => {
     const recompute = () => {
@@ -224,6 +298,7 @@ export function useClassChannel(opts: {
       for (const id of [...orderRef.current.keys()]) {
         if (!up.some((p) => p.identity === id)) orderRef.current.delete(id)
       }
+      setHandsSince(new Map(orderRef.current))
       setHands(
         up
           .map((p) => p.identity)
@@ -254,6 +329,40 @@ export function useClassChannel(opts: {
     (identity: string) => send({ t: "hand.clear" }, [identity]),
     [send]
   )
+  const clearAllHands = useCallback(() => send({ t: "hand.clearAll" }), [send])
+
+  const sendDraft = useCallback(
+    (draft: DraftStroke) => {
+      void sendRaw(encodeMessage({ t: "wb.draft", draft }), {
+        reliable: false,
+      }).catch(() => {})
+    },
+    [sendRaw]
+  )
+  const lastReactRef = useRef(0)
+  const sendReaction = useCallback(
+    (emoji: string) => {
+      const now = Date.now()
+      if (now - lastReactRef.current < 400) return
+      lastReactRef.current = now
+      void sendRaw(encodeMessage({ t: "react", emoji }), {
+        reliable: false,
+      }).catch(() => {})
+      // No echo for our own: show it here.
+      emit({
+        kind: "react",
+        emoji,
+        from: localParticipant.identity,
+        name: localParticipant.name ?? localParticipant.identity,
+      })
+    },
+    [sendRaw, emit, localParticipant]
+  )
+  const setGrant = useCallback(
+    (to: BoardGrant) => send({ t: "wb.grant", to }),
+    [send]
+  )
+  const canDraw = canDrawOn(state, localParticipant.identity, isHost)
 
   return {
     state,
@@ -262,8 +371,16 @@ export function useClassChannel(opts: {
     send,
     sendStroke,
     hands,
+    handsSince,
     handUp,
     setHand,
     clearHand,
+    clearAllHands,
+    canDraw,
+    sendDraft,
+    sendReaction,
+    setGrant,
+    subscribe,
+    localIdentity: localParticipant.identity,
   }
 }

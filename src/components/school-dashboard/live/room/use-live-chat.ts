@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useChat } from "@livekit/components-react"
 
-import type { ThreadMessage } from "@/components/school-dashboard/messaging/mobile"
 import {
   getRoomChat,
   recordChatMessage,
   type RoomChatMessage,
 } from "@/components/school-dashboard/live/actions/chat"
+import type { ThreadMessage } from "@/components/school-dashboard/messaging/mobile"
 
 type Pending = {
   id: string
@@ -71,7 +71,9 @@ export function useLiveChat({
   }, [enabled, sessionId])
 
   const historyRef = useRef(history)
-  historyRef.current = history
+  useEffect(() => {
+    historyRef.current = history
+  }, [history])
   const loadOlder = useCallback(async () => {
     const oldest = historyRef.current[0]
     if (!oldest) return
@@ -125,15 +127,13 @@ export function useLiveChat({
     return merged
   }, [history, live, pending, selfId])
 
-  // Drop temp rows once their real twin is in the list.
+  // Temp rows whose real twin has landed are skipped by the merge above and
+  // pruned on the next send — never from an effect, which would re-render
+  // the whole list a second time on every message.
+  const liveIdsRef = useRef(new Set<string>())
   useEffect(() => {
-    if (!pending.some((p) => p.sentId)) return
-    const ids = new Set(live.map((m) => m.id))
-    setPending((ps) => {
-      const next = ps.filter((p) => !(p.sentId && ids.has(p.sentId)))
-      return next.length === ps.length ? ps : next
-    })
-  }, [live, pending])
+    liveIdsRef.current = new Set(live.map((m) => m.id))
+  }, [live])
 
   const transmit = useCallback(
     (tempId: string, text: string) => {
@@ -163,14 +163,19 @@ export function useLiveChat({
       const text = raw.trim().slice(0, 1000)
       if (!text) return
       const id = `temp-${crypto.randomUUID()}`
-      setPending((ps) => [...ps, { id, text, at: Date.now(), status: "sending" }])
+      setPending((ps) => [
+        ...ps.filter((p) => !(p.sentId && liveIdsRef.current.has(p.sentId))),
+        { id, text, at: Date.now(), status: "sending" },
+      ])
       transmit(id, text)
     },
     [transmit]
   )
 
   const pendingRef = useRef(pending)
-  pendingRef.current = pending
+  useEffect(() => {
+    pendingRef.current = pending
+  }, [pending])
   const retry = useCallback(
     (id: string) => {
       const p = pendingRef.current.find((x) => x.id === id)
@@ -188,10 +193,10 @@ export function useLiveChat({
     () => live.reduce((n, m) => (m.senderId !== selfId ? n + 1 : n), 0),
     [live, selfId]
   )
+  // Caught up whenever the chat is on screen — adjusted during render, the
+  // React way to follow a prop, rather than in an effect.
   const [seen, setSeen] = useState(0)
-  useEffect(() => {
-    if (visible) setSeen(othersCount)
-  }, [visible, othersCount])
+  if (visible && seen !== othersCount) setSeen(othersCount)
   const unread = visible ? 0 : Math.max(0, othersCount - seen)
 
   return { messages, send, retry, unread, hasMore, loadOlder }

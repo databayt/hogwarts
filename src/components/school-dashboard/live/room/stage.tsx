@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { createContext, useContext } from "react"
 import {
   CarouselLayout,
   FocusLayout,
@@ -9,16 +10,51 @@ import {
   isTrackReference,
   ParticipantTile,
   useLocalParticipant,
+  useMaybeTrackRefContext,
   useTracks,
+  type TrackReferenceOrPlaceholder,
 } from "@livekit/components-react"
 import { Track } from "livekit-client"
 
 import { cn } from "@/lib/utils"
+import {
+  handRaisedFill,
+  SfSymbol,
+} from "@/components/lumos/shared/video-player/sf-symbols"
 
+import { Board } from "./board/board"
 import type { RoomLabels } from "./labels"
 import { SlidesView } from "./slides"
 import type { ClassChannel } from "./use-class-channel"
-import { Whiteboard } from "./whiteboard"
+
+/** Raised hands in order, read by every tile without threading props
+ *  through LiveKit's layouts. */
+const HandsContext = createContext<string[]>([])
+
+/**
+ * A LiveKit tile with the class's marks over it — a raised hand and its
+ * place in line. Wraps the stock tile rather than restyling it.
+ */
+function ClassTile({ trackRef }: { trackRef?: TrackReferenceOrPlaceholder }) {
+  const fromLoop = useMaybeTrackRefContext()
+  const ref = trackRef ?? fromLoop
+  const hands = useContext(HandsContext)
+  const place = ref ? hands.indexOf(ref.participant.identity) : -1
+  return (
+    <div className="relative h-full w-full">
+      <ParticipantTile trackRef={ref} className="h-full w-full" />
+      {place >= 0 && (
+        <span
+          className="pointer-events-none absolute end-2 top-2 flex h-8 items-center gap-1 rounded-full bg-amber-400 ps-2 pe-2.5 text-sm font-bold text-black shadow-lg motion-safe:animate-[bounce_1s_ease-in-out_2]"
+          aria-hidden
+        >
+          <SfSymbol glyph={handRaisedFill} pt={16} />
+          {place + 1}
+        </span>
+      )}
+    </div>
+  )
+}
 
 interface StageProps {
   channel: ClassChannel
@@ -43,17 +79,23 @@ export function Stage({ channel, labels }: StageProps) {
   const share = tracks.find(
     (t) => t.source === Track.Source.ScreenShare && isTrackReference(t)
   )
-  const cameras = tracks.filter((t) => t.source === Track.Source.Camera)
-  const { whiteboard, slides } = channel.state
+  const allCameras = tracks.filter((t) => t.source === Track.Source.Camera)
+  const { whiteboard, slides, spotlight } = channel.state
+  // The spotlit student leads the strip; the teacher comes next.
+  const spot = spotlight
+    ? allCameras.find((t) => t.participant.identity === spotlight)
+    : undefined
+  const cameras = [...allCameras].sort((a, b) => rank(a) - rank(b))
+  function rank(t: TrackReferenceOrPlaceholder) {
+    if (t.participant.identity === spotlight) return 0
+    if (t.participant.identity === channel.hostIdentity) return 1
+    return 2
+  }
+  // The one picture a phone keeps while the board or slides fill it.
+  const pip = spot ?? cameras.find((t) => !t.participant.isLocal) ?? cameras[0]
 
   const focus = whiteboard ? (
-    <Whiteboard
-      strokes={channel.state.strokes}
-      canDraw={channel.isHost}
-      onStroke={(s) => void channel.sendStroke(s)}
-      onClear={() => void channel.send({ t: "wb.clear" })}
-      labels={labels}
-    />
+    <Board channel={channel} labels={labels} />
   ) : slides ? (
     <SlidesView
       slides={slides}
@@ -69,6 +111,9 @@ export function Stage({ channel, labels }: StageProps) {
     />
   ) : share && isTrackReference(share) ? (
     <FocusLayout trackRef={share} className="h-full w-full" />
+  ) : spot ? (
+    // "Give the floor": the student fills the stage for everyone.
+    <ClassTile trackRef={spot} />
   ) : null
 
   if (!focus) {
@@ -105,25 +150,53 @@ export function Stage({ channel, labels }: StageProps) {
         )}
         data-lone-camera={lone ? "" : undefined}
       >
-        <GridLayout tracks={cameras} className="h-full w-full">
-          <ParticipantTile />
-        </GridLayout>
+        <HandsContext.Provider value={channel.hands}>
+          <GridLayout tracks={cameras} className="h-full w-full">
+            <ClassTile />
+          </GridLayout>
+        </HandsContext.Provider>
       </div>
     )
   }
 
+  // The board runs edge to edge (it fits its own page and keeps clear of
+  // the chrome); slides, a share and a spotlight keep the stage's gutter.
   return (
-    <div className="flex h-full w-full gap-2 p-2">
-      <div className="min-h-0 min-w-0 flex-1">{focus}</div>
-      <div className="hidden w-44 shrink-0 sm:block">
-        <CarouselLayout
-          tracks={cameras}
-          orientation="vertical"
-          className="h-full"
+    <HandsContext.Provider value={channel.hands}>
+      <div
+        className={cn(
+          "relative flex h-full w-full",
+          !whiteboard && "gap-2 p-2"
+        )}
+      >
+        <div className="min-h-0 min-w-0 flex-1">{focus}</div>
+        <div
+          className={cn(
+            "hidden w-44 shrink-0 sm:block",
+            whiteboard && "py-16 pe-2"
+          )}
         >
-          <ParticipantTile />
-        </CarouselLayout>
+          <CarouselLayout
+            tracks={
+              spot && !whiteboard && !slides && !share
+                ? cameras.slice(1)
+                : cameras
+            }
+            orientation="vertical"
+            className="h-full"
+          >
+            <ClassTile />
+          </CarouselLayout>
+        </div>
+        {/* A phone has no room for the strip: the teacher (or the student
+            with the floor) floats in the top corner, under the top row and
+            clear of the bottom controls, instead of vanishing. */}
+        {pip && (whiteboard || slides || share) && (
+          <div className="pointer-events-none absolute end-3 top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem))] z-10 aspect-[3/4] w-20 overflow-hidden rounded-2xl shadow-[0_6px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/20 sm:hidden [&_.lk-participant-metadata]:hidden!">
+            <ClassTile trackRef={pip} />
+          </div>
+        )}
       </div>
-    </div>
+    </HandsContext.Provider>
   )
 }

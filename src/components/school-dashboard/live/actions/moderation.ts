@@ -5,10 +5,16 @@
 //
 // Host moderation — remove a participant from a live conference. Wraps the
 // LiveKit `removeParticipant` room-service call with auth + tenant scoping.
+import { TrackSource } from "livekit-server-sdk"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { isLiveKitConfigured } from "@/components/school-dashboard/live/livekit/client"
-import { removeParticipant } from "@/components/school-dashboard/live/livekit/rooms"
+import {
+  listParticipants,
+  muteTrack,
+  removeParticipant,
+} from "@/components/school-dashboard/live/livekit/rooms"
 
 import { requireContext } from "./helpers"
 
@@ -66,4 +72,88 @@ export async function kickParticipant(sessionId: string, userId: string) {
   }
 
   return { success: true as const, data: { userId } }
+}
+
+/**
+ * The caller must be a HOST or CO_HOST of this tenant's session — the same
+ * participant row the room's host trust is published from. Co-teachers
+ * moderate too, as they run every other host tool.
+ */
+async function hostRoom(sessionId: string) {
+  const ctx = await requireContext("end_live_class")
+  if (!ctx.ok) return { ok: false as const, response: ctx.response }
+  if (!isLiveKitConfigured())
+    return {
+      ok: false as const,
+      response: actionError(ACTION_ERRORS.NOT_IMPLEMENTED),
+    }
+  const [session, hosts] = await Promise.all([
+    db.conference.findFirst({
+      where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
+      select: { roomName: true },
+    }),
+    db.conferenceParticipant.findMany({
+      where: {
+        sessionId,
+        schoolId: ctx.schoolId,
+        role: { in: ["HOST", "CO_HOST"] },
+      },
+      select: { userId: true },
+    }),
+  ])
+  const hostIds = new Set(hosts.map((h) => h.userId))
+  if (!session)
+    return {
+      ok: false as const,
+      response: actionError(ACTION_ERRORS.NOT_FOUND),
+    }
+  if (!hostIds.has(ctx.userId))
+    return {
+      ok: false as const,
+      response: actionError(ACTION_ERRORS.UNAUTHORIZED),
+    }
+  return {
+    ok: true as const,
+    roomName: session.roomName,
+    userId: ctx.userId,
+    hostIds,
+  }
+}
+
+/** Mute `only`'s microphone, or every student's when omitted. */
+async function muteMics(sessionId: string, only?: string) {
+  const host = await hostRoom(sessionId)
+  if (!host.ok) return host.response
+  // Never mute a teacher — judged from the DB, not from participant
+  // attributes, which a student's own client can rewrite.
+  try {
+    const people = await listParticipants(host.roomName)
+    let muted = 0
+    for (const p of people) {
+      if (host.hostIds.has(p.identity)) continue
+      if (only && p.identity !== only) continue
+      for (const t of p.tracks) {
+        if (t.source === TrackSource.MICROPHONE && !t.muted) {
+          await muteTrack(host.roomName, p.identity, t.sid)
+          muted++
+        }
+      }
+    }
+    return { success: true as const, data: { muted } }
+  } catch (err) {
+    console.error("[muteMics]", err)
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+/** Host: mute every student's microphone. They may unmute themselves. */
+export async function muteAll(sessionId: string) {
+  return muteMics(sessionId)
+}
+
+/** Host: mute one participant's microphone. */
+export async function muteParticipant(sessionId: string, identity: string) {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(identity))
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  return muteMics(sessionId, identity)
 }

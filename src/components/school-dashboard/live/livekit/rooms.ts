@@ -53,6 +53,17 @@ export async function removeParticipant(
   await svc.removeParticipant(roomName, identity)
 }
 
+/** Server-side mute of one published track (the SFU stops forwarding it;
+ *  the participant may unmute themselves again). */
+export async function muteTrack(
+  roomName: string,
+  identity: string,
+  trackSid: string
+): Promise<void> {
+  const svc = getRoomServiceClient()
+  await svc.mutePublishedTrack(roomName, identity, trackSid, true)
+}
+
 export async function listParticipants(roomName: string) {
   const svc = getRoomServiceClient()
   return svc.listParticipants(roomName)

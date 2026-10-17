@@ -30,7 +30,11 @@ vi.mock("@livekit/components-react", () => ({
   useConnectionState: () => "connected",
   useRemoteParticipants: () => [],
   RoomAudioRenderer: () => null,
-  useChat: () => ({ chatMessages: [], send: async () => ({}), isSending: false }),
+  useChat: () => ({
+    chatMessages: [],
+    send: async () => ({}),
+    isSending: false,
+  }),
   useParticipants: () => [],
 }))
 vi.mock("@/components/school-dashboard/live/actions/chat", () => ({
@@ -54,6 +58,14 @@ vi.mock("@/components/school-dashboard/live/room/use-class-channel", () => ({
     handUp: false,
     setHand: async () => {},
     clearHand: async () => {},
+    handsSince: new Map(),
+    clearAllHands: async () => {},
+    canDraw: false,
+    sendDraft: () => {},
+    sendReaction: () => {},
+    setGrant: async () => {},
+    subscribe: () => () => {},
+    localIdentity: "me",
   }),
 }))
 vi.mock(

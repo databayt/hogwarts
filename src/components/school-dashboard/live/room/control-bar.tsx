@@ -2,13 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { useMediaDeviceSelect, useTrackToggle } from "@livekit/components-react"
 import { Track } from "livekit-client"
 
 import { cn } from "@/lib/utils"
 import {
   glassButton,
+  glassPill,
   glassSurface,
   phoneMenuCard,
   phoneMenuRow,
@@ -21,12 +28,21 @@ import {
   chevronRight,
   docRichtext,
   ellipsis,
+  faceSmiling,
   handRaisedFill,
+  handRaisedSlashFill,
   micFill,
+  micSlash,
   micSlashFill,
+  pauseFill,
   pencilAndScribble,
+  person2BadgeGearshapeFill,
+  playFill,
   rectangleInsetFilledAndPersonFilled,
   SfSymbol,
+  sparkles,
+  stopFill,
+  timer as timerGlyph,
   video,
   videoFill,
   videoSlashFill,
@@ -38,6 +54,8 @@ import type {
 } from "@/components/school-dashboard/live/types"
 
 import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
+import { REACTIONS, timerLeft } from "./class-channel"
+import { formatClock, timerDone, useTimerNow } from "./class-timer"
 import type { RoomLabels } from "./labels"
 import { QUALITY_TONE } from "./overlays"
 import type { PanelTab } from "./side-panel"
@@ -48,26 +66,32 @@ import type { ClassChannel } from "./use-class-channel"
 /**
  * The class's controls: ONE row of equal glass discs along the bottom of the
  * call (Abdout, 2026-09-13 — "camera, mic, hand, blackboard and the rest, in
- * a row at the bottom, all the same size", in place of the Discussion capsule
- * and the centre trio that sat over the picture).
+ * a row at the bottom, all the same size").
  *
- *   camera · mic · hand · board (host) · share · discussion
+ *   host:     camera · mic · hands · board · class tools · share* · discussion
+ *   student:  camera · mic · hand · react · share* · discussion
+ *   observer: react · discussion
  *
- * The rarer things — quality, device selects, slides — stay in the ⋯ card
- * beside the title.
+ * *share only where the browser can capture a screen — no phone can, so the
+ * row stays six discs at 390px. The rarer things — quality, device selects,
+ * slides — stay in the ⋯ card beside the title.
+ *
+ * ONE size everywhere (Abdout, 2026-10-17: "icons same size in mobile and
+ * desktop"): 48px discs, 22pt glyphs, at every width.
  */
 
-/** Every disc in the row: 48px on a phone, 40px from `sm`. */
+/** Every disc in the row: 48px at every width. */
 const disc = cn(
   glassButton,
-  "relative flex size-12 shrink-0 items-center justify-center text-white disabled:opacity-40 sm:size-10"
+  "relative flex size-12 shrink-0 items-center justify-center text-white disabled:opacity-40"
 )
 /** Every glyph in the row, at one point size. */
 const GLYPH_PT = 22
-const glyphClass = "sm:size-[18px]"
 /** A disc that is switched on — inline, because `glassSurface` sets the
  *  background inline and would beat a `bg-*` class. */
 const onSurface = { ...glassSurface, background: "rgba(255, 255, 255, 0.25)" }
+/** The raised hand's amber. */
+const handSurface = { ...glassSurface, background: "rgb(251 191 36 / 0.95)" }
 
 /** The count in a disc's corner. Always `aria-hidden` — the disc's label
  *  carries the same number for a screen reader. */
@@ -82,6 +106,71 @@ function CountBadge({ count }: { count: number }) {
   )
 }
 
+/** Can this browser capture a screen? Read once, after hydration. */
+const noop = () => () => {}
+function useCanShareScreen(): boolean {
+  return useSyncExternalStore(
+    noop,
+    () =>
+      typeof navigator !== "undefined" &&
+      typeof navigator.mediaDevices?.getDisplayMedia === "function",
+    () => true
+  )
+}
+
+/** Close a popover on a press outside `root` or on Escape — a document
+ *  listener, not a fixed catcher (glass makes `fixed` relative to itself). */
+function useDismiss(
+  open: boolean,
+  root: React.RefObject<HTMLElement | null>,
+  close: () => void
+) {
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) close()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close()
+    }
+    document.addEventListener("pointerdown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open, root, close])
+}
+
+/** The card a row popover opens as: above the row, centred on the row. */
+const popCard = cn(
+  "absolute bottom-full left-1/2 z-30 mb-3 -translate-x-1/2 rounded-[28px] bg-[#121212]/95 p-2 text-white shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-[40px]"
+)
+
+function ReactionStrip({
+  channel,
+  labels,
+}: {
+  channel: ClassChannel
+  labels: RoomLabels
+}) {
+  return (
+    <div role="group" aria-label={labels.reactions} className="flex gap-1">
+      {REACTIONS.map((e) => (
+        <button
+          key={e}
+          type="button"
+          className="flex size-11 items-center justify-center rounded-full text-[26px] transition-transform hover:bg-white/10 active:scale-125"
+          aria-label={`${labels.react} ${e}`}
+          onClick={() => channel.sendReaction(e)}
+        >
+          {e}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 interface ControlsProps {
   role: ConferenceParticipantRole
   labels: RoomLabels
@@ -91,11 +180,17 @@ interface ControlsProps {
   tools: RoomTools
   /** Others' chat messages not yet seen — counted on the discussion disc. */
   chatUnread?: number
+  /** A popover in the row is open — the chrome must not auto-hide under it. */
+  onPinned?: (pinned: boolean) => void
+  /** Host: mute every student. */
+  onMuteAll?: () => void
 }
 
+type Pop = "react" | "tools" | null
+
 /**
- * An OBSERVER publishes nothing, so their row is the discussion disc alone —
- * and mounts no LiveKit track hook.
+ * An OBSERVER publishes nothing, so their row is react + discussion — and
+ * mounts no LiveKit track hook.
  */
 export function ClassControls({
   role,
@@ -105,11 +200,15 @@ export function ClassControls({
   onPanel,
   tools,
   chatUnread = 0,
+  onPinned,
+  onMuteAll,
 }: ControlsProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const canPublish = role !== "OBSERVER"
+  const canShareScreen = useCanShareScreen()
   const unanswered = channel.state.questions.filter((q) => !q.answered).length
   const hands = channel.hands.length
+  const myPlace = channel.hands.indexOf(channel.localIdentity) + 1
   // The host's hands have their own disc when the tool is on; otherwise they
   // still count on the discussion disc, whose panel lists them.
   const badge = unanswered + chatUnread + (isHost && !tools.hands ? hands : 0)
@@ -123,34 +222,70 @@ export function ClassControls({
         ? `${labels.discussion} — ${labels.pollOpenAnnounce}`
         : labels.discussion
 
+  const [pop, setPop] = useState<Pop>(null)
+  const rowRef = useRef<HTMLDivElement>(null)
+  const closePop = useCallback(() => setPop(null), [])
+  useDismiss(pop !== null, rowRef, closePop)
+  useEffect(() => {
+    onPinned?.(pop !== null)
+  }, [pop, onPinned])
+  const togglePop = (p: Pop) => setPop((cur) => (cur === p ? null : p))
+
+  const showShare =
+    canShareScreen && (isHost || (role === "PARTICIPANT" && tools.studentShare))
+
   return (
-    <div className="flex items-center justify-center gap-2.5 sm:gap-2">
+    <div
+      ref={rowRef}
+      className="relative flex items-center justify-center gap-2.5"
+    >
+      {/* The student's place in line, over the row while the hand is up. */}
+      {!isHost && channel.handUp && myPlace > 0 && pop === null && (
+        <p
+          className={cn(
+            glassPill,
+            "pointer-events-none absolute bottom-full left-1/2 mb-3 -translate-x-1/2 px-3.5 py-1.5 text-[15px] font-medium whitespace-nowrap text-white"
+          )}
+          style={{ ...glassSurface, background: "rgba(20, 20, 20, 0.7)" }}
+          aria-live="polite"
+        >
+          ✋ {labels.handInLine.replace("{n}", String(myPlace))}
+        </p>
+      )}
+
       {canPublish && <CameraDisc labels={labels} />}
       {canPublish && <MicDisc labels={labels} />}
       {canPublish && !isHost && (
         <button
           type="button"
-          className={disc}
-          style={
-            channel.handUp
-              ? { ...glassSurface, background: "rgb(251 191 36 / 0.9)" }
-              : glassSurface
-          }
+          className={cn(disc, channel.handUp && "text-black")}
+          style={channel.handUp ? handSurface : glassSurface}
           aria-pressed={channel.handUp}
           aria-label={channel.handUp ? labels.lowerHand : labels.raiseHand}
-          onClick={() => void channel.setHand(!channel.handUp)}
+          onClick={() => {
+            const up = !channel.handUp
+            if (up) navigator.vibrate?.(12)
+            void channel.setHand(up)
+          }}
         >
-          <SfSymbol
-            glyph={handRaisedFill}
-            pt={GLYPH_PT}
-            className={cn(glyphClass, channel.handUp && "text-black")}
-          />
+          {/* A soft ring breathes round a raised hand, so the student can
+              see at a glance that it is still up. */}
+          {channel.handUp && (
+            <span
+              className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-amber-300 motion-safe:animate-ping"
+              aria-hidden
+            />
+          )}
+          <SfSymbol glyph={handRaisedFill} pt={GLYPH_PT} />
         </button>
       )}
       {isHost && tools.hands && (
         <button
           type="button"
-          className={disc}
+          className={cn(
+            disc,
+            hands > 0 && panel !== "hands" && "text-amber-300"
+          )}
           style={panel === "hands" ? onSurface : glassSurface}
           aria-pressed={panel === "hands"}
           aria-label={
@@ -158,11 +293,7 @@ export function ClassControls({
           }
           onClick={() => onPanel(panel === "hands" ? null : "hands")}
         >
-          <SfSymbol
-            glyph={handRaisedFill}
-            pt={GLYPH_PT}
-            className={glyphClass}
-          />
+          <SfSymbol glyph={handRaisedFill} pt={GLYPH_PT} />
           {hands > 0 && <CountBadge count={hands} />}
         </button>
       )}
@@ -179,16 +310,42 @@ export function ClassControls({
             void channel.send({ t: "wb.show", on: !channel.state.whiteboard })
           }
         >
-          <SfSymbol
-            glyph={pencilAndScribble}
-            pt={GLYPH_PT}
-            className={glyphClass}
-          />
+          <SfSymbol glyph={pencilAndScribble} pt={GLYPH_PT} />
         </button>
       )}
-      {(isHost || (role === "PARTICIPANT" && tools.studentShare)) && (
-        <ShareDisc labels={labels} />
+      {!isHost && (
+        <button
+          type="button"
+          className={disc}
+          style={pop === "react" ? onSurface : glassSurface}
+          aria-haspopup="true"
+          aria-expanded={pop === "react"}
+          aria-label={labels.react}
+          onClick={() => togglePop("react")}
+        >
+          <SfSymbol glyph={faceSmiling} pt={GLYPH_PT} />
+        </button>
       )}
+      {isHost && (
+        <button
+          type="button"
+          className={disc}
+          style={pop === "tools" ? onSurface : glassSurface}
+          aria-haspopup="true"
+          aria-expanded={pop === "tools"}
+          aria-label={labels.classTools}
+          onClick={() => togglePop("tools")}
+        >
+          <SfSymbol glyph={sparkles} pt={GLYPH_PT} />
+          {channel.state.timer?.running && (
+            <span
+              className="absolute end-0.5 top-0.5 size-2.5 rounded-full bg-sky-400"
+              aria-hidden
+            />
+          )}
+        </button>
+      )}
+      {showShare && <ShareDisc labels={labels} />}
       <button
         type="button"
         className={disc}
@@ -197,11 +354,7 @@ export function ClassControls({
         aria-label={discussionLabel}
         onClick={() => onPanel(discussionOpen ? null : defaultTab)}
       >
-        <SfSymbol
-          glyph={bubbleLeftAndBubbleRightFill}
-          pt={GLYPH_PT}
-          className={glyphClass}
-        />
+        <SfSymbol glyph={bubbleLeftAndBubbleRightFill} pt={GLYPH_PT} />
         {badge > 0 ? (
           <CountBadge count={badge} />
         ) : pollOpen ? (
@@ -211,6 +364,201 @@ export function ClassControls({
           />
         ) : null}
       </button>
+
+      {pop === "react" && (
+        <div className={popCard} role="dialog" aria-label={labels.reactions}>
+          <ReactionStrip channel={channel} labels={labels} />
+        </div>
+      )}
+      {pop === "tools" && (
+        <ClassToolsCard
+          channel={channel}
+          labels={labels}
+          tools={tools}
+          canShareScreen={canShareScreen}
+          onMuteAll={onMuteAll}
+          onClose={closePop}
+        />
+      )}
+    </div>
+  )
+}
+
+const TIMER_PRESETS = [1, 3, 5, 10]
+
+/**
+ * The host's class tools: reactions, the countdown, the room-wide moderation
+ * moves and who may draw. One card, short enough to sit above the row on a
+ * phone.
+ */
+function ClassToolsCard({
+  channel,
+  labels,
+  tools,
+  canShareScreen,
+  onMuteAll,
+  onClose,
+}: {
+  channel: ClassChannel
+  labels: RoomLabels
+  tools: RoomTools
+  canShareScreen: boolean
+  onMuteAll?: () => void
+  onClose: () => void
+}) {
+  const now = useTimerNow(channel.state.timer)
+  // A finished countdown offers a fresh one rather than Pause at 0:00.
+  const timer = timerDone(channel.state.timer, now) ? null : channel.state.timer
+  const left = timer ? timerLeft(timer, now) : 0
+  const startTimer = (ms: number, totalMs = ms) =>
+    void channel.send({ t: "timer", remainingMs: ms, totalMs, running: true })
+  const row =
+    "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-start text-[16px] transition-colors hover:bg-white/10 active:bg-white/15 disabled:opacity-40"
+
+  return (
+    <div
+      className={cn(popCard, "w-[min(22rem,calc(100vw-1.5rem))]")}
+      role="dialog"
+      aria-label={labels.classTools}
+    >
+      <div className="flex justify-center pb-1">
+        <ReactionStrip channel={channel} labels={labels} />
+      </div>
+      <div className="mx-2 h-px bg-white/10" />
+
+      <div className="px-1 pt-2 pb-1">
+        <p className="flex items-center gap-2 px-2 pb-1.5 text-[13px] font-medium text-white/60">
+          <SfSymbol glyph={timerGlyph} pt={14} />
+          {labels.timer}
+          {timer && (
+            <span className="ms-auto text-[15px] font-semibold text-white tabular-nums">
+              {formatClock(left)}
+            </span>
+          )}
+        </p>
+        {timer ? (
+          <div className="flex gap-2 px-1">
+            <button
+              type="button"
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
+              onClick={() =>
+                void channel.send({
+                  t: "timer",
+                  remainingMs: left,
+                  totalMs: timer.totalMs,
+                  running: !timer.running,
+                })
+              }
+            >
+              <SfSymbol glyph={timer.running ? pauseFill : playFill} pt={16} />
+              {timer.running ? labels.timerPause : labels.timerResume}
+            </button>
+            <button
+              type="button"
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
+              onClick={() => void channel.send({ t: "timer.stop" })}
+            >
+              <SfSymbol glyph={stopFill} pt={16} />
+              {labels.timerStop}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-2 px-1">
+            {TIMER_PRESETS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="h-11 rounded-full bg-white/15 text-[15px] font-semibold tabular-nums hover:bg-white/25"
+                onClick={() => {
+                  startTimer(m * 60_000)
+                  onClose()
+                }}
+              >
+                {labels.timerMinutes.replace("{n}", String(m))}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="mx-2 mt-1 h-px bg-white/10" />
+
+      <div className="pt-1">
+        <button
+          type="button"
+          className={row}
+          onClick={() => {
+            onMuteAll?.()
+            onClose()
+          }}
+        >
+          <SfSymbol glyph={micSlash} pt={18} className="w-6" />
+          {labels.muteAll}
+        </button>
+        <button
+          type="button"
+          className={row}
+          disabled={channel.hands.length === 0}
+          onClick={() => {
+            void channel.clearAllHands()
+            onClose()
+          }}
+        >
+          <SfSymbol glyph={handRaisedSlashFill} pt={18} className="w-6" />
+          {labels.lowerAllHands}
+          {channel.hands.length > 0 && (
+            <span className="ms-auto text-white/60 tabular-nums">
+              {channel.hands.length}
+            </span>
+          )}
+        </button>
+        {tools.whiteboard && (
+          <div className="flex items-center gap-3 px-3 py-1.5">
+            <SfSymbol
+              glyph={person2BadgeGearshapeFill}
+              pt={18}
+              className="w-6"
+            />
+            <span className="min-w-0 flex-1 truncate text-[16px]">
+              {labels.boardWho}
+            </span>
+            <div className="flex rounded-full bg-white/10 p-0.5 text-[13px] font-semibold">
+              {(
+                [
+                  [null, labels.boardOnlyHosts],
+                  ["*", labels.boardEveryone],
+                ] as Array<[string | null, string]>
+              ).map(([to, text]) => (
+                <button
+                  key={String(to)}
+                  type="button"
+                  className={cn(
+                    "min-h-9 rounded-full px-2.5",
+                    (channel.state.grant === "*" ? "*" : null) === to
+                      ? "bg-white text-black"
+                      : "text-white/80"
+                  )}
+                  aria-pressed={
+                    (channel.state.grant === "*" ? "*" : null) === to
+                  }
+                  onClick={() => void channel.setGrant(to)}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {!canShareScreen && (
+          <p className="flex items-center gap-3 px-3 py-2 text-[13px] text-white/50">
+            <SfSymbol
+              glyph={rectangleInsetFilledAndPersonFilled}
+              pt={16}
+              className="w-6"
+            />
+            {labels.shareNeedsComputer}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
@@ -234,11 +582,7 @@ function MicDisc({ labels }: { labels: RoomLabels }) {
       disabled={pending}
       onClick={() => void toggle()}
     >
-      <SfSymbol
-        glyph={enabled ? micFill : micSlashFill}
-        pt={GLYPH_PT}
-        className={glyphClass}
-      />
+      <SfSymbol glyph={enabled ? micFill : micSlashFill} pt={GLYPH_PT} />
     </button>
   )
 }
@@ -259,11 +603,7 @@ function CameraDisc({ labels }: { labels: RoomLabels }) {
       disabled={pending}
       onClick={() => void toggle()}
     >
-      <SfSymbol
-        glyph={enabled ? videoFill : videoSlashFill}
-        pt={GLYPH_PT}
-        className={glyphClass}
-      />
+      <SfSymbol glyph={enabled ? videoFill : videoSlashFill} pt={GLYPH_PT} />
     </button>
   )
 }
@@ -286,11 +626,7 @@ function ShareDisc({ labels }: { labels: RoomLabels }) {
       disabled={pending}
       onClick={() => void toggle()}
     >
-      <SfSymbol
-        glyph={rectangleInsetFilledAndPersonFilled}
-        pt={GLYPH_PT}
-        className={glyphClass}
-      />
+      <SfSymbol glyph={rectangleInsetFilledAndPersonFilled} pt={GLYPH_PT} />
     </button>
   )
 }

@@ -2,14 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParticipants } from "@livekit/components-react"
-import { Check, Hand, X } from "lucide-react"
+import { Check, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { glassPill } from "@/components/lumos/shared/video-player/glass"
+import {
+  handRaisedFill,
+  handRaisedSlashFill,
+  personWave2Fill,
+  SfSymbol,
+} from "@/components/lumos/shared/video-player/sf-symbols"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
 import { InputBar } from "@/components/school-dashboard/messaging/mobile"
 
@@ -37,6 +43,8 @@ interface SidePanelProps {
   open: boolean
   onPollClosed?: (poll: Poll) => void
   onQuestion?: (id: string, text: string, from: string) => void
+  /** Host: lower the hand and spotlight the student. */
+  onGiveFloor?: (identity: string) => void
 }
 
 export function SidePanel(props: SidePanelProps) {
@@ -138,7 +146,12 @@ function QuestionsTab({
   const ask = (raw: string) => {
     const t = raw.trim().slice(0, 500)
     if (!t) return
-    void channel.send({ t: "q", id: crypto.randomUUID(), text: t, at: Date.now() })
+    void channel.send({
+      t: "q",
+      id: crypto.randomUUID(),
+      text: t,
+      at: Date.now(),
+    })
   }
 
   return (
@@ -379,30 +392,123 @@ function hostTargets(channel: ClassChannel): string[] | undefined {
 
 // ---------------------------------------------------------------------------
 
-function HandsTab({ channel, labels }: SidePanelProps) {
+function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
   const participants = useParticipants()
   const byIdentity = new Map(participants.map((p) => [p.identity, p]))
-  if (channel.hands.length === 0)
-    return <p className="p-3 text-sm text-white/60">{labels.noHands}</p>
+  // "2 min" ticks over on its own.
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const h = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(h)
+  }, [])
+  const spotlight = channel.state.spotlight
+  const spotName = spotlight
+    ? byIdentity.get(spotlight)?.name || spotlight
+    : null
+
   return (
-    <ul className="space-y-1 p-3 text-sm">
-      {channel.hands.map((id, i) => (
-        <li
-          key={id}
-          className="flex items-center gap-2 rounded-md bg-white/10 px-2 py-1.5"
-        >
-          <Hand className="h-4 w-4 text-amber-300" aria-hidden />
-          <span className="text-white/60">{i + 1}.</span>
-          <span className="truncate">{byIdentity.get(id)?.name || id}</span>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <p className="flex-1 text-[15px] font-semibold">
+          {labels.handsRaised}
+          {channel.hands.length > 0 && (
+            <span className="ms-2 rounded-full bg-amber-400 px-2 py-0.5 text-[12px] text-black tabular-nums">
+              {channel.hands.length}
+            </span>
+          )}
+        </p>
+        {channel.hands.length > 1 && (
           <button
             type="button"
-            className="ms-auto text-xs underline underline-offset-2"
-            onClick={() => void channel.clearHand(id)}
+            className="min-h-9 rounded-full bg-white/15 px-3 text-sm font-medium hover:bg-white/25"
+            onClick={() => void channel.clearAllHands()}
           >
-            {labels.clearHand}
+            {labels.lowerAllHands}
           </button>
-        </li>
-      ))}
-    </ul>
+        )}
+      </div>
+
+      {spotName && (
+        <div className="mx-3 mb-2 flex items-center gap-2 rounded-2xl bg-sky-500/20 px-3 py-2 text-sm ring-1 ring-sky-400/40">
+          <span aria-hidden>🎙️</span>
+          <span className="min-w-0 flex-1 truncate">{spotName}</span>
+          <button
+            type="button"
+            className="min-h-9 shrink-0 rounded-full bg-white/15 px-3 font-medium hover:bg-white/25"
+            onClick={() => {
+              void channel.send({ t: "spotlight", identity: null })
+              if (channel.state.grant === spotlight) void channel.setGrant(null)
+            }}
+          >
+            {labels.endSpotlight}
+          </button>
+        </div>
+      )}
+
+      {channel.hands.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 pb-10 text-center text-white/55">
+          <SfSymbol glyph={handRaisedFill} pt={34} className="text-white/30" />
+          <p className="text-sm">{labels.noHands}</p>
+        </div>
+      ) : (
+        <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pb-3">
+          {channel.hands.map((id, i) => {
+            const name = byIdentity.get(id)?.name || id
+            const at = channel.handsSince.get(id)
+            const mins = at ? Math.floor((now - at) / 60_000) : 0
+            return (
+              <li
+                key={id}
+                className="flex min-h-[52px] items-center gap-3 rounded-2xl bg-white/[0.07] py-1.5 ps-2 pe-1.5"
+              >
+                <span className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-400/90 text-sm font-bold text-black">
+                  {initials(name)}
+                  <span className="absolute -end-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-amber-300 tabular-nums ring-2 ring-black">
+                    {i + 1}
+                  </span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-medium">
+                    {name}
+                  </span>
+                  <span className="block text-[12px] text-white/55">
+                    {mins < 1
+                      ? labels.handJustNow
+                      : labels.handMinutes.replace("{n}", String(mins))}
+                  </span>
+                </span>
+                {onGiveFloor && (
+                  <button
+                    type="button"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-black transition-opacity active:opacity-60"
+                    aria-label={`${labels.giveFloor}: ${name}`}
+                    title={labels.giveFloor}
+                    onClick={() => onGiveFloor(id)}
+                  >
+                    <SfSymbol glyph={personWave2Fill} pt={20} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-opacity hover:bg-white/25 active:opacity-60"
+                  aria-label={`${labels.clearHand}: ${name}`}
+                  title={labels.clearHand}
+                  onClick={() => void channel.clearHand(id)}
+                >
+                  <SfSymbol glyph={handRaisedSlashFill} pt={20} />
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+    </div>
   )
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  const a = parts[0]?.[0] ?? "?"
+  const b = parts.length > 1 ? parts[parts.length - 1][0] : ""
+  return (a + b).toUpperCase()
 }
