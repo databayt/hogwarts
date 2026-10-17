@@ -2,7 +2,7 @@
 title: "Bulk-import students"
 description: Bring a whole class in from Excel or CSV, review every row, hand out logins, and undo if needed.
 summary: "Importing students from an Excel or CSV file, with their logins"
-keywords: ["import student", "bulk student", "students excel", "students from excel", "students csv", "students from a file", "upload students", "many students", "all students", "excel", "csv", "bulk", "import"]
+keywords: ["import student", "bulk student", "students excel", "students from excel", "students csv", "students from a file", "upload students", "many students", "all students", "excel", "csv", "bulk", "import", "import failed", "csv error"]
 roles: ["admin"]
 flow: bulk-student
 ---
@@ -21,6 +21,15 @@ flow: bulk-student
 
 - Each user chooses their own password the first time they sign in.
 - Imported the wrong file? Find it in **Import history** and click **Undo**. This removes the people that import created, except anyone who has already signed in.
+
+## Troubleshooting
+
+- **The file is rejected** — use Excel, CSV, JSON, Word or text, up to 10 MB and 5,000 rows. Starting from the **Template** avoids most problems.
+- **"Choose a column for: …"** — a required field has no column. Pick the right column in **Match columns**, or add it to your file.
+- **"This looks like a … file"** — you picked the wrong card, for example a teachers file on **Students**. Click **Import as …** to switch.
+- **Rows show Skip** — those students already exist. Turn on **Update people who already exist** to write their changes instead.
+- **Rows show Error** — open the row to see why, fix it in your file, and import again. Rows that went in are not duplicated.
+- **The import stopped halfway** — find it in **Import history** and click **Resume**.
 
 ## Related
 

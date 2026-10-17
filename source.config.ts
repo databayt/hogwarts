@@ -36,6 +36,7 @@ const schema = frontmatterSchema.extend({
   summary: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   flow: z.string().optional(),
+  media: z.array(z.string()).optional(),
   sales: z.boolean().optional(),
   guide: z.string().optional(),
   answer: z.string().optional(),

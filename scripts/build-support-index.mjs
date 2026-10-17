@@ -10,7 +10,8 @@
  * what the guide says, and a guide edit reaches the chat on the next build.
  *
  * A guide is a topic when its frontmatter has `summary` (index and faq don't).
- * The bot's answer is the guide's Steps + Good to know sections, plain text,
+ * The bot's answer is the guide's Steps + Good to know + Troubleshooting
+ * sections, plain text,
  * unless frontmatter `answer` overrides it (pricing: the live figures are in
  * the prompt). Committed, not built at runtime: Workers have no file system.
  *
@@ -29,8 +30,8 @@ const ROLES = new Set(["admin", "teacher", "parent"])
 // The sections the bot answers from, per language. Related links and media
 // stay on the page.
 const SECTIONS = {
-  en: ["Steps", "Good to know"],
-  ar: ["الخطوات", "معلومات مفيدة"],
+  en: ["Steps", "Good to know", "Troubleshooting"],
+  ar: ["الخطوات", "معلومات مفيدة", "حل المشكلات"],
 }
 
 const errors = []
@@ -73,12 +74,14 @@ function plain(text) {
 function answerOf(lang, slug, doc) {
   if (doc.attributes.answer) return String(doc.attributes.answer).trim()
   const s = sections(doc.body)
-  const [steps, extra] = SECTIONS[lang]
+  const [steps, extra, trouble] = SECTIONS[lang]
   if (!s[steps]?.trim()) {
     fail(`${lang}/${slug}.mdx: no "## ${steps}" section`)
     return ""
   }
-  return plain([s[steps], s[extra] ?? ""].join("\n\n"))
+  const parts = [s[steps], s[extra] ?? ""]
+  if (s[trouble]?.trim()) parts.push(`${trouble}:\n${s[trouble]}`)
+  return plain(parts.join("\n\n"))
 }
 
 const order = JSON.parse(
@@ -118,6 +121,8 @@ for (const slug of order) {
   const topic = {
     slug,
     ...(en.attributes.flow ? { flow: en.attributes.flow } : {}),
+    // Extra manifest ids (media of another flow or a page still) to attach.
+    ...(en.attributes.media?.length ? { media: en.attributes.media } : {}),
     roles,
     title: { ar: ar.attributes.title, en: en.attributes.title },
     summary: { ar: ar.attributes.summary, en: en.attributes.summary },

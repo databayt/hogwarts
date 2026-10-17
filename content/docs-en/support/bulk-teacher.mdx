@@ -2,7 +2,7 @@
 title: "Bulk-import teachers"
 description: Bring your staff in from one file, with departments, subjects and logins.
 summary: "Importing teachers from a file, with departments, subjects and logins"
-keywords: ["import teacher", "bulk teacher", "teachers excel", "teachers from excel", "teachers csv", "teachers from a file", "upload teachers", "all teachers"]
+keywords: ["import teacher", "bulk teacher", "teachers excel", "teachers from excel", "teachers csv", "teachers from a file", "upload teachers", "all teachers", "import teachers"]
 roles: ["admin"]
 flow: bulk-teacher
 ---
@@ -20,6 +20,14 @@ flow: bulk-teacher
 ## Good to know
 
 - To remove an import, click **Undo** next to it in **Import history**. People who have already signed in are kept.
+
+## Troubleshooting
+
+- **The file is rejected** — use Excel, CSV or similar, up to 10 MB and 5,000 rows. Start from the **Template**.
+- **Rows show Error** — usually a missing or repeated email. Every teacher needs their own email; fix it in the file and import again.
+- **Rows show Skip** — those teachers already exist. Turn on **Update people who already exist** to write their changes.
+- **Departments or subjects are missing** — turn on **Create missing sections and departments**, or check the spelling in your file.
+- **The logins file has new passwords** — each download sets new passwords for accounts that haven't signed in yet. Hand out the latest file only.
 
 ## Related
 

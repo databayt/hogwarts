@@ -2,7 +2,7 @@
 title: "Add a student"
 description: The add-student wizard, from documents to the student's login.
 summary: "The add-student wizard, with the student's login"
-keywords: ["add student", "add a student", "new student", "create student", "create a student", "register student", "register a student", "enrol", "enroll"]
+keywords: ["add student", "add a student", "new student", "create student", "create a student", "register student", "register a student", "enrol", "enroll", "student login", "can't add student"]
 roles: ["admin"]
 flow: add-student
 ---
@@ -23,6 +23,13 @@ flow: add-student
 - Only the student's name and one parent are required. You can fill in the rest later.
 - The wizard saves the parent as a contact. To give the parent their own login, use **Generate Credentials** on the student, or import guardians in bulk.
 - Adding a whole class? Bulk import is faster.
+
+## Troubleshooting
+
+- **The Create button is greyed out** — a required field is empty. Fill in the student's name and at least one parent.
+- **The student's login didn't show or got lost** — open the student, use **Generate Credentials** to make a new login, and send it again.
+- **The student doesn't appear in a class** — check the **Academic** step: the grade, stream and section must be set. Edit the student to fix it.
+- **The photo or file won't upload** — use a JPG, PNG or PDF, check its size, and try again on a steady connection.
 
 ## Related
 

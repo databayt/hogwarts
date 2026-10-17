@@ -1,23 +1,33 @@
 ---
 title: "Fees and invoices"
-description: Set up fees, assign them to students, collect payments and send invoices.
+description: Set the school fee, fine-tune it per grade or student, collect payments and send invoices.
 summary: "Setting up fees, collecting them and invoicing"
-keywords: ["fee", "invoice", "payment", "tuition", "instalment", "installment", "finance", "billing"]
+keywords: ["fee", "invoice", "payment", "tuition", "instalment", "installment", "finance", "billing", "student price", "grade fee", "school fee", "discount", "scholarship", "overdue", "receipt"]
 roles: ["admin", "parent"]
 ---
 
 ## Steps
 
-1. Open **Finance → Fees → Fee Structures** and create a fee: amount, category, grade, number of instalments and late fee.
-2. Assign it to students one by one or in bulk. A student placed in a grade gets that grade's fees automatically.
-3. Invoices are created automatically from fees. To make one by hand, open **Invoice**.
-4. Share an invoice by link, PDF or email.
+1. **School fee**: set it once in **School → Configuration → Price**, or in the price step of onboarding. Every grade starts from it.
+2. **Grade fee**: open **Finance → Fees → Structure**, open a grade's fee and save a new amount. The grade is now **Fine-tuned for this grade**. **Reset to school fee** puts it back.
+3. **Student price**: open **Finance → Fees → Assignments**, open the student's fee, and under **Student price** click **Save price**. **Reset to grade fee** puts it back. A **Discount** with a reason goes on the same card.
+4. Students placed in a grade get that grade's fee automatically, and invoices are created from it.
+5. Record a payment under **Payments**, or let parents pay online. Share an invoice by link, PDF or email.
 
 ## Good to know
 
-- Parents can pay by card (Stripe), cash, bank transfer or mobile wallet (Bankak/mBOK).
-- A daily reminder goes out for overdue fees.
-- Parents see their children's fees in the parent portal.
+- Prices flow school → grade → student. A change only reaches the levels still inheriting it. Fine-tuned grades and students with their own price keep theirs.
+- Anything already paid is never re-priced. Open instalments are re-split so they add up to the new amount.
+- Moving a student to another grade, or promoting them, cancels this year's unpaid old-grade fee and assigns the new one.
+- Parents pay by card, cash, bank transfer or mobile wallet (Bankak/mBOK). They see their fees under **Finance**, and get a daily reminder when a fee is overdue.
+
+## Troubleshooting
+
+- **I changed the school fee but a grade didn't move**: that grade is fine-tuned. Open it and click **Reset to school fee**.
+- **One student kept the old price**: they have their own price. Open their fee and click **Reset to grade fee**.
+- **A student still shows their old grade's fee**: change the grade from the student's record, not the fee. This year's unpaid old fee is then cancelled for you.
+- **A paid fee didn't change after re-pricing**: that's on purpose. Paid amounts are never rewritten. Add a fine or a discount instead.
+- **"Enter a valid amount"**: type digits only, without commas or a currency sign.
 
 ## Related
 
