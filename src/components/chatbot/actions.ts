@@ -3,12 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { headers } from "next/headers"
+import { auth } from "@/auth"
 import { createGroq } from "@ai-sdk/groq"
 import { CoreMessage, generateText } from "ai"
 
 import { db } from "@/lib/db"
 import { extractIdentifiers } from "@/lib/funnel/identifiers"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { mainOriginForHost } from "@/lib/root-domain"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
@@ -17,15 +19,18 @@ import { captureFromChat } from "./capture"
 import {
   buildSaasMarketingPrompt,
   buildSchoolSitePrompt,
+  buildSchoolSupportPrompt,
   deriveSchoolContext,
   type SchoolChatbotData,
   type SystemPromptType,
 } from "./prompts"
 import {
+  formatSupport,
   isHelpIndexQuestion,
   isSupportQuestion,
   matchTopics,
   SUPPORT_TOPICS,
+  supportRoleOf,
   type SupportTopic,
 } from "./support"
 import { resourcesFor } from "./support-media"
@@ -33,6 +38,7 @@ import type {
   ChatbotDictionary,
   ChatResource,
   SchoolChatbotDisplay,
+  SupportRole,
 } from "./type"
 
 /**
@@ -208,39 +214,90 @@ async function fetchSchoolData(
   }
 }
 
+/** The signed-in school member the dashboard support desk is talking to. */
+interface SupportMember {
+  id: string
+  role: SupportRole
+  /** Dictionary key naming their exact role in the prompt (`roleTeacher`). */
+  roleKey: string
+  schoolName: string | null
+}
+
+const ROLE_KEYS: Record<string, string> = {
+  ADMIN: "roleAdmin",
+  DEVELOPER: "roleAdmin",
+  TEACHER: "roleTeacher",
+  GUARDIAN: "roleParent",
+  STUDENT: "roleStudent",
+  ACCOUNTANT: "roleAccountant",
+}
+
 /**
- * Server-side resolution of the system prompt for either mode. The dictionary
- * is loaded here (not on the client) so we never ship the entire prompt text
- * over the network — only the assistant's response.
+ * Role and school come from the session, never from the client: the
+ * support desk tailors answers to them, so a forged role would only get
+ * someone else's how-to — but it still has to be the truth.
+ */
+async function supportMember(locale: string): Promise<SupportMember | null> {
+  const session = await auth()
+  const user = session?.user
+  if (!user?.id) return null
+  const school = user.schoolId
+    ? await db.school.findUnique({
+        where: { id: user.schoolId },
+        select: { name: true, nameEn: true },
+      })
+    : null
+  return {
+    id: user.id,
+    role: supportRoleOf(user.role),
+    roleKey: ROLE_KEYS[user.role ?? ""] ?? "roleStaff",
+    schoolName: school
+      ? locale === "en"
+        ? (school.nameEn ?? school.name)
+        : school.name
+      : null,
+  }
+}
+
+/**
+ * Server-side resolution of the system prompt for every mode. The
+ * dictionary is loaded by the caller (not the client) so we never ship the
+ * prompt text over the network — only the assistant's response.
  */
 async function resolveSystemPrompt(
   systemPromptType: SystemPromptType,
-  subdomain: string | undefined,
-  locale: string,
-  matched: SupportTopic[] = []
-): Promise<{ prompt: string; chatbot: ChatbotDictionary }> {
-  const dictionary = await getDictionary(locale as Locale)
-  const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
+  chatbot: ChatbotDictionary,
+  options: {
+    subdomain?: string
+    locale: string
+    matched: SupportTopic[]
+    attached: string[]
+    member: SupportMember | null
+  }
+): Promise<string> {
+  const { subdomain, locale, matched, attached, member } = options
+
+  if (systemPromptType === "schoolSupport" && member) {
+    return buildSchoolSupportPrompt(locale, chatbot, {
+      schoolName:
+        member.schoolName ?? (locale === "ar" ? "مدرستك" : "your school"),
+      roleLabel: chatbot[member.roleKey] ?? chatbot.roleStaff,
+      support: formatSupport(locale, matched, { role: member.role, attached }),
+    })
+  }
 
   if (systemPromptType === "schoolSite" && subdomain) {
     const schoolData = await fetchSchoolData(subdomain)
-    if (schoolData) {
-      return {
-        prompt: buildSchoolSitePrompt(schoolData, locale, chatbot),
-        chatbot,
-      }
-    }
+    if (schoolData) return buildSchoolSitePrompt(schoolData, locale, chatbot)
   }
 
-  return {
-    prompt: buildSaasMarketingPrompt(
-      locale,
-      chatbot,
-      (await getExchangeRates()).rates,
-      matched
-    ),
+  return buildSaasMarketingPrompt(
+    locale,
     chatbot,
-  }
+    (await getExchangeRates()).rates,
+    matched,
+    attached
+  )
 }
 
 export async function sendMessage(
@@ -251,19 +308,33 @@ export async function sendMessage(
 ) {
   // Hoisted so the catch below can still answer a support question with its
   // guide cards instead of the sales fallback.
-  let support = false
+  let support = systemPromptType === "schoolSupport"
   let resources: ChatResource[] = []
   try {
-    // Public, unauthenticated action → throttle before anything costs money.
-    // Key: IP + truncated UA (shared school networks stay fair; spoofing only
-    // buys friction). Two windows: burst and sustained.
+    // The dashboard desk answers signed-in school members only.
+    const desk = systemPromptType === "schoolSupport"
+    const member = desk ? await supportMember(locale) : null
+    if (desk && !member) {
+      return {
+        success: false,
+        error:
+          locale === "ar"
+            ? "سجّل الدخول لتسأل مساعد الدعم."
+            : "Sign in to ask the support assistant.",
+      }
+    }
+
+    // Public action → throttle before anything costs money. Key: the user
+    // when signed in (a whole school shares one IP), else IP + truncated UA
+    // (shared school networks stay fair; spoofing only buys friction). Two
+    // windows: burst and sustained.
     const h = await headers()
     const ip =
       h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       h.get("x-real-ip") ||
       "unknown"
     const ua = (h.get("user-agent") ?? "").slice(0, 50)
-    const rlKey = `${ip}:${ua}`
+    const rlKey = member ? `user:${member.id}` : `${ip}:${ua}`
     const burst = await checkUserRateLimit(
       rlKey,
       RATE_LIMITS.CHATBOT,
@@ -305,37 +376,65 @@ export async function sendMessage(
     // carries only the guides this question needs, and the guide/video/
     // screenshot cards are attached from the registry — never model output.
     const isSaas = systemPromptType === "saasMarketing"
-    const texts = isSaas ? lastUserTexts(messages) : []
-    const helpIndex = isSaas && isHelpIndexQuestion(texts[0] ?? "")
-    const matched = helpIndex ? [] : matchTopics(texts)
-    support = helpIndex || isSupportQuestion(matched)
+    const helps = isSaas || desk
+    const texts = helps ? lastUserTexts(messages) : []
+    const helpIndex = helps && isHelpIndexQuestion(texts[0] ?? "")
+    // The desk carries a third guide: a signed-in user's question is almost
+    // always a how-to, and a near miss costs more than the extra tokens.
+    const matched = helpIndex
+      ? []
+      : matchTopics(texts, desk ? 3 : 2, member?.role)
+    support = desk || helpIndex || isSupportQuestion(matched)
 
-    const { prompt: systemPrompt, chatbot } = await resolveSystemPrompt(
-      systemPromptType,
-      subdomain,
-      locale,
-      matched
-    )
+    const dictionary = await getDictionary(locale as Locale)
+    const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
+    // The help center lives on the main domain; a school subdomain (the
+    // dashboard desk) has no /docs route, so its links carry the origin.
+    const origin = desk ? mainOriginForHost(h.get("host")) : ""
     resources = helpIndex
       ? [
           {
             kind: "guide",
             title: chatbot.ctaHelpCenter,
-            href: `/${locale}/docs/support`,
+            href: `${origin}/${locale}/docs/support`,
           },
         ]
-      : matched.slice(0, 1).flatMap((topic) =>
-          resourcesFor(topic, locale, {
-            video: chatbot.resourceVideo,
-            guide: chatbot.resourceGuide,
-          })
-        )
+      : matched
+          .slice(0, 1)
+          .flatMap((topic) =>
+            resourcesFor(
+              topic,
+              locale,
+              { video: chatbot.resourceVideo, guide: chatbot.resourceGuide },
+              undefined,
+              origin
+            )
+          )
 
     // "What can you help with?" has one right answer — the guide list. A
     // 20B model asked for it still invents steps, so it is answered here.
     if (helpIndex) {
-      return { success: true, content: helpIndexReply(locale), resources }
+      return {
+        success: true,
+        content: helpIndexReply(locale, member?.role),
+        resources,
+      }
     }
+
+    // The bot is told which cards sit under its answer (by title, never by
+    // URL) so it can point at "the screenshots below" when they exist.
+    const attached = resources
+      .filter((r) => r.kind !== "guide")
+      .map((r) =>
+        r.kind === "video" ? `${chatbot.resourceVideo}: ${r.title}` : r.title
+      )
+    const systemPrompt = await resolveSystemPrompt(systemPromptType, chatbot, {
+      subdomain,
+      locale,
+      matched,
+      attached,
+      member,
+    })
 
     const groq = createGroq({ apiKey })
 
@@ -348,7 +447,7 @@ export async function sendMessage(
     const result = await generateText({
       model: groq(CHAT_MODEL),
       messages: recentMessages,
-      system: isSaas
+      system: helps
         ? systemPrompt + askState(messages, locale, support)
         : systemPrompt,
       // Low temperature → factual, on-script answers (never invent prices).
@@ -374,7 +473,7 @@ export async function sendMessage(
     return {
       success: true,
       content: plainText(
-        isSaas ? dropRepeatAsk(result.text, messages, support) : result.text
+        helps ? dropRepeatAsk(result.text, messages, support) : result.text
       ),
       resources,
     }
@@ -459,6 +558,10 @@ function fallbackReply(
   support = false
 ): string {
   const ar = locale === "ar"
+  if (type === "schoolSupport")
+    return ar
+      ? "عذرًا، لم أتمكن من الإجابة الآن. حاول مجددًا بعد قليل، أو استخدم «الإبلاغ عن مشكلة» أسفل الصفحة، أو راسلنا على contact@databayt.org."
+      : "Sorry, I couldn't answer just now. Try again shortly, use 'Report an issue' at the bottom of the page, or email us at contact@databayt.org."
   if (support)
     return ar
       ? "عذرًا، لم أتمكن من الإجابة الآن. الدليل وفيديو الشرح مرفقان أدناه، أو راسلنا على contact@databayt.org."
@@ -487,9 +590,11 @@ function lastUserTexts(
     .map(textOf)
 }
 
-function helpIndexReply(locale: string): string {
+function helpIndexReply(locale: string, role?: SupportRole): string {
   const ar = locale === "ar"
-  const titles = SUPPORT_TOPICS.map((t) => `- ${t.title[ar ? "ar" : "en"]}`)
+  const titles = SUPPORT_TOPICS.filter(
+    (t) => !role || !t.roles?.length || t.roles.includes(role)
+  ).map((t) => `- ${t.title[ar ? "ar" : "en"]}`)
   return [
     ar
       ? "أستطيع مساعدتك في استخدام «بالقلم» خطوة بخطوة. اسألني عن أيٍّ من هذه:"

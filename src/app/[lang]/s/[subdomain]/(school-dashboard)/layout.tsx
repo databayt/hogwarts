@@ -10,6 +10,8 @@ import { parseEnabledModules } from "@/lib/enabled-modules"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ModalProvider } from "@/components/atom/modal/context"
+import { Chatbot } from "@/components/chatbot/chatbot"
+import { supportRoleOf } from "@/components/chatbot/support"
 import {
   isRTL as checkIsRTL,
   type Locale,
@@ -217,6 +219,15 @@ export default async function PlatformLayout({
                     <ReportIssueFooter />
                   </div>
                 </div>
+                {/* The tech-support desk: answers how-to questions from the
+                    help center, in the member's role, with the guide's
+                    screenshots. Role and school are re-read from the session
+                    on every message; the prop only picks the quick asks. */}
+                <Chatbot
+                  lang={lang as Locale}
+                  promptType="schoolSupport"
+                  supportRole={supportRoleOf(serverRole)}
+                />
                 {/* Admin-forced password reset. Streams in behind the page
                     instead of holding the whole layout for its lookup. */}
                 <Suspense fallback={null}>

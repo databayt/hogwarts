@@ -8,8 +8,8 @@ import {
 import {
   ENTERPRISE_STUDENTS,
   FALLBACK_RATES,
-  FREE_STUDENTS,
   formatMoney,
+  FREE_STUDENTS,
   quote,
   type Rates,
 } from "@/components/saas-marketing/pricing/rates"
@@ -172,12 +172,30 @@ export function buildSaasMarketingPrompt(
   locale: string = "en",
   dict: Pick<ChatbotDictionary, "saasPromptTemplate">,
   rates: Rates = FALLBACK_RATES,
-  matched: SupportTopic[] = []
+  matched: SupportTopic[] = [],
+  attached: string[] = []
 ): string {
   return dict.saasPromptTemplate
     .replace("{pricing}", formatPricing(locale, rates))
     .replace("{features}", formatFeatures())
-    .replace("{support}", formatSupport(locale, matched))
+    .replace("{support}", formatSupport(locale, matched, { attached }))
+    .replaceAll("{contactEmail}", "contact@databayt.org")
+}
+
+/**
+ * The dashboard support desk: a signed-in member of `schoolName` asking how
+ * to use the product. No pricing, no features pitch — only the guides their
+ * role reads, and the matched ones in full.
+ */
+export function buildSchoolSupportPrompt(
+  locale: string,
+  dict: Pick<ChatbotDictionary, "supportPromptTemplate">,
+  context: { schoolName: string; roleLabel: string; support: string }
+): string {
+  return dict.supportPromptTemplate
+    .replaceAll("{schoolName}", context.schoolName)
+    .replaceAll("{role}", context.roleLabel)
+    .replace("{support}", context.support)
     .replaceAll("{contactEmail}", "contact@databayt.org")
 }
 
@@ -422,4 +440,4 @@ export function buildSchoolSitePrompt(
 }
 
 // Backwards-compat surface — used only by older imports of `SystemPromptType`
-export type SystemPromptType = "saasMarketing" | "schoolSite"
+export type SystemPromptType = "saasMarketing" | "schoolSite" | "schoolSupport"

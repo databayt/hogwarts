@@ -79,8 +79,11 @@ export interface ChatbotDictionary {
   speechError: string
   listening: string
 
+  errorBubble: string
+
   // Welcomes (mode-specific)
   welcomeSaas: string
+  welcomeSupport: string
   welcomeSchoolTemplate: string // contains {name} placeholder
 
   // CTA chip labels
@@ -95,6 +98,7 @@ export interface ChatbotDictionary {
   ctaViewScholarships: string
   ctaOpenDocs: string
   ctaHelpCenter: string
+  ctaEmailSupport: string
 
   // Support resources attached under an answer
   resourceVideo: string
@@ -108,6 +112,15 @@ export interface ChatbotDictionary {
   saasPromptTemplate: string // {pricing}, {features}, {support}, {contactEmail}
   schoolPromptIntroTemplate: string // {schoolName}
   schoolPromptRules: string
+  supportPromptTemplate: string // {schoolName}, {role}, {support}, {contactEmail}
+
+  // How the support prompt names the signed-in user's role
+  roleAdmin: string
+  roleTeacher: string
+  roleParent: string
+  roleStudent: string
+  roleAccountant: string
+  roleStaff: string
 
   // School prompt section headers
   schoolHeaderAcademic: string
@@ -211,7 +224,16 @@ export interface ChatbotConfig {
   storageKey?: string
 }
 
-export type PromptType = "saasMarketing" | "schoolSite"
+/**
+ * `schoolSupport` is the dashboard's tech-support desk: a signed-in school
+ * member asking how to use the product. The server reads their role and
+ * school from the session — the client only uses `supportRole` for the
+ * quick-ask buttons.
+ */
+export type PromptType = "saasMarketing" | "schoolSite" | "schoolSupport"
+
+/** The help-center audience a signed-in user belongs to. */
+export type SupportRole = "admin" | "teacher" | "parent"
 
 /**
  * Display fields for the school site mode — what the client needs to render
@@ -240,6 +262,8 @@ export interface ChatbotProps {
   className?: string
   promptType?: PromptType
   subdomain?: string
+  /** Dashboard support mode: the viewer's audience, for the quick asks. */
+  supportRole?: SupportRole
   onMessageSend?: (message: string) => void
   onChatOpen?: () => void
   onChatClose?: () => void
@@ -276,6 +300,7 @@ export interface ChatWindowProps {
   subtitle?: string
   promptType?: PromptType
   schoolContext?: SchoolChatbotDisplay | null
+  supportRole?: SupportRole
   enableTypingIndicator?: boolean
   enableTimestamps?: boolean
 }

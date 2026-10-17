@@ -51,10 +51,12 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   speechNotSupported: "Speech recognition is not supported in your browser.",
   speechError: "Speech recognition error. Please try again.",
   listening: "Listening...",
+  errorBubble: "Sorry, something went wrong. Please try again in a moment.",
 
   // Welcomes
   welcomeSaas: "Welcome to balqalam.",
   welcomeSchoolTemplate: "Hi! I'm the {name} assistant",
+  welcomeSupport: "Need a hand? Ask me how to do anything in Balqalam.",
 
   // CTA chip labels
   ctaTryFree: "Try free",
@@ -68,6 +70,7 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   ctaViewScholarships: "View scholarships",
   ctaOpenDocs: "Read the docs",
   ctaHelpCenter: "Help center",
+  ctaEmailSupport: "Email support",
   resourceVideo: "Watch the tutorial",
   resourceGuide: "Open the guide",
 
@@ -79,6 +82,13 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   saasPromptTemplate: "",
   schoolPromptIntroTemplate: "",
   schoolPromptRules: "",
+  supportPromptTemplate: "",
+  roleAdmin: "a school admin",
+  roleTeacher: "a teacher",
+  roleParent: "a parent",
+  roleStudent: "a student",
+  roleAccountant: "the school accountant",
+  roleStaff: "a staff member",
 
   // School prompt headers / phrases (no-op defaults — dictionary overrides)
   schoolHeaderAcademic: "Academic Structure",

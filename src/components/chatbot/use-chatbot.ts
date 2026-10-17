@@ -9,16 +9,22 @@ import { sendMessage as sendMessageAction } from "./actions"
 import type { SystemPromptType } from "./prompts"
 import type { ChatbotState, ChatMessage } from "./type"
 
+/** A failure the server already worded for the visitor. */
+class ChatError extends Error {}
+
 interface UseChatbotOptions {
   promptType?: SystemPromptType
   subdomain?: string
   locale?: string
+  /** The bubble shown when the action fails — localized by the caller. */
+  errorText?: string
 }
 
 export function useChatbot({
   promptType = "saasMarketing",
   subdomain,
   locale = "en",
+  errorText = "Sorry, something went wrong. Please try again in a moment.",
 }: UseChatbotOptions = {}) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -70,7 +76,9 @@ export function useChatbot({
         )
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to send message")
+          // The action's own errors (rate limit, sign-in) are written for
+          // people in their language — show them as they are.
+          throw new ChatError(result.error || errorText)
         }
 
         // Add assistant message
@@ -89,12 +97,14 @@ export function useChatbot({
           err instanceof Error ? err.message : "Unknown error occurred"
         setError(errorMessage)
 
-        // Add error message
+        // The bubble speaks the visitor's language; a raw network or
+        // runtime error stays in the console.
+        const bubble = err instanceof ChatError ? err.message : errorText
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: `Sorry, there was an error: ${errorMessage}`,
+            content: bubble,
             id: Date.now().toString() + "_error",
             timestamp: new Date(),
           },
@@ -103,7 +113,7 @@ export function useChatbot({
         setIsLoading(false)
       }
     },
-    [messages, promptType, subdomain, locale]
+    [messages, promptType, subdomain, locale, errorText]
   )
 
   const clearMessages = useCallback(() => {

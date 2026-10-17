@@ -20,9 +20,13 @@ export async function Chatbot({
   subdomain,
   ...props
 }: ChatbotWrapperProps) {
+  // The dashboard desk needs no school marketing data — the server action
+  // reads the member's school and role from the session on every message.
   const [dictionary, schoolContext] = await Promise.all([
     getDictionary(lang),
-    subdomain ? getSchoolChatbotDisplay(subdomain) : Promise.resolve(null),
+    subdomain && promptType === "schoolSite"
+      ? getSchoolChatbotDisplay(subdomain)
+      : Promise.resolve(null),
   ])
 
   return (

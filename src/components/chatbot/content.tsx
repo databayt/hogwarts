@@ -38,6 +38,7 @@ export const ChatbotContent = forwardRef<
       promptType = "saasMarketing",
       subdomain,
       schoolContext,
+      supportRole,
     },
     ref
   ) => {
@@ -56,6 +57,7 @@ export const ChatbotContent = forwardRef<
       promptType,
       subdomain,
       locale,
+      errorText: fullDictionary.errorBubble,
     })
 
     useImperativeHandle(
@@ -119,6 +121,7 @@ export const ChatbotContent = forwardRef<
           dictionary={fullDictionary}
           promptType={promptType}
           schoolContext={schoolContext}
+          supportRole={supportRole}
         />
       </>
     )

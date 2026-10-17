@@ -6,6 +6,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
+import { mainOriginFromLocation } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ export const ChatWindow = memo(function ChatWindow({
   dictionary,
   promptType = "saasMarketing",
   schoolContext,
+  supportRole = "admin",
 }: ChatWindowProps) {
   const [input, setInput] = useState("")
   const [isMobile, setIsMobile] = useState(false)
@@ -37,6 +39,34 @@ export const ChatWindow = memo(function ChatWindow({
   const isRTL = locale === "ar"
 
   const quickAskButtons = useMemo(() => {
+    if (promptType === "schoolSupport") {
+      // What each audience asks most — the guides written for them.
+      const ask = (key: string, icon: typeof InfoIcon) => ({
+        label: dictionary[key],
+        question: dictionary[`${key}Question`],
+        icon,
+      })
+      if (supportRole === "teacher")
+        return [
+          ask("supportAttendance", TimeIcon),
+          ask("supportGrades", ServicesIcon),
+          ask("supportTimetable", TimeIcon),
+          ask("supportPassword", InfoIcon),
+        ]
+      if (supportRole === "parent")
+        return [
+          ask("supportChildGrades", ServicesIcon),
+          ask("supportChildFees", PriceIcon),
+          ask("supportPassword", InfoIcon),
+          ask("saasSupport", InfoIcon),
+        ]
+      return [
+        ask("supportAddStudent", ServicesIcon),
+        ask("supportFees", PriceIcon),
+        ask("supportRoles", InfoIcon),
+        ask("saasSupport", InfoIcon),
+      ]
+    }
     if (promptType === "schoolSite") {
       const buttons = [
         {
@@ -112,7 +142,7 @@ export const ChatWindow = memo(function ChatWindow({
         icon: InfoIcon,
       },
     ]
-  }, [promptType, dictionary, schoolContext])
+  }, [promptType, dictionary, schoolContext, supportRole])
 
   // Personalised welcome — school name in school mode, generic SaaS line otherwise
   const welcomeText = useMemo(() => {
@@ -121,12 +151,30 @@ export const ChatWindow = memo(function ChatWindow({
         locale === "ar" ? schoolContext.schoolNameAr : schoolContext.schoolName
       return dictionary.welcomeSchoolTemplate.replace("{name}", name)
     }
+    if (promptType === "schoolSupport") return dictionary.welcomeSupport
     return dictionary.welcomeSaas
   }, [promptType, schoolContext, locale, dictionary])
 
   // Mode-aware CTA chips — derived from promptType + live school context.
   // Paths use `/${locale}/...` only — never `/s/${subdomain}/...` (gotcha #11).
   const ctaChips = useMemo<CtaChip[]>(() => {
+    if (promptType === "schoolSupport") {
+      // A school subdomain has no help center of its own — link the main
+      // domain's. The email carries the page so we can see what they saw.
+      const page = typeof window === "undefined" ? "" : window.location.href
+      return [
+        {
+          label: dictionary.ctaHelpCenter,
+          href: `${mainOriginFromLocation()}/${locale}/docs/support`,
+        },
+        {
+          label: dictionary.ctaEmailSupport,
+          href: `mailto:contact@databayt.org?subject=${encodeURIComponent(
+            dictionary.ctaEmailSupport
+          )}&body=${encodeURIComponent(page)}`,
+        },
+      ]
+    }
     if (promptType === "saasMarketing") {
       return [
         { label: dictionary.ctaTryFree, href: `/${locale}/onboarding` },

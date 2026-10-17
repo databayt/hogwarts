@@ -7,6 +7,7 @@ import {
   matchTopics,
   normalize,
   SUPPORT_TOPICS,
+  supportRoleOf,
 } from "@/components/chatbot/support"
 import { resourcesFor } from "@/components/chatbot/support-media"
 import { flowStills } from "@/components/docs/media"
@@ -181,6 +182,26 @@ describe("support media", () => {
     expect(res.at(-1)?.href).toBe("/en/docs/support/add-student")
   })
 
+  it("borrows images by manifest id, and prefixes the help-center origin", () => {
+    const login = {
+      ...addStudent,
+      flow: undefined,
+      media: ["add-student/father-ar"],
+    }
+    const res = resourcesFor(
+      login,
+      "ar",
+      labels,
+      fixture,
+      "https://balqalam.com"
+    )
+    expect(res.map((r) => r.kind)).toEqual(["image", "guide"])
+    expect(res[0]?.title).toBe("father ar")
+    expect(res.at(-1)?.href).toBe(
+      "https://balqalam.com/ar/docs/support/add-student"
+    )
+  })
+
   it("an unpublished flow gives only the guide — never throws", () => {
     const res = resourcesFor(addStudent, "ar", labels, {})
     expect(res).toEqual([
@@ -211,5 +232,52 @@ describe("SUPPORT_TOPICS (generated from the help guides)", () => {
       expect(t.answer.ar && t.answer.en).toBeTruthy()
       expect(t.roles?.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe("dashboard support desk", () => {
+  it("maps every UserRole to a help-center audience", () => {
+    expect(supportRoleOf("TEACHER")).toBe("teacher")
+    expect(supportRoleOf("GUARDIAN")).toBe("parent")
+    expect(supportRoleOf("STUDENT")).toBe("parent")
+    for (const r of ["ADMIN", "DEVELOPER", "ACCOUNTANT", "STAFF", undefined])
+      expect(supportRoleOf(r)).toBe("admin")
+  })
+
+  it("lists only the guides written for the member's role", () => {
+    const index = formatSupport("en", [], { role: "parent" })
+    for (const t of SUPPORT_TOPICS) {
+      const listed = index.includes(`- ${t.title.en}:`)
+      expect(listed).toBe(!t.roles?.length || t.roles.includes("parent"))
+    }
+  })
+
+  it("names the attached media under the first matched guide only", () => {
+    const [a, b] = SUPPORT_TOPICS
+    const out = formatSupport("en", [a!, b!], { attached: ["Step one"] })
+    expect(out).toContain(`${a!.answer.en}\nAttached below: Step one`)
+    expect(out.match(/Attached below/g)).toHaveLength(1)
+  })
+
+  it("puts the guide written for the member's role first", () => {
+    const q = "كيف أرصد درجات الامتحان؟"
+    expect(matchTopics([q], 3, "teacher")[0]?.slug).toBe("exams")
+    expect(matchTopics([q], 3, "parent")[0]?.slug).toBe("grades")
+  })
+
+  it.each([
+    ["How do I enter exam marks?", "exams"],
+    ["أين أرى درجات ابني؟", "grades"],
+    ["report card", "grades"],
+    ["أين أجد جدولي الدراسي؟", "timetable"],
+    ["Where do I see my timetable?", "timetable"],
+    ["كيف أسجّل حضور فصلي؟", "attendance"],
+    ["كيف أحدد رسوم صف دراسي؟", "fees"],
+    ["How do I see my child's fees?", "fees"],
+    ["كيف أعطي موظفًا صلاحية الدخول؟", "roles"],
+    ["How do I give a staff member access?", "roles"],
+    ["كيف أغيّر كلمة المرور أو أستعيدها؟", "login"],
+  ])("dashboard quick ask %s → %s", (question, slug) => {
+    expect(top(question)).toBe(slug)
   })
 })
