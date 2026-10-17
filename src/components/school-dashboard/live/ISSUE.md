@@ -4,6 +4,41 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Recording key + attendance decisions + after-class register — 2026-10-17 (Phases 2–3)
+
+Part of the ship-to-client pass on #402.
+
+- [x] **Recording key** (`fce44b02d`). `egress_ended` wrote
+      `fileResults[0].filename` straight into `s3Key`; `egressObjectKey`
+      keeps a full path, falls back to the key inside `location`, else "no
+      file". Both credential sets reach `schools/` in `hogwarts-databayt`
+      (HEAD → 404, not 403) and the recording and app buckets are the same, so
+      the lesson publish copy holds. Stuck rows: the end-stale sweep
+      (`e65e91dcb`).
+- [x] **attn-04 decided:** an empty room the host started writes nothing
+      (`skipped: "empty_room"`); the class page says why (`71f568812`).
+- [x] **attn-05 tightened:** presence only raises a manual mark — no more
+      manual PRESENT → VIRTUAL LATE; EXCUSED untouched; a VIRTUAL row a person
+      corrected (`markedBy` set) counts as manual (`c468c926c`).
+- [x] **attn-02 decided:** the sync rolls the day's period rows into a
+      VIRTUAL daily row it owns (`markedBy` null), so the guardian summary,
+      ADEK export and section day stats count online days without reading
+      period rows (which would multiply a day by its periods). A daily row a
+      person marked is never touched. Day rule: any period PRESENT → PRESENT,
+      else LATE, else a recorded reason, else ABSENT.
+- [x] **After-class register** (`attendance-review*.tsx`, `c468c926c`): host
+      and admins see the roster with joined / left / minutes and the period
+      mark, correctable inline through `markPeriodAttendance` (+ day re-roll).
+
+Open:
+
+- [ ] Never run against a real egress file or a real class on prod — the
+      verification pass owes one recorded class and one synced register.
+- [ ] A midday VIRTUAL daily ABSENT can exist before a later online period
+      raises it; `absence-followup` may contact a guardian in that window
+      (it already does for period ABSENT rows).
+- [ ] `detail.test.tsx`'s 3 `notFound()` failures are still pre-existing.
+
 ## Ready for a client: the journey, backward from "class happens" — 2026-10-17 (Phase 1)
 
 Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
@@ -82,7 +117,7 @@ Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
       student via "Give the floor", or everyone). The reducer stamps each
       stroke's author; a student erases/undoes only their own.
 - [x] **Board saved** (`actions/board.ts`, `ConferenceEvent` `eventType:
-    "board"`, one upserted row) — the host's reload restores it. Closes the
+  "board"`, one upserted row) — the host's reload restores it. Closes the
       "strokes are room-scoped" item below.
 - [x] **Raise hand** — amber disc with a breathing ring and "#2 in line" for
       the student; the host gets a toast with Give the floor / Lower and a
