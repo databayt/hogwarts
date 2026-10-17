@@ -376,7 +376,7 @@ describe("joinLiveClass eligibility", () => {
     expect(db.conference.updateMany).not.toHaveBeenCalled()
   })
 
-  it("scheduled class cannot be joined by non-host → LIVE_CLASS_INVALID_STATE", async () => {
+  it("scheduled class holds a non-host in the waiting room → LIVE_CLASS_NOT_STARTED", async () => {
     mockUser(STUDENT_USER_ID, "STUDENT")
     vi.mocked(db.student.findFirst).mockResolvedValue({
       id: "stu-1",
@@ -398,7 +398,7 @@ describe("joinLiveClass eligibility", () => {
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
-    if ("error" in result) expect(result.error).toBe("LIVE_CLASS_INVALID_STATE")
+    if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_STARTED")
   })
 
   it("cross-tenant: student in school B cannot join a class in school A", async () => {

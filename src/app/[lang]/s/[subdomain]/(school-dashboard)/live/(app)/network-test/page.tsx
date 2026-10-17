@@ -18,7 +18,18 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-const ALLOWED_ROLES = ["DEVELOPER", "ADMIN"]
+// Everyone who joins a class can check their own connection before it starts
+// (the pre-join card links here under a refusal). Only admins see the
+// deployment's configuration — missing env names and the recording state.
+const ALLOWED_ROLES = [
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STAFF",
+  "STUDENT",
+  "GUARDIAN",
+]
+const CONFIG_ROLES = ["DEVELOPER", "ADMIN"]
 
 export default async function Page({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
@@ -31,6 +42,15 @@ export default async function Page({ params }: Props) {
   const t = dictionary?.liveClasses
 
   const readiness = getLiveKitReadiness()
+  const seesConfig = CONFIG_ROLES.includes(role)
+  if (!readiness.configured && !seesConfig) {
+    return (
+      <p className="text-muted-foreground mx-auto max-w-xl text-sm">
+        {t?.errors?.providerUnavailable ??
+          "Video service is unavailable. Try again shortly."}
+      </p>
+    )
+  }
   if (!readiness.configured) {
     return (
       <div className="mx-auto max-w-xl space-y-3">
@@ -84,7 +104,9 @@ export default async function Page({ params }: Props) {
   })
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-xs">{recordingNote}</p>
+      {seesConfig && (
+        <p className="text-muted-foreground text-xs">{recordingNote}</p>
+      )}
       <NetworkTestClient
         wsUrl={wsUrl}
         token={token}

@@ -28,20 +28,21 @@ describe("conference tab strip (list-permissions.getTabsForRole)", () => {
     expect(getTabsForRole(null, "en", dict)).toEqual([])
   })
 
-  it("shows STUDENT only Sessions — no surface they'd be redirected out of", () => {
+  it("shows STUDENT Sessions and the network test — nothing they'd be redirected out of", () => {
     const tabs = getTabsForRole("STUDENT", "en", dict)
-    expect(tabs.map((t) => t.name)).toEqual(["Sessions"])
+    expect(tabs.map((t) => t.name)).toEqual(["Sessions", "Network test"])
   })
 
-  it("shows GUARDIAN the same single tab as STUDENT", () => {
+  it("shows GUARDIAN the same tabs as STUDENT", () => {
     expect(getTabsForRole("GUARDIAN", "en", dict).map((t) => t.name)).toEqual([
       "Sessions",
+      "Network test",
     ])
   })
 
   it("adds Schedule for TEACHER but keeps the admin surfaces hidden", () => {
     const names = getTabsForRole("TEACHER", "en", dict).map((t) => t.name)
-    expect(names).toEqual(["Sessions", "Schedule"])
+    expect(names).toEqual(["Sessions", "Schedule", "Network test"])
   })
 
   it("gives ADMIN every surface", () => {

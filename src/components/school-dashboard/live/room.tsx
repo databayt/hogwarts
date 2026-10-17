@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { LayoutContextProvider, LiveKitRoom } from "@livekit/components-react"
 import {
   DisconnectReason,
+  MediaDeviceFailure,
   ScreenSharePresets,
   VideoPresets,
   type RoomOptions,
@@ -89,6 +90,10 @@ const DENY_CODES = new Set([
   "LIVE_CLASS_INVALID_STATE",
 ])
 const RETRY_DELAY_MS = 20_000
+/** How often a student held on the card asks again whether the teacher has
+ *  started; backs off to the cap so a class that never starts costs little. */
+const WAIT_RETRY_MS = 10_000
+const MAX_WAIT_RETRY_MS = 30_000
 /** Back off on repeated failure instead of hammering a struggling endpoint. */
 const MAX_RETRY_DELAY_MS = 5 * 60_000
 
@@ -154,6 +159,14 @@ export function RoomClient({
   const [ticket, setTicket] = useState<RoomJoinTicket | null>(null)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
+  // Arrived before the teacher: hold on the card and retry, rather than show a
+  // refusal for what is the normal way into a class.
+  const [waiting, setWaiting] = useState(false)
+  const waitTries = useRef(0)
+  // A camera/mic the browser refused or could not find. The call carries on —
+  // a student who denied the camera can still listen — so this is a notice
+  // over the room, not an error that replaces it.
+  const [deviceNotice, setDeviceNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ended, setEnded] = useState<Ended | null>(null)
   const options = useMemo(
@@ -168,10 +181,12 @@ export function RoomClient({
     try {
       const result = await joinLiveClass(sessionId)
       if ("success" in result && result.success) {
+        setWaiting(false)
         setTicket(result.data)
         return
       }
       const code = "error" in result ? result.error : undefined
+      setWaiting(code === "LIVE_CLASS_NOT_STARTED")
       setJoinError(
         (code ? labels.joinErrors[code] : undefined) ?? labels.joinErrors[""]
       )
@@ -230,6 +245,22 @@ export function RoomClient({
       clearTimeout(timer)
     }
   }, [ticket?.expiresAt, sessionId, labels.error, error])
+
+  // While held on the card, ask again on a timer. A fresh wait starts the
+  // backoff over; any other answer (a ticket, a real refusal) stops it.
+  useEffect(() => {
+    if (!waiting) {
+      waitTries.current = 0
+      return
+    }
+    if (joining) return
+    waitTries.current++
+    const timer = setTimeout(
+      () => void join(),
+      Math.min(WAIT_RETRY_MS * waitTries.current, MAX_WAIT_RETRY_MS)
+    )
+    return () => clearTimeout(timer)
+  }, [waiting, joining, join])
 
   const detailHref = `/${locale}/live/${sessionId}`
 
@@ -295,10 +326,20 @@ export function RoomClient({
             labels={labels.card}
             sessionId={sessionId}
             detailHref={detailHref}
-            pending={joining}
+            pending={joining || waiting}
             error={joinError}
             onJoin={() => void join()}
           />
+          {joinError && (
+            <p className="mt-2 px-4 text-center text-sm">
+              <a
+                className="text-muted-foreground underline"
+                href={`/${locale}/live/network-test`}
+              >
+                {labels.room.testConnection}
+              </a>
+            </p>
+          )}
         </div>
         {shelf}
       </>
@@ -321,6 +362,21 @@ export function RoomClient({
         video={
           isHost || (ticket.role !== "OBSERVER" && !ticket.roomConfig.joinMuted)
         }
+        onMediaDeviceFailure={(failure, kind) => {
+          const device =
+            kind === "audioinput"
+              ? labels.room.deviceMic
+              : labels.room.deviceCamera
+          const text =
+            failure === MediaDeviceFailure.PermissionDenied
+              ? labels.room.deviceDenied
+              : failure === MediaDeviceFailure.NotFound
+                ? labels.room.deviceMissing
+                : failure === MediaDeviceFailure.DeviceInUse
+                  ? labels.room.deviceInUse
+                  : labels.room.deviceFailed
+          setDeviceNotice(text.replace("{device}", device))
+        }}
         onDisconnected={(reason) => {
           switch (reason) {
             case DisconnectReason.CLIENT_INITIATED:
@@ -344,6 +400,21 @@ export function RoomClient({
         }}
         className="h-full w-full"
       >
+        {deviceNotice && (
+          <div
+            role="alert"
+            className="bg-background/95 fixed inset-x-4 top-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-xl border p-3 text-sm shadow-lg"
+          >
+            <p className="flex-1">{deviceNotice}</p>
+            <button
+              type="button"
+              className="text-muted-foreground shrink-0 underline"
+              onClick={() => setDeviceNotice(null)}
+            >
+              {labels.room.dismiss}
+            </button>
+          </div>
+        )}
         <LayoutContextProvider>
           <RoomShell
             sessionId={sessionId}

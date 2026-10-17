@@ -160,6 +160,16 @@ export const DEFAULT_ROOM_LABELS = {
   back: "Back",
   /** The stage when no one else is in the call and the reader's camera is off. */
   aloneInRoom: "You're alone in this room",
+  /** The pre-join card's link to the connection check, under a refusal. */
+  testConnection: "Test my camera and connection",
+  /** Device notices over the room; `{device}` is deviceCamera / deviceMic. */
+  deviceCamera: "camera",
+  deviceMic: "microphone",
+  deviceDenied:
+    "Your browser blocked the {device}. Allow it from the icon in the address bar, then rejoin — you can keep listening meanwhile.",
+  deviceMissing: "No {device} was found on this device. You can still listen and chat.",
+  deviceInUse: "Another app is using your {device}. Close it, then rejoin.",
+  deviceFailed: "Your {device} could not start. You can still listen and chat.",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

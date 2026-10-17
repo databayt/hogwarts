@@ -240,9 +240,15 @@ export async function performLiveClassJoin(
     return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
   }
 
-  // Hosts can start a not-yet-live class on join. Others get blocked.
+  // Hosts can start a not-yet-live class on join. Everyone else waits: a
+  // distinct code, not INVALID_STATE, because a student who arrives before the
+  // teacher is the normal case — the room holds them on the card and retries
+  // until the host's join flips the session `live`.
   if (liveClass.status === "scheduled") {
-    if (participantRole !== "HOST" || !allowAutoStart) {
+    if (participantRole !== "HOST") {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_STARTED)
+    }
+    if (!allowAutoStart) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
     // Joining as HOST auto-starts the room, so it must respect the same

@@ -31,8 +31,8 @@ export interface LiveNavDictionary {
  * from the sidebar and owns its own hero, exactly as `/lumos` does. What's
  * left is one flat row over the surfaces that manage sessions.
  *
- * Tabs narrow with the role — a student sees only Sessions, so no strip of
- * links they'd be redirected out of.
+ * Tabs narrow with the role — a student sees Sessions and the network test,
+ * so no strip of links they'd be redirected out of.
  */
 export function getTabsForRole(
   role: Role | null | undefined,
@@ -64,12 +64,14 @@ export function getTabsForRole(
             name: t?.settings ?? "Settings",
             href: `/${lang}/live/settings`,
           },
-          {
-            name: t?.networkTest ?? "Network test",
-            href: `/${lang}/live/network-test`,
-          },
         ]
       : []),
+    // Every role: a student checks their own camera and connection before
+    // class; only admins see the deployment's configuration on that page.
+    {
+      name: t?.networkTest ?? "Network test",
+      href: `/${lang}/live/network-test`,
+    },
   ]
 }
 

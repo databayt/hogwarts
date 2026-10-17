@@ -29,6 +29,11 @@ export function resolveLiveClassError(
       return errs?.notFound ?? "Live class not found."
     case "LIVE_CLASS_INVALID_STATE":
       return errs?.invalidState ?? "The class is not in the right state."
+    case "LIVE_CLASS_NOT_STARTED":
+      return (
+        errs?.notStarted ??
+        "Your teacher hasn't started the class yet. You'll join automatically when it begins."
+      )
     case "LIVE_CLASS_ROOM_FULL":
       return errs?.roomFull ?? "Room is full."
     case "LIVE_CLASS_MAX_DURATION_EXCEEDED":

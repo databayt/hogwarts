@@ -4,7 +4,7 @@
  * Verifies allowed/blocked routes per role for the conference block.
  *   - /live               → all school roles
  *   - /live/schedule      → ADMIN, TEACHER, DEVELOPER only
- *   - /live/network-test  → ADMIN, DEVELOPER only
+ *   - /live/network-test  → every school role (config details admin-only)
  *
  * Tag: @conference @rbac
  */
@@ -108,17 +108,16 @@ test.describe("Conference RBAC @conference @rbac", () => {
     await assertNoSSE(page)
   })
 
-  test("LC-RBAC-07: GUARDIAN blocked from /live/network-test", async ({
+  test("LC-RBAC-07: GUARDIAN can check their connection at /live/network-test", async ({
     page,
   }) => {
     await loginAs(page, "guardian")
     if (skipIfProtocolError(page)) return
     await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env))
     await page.waitForLoadState("domcontentloaded")
-    const url = page.url()
-    expect(
-      url.includes("/dashboard") || !url.includes("/network-test")
-    ).toBeTruthy()
+    expect(page.url()).toContain("/network-test")
+    // The deployment's configuration stays admin-only.
+    await expect(page.getByText("LIVEKIT_", { exact: false })).toHaveCount(0)
   })
 
   test("LC-RBAC-08: STAFF can access /live (read-only)", async ({ page }) => {
