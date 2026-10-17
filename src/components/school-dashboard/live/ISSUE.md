@@ -4,6 +4,63 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Ready for a client: the journey, backward from "class happens" — 2026-10-17 (Phase 1)
+
+Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
+`e65e91dcb` + `290d8886e`).
+
+- [x] **Waiting room.** A student who opened the class before the teacher got
+      "the class is not in the right state". `join-core` now answers
+      `LIVE_CLASS_NOT_STARTED` for a non-host on a `scheduled` session; the room
+      holds them on the card ("your teacher hasn't started yet") and retries
+      every 10 s, backing off to 30 s, and they enter the moment the host's join
+      flips the session `live`. A HOST without auto-start still gets
+      INVALID_STATE. (Android sees the new code as a generic refusal.)
+- [x] **Camera/mic failures are said out loud.** `onMediaDeviceFailure` →
+      a dismissible notice over the call (blocked / not found / in use / failed,
+      camera or microphone); the call carries on.
+- [x] **Connection check for everyone.** `/live/network-test` opens to every
+      school role (env names + recording state stay admin-only) and is a tab
+      for all; the pre-join card links to it under any refusal.
+- [x] **One tap from the lesson.** The lesson page's live strip opens a running
+      class's room, not its detail page. The dashboard's Today row re-reads the
+      clock every 30 s, so Join appears without a reload.
+- [x] **`/live/schedule` refuses without LiveKit** (it can only write
+      `provider = livekit` rows) and **admins pick the host** — it used to take
+      the first teacher by `createdAt`.
+- [x] **Ownership.** The wizard's create/update now hold a TEACHER to classes
+      they host (admins: any). STAFF is read-only — it had a create button the
+      rest of the block refused; `manage_live_class` was already ADMIN-only.
+- [x] **Co-host is no longer every teacher.** Another TEACHER co-hosts only a
+      class of a section they teach (a timetable slot there or its homeroom);
+      an open room admits them as a participant; otherwise refused. Closes the
+      "any TEACHER is CO_HOST on ANY session" decision item below.
+- [x] **Parent portal Join follows `conferenceGuardiansObserve`** — no button
+      the room then refuses.
+- [x] **Load failures show an error**, not an empty list (sessions table,
+      recordings page). Closes the P2 item below.
+- **Chat switch, server side — decided NOT to strip `canPublishData`.** Every
+  student needs the data channel even with chat, hands and polls all off:
+  `sync.request` (a late joiner's board/timer/poll state), `wb.*` when given
+  the pen, reactions. Stripping it would break the board for late joiners.
+  What enforces the switch instead: chat HISTORY is a server rule
+  (`getRoomChat` / save require the switch), and every receiver's
+  `useLiveChat` is disabled when chat is off, so a forged chat message is
+  rendered by nobody. The residual is a crafted client sending to other
+  crafted clients.
+
+### Found while here, NOT fixed
+
+- **No UI writes `Section.homeroomTeacherId`** — still open. It needs a teacher
+  select per section in the live settings' section list (a new
+  `setSectionHomeroomTeacher` action beside `setSectionOnline`), not a small
+  edit; the co-host rule above reads it already.
+- **The timetable's guardian view** (`timetable/views/guardian-view.tsx`) still
+  shows Join without the observe switch; only the parent portal strip was
+  fixed. Same one-line rule once its data path carries the switch.
+- `dictionaries/*/live-classes.json`: the attendance pass's `attendanceReview`
+  keys rode in on `2feda2bfc` (shared file, parallel session).
+
 ## The board, raised hands, one icon size, class tools — 2026-10-17
 
 - [x] **One icon size.** Every disc in the row is 48px with a 22pt glyph at
@@ -25,7 +82,7 @@
       student via "Give the floor", or everyone). The reducer stamps each
       stroke's author; a student erases/undoes only their own.
 - [x] **Board saved** (`actions/board.ts`, `ConferenceEvent` `eventType:
-      "board"`, one upserted row) — the host's reload restores it. Closes the
+    "board"`, one upserted row) — the host's reload restores it. Closes the
       "strokes are room-scoped" item below.
 - [x] **Raise hand** — amber disc with a breathing ring and "#2 in line" for
       the student; the host gets a toast with Give the floor / Lower and a
@@ -421,7 +478,7 @@ Owed / decisions surfaced (not changed):
 - [ ] **A HOST-started class nobody joins marks the roster ABSENT** on
       `room_finished` (attn-04) — the recorded no-show rule covers the cron's
       cancel path only; decide whether an empty room should sync.
-- [ ] **Any TEACHER of the school is CO_HOST on ANY session**, including
+- [x] **Any TEACHER of the school is CO_HOST on ANY session** (fixed 2026-10-17 — section teachers only), including
       section-private ones (join-core) — policy, not a bug; decide.
 - [ ] **A MANUAL PRESENT can still become VIRTUAL LATE** (the guard forbids
       only the drop to ABSENT) — tighten to "never lower a manual status" if
@@ -1037,7 +1094,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       `listSectionRecordingPolicy`) — realistic school sizes bound them.
 - [ ] Zoom/Teams `createMeeting` carry no idempotency key (Google Meet does);
       both adapters are dark until OAuth creds land.
-- [ ] `content.tsx` / `recordings.tsx` render a load failure as an empty list
+- [x] `content.tsx` / `recordings.tsx` render a load failure as an empty list (fixed 2026-10-17)
       (logged server-side, invisible to the user).
 
 ## P0 — Pre-signature gates (Aldar)
