@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import {
   connectedSeconds,
+  dailyStatusFromPeriods,
+  rollUpDailyAttendance,
   syncLiveAttendance,
 } from "@/components/school-dashboard/live/actions/attendance-sync"
 
@@ -15,7 +17,12 @@ vi.mock("@/lib/db", () => ({
     timetable: { findFirst: vi.fn() },
     student: { findMany: vi.fn() },
     conferenceParticipant: { findMany: vi.fn() },
-    attendance: { findMany: vi.fn(), update: vi.fn(), createMany: vi.fn() },
+    attendance: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      createMany: vi.fn(),
+      groupBy: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -29,6 +36,7 @@ const mockDb = db as unknown as {
     findMany: ReturnType<typeof vi.fn>
     update: ReturnType<typeof vi.fn>
     createMany: ReturnType<typeof vi.fn>
+    groupBy: ReturnType<typeof vi.fn>
   }
   $transaction: ReturnType<typeof vi.fn>
 }
@@ -38,6 +46,18 @@ const START = new Date("2026-06-19T08:00:00.000Z")
 const END = new Date(START.getTime() + 45 * 60_000)
 const ON_TIME = new Date("2026-06-19T08:05:00.000Z") // within the 10-min grace
 const LATE = new Date("2026-06-19T08:20:00.000Z") // past the 10-min grace
+
+// Only sB joined (on time, stayed) — the room was not empty, so the sync runs
+// and sA/sC read ABSENT by presence.
+const ONLY_B = [
+  {
+    userId: "uB",
+    joinedAt: ON_TIME,
+    leftAt: null,
+    durationSeconds: null,
+    activeSince: null,
+  },
+]
 
 function happySession() {
   mockDb.conference.findFirst.mockResolvedValue({
@@ -83,6 +103,8 @@ function happySession() {
 describe("syncLiveAttendance", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // No period rows by default → the daily roll-up is a no-op.
+    mockDb.attendance.groupBy.mockResolvedValue([])
     // $transaction runs the callback with a tx exposing the attendance writers.
     mockDb.$transaction.mockImplementation(async (cb: any) =>
       cb({
@@ -422,8 +444,8 @@ describe("syncLiveAttendance — no legacy class link (attn-03)", () => {
 describe("syncLiveAttendance — hybrid-school safety (attn-05)", () => {
   it("never downgrades a MANUAL PRESENT row to ABSENT for a student who didn't join online", async () => {
     happySession()
-    // Nobody joined the live room this sync — everyone reads ABSENT by presence.
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
+    // sA did not join the live room — presence reads ABSENT for sA.
+    mockDb.conferenceParticipant.findMany.mockResolvedValue(ONLY_B)
     mockDb.attendance.findMany.mockResolvedValue([
       { id: "att-A", studentId: "sA", method: "MANUAL", status: "PRESENT" },
     ])
@@ -432,14 +454,14 @@ describe("syncLiveAttendance — hybrid-school safety (attn-05)", () => {
 
     // sA's manual row must never be touched.
     expect(mockDb.attendance.update).not.toHaveBeenCalled()
-    // sB and sC (no existing row) still get created ABSENT.
+    // sB (present) and sC (absent), with no existing row, are still created.
     expect(res.marked).toBe(2)
     expect(res.updated).toBe(0)
   })
 
   it("leaves a manual EXCUSED row untouched when presence says ABSENT", async () => {
     happySession()
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
+    mockDb.conferenceParticipant.findMany.mockResolvedValue(ONLY_B)
     mockDb.attendance.findMany.mockResolvedValue([
       { id: "att-A", studentId: "sA", method: "MANUAL", status: "EXCUSED" },
     ])
@@ -453,7 +475,7 @@ describe("syncLiveAttendance — hybrid-school safety (attn-05)", () => {
 
   it("a SOFT-DELETED manual PRESENT row does NOT block revival — an admin-removed mark was never 'seen in the room'", async () => {
     happySession()
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([]) // nobody joined online
+    mockDb.conferenceParticipant.findMany.mockResolvedValue(ONLY_B) // nobody joined online
     mockDb.attendance.findMany.mockResolvedValue([
       {
         id: "att-A",
@@ -502,7 +524,7 @@ describe("syncLiveAttendance — hybrid-school safety (attn-05)", () => {
 
   it("still allows a VIRTUAL row to be downgraded to ABSENT on re-sync (no manual protection)", async () => {
     happySession()
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([]) // sA no longer present
+    mockDb.conferenceParticipant.findMany.mockResolvedValue(ONLY_B) // sA no longer present
     mockDb.attendance.findMany.mockResolvedValue([
       { id: "att-A", studentId: "sA", method: "VIRTUAL", status: "PRESENT" },
     ])
@@ -663,5 +685,148 @@ describe("connectedSeconds", () => {
         now
       )
     ).toBe(600)
+  })
+})
+
+describe("syncLiveAttendance — 2026-10-17 rules", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockDb.attendance.groupBy.mockResolvedValue([])
+    mockDb.$transaction.mockImplementation(async (cb: any) =>
+      cb({
+        attendance: {
+          update: mockDb.attendance.update,
+          createMany: mockDb.attendance.createMany,
+        },
+      })
+    )
+  })
+
+  it("an empty room the host started writes nothing (attn-04)", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
+
+    const res = await syncLiveAttendance("school1", "c1")
+
+    expect(res.skipped).toBe("empty_room")
+    expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
+    expect(mockDb.attendance.update).not.toHaveBeenCalled()
+  })
+
+  it("never turns a MANUAL PRESENT into VIRTUAL LATE", async () => {
+    happySession()
+    // sB joins LATE in happySession(); a teacher already marked sB PRESENT.
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-B", studentId: "sB", method: "MANUAL", status: "PRESENT" },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "att-B" } })
+    )
+  })
+
+  it("still raises a MANUAL LATE to PRESENT when the student was on time online", async () => {
+    happySession()
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-A", studentId: "sA", method: "MANUAL", status: "LATE" },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "att-A" },
+        data: expect.objectContaining({ status: "PRESENT" }),
+      })
+    )
+  })
+})
+
+describe("daily roll-up (attn-02)", () => {
+  const DAY = new Date("2026-06-19")
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("derives the day: any period present counts, a reason beats ABSENT", () => {
+    expect(dailyStatusFromPeriods(["ABSENT", "LATE", "PRESENT"])).toBe(
+      "PRESENT"
+    )
+    expect(dailyStatusFromPeriods(["ABSENT", "LATE"])).toBe("LATE")
+    expect(dailyStatusFromPeriods(["ABSENT", "EXCUSED"])).toBe("EXCUSED")
+    expect(dailyStatusFromPeriods(["ABSENT", "ABSENT"])).toBe("ABSENT")
+  })
+
+  it("creates a VIRTUAL daily row for a student with period rows and no daily mark", async () => {
+    mockDb.attendance.groupBy.mockResolvedValue([
+      { studentId: "sA", status: "ABSENT" },
+      { studentId: "sA", status: "PRESENT" },
+    ])
+    mockDb.attendance.findMany.mockResolvedValue([])
+    mockDb.attendance.createMany.mockResolvedValue({ count: 1 })
+
+    const res = await rollUpDailyAttendance("school1", "sec1", DAY, ["sA"])
+
+    expect(res.created).toBe(1)
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data
+    expect(rows[0]).toMatchObject({
+      studentId: "sA",
+      periodId: null,
+      status: "PRESENT",
+      method: "VIRTUAL",
+      markedBy: null,
+    })
+  })
+
+  it("never touches a daily row a person marked", async () => {
+    mockDb.attendance.groupBy.mockResolvedValue([
+      { studentId: "sA", status: "ABSENT" },
+    ])
+    mockDb.attendance.findMany.mockResolvedValue([
+      {
+        id: "d-A",
+        studentId: "sA",
+        status: "PRESENT",
+        method: "MANUAL",
+        markedBy: "teacher-1",
+        deletedAt: null,
+      },
+    ])
+
+    const res = await rollUpDailyAttendance("school1", "sec1", DAY, ["sA"])
+
+    expect(res).toEqual({ created: 0, updated: 0 })
+    expect(mockDb.attendance.update).not.toHaveBeenCalled()
+    expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
+  })
+
+  it("updates its own VIRTUAL daily row when a later period changes the day", async () => {
+    mockDb.attendance.groupBy.mockResolvedValue([
+      { studentId: "sA", status: "ABSENT" },
+      { studentId: "sA", status: "PRESENT" },
+    ])
+    mockDb.attendance.findMany.mockResolvedValue([
+      {
+        id: "d-A",
+        studentId: "sA",
+        status: "ABSENT",
+        method: "VIRTUAL",
+        markedBy: null,
+        deletedAt: null,
+      },
+    ])
+
+    const res = await rollUpDailyAttendance("school1", "sec1", DAY, ["sA"])
+
+    expect(res.updated).toBe(1)
+    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "d-A" },
+        data: expect.objectContaining({ status: "PRESENT" }),
+      })
+    )
   })
 })

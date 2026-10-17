@@ -164,6 +164,19 @@ export async function syncLiveAttendance(
     const presenceByUser = new Map<string, Presence>()
     for (const p of participants) presenceByUser.set(p.userId, p)
 
+    // A room nobody on the roster ever entered (attn-04). The host started it,
+    // so this is not the cron's never-started case — but writing ABSENT for the
+    // whole section from an empty room records a fact we do not have: the
+    // class may have moved, the link may have failed, the teacher may have
+    // opened it by mistake. Leave the register to the teacher; the class page
+    // says why it is empty.
+    const anyoneJoined = roster.some(
+      (s) => s.userId && presenceByUser.get(s.userId)?.joinedAt
+    )
+    if (!anyoneJoined) {
+      return { marked: 0, updated: 0, skipped: "empty_room" }
+    }
+
     const start = session.actualStart ?? session.scheduledStart
     const lateAfter = new Date(start.getTime() + lateGraceMin * 60_000)
     // Attendance.date is @db.Date — the stored value must be the SCHOOL-LOCAL
@@ -294,7 +307,16 @@ export async function syncLiveAttendance(
             (existing.status === "PRESENT" ||
               existing.status === "LATE" ||
               existing.status === "EXCUSED")
-          if (isManualPresentLike && status === "ABSENT") {
+          // Never LOWER a manual mark (attn-05 tightened 2026-10-17): presence
+          // may only raise it — a manual LATE becomes PRESENT when the student
+          // was on time online. A manual PRESENT is never turned into a
+          // VIRTUAL LATE, and EXCUSED is a decision, not a presence reading.
+          if (
+            isManualPresentLike &&
+            (status === "ABSENT" ||
+              existing.status === "EXCUSED" ||
+              (existing.status === "PRESENT" && status === "LATE"))
+          ) {
             continue
           }
           await tx.attendance.update({
@@ -342,6 +364,8 @@ export async function syncLiveAttendance(
       }
     })
 
+    await rollUpDailyAttendance(schoolId, sectionId, dateObj, studentIds)
+
     return { marked, updated }
   } catch (err) {
     console.error("[conference] syncLiveAttendance failed", {
@@ -350,6 +374,128 @@ export async function syncLiveAttendance(
       err: err instanceof Error ? err.message : err,
     })
     return { marked: 0, updated: 0, skipped: "error" }
+  }
+}
+
+type DailyStatus = "PRESENT" | "LATE" | "EXCUSED" | "SICK" | "HOLIDAY" | "ABSENT"
+
+/**
+ * The day's status from its period rows: in any period → the day counts.
+ * PRESENT beats LATE (on time to some class is on time to school); a
+ * recorded reason (EXCUSED, SICK, HOLIDAY) beats ABSENT.
+ */
+export function dailyStatusFromPeriods(statuses: Iterable<string>): DailyStatus {
+  const seen = new Set(statuses)
+  for (const s of ["PRESENT", "LATE", "EXCUSED", "SICK", "HOLIDAY"] as const) {
+    if (seen.has(s)) return s
+  }
+  return "ABSENT"
+}
+
+/**
+ * Roll the day's period rows up into the DAILY row (periodId null) — attn-02.
+ *
+ * Every daily consumer (the guardian summary, the ADEK compliance export, the
+ * section day stats) reads `periodId: null` only, so an online school's
+ * attendance — which is all period rows — counted nowhere. Counting period
+ * rows there instead would multiply a day by its periods; the daily row is
+ * what those reports mean.
+ *
+ * Owns only rows it wrote: none yet, or VIRTUAL with no `markedBy` (a person
+ * marking the daily register sets markedBy, and that row is never touched).
+ * Best effort — the period rows are already written; a failure here is logged
+ * and the next class's sync recomputes the day.
+ */
+export async function rollUpDailyAttendance(
+  schoolId: string,
+  sectionId: string,
+  date: Date,
+  studentIds: string[]
+): Promise<{ created: number; updated: number }> {
+  try {
+    const periodRows = await db.attendance.groupBy({
+      by: ["studentId", "status"],
+      where: {
+        schoolId,
+        date,
+        periodId: { not: null },
+        deletedAt: null,
+        studentId: { in: studentIds },
+      },
+    })
+    if (periodRows.length === 0) return { created: 0, updated: 0 }
+
+    const statusesByStudent = new Map<string, string[]>()
+    for (const r of periodRows) {
+      const list = statusesByStudent.get(r.studentId) ?? []
+      list.push(r.status)
+      statusesByStudent.set(r.studentId, list)
+    }
+
+    // No sectionId filter: some daily writers (kiosk, QR) store none, and a
+    // second daily row for the same student would double-count the day.
+    const dailyRows = await db.attendance.findMany({
+      where: {
+        schoolId,
+        date,
+        periodId: null,
+        studentId: { in: [...statusesByStudent.keys()] },
+      },
+      select: {
+        id: true,
+        studentId: true,
+        status: true,
+        method: true,
+        markedBy: true,
+        deletedAt: true,
+      },
+    })
+    const dailyByStudent = new Map(dailyRows.map((r) => [r.studentId, r]))
+
+    let created = 0
+    let updated = 0
+    const toCreate: Prisma.AttendanceCreateManyInput[] = []
+    for (const [studentId, statuses] of statusesByStudent) {
+      const status = dailyStatusFromPeriods(statuses)
+      const daily = dailyByStudent.get(studentId)
+      if (!daily) {
+        toCreate.push({
+          schoolId,
+          studentId,
+          sectionId,
+          date,
+          periodId: null,
+          status,
+          method: "VIRTUAL",
+          markedBy: null,
+          notes: "auto: day from live-class periods",
+        })
+        continue
+      }
+      const ours = daily.method === "VIRTUAL" && daily.markedBy == null
+      if (!ours) continue
+      if (daily.status === status && daily.deletedAt == null) continue
+      await db.attendance.update({
+        where: { id: daily.id },
+        data: { status, markedAt: new Date(), deletedAt: null },
+      })
+      updated++
+    }
+    if (toCreate.length > 0) {
+      const res = await db.attendance.createMany({
+        data: toCreate,
+        skipDuplicates: true,
+      })
+      created = res?.count ?? toCreate.length
+    }
+    return { created, updated }
+  } catch (err) {
+    console.error("[conference] daily attendance roll-up failed", {
+      schoolId,
+      sectionId,
+      err: err instanceof Error ? err.message : err,
+    })
+    return { created: 0, updated: 0 }
   }
 }
 
