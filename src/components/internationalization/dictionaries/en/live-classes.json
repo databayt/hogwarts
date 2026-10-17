@@ -36,6 +36,7 @@
     "scheduledEnd": "Ends",
     "recordingEnabled": "Record this class",
     "maxParticipants": "Max participants",
+    "teacher": "Teacher",
     "recordingUnavailable": "Recording is not set up for this school yet.",
     "joinMutedLabel": "Students enter",
     "joinMutedDefault": "School default",

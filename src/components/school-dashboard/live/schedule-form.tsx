@@ -20,6 +20,8 @@ interface Props {
   sections: { id: string; name: string }[]
   subjects: { id: string; name: string }[]
   teacherId?: string | null
+  /** Admins pick the host; a teacher's form has none and hosts it themselves. */
+  teachers?: { id: string; name: string }[]
   /** Whether Egress has a bucket to write to. Off → no checkbox, a note. */
   recordingAvailable?: boolean
 }
@@ -29,12 +31,16 @@ export function ScheduleLiveClassForm({
   dictionary,
   sections,
   subjects,
-  teacherId,
+  teacherId: ownTeacherId,
+  teachers = [],
   recordingAvailable = false,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [teacherId, setTeacherId] = useState<string>(
+    ownTeacherId ?? teachers[0]?.id ?? ""
+  )
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -93,6 +99,25 @@ export function ScheduleLiveClassForm({
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
         />
       </div>
+
+      {teachers.length > 0 && (
+        <div className="space-y-2">
+          <Label htmlFor="teacher">{t?.form?.teacher ?? "Teacher"}</Label>
+          <select
+            id="teacher"
+            required
+            className="bg-background w-full rounded-md border px-3 py-2 text-sm"
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+          >
+            {teachers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="description">

@@ -86,6 +86,14 @@ async function createLiveClassWithCtx(
   }
   const data = parsed.data
 
+  // This form has no meeting-URL field, so every row it writes takes the
+  // schema's `provider = livekit`. Without an SFU that row looks scheduled and
+  // only fails when the teacher presses Start — refuse at create time, as the
+  // wizard does (list-actions.ts), and point the school at a link instead.
+  if (!isLiveKitConfigured()) {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+  }
+
   try {
     // School config + (optional) the section's recording opt-out, in parallel.
     const [school, section] = await Promise.all([

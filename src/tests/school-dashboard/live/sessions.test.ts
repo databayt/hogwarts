@@ -179,6 +179,20 @@ beforeEach(() => {
 })
 
 describe("createLiveClass", () => {
+  // This form only writes LiveKit rows, so it needs the SFU configured.
+  beforeEach(() => {
+    vi.mocked(isLiveKitConfigured).mockReturnValue(true)
+  })
+
+  it("refuses when LiveKit is not configured → LIVE_CLASS_PROVIDER_UNAVAILABLE", async () => {
+    vi.mocked(isLiveKitConfigured).mockReturnValue(false)
+    mockAdmin()
+    const result = await createLiveClass(goodInput)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_PROVIDER_UNAVAILABLE")
+  })
+
   it("admin creates → returns session + final roomName + invites teacher as HOST", async () => {
     mockAdmin()
     const result = await createLiveClass(goodInput)

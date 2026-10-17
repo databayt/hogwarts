@@ -52,17 +52,25 @@ export default async function Page({ params }: Props) {
       : null,
   ])
 
-  // For admin/dev, allow picking any teacher in school. For pilot, default
-  // to the first active teacher if no user-teacher mapping.
-  let teacherId: string | null = teacher?.id ?? null
-  if (!teacherId && (role === "ADMIN" || role === "DEVELOPER")) {
-    const firstTeacher = await db.teacher.findFirst({
-      where: { schoolId },
-      select: { id: true },
-      orderBy: { createdAt: "asc" },
-    })
-    teacherId = firstTeacher?.id ?? null
-  }
+  // An admin picks the host from the school's teachers; it used to be the
+  // first teacher by createdAt, silently, which put every admin-scheduled
+  // class on one person's calendar. A teacher hosts their own and gets no
+  // picker (the action enforces that too).
+  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
+  const teachers = isAdmin
+    ? (
+        await db.teacher.findMany({
+          where: { schoolId },
+          select: { id: true, firstName: true, lastName: true },
+          orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+          take: 500,
+        })
+      ).map((x) => ({
+        id: x.id,
+        name: [x.firstName, x.lastName].filter(Boolean).join(" "),
+      }))
+    : []
+  const teacherId: string | null = teacher?.id ?? null
 
   return (
     <div>
@@ -72,6 +80,7 @@ export default async function Page({ params }: Props) {
         sections={sections}
         subjects={subjects}
         teacherId={teacherId}
+        teachers={teachers}
         recordingAvailable={isRecordingConfigured()}
       />
     </div>
