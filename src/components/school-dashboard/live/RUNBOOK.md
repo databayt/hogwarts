@@ -49,7 +49,7 @@ shipping state.
    **Trim trailing newlines.** Vercel stores them, and eight production values already carried one
    (see `DEPLOYMENT.md`). Never create `.env.local` / `.env.*` — project rule.
 
-3. Register the webhook URL in the project's settings: `https://ed.databayt.org/api/webhooks/livekit`.
+3. Register the webhook URL in the project's settings: `https://balqalam.com/api/webhooks/livekit`.
 4. Redeploy (`./scripts/deploy-hobby.sh` while on the free account — **not** `git push`).
 5. Open `/live/network-test` as an ADMIN and confirm nothing is listed as missing.
 6. Flip the school to LiveKit on `/live/settings` — `School.conferenceProviderDefault`
@@ -83,6 +83,15 @@ printf '%s' "$VALUE" | vercel env add LIVEKIT_API_SECRET production --sensitive 
 `vercel env ls` shows the **created** time, not the last-modified time — an
 unchanged timestamp after an override is expected, not a failed write.
 
+**On Cloudflare (balqalam.com, since 2026-09-07) Vercel is out of the loop.**
+The four LiveKit secrets live in `~/.cache/cf-build/hogwarts-prod.env` and reach
+the Worker with `scripts/cf-secrets.sh <that file>`; `LIVEKIT_HOST`,
+`LIVEKIT_WS_URL` and the recording bucket/region are baked into `env.json` at
+build. `ed.databayt.org` only 301s to balqalam.com — a webhook or cron pointed
+at it is silently lost (LiveKit's POST does not survive the redirect; `curl -f`
+counts the 301 as success). The conference crons run from the Worker's own
+triggers (`cf/crons.json`).
+
 **Know what the free tier buys.** 5,000 WebRTC minutes/month, 100 concurrent connections, 1,000
 recording minutes. One 25-student, 45-minute class costs ~1,125 participant-minutes — so this
 verifies the feature and runs a demo or a small pilot, and it does **not** run a school. Real volume
@@ -90,8 +99,9 @@ means the paid tier or a self-hosted `livekit-server` on any VM. The code is ide
 only the values in those four vars change.
 
 **Status as of 2026-09-04: recording is configured in production.** `LIVEKIT_RECORDING_BUCKET`,
-`LIVEKIT_RECORDING_REGION`, `LIVEKIT_S3_ACCESS_KEY` and `LIVEKIT_S3_SECRET` are all set on Vercel for
-`balqalam.com` / `ed.databayt.org` — `isRecordingConfigured()` returns `true`, and the steps below
+`LIVEKIT_RECORDING_REGION`, `LIVEKIT_S3_ACCESS_KEY` and `LIVEKIT_S3_SECRET` are all Worker secrets /
+baked config for `balqalam.com` (Cloudflare, since 2026-10-17; before that they reached the
+container only through the Mac's `.env` copied into the image) — `isRecordingConfigured()` returns `true`, and the steps below
 remain the reference for standing up the NEXT LiveKit Cloud project (a new school, a new pilot), not
 a thing still owed on this one.
 
@@ -136,7 +146,7 @@ platform routing it:
 
 ```bash
 for r in live-class-reminders end-stale-live-classes expire-live-recordings; do
-  curl -s -o /dev/null -w "%{http_code} $r\n" "https://ed.databayt.org/api/cron/$r"
+  curl -s -o /dev/null -w "%{http_code} $r\n" "https://balqalam.com/api/cron/$r"
 done
 # expect: 401 401 401 — anything else (000, 404, 500) means the deploy itself is broken
 ```
@@ -216,7 +226,7 @@ and **cannot** `PutObject`.
 The SFU is the authoritative writer for `live`/`ended` + recording rows.
 
 1. In the LiveKit server config, set the webhook URL to
-   **`https://ed.databayt.org/api/webhooks/livekit`** (the route in
+   **`https://balqalam.com/api/webhooks/livekit`** (the route in
    `src/app/api/webhooks/livekit/route.ts`).
 2. Use the same API key/secret as Gate 1 — the route's `verifyWebhook` checks the HMAC signature.
 

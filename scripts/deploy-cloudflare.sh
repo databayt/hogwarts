@@ -67,6 +67,11 @@ build() {
   export CF_CONTAINER=1 NODE_OPTIONS="--max-old-space-size=${CF_HEAP_MB:-3072}" NEXT_TELEMETRY_DISABLED=1 NEXT_BUILD_CPUS=${NEXT_BUILD_CPUS:-2}
   node cf/env-split.mjs "$ENV_FILE" run -- pnpm exec next build
   [[ -f .next/standalone/server.js ]] || { echo "ABORT: .next/standalone/server.js missing"; exit 1; }
+  # next build copies .env into the standalone output, and next start loads it
+  # for every name the runtime leaves unset — so the Mac's local secrets shipped
+  # in the image and silently stood in for missing Worker secrets (the LiveKit
+  # keys ran that way for weeks). Runtime env is env.json + Worker secrets only.
+  rm -f .next/standalone/.env .next/standalone/.env.*
 
   echo "==> assembling: baked non-secret config, sharp + prisma checks"
   node cf/env-split.mjs "$ENV_FILE" config > .next/standalone/env.json
