@@ -30,14 +30,14 @@ The `schedule` step is defined in `OnboardingStep` with its own component direct
 
 ### Group 3 — Business and legal
 
-| Step       | Path          | Required | Database                                                      |
-| ---------- | ------------- | -------- | ------------------------------------------------------------- |
-| Join       | `/join`       | Yes      | `User`                                                        |
-| Visibility | `/visibility` | No       | `School.isPublished`                                          |
-| Price      | `/price`      | Yes      | `tuitionFee`, `registrationFee`, `applicationFee`, `currency` |
-| Discount   | `/discount`   | No       | `Discount` model                                              |
-| Legal      | `/legal`      | Yes      | `LegalConsent`                                                |
-| Subdomain  | `/subdomain`  | No       | `School.domain`                                               |
+| Step       | Path          | Required | Database                                              |
+| ---------- | ------------- | -------- | ----------------------------------------------------- |
+| Join       | `/join`       | Yes      | `User`                                                |
+| Visibility | `/visibility` | No       | `School.isPublished`                                  |
+| Price      | `/price`      | Yes      | `School.tuitionFee` (the fee every grade starts from) |
+| Discount   | `/discount`   | No       | `Discount` model                                      |
+| Legal      | `/legal`      | Yes      | `LegalConsent`                                        |
+| Subdomain  | `/subdomain`  | No       | `School.domain`                                       |
 
 After all steps the user lands on `/congratulations` for a smart redirect (school subdomain dashboard or main domain depending on session state).
 

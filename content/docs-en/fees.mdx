@@ -9,6 +9,27 @@ Define what the school charges, assign fees to students, collect online or offli
 
 The fee structures, assignments, payments, fines and scholarships lists open on cards on a phone — name, amount in the school's currency, status chips, date, and the same actions menu as the table row. The view toggle switches to the table. Amounts in these lists are formatted in `School.currency`.
 
+## How fees cascade — school → grade → student
+
+One price flows down three levels. Each level inherits from the one above until someone fine-tunes it.
+
+| Level   | Where it's set                                                     | Inherits          | Fine-tuned how                                                                           |
+| ------- | ------------------------------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------------- |
+| School  | School → Configuration → Price (or the onboarding price step)      | —                 | The school fee is the default for every grade                                            |
+| Grade   | Finance → Fees → Fee Structures → a grade's fee                    | The school fee    | Saving a new amount marks the grade **Fine-tuned**; **Reset to school fee** puts it back |
+| Student | Finance → Fees → Assignments → a student's fee → **Student price** | Their grade's fee | **Save price** gives the student their own price; **Reset to grade fee** puts them back  |
+
+What moves when a price changes:
+
+- **School fee changes** → every grade still on the school fee re-prices, and so does every student still on their grade's fee. Fine-tuned grades and students with their own price stay.
+- **Grade fee changes** → every student in that grade still on the grade fee re-prices. Students with their own price stay.
+- **Discounts and scholarships** apply on top of whichever price wins: own price, else grade fee.
+- **Anything with money against it stays.** A fee with a payment or a paid instalment is never re-priced; the open instalments of a re-priced fee are re-split so they still add up to the new amount.
+- **Grade change or promotion** → this year's unpaid fee of the old grade is cancelled and the new grade's fee is assigned. Last year's unpaid fees stay as arrears.
+- **New academic year** → creating the latest school year gives every grade its fee (last year's fine-tuned price carries over; otherwise the school fee) and every student their grade's fee.
+
+The code lives in `src/lib/fee-reprice.ts` (the cascade), `src/lib/fee-provisioning.ts` (school → grade) and `src/lib/fee-auto-assign.ts` (grade → student).
+
 ## Pipeline
 
 ```

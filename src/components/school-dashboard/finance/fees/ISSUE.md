@@ -99,20 +99,42 @@ before it. It still runs ahead of every count that reads the rows it repairs
 (the reason it exists), but a user who cannot view fees no longer triggers it.
 Admins — the only audience that ever benefited — are unaffected.
 
-## 4-Level Fee Inheritance (owner's core spec — shipped 2026-06-13)
+## Fee cascade — school → grade → student (rebuilt 2026-10-17)
 
-The fee system enforces a strict four-level cascade. All four levels are now implemented:
+The June "4-level inheritance" was a chain of one-time copies: a grade edit
+lost its grade and was overwritten by the next Sync, a school-fee change never
+reached existing students, a per-student price (`customAmount`) was stored and
+never read, grade changes double-billed, and re-pricing set every instalment
+invoice to the full amount (4× on quarterly fees). Rebuilt as a live cascade:
 
-| Level | Name                                      | Trigger                                            | Scope                                                                                                                    |
-| ----- | ----------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 1     | Onboarding auto-provision                 | School completes pricing step in onboarding wizard | Auto-creates one `FeeStructure` per grade per fee type; zero manual setup                                                |
-| 2     | Per-grade fine-tune                       | ADMIN/ACCOUNTANT edits a grade's FeeStructure      | Applies to new assignments only; does not retroactively touch existing students                                          |
-| 3     | `propagateFeeStructureChange` cascade     | Grade FeeStructure is updated                      | Cascades to all uncollected `FeeAssignment` rows for that grade, preserving each student's existing per-student discount |
-| 4     | `updateFeeAssignmentDiscount` per-student | ADMIN/ACCOUNTANT adjusts one student's discount    | Touches only that `FeeAssignment`; grade structure and other students unchanged                                          |
+| Level   | Source of truth                         | Override flag                       | Re-priced by                                                    |
+| ------- | --------------------------------------- | ----------------------------------- | --------------------------------------------------------------- |
+| School  | `School.tuitionFee`                     | —                                   | `updateSchoolPricing` → `provisionSchoolFees("recompute")`       |
+| Grade   | auto `FeeStructure` (one per grade)     | `isLocked` (set on any amount edit) | `provisionSchoolFees` → `repriceStructureAssignments`            |
+| Student | `FeeAssignment`                         | `customAmount != null`              | `repriceStructureAssignments` skips it; `recomputeAssignment`   |
 
-**Key invariant**: collected (paid/partially-paid) assignments are never overwritten by Level 3 cascade.
-**Currency snapshot**: recorded on `FeeAssignment` at creation time (Level 1+2); cannot drift if school changes currency later.
-**Gateway-aware checkout**: `createFeePaymentCheckout` auto-routes AED-currency schools to Tap; others use Stripe.
+- `src/lib/fee-reprice.ts` — `repriceStructureAssignments` (skips own-price,
+  paid, cancelled), `recomputeAssignment`, `releaseGradeFees`.
+- `resyncAssignmentInvoices` (fee-invoice-sync) re-splits open instalments by
+  weight; settled ones keep their amounts. Schedules scale to `finalAmount`.
+- Grade change / promotion: `ensureStudentFeeAssignments` cancels this year's
+  unpaid old-grade fee first (last year's arrears stay); a cancelled fee
+  revives if the student returns. `executePromotions` assigns the new grade's
+  fee for the latest year when it is newer than the batch year.
+- New year: `createSchoolYear` provisions the latest year (`new-scope`);
+  fine-tuned grade fees carry over locked.
+- UI: grade picker + Fine-tuned / Reset on the structure form;
+  **Student price** card (own price, reset, discount) on
+  `/finance/fees/assignments/[id]` (`fees:approve`).
+- `applyScholarship` prices from the scholarship's coverage, clamped.
+- `assignFee` / `bulkAssignFees` verify tenant ownership, price from the
+  cascade, and create invoices.
+- Removed the dead `listings/students/profile` fee tab + its unguarded actions.
+- Data heal (apply branch-first): `prisma/migrations/20261017180000_fee_grade_heal`.
+
+Open: `PricingRule` has no editor; re-pricing posts no ledger delta; auto-assign
+posts no `postFeeAssignment`; admin school-wide structures stay additive on top
+of the grade fee; `markInvoicePaid` bypasses `FeeAssignment.status`.
 
 ## MVP Checklist
 
@@ -129,14 +151,14 @@ The fee system enforces a strict four-level cascade. All four levels are now imp
 - [x] **Offline bank-transfer + ATM-deposit pending→cleared flow** (Aldar P2.1+P2.2) — `PENDING_VERIFICATION` status, deposit slip URL, bank branch, sender IBAN, `markPaymentCleared` action
 - [x] **Server-side receipt PDF** at `/api/payment/[paymentId]/receipt` (Aldar P1.5) — branded with school logo (P2.4); status-guarded + i18n + school name/currency
 - [x] **17+ tests passing** in `__tests__/actions.test.ts` (+4 markPaymentCleared)
-- [x] **4-level fee inheritance** — onboarding auto-provision (L1), per-grade tune (L2), `propagateFeeStructureChange` cascade preserving per-student discounts (L3), `updateFeeAssignmentDiscount` per-student (L4)
+- [x] **Fee cascade school → grade → student** — live inheritance with override flags (rebuilt 2026-10-17, see above)
 - [x] **Gateway-aware fee checkout** — Tap for AED, Stripe otherwise
 - [x] **Fee-overdue cron** now per-tenant (iterates all schools); mirrors OVERDUE to `UserInvoice`
 - [x] **New `/api/cron/fee-due` (daily)** — upcoming-due + offer-expiry reminders per tenant
 - [x] **Receipt link in my-fees view** — students/guardians can download PDF from `/finance/fees/my`
 - [ ] Migrate `validation.ts` to `ValidationHelper`
 - [ ] More test coverage (markPaymentCleared has 4; offline reference-field capture + reconciliation report uncovered)
-- [ ] Fee defaulters list (#56)
+- [ ] Fee defaulters list
 - [ ] Issue #269: fee-structure-creation-as-modal UX (deferred)
 - [ ] Onboarding re-provision on tuition-change (Level 1 only fires once today — deferred)
 
