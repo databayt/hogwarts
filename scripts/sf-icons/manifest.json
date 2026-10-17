@@ -198,6 +198,120 @@
       "weight": "regular",
       "pt": 22,
       "use": "live control row: discussion"
+    },
+    {
+      "name": "face.smiling",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live control row: react"
+    },
+    {
+      "name": "timer",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live class tools: timer"
+    },
+    {
+      "name": "sparkles",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live control row: class tools"
+    },
+    {
+      "name": "eraser",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: eraser"
+    },
+    {
+      "name": "arrow.uturn.backward",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: undo"
+    },
+    {
+      "name": "arrow.uturn.forward",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: redo"
+    },
+    {
+      "name": "highlighter",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: highlighter"
+    },
+    {
+      "name": "pencil.tip",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: pen"
+    },
+    {
+      "name": "textformat",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: text"
+    },
+    {
+      "name": "line.diagonal",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: line"
+    },
+    {
+      "name": "arrow.up.right",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: arrow"
+    },
+    {
+      "name": "rectangle",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: rectangle"
+    },
+    {
+      "name": "circle",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: ellipse"
+    },
+    {
+      "name": "trash",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: clear"
+    },
+    {
+      "name": "hand.raised.slash.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live hands: lower"
+    },
+    {
+      "name": "person.wave.2.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live hands: give the floor"
+    },
+    {
+      "name": "person.2.badge.gearshape.fill",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live board rail: who can draw"
+    },
+    {
+      "name": "mic.slash",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live moderation: mute"
+    },
+    {
+      "name": "stop.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live timer: stop"
     }
   ]
 }
