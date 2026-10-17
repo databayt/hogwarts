@@ -617,6 +617,8 @@ export type LiveClassReferenceData = {
     status: string
   }[]
   assignments: { id: string; title: string; dueDate: string; status: string }[]
+  /** Quick checks (poll / exit ticket / quiz) the host can launch in the room. */
+  quickChecks: { id: string; title: string; type: string; status: string }[]
 }
 
 /**
@@ -656,7 +658,7 @@ export async function getLiveClassReferenceData(
   subjectId: string,
   gradeNumber?: number
 ): Promise<LiveClassReferenceData> {
-  const [lessons, exams, assignments] = await Promise.all([
+  const [lessons, exams, assignments, quickChecks] = await Promise.all([
     db.lesson.findMany({
       where: {
         chapter: {
@@ -715,6 +717,18 @@ export async function getLiveClassReferenceData(
       orderBy: { dueDate: "desc" },
       take: 50,
     }),
+    db.quickAssessment.findMany({
+      where: {
+        schoolId,
+        subjectId,
+        ...(gradeNumber
+          ? { OR: [{ grade: { gradeNumber } }, { gradeId: null }] }
+          : {}),
+      },
+      select: { id: true, title: true, type: true, status: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
   ])
 
   return {
@@ -732,6 +746,7 @@ export async function getLiveClassReferenceData(
       dueDate: a.dueDate.toISOString(),
       status: a.status,
     })),
+    quickChecks,
   }
 }
 
@@ -758,11 +773,15 @@ export async function getLiveClassDetail(schoolId: string, id: string) {
           title: true,
           schoolExamId: true,
           schoolAssignmentId: true,
+          quickAssessmentId: true,
           schoolExam: {
             select: { id: true, title: true, examType: true, examDate: true },
           },
           schoolAssignment: {
             select: { id: true, title: true, type: true, dueDate: true },
+          },
+          quickAssessment: {
+            select: { id: true, title: true, type: true, status: true },
           },
         },
       },

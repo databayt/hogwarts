@@ -95,6 +95,9 @@ export function LiveClassForm({
     [t.validation]
   )
 
+  // Saved resource rows the wizard has no picker for (see the edit load).
+  const keptResources = useRef<LiveClassFormData["resources"]>([])
+
   const form = useForm<WizardFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
@@ -121,6 +124,7 @@ export function LiveClassForm({
       resources: [],
       saveAsDefault: false,
       examRefId: "",
+      quickRefId: "",
       assignmentRefId: "",
       linkUrl: "",
       linkTitle: "",
@@ -219,8 +223,27 @@ export function LiveClassForm({
           const start = new Date(d.scheduledStart)
           const end = new Date(d.scheduledEnd)
           const examRef = d.resources.find((r) => r.schoolExamId)
+          const quickRef = d.resources.find((r) => r.quickAssessmentId)
           const assignmentRef = d.resources.find((r) => r.schoolAssignmentId)
           const linkRef = d.resources.find((r) => r.url)
+          // Rows the pickers don't show (a second assignment, homework set at
+          // the end of class) ride through untouched: saving replaces the
+          // whole set, so dropping them here would delete them.
+          keptResources.current = d.resources
+            .filter(
+              (r) =>
+                r !== examRef &&
+                r !== quickRef &&
+                r !== assignmentRef &&
+                r !== linkRef
+            )
+            .map((r) => ({
+              schoolExamId: r.schoolExamId,
+              schoolAssignmentId: r.schoolAssignmentId,
+              quickAssessmentId: r.quickAssessmentId,
+              url: r.url,
+              title: r.title,
+            }))
           form.reset({
             ...form.getValues(),
             title: d.title,
@@ -249,6 +272,7 @@ export function LiveClassForm({
             maxParticipants: d.maxParticipants,
             catalogLessonId: d.catalogLessonId ?? "",
             examRefId: examRef?.schoolExamId ?? "",
+            quickRefId: quickRef?.quickAssessmentId ?? "",
             assignmentRefId: assignmentRef?.schoolAssignmentId ?? "",
             linkUrl: linkRef?.url ?? "",
             linkTitle: linkRef?.title ?? "",
@@ -277,6 +301,15 @@ export function LiveClassForm({
         title: null,
       })
     }
+    if (v.quickRefId && v.quickRefId !== NONE) {
+      rows.push({
+        schoolExamId: null,
+        schoolAssignmentId: null,
+        quickAssessmentId: v.quickRefId,
+        url: null,
+        title: null,
+      })
+    }
     if (v.assignmentRefId && v.assignmentRefId !== NONE) {
       rows.push({
         schoolExamId: null,
@@ -293,7 +326,7 @@ export function LiveClassForm({
         title: v.linkTitle || null,
       })
     }
-    return rows
+    return [...rows, ...keptResources.current]
   }
 
   const onSubmit = async (data: WizardFormValues) => {

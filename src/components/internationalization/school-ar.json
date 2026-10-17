@@ -5628,6 +5628,8 @@
         "referencesLabel": "المراجع",
         "examRefLabel": "اختبار / كويز",
         "examRefPlaceholder": "أرفق اختبارًا أو كويزًا (اختياري)",
+        "quickRefLabel": "تقييم سريع تطلقه أثناء الحصة",
+        "quickRefPlaceholder": "استطلاع أو بطاقة خروج أو اختبار قصير (اختياري)",
         "assignmentRefLabel": "الواجب",
         "assignmentRefPlaceholder": "أرفق واجبًا (اختياري)",
         "linkUrlLabel": "رابط المرجع",

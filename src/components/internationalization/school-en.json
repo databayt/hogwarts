@@ -5612,6 +5612,8 @@
         "referencesLabel": "References",
         "examRefLabel": "Exam / Quiz",
         "examRefPlaceholder": "Attach an exam or quiz (optional)",
+        "quickRefLabel": "Quick check to launch in class",
+        "quickRefPlaceholder": "A poll, exit ticket or quick quiz (optional)",
         "assignmentRefLabel": "Assignment",
         "assignmentRefPlaceholder": "Attach an assignment (optional)",
         "linkUrlLabel": "Link URL",

@@ -112,13 +112,14 @@ export type LiveVisibilityValue = (typeof LIVE_CLASS_VISIBILITY_VALUES)[number]
 // Schema factory
 // ---------------------------------------------------------------------------
 
-// One attached reference — exactly one of exam / assignment / ad-hoc URL per
-// row (mirrors the ConferenceResource multi-nullable-FK model).
+// One attached reference — exactly one of exam / assignment / quick check /
+// ad-hoc URL per row (mirrors the ConferenceResource multi-nullable-FK model).
 function createResourceItemSchema(m: ReturnType<typeof v>) {
   return z
     .object({
       schoolExamId: z.string().optional().nullable(),
       schoolAssignmentId: z.string().optional().nullable(),
+      quickAssessmentId: z.string().optional().nullable(),
       // .url() alone admits any scheme (javascript:, data:) — these values
       // render as <a href>, so lock to http(s).
       url: z
@@ -133,8 +134,9 @@ function createResourceItemSchema(m: ReturnType<typeof v>) {
     })
     .refine(
       (r) =>
-        [r.schoolExamId, r.schoolAssignmentId, r.url].filter(Boolean).length ===
-        1,
+        [r.schoolExamId, r.schoolAssignmentId, r.quickAssessmentId, r.url].filter(
+          Boolean
+        ).length === 1,
       { message: m.resourceOneRef, path: ["url"] }
     )
 }

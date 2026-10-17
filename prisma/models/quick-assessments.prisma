@@ -54,6 +54,8 @@ model QuickAssessment {
   subject   Subject                   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   responses QuickAssessmentResponse[]
 
+  conferenceResources ConferenceResource[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

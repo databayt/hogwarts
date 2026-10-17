@@ -43,6 +43,7 @@ import type {
 // the zod resolver strips them from the validated payload).
 export type WizardFormValues = LiveClassFormData & {
   examRefId: string
+  quickRefId: string
   assignmentRefId: string
   linkUrl: string
   linkTitle: string
@@ -458,6 +459,18 @@ export function StepReferences({
               )}
             />
           </div>
+          <SelectField
+            name="quickRefId"
+            label={f.quickRefLabel}
+            placeholder={refLoading ? "…" : f.quickRefPlaceholder}
+            disabled={isPending || refLoading}
+            options={withNone(
+              (refData?.quickChecks ?? []).map((q) => ({
+                value: q.id,
+                label: q.title,
+              }))
+            )}
+          />
         </>
       ) : (
         <p className="text-muted-foreground text-sm">{f.pickSubjectFirst}</p>

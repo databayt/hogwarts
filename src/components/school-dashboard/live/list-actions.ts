@@ -93,7 +93,7 @@ function mapMeetingProviderToId(provider?: string | null): ProviderId {
 
 /**
  * Tenant-verify attached references before writing ConferenceResource rows.
- * Every exam/assignment id must belong to this school — a foreign id is a
+ * Every exam/assignment/quick-check id must belong to this school — a foreign id is a
  * validation failure, never a silent skip. Returns the rows ready to insert.
  */
 async function verifyResourceRefs(
@@ -112,7 +112,12 @@ async function verifyResourceRefs(
       resources.map((r) => r.schoolAssignmentId).filter((x): x is string => !!x)
     ),
   ]
-  const [examCount, assignmentCount] = await Promise.all([
+  const quickIds = [
+    ...new Set(
+      resources.map((r) => r.quickAssessmentId).filter((x): x is string => !!x)
+    ),
+  ]
+  const [examCount, assignmentCount, quickCount] = await Promise.all([
     examIds.length
       ? db.schoolExam.count({ where: { id: { in: examIds }, schoolId } })
       : Promise.resolve(0),
@@ -121,9 +126,13 @@ async function verifyResourceRefs(
           where: { id: { in: assignmentIds }, schoolId },
         })
       : Promise.resolve(0),
+    quickIds.length
+      ? db.quickAssessment.count({ where: { id: { in: quickIds }, schoolId } })
+      : Promise.resolve(0),
   ])
   if (examCount !== examIds.length) return { ok: false }
   if (assignmentCount !== assignmentIds.length) return { ok: false }
+  if (quickCount !== quickIds.length) return { ok: false }
   return { ok: true, rows: resources }
 }
 
@@ -143,6 +152,7 @@ async function writeResources(
               sessionId,
               schoolExamId: r.schoolExamId || null,
               schoolAssignmentId: r.schoolAssignmentId || null,
+              quickAssessmentId: r.quickAssessmentId || null,
               url: r.url || null,
               title: r.title || null,
               order: i,
@@ -255,6 +265,7 @@ export async function getLiveClass(params: { id: string }): Promise<
     resources: {
       schoolExamId: string | null
       schoolAssignmentId: string | null
+      quickAssessmentId: string | null
       url: string | null
       title: string | null
     }[]
@@ -315,6 +326,7 @@ export async function getLiveClass(params: { id: string }): Promise<
         resources: liveClass.resources.map((r) => ({
           schoolExamId: r.schoolExamId,
           schoolAssignmentId: r.schoolAssignmentId,
+          quickAssessmentId: r.quickAssessmentId,
           url: r.url,
           title: r.title,
         })),
@@ -349,7 +361,7 @@ export async function getLiveClassReferenceOptions(params: {
     if (!params.subjectId) {
       return {
         success: true,
-        data: { lessons: [], exams: [], assignments: [] },
+        data: { lessons: [], exams: [], assignments: [], quickChecks: [] },
       }
     }
 

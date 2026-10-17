@@ -184,7 +184,7 @@ model Conference {
 
 // Reference material attached to a session — exactly one of schoolExamId
 // (exams AND quizzes: quiz = SchoolExam.examType QUIZ), schoolAssignmentId,
-// or url is populated per row (the ContentOverride multi-nullable-FK pattern).
+// quickAssessmentId or url is populated per row (the ContentOverride multi-nullable-FK pattern).
 // Lesson-level materials/videos/questions are NOT rows here — they surface
 // automatically through Conference.catalogLessonId.
 model ConferenceResource {
@@ -199,6 +199,10 @@ model ConferenceResource {
   schoolAssignmentId String?
   schoolAssignment   SchoolAssignment? @relation(fields: [schoolAssignmentId], references: [id], onDelete: Cascade)
 
+  // A quick check (poll / exit ticket / quiz) the host can launch in the room.
+  quickAssessmentId String?
+  quickAssessment   QuickAssessment? @relation(fields: [quickAssessmentId], references: [id], onDelete: Cascade)
+
   // Ad-hoc external reference (worksheet URL, article, drive folder…).
   url   String?
   title String?
@@ -209,6 +213,7 @@ model ConferenceResource {
   @@index([schoolId, sessionId])
   @@index([schoolExamId])
   @@index([schoolAssignmentId])
+  @@index([quickAssessmentId])
   @@map("live_class_resources")
 }
 
