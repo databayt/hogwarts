@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
+import { AttendanceReview } from "@/components/school-dashboard/live/attendance-review"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
@@ -241,6 +242,12 @@ export async function LiveClassDetailContent({
           )}
         </div>
       )}
+
+      <AttendanceReview
+        sessionId={session.id}
+        locale={locale}
+        dictionary={dictionary}
+      />
 
       <div className="flex gap-2">
         {canJoin &&

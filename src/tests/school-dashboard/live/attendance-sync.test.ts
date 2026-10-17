@@ -830,3 +830,38 @@ describe("daily roll-up (attn-02)", () => {
     )
   })
 })
+
+describe("syncLiveAttendance — a corrected VIRTUAL row is manual", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockDb.attendance.groupBy.mockResolvedValue([])
+    mockDb.$transaction.mockImplementation(async (cb: any) =>
+      cb({
+        attendance: {
+          update: mockDb.attendance.update,
+          createMany: mockDb.attendance.createMany,
+        },
+      })
+    )
+  })
+
+  it("never lowers a VIRTUAL row a teacher corrected (markedBy set)", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue(ONLY_B)
+    mockDb.attendance.findMany.mockResolvedValue([
+      {
+        id: "att-A",
+        studentId: "sA",
+        method: "VIRTUAL",
+        status: "PRESENT",
+        markedBy: "teacher-1",
+      },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "att-A" } })
+    )
+  })
+})

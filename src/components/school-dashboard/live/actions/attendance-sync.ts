@@ -238,6 +238,7 @@ export async function syncLiveAttendance(
         studentId: true,
         method: true,
         status: true,
+        markedBy: true,
         deletedAt: true,
       },
     })
@@ -248,6 +249,7 @@ export async function syncLiveAttendance(
           id: r.id,
           method: r.method,
           status: r.status,
+          markedBy: r.markedBy,
           deletedAt: r.deletedAt,
         },
       ])
@@ -301,9 +303,12 @@ export async function syncLiveAttendance(
           // excluded from the protection: an admin-removed mark was never
           // "seen in the room" and must not block the row from being
           // revived (see the `deletedAt: null` write below).
+          // "Manual" = not ours: any method but VIRTUAL, or a VIRTUAL row a
+          // person has since corrected (the class page's override goes through
+          // markPeriodAttendance, which sets markedBy and keeps the method).
           const isManualPresentLike =
             existing.deletedAt == null &&
-            existing.method !== "VIRTUAL" &&
+            (existing.method !== "VIRTUAL" || existing.markedBy != null) &&
             (existing.status === "PRESENT" ||
               existing.status === "LATE" ||
               existing.status === "EXCUSED")
