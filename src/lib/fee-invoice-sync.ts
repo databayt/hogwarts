@@ -195,8 +195,15 @@ export async function ensureInvoicesForAssignment(
       })
     }
   } else if (schedule && Array.isArray(schedule) && schedule.length > 0) {
+    // The schedule is priced at the structure's list total; the student owes
+    // `finalAmount` (an override or a discount moves it), so the instalments
+    // are split by the schedule's weights and always sum to finalAmount.
+    const amounts = splitByWeights(
+      finalAmount,
+      schedule.map((entry) => Number(entry.amount))
+    )
     schedule.forEach((entry, i) => {
-      const amount = Number(entry.amount)
+      const amount = amounts[i]
       if (!Number.isFinite(amount) || amount <= 0) return
       const description =
         entry.description ??
@@ -317,4 +324,128 @@ async function generateUniqueInvoiceNumber(
     if (!exists) return candidate
   }
   return `${prefix}-${year}-${Date.now()}${installmentNumber ? `-${installmentNumber}` : ""}`
+}
+
+/**
+ * Split `total` across weights (non-finite / negative weights count as 0;
+ * all-zero weights split equally). The last share absorbs rounding so the
+ * shares always sum to `total` exactly.
+ */
+export function splitByWeights(total: number, weights: number[]): number[] {
+  if (weights.length === 0) return []
+  const clean = weights.map((w) => (Number.isFinite(w) && w > 0 ? w : 0))
+  const sum = clean.reduce((s, w) => s + w, 0)
+  const shares = sum > 0 ? clean.map((w) => w / sum) : clean.map(() => 1 / clean.length)
+  const out: number[] = []
+  let running = 0
+  for (let i = 0; i < shares.length; i++) {
+    const isLast = i === shares.length - 1
+    const amount = isLast ? round2(total - running) : round2(total * shares[i])
+    running = round2(running + amount)
+    out.push(amount)
+  }
+  return out
+}
+
+/**
+ * Re-price the open invoices of an assignment after its `finalAmount` moved
+ * (grade fee edited, school fee re-synced, override or discount changed).
+ *
+ * Invoices already settled (PAID, or with money applied) keep their amounts;
+ * the rest of the new amount is split across the still-open ones by their
+ * current weights. A single open invoice with no settled siblings takes the
+ * whole amount — itemized lines keep their prices and the invoice discount
+ * (or an adjustment line) reconciles them, the same shape
+ * `ensureInvoicesForAssignment` writes. Instalment invoices carry one line,
+ * which is re-priced in place.
+ *
+ * Returns the number of invoices updated. Never creates invoices — a caller
+ * that needs them runs `ensureInvoicesForAssignment`.
+ */
+export async function resyncAssignmentInvoices(
+  client: DbClient,
+  schoolId: string,
+  feeAssignmentId: string,
+  finalAmount: number
+): Promise<number> {
+  const invoices = await client.userInvoice.findMany({
+    where: { schoolId, feeAssignmentId, status: { not: "CANCELLED" } },
+    orderBy: { due_date: "asc" },
+    select: {
+      id: true,
+      status: true,
+      total: true,
+      amountPaid: true,
+      items: {
+        select: { id: true, item_name: true, price: true },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  })
+  if (invoices.length === 0) return 0
+
+  const settled = invoices.filter(
+    (inv) => inv.status === "PAID" || Number(inv.amountPaid) > 0
+  )
+  const open = invoices.filter((inv) => !settled.includes(inv))
+  if (open.length === 0) return 0
+
+  const settledSum = round2(
+    settled.reduce((s, inv) => s + Number(inv.total), 0)
+  )
+  const remaining = Math.max(round2(finalAmount - settledSum), 0)
+  const amounts = splitByWeights(
+    remaining,
+    open.map((inv) => Number(inv.total))
+  )
+
+  let updated = 0
+  for (let i = 0; i < open.length; i++) {
+    const inv = open[i]
+    const amount = amounts[i]
+    if (inv.items.length > 1) {
+      // Itemized: component prices stay; reconcile to the billed amount.
+      const itemSum = round2(
+        inv.items.reduce((s, it) => s + Number(it.price), 0)
+      )
+      if (amount <= itemSum) {
+        await client.userInvoice.update({
+          where: { id: inv.id },
+          data: {
+            sub_total: itemSum,
+            discount: amount < itemSum ? round2(itemSum - amount) : null,
+            total: amount,
+          },
+        })
+      } else {
+        await client.userInvoiceItem.create({
+          data: {
+            schoolId,
+            invoiceId: inv.id,
+            item_name: "Adjustment",
+            quantity: 1,
+            price: round2(amount - itemSum),
+            total: round2(amount - itemSum),
+          },
+        })
+        await client.userInvoice.update({
+          where: { id: inv.id },
+          data: { sub_total: amount, discount: null, total: amount },
+        })
+      }
+    } else {
+      if (inv.items[0]) {
+        await client.userInvoiceItem.update({
+          where: { id: inv.items[0].id },
+          data: { price: amount, total: amount },
+        })
+      }
+      await client.userInvoice.update({
+        where: { id: inv.id },
+        data: { sub_total: amount, discount: null, total: amount },
+      })
+    }
+    updated++
+  }
+  return updated
 }

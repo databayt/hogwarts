@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -36,7 +37,12 @@ vi.mock("@/lib/db", () => ({
     section: { findMany: vi.fn() },
     student: { findMany: vi.fn(), update: vi.fn() },
     studentYearLevel: { create: vi.fn() },
+    schoolYear: { findFirst: vi.fn() },
   },
+}))
+
+vi.mock("@/lib/fee-auto-assign", () => ({
+  ensureStudentFeeAssignments: vi.fn().mockResolvedValue({}),
 }))
 
 vi.mock("@/lib/enrollment-sync", () => ({
@@ -317,6 +323,48 @@ describe("executePromotions — sections", () => {
     })
     expect(syncStudentSubjectEnrollments).toHaveBeenCalledTimes(3)
     expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(SCHOOL, "s1")
+  })
+
+  it("charges the new grade's fee for the year the student is promoted into", async () => {
+    vi.mocked(ensureStudentFeeAssignments).mockClear()
+    vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
+      id: "y2",
+      yearName: "2027-2028",
+    } as never)
+    vi.mocked(db.promotionCandidate.findMany).mockResolvedValue([
+      { id: "c1", studentId: "s1", finalDecision: "PROMOTE", newGradeId: "g8" },
+    ] as never)
+    vi.mocked(db.student.findMany).mockResolvedValue([
+      { id: "s1", section: null },
+    ] as never)
+
+    await executePromotions("batch-1")
+
+    expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
+      schoolId: SCHOOL,
+      studentId: "s1",
+      academicGradeId: "g8",
+      academicYear: "2027-2028",
+      notify: false,
+    })
+  })
+
+  it("leaves fees to the new year when the promotion year is still the latest", async () => {
+    vi.mocked(ensureStudentFeeAssignments).mockClear()
+    vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
+      id: "y1",
+      yearName: "2026-2027",
+    } as never)
+    vi.mocked(db.promotionCandidate.findMany).mockResolvedValue([
+      { id: "c1", studentId: "s1", finalDecision: "PROMOTE", newGradeId: "g8" },
+    ] as never)
+    vi.mocked(db.student.findMany).mockResolvedValue([
+      { id: "s1", section: null },
+    ] as never)
+
+    await executePromotions("batch-1")
+
+    expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
   })
 
   it("a retained student keeps their section", async () => {

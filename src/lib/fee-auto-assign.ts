@@ -80,6 +80,19 @@ export async function ensureStudentFeeAssignments(
   const academicYear =
     input.academicYear ?? (await resolveCurrentAcademicYear(schoolId, client))
 
+  // A student charges one grade per year: fees this year's previous grade
+  // charged (and nobody paid toward) are cancelled before the new grade's
+  // fees attach — no double billing after a grade edit or promotion.
+  const { releaseGradeFees, recomputeAssignment } = await import(
+    "@/lib/fee-reprice"
+  )
+  await releaseGradeFees(client, {
+    schoolId,
+    studentId,
+    academicYear,
+    keepGradeId: academicGradeId,
+  })
+
   // Three sources of structures match a student-grade pair:
   // 1. Admin-created school-wide (no grade, not auto-generated)
   // 2. Admin-created structures for this grade
@@ -160,8 +173,22 @@ export async function ensureStudentFeeAssignments(
   const structureIds = feeStructures.map((s) => s.id)
   const existing = await client.feeAssignment.findMany({
     where: { studentId, academicYear, feeStructureId: { in: structureIds } },
-    select: { id: true, feeStructureId: true },
+    select: { id: true, feeStructureId: true, status: true },
   })
+  // Back in a grade they left earlier this year → its cancelled fee revives
+  // at today's price (the unique key forbids a second row).
+  for (const a of existing) {
+    if (a.status !== "CANCELLED") continue
+    await client.feeAssignment.update({
+      where: { id: a.id },
+      data: { status: "PENDING" },
+    })
+    await client.userInvoice.updateMany({
+      where: { schoolId, feeAssignmentId: a.id, status: "CANCELLED" },
+      data: { status: "UNPAID" },
+    })
+    await recomputeAssignment(client, schoolId, a.id)
+  }
   const existingStructureIds = new Set(existing.map((a) => a.feeStructureId))
   const missing = feeStructures.filter((s) => !existingStructureIds.has(s.id))
 

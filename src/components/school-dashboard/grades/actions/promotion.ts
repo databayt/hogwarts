@@ -10,6 +10,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { audienceRosterWhere } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -590,6 +591,13 @@ export async function executePromotions(
       students.map((s) => [s.id, s.section?.letter ?? null])
     )
 
+    // The school's latest year — the one fees are charged for.
+    const feeYear = await db.schoolYear.findFirst({
+      where: { schoolId },
+      orderBy: { startDate: "desc" },
+      select: { id: true, yearName: true },
+    })
+
     let executed = 0
 
     for (const candidate of candidates) {
@@ -608,6 +616,27 @@ export async function executePromotions(
           })
           // The new grade's subjects in the LMS (last year's stay)
           await syncStudentSubjectEnrollments(schoolId, candidate.studentId)
+
+          // The new grade's fee — for the year the student is promoted into.
+          // Until that year exists its fees come with it (createSchoolYear
+          // provisions and fans out by the student's grade then).
+          if (feeYear && feeYear.id !== batch.yearId) {
+            try {
+              await ensureStudentFeeAssignments({
+                schoolId,
+                studentId: candidate.studentId,
+                academicGradeId: candidate.newGradeId,
+                academicYear: feeYear.yearName,
+                notify: false,
+              })
+            } catch (feeErr) {
+              console.error(
+                "[executePromotions] fee assignment failed:",
+                candidate.studentId,
+                feeErr
+              )
+            }
+          }
 
           // Create StudentYearLevel record
           const levelId = gradeToYearLevel.get(candidate.newGradeId)

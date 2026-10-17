@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -59,6 +60,24 @@ export async function createSchoolYear(
         startDate: parsed.startDate,
         endDate: parsed.endDate,
       },
+    })
+
+    // A new latest year is the year fees are charged for: give every grade
+    // its fee (last year's fine-tuned price, else the school fee) and every
+    // student their grade's fee. After the response — it fans out per student.
+    after(async () => {
+      try {
+        const latest = await db.schoolYear.findFirst({
+          where: { schoolId },
+          orderBy: { startDate: "desc" },
+          select: { id: true },
+        })
+        if (latest?.id !== row.id) return
+        const { provisionSchoolFees } = await import("@/lib/fee-provisioning")
+        await provisionSchoolFees(schoolId, { mode: "new-scope" })
+      } catch (err) {
+        console.error("[createSchoolYear] fee provisioning failed:", err)
+      }
     })
 
     revalidatePath(ACADEMIC_PATH)

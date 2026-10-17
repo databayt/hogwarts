@@ -541,7 +541,7 @@ describe("markPaymentCleared", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Level 3 — propagateFeeStructureChange (via updateFeeStructure)
+// Cascade — repriceStructureAssignments (via updateFeeStructure)
 // ---------------------------------------------------------------------------
 
 describe("updateFeeStructure — Level 3 inheritance propagation", () => {
@@ -640,7 +640,7 @@ describe("updateFeeStructure — Level 3 inheritance propagation", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Level 4 — updateFeeAssignmentDiscount
+// Student fine-tune — updateFeeAssignmentDiscount
 // ---------------------------------------------------------------------------
 
 describe("updateFeeAssignmentDiscount", () => {
@@ -666,18 +666,26 @@ describe("updateFeeAssignmentDiscount", () => {
 
   it("computes finalAmount = baseAmount - discount and returns it", async () => {
     const { db: dbMock } = await import("@/lib/db")
+    // Stateful row: the action writes the discount, then the cascade
+    // recompute reads it back to derive finalAmount.
+    let row: Record<string, unknown> = {
+      id: FEE_ASSIGNMENT_ID,
+      schoolId: SCHOOL_ID,
+      status: "PENDING",
+      discounts: [],
+      totalDiscount: 0,
+      customAmount: null,
+      feeStructure: { totalAmount: 10000 },
+    }
     ;(dbMock.feeAssignment as any) = {
-      findFirst: vi.fn().mockResolvedValue({
-        id: FEE_ASSIGNMENT_ID,
-        schoolId: SCHOOL_ID,
-        discounts: [],
-        totalDiscount: 0,
-        feeStructure: { totalAmount: 10000 },
-        invoices: [],
+      findFirst: vi.fn(async () => row),
+      update: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        row = { ...row, ...data }
+        return row
       }),
-      update: vi.fn().mockResolvedValue({}),
     }
     ;(dbMock.userInvoice as any) = {
+      findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
     }
     ;(dbMock.$transaction as any) = vi
@@ -701,15 +709,26 @@ describe("updateFeeAssignmentDiscount", () => {
 
   it("clamps negative discount to zero (finalAmount stays at base)", async () => {
     const { db: dbMock } = await import("@/lib/db")
+    // Stateful row: the action writes the discount, then the cascade
+    // recompute reads it back to derive finalAmount.
+    let row: Record<string, unknown> = {
+      id: FEE_ASSIGNMENT_ID,
+      schoolId: SCHOOL_ID,
+      status: "PENDING",
+      discounts: [],
+      totalDiscount: 0,
+      customAmount: null,
+      feeStructure: { totalAmount: 5000 },
+    }
     ;(dbMock.feeAssignment as any) = {
-      findFirst: vi.fn().mockResolvedValue({
-        id: FEE_ASSIGNMENT_ID,
-        schoolId: SCHOOL_ID,
-        discounts: [],
-        totalDiscount: 0,
-        feeStructure: { totalAmount: 5000 },
-        invoices: [],
+      findFirst: vi.fn(async () => row),
+      update: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        row = { ...row, ...data }
+        return row
       }),
+    }
+    ;(dbMock.userInvoice as any) = {
+      findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
     }
     ;(dbMock.$transaction as any) = vi

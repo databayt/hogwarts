@@ -41,6 +41,12 @@ vi.mock("@/lib/fee-invoice-sync", () => ({
   ensureInvoicesForAssignment: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Grade-change release + revive are covered in fee-reprice.test.ts.
+vi.mock("@/lib/fee-reprice", () => ({
+  releaseGradeFees: vi.fn().mockResolvedValue(0),
+  recomputeAssignment: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockResolvedValue(undefined),
 }))
