@@ -5708,7 +5708,8 @@
         },
         "catchUp": {
           "title": "Catch up",
-          "recording": "Recording"
+          "recording": "Recording",
+          "homeworkDue": "Homework due"
         },
         "readiness": {
           "title": "Ready to teach online",

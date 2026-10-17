@@ -25,6 +25,7 @@ vi.mock("@/lib/db", () => ({
     lesson: { findMany: vi.fn(), count: vi.fn() },
     schoolExam: { findMany: vi.fn() },
     schoolAssignment: { findMany: vi.fn() },
+    quickAssessment: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }))
 

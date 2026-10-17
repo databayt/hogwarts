@@ -5724,7 +5724,8 @@
         },
         "catchUp": {
           "title": "ما فاتك",
-          "recording": "تسجيل"
+          "recording": "تسجيل",
+          "homeworkDue": "واجب مطلوب"
         },
         "readiness": {
           "title": "جاهزية المدرسة للتدريس عبر الإنترنت",

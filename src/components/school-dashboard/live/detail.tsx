@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
 import { AttendanceReview } from "@/components/school-dashboard/live/attendance-review"
+import { ClassWork } from "@/components/school-dashboard/live/class-work"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
@@ -244,6 +245,12 @@ export async function LiveClassDetailContent({
       )}
 
       <AttendanceReview
+        sessionId={session.id}
+        locale={locale}
+        dictionary={dictionary}
+      />
+
+      <ClassWork
         sessionId={session.id}
         locale={locale}
         dictionary={dictionary}
