@@ -46,6 +46,8 @@ export default async function LiveClassesContent({
 
   let data: LiveClassRow[] = []
   let total = 0
+  // A failed read must not look like a school with no classes.
+  let loadFailed = false
   // Resolve form dropdown options on the server (teachers/subjects/sections)
   // and hand them to the table as stable props. The create/edit form must not
   // fetch these on the client — a parent re-render loop would otherwise turn
@@ -143,11 +145,18 @@ export default async function LiveClassesContent({
       console.error("[LiveClassesContent] Error fetching live classes:", error)
       data = []
       total = 0
+      loadFailed = true
     }
   }
 
   return (
     <div className="space-y-6">
+      {loadFailed && (
+        <p role="alert" className="text-destructive text-sm">
+          {t?.errors?.loadFailed ??
+            "Couldn't load the classes. Refresh the page to try again."}
+        </p>
+      )}
       <LiveClassesTable
         initialData={data}
         total={total}

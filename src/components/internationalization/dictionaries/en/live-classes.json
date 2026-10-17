@@ -278,6 +278,8 @@
     "notFound": "Live class not found.",
     "invalidState": "The class is not in the right state.",
     "notStarted": "Your teacher hasn't started the class yet. You'll join automatically when it begins.",
+    "loadFailed": "Couldn't load the classes. Refresh the page to try again.",
+    "recordingsLoadFailed": "Couldn't load the recordings. Refresh the page to try again.",
     "roomFull": "Room is full.",
     "maxDuration": "Class duration exceeds the school maximum.",
     "maxConcurrent": "The school has reached its limit of concurrent live classes.",
@@ -479,6 +481,29 @@
     "unanchored": "This class is not tied to a timetable period, so attendance is not recorded against one.",
     "disabled": "Automatic attendance is turned off for this school. Mark attendance as usual.",
     "markLink": "Go to attendance"
+  },
+  "attendanceReview": {
+    "title": "Attendance",
+    "joinedOf": "{joined} of {total} joined",
+    "emptyRoom": "No student joined this class, so attendance was not written automatically. Mark it below or in the register.",
+    "noPeriod": "This class is not tied to a timetable period, so marks are kept in the register.",
+    "student": "Student",
+    "joined": "Joined",
+    "left": "Left",
+    "minutes": "Minutes",
+    "status": "Status",
+    "stillIn": "Still in",
+    "notMarked": "Not marked",
+    "saved": "Attendance updated",
+    "failed": "Could not update attendance",
+    "statuses": {
+      "PRESENT": "Present",
+      "LATE": "Late",
+      "ABSENT": "Absent",
+      "EXCUSED": "Excused",
+      "SICK": "Sick",
+      "HOLIDAY": "Holiday"
+    }
   },
   "references": {
     "title": "Lesson & references",

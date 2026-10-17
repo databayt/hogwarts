@@ -38,7 +38,8 @@ export async function RecordingsContent({
   viewer,
 }: Props) {
   const result = await listRecordings(sessionId)
-  const recordings = "success" in result && result.success ? result.data : []
+  const loaded = "success" in result && result.success
+  const recordings = loaded ? result.data : []
 
   const t = dictionary?.liveClasses
 
@@ -51,7 +52,12 @@ export async function RecordingsContent({
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <h1 className={typography.h2}>{t?.labels?.recordings ?? "Recordings"}</h1>
-      {recordings.length === 0 ? (
+      {!loaded ? (
+        <p role="alert" className="text-destructive text-sm">
+          {t?.errors?.recordingsLoadFailed ??
+            "Couldn't load the recordings. Refresh the page to try again."}
+        </p>
+      ) : recordings.length === 0 ? (
         <p className={typography.muted}>
           {t?.recording?.empty ?? "No recordings yet for this class."}
         </p>
