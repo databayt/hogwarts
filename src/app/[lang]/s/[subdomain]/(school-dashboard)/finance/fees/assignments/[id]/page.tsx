@@ -42,6 +42,7 @@ import {
   InstallmentTimeline,
 } from "@/components/school-dashboard/finance/fees/installment-timeline"
 import { PaymentReturnBanner } from "@/components/school-dashboard/finance/fees/payment-return-banner"
+import { FeePriceEditor } from "@/components/school-dashboard/finance/fees/fee-price-editor"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
@@ -99,7 +100,10 @@ export default async function AssignmentDetailPage({
   const [{ lang, id }, sp] = await Promise.all([params, searchParams])
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance
-  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
+  const { schoolId, can } = await resolveFinanceAccess("fees", [
+    "view",
+    "approve",
+  ])
 
   if (!schoolId) notFound()
 
@@ -169,6 +173,15 @@ export default async function AssignmentDetailPage({
     .filter((p) => p.status === "SUCCESS")
     .reduce((sum, p) => sum + Number(p.amount), 0)
   const remaining = Math.max(finalAmount - totalPaid, 0)
+  const adminDiscount = (
+    Array.isArray(assignment.discounts)
+      ? (assignment.discounts as Array<{
+          type?: string
+          amount?: number
+          reason?: string
+        }>)
+      : []
+  ).find((entry) => entry?.type === "ADMIN_OVERRIDE")
 
   const fees = d?.fees as
     | {
@@ -293,6 +306,25 @@ export default async function AssignmentDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {can.approve &&
+        assignment.status !== "PAID" &&
+        assignment.status !== "CANCELLED" && (
+          <FeePriceEditor
+            assignmentId={id}
+            lang={lang}
+            currency={currency}
+            gradeFee={Number(assignment.feeStructure?.totalAmount ?? 0)}
+            customAmount={
+              assignment.customAmount != null
+                ? Number(assignment.customAmount)
+                : null
+            }
+            adminDiscount={adminDiscount?.amount ?? 0}
+            adminDiscountReason={adminDiscount?.reason ?? ""}
+            dictionary={d?.feePrice as Record<string, string> | undefined}
+          />
+        )}
 
       {/* Parent-side gateway picker. Hidden when remaining is zero or no
           online gateway is configured for the school's region. */}

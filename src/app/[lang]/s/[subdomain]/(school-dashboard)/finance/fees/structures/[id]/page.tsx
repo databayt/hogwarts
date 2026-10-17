@@ -53,6 +53,18 @@ export default async function FeeStructureDetailPage({ params }: Props) {
     notFound()
   }
 
+  const [grades, school] = await Promise.all([
+    db.academicGrade.findMany({
+      where: { schoolId },
+      select: { id: true, name: true },
+      orderBy: { gradeNumber: "asc" },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { tuitionFee: true, currency: true },
+    }),
+  ])
+
   return (
     <div className="space-y-6">
       <div>
@@ -65,6 +77,11 @@ export default async function FeeStructureDetailPage({ params }: Props) {
       <FeeStructureForm
         lang={lang}
         initialData={JSON.parse(JSON.stringify(feeStructure))}
+        grades={grades}
+        schoolFee={
+          school?.tuitionFee != null ? Number(school.tuitionFee) : undefined
+        }
+        currency={feeStructure.currency ?? school?.currency ?? undefined}
       />
     </div>
   )

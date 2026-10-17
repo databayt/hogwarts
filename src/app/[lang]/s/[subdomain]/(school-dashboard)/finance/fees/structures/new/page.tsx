@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next"
 
+import { db } from "@/lib/db"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
@@ -42,6 +43,18 @@ export default async function NewFeeStructurePage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
+  const [grades, school] = await Promise.all([
+    db.academicGrade.findMany({
+      where: { schoolId },
+      select: { id: true, name: true },
+      orderBy: { gradeNumber: "asc" },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
+
   return (
     <div className="space-y-6">
       <div>
@@ -50,7 +63,11 @@ export default async function NewFeeStructurePage({ params }: Props) {
           {f?.createFeeDescription}
         </p>
       </div>
-      <FeeStructureForm lang={lang} />
+      <FeeStructureForm
+        lang={lang}
+        grades={grades}
+        currency={school?.currency ?? undefined}
+      />
     </div>
   )
 }

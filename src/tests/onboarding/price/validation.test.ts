@@ -67,10 +67,16 @@ describe("createTuitionSchema (Step 4)", () => {
     )
   })
 
-  it("rejects values over 50,000", () => {
-    expect(createTuitionSchema().safeParse({ tuitionFee: 50001 }).success).toBe(
-      false
-    )
+  it("accepts a typical SDG tuition (over the old 50,000 cap)", () => {
+    expect(
+      createTuitionSchema().safeParse({ tuitionFee: 450000 }).success
+    ).toBe(true)
+  })
+
+  it("rejects values over 99,999,999", () => {
+    expect(
+      createTuitionSchema().safeParse({ tuitionFee: 100_000_000 }).success
+    ).toBe(false)
   })
 
   it("allows decimals (cents level precision)", () => {

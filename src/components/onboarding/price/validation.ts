@@ -44,7 +44,7 @@ export function createTuitionSchema(v?: ValidationHelper) {
   const tooBig = v?.get("tuitionFeeMaxLimit") ?? "Tuition fee is too high"
 
   return z.object({
-    tuitionFee: z.number().min(0, nonNeg).max(50000, tooBig),
+    tuitionFee: z.number().min(0, nonNeg).max(99_999_999, tooBig),
   })
 }
 
@@ -71,7 +71,7 @@ export function createSchoolPriceSchema(v?: ValidationHelper) {
     v?.get("paymentScheduleRequired") ?? "Please select a payment schedule"
 
   return z.object({
-    tuitionFee: z.number().min(0, nonNegTuition).max(50000, maxTuition),
+    tuitionFee: z.number().min(0, nonNegTuition).max(99_999_999, maxTuition),
     registrationFee: z.number().min(0, nonNegReg).max(5000, maxReg).optional(),
     applicationFee: z.number().min(0, nonNegApp).max(1000, maxApp).optional(),
     currency: z.enum(CURRENCY_ENUM, { message: currencyRequired }),
