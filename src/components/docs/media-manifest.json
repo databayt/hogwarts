@@ -2579,5 +2579,131 @@
       "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms.webp?v=176b765a",
       "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms@2x.webp?v=dd2eb5fd"
     }
+  },
+  "manage-admission/campaigns-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "حملات القبول ومقاعدها وطلباتها",
+      "en": "Admission campaigns with their seats and applications"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/campaigns.avif?v=ac3190ee",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/campaigns@2x.avif?v=bb9577fb"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/campaigns.webp?v=aa497751",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/campaigns@2x.webp?v=84bfe132"
+    }
+  },
+  "manage-admission/applications-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "طلبات الالتحاق الواردة",
+      "en": "Incoming applications"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/applications.avif?v=c1fad815",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/applications@2x.avif?v=06c9e573"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/applications.webp?v=89e97adb",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/applications@2x.webp?v=03329330"
+    }
+  },
+  "manage-admission/application-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تفاصيل طلب التحاق",
+      "en": "One application in detail"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/application.avif?v=8449078e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/application@2x.avif?v=618bb106"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/application.webp?v=6de9ee67",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/application@2x.webp?v=94bc6f4c"
+    }
+  },
+  "manage-admission/merit-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة الترتيب حسب الجدارة",
+      "en": "The merit list"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/merit.avif?v=3d2be9c2",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/merit@2x.avif?v=33bb5473"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/merit.webp?v=edf39e95",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/merit@2x.webp?v=d1f67d05"
+    }
+  },
+  "manage-admission/enrollment-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "تسجيل المقبولين",
+      "en": "Enrolling accepted applicants"
+    },
+    "order": 5,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/enrollment.avif?v=190fc218",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/enrollment@2x.avif?v=a67e1fc4"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/enrollment.webp?v=a25e192f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/enrollment@2x.webp?v=45c0ca6a"
+    }
+  },
+  "manage-admission/leads-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الاستفسارات والعملاء المحتملون",
+      "en": "Enquiries and leads"
+    },
+    "order": 6,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/leads.avif?v=818cd1c7",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/leads@2x.avif?v=c673dd69"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/leads.webp?v=a96a3894",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/leads@2x.webp?v=75b3b90a"
+    }
+  },
+  "manage-admission/settings-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إعدادات القبول",
+      "en": "Admission settings"
+    },
+    "order": 7,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/settings.avif?v=f3bc8360",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/settings@2x.avif?v=d2889d22"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/admission/settings.webp?v=471b44d0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/admission/settings@2x.webp?v=b8dde74b"
+    }
   }
 }
