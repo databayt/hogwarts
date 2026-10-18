@@ -575,6 +575,21 @@ describe("fee-due cron — auto-expire lapsed offers", () => {
       .mockResolvedValueOnce([] as any)
       // 2nd groupBy: already-lapsed set — this school has no other work
       .mockResolvedValueOnce([{ schoolId: "school-lapsed" }] as any)
+    const lapsed = ["app-1", "app-2", "app-3"].map((id, i) => ({
+      id,
+      applicationNumber: `APP-${i}`,
+      firstName: "Sara",
+      middleName: null,
+      lastName: "Ali",
+      email: `f${i}@test.com`,
+      userId: i === 2 ? null : `u${i}`,
+      offerExpiryDate: new Date("2026-01-01"),
+    }))
+    mockDb.application.findMany
+      // Part B: offers expiring within the window — none
+      .mockResolvedValueOnce([] as any)
+      // Part C: already-lapsed offers
+      .mockResolvedValueOnce(lapsed as any)
     mockDb.application.updateMany.mockResolvedValue({ count: 3 } as any)
 
     const res = await GET(makeRequest("secret") as any)
@@ -586,14 +601,33 @@ describe("fee-due cron — auto-expire lapsed offers", () => {
     // never future-dated offers, and never an offer the family has already
     // ACCEPTED: the deadline binds acceptance, and an accepted (often paid)
     // offer waiting on the admin's Confirm Enrollment click must not lapse.
+    expect(mockDb.application.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          schoolId: "school-lapsed",
+          status: "SELECTED",
+          offerAccepted: false,
+          offerExpiryDate: { lt: expect.any(Date) },
+        },
+      })
+    )
     expect(mockDb.application.updateMany).toHaveBeenCalledWith({
       where: {
+        id: { in: ["app-1", "app-2", "app-3"] },
         schoolId: "school-lapsed",
         status: "SELECTED",
         offerAccepted: false,
-        offerExpiryDate: { lt: expect.any(Date) },
       },
       data: { status: "EXPIRED" },
+    })
+    // Every family hears — linked accounts in-app + email, a guest by email.
+    const expiredNotices = mockDispatch.mock.calls.filter(
+      (c) => (c[0].metadata as { action?: string })?.action === "offer_expired"
+    )
+    expect(expiredNotices).toHaveLength(3)
+    expect(expiredNotices[2][0]).toMatchObject({
+      directEmail: "f2@test.com",
+      channels: ["email"],
     })
   })
 

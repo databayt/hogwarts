@@ -3,7 +3,7 @@
 
 import { headers } from "next/headers"
 
-import { tenantOriginForHost } from "@/lib/root-domain"
+import { tenantOriginForHost, tenantOriginForRoot } from "@/lib/root-domain"
 import { i18n, type Locale } from "@/components/internationalization/config"
 
 /**
@@ -41,15 +41,19 @@ export async function tenantUrl(
 ): Promise<string> {
   // `headers()` only exists inside a request. Callers outside one — a cron, a
   // payment webhook, a unit test — must still get a usable link rather than a
-  // thrown "called outside a request scope": fall back to the primary root
-  // (what `tenantOriginForHost(null, …)` returns) and the default locale.
+  // thrown "called outside a request scope": fall back to the live root
+  // (`tenantOriginForRoot` — the primary root, databayt.org, answers 402 since
+  // the Cloudflare cutover) and the default locale.
   let h: Awaited<ReturnType<typeof headers>> | null = null
   try {
     h = await headers()
   } catch {
     h = null
   }
-  const origin = tenantOriginForHost(h?.get("host") ?? null, subdomain)
+  const host = h?.get("host") ?? null
+  const origin = host
+    ? tenantOriginForHost(host, subdomain)
+    : tenantOriginForRoot(subdomain)
   const candidate = lang ?? h?.get("x-locale") ?? undefined
   const locale = i18n.locales.includes(candidate as Locale)
     ? (candidate as Locale)

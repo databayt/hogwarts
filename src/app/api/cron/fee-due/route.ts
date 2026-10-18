@@ -476,16 +476,108 @@ async function processSchool(
   // dropped them off the Enrollment tab, and showed a paying family an
   // "offer expired" page. `confirmEnrollment` and the offer actions apply the
   // same `offerAccepted` exemption.
-  const expired = await db.application.updateMany({
+  //
+  // The flip used to be silent: the family's offer link simply stopped
+  // working and admins never learned a seat had freed up. Read the lapsing
+  // rows first so each family hears (in the school's language) and admins get
+  // one roll-up. The status change is itself the idempotency guard — a row
+  // flips, and is notified, exactly once.
+  const lapsing = await db.application.findMany({
     where: {
       schoolId,
       status: "SELECTED",
       offerAccepted: false,
       offerExpiryDate: { lt: now },
     },
-    data: { status: "EXPIRED" },
+    select: {
+      id: true,
+      applicationNumber: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      email: true,
+      userId: true,
+      offerExpiryDate: true,
+    },
   })
+  const expired = lapsing.length
+    ? await db.application.updateMany({
+        where: {
+          id: { in: lapsing.map((a) => a.id) },
+          schoolId,
+          status: "SELECTED",
+          offerAccepted: false,
+        },
+        data: { status: "EXPIRED" },
+      })
+    : { count: 0 }
   offersExpired = expired.count
+
+  if (expired.count > 0) {
+    try {
+      for (const application of lapsing) {
+        const body = interp(copy.offerExpiredBody, {
+          studentName: displayName(application, nameDisplay),
+          date: application.offerExpiryDate
+            ? calendarDay(application.offerExpiryDate)
+            : "—",
+        })
+        const metadata = {
+          applicationId: application.id,
+          applicationNumber: application.applicationNumber,
+          action: "offer_expired",
+          url: "/application",
+        }
+        if (application.userId) {
+          const result = await dispatchNotification({
+            schoolId,
+            userId: application.userId,
+            type: "system_alert",
+            title: copy.offerExpiredTitle,
+            body,
+            priority: "high",
+            channels: ["in_app", "email"],
+            lang,
+            metadata,
+          })
+          if (result) notificationsCreated++
+        } else if (application.email) {
+          await dispatchNotification({
+            schoolId,
+            userId: "", // unused when directEmail is set
+            type: "system_alert",
+            title: copy.offerExpiredTitle,
+            body,
+            priority: "high",
+            channels: ["email"],
+            lang,
+            directEmail: application.email,
+            metadata,
+          })
+          notificationsCreated++
+        }
+      }
+      await dispatchNotificationsToAudience({
+        schoolId,
+        targetScope: "role",
+        targetRoles: ["ADMIN"],
+        type: "system_alert",
+        title: copy.offerExpiredAdminTitle,
+        body: interp(copy.offerExpiredAdminBody, { count: expired.count }),
+        lang,
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          action: "offers_expired",
+          count: expired.count,
+          url: "/admission/applications",
+        },
+      })
+    } catch (err) {
+      // The flip stands; a failed notice must not take the cron down.
+      console.error("[fee-due] offer-expired notices failed:", err)
+    }
+  }
 
   // ── D: Students who never got a grade or a seat ───────────────────────────
   // A student with no `academicGradeId` is the quiet failure mode of the whole
