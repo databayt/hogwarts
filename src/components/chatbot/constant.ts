@@ -3,7 +3,7 @@
 
 import { asset } from "@/lib/asset-url"
 
-import type { ChatbotConfig, ChatbotDictionary, ChatbotTheme } from "./type"
+import type { ChatbotConfig, ChatbotTheme } from "./type"
 
 export const CHATBOT_POSITIONS = {
   "bottom-right": "fixed bottom-1 end-1 sm:bottom-2 sm:end-2",
@@ -29,133 +29,6 @@ export const CHAT_WINDOW_SIZE = {
   maxHeight: "max-h-[80vh] sm:max-h-[80vh]",
 } as const
 
-/**
- * Defaults are only used when the chatbot is mounted without the dictionary
- * prop (legacy / standalone). In production the layout passes
- * `dictionary.chatbot` from i18n and these strings are overridden.
- */
-export const DEFAULT_DICTIONARY: ChatbotDictionary = {
-  // Core UI
-  openChat: "Open chat",
-  closeChat: "Close chat",
-  placeholder: "Type your message...",
-  welcomeMessage: "Hello! How can I help you today?",
-  noMessages: "No messages yet. Start a conversation!",
-  errorMessage: "Sorry, something went wrong. Please try again.",
-  typing: "Typing...",
-  send: "Send",
-  retry: "Retry",
-  chooseQuestion: "A great journey is about to begin.",
-  sendMessage: "Send message",
-  voiceInput: "Voice input",
-  speechNotSupported: "Speech recognition is not supported in your browser.",
-  speechError: "Speech recognition error. Please try again.",
-  listening: "Listening...",
-  errorBubble: "Sorry, something went wrong. Please try again in a moment.",
-
-  // Welcomes
-  welcomeSaas: "Welcome to balqalam.",
-  welcomeSchoolTemplate: "Hi! I'm the {name} assistant",
-  welcomeSupport: "Need a hand? Ask me how to do anything in Balqalam.",
-
-  // CTA chip labels
-  ctaTryFree: "Try free",
-  ctaSeePricing: "See pricing",
-  ctaViewFeatures: "View features",
-  ctaBookDemo: "Book a demo",
-  ctaStartApplication: "Start application",
-  ctaBookTour: "Book a tour",
-  ctaSendInquiry: "Send inquiry",
-  ctaContactSchool: "Contact school",
-  ctaViewScholarships: "View scholarships",
-  ctaOpenDocs: "Read the docs",
-  ctaHelpCenter: "Help center",
-  ctaEmailSupport: "Email support",
-  resourceVideo: "Watch the tutorial",
-  resourceClose: "Close",
-  resourceFullSize: "Open full size",
-  resourceGuide: "Open the guide",
-
-  // Pricing nudge
-  pricingNudgeTitle: "Comparing plans?",
-  pricingNudgeBody: "I can help you pick the right plan in seconds.",
-
-  // Prompt templates (placeholders only; real values come from dictionary)
-  saasPromptTemplate: "",
-  schoolPromptIntroTemplate: "",
-  schoolPromptRules: "",
-  supportPromptTemplate: "",
-  roleAdmin: "a school admin",
-  roleTeacher: "a teacher",
-  roleParent: "a parent",
-  roleStudent: "a student",
-  roleAccountant: "the school accountant",
-  roleStaff: "a staff member",
-
-  // School prompt headers / phrases (no-op defaults — dictionary overrides)
-  schoolHeaderAcademic: "Academic Structure",
-  schoolHeaderAdmissionOpen: "Admission",
-  schoolHeaderAdmissionSoon: "Admission",
-  schoolHeaderAdmissionClosed: "Admission",
-  schoolHeaderFeesDetailed: "Fees",
-  schoolHeaderFeesBasic: "Fees",
-  schoolHeaderScholarships: "Scholarships",
-  schoolHeaderEvents: "Events",
-  schoolHeaderAnnouncements: "Announcements",
-  schoolHeaderContact: "Contact",
-  schoolHeaderCapacity: "Capacity",
-  schoolPhraseAbout: "About",
-  schoolPhraseType: "Type",
-  schoolPhraseLevel: "Level",
-  schoolPhraseCurriculum: "Curriculum",
-  schoolPhraseGrades: "Grades",
-  schoolPhraseOpenUntil: "open until",
-  schoolPhraseSeatsAvailable: "seats available",
-  schoolPhraseApplicationFee: "application fee",
-  schoolPhraseApplyOnline: "Visitors can apply online.",
-  schoolPhraseNextAdmission: "Next admission period",
-  schoolPhraseAdmissionOpens: "opens",
-  schoolPhraseCheckBack: "Advise visitors to check back.",
-  schoolPhraseNoCampaigns: "No admission campaigns are open.",
-  schoolPhraseTotal: "total",
-  schoolPhraseTuition: "tuition",
-  schoolPhraseInstallment: "installment",
-  schoolPhraseInstallments: "installments",
-  schoolPhraseFullScholarship: "full scholarship",
-  schoolPhrasePercentageCoverage: "% coverage",
-  schoolPhraseAmountOff: "off",
-  schoolPhrasePayment: "Payment",
-  schoolPhrasePhone: "Phone",
-  schoolPhraseEmail: "Email",
-  schoolPhraseWebsite: "Website",
-  schoolPhraseAddress: "Address",
-  schoolPhraseStudents: "Students",
-  schoolPhraseTeachers: "Teachers",
-  schoolPhraseAt: "at",
-
-  // Quick-ask labels
-  saasFeatures: "Features",
-  saasFeaturesQuestion: "What features does Balqalam offer?",
-  saasPricing: "Pricing",
-  saasPricingQuestion: "What are the pricing plans?",
-  saasGetStarted: "Get Started",
-  saasGetStartedQuestion: "How do I get started with Balqalam?",
-  saasSupport: "Support",
-  saasSupportQuestion: "What can you help me with in using Balqalam?",
-  schoolAdmission: "Admission",
-  schoolAdmissionQuestion: "How do I apply to this school?",
-  schoolFees: "Fees",
-  schoolFeesQuestion: "What are the school fees?",
-  schoolContact: "Contact",
-  schoolContactQuestion: "How can I contact the school?",
-  schoolPrograms: "Programs",
-  schoolProgramsQuestion: "What programs does the school offer?",
-  schoolScholarships: "Scholarships",
-  schoolScholarshipsQuestion: "What scholarships are available?",
-  schoolEvents: "Events",
-  schoolEventsQuestion: "What upcoming events does the school have?",
-}
-
 export const DEFAULT_THEME: ChatbotTheme = {
   primaryColor: "hsl(var(--primary))",
   backgroundColor: "hsl(var(--background))",
@@ -177,7 +50,7 @@ export const DEFAULT_CONFIG: Required<
   title: "Chat Support",
   subtitle: "We're here to help",
   locale: "en",
-  dictionary: DEFAULT_DICTIONARY,
+  dictionary: {},
   theme: DEFAULT_THEME,
   avatar: asset("/illustrations/robot-fill.png"),
   // The chatbot does not consume `api` — `actions.ts:sendMessage` calls Groq
@@ -226,3 +99,9 @@ export const TYPING_INDICATOR_DELAY = 1000
 export const PRICING_NUDGE_STORAGE_KEY = "hogwarts.chatbot.pricingNudge"
 export const PRICING_NUDGE_DELAY_MS = 30_000
 export const PRICING_NUDGE_COOLDOWN_DAYS = 30
+
+/** Where support and sales questions the bot can't answer go. */
+export const CONTACT_EMAIL = "contact@databayt.org"
+
+/** Turns sent per request — the server keeps the same window. */
+export const CHAT_HISTORY_TURNS = 10

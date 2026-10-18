@@ -4,14 +4,26 @@
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { getSchoolChatbotDisplay } from "./actions"
+import { getSchoolChatbotDisplay } from "./server"
 import { ChatbotContent } from "./content"
-import type { ChatbotProps, PromptType } from "./type"
+import type { ChatbotDictionary, ChatbotProps, PromptType } from "./type"
 
 interface ChatbotWrapperProps extends ChatbotProps {
   lang: Locale
   promptType?: PromptType
   subdomain?: string
+}
+
+/**
+ * Keys only the server reads to build a system prompt. They stay out of the
+ * client props — the browser gets the UI strings, never the prompt text.
+ */
+const SERVER_ONLY_KEY = /Prompt|^schoolHeader|^schoolPhrase|^role[A-Z]|^reply[A-Z]/
+
+function clientDictionary(chatbot: Record<string, string>): ChatbotDictionary {
+  return Object.fromEntries(
+    Object.entries(chatbot).filter(([key]) => !SERVER_ONLY_KEY.test(key))
+  ) as ChatbotDictionary
 }
 
 export async function Chatbot({
@@ -32,7 +44,7 @@ export async function Chatbot({
   return (
     <ChatbotContent
       {...props}
-      dictionary={dictionary.chatbot}
+      dictionary={clientDictionary(dictionary.chatbot)}
       promptType={promptType}
       subdomain={subdomain}
       schoolContext={schoolContext}

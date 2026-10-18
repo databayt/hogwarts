@@ -45,7 +45,7 @@ A parent wants to know when admissions open or what the fees are, so they call t
 
 ## What you can say
 
-- The assistant on a school's website answers from that school's own admissions, fees, scholarships, events and contact information. [prompts.ts; actions.ts]
+- The assistant on a school's website answers from that school's own admissions, fees, scholarships, events and contact information. [prompts.ts; server.ts]
 - It answers in the visitor's language, Arabic or English. [README.md "Knowledge base"; internationalization chatbot strings]
 - Prices it quotes come from the same price list as the pricing page, so they stay current when prices change. [README.md "Knowledge base"]
 - Visitors can type or speak their question. [README.md "Input controls"]
@@ -76,7 +76,8 @@ A parent wants to know when admissions open or what the fees are, so they call t
 ## Sources
 
 - src/components/chatbot/README.md
-- src/components/chatbot/actions.ts
+- src/components/chatbot/server.ts
+- src/app/api/chatbot/route.ts
 - src/components/chatbot/prompts.ts
 - src/components/chatbot/constant.ts
 - src/components/chatbot/pricing-nudge.tsx

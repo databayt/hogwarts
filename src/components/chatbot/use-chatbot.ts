@@ -3,11 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
-import type { CoreMessage } from "ai"
 
-import { sendMessage as sendMessageAction } from "./actions"
+import { CHAT_HISTORY_TURNS } from "./constant"
 import type { SystemPromptType } from "./prompts"
-import type { ChatbotState, ChatMessage } from "./type"
+import type { ChatbotState, ChatMessage, ChatMeta } from "./type"
 
 /** A failure the server already worded for the visitor. */
 class ChatError extends Error {}
@@ -16,7 +15,7 @@ interface UseChatbotOptions {
   promptType?: SystemPromptType
   subdomain?: string
   locale?: string
-  /** The bubble shown when the action fails — localized by the caller. */
+  /** The bubble shown when the request fails — localized by the caller. */
   errorText?: string
 }
 
@@ -60,37 +59,72 @@ export function useChatbot({
       setMessages((prev) => [...prev, userMessage])
 
       try {
-        // Convert messages to CoreMessage format for the server action
-        const coreMessages: CoreMessage[] = [...messages, userMessage].map(
-          (msg) => ({
-            role: msg.role as "user" | "assistant",
-            content: msg.content,
-          })
-        )
+        // Only the window the server reads; older turns stay on screen.
+        const history = [...messages, userMessage]
+          .filter((msg) => msg.role === "user" || msg.role === "assistant")
+          .slice(-CHAT_HISTORY_TURNS)
+          .map((msg) => ({ role: msg.role, content: msg.content }))
 
-        const result = await sendMessageAction(
-          coreMessages,
-          promptType,
-          subdomain,
-          locale
-        )
+        const res = await fetch("/api/chatbot", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            messages: history,
+            promptType,
+            subdomain,
+            locale,
+          }),
+        })
 
-        if (!result.success) {
-          // The action's own errors (rate limit, sign-in) are written for
+        if (!res.ok || !res.body) {
+          // The route's own errors (rate limit, sign-in) are written for
           // people in their language — show them as they are.
-          throw new ChatError(result.error || errorText)
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string
+          }
+          throw new ChatError(body.error || errorText)
         }
 
-        // Add assistant message
-        const assistantMessage: ChatMessage = {
-          role: "assistant",
-          content: result.content || "",
-          resources: result.resources,
-          id: Date.now().toString() + "_ai",
-          timestamp: new Date(),
+        // Body: one JSON line of ChatMeta, then the reply as it streams.
+        const id = Date.now().toString() + "_ai"
+        const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+        let meta: ChatMeta | null = null
+        let head = ""
+        let content = ""
+        const show = () => {
+          const next: ChatMessage = {
+            role: "assistant",
+            content: content.trim(),
+            resources: meta?.resources,
+            id,
+            timestamp: new Date(),
+          }
+          setMessages((prev) =>
+            prev.some((m) => m.id === id)
+              ? prev.map((m) => (m.id === id ? next : m))
+              : [...prev, next]
+          )
         }
 
-        setMessages((prev) => [...prev, assistantMessage])
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          if (!meta) {
+            head += value
+            const nl = head.indexOf("\n")
+            if (nl === -1) continue
+            meta = JSON.parse(head.slice(0, nl)) as ChatMeta
+            content = head.slice(nl + 1)
+          } else {
+            content += value
+          }
+          if (content.trim()) show()
+        }
+
+        if (!content.trim()) {
+          content = meta?.fallback || errorText
+          show()
+        }
       } catch (err) {
         console.error("Chat error:", err)
         const errorMessage =

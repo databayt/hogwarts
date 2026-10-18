@@ -33,6 +33,16 @@ export interface ChatResource {
   image?: ImageMedia
 }
 
+/**
+ * The first line of a `/api/chatbot` response: what is known before the
+ * model starts — the cards under the answer, and the bubble to show if the
+ * reply comes back empty.
+ */
+export interface ChatMeta {
+  resources: ChatResource[]
+  fallback: string
+}
+
 export interface ChatbotState {
   isOpen: boolean
   messages: ChatMessage[]

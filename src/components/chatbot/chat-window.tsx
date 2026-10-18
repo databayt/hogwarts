@@ -12,7 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import { CHAT_WINDOW_POSITIONS, CHAT_WINDOW_SIZE } from "./constant"
+import {
+  CHAT_WINDOW_POSITIONS,
+  CHAT_WINDOW_SIZE,
+  CONTACT_EMAIL,
+} from "./constant"
 import { InfoIcon, PriceIcon, SendIcon, ServicesIcon, TimeIcon } from "./icons"
 import { ResourceCards } from "./resource-cards"
 import type { ChatWindowProps, CtaChip } from "./type"
@@ -169,7 +173,7 @@ export const ChatWindow = memo(function ChatWindow({
         },
         {
           label: dictionary.ctaEmailSupport,
-          href: `mailto:contact@databayt.org?subject=${encodeURIComponent(
+          href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
             dictionary.ctaEmailSupport
           )}&body=${encodeURIComponent(page)}`,
         },

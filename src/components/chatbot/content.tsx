@@ -8,7 +8,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { ChatButton } from "./chat-button"
 import { ChatWindow } from "./chat-window"
-import { DEFAULT_CONFIG, DEFAULT_DICTIONARY } from "./constant"
+import { DEFAULT_CONFIG } from "./constant"
 import type {
   ChatbotDictionary,
   ChatbotProps,
@@ -18,7 +18,8 @@ import type {
 import { useChatbot } from "./use-chatbot"
 
 interface ChatbotContentProps extends ChatbotProps {
-  dictionary?: Partial<ChatbotDictionary>
+  /** UI strings only — `chatbot.tsx` strips the server-side prompt keys. */
+  dictionary: ChatbotDictionary
   promptType?: PromptType
   subdomain?: string
   schoolContext?: SchoolChatbotDisplay | null
@@ -34,7 +35,7 @@ export const ChatbotContent = forwardRef<
       onMessageSend,
       onChatOpen,
       onChatClose,
-      dictionary = {},
+      dictionary,
       promptType = "saasMarketing",
       subdomain,
       schoolContext,
@@ -48,10 +49,7 @@ export const ChatbotContent = forwardRef<
       ...config,
       locale: locale as "en" | "ar",
     }
-    const fullDictionary = {
-      ...DEFAULT_DICTIONARY,
-      ...dictionary,
-    } as ChatbotDictionary
+    const fullDictionary = dictionary
 
     const { state, toggleChat, openChat, closeChat, sendMessage } = useChatbot({
       promptType,

@@ -16,16 +16,31 @@ three modes from the same component, decided by `promptType`:
 | **Support desk** | `schoolSupport` | `app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx` | Signed-in admins, teachers, parents |
 
 The support desk (2026-10-17) re-reads the member's role and school from
-`auth()` on every message (`supportMember` in `actions.ts`) — the client's
+`auth()` on every message (`supportMember` in `server.ts`) — the client's
 `supportRole` prop only picks the quick asks. It matches up to 3 guides with a
 boost for the member's audience (`matchTopics(texts, n, role)`), lists only that
 audience's guides, never captures or asks for contact details, rate-limits per
 user, and points uncovered problems to **Report an issue**. Help-center links
 carry the main-domain origin: a school subdomain has no `/docs` route.
 
-Answers come from Groq (`openai/gpt-oss-20b`, override `GROQ_CHAT_MODEL`; `llama-3.1-8b-instant` was retired by Groq) via the AI SDK. The **system
-prompt _is_ the knowledge base** — it's assembled server-side and never shipped
-to the client; only the assistant's reply crosses the wire.
+Answers come from Groq (`openai/gpt-oss-20b`, override `GROQ_CHAT_MODEL`; `llama-3.1-8b-instant` was retired by Groq) via the AI SDK, **streamed**
+(2026-10-19) from `POST /api/chatbot`. The **system prompt _is_ the knowledge
+base** — it's assembled server-side and never shipped to the client; only the
+assistant's reply crosses the wire. `chatbot.tsx` strips the prompt keys
+(`*Prompt*`, `schoolHeader*`, `schoolPhrase*`, `role*`, `reply*`) from the
+dictionary before it becomes a client prop.
+
+### Request flow (2026-10-19)
+
+1. `use-chatbot.ts` POSTs the last 10 turns to `/api/chatbot` (`app/api/chatbot/route.ts`).
+2. `prepareChat()` (`server.ts`, server-only) does sign-in check (desk), rate
+   limit, capture, topic match, cards and the system prompt — and returns a
+   plan: `error` (4xx JSON, localized), `reply` (answered in code) or `model`.
+3. The route `streamText`s the model; `replyStream()` writes one JSON line of
+   `ChatMeta` (cards + localized fallback) then the reply **a line at a time**,
+   so the markdown strip and the repeat-ask cut still apply. An empty or failed
+   stream sends the fallback — never an empty bubble.
+4. The hook shows the bubble on the first line and grows it as lines arrive.
 
 ## Structure
 
@@ -35,16 +50,15 @@ chatbot/
 ├── content.tsx          # Client shell — wires button + window + useChatbot hook
 ├── chat-button.tsx      # Floating FAB (robot, or school logo on tenant sites)
 ├── chat-window.tsx      # The panel: messages, quick-asks, CTA chips, input pill, mic
-├── use-chatbot.ts       # Client state hook (messages, send, loading, error)
-├── actions.ts           # "use server" — fetchSchoolData, resolveSystemPrompt, sendMessage
+├── use-chatbot.ts       # Client state hook — streams from /api/chatbot
+├── server.ts            # server-only — prepareChat, replyStream, cached school read
 ├── capture.ts           # Funnel capture — deterministic identifier extraction → Prospect upsert
 ├── prompts.ts           # buildSaasMarketingPrompt / buildSchoolSitePrompt (data → prompt)
-├── constant.ts          # Positions, sizes, DEFAULT_DICTIONARY fallback, pricing-nudge config
+├── constant.ts          # Positions, sizes, CONTACT_EMAIL, history window, pricing-nudge config
 ├── pricing-nudge.tsx    # One-shot proactive open on /pricing (30s, cooldown-gated)
 ├── icons.tsx            # Inline SVGs (Send, Voice, quick-ask category icons…)
 ├── type.ts              # ChatbotDictionary + props/context types
-├── utils.ts             # mergeConfig
-└── dictionary-client.ts # Client-side dictionary loader (legacy fallback path)
+└── utils.ts             # mergeConfig
 ```
 
 ## Knowledge base
@@ -60,8 +74,12 @@ chatbot/
   `scripts/build-support-index.mjs` (predev writes it, prebuild `--check`s it):
   frontmatter `summary`/`keywords`/`roles`/`flow` + the guide's Steps and Good
   to know sections are the answer — the MDX is the only source. Each
-  turn, `matchTopics` (Arabic-normalised keyword scoring, latest message
-  weighted over the one before) picks ≤2 topics; the prompt's `{support}` block
+  turn, `matchTopics` picks ≤2 topics (≤3 on the desk): Arabic-normalised
+  keyword phrases decide, latest message weighted over the one before; since
+  2026-10-19 the guide's own title + summary words (both languages, stemmed:
+  article, `ات` plural, English `-s`; IDF-weighted) break ties under the role
+  boost and stand in when no keyword hits — with a noise floor, so an
+  unrelated question attaches no card; the prompt's `{support}` block
   carries every guide's title + the matched answers. The reply gets
   **resource cards** (`resource-cards.tsx`) built in code, never by the model:
   the guide link, the flow's tutorial video and 3 spaced screenshots, read from
@@ -75,7 +93,8 @@ chatbot/
   `node scripts/build-support-index.mjs`. `roles` also files the guide under
   the docs sidebar's Admins / Teachers / Parents groups.
 - **School** (`buildSchoolSitePrompt`): pulls **live** school data via
-  `fetchSchoolData(subdomain)` — admissions campaigns, fee structures,
+  `fetchSchoolData(subdomain)` (cached 5 min per subdomain, tag
+  `chatbot-school:<subdomain>`, shared by page render and every message) — admissions campaigns, fee structures,
   scholarships, events, announcements, academic levels, contact. All scoped to
   the one school by `domain` lookup.
 - Prompt _wording_ (intro, rules, section headers, phrases) lives in the i18n
@@ -89,13 +108,21 @@ chatbot/
   placeholders. Keep it that way — never hardcode prices or features in code.
 - **CTA chips are computed client-side** from `promptType` + school flags, never
   from LLM output. Paths use `/${locale}/…` only (gotcha #11 — no `/s/${subdomain}/`).
-- **Generation params** (`actions.ts`): `temperature: 0.3` (factual, never invent
-  prices) + `maxOutputTokens: 400` (2–3 sentences / short list) + history trimmed
-  to the last 10 turns (the system prompt already carries the full context).
+- **Generation params** (`app/api/chatbot/route.ts`): `temperature: 0.3`
+  (factual, never invent prices) + `maxOutputTokens: 600` (reasoning tokens
+  count against it; `reasoningEffort: "low"`) + history trimmed to the last 10
+  turns on both client and server.
+- **A route handler, not a Server Action** — the one deliberate exception to
+  "mutations are actions": the reply streams. Auth and tenant reads stay in
+  `server.ts`; the route only validates (Zod) and streams.
+- **Visitor-facing replies are dictionary keys** (`chatbot.reply*`): sign-in,
+  rate limit, not configured, the four fallbacks, the help-index intro/outro.
+  Prompt fragments (`askState`, `formatPricing`) stay in code — model input,
+  not UI.
 
 ## Capture + rate limit — the funnel surface (2026-08-22)
 
-`sendMessage` is a public, unauthenticated Server Action where every call costs a
+`/api/chatbot` (formerly the `sendMessage` Server Action) is public and unauthenticated; every call costs a
 Groq request — so it now does two things before the model runs:
 
 - **Throttle.** `checkUserRateLimit` keyed on IP + truncated UA, two windows
@@ -160,7 +187,6 @@ files) — this block adds **zero** new violations.
 
 ## Known gaps / next
 
-- No `chatbot.mdx` docs page yet (user-facing — candidate for `content/docs-en/`).
 - Tests: `capture.test.ts` + `support.test.ts` (topic matching, help-index
   detection, manifest → resource cards). Mode selection is still untested.
 - Guides with screenshots on the CDN: add/bulk student/teacher (stills +
@@ -169,7 +195,9 @@ files) — this block adds **zero** new violations.
   the child's tabs wait on better demo data (media-qa 2026-10-17: weekend
   date, empty timetable, implausible fees, a child with no records); tutorial
   videos are still owed via `/record`.
-- Topic matching is keywords, not embeddings: a phrasing no keyword covers
-  falls through to the general prompt — add the phrase to the topic.
+- Topic matching is keywords + guide words, not embeddings: a phrasing in
+  neither falls through to the general prompt — add the phrase to the topic.
+- `how do I set up the timetable` lands on get-started first (its `set up`
+  keyword is two parts vs timetable's one) — a keyword-weight issue, pre-2026-10-19.
 - Conversation is not persisted across reloads (`enablePersistence` is wired in
   config but the SaaS/school mounts don't use it).

@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { DEFAULT_CONFIG, DEFAULT_DICTIONARY, DEFAULT_THEME } from "./constant"
+import { DEFAULT_CONFIG, DEFAULT_THEME } from "./constant"
 import type { ChatbotConfig } from "./type"
 
 /**
@@ -17,7 +17,7 @@ export function mergeConfig(
     title: userConfig.title ?? DEFAULT_CONFIG.title,
     subtitle: userConfig.subtitle ?? DEFAULT_CONFIG.subtitle,
     locale: userConfig.locale ?? DEFAULT_CONFIG.locale,
-    dictionary: { ...DEFAULT_DICTIONARY, ...userConfig.dictionary },
+    dictionary: userConfig.dictionary ?? {},
     theme: { ...DEFAULT_THEME, ...userConfig.theme },
     avatar: userConfig.avatar ?? DEFAULT_CONFIG.avatar,
     api: { ...DEFAULT_CONFIG.api, ...userConfig.api },

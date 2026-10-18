@@ -14,6 +14,7 @@ import {
   type Rates,
 } from "@/components/saas-marketing/pricing/rates"
 
+import { CONTACT_EMAIL } from "./constant"
 import { formatSupport, type SupportTopic } from "./support"
 import type { ChatbotDictionary } from "./type"
 
@@ -179,7 +180,7 @@ export function buildSaasMarketingPrompt(
     .replace("{pricing}", formatPricing(locale, rates))
     .replace("{features}", formatFeatures())
     .replace("{support}", formatSupport(locale, matched, { attached }))
-    .replaceAll("{contactEmail}", "contact@databayt.org")
+    .replaceAll("{contactEmail}", CONTACT_EMAIL)
 }
 
 /**
@@ -196,7 +197,7 @@ export function buildSchoolSupportPrompt(
     .replaceAll("{schoolName}", context.schoolName)
     .replaceAll("{role}", context.roleLabel)
     .replace("{support}", context.support)
-    .replaceAll("{contactEmail}", "contact@databayt.org")
+    .replaceAll("{contactEmail}", CONTACT_EMAIL)
 }
 
 type SchoolPromptDict = Pick<

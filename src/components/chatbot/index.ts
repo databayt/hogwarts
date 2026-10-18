@@ -9,7 +9,6 @@ export { ChatWindow } from "./chat-window"
 
 // Hook
 export { useChatbot } from "./use-chatbot"
-export { getClientDictionary } from "./dictionary-client"
 
 // Types
 export type {
@@ -26,7 +25,7 @@ export type {
 } from "./type"
 
 // Constants
-export { DEFAULT_CONFIG, DEFAULT_THEME, DEFAULT_DICTIONARY } from "./constant"
+export { DEFAULT_CONFIG, DEFAULT_THEME } from "./constant"
 
 // Utilities
 export { mergeConfig } from "./utils"

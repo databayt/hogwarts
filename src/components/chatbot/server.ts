@@ -1,11 +1,11 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { headers } from "next/headers"
+import "server-only"
+
+import { cache } from "react"
+import { unstable_cache } from "next/cache"
 import { auth } from "@/auth"
-import { createGroq } from "@ai-sdk/groq"
-import { CoreMessage, generateText } from "ai"
+import type { ModelMessage } from "ai"
 
 import { db } from "@/lib/db"
 import { extractIdentifiers } from "@/lib/funnel/identifiers"
@@ -16,6 +16,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
 
 import { captureFromChat } from "./capture"
+import { CHAT_HISTORY_TURNS, CONTACT_EMAIL } from "./constant"
 import {
   buildSaasMarketingPrompt,
   buildSchoolSitePrompt,
@@ -36,6 +37,7 @@ import {
 import { resourcesFor } from "./support-media"
 import type {
   ChatbotDictionary,
+  ChatMeta,
   ChatResource,
   SchoolChatbotDisplay,
   SupportRole,
@@ -48,7 +50,7 @@ import type {
  * `src/components/translation/groq.ts`). A dead default is a dead chatbot:
  * check `GET api.groq.com/openai/v1/models` before trusting it.
  */
-const CHAT_MODEL = process.env.GROQ_CHAT_MODEL ?? "openai/gpt-oss-20b"
+export const CHAT_MODEL = process.env.GROQ_CHAT_MODEL ?? "openai/gpt-oss-20b"
 
 /**
  * Returns the display + visibility context the chatbot client needs:
@@ -72,7 +74,22 @@ export async function getSchoolChatbotDisplay(
   }
 }
 
-async function fetchSchoolData(
+/**
+ * Every school-site page render and every visitor message read the same
+ * six-relation school row. Cached per subdomain for five minutes — a new
+ * campaign or event reaches the bot within that window — and deduped
+ * within one request. Dates come back from the cache as ISO strings; the
+ * prompt builders wrap every one in `new Date()`.
+ */
+const fetchSchoolData = cache(
+  (subdomain: string): Promise<SchoolChatbotData | null> =>
+    unstable_cache(() => readSchool(subdomain), ["chatbot-school", subdomain], {
+      revalidate: 300,
+      tags: [`chatbot-school:${subdomain}`],
+    })()
+)
+
+async function readSchool(
   subdomain: string
 ): Promise<SchoolChatbotData | null> {
   const now = new Date()
@@ -261,8 +278,8 @@ async function supportMember(locale: string): Promise<SupportMember | null> {
 
 /**
  * Server-side resolution of the system prompt for every mode. The
- * dictionary is loaded by the caller (not the client) so we never ship the
- * prompt text over the network — only the assistant's response.
+ * dictionary is loaded here (not by the client) so the prompt text never
+ * crosses the network — only the assistant's response.
  */
 async function resolveSystemPrompt(
   systemPromptType: SystemPromptType,
@@ -279,8 +296,7 @@ async function resolveSystemPrompt(
 
   if (systemPromptType === "schoolSupport" && member) {
     return buildSchoolSupportPrompt(locale, chatbot, {
-      schoolName:
-        member.schoolName ?? (locale === "ar" ? "مدرستك" : "your school"),
+      schoolName: member.schoolName ?? chatbot.replyYourSchool,
       roleLabel: chatbot[member.roleKey] ?? chatbot.roleStaff,
       support: formatSupport(locale, matched, { role: member.role, attached }),
     })
@@ -300,82 +316,86 @@ async function resolveSystemPrompt(
   )
 }
 
-export async function sendMessage(
-  messages: CoreMessage[],
-  systemPromptType: SystemPromptType = "saasMarketing",
-  subdomain?: string,
-  locale: string = "en"
-) {
+/**
+ * What the route does with one visitor message:
+ * - `error` — refused before the model (sign-in, rate limit), worded for people
+ * - `reply` — answered in code (the help index, or a failure's fallback)
+ * - `model` — stream the model's answer with these settings
+ */
+export type ChatPlan =
+  | { kind: "error"; status: number; error: string }
+  | { kind: "reply"; meta: ChatMeta; text: string }
+  | {
+      kind: "model"
+      meta: ChatMeta
+      system: string
+      messages: ModelMessage[]
+      /** Cut lines that repeat the WhatsApp/email ask (see `dropsAsk`). */
+      dropAsk: boolean
+    }
+
+export interface ChatRequest {
+  messages: ModelMessage[]
+  promptType: SystemPromptType
+  subdomain?: string
+  locale: string
+  headers: Headers
+}
+
+export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
+  const { promptType, subdomain, headers: h } = req
+  const locale = req.locale === "ar" ? "ar" : "en"
+  // The server keeps its own window: a client may send any length.
+  const messages = req.messages.slice(-CHAT_HISTORY_TURNS)
+  const dictionary = await getDictionary(locale as Locale)
+  const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
+
   // Hoisted so the catch below can still answer a support question with its
   // guide cards instead of the sales fallback.
-  let support = systemPromptType === "schoolSupport"
+  let support = promptType === "schoolSupport"
   let resources: ChatResource[] = []
   try {
     // The dashboard desk answers signed-in school members only.
-    const desk = systemPromptType === "schoolSupport"
+    const desk = promptType === "schoolSupport"
     const member = desk ? await supportMember(locale) : null
     if (desk && !member) {
-      return {
-        success: false,
-        error:
-          locale === "ar"
-            ? "سجّل الدخول لتسأل مساعد الدعم."
-            : "Sign in to ask the support assistant.",
-      }
+      return { kind: "error", status: 401, error: chatbot.replySignIn }
     }
 
-    // Public action → throttle before anything costs money. Key: the user
+    // Public endpoint → throttle before anything costs money. Key: the user
     // when signed in (a whole school shares one IP), else IP + truncated UA
     // (shared school networks stay fair; spoofing only buys friction). Two
     // windows: burst and sustained.
-    const h = await headers()
     const ip =
       h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       h.get("x-real-ip") ||
       "unknown"
     const ua = (h.get("user-agent") ?? "").slice(0, 50)
     const rlKey = member ? `user:${member.id}` : `${ip}:${ua}`
-    const burst = await checkUserRateLimit(
-      rlKey,
-      RATE_LIMITS.CHATBOT,
-      "chatbot"
-    )
-    const sustained = await checkUserRateLimit(
-      rlKey,
-      RATE_LIMITS.CHATBOT_HOURLY,
-      "chatbot-h"
-    )
+    const [burst, sustained] = await Promise.all([
+      checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT, "chatbot"),
+      checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT_HOURLY, "chatbot-h"),
+    ])
     if (!burst.allowed || !sustained.allowed) {
-      return {
-        success: false,
-        error:
-          locale === "ar"
-            ? "رسائل كثيرة خلال وقت قصير — انتظر قليلاً ثم حاول مجدداً."
-            : "Too many messages — please wait a moment and try again.",
-      }
+      return { kind: "error", status: 429, error: chatbot.replyRateLimit }
     }
 
     // Capture runs BEFORE the model and never blocks it: if the visitor typed
     // an email or phone, it persists even when the LLM call fails. SaaS mode
     // only — schoolSite visitors are the school's parents, not our pipeline.
-    if (systemPromptType === "saasMarketing") {
+    if (promptType === "saasMarketing") {
       await captureFromChat({ messages, locale })
     }
 
-    const apiKey = process.env.GROQ_API_KEY
-
-    if (!apiKey) {
-      return {
-        success: false,
-        error:
-          "Groq API key not configured. Please add GROQ_API_KEY to your .env file.",
-      }
+    if (!process.env.GROQ_API_KEY) {
+      console.error("Chatbot: GROQ_API_KEY is not set")
+      return { kind: "error", status: 503, error: chatbot.replyNotConfigured }
     }
 
-    // Support topics are matched in code (keywords, ar + en) so the prompt
-    // carries only the guides this question needs, and the guide/video/
-    // screenshot cards are attached from the registry — never model output.
-    const isSaas = systemPromptType === "saasMarketing"
+    // Support topics are matched in code (ar + en) so the prompt carries
+    // only the guides this question needs, and the guide/video/screenshot
+    // cards are attached from the registry — never model output.
+    const isSaas = promptType === "saasMarketing"
     const helps = isSaas || desk
     const texts = helps ? lastUserTexts(messages) : []
     const helpIndex = helps && isHelpIndexQuestion(texts[0] ?? "")
@@ -386,8 +406,6 @@ export async function sendMessage(
       : matchTopics(texts, desk ? 3 : 2, member?.role)
     support = desk || helpIndex || isSupportQuestion(matched)
 
-    const dictionary = await getDictionary(locale as Locale)
-    const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
     // The help center lives on the main domain; a school subdomain (the
     // dashboard desk) has no /docs route, so its links carry the origin.
     const origin = desk ? mainOriginForHost(h.get("host")) : ""
@@ -410,14 +428,18 @@ export async function sendMessage(
               origin
             )
           )
+    const meta: ChatMeta = {
+      resources,
+      fallback: fallbackReply(chatbot, promptType, support),
+    }
 
     // "What can you help with?" has one right answer — the guide list. A
     // 20B model asked for it still invents steps, so it is answered here.
     if (helpIndex) {
       return {
-        success: true,
-        content: helpIndexReply(locale, member?.role),
-        resources,
+        kind: "reply",
+        meta,
+        text: helpIndexReply(chatbot, locale, member?.role),
       }
     }
 
@@ -428,7 +450,7 @@ export async function sendMessage(
       .map((r) =>
         r.kind === "video" ? `${chatbot.resourceVideo}: ${r.title}` : r.title
       )
-    const systemPrompt = await resolveSystemPrompt(systemPromptType, chatbot, {
+    const systemPrompt = await resolveSystemPrompt(promptType, chatbot, {
       subdomain,
       locale,
       matched,
@@ -436,57 +458,21 @@ export async function sendMessage(
       member,
     })
 
-    const groq = createGroq({ apiKey })
-
-    // Keep only the most recent turns. The system prompt already carries the
-    // full knowledge base (live pricing, features, or school data), so older
-    // small-talk adds little — trimming keeps the model on-task and bounds
-    // latency/cost.
-    const recentMessages = messages.slice(-10)
-
-    const result = await generateText({
-      model: groq(CHAT_MODEL),
-      messages: recentMessages,
+    return {
+      kind: "model",
+      meta,
+      messages,
       system: helps
         ? systemPrompt + askState(messages, locale, support)
         : systemPrompt,
-      // Low temperature → factual, on-script answers (never invent prices).
-      temperature: 0.3,
-      // Caps replies at a short answer or a ≤6-step how-to list. gpt-oss is a
-      // reasoning model and its reasoning tokens count against this cap, so
-      // effort stays "low" (~60 reasoning tokens measured); 600 leaves a
-      // numbered list room to finish.
-      maxOutputTokens: 600,
-      providerOptions: { groq: { reasoningEffort: "low" } },
-    })
-
-    // A reasoning model can spend its whole cap thinking and return "" — an
-    // empty bubble reads as a dead product. Fall back to the capture ask.
-    if (!result.text.trim()) {
-      return {
-        success: true,
-        content: fallbackReply(systemPromptType, locale, support),
-        resources,
-      }
-    }
-
-    return {
-      success: true,
-      content: plainText(
-        helps ? dropRepeatAsk(result.text, messages, support) : result.text
-      ),
-      resources,
+      dropAsk: helps && dropsAsk(messages, support),
     }
   } catch (error) {
-    // Groq's free tier caps tokens per minute; during an outreach wave the
-    // visitor would otherwise read a raw English provider error. The capture
-    // above already ran, so the fallback turns a failure into the ask.
-    console.error("Server Action Error:", error)
-    return {
-      success: true,
-      content: fallbackReply(systemPromptType, locale, support),
-      resources,
-    }
+    // A failed read must not leave the visitor with a raw error: the
+    // capture above already ran, so the fallback turns it into the ask.
+    console.error("Chatbot prepare failed:", error)
+    const fallback = fallbackReply(chatbot, promptType, support)
+    return { kind: "reply", meta: { resources, fallback }, text: fallback }
   }
 }
 
@@ -508,20 +494,16 @@ function contactState(messages: Array<{ role: string; content: unknown }>) {
 
 /**
  * The note in `askState` lowers the repeat rate; it does not end it (the
- * model still re-asked on 1 turn in 3). Once the ask is on record, a line
- * that makes it again is cut — unless it is the whole reply.
+ * model still re-asked on 1 turn in 3). Once the ask is on record — or the
+ * visitor is a customer asking how to use the product, not a lead — a line
+ * that makes it again is cut (see `replyStream`).
  */
-function dropRepeatAsk(
-  reply: string,
+function dropsAsk(
   messages: Array<{ role: string; content: unknown }>,
-  support = false
-): string {
+  support: boolean
+): boolean {
   const { gave, asked } = contactState(messages)
-  // A customer asking how to use the product is not a lead — no sales ask.
-  if (!gave && !asked && !support) return reply
-  const kept = reply.split("\n").filter((l) => !ASK_RE.test(l))
-  const out = kept.join("\n").trim()
-  return out || reply
+  return gave || asked || support
 }
 
 /**
@@ -553,26 +535,19 @@ function askState(
 }
 
 function fallbackReply(
+  chatbot: ChatbotDictionary,
   type: SystemPromptType,
-  locale: string,
   support = false
 ): string {
-  const ar = locale === "ar"
-  if (type === "schoolSupport")
-    return ar
-      ? "عذرًا، لم أتمكن من الإجابة الآن. حاول مجددًا بعد قليل، أو استخدم «الإبلاغ عن مشكلة» أسفل الصفحة، أو راسلنا على contact@databayt.org."
-      : "Sorry, I couldn't answer just now. Try again shortly, use 'Report an issue' at the bottom of the page, or email us at contact@databayt.org."
-  if (support)
-    return ar
-      ? "عذرًا، لم أتمكن من الإجابة الآن. الدليل وفيديو الشرح مرفقان أدناه، أو راسلنا على contact@databayt.org."
-      : "Sorry, I couldn't answer just now. The guide and tutorial video are attached below, or email us at contact@databayt.org."
-  if (type === "saasMarketing")
-    return ar
-      ? "عذرًا، لم أتمكن من الإجابة الآن. اترك رقم واتساب أو بريدًا إلكترونيًا وسيتواصل معك فريق «بالقلم» ويجهّز لمدرستك نسخة تجريبية مجانية لثلاثة أشهر."
-      : "Sorry, I couldn't answer just now. Leave a WhatsApp number or an email and the Balqalam team will reach you and prepare a free three-month trial copy for your school."
-  return ar
-    ? "عذرًا، لم أتمكن من الإجابة الآن. حاول مجددًا بعد قليل، أو تواصل مع المدرسة مباشرة."
-    : "Sorry, I couldn't answer just now. Please try again shortly, or contact the school directly."
+  const text =
+    type === "schoolSupport"
+      ? chatbot.replyFallbackDesk
+      : support
+        ? chatbot.replyFallbackSupport
+        : type === "saasMarketing"
+          ? chatbot.replyFallbackSaas
+          : chatbot.replyFallbackSchool
+  return text.replaceAll("{contactEmail}", CONTACT_EMAIL)
 }
 
 /**
@@ -590,30 +565,90 @@ function lastUserTexts(
     .map(textOf)
 }
 
-function helpIndexReply(locale: string, role?: SupportRole): string {
-  const ar = locale === "ar"
+function helpIndexReply(
+  chatbot: ChatbotDictionary,
+  locale: string,
+  role?: SupportRole
+): string {
   const titles = SUPPORT_TOPICS.filter(
     (t) => !role || !t.roles?.length || t.roles.includes(role)
-  ).map((t) => `- ${t.title[ar ? "ar" : "en"]}`)
+  ).map((t) => `- ${t.title[locale === "ar" ? "ar" : "en"]}`)
   return [
-    ar
-      ? "أستطيع مساعدتك في استخدام «بالقلم» خطوة بخطوة. اسألني عن أيٍّ من هذه:"
-      : "I can walk you through Balqalam step by step. Ask me about any of these:",
+    chatbot.replyHelpIndexIntro,
     ...titles,
-    ar
-      ? "مثال: «كيف أضيف طالبًا؟». وكل الأدلة مع فيديوهات الشرح في مركز المساعدة أدناه."
-      : 'For example: "How do I add a student?". Every guide, with its tutorial video, is in the help center below.',
+    chatbot.replyHelpIndexOutro,
   ].join("\n")
 }
 
 /**
  * The bubble renders text as-is, so markdown shows up as stray symbols.
  * The prompt forbids it; a 20B model still slips — strip what it slips.
+ * Runs per line, because the reply streams line by line.
  */
-function plainText(reply: string): string {
-  return reply
+function plainLine(line: string): string {
+  return line
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/__(.+?)__/g, "$1")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/[ \t]+$/gm, "")
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/[ \t]+$/, "")
+}
+
+/**
+ * The response body: one JSON line of `ChatMeta` (cards + fallback, known
+ * before the model starts), then the reply text. Text is released a whole
+ * line at a time so the markdown strip and the repeat-ask cut still apply —
+ * a how-to list appears step by step.
+ *
+ * A reasoning model can spend its whole cap thinking and return "" — an
+ * empty bubble reads as a dead product, so an empty or failed stream sends
+ * the fallback instead. Groq's free tier caps tokens per minute; during an
+ * outreach wave that turns a raw provider error into the ask.
+ */
+export function replyStream(
+  meta: ChatMeta,
+  source: AsyncIterable<string> | Iterable<string>,
+  dropAsk = false
+): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder()
+  return new ReadableStream({
+    async start(controller) {
+      const send = (text: string) => controller.enqueue(encoder.encode(text))
+      send(JSON.stringify(meta) + "\n")
+
+      let buffer = ""
+      let sent = false
+      const dropped: string[] = []
+      const flush = (line: string, newline: boolean) => {
+        if (dropAsk && ASK_RE.test(line)) {
+          dropped.push(line)
+          return
+        }
+        const out = plainLine(line)
+        // Leading blank lines would open an empty bubble.
+        if (!sent && !out.trim()) return
+        send(newline ? out + "\n" : out)
+        sent = true
+      }
+
+      try {
+        for await (const chunk of source) {
+          buffer += chunk
+          let nl = buffer.indexOf("\n")
+          while (nl !== -1) {
+            flush(buffer.slice(0, nl), true)
+            buffer = buffer.slice(nl + 1)
+            nl = buffer.indexOf("\n")
+          }
+        }
+        if (buffer) flush(buffer, false)
+      } catch (error) {
+        console.error("Chatbot stream failed:", error)
+      }
+
+      // A reply that was nothing but the ask keeps it — cutting it all
+      // would leave nothing to read.
+      if (!sent) send(dropped.length ? dropped.join("\n") : meta.fallback)
+      controller.close()
+    },
+  })
 }
