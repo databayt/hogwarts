@@ -8,7 +8,7 @@ maturity: Built
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-09-04
+last_audited: 2026-10-19
 ---
 
 # Admission (Dashboard) Block
@@ -95,6 +95,21 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
   clears `offerAccepted` / the manual intent / the proof unless
   `registrationFeePaid`, and extends `accessTokenExpiry` past the new deadline
   (the applicant dashboard and the tracker hide an offer whose token lapsed).
+- **Leads actions bind to the session school (2026-10-19)**: a server action
+  skips the layout's session-school == subdomain check, and
+  `getTenantContext()` prefers the host — so school roles must use
+  `session.user.schoolId` (only DEVELOPER follows the tenant context). The
+  main `actions.ts` already did; keep any new admission action the same.
+- **settle refuses dead applications (2026-10-19)**: `settleRegistrationFee`
+  never flips WITHDRAWN/REJECTED, returns `not_live` / `needs_refund`, and
+  alerts ADMIN+ACCOUNTANT for a gateway capture it can't absorb. Card
+  checkouts store the Stripe session id in `registrationFeeReference` so a
+  retry can expire it and the expired webhook clears only that session.
+- **Tour manage key**: cancel/reschedule require the HMAC `?k=` from the
+  confirmation email (`tour-manage-key.ts`, AUTH_SECRET). Never authorise a
+  public mutation by booking number alone.
+- **Crons live on Cloudflare** (`cf/crons.json`); never re-add a GitHub
+  bridge pointed at `ed.databayt.org`.
 - **Commit hygiene**: `school-en.json` / `school-ar.json` are shared with every
   other block and routinely carry another session's uncommitted hunks — stage
   the `school.admission` subtree only (build the index blob from HEAD + the

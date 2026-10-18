@@ -15,9 +15,59 @@ last_audited: 2026-09-04
 
 **Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified twice; ~96% complete
 **Real Completion:** ~96% (2026-09-04 pass closed the money/expiry/notification/role P0s; the account model, interview scheduling and tour mail remain product work)
-**Last Updated:** 2026-09-05 (intake pass — see the section below; 2026-09-04 production pass follows)
+**Last Updated:** 2026-10-19 (gap trace — see the section below)
 **Last Audited:** 2026-09-04 (four parallel traces: finance, notifications, roles + family surfaces, i18n/RTL/mobile; tsc 0; 428 admission-area tests passing)
 **Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
+
+---
+
+## 2026-10-19 — gap trace (LOCAL on main, not deployed)
+
+Three parallel traces (dashboard, applicant, infra); every P0 re-verified by
+hand. Plan: `~/.claude/plans/read-admission-feature-trace-iterative-goblet.md`.
+Shipped as atomic commits on `main`:
+
+- [x] **P0 — crons dead since the cutover, green on GitHub** (`67a065ff7`).
+      `admission-crons.yml` pinged `ed.databayt.org` (301) and `curl -f`
+      passed it. fee-due / fee-overdue / email drain / document jobs moved to
+      `cf/crons.json`; `0 9 * * *` trigger added (allow ~19 h); workflow gone.
+- [x] **P0 — cross-tenant leads** (`377717a3a`). School from the host, role
+      from the session → STAFF of A read/edited B's leads. Bound to
+      `session.user.schoolId`; DEVELOPER follows tenant context.
+- [x] **P0 — paying a withdrawn offer / double card charge** (`4db3bd212`).
+      settle refuses WITHDRAWN/REJECTED and alerts ADMIN+ACCOUNTANT to refund
+      a capture it can't absorb; card retry expires the old Stripe session
+      (session id now stored as the card reference); expired-session webhook
+      clears only its own state; offer token expiry enforced.
+- [x] **P0 — tour manage-by-number** (`ed7e1f395`). HMAC `?k=` key in the
+      confirmation link (`school-marketing/admission/actions/tour-manage-key.ts`);
+      atomic cancel; cancel email links the real host.
+- [x] **P1 — silent EXPIRED flip; spoofable client IP; out-of-request links
+      to databayt.org** (`e8c54d6f3`).
+- [x] Inquiry update Zod + same-school assignee (`07ce2051d`); AI/extract URL
+      allow-lists exact-match our bucket (`e3d3ac3f8`).
+
+Open — needs Abdout (schema / product / core):
+
+- [ ] **No UI creates `AdmissionTimeSlot`** — only the seed does; real schools
+      have no tour times. Needs a slot editor in settings.
+- [ ] **Platform tenant binding** — `getTenantContext()` honours the unsigned
+      `impersonate_schoolId` cookie for ANY role and prefers `x-subdomain` over
+      the session; ~200 server-action files use it with session roles. Fixed for
+      leads only; root fix is `src/lib/tenant-context.ts` (core auth change).
+- [ ] **One parent, two children** — unique key + drafts keyed campaign+user;
+      second child fails at the final submit with a generic duplicate error.
+- [ ] Prod `NEXT_PUBLIC_APP_URL=https://ed.databayt.org` (works via 301).
+- [ ] Refund/dispute doesn't revert `registrationFeePaid`; SELECTED→REJECTED
+      allowed after the fee is paid; accepted-but-unpaid never lapses.
+- [ ] 4 duplicate `Application` groups block the unique index on prod; add
+      `@@index([schoolId, campaignId, status])`.
+- [ ] Dead settings columns (`tourDuration`, `maxToursPerDay`, `tourTimeSlots`,
+      `documentRequirements`, `gradeMapping`, `smsNotifications`,
+      `stripeAccountId`); `tourDaysOfWeek` is read but not editable.
+- [ ] Pre-existing stale mocks: 10 Stripe + 11 Tap webhook tests fail on
+      `db.payment` / `db.application.updateMany` not mocked (fee paths).
+- [ ] Enrollment "Send reminder" opens `mailto:` with no recipient (row has no email).
 
 ---
 

@@ -8,7 +8,7 @@ maturity: Built
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-09-05
+last_audited: 2026-10-19
 ---
 
 ## Admission (Dashboard) — School-side admission management pipeline
@@ -36,6 +36,7 @@ This is a cross-block feature. The dashboard side (this block) handles admin rev
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/merit`             | Merit list         | Ready (score entry + weighted ranking)       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/enrollment`        | Enrollment list    | Ready (PlacementDialog wired)                |
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/settings`          | Admission settings | Partial — exposes ~12 of ~30 settings fields |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/leads`             | Leads (inquiries + tours) | Ready — actions bound to the session school |
 
 ### File Structure
 
@@ -105,7 +106,7 @@ Full admit→accept→pay→enroll→fee pipeline verified twice (08-15, 09-04).
 - `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking (oversell-safe, rate-limited, OTP hashed)
 - `src/components/school-marketing/application/` -- multi-step student application wizard (fees step is informational — applying is always free; payment only at registration-fee + tuition stages). `offer/fee-structures.ts` is the offer's fee resolver (same set enrollment assigns); `offer/settle.ts` is the ONE registration-fee settler (card webhooks AND the dashboard's cash/bank/wallet confirmation)
 - `ai/` subsystem -- Claude document classification/extraction/completeness/merit-scoring + bank-receipt OCR. Drained by `/api/cron/process-document-jobs` (\*/10 min); budget-gated + RBAC-gated.
-- `/api/cron/process-document-jobs` -- new cron (\*/10) that processes the document-extraction queue
+- Crons (fee-due 08:00, fee-overdue 09:00, process-email-notifications \*/15, process-document-jobs \*/30 UTC) are Worker triggers in `cf/crons.json` since 2026-10-19 — the GitHub bridge never reached the app after the cutover
 - `/api/cron/fee-due` -- daily cron for upcoming-due + offer-expiry reminders
 - `/api/cron/fee-overdue` -- per-tenant OVERDUE mirror to `UserInvoice`
 - `src/lib/enrollment-sync.ts` -- give placed students their grade's subjects in Lumos (`syncStudentSubjectEnrollments`)
