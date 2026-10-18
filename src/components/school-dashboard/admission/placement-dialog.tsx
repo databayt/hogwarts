@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast, WarningToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -26,6 +26,7 @@ import {
   getAvailableSectionsForPlacement,
   placeStudentInSection,
 } from "./actions"
+import { translateEnrollmentWarning } from "./warning-messages"
 
 /**
  * Dict-first mapping for admission action error CODES (see ACTION_ERRORS in
@@ -44,6 +45,11 @@ function resolveAdmissionErrorMessage(
       sectionAtCapacity?: string
       validationError?: string
       generic?: string
+      studentAlreadyInSection?: string
+      placementInvalidStatus?: string
+      placementNoUser?: string
+      notFound?: string
+      invalidSection?: string
     }
   }
   const e = staged.errors
@@ -56,9 +62,26 @@ function resolveAdmissionErrorMessage(
       )
     case "VALIDATION_ERROR":
       return e?.validationError || "Please check your input and try again."
-    default:
-      return e?.generic || "Something went wrong. Please try again."
+    // Codes the placement action returns that have no dictionary entry yet:
+    // read a staged key when one lands, else the localized generic message
+    // (never a raw code).
+    case "STUDENT_ALREADY_IN_SECTION":
+      if (e?.studentAlreadyInSection) return e.studentAlreadyInSection
+      break
+    case "PLACEMENT_INVALID_STATUS":
+      if (e?.placementInvalidStatus) return e.placementInvalidStatus
+      break
+    case "PLACEMENT_NO_USER":
+      if (e?.placementNoUser) return e.placementNoUser
+      break
+    case "NOT_FOUND":
+      if (e?.notFound) return e.notFound
+      break
+    case "INVALID_SECTION":
+      if (e?.invalidSection) return e.invalidSection
+      break
   }
+  return e?.generic || "Something went wrong. Please try again."
 }
 
 interface SectionOption {
@@ -148,6 +171,17 @@ export function PlacementDialog({
         SuccessToast(
           t?.enrollment?.placementConfirmed || "Student placed in section"
         )
+        // Placed, with a caveat (e.g. NO_CLASSES_FOR_GRADE: the section has
+        // no timetable yet) — same translator as Confirm Enrollment.
+        if (result.warning) {
+          const warningMsg = translateEnrollmentWarning(
+            {
+              code: result.warning,
+            } as Parameters<typeof translateEnrollmentWarning>[0],
+            t
+          )
+          if (warningMsg) WarningToast(warningMsg)
+        }
         onOpenChange(false)
         onPlaced?.()
         router.refresh()

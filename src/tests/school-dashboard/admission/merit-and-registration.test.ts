@@ -689,7 +689,7 @@ describe("confirmEnrollment — registration-fee materialization", () => {
 
     // payment.update must be called to stamp journalEntryId
     expect(db.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay-je-test" },
+      where: { id: "pay-je-test", schoolId: SCHOOL_ID },
       data: { journalEntryId: "je-test-1" },
     })
   })

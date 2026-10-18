@@ -22,7 +22,6 @@ import {
   getEnrollmentData,
   getMeritListData,
   placeStudentInSection,
-  recordPayment,
   updateApplicationStatus,
   updateCampaign,
 } from "@/components/school-dashboard/admission/actions"
@@ -55,6 +54,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     student: {
       findUnique: vi.fn(),
@@ -328,7 +328,6 @@ describe("Admission Actions", () => {
         generateMeritList({ campaignId: "c-1" }),
         getEnrollmentData({}),
         confirmEnrollment({ id: "a-1" }),
-        recordPayment({ id: "a-1", paymentId: "pay-1" }),
         getAvailableSectionsForPlacement({ applyingForClass: "Grade 1" }),
         placeStudentInSection({ applicationId: "a-1", sectionId: "sec-1" }),
         fetchCampaignOptions(),
@@ -452,8 +451,11 @@ describe("Admission Actions", () => {
           name: validCampaignData.name,
           academicYear: validCampaignData.academicYear,
           totalSeats: validCampaignData.totalSeats,
+          // Applying is always free — no fee is copied onto the campaign.
+          applicationFee: null,
         }),
       })
+      expect(db.admissionSettings.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns validation error when schema fails", async () => {
@@ -637,7 +639,9 @@ describe("Admission Actions", () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "UNDER_REVIEW",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await updateApplicationStatus({
         id: "a-1",
@@ -645,8 +649,9 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(true)
-      expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: "a-1", schoolId: SCHOOL_ID },
+      expect(db.application.updateMany).toHaveBeenCalledWith({
+        // Conditional on the status the transition check approved.
+        where: { id: "a-1", schoolId: SCHOOL_ID, status: "UNDER_REVIEW" },
         data: {
           status: "SHORTLISTED",
           reviewedAt: expect.any(Date),
@@ -659,8 +664,8 @@ describe("Admission Actions", () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "UNDER_REVIEW",
       } as any)
-      vi.mocked(db.application.update).mockRejectedValue(
-        new Error("Record not found")
+      vi.mocked(db.application.updateMany).mockRejectedValue(
+        new Error("Connection lost")
       )
 
       const result = await updateApplicationStatus({
@@ -672,11 +677,40 @@ describe("Admission Actions", () => {
       expect(result.error).toBe("UPDATE_FAILED")
     })
 
+    it("refuses the write when another request moved the status after the check", async () => {
+      // Read says UNDER_REVIEW (→ SHORTLISTED is legal), but by the time the
+      // write lands someone else already rejected the row: 0 rows match.
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "UNDER_REVIEW",
+      } as any)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 0,
+      } as any)
+
+      const result = await updateApplicationStatus({
+        id: "a-1",
+        status: "SHORTLISTED",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("APPLICATION_STATUS_INVALID")
+      expect(db.application.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "a-1", schoolId: SCHOOL_ID, status: "UNDER_REVIEW" },
+        })
+      )
+      // No notice for a change that never happened.
+      expect(db.application.findFirst).not.toHaveBeenCalled()
+      expect(dispatchNotification).not.toHaveBeenCalled()
+    })
+
     it("rejects an illegal transition out of a terminal status (REJECTED → SELECTED)", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "REJECTED",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await updateApplicationStatus({
         id: "a-1",
@@ -686,14 +720,16 @@ describe("Admission Actions", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe("APPLICATION_STATUS_INVALID")
       // The dangerous re-offer write must never happen.
-      expect(db.application.update).not.toHaveBeenCalled()
+      expect(db.application.updateMany).not.toHaveBeenCalled()
     })
 
     it("allows a same-status no-op without erroring", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "SHORTLISTED",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await updateApplicationStatus({
         id: "a-1",
@@ -708,7 +744,9 @@ describe("Admission Actions", () => {
         status: "UNDER_REVIEW",
         accessToken: "existing-token-abc",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
       vi.mocked(db.application.findFirst).mockResolvedValue({
         userId: null,
         firstName: "Amina",
@@ -1081,6 +1119,92 @@ describe("Admission Actions", () => {
       expect(result.error).toBe("ADMISSION_NOT_FOUND")
     })
 
+    it("tells the losing click of a double-submit the student is already enrolled", async () => {
+      // Both clicks read SELECTED; the winner flips the row first, so the
+      // loser's conditional update (where status SELECTED) throws P2025.
+      vi.mocked(db.application.findUnique).mockResolvedValue(
+        mockApplication as any
+      )
+      vi.mocked(db.application.update).mockRejectedValue(
+        Object.assign(new Error("Record to update not found."), {
+          code: "P2025",
+        })
+      )
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("STUDENT_ALREADY_ENROLLED")
+      expect(db.student.create).not.toHaveBeenCalled()
+    })
+
+    it("reports already-enrolled when the row is ADMITTED at read time", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        ...mockApplication,
+        status: "ADMITTED",
+      } as any)
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("STUDENT_ALREADY_ENROLLED")
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it("retries with a fresh enrollment number when a concurrent enrollment took it (P2002)", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue(
+        mockApplication as any
+      )
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.student.findUnique).mockResolvedValue(null)
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-new",
+        schoolId: SCHOOL_ID,
+      } as any)
+      vi.mocked(db.yearLevel.findFirst).mockResolvedValue(null)
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "USER" } as any)
+      vi.mocked(db.user.update).mockResolvedValue({} as any)
+      // The competitor commits ENR-..-0001 between our pick and our insert.
+      vi.mocked(db.student.count).mockResolvedValueOnce(0).mockResolvedValue(1)
+      const realTx = vi.mocked(db.$transaction).getMockImplementation()!
+      vi.mocked(db.$transaction)
+        .mockRejectedValueOnce(
+          Object.assign(new Error("Unique constraint failed"), {
+            code: "P2002",
+            meta: { target: ["schoolId", "admissionNumber"] },
+          })
+        )
+        .mockImplementation(realTx)
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.$transaction).toHaveBeenCalledTimes(2)
+      const numbers = vi
+        .mocked(db.application.update)
+        .mock.calls.map((c) => (c[0] as any).data?.enrollmentNumber)
+        .filter(Boolean)
+      // Only the retry reached the flip, carrying the regenerated number.
+      expect(numbers).toEqual([expect.stringMatching(/-0002$/)])
+    })
+
+    it("does not retry a unique violation on another column", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue(
+        mockApplication as any
+      )
+      vi.mocked(db.$transaction).mockRejectedValue(
+        Object.assign(new Error("Unique constraint failed"), {
+          code: "P2002",
+          meta: { target: ["applicationId"] },
+        })
+      )
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(false)
+      expect(db.$transaction).toHaveBeenCalledTimes(1)
+    })
+
     it("refuses a lapsed offer nobody accepted", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         ...mockApplication,
@@ -1300,42 +1424,6 @@ describe("Admission Actions", () => {
   })
 
   // =========================================================================
-  // recordPayment
-  // =========================================================================
-
-  describe("recordPayment", () => {
-    it("marks application as paid with payment reference", async () => {
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
-
-      const result = await recordPayment({
-        id: "a-1",
-        paymentId: "pay-stripe-123",
-      })
-
-      expect(result.success).toBe(true)
-      expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: "a-1", schoolId: SCHOOL_ID },
-        data: {
-          applicationFeePaid: true,
-          paymentId: "pay-stripe-123",
-          paymentDate: expect.any(Date),
-        },
-      })
-    })
-
-    it("returns error on database failure", async () => {
-      vi.mocked(db.application.update).mockRejectedValue(
-        new Error("DB timeout")
-      )
-
-      const result = await recordPayment({ id: "a-1", paymentId: "pay-1" })
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
-    })
-  })
-
-  // =========================================================================
   // confirmRegistrationPayment (P0: cash/bank registration fee was never
   // markable as paid — the public offer portal only records the parent's
   // INTENT, never the confirmation)
@@ -1488,7 +1576,7 @@ describe("Admission Actions", () => {
   })
 
   // =========================================================================
-  // getAvailableClassesForPlacement
+  // getAvailableSectionsForPlacement
   // =========================================================================
 
   describe("getAvailableSectionsForPlacement", () => {
@@ -1553,7 +1641,7 @@ describe("Admission Actions", () => {
   })
 
   // =========================================================================
-  // placeStudentInClass
+  // placeStudentInSection
   // =========================================================================
 
   describe("placeStudentInSection", () => {
@@ -1791,6 +1879,58 @@ describe("Admission Actions", () => {
       expect(result.error).toBe("STUDENT_ALREADY_IN_SECTION")
     })
 
+    it("rejects a section from another grade than the student's", async () => {
+      setupPlacementMocks()
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "student-1",
+        sectionId: null,
+        academicGradeId: "grade-3",
+      } as any)
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "sec-9a",
+        name: "9A",
+        gradeId: "grade-9",
+        maxCapacity: 30,
+        _count: { students: 2 },
+      } as any)
+
+      const result = await placeStudentInSection({
+        applicationId: "a-1",
+        sectionId: "sec-9a",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("INVALID_SECTION")
+      expect(db.student.update).not.toHaveBeenCalled()
+    })
+
+    it("places into a section of the student's own grade", async () => {
+      setupPlacementMocks()
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "student-1",
+        sectionId: null,
+        academicGradeId: "grade-5",
+      } as any)
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "sec-5a",
+        name: "5A",
+        gradeId: "grade-5",
+        maxCapacity: 30,
+        _count: { students: 2 },
+      } as any)
+
+      const result = await placeStudentInSection({
+        applicationId: "a-1",
+        sectionId: "sec-5a",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.student.update).toHaveBeenCalledWith({
+        where: { id: "student-1" },
+        data: { sectionId: "sec-5a" },
+      })
+    })
+
     it("returns error when application not found", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue(null)
 
@@ -1867,7 +2007,7 @@ describe("updateApplicationStatus — note to the family + re-offer reset", () =
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuthenticated()
-    vi.mocked(db.application.update).mockResolvedValue({} as any)
+    vi.mocked(db.application.updateMany).mockResolvedValue({ count: 1 } as any)
     vi.mocked(db.application.findFirst).mockResolvedValue({
       userId: "applicant-user-1",
       lang: "en",
@@ -1893,7 +2033,7 @@ describe("updateApplicationStatus — note to the family + re-offer reset", () =
     })
 
     expect(result.success).toBe(true)
-    expect(db.application.update).toHaveBeenCalledWith(
+    expect(db.application.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: "REJECTED",
@@ -1918,7 +2058,8 @@ describe("updateApplicationStatus — note to the family + re-offer reset", () =
 
     await updateApplicationStatus({ id: "app-1", status: "SHORTLISTED" })
 
-    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    const data = (vi.mocked(db.application.updateMany).mock.calls[0][0] as any)
+      .data
     expect("reviewNotes" in data).toBe(false)
   })
 
@@ -1940,7 +2081,8 @@ describe("updateApplicationStatus — note to the family + re-offer reset", () =
     })
 
     expect(result.success).toBe(true)
-    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    const data = (vi.mocked(db.application.updateMany).mock.calls[0][0] as any)
+      .data
     expect(data.offerAccepted).toBe(false)
     expect(data.offerAcceptedAt).toBeNull()
     expect(data.registrationFeeMethod).toBeNull()
@@ -1964,7 +2106,8 @@ describe("updateApplicationStatus — note to the family + re-offer reset", () =
 
     await updateApplicationStatus({ id: "app-1", status: "SELECTED" })
 
-    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    const data = (vi.mocked(db.application.updateMany).mock.calls[0][0] as any)
+      .data
     expect("offerAccepted" in data).toBe(false)
     expect("registrationFeeMethod" in data).toBe(false)
   })

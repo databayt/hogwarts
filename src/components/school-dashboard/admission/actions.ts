@@ -21,12 +21,13 @@ import {
   shouldSendNotification,
 } from "@/lib/dispatch-notification"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
-import { extractGradeNumber } from "@/lib/grade-utils"
+import { parseGrade } from "@/lib/grade"
 import { displayName } from "@/lib/name-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
+import type { JournalEntryInput } from "@/components/school-dashboard/finance/lib/accounting/types"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 import { settleRegistrationFee } from "@/components/school-marketing/application/offer/settle"
 
@@ -90,13 +91,6 @@ const NOTIF = {
       ar: `تم تعيينك في قسم "${sectionName}"`,
       en: `You have been placed in section "${sectionName}"`,
     }),
-  },
-  feePaid: {
-    title: { ar: "تأكيد الدفع", en: "Payment Confirmed" },
-    body: {
-      ar: "تم تأكيد دفع رسوم التسجيل بنجاح.",
-      en: "Your registration fee payment has been confirmed.",
-    },
   },
 } as const
 
@@ -327,18 +321,9 @@ export async function createCampaign(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    // Fall back to school's default application fee if none specified
-    let applicationFee = validated.data.applicationFee ?? null
-    if (applicationFee === null || applicationFee === 0) {
-      const settings = await db.admissionSettings.findUnique({
-        where: { schoolId },
-        select: { defaultApplicationFee: true },
-      })
-      if (settings?.defaultApplicationFee) {
-        applicationFee = Number(settings.defaultApplicationFee)
-      }
-    }
-
+    // Applying is always free (2026-06-12 product decision): the campaign's
+    // applicationFee column is vestigial and stays null. This used to copy
+    // the school's `defaultApplicationFee` in, re-arming a fee nothing charges.
     const campaign = await db.admissionCampaign.create({
       data: {
         schoolId,
@@ -349,7 +334,7 @@ export async function createCampaign(
         status: validated.data.status,
         description: validated.data.description ?? null,
         totalSeats: validated.data.totalSeats,
-        applicationFee,
+        applicationFee: null,
       },
     })
 
@@ -623,10 +608,18 @@ export async function updateApplicationStatus(params: {
       }
     }
 
-    await db.application.update({
-      where: { id: params.id, schoolId },
+    // Conditional on the status the transition check above approved. Two
+    // reviewers acting at once (or the offer-expiry cron flipping SELECTED →
+    // EXPIRED mid-request) both pass the read-time check; an unconditional
+    // write let the slower one apply a move that was never legal from the
+    // row's real status. Zero rows matched = someone else moved it first.
+    const { count } = await db.application.updateMany({
+      where: { id: params.id, schoolId, status: current.status },
       data,
     })
+    if (count === 0) {
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
+    }
 
     // Notify applicant about status change (non-blocking)
     const application = await db.application.findFirst({
@@ -1175,6 +1168,27 @@ export interface ConfirmEnrollmentResult {
   warnings?: EnrollmentWarning[]
 }
 
+/** The losing click of a double-submitted Confirm Enrollment: another
+ *  request flipped the application SELECTED → ADMITTED first. */
+class EnrollmentAlreadyConfirmed extends Error {}
+
+function prismaErrorCode(error: unknown): string | undefined {
+  return (error as { code?: string } | null)?.code
+}
+
+/** P2002 on Student @@unique([schoolId, admissionNumber]). The target shape
+ *  varies by engine/adapter (field array, index name, adapter cause), so
+ *  match on the column name anywhere in `meta`. */
+function isAdmissionNumberCollision(error: unknown): boolean {
+  if (prismaErrorCode(error) !== "P2002") return false
+  const meta = (error as { meta?: unknown }).meta
+  try {
+    return JSON.stringify(meta ?? {}).includes("admissionNumber")
+  } catch {
+    return false
+  }
+}
+
 export async function confirmEnrollment(params: {
   id: string
 }): Promise<ActionResponse<ConfirmEnrollmentResult>> {
@@ -1204,7 +1218,7 @@ export async function confirmEnrollment(params: {
     // already enrolled; a declined offer sets status WITHDRAWN, so this gate is
     // what stops a withdrawn/rejected applicant being turned into a Student.
     if (application.status === "ADMITTED") {
-      return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+      return actionError(ACTION_ERRORS.STUDENT_ALREADY_ENROLLED)
     }
     if (application.status !== "SELECTED") {
       return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
@@ -1233,28 +1247,35 @@ export async function confirmEnrollment(params: {
       .slice(-4)
       .slice(0, 2)
 
-    let enrollmentNumber = ""
-    const MAX_RETRIES = 10
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      const existingCount = await db.student.count({ where: { schoolId } })
-      const seq = String(existingCount + 1 + attempt).padStart(4, "0")
-      const candidate = `ENR-${academicYearShort}-${seq}`
-      // Check uniqueness against Student.admissionNumber
-      const conflict = await db.student.findFirst({
-        where: { schoolId, admissionNumber: candidate },
-        select: { id: true },
-      })
-      if (!conflict) {
-        enrollmentNumber = candidate
-        break
+    const nextEnrollmentNumber = async (): Promise<string> => {
+      const MAX_RETRIES = 10
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        const existingCount = await db.student.count({ where: { schoolId } })
+        const seq = String(existingCount + 1 + attempt).padStart(4, "0")
+        const candidate = `ENR-${academicYearShort}-${seq}`
+        // Check uniqueness against Student.admissionNumber
+        const conflict = await db.student.findFirst({
+          where: { schoolId, admissionNumber: candidate },
+          select: { id: true },
+        })
+        if (!conflict) return candidate
       }
-    }
-    if (!enrollmentNumber) {
       // Ultimate fallback: timestamp suffix — guaranteed unique
-      enrollmentNumber = `ENR-${Date.now()}`
+      return `ENR-${Date.now()}`
     }
+
+    let enrollmentNumber = await nextEnrollmentNumber()
     let enrolledStudentId: string | null = null
     const warnings: EnrollmentWarning[] = []
+    // The registration-fee journal entry, posted only AFTER the enrollment
+    // transaction commits. `createJournalEntry` writes through the global
+    // client, so calling it inside the tx committed a ledger entry even when
+    // the enrollment then rolled back — books recording money for a student
+    // who does not exist.
+    let pendingLedgerPost = null as {
+      paymentId: string
+      entryInput: JournalEntryInput
+    } | null
 
     // (No application-fee warning here: applying is always free — the
     // 2026-06-12 product decision. The registration fee on the offer leg is
@@ -1275,398 +1296,480 @@ export async function confirmEnrollment(params: {
       }
     }
 
-    const { userId: txUserId, isNewGuestUser } = await db.$transaction(
-      async (tx) => {
-        // 2. Update application status to ADMITTED. `status: "SELECTED"` in
-        //    the where makes the flip atomic: two admins confirming the same
-        //    row at once both pass the read-time gate above, but only one
-        //    update finds a SELECTED row — the other throws P2025 here and
-        //    its transaction aborts before a second Student is minted (the
-        //    unique Student.applicationId index was the only thing catching
-        //    that, and it failed late, after the fee fan-out).
-        await tx.application.update({
-          where: { id: params.id, schoolId, status: "SELECTED" },
-          data: {
-            status: "ADMITTED",
-            admissionConfirmed: true,
-            confirmationDate: new Date(),
-            enrollmentNumber,
-          },
-        })
-
-        // Build the guardian inputs from the application's father/mother/
-        // other fields (typed entries with fullName split into first/last),
-        // then delegate every user/student/yearLevel/role/fee/guardian/
-        // document create to the shared provisioning core. confirmEnrollment
-        // always reuses THIS existing Application (never mints a shadow one)
-        // and keeps ownership of the registration-fee ledger entry below,
-        // which reads the FeeAssignment provisionStudent creates.
-        let guardianInputs: ProvisionGuardianInput[] = []
-        try {
-          const { fromFullName } = await import("@/lib/guardian-utils")
-
-          const guardianEntries: Array<{
-            typeName: string
-            fullName: string
-            email: string | null
-            phone: string | null
-            whatsapp: string | null
-            occupation: string | null
-            isPrimary: boolean
-          }> = []
-
-          // The public wizard's guardian tab has a WhatsApp field and no
-          // email field, but Application has only `*Email` columns to hold
-          // it — so those columns carry a phone number for every family
-          // that applied online. Handing that to createOrLinkGuardian as
-          // `email` wrote "+249…" into Guardian.emailAddress, made the
-          // enrollment mail try to deliver to it, and — because the email
-          // path upserts by address — collapsed a father and mother who
-          // share a household WhatsApp into ONE guardian row, dropping the
-          // mother's name. Classify by shape; the columns keep their names.
-          const contact = splitGuardianContact
-
-          if (application.fatherName) {
-            guardianEntries.push({
-              typeName: "father",
-              fullName: application.fatherName,
-              ...contact(application.fatherEmail),
-              phone: application.fatherPhone,
-              occupation: application.fatherOccupation,
-              isPrimary: true,
+    const warningsBeforeTx = warnings.length
+    const runEnrollmentTx = () =>
+      db.$transaction(
+        async (tx) => {
+          // 2. Update application status to ADMITTED. `status: "SELECTED"` in
+          //    the where makes the flip atomic: two admins confirming the same
+          //    row at once both pass the read-time gate above, but only one
+          //    update finds a SELECTED row — the other throws P2025 here and
+          //    its transaction aborts before a second Student is minted (the
+          //    unique Student.applicationId index was the only thing catching
+          //    that, and it failed late, after the fee fan-out). The loser
+          //    reports "already enrolled", not a generic failure.
+          try {
+            await tx.application.update({
+              where: { id: params.id, schoolId, status: "SELECTED" },
+              data: {
+                status: "ADMITTED",
+                admissionConfirmed: true,
+                confirmationDate: new Date(),
+                enrollmentNumber,
+              },
             })
-          }
-          if (application.motherName) {
-            guardianEntries.push({
-              typeName: "mother",
-              fullName: application.motherName,
-              ...contact(application.motherEmail),
-              phone: application.motherPhone,
-              occupation: application.motherOccupation,
-              isPrimary: !application.fatherName,
-            })
-          }
-          if (
-            application.guardianName &&
-            application.guardianName !== application.fatherName &&
-            application.guardianName !== application.motherName
-          ) {
-            guardianEntries.push({
-              typeName:
-                application.guardianRelation?.toLowerCase() || "guardian",
-              fullName: application.guardianName,
-              ...contact(application.guardianEmail),
-              phone: application.guardianPhone,
-              occupation: null,
-              isPrimary: false,
-            })
+          } catch (flipError) {
+            if (prismaErrorCode(flipError) === "P2025") {
+              throw new EnrollmentAlreadyConfirmed()
+            }
+            throw flipError
           }
 
-          guardianInputs = guardianEntries.map((entry) => fromFullName(entry))
-        } catch (guardianBuildError) {
-          console.warn(
-            "[confirmEnrollment] Guardian entry construction failed:",
-            guardianBuildError
-          )
-          warnings.push({ code: "GUARDIAN_CREATE_FAILED" })
-        }
+          // Build the guardian inputs from the application's father/mother/
+          // other fields (typed entries with fullName split into first/last),
+          // then delegate every user/student/yearLevel/role/fee/guardian/
+          // document create to the shared provisioning core. confirmEnrollment
+          // always reuses THIS existing Application (never mints a shadow one)
+          // and keeps ownership of the registration-fee ledger entry below,
+          // which reads the FeeAssignment provisionStudent creates.
+          let guardianInputs: ProvisionGuardianInput[] = []
+          try {
+            const { fromFullName } = await import("@/lib/guardian-utils")
 
-        const provisionResult = await provisionStudent(
-          {
-            schoolId,
-            firstName: application.firstName,
-            middleName: application.middleName,
-            lastName: application.lastName,
-            dateOfBirth: application.dateOfBirth,
-            gender: application.gender,
-            nationality: application.nationality,
-            category: application.category,
-            photoUrl: application.photoUrl,
-            email: application.email,
-            phone: application.phone,
-            alternatePhone: application.alternatePhone,
-            address: application.address,
-            city: application.city,
-            state: application.state,
-            postalCode: application.postalCode,
-            country: application.country,
-            applyingForClass: application.applyingForClass,
-            academicYear: application.campaign.academicYear,
-            previousSchool: application.previousSchool,
-            previousGrade: application.previousClass,
-            previousMarks: application.previousMarks,
-            previousPercentage: application.previousPercentage,
-            achievements: application.achievements,
-            guardians: guardianInputs,
-            documents:
-              (application.documents as Array<{
-                type?: string
-                name?: string
-                url?: string
-                uploadedAt?: string
-              }> | null) ?? undefined,
-            applicationId: params.id,
-            admissionNumber: enrollmentNumber,
-            userId: application.userId,
-            emergencyContactName:
-              application.guardianName || application.fatherName || undefined,
-            emergencyContactPhone:
-              application.guardianPhone || application.fatherPhone || undefined,
-            emergencyContactRelation: application.guardianRelation || "Parent",
-          },
-          { notify: false, credentialDelivery: "reset-link", origin: "PORTAL" },
-          tx
-        )
+            const guardianEntries: Array<{
+              typeName: string
+              fullName: string
+              email: string | null
+              phone: string | null
+              whatsapp: string | null
+              occupation: string | null
+              isPrimary: boolean
+            }> = []
 
-        warnings.push(
-          ...provisionResult.warnings.map((w) => ({
-            code: w.code as EnrollmentWarningCode,
-            meta: w.meta,
-          }))
-        )
+            // The public wizard's guardian tab has a WhatsApp field and no
+            // email field, but Application has only `*Email` columns to hold
+            // it — so those columns carry a phone number for every family
+            // that applied online. Handing that to createOrLinkGuardian as
+            // `email` wrote "+249…" into Guardian.emailAddress, made the
+            // enrollment mail try to deliver to it, and — because the email
+            // path upserts by address — collapsed a father and mother who
+            // share a household WhatsApp into ONE guardian row, dropping the
+            // mother's name. Classify by shape; the columns keep their names.
+            const contact = splitGuardianContact
 
-        {
-          const studentId = provisionResult.studentId
-
-          // Registration-fee materialization (ADMISSION-FEE-NO-LEDGER).
-          // If the application captured a registration-fee payment at offer
-          // time, we must create a Payment + journal entry so the books reflect
-          // the money already collected.  Idempotent: if a Payment for this
-          // student's REGISTRATION FeeAssignment already exists, skip.
-          if (
-            application.registrationFeePaid &&
-            application.registrationFeeAmount
-          ) {
-            try {
-              // Find the registration-type FeeAssignment just created by
-              // provisionStudent's ensureStudentFeeAssignments call (or a
-              // pre-existing one).
-              const regAssignment = await tx.feeAssignment.findFirst({
-                where: {
-                  schoolId,
-                  studentId,
-                  feeStructure: {
-                    OR: [
-                      {
-                        name: { contains: "registration", mode: "insensitive" },
-                      },
-                      {
-                        name: { contains: "Registration", mode: "insensitive" },
-                      },
-                      { registrationFee: { gt: 0 } },
-                    ],
-                  },
-                },
-                select: {
-                  id: true,
-                  status: true,
-                  finalAmount: true,
-                  currency: true,
-                },
+            if (application.fatherName) {
+              guardianEntries.push({
+                typeName: "father",
+                fullName: application.fatherName,
+                ...contact(application.fatherEmail),
+                phone: application.fatherPhone,
+                occupation: application.fatherOccupation,
+                isPrimary: true,
               })
+            }
+            if (application.motherName) {
+              guardianEntries.push({
+                typeName: "mother",
+                fullName: application.motherName,
+                ...contact(application.motherEmail),
+                phone: application.motherPhone,
+                occupation: application.motherOccupation,
+                isPrimary: !application.fatherName,
+              })
+            }
+            if (
+              application.guardianName &&
+              application.guardianName !== application.fatherName &&
+              application.guardianName !== application.motherName
+            ) {
+              guardianEntries.push({
+                typeName:
+                  application.guardianRelation?.toLowerCase() || "guardian",
+                fullName: application.guardianName,
+                ...contact(application.guardianEmail),
+                phone: application.guardianPhone,
+                occupation: null,
+                isPrimary: false,
+              })
+            }
 
-              if (regAssignment) {
-                // Idempotency: skip if a payment for this assignment already exists
-                const existingPayment = await tx.payment.findFirst({
+            guardianInputs = guardianEntries.map((entry) => fromFullName(entry))
+          } catch (guardianBuildError) {
+            console.warn(
+              "[confirmEnrollment] Guardian entry construction failed:",
+              guardianBuildError
+            )
+            warnings.push({ code: "GUARDIAN_CREATE_FAILED" })
+          }
+
+          const provisionResult = await provisionStudent(
+            {
+              schoolId,
+              firstName: application.firstName,
+              middleName: application.middleName,
+              lastName: application.lastName,
+              dateOfBirth: application.dateOfBirth,
+              gender: application.gender,
+              nationality: application.nationality,
+              category: application.category,
+              photoUrl: application.photoUrl,
+              email: application.email,
+              phone: application.phone,
+              alternatePhone: application.alternatePhone,
+              address: application.address,
+              city: application.city,
+              state: application.state,
+              postalCode: application.postalCode,
+              country: application.country,
+              applyingForClass: application.applyingForClass,
+              academicYear: application.campaign.academicYear,
+              previousSchool: application.previousSchool,
+              previousGrade: application.previousClass,
+              previousMarks: application.previousMarks,
+              previousPercentage: application.previousPercentage,
+              achievements: application.achievements,
+              guardians: guardianInputs,
+              documents:
+                (application.documents as Array<{
+                  type?: string
+                  name?: string
+                  url?: string
+                  uploadedAt?: string
+                }> | null) ?? undefined,
+              applicationId: params.id,
+              admissionNumber: enrollmentNumber,
+              userId: application.userId,
+              emergencyContactName:
+                application.guardianName || application.fatherName || undefined,
+              emergencyContactPhone:
+                application.guardianPhone ||
+                application.fatherPhone ||
+                undefined,
+              emergencyContactRelation:
+                application.guardianRelation || "Parent",
+            },
+            {
+              notify: false,
+              credentialDelivery: "reset-link",
+              origin: "PORTAL",
+            },
+            tx
+          )
+
+          warnings.push(
+            ...provisionResult.warnings.map((w) => ({
+              code: w.code as EnrollmentWarningCode,
+              meta: w.meta,
+            }))
+          )
+
+          {
+            const studentId = provisionResult.studentId
+
+            // Registration-fee materialization (ADMISSION-FEE-NO-LEDGER).
+            // If the application captured a registration-fee payment at offer
+            // time, we must create a Payment + journal entry so the books reflect
+            // the money already collected.  Idempotent: if a Payment for this
+            // student's REGISTRATION FeeAssignment already exists, skip.
+            if (
+              application.registrationFeePaid &&
+              application.registrationFeeAmount
+            ) {
+              try {
+                // Find the registration-type FeeAssignment just created by
+                // provisionStudent's ensureStudentFeeAssignments call (or a
+                // pre-existing one).
+                const regAssignment = await tx.feeAssignment.findFirst({
                   where: {
                     schoolId,
-                    feeAssignmentId: regAssignment.id,
+                    studentId,
+                    feeStructure: {
+                      OR: [
+                        {
+                          name: {
+                            contains: "registration",
+                            mode: "insensitive",
+                          },
+                        },
+                        {
+                          name: {
+                            contains: "Registration",
+                            mode: "insensitive",
+                          },
+                        },
+                        { registrationFee: { gt: 0 } },
+                      ],
+                    },
                   },
-                  select: { id: true },
+                  select: {
+                    id: true,
+                    status: true,
+                    finalAmount: true,
+                    currency: true,
+                  },
                 })
 
-                if (!existingPayment) {
-                  // Map application.registrationFeeMethod string to PaymentMethod enum
-                  const methodMap: Record<string, PaymentMethod> = {
-                    cash: "CASH",
-                    stripe: "CREDIT_CARD",
-                    credit_card: "CREDIT_CARD",
-                    bank_transfer: "BANK_TRANSFER",
-                    cheque: "CHEQUE",
-                    online: "CREDIT_CARD",
-                    wallet: "WALLET",
-                    apple_pay: "APPLE_PAY",
-                    google_pay: "GOOGLE_PAY",
-                    mada: "MADA",
-                    knet: "KNET",
-                  }
-                  const rawMethod = (
-                    application.registrationFeeMethod ?? "cash"
-                  ).toLowerCase()
-                  const paymentMethod: PaymentMethod =
-                    methodMap[rawMethod] ?? "OTHER"
-
-                  // Collision-safe paymentNumber/receiptNumber
-                  const timestamp = Date.now()
-                  const suffix = nanoid(6).toUpperCase()
-                  const paymentNumber = `PAY-REG-${timestamp}-${suffix}`
-                  const receiptNumber = `REC-REG-${timestamp}-${suffix}`
-
-                  const regPaymentDate =
-                    application.registrationFeeDate ?? new Date()
-                  const regAmount = Number(application.registrationFeeAmount)
-
-                  // Snapshot the currency the way every other Payment writer
-                  // does (fees.prisma: new rows MUST write currency) — the
-                  // assignment's snapshot first, the school's setting as the
-                  // fallback — so the receipt survives a later currency
-                  // change. This row was the one writer leaving it null.
-                  let paymentCurrency: string | null =
-                    regAssignment.currency ?? null
-                  if (!paymentCurrency) {
-                    const schoolRow = await tx.school.findUnique({
-                      where: { id: schoolId },
-                      select: { currency: true },
-                    })
-                    paymentCurrency = schoolRow?.currency ?? null
-                  }
-
-                  const newPayment = await tx.payment.create({
-                    data: {
+                if (regAssignment) {
+                  // Idempotency: skip if a payment for this assignment already exists
+                  const existingPayment = await tx.payment.findFirst({
+                    where: {
                       schoolId,
                       feeAssignmentId: regAssignment.id,
-                      studentId,
-                      paymentNumber,
-                      receiptNumber,
-                      amount: regAmount,
-                      currency: paymentCurrency,
-                      paymentMethod,
-                      paymentDate: regPaymentDate,
-                      status: "SUCCESS",
-                      transactionId:
-                        application.registrationFeeReference ?? null,
-                      remarks: "Registration fee collected at offer acceptance",
                     },
                     select: { id: true },
                   })
 
-                  // The matched assignment is normally the student's ANNUAL
-                  // structure — the auto-provisioned per-grade rows carry the
-                  // registration component inside their total — so the
-                  // registration payment settles it only when it covers the
-                  // whole balance. Marking it PAID unconditionally (as this
-                  // did) declared a year's tuition settled on a deposit, and
-                  // the fee-due / fee-overdue crons stopped chasing it.
-                  const assignmentTotal = Number(regAssignment.finalAmount)
-                  const settlesAssignment =
-                    !(assignmentTotal > 0) || regAmount >= assignmentTotal
-                  await tx.feeAssignment.update({
-                    where: { id: regAssignment.id },
-                    data: { status: settlesAssignment ? "PAID" : "PARTIAL" },
-                  })
-
-                  // Post the ledger entry (non-blocking — failure must not
-                  // roll back enrollment; we log and continue)
-                  try {
-                    const { createFeePaymentEntry } =
-                      await import("@/components/school-dashboard/finance/lib/accounting/posting-rules")
-                    const { createJournalEntry } =
-                      await import("@/components/school-dashboard/finance/lib/accounting/utils")
-                    const entryInput = await createFeePaymentEntry(
-                      schoolId,
-                      {
-                        paymentId: newPayment.id,
-                        studentId,
-                        amount: regAmount,
-                        paymentMethod: paymentMethod,
-                        paymentDate: regPaymentDate,
-                        feeType: "registration",
-                      },
-                      tx
-                    )
-                    // Use a system actor ID ("system") for automated entries
-                    const postResult = await createJournalEntry(
-                      schoolId,
-                      entryInput,
-                      session.user?.id ?? "system"
-                    )
-                    if (postResult.success && postResult.journalEntryId) {
-                      await tx.payment.update({
-                        where: { id: newPayment.id },
-                        data: { journalEntryId: postResult.journalEntryId },
-                      })
+                  if (!existingPayment) {
+                    // Map application.registrationFeeMethod string to PaymentMethod enum
+                    const methodMap: Record<string, PaymentMethod> = {
+                      cash: "CASH",
+                      stripe: "CREDIT_CARD",
+                      credit_card: "CREDIT_CARD",
+                      bank_transfer: "BANK_TRANSFER",
+                      cheque: "CHEQUE",
+                      online: "CREDIT_CARD",
+                      wallet: "WALLET",
+                      apple_pay: "APPLE_PAY",
+                      google_pay: "GOOGLE_PAY",
+                      mada: "MADA",
+                      knet: "KNET",
                     }
-                  } catch (ledgerErr) {
-                    console.warn(
-                      "[confirmEnrollment] Registration fee ledger entry failed:",
-                      ledgerErr
-                    )
-                  }
+                    const rawMethod = (
+                      application.registrationFeeMethod ?? "cash"
+                    ).toLowerCase()
+                    const paymentMethod: PaymentMethod =
+                      methodMap[rawMethod] ?? "OTHER"
 
-                  // Sync the payment onto the auto-generated UserInvoice(s) for
-                  // this assignment (created moments ago by provisionStudent →
-                  // ensureInvoicesForAssignment inside this same transaction).
-                  // Without this the invoice stays UNPAID forever while the
-                  // Payment/ledger say collected. `tx` is load-bearing: the
-                  // invoices are uncommitted, so the plain db client can't see
-                  // them.
-                  try {
-                    const { allocatePaymentToInvoices } =
-                      await import("@/components/school-dashboard/finance/lib/invoice-allocation")
-                    await allocatePaymentToInvoices(
-                      schoolId,
-                      regAssignment.id,
-                      regAmount,
-                      tx
-                    )
-                  } catch (allocErr) {
-                    console.warn(
-                      "[confirmEnrollment] Registration fee invoice allocation failed:",
-                      allocErr
-                    )
+                    // Collision-safe paymentNumber/receiptNumber
+                    const timestamp = Date.now()
+                    const suffix = nanoid(6).toUpperCase()
+                    const paymentNumber = `PAY-REG-${timestamp}-${suffix}`
+                    const receiptNumber = `REC-REG-${timestamp}-${suffix}`
+
+                    const regPaymentDate =
+                      application.registrationFeeDate ?? new Date()
+                    const regAmount = Number(application.registrationFeeAmount)
+
+                    // Snapshot the currency the way every other Payment writer
+                    // does (fees.prisma: new rows MUST write currency) — the
+                    // assignment's snapshot first, the school's setting as the
+                    // fallback — so the receipt survives a later currency
+                    // change. This row was the one writer leaving it null.
+                    let paymentCurrency: string | null =
+                      regAssignment.currency ?? null
+                    if (!paymentCurrency) {
+                      const schoolRow = await tx.school.findUnique({
+                        where: { id: schoolId },
+                        select: { currency: true },
+                      })
+                      paymentCurrency = schoolRow?.currency ?? null
+                    }
+
+                    const newPayment = await tx.payment.create({
+                      data: {
+                        schoolId,
+                        feeAssignmentId: regAssignment.id,
+                        studentId,
+                        paymentNumber,
+                        receiptNumber,
+                        amount: regAmount,
+                        currency: paymentCurrency,
+                        paymentMethod,
+                        paymentDate: regPaymentDate,
+                        status: "SUCCESS",
+                        transactionId:
+                          application.registrationFeeReference ?? null,
+                        remarks:
+                          "Registration fee collected at offer acceptance",
+                      },
+                      select: { id: true },
+                    })
+
+                    // The matched assignment is normally the student's ANNUAL
+                    // structure — the auto-provisioned per-grade rows carry the
+                    // registration component inside their total — so the
+                    // registration payment settles it only when it covers the
+                    // whole balance. Marking it PAID unconditionally (as this
+                    // did) declared a year's tuition settled on a deposit, and
+                    // the fee-due / fee-overdue crons stopped chasing it.
+                    const assignmentTotal = Number(regAssignment.finalAmount)
+                    const settlesAssignment =
+                      !(assignmentTotal > 0) || regAmount >= assignmentTotal
+                    await tx.feeAssignment.update({
+                      where: { id: regAssignment.id },
+                      data: { status: settlesAssignment ? "PAID" : "PARTIAL" },
+                    })
+
+                    // Build the ledger entry here (it reads accounts through
+                    // `tx`); it is POSTED after the transaction commits — see
+                    // `pendingLedgerPost`. Failure must not roll back
+                    // enrollment; we log and continue.
+                    try {
+                      const { createFeePaymentEntry } =
+                        await import("@/components/school-dashboard/finance/lib/accounting/posting-rules")
+                      const entryInput = await createFeePaymentEntry(
+                        schoolId,
+                        {
+                          paymentId: newPayment.id,
+                          studentId,
+                          amount: regAmount,
+                          paymentMethod: paymentMethod,
+                          paymentDate: regPaymentDate,
+                          feeType: "registration",
+                        },
+                        tx
+                      )
+                      pendingLedgerPost = {
+                        paymentId: newPayment.id,
+                        entryInput,
+                      }
+                    } catch (ledgerErr) {
+                      console.warn(
+                        "[confirmEnrollment] Registration fee ledger entry failed:",
+                        ledgerErr
+                      )
+                    }
+
+                    // Sync the payment onto the auto-generated UserInvoice(s) for
+                    // this assignment (created moments ago by provisionStudent →
+                    // ensureInvoicesForAssignment inside this same transaction).
+                    // Without this the invoice stays UNPAID forever while the
+                    // Payment/ledger say collected. `tx` is load-bearing: the
+                    // invoices are uncommitted, so the plain db client can't see
+                    // them.
+                    try {
+                      const { allocatePaymentToInvoices } =
+                        await import("@/components/school-dashboard/finance/lib/invoice-allocation")
+                      await allocatePaymentToInvoices(
+                        schoolId,
+                        regAssignment.id,
+                        regAmount,
+                        tx
+                      )
+                    } catch (allocErr) {
+                      console.warn(
+                        "[confirmEnrollment] Registration fee invoice allocation failed:",
+                        allocErr
+                      )
+                    }
                   }
+                } else {
+                  // No matching registration FeeStructure was found — warn admin
+                  warnings.push({ code: "REGISTRATION_FEE_NO_STRUCTURE" })
                 }
-              } else {
-                // No matching registration FeeStructure was found — warn admin
-                warnings.push({ code: "REGISTRATION_FEE_NO_STRUCTURE" })
+              } catch (regFeeErr) {
+                console.warn(
+                  "[confirmEnrollment] Registration fee materialization failed:",
+                  regFeeErr
+                )
               }
-            } catch (regFeeErr) {
-              console.warn(
-                "[confirmEnrollment] Registration fee materialization failed:",
-                regFeeErr
-              )
             }
+
+            enrolledStudentId = studentId
           }
 
-          enrolledStudentId = studentId
-        }
+          return {
+            userId: provisionResult.userId,
+            isNewGuestUser: provisionResult.isNewUser,
+          }
+        },
+        { timeout: 30000 }
+      )
 
-        return {
-          userId: provisionResult.userId,
-          isNewGuestUser: provisionResult.isNewUser,
+    // The ENR number is picked before the transaction, so two DIFFERENT
+    // applications confirmed at once can pick the same one — and the loser's
+    // P2002 on Student @@unique([schoolId, admissionNumber]) used to roll back
+    // its whole enrollment. The rollback leaves nothing behind and the
+    // winner's row is now committed, so regenerate and retry (bounded).
+    const ENROLL_TX_ATTEMPTS = 3
+    let txOutcome: Awaited<ReturnType<typeof runEnrollmentTx>> | null = null
+    for (let attempt = 1; !txOutcome; attempt++) {
+      warnings.length = warningsBeforeTx
+      pendingLedgerPost = null
+      try {
+        txOutcome = await runEnrollmentTx()
+      } catch (txError) {
+        if (
+          attempt >= ENROLL_TX_ATTEMPTS ||
+          !isAdmissionNumberCollision(txError)
+        ) {
+          throw txError
         }
-      },
-      { timeout: 30000 }
-    )
+        enrollmentNumber = await nextEnrollmentNumber()
+      }
+    }
+    const { userId: txUserId, isNewGuestUser } = txOutcome
+
+    // Post the registration-fee ledger entry now that the enrollment is
+    // committed (non-blocking — a ledger failure never undoes an enrollment).
+    if (pendingLedgerPost) {
+      const { paymentId, entryInput } = pendingLedgerPost
+      try {
+        const { createJournalEntry } =
+          await import("@/components/school-dashboard/finance/lib/accounting/utils")
+        // Use a system actor ID ("system") for automated entries
+        const postResult = await createJournalEntry(
+          schoolId,
+          entryInput,
+          session.user?.id ?? "system"
+        )
+        if (postResult.success && postResult.journalEntryId) {
+          await db.payment.update({
+            where: { id: paymentId, schoolId },
+            data: { journalEntryId: postResult.journalEntryId },
+          })
+        }
+      } catch (ledgerErr) {
+        console.warn(
+          "[confirmEnrollment] Registration fee ledger entry failed:",
+          ledgerErr
+        )
+      }
+    }
 
     // Check for suggested section placement (auto-suggest when a matching section has capacity)
     let suggestedSectionId: string | null = null
     let suggestedSectionName: string | null = null
     try {
-      if (application.applyingForClass) {
-        const gradeNum = extractGradeNumber(application.applyingForClass)
-        const gradeWhere = gradeNum
-          ? {
-              OR: [
-                {
-                  grade: {
-                    name: {
-                      contains: application.applyingForClass,
-                      mode: "insensitive" as const,
+      // Suggest from the grade provisioning actually resolved
+      // (Student.academicGradeId) so the suggestion and the student's fees /
+      // year level agree; the label match is the fallback. parseGrade reads
+      // KG labels too ("روضة 1" → -1, "روضة 2" → 0) — extractGradeNumber took
+      // "روضة 1" for Grade 1, and a truthiness check dropped KG2's 0.
+      const provisioned = enrolledStudentId
+        ? await db.student.findFirst({
+            where: { id: enrolledStudentId, schoolId },
+            select: { academicGradeId: true },
+          })
+        : null
+      const provisionedGradeId = provisioned?.academicGradeId ?? null
+      const label = application.applyingForClass?.trim() ?? ""
+      if (provisionedGradeId || label) {
+        const gradeNum = label ? parseGrade(label) : null
+        const gradeWhere = provisionedGradeId
+          ? { gradeId: provisionedGradeId }
+          : gradeNum !== null
+            ? {
+                OR: [
+                  {
+                    grade: {
+                      name: {
+                        contains: label,
+                        mode: "insensitive" as const,
+                      },
                     },
                   },
+                  { grade: { gradeNumber: gradeNum } },
+                ],
+              }
+            : {
+                grade: {
+                  name: {
+                    contains: label,
+                    mode: "insensitive" as const,
+                  },
                 },
-                { grade: { gradeNumber: gradeNum } },
-              ],
-            }
-          : {
-              grade: {
-                name: {
-                  contains: application.applyingForClass,
-                  mode: "insensitive" as const,
-                },
-              },
-            }
+              }
 
         const sections = await db.section.findMany({
           where: { schoolId, ...gradeWhere },
@@ -1745,113 +1848,8 @@ export async function confirmEnrollment(params: {
     if (isPermissionDenied(error)) {
       return actionError(ACTION_ERRORS.FORBIDDEN)
     }
-    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
-  }
-}
-
-export async function recordPayment(params: {
-  id: string
-  paymentId: string
-}): Promise<ActionResponse> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
-
-    assertAdmissionPermission(session.user.role, "recordPayment")
-
-    await db.application.update({
-      where: { id: params.id, schoolId },
-      data: {
-        applicationFeePaid: true,
-        paymentId: params.paymentId,
-        paymentDate: new Date(),
-      },
-    })
-
-    // BUG-9: notify the applicant about their registration-fee payment being
-    // confirmed. Non-blocking — failure must not fail the action.
-    try {
-      const application = await db.application.findUnique({
-        where: { id: params.id, schoolId },
-        select: {
-          userId: true,
-          email: true,
-          firstName: true,
-          middleName: true,
-          lastName: true,
-          lang: true,
-        },
-      })
-      if (application?.userId) {
-        const school = await db.school.findFirst({
-          where: { id: schoolId },
-          select: { preferredLanguage: true },
-        })
-        const notifLang = applicantLang(
-          application.lang,
-          school?.preferredLanguage
-        )
-        dispatchAdmissionNotification({
-          schoolId,
-          userId: application.userId,
-          type: "fee_paid",
-          title: t(NOTIF.feePaid.title, notifLang),
-          body: t(NOTIF.feePaid.body, notifLang),
-          lang: notifLang,
-          priority: "normal",
-          channels: ["in_app", "email"],
-          metadata: {
-            applicationId: params.id,
-            paymentId: params.paymentId,
-            url: "/application",
-          },
-          actorId: session.user?.id,
-        }).catch((err) =>
-          console.error("[recordPayment] Notification error:", err)
-        )
-      } else if (application?.email) {
-        // Guest applicant (no userId): deliver the confirmation email directly.
-        const school = await db.school.findFirst({
-          where: { id: schoolId },
-          select: { preferredLanguage: true },
-        })
-        const notifLang = applicantLang(
-          application.lang,
-          school?.preferredLanguage
-        )
-        dispatchAdmissionNotification({
-          schoolId,
-          directEmail: application.email,
-          type: "fee_paid",
-          title: t(NOTIF.feePaid.title, notifLang),
-          body: t(NOTIF.feePaid.body, notifLang),
-          lang: notifLang,
-          priority: "normal",
-          channels: ["email"],
-          metadata: {
-            applicationId: params.id,
-            paymentId: params.paymentId,
-            url: "/application",
-          },
-          actorId: session.user?.id,
-        }).catch((err) =>
-          console.error("[recordPayment] Guest notification error:", err)
-        )
-      }
-    } catch (notifErr) {
-      console.warn("[recordPayment] Notification setup failed:", notifErr)
-    }
-
-    refreshPage("/admission/enrollment")
-    return { success: true, data: null }
-  } catch (error) {
-    console.error("[recordPayment]", error)
-    if (isPermissionDenied(error)) {
-      return actionError(ACTION_ERRORS.FORBIDDEN)
+    if (error instanceof EnrollmentAlreadyConfirmed) {
+      return actionError(ACTION_ERRORS.STUDENT_ALREADY_ENROLLED)
     }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
@@ -1990,10 +1988,13 @@ export async function getAvailableSectionsForPlacement(params: {
     }
 
     // Exact grade when known; else cascading match: text contains OR grade number
-    const gradeNum = label ? extractGradeNumber(label) : null
+    // parseGrade, not extractGradeNumber: it is what provisioning resolves
+    // grades with, it reads KG labels ("روضة 1" was matching Grade 1), and
+    // KG2 is 0 — so compare against null, never truthiness.
+    const gradeNum = label ? parseGrade(label) : null
     const gradeWhere = params.gradeId
       ? { gradeId: params.gradeId }
-      : gradeNum
+      : gradeNum !== null
         ? {
             OR: [
               {
@@ -2042,9 +2043,6 @@ export async function getAvailableSectionsForPlacement(params: {
   }
 }
 
-/** @deprecated Use getAvailableSectionsForPlacement instead */
-export const getAvailableClassesForPlacement = getAvailableSectionsForPlacement
-
 export async function placeStudentInSection(params: {
   /** PORTAL path: the ADMITTED application (Enrollment tab). */
   applicationId?: string
@@ -2070,6 +2068,7 @@ export async function placeStudentInSection(params: {
       userId: string | null
       applicationId: string | null
       lang: string | null
+      academicGradeId: string | null
     } | null = null
 
     if (params.studentId) {
@@ -2082,6 +2081,7 @@ export async function placeStudentInSection(params: {
           userId: true,
           applicationId: true,
           lang: true,
+          academicGradeId: true,
         },
       })
       if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
@@ -2104,7 +2104,13 @@ export async function placeStudentInSection(params: {
 
       const byUser = await db.student.findFirst({
         where: { userId: application.userId, schoolId },
-        select: { id: true, sectionId: true, userId: true, lang: true },
+        select: {
+          id: true,
+          sectionId: true,
+          userId: true,
+          lang: true,
+          academicGradeId: true,
+        },
       })
       if (!byUser) return actionError(ACTION_ERRORS.ENROLLMENT_FAILED)
       student = {
@@ -2141,6 +2147,19 @@ export async function placeStudentInSection(params: {
 
       if (!section) return null
 
+      // The section must belong to the student's grade (the one provisioning
+      // resolved). Any same-school id used to be accepted, so a stale dialog
+      // or a crafted call could seat a Grade 3 student in a Grade 9 homeroom
+      // — wrong roster, timetable and LMS courses. A student with no grade on
+      // record has nothing to compare against and stays placeable.
+      if (
+        student.academicGradeId &&
+        section.gradeId &&
+        section.gradeId !== student.academicGradeId
+      ) {
+        return { ...section, wrongGrade: true as const }
+      }
+
       if (section._count.students >= section.maxCapacity) {
         return { ...section, full: true as const }
       }
@@ -2160,6 +2179,10 @@ export async function placeStudentInSection(params: {
     })
 
     if (!sectionData) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    if ("wrongGrade" in sectionData && sectionData.wrongGrade) {
+      return actionError(ACTION_ERRORS.INVALID_SECTION)
+    }
 
     if ("full" in sectionData && sectionData.full) {
       return actionError(ACTION_ERRORS.SECTION_AT_CAPACITY)
@@ -2229,14 +2252,6 @@ export async function placeStudentInSection(params: {
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
-
-/** @deprecated Use placeStudentInSection instead */
-export const placeStudentInClass =
-  placeStudentInSection as unknown as (params: {
-    applicationId?: string
-    studentId?: string
-    classId: string
-  }) => Promise<ActionResponse>
 
 // ============================================================================
 // Helper Actions

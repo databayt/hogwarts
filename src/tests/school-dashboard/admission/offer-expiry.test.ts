@@ -25,6 +25,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     admissionSettings: {
       findUnique: vi.fn(),
@@ -142,8 +143,8 @@ describe("updateApplicationStatus - offer expiry", () => {
     vi.clearAllMocks()
     mockAuthenticated()
 
-    // Default: application.update succeeds
-    vi.mocked(db.application.update).mockResolvedValue({} as any)
+    // Default: the conditional status write matches the row
+    vi.mocked(db.application.updateMany).mockResolvedValue({ count: 1 } as any)
     // Default: application.findUnique returns current status for transition validation
     vi.mocked(db.application.findUnique).mockResolvedValue({
       status: "SHORTLISTED",
@@ -176,10 +177,11 @@ describe("updateApplicationStatus - offer expiry", () => {
       select: { offerExpiryDays: true },
     })
 
-    // Verify application.update was called
-    expect(db.application.update).toHaveBeenCalledTimes(1)
+    // Verify the status write was made
+    expect(db.application.updateMany).toHaveBeenCalledTimes(1)
 
-    const updateCall = vi.mocked(db.application.update).mock.calls[0][0] as any
+    const updateCall = vi.mocked(db.application.updateMany).mock
+      .calls[0][0] as any
     const updateData = updateCall.data
 
     // Status and offer fields should be set
@@ -210,7 +212,7 @@ describe("updateApplicationStatus - offer expiry", () => {
 
     expect(result.success).toBe(true)
     const updateData = (
-      vi.mocked(db.application.update).mock.calls[0][0] as any
+      vi.mocked(db.application.updateMany).mock.calls[0][0] as any
     ).data
     expect(updateData.status).toBe("SELECTED")
     expect(updateData.admissionOffered).toBe(true)
@@ -224,7 +226,7 @@ describe("updateApplicationStatus - offer expiry", () => {
     })
 
     expect(result.success).toBe(false)
-    expect(db.application.update).not.toHaveBeenCalled()
+    expect(db.application.updateMany).not.toHaveBeenCalled()
   })
 
   it("defaults to 14 days when no admission settings exist", async () => {
@@ -240,7 +242,8 @@ describe("updateApplicationStatus - offer expiry", () => {
       expect.objectContaining({ select: { offerExpiryDays: true } })
     )
 
-    const updateCall = vi.mocked(db.application.update).mock.calls[0][0] as any
+    const updateCall = vi.mocked(db.application.updateMany).mock
+      .calls[0][0] as any
     const expiryDate = updateCall.data.offerExpiryDate as Date
 
     // Should default to 14 days
@@ -265,9 +268,9 @@ describe("updateApplicationStatus - offer expiry", () => {
     )
 
     // Verify the update still happened, but without offer fields
-    expect(db.application.update).toHaveBeenCalledTimes(1)
+    expect(db.application.updateMany).toHaveBeenCalledTimes(1)
     const updateData = (
-      vi.mocked(db.application.update).mock.calls[0][0] as any
+      vi.mocked(db.application.updateMany).mock.calls[0][0] as any
     ).data
     expect(updateData.status).toBe("SHORTLISTED")
     expect(updateData.admissionOffered).toBeUndefined()
