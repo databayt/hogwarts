@@ -1,5 +1,5 @@
 {
-  "_note": "Generated from vercel.crons.full.json minus the 4 admission/finance jobs that run on GitHub Actions (.github/workflows/admission-crons.yml). The 3 conference jobs moved here on 2026-10-17 (their GitHub bridge pinged ed.databayt.org, which 301s, so they had silently not run since the cutover). Keyed by cron expression (UTC) \u2192 cron route paths.",
+  "_note": "Generated from vercel.crons.full.json. Every job runs here: the 3 conference jobs moved on 2026-10-17 and the 4 admission/finance jobs (fee-due, fee-overdue, process-email-notifications, process-document-jobs) on 2026-10-19 \u2014 both GitHub bridges pinged ed.databayt.org, which 301s, and curl -f counts a 301 as success, so neither had run since the cutover. Keyed by cron expression (UTC) \u2192 cron route paths.",
   "schedules": {
     "*/15 * * * *": [
       "/api/cron/publish-announcements",
@@ -7,7 +7,8 @@
       "/api/cron/process-whatsapp-notifications",
       "/api/cron/process-broadcast-batches",
       "/api/cron/exam-lifecycle",
-      "/api/cron/live-class-reminders"
+      "/api/cron/live-class-reminders",
+      "/api/cron/process-email-notifications"
     ],
     "0 * * * *": [
       "/api/cron/expire-announcements"
@@ -16,7 +17,8 @@
       "/api/cron/process-report-card-pdfs",
       "/api/cron/process-transcript-pdfs",
       "/api/cron/absence-followup",
-      "/api/cron/end-stale-live-classes"
+      "/api/cron/end-stale-live-classes",
+      "/api/cron/process-document-jobs"
     ],
     "0 3 * * *": [
       "/api/cron/term-end-report-cards",
@@ -29,7 +31,8 @@
     ],
     "0 8 * * *": [
       "/api/cron/event-reminders",
-      "/api/cron/assignment-reminders"
+      "/api/cron/assignment-reminders",
+      "/api/cron/fee-due"
     ],
     "0 1 * * *": [
       "/api/cron/attendance-policies"
@@ -58,6 +61,9 @@
     ],
     "17 * * * *": [
       "/api/cron/funnel-apply"
+    ],
+    "0 9 * * *": [
+      "/api/cron/fee-overdue"
     ]
   }
 }

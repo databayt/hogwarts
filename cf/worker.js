@@ -2,9 +2,9 @@
 // request is forwarded as-is (Host header included — src/proxy.ts and cookie
 // scoping read it). Cron triggers (wrangler.jsonc) call the app's /api/cron/*
 // routes inside the container with the CRON_SECRET bearer, on the schedules in
-// cf/crons.json — the same table Vercel ran, minus the 4 admission jobs that
-// stay on GitHub Actions so nothing runs twice. A non-200 is logged as an
-// error: the conference jobs once "succeeded" for weeks against a redirect.
+// cf/crons.json — the same table Vercel ran, every job included (the
+// conference and admission GitHub bridges are gone). A non-200 is logged as
+// an error: both bridges once "succeeded" for weeks against a redirect.
 //
 // Static assets are served from Cloudflare's edge cache (2026-09-13). A
 // container fetch is not a CDN fetch: nothing about it went through the
