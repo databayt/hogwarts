@@ -5,34 +5,48 @@ description: Curated media on cdn.databayt.org — product media that mirrors th
 
 Every curated hogwarts asset lives under the `hogwarts/` namespace of `cdn.databayt.org` (hogwarts is the internal name; balqalam is only the public brand). There are two tiers:
 
-1. **Product media** — the stills and videos `/shoot` and `/record` produce. The folder **mirrors the app's routes**, the keys are content-hashed, and pages read them by id from `src/components/docs/media-manifest.json`, never by URL.
+1. **Product media** — the stills and videos `/shoot` and `/record` produce. The path **mirrors the app's URL, language first**, file names are fixed and never hashed, and pages and the support chat read them by id from `src/components/docs/media-manifest.json`, never by URL.
 2. **App chrome** — icons, illustrations, animations and photos, through `asset()` (flat, unhashed).
 
-Both are cached `immutable` for one year. One origin helper, `src/lib/cdn.ts` (`CDN_ORIGIN`, `cdn(key)`), builds every URL; nothing else hard-codes the domain.
+Chrome is cached `immutable` for one year; product media is overwritten in place on a re-shoot (an hour in browsers, a year at the edge, invalidated on overwrite) and its manifest URLs carry `?v=<sha8>`. One origin helper, `src/lib/cdn.ts` (`CDN_ORIGIN`, `cdn(key)`), builds every URL; nothing else hard-codes the domain.
 
 ## Infrastructure
 
-| Component        | Value                                                          |
-| ---------------- | -------------------------------------------------------------- |
-| S3 bucket        | `databayt-cdn` (`us-east-1`; user uploads stay in `hogwarts-databayt`) |
-| CloudFront CNAME | `cdn.databayt.org` (preferred)                                 |
-| CloudFront raw   | `d1dlwtcfl0db67.cloudfront.net` (still works — additive alias) |
-| Cache            | `public, max-age=31536000, immutable`                          |
-| Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time; read only by `src/lib/cdn.ts`) |
+| Component        | Value                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| S3 bucket        | `databayt-cdn` (`us-east-1`; user uploads stay in `hogwarts-databayt`)                                 |
+| CloudFront CNAME | `cdn.databayt.org` (preferred)                                                                         |
+| CloudFront raw   | `d1dlwtcfl0db67.cloudfront.net` (still works — additive alias)                                         |
+| Cache            | chrome `public, max-age=31536000, immutable` · product media `public, max-age=3600, s-maxage=31536000` |
+| Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time; read only by `src/lib/cdn.ts`)                                   |
 
-## Product media — the CDN mirrors the routes
+## Product media — the CDN mirrors the app URL
 
 ```
-cdn.databayt.org/hogwarts/<route>/<flow>-<step>-<locale>-<width>.<hash>.avif   stills (+ .webp)
-cdn.databayt.org/hogwarts/<route>/<flow>[-<clip>]-<locale>.<hash>.mp4           videos (+ .av1, poster, .vtt)
+<school>.databayt.org/<lang>/<route>
+cdn.databayt.org/hogwarts/<lang>/<route>[/<flow>]/<asset>
 ```
 
-| Route the flow films | CDN folder | Example |
-| -------------------- | ---------- | ------- |
-| `/students`          | `hogwarts/students/`    | `add-student-created-ar-1600.<hash>.avif`, `add-student-ar.<hash>.mp4` |
-| `/teachers`          | `hogwarts/teachers/`    | `add-teacher-created-ar-1600.<hash>.avif` |
-| `/school/bulk`       | `hogwarts/school/bulk/` | `bulk-student-review-ar-1600.<hash>.avif` |
-| `/` (homepage)       | `hogwarts/`             | `story.<hash>.mp4`, `hero-3d.<hash>.mp4`, `modern-02.<hash>.avif` |
+Route groups and `s/[subdomain]` never reach a URL, so they never reach a key. When one route hosts two flows (`/school/bulk` imports students and teachers) each gets a short subfolder. Every key names its language; English is the same path under `en/`.
+
+| Asset       | Key                                                                 |
+| ----------- | ------------------------------------------------------------------- |
+| Tutorial    | `video.mp4` · `video.av1.mp4` · `video.poster.webp` · `video.vtt`   |
+| Still       | `<step>.avif` · `<step>@2x.avif` · `<step>.webp` · `<step>@2x.webp` |
+| Phone still | `iphone-16/<step>.avif`                                             |
+| Reel, clip  | `reel.mp4` · `<clip>.mp4`                                           |
+| Page still  | `page.avif` (home → `hogwarts/<lang>/page.avif`)                    |
+
+| Flow           | App route       | CDN folder                         |
+| -------------- | --------------- | ---------------------------------- |
+| add-student    | `/students`     | `hogwarts/ar/students/add/`        |
+| add-teacher    | `/teachers/add` | `hogwarts/ar/teachers/add/`        |
+| bulk-student   | `/school/bulk`  | `hogwarts/ar/school/bulk/student/` |
+| bulk-teacher   | `/school/bulk`  | `hogwarts/ar/school/bulk/teacher/` |
+| set-fees       | `/finance/fees` | `hogwarts/ar/finance/fees/`        |
+| view-timetable | `/timetable`    | `hogwarts/ar/timetable/`           |
+
+So `cdn.databayt.org/hogwarts/ar/school/bulk/student/video.mp4` is the Arabic bulk-import tutorial, and `…/en/school/bulk/student/review.avif` its English review step. A re-shoot overwrites the same key; the manifest's `?v=<sha8>` makes browsers fetch the new bytes. A flow declares its folder as `export const route` in kun's `shoot/flows/hogwarts/<flow>.mjs`; `media.sh prune` lists keys nothing serves any more.
 
 Render them by manifest id:
 
@@ -69,7 +83,6 @@ The chrome objects sit flat at `hogwarts/<file>`; the groups below are how they 
 | `photos/`        | Real photographs                         |      22 |
 | `media/`         | Video and audio                          |       1 |
 | **Total**        |                                          | **155** |
-
 
 ## Naming conventions
 
@@ -125,8 +138,8 @@ Feature illustrations are used by `feature-tabs.tsx` and `dream-section.tsx`.
 
 ## media/ (1)
 
-| Key         | Used by |
-| ----------- | ------- |
+| Key         | Used by                                                                        |
+| ----------- | ------------------------------------------------------------------------------ |
 | `story.mp4` | legacy flat copy, served `application/octet-stream`; nothing reads it any more |
 
 The story video and the school hero loop are product media now: `hogwarts/story.<hash>.mp4` and

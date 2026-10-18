@@ -66,6 +66,7 @@ export function resourcesFor(
           href: `${guideHref}#video`,
           thumb: video.poster,
           duration: video.duration,
+          video,
         })
         break
       }
@@ -79,7 +80,13 @@ export function resourcesFor(
         const full = image.webp["2400"] ?? image.webp["1600"]
         const thumb = image.webp["1600"] ?? full
         if (!full || !thumb) continue
-        out.push({ kind: "image", title: image.alt[lang], href: full, thumb })
+        out.push({
+          kind: "image",
+          title: image.alt[lang],
+          href: full,
+          thumb,
+          image,
+        })
       }
       break
     }
@@ -95,7 +102,13 @@ export function resourcesFor(
     const full = image.webp["2400"] ?? image.webp["1600"]
     const thumb = image.webp["1600"] ?? full
     if (full && thumb)
-      out.push({ kind: "image", title: image.alt[lang], href: full, thumb })
+      out.push({
+        kind: "image",
+        title: image.alt[lang],
+        href: full,
+        thumb,
+        image,
+      })
   }
 
   out.push({ kind: "guide", title: topic.title[lang], href: guideHref })

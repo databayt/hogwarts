@@ -271,9 +271,7 @@
   },
   {
     "slug": "roles",
-    "media": [
-      "page/students-ar"
-    ],
+    "flow": "manage-roles",
     "roles": [
       "admin"
     ],
@@ -382,6 +380,7 @@
   },
   {
     "slug": "academics",
+    "flow": "setup-academics",
     "roles": [
       "admin"
     ],
@@ -476,6 +475,7 @@
   },
   {
     "slug": "exams",
+    "flow": "create-exam",
     "roles": [
       "admin",
       "teacher"
@@ -530,6 +530,7 @@
   },
   {
     "slug": "grades",
+    "flow": "enter-grades",
     "roles": [
       "admin",
       "teacher",
@@ -733,6 +734,7 @@
   },
   {
     "slug": "language",
+    "flow": "switch-language",
     "roles": [
       "admin",
       "teacher",
@@ -772,6 +774,7 @@
   },
   {
     "slug": "mobile",
+    "flow": "install-app",
     "roles": [
       "admin",
       "teacher",
@@ -820,6 +823,7 @@
   },
   {
     "slug": "security",
+    "flow": "review-security",
     "roles": [
       "admin"
     ],

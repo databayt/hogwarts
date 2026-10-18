@@ -72,6 +72,8 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   ctaHelpCenter: "Help center",
   ctaEmailSupport: "Email support",
   resourceVideo: "Watch the tutorial",
+  resourceClose: "Close",
+  resourceFullSize: "Open full size",
   resourceGuide: "Open the guide",
 
   // Pricing nudge

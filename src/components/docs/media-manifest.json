@@ -5,17 +5,17 @@
       "ar": "قصتنا",
       "en": "Our story"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/story-poster.5038a244.webp",
+    "poster": "https://cdn.databayt.org/hogwarts/story.poster.webp?v=5038a244",
     "width": 1920,
     "height": 1080,
     "duration": 94.02,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/story.av1.b31ce14c.mp4",
+        "src": "https://cdn.databayt.org/hogwarts/story.av1.mp4?v=b31ce14c",
         "type": "video/mp4; codecs=\"av01.0.09M.10, mp4a.40.2\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/story.721b10fc.mp4",
+        "src": "https://cdn.databayt.org/hogwarts/story.mp4?v=721b10fc",
         "type": "video/mp4; codecs=\"avc1.64002A, mp4a.40.2\""
       }
     ],
@@ -27,13 +27,13 @@
       "ar": "حركة واجهة المدرسة",
       "en": "School homepage hero loop"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/hero-3d-poster.16479ca7.webp",
+    "poster": "https://cdn.databayt.org/hogwarts/hero-3d.poster.webp?v=16479ca7",
     "width": 960,
     "height": 720,
     "duration": 8.37,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/hero-3d.a5a7c1a1.mp4",
+        "src": "https://cdn.databayt.org/hogwarts/hero-3d.mp4?v=a5a7c1a1",
         "type": "video/mp4; codecs=\"avc1.4D401F\""
       }
     ],
@@ -49,12 +49,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/list.avif?v=68df521f",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/list@2x.avif?v=ec8e2e1f"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/list.avif?v=68df521f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/list@2x.avif?v=ec8e2e1f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/list.webp?v=26ca6c5b",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/list@2x.webp?v=6bc2abbc"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/list.webp?v=26ca6c5b",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/list@2x.webp?v=6bc2abbc"
     }
   },
   "add-student/list-en": {
@@ -67,12 +67,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/list-en.avif?v=b27ffb4e",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/list-en@2x.avif?v=0c364fc1"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/list.avif?v=b27ffb4e",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/list@2x.avif?v=0c364fc1"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/list-en.webp?v=ec7467de",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/list-en@2x.webp?v=1b140b2b"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/list.webp?v=ec7467de",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/list@2x.webp?v=1b140b2b"
     }
   },
   "add-student/documents-ar": {
@@ -85,12 +85,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/documents.avif?v=b6f05b2f",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/documents@2x.avif?v=5b8901d9"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/documents.avif?v=b6f05b2f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/documents@2x.avif?v=5b8901d9"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/documents.webp?v=80a55647",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/documents@2x.webp?v=e7e44a64"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/documents.webp?v=80a55647",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/documents@2x.webp?v=e7e44a64"
     }
   },
   "add-student/documents-en": {
@@ -103,12 +103,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/documents-en.avif?v=15bcdc92",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/documents-en@2x.avif?v=459ad2af"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/documents.avif?v=15bcdc92",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/documents@2x.avif?v=459ad2af"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/documents-en.webp?v=24eaaedd",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/documents-en@2x.webp?v=adc9921c"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/documents.webp?v=24eaaedd",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/documents@2x.webp?v=adc9921c"
     }
   },
   "add-student/finder-photo-ar": {
@@ -121,12 +121,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-photo.avif?v=f9cf50b4",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-photo@2x.avif?v=e4e76a9b"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-photo.avif?v=f9cf50b4",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-photo@2x.avif?v=e4e76a9b"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-photo.webp?v=2c9f890c",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-photo@2x.webp?v=c51e5295"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-photo.webp?v=2c9f890c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-photo@2x.webp?v=c51e5295"
     }
   },
   "add-student/finder-photo-en": {
@@ -139,12 +139,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-photo-en.avif?v=bb0a4d58",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-photo-en@2x.avif?v=2fa374f1"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/finder-photo.avif?v=bb0a4d58",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/finder-photo@2x.avif?v=2fa374f1"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-photo-en.webp?v=fc94e71b",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-photo-en@2x.webp?v=ec6f93de"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/finder-photo.webp?v=fc94e71b",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/finder-photo@2x.webp?v=ec6f93de"
     }
   },
   "add-student/photo-uploaded-ar": {
@@ -157,12 +157,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded.avif?v=7102eee1",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded@2x.avif?v=81113d0e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/photo-uploaded.avif?v=7102eee1",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/photo-uploaded@2x.avif?v=81113d0e"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded.webp?v=fea08d8a",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded@2x.webp?v=4e0e665e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/photo-uploaded.webp?v=fea08d8a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/photo-uploaded@2x.webp?v=4e0e665e"
     }
   },
   "add-student/photo-uploaded-en": {
@@ -175,12 +175,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded-en.avif?v=a36a96d3",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded-en@2x.avif?v=46dbc315"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/photo-uploaded.avif?v=a36a96d3",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/photo-uploaded@2x.avif?v=46dbc315"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded-en.webp?v=dea9526c",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/photo-uploaded-en@2x.webp?v=984439bd"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/photo-uploaded.webp?v=dea9526c",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/photo-uploaded@2x.webp?v=984439bd"
     }
   },
   "add-student/finder-cv-ar": {
@@ -193,12 +193,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-cv.avif?v=36c52707",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-cv@2x.avif?v=2ea1e662"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-cv.avif?v=36c52707",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-cv@2x.avif?v=2ea1e662"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-cv.webp?v=8d52e919",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-cv@2x.webp?v=72420f82"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-cv.webp?v=8d52e919",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/finder-cv@2x.webp?v=72420f82"
     }
   },
   "add-student/finder-cv-en": {
@@ -211,12 +211,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-cv-en.avif?v=bcc42c75",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-cv-en@2x.avif?v=15c40128"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/finder-cv.avif?v=bcc42c75",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/finder-cv@2x.avif?v=15c40128"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/finder-cv-en.webp?v=61180778",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/finder-cv-en@2x.webp?v=f08b621a"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/finder-cv.webp?v=61180778",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/finder-cv@2x.webp?v=f08b621a"
     }
   },
   "add-student/cv-uploaded-ar": {
@@ -229,12 +229,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded.avif?v=23298d16",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded@2x.avif?v=0f1b4081"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/cv-uploaded.avif?v=23298d16",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/cv-uploaded@2x.avif?v=0f1b4081"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded.webp?v=1ba2bcc0",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded@2x.webp?v=95b2ad5e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/cv-uploaded.webp?v=1ba2bcc0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/cv-uploaded@2x.webp?v=95b2ad5e"
     }
   },
   "add-student/cv-uploaded-en": {
@@ -247,12 +247,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded-en.avif?v=a0d2ffe2",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded-en@2x.avif?v=73185803"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/cv-uploaded.avif?v=a0d2ffe2",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/cv-uploaded@2x.avif?v=73185803"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded-en.webp?v=e07f0369",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/cv-uploaded-en@2x.webp?v=e9ffd724"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/cv-uploaded.webp?v=e07f0369",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/cv-uploaded@2x.webp?v=e9ffd724"
     }
   },
   "add-student/personal-ar": {
@@ -265,12 +265,12 @@
     },
     "order": 7,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal.avif?v=454fe8e3",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal@2x.avif?v=af48b21a"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/personal.avif?v=454fe8e3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/personal@2x.avif?v=af48b21a"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal.webp?v=c2242761",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal@2x.webp?v=d4a387f5"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/personal.webp?v=c2242761",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/personal@2x.webp?v=d4a387f5"
     }
   },
   "add-student/personal-en": {
@@ -283,12 +283,12 @@
     },
     "order": 7,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-en.avif?v=ceb75e17",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-en@2x.avif?v=bc8ae42b"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/personal.avif?v=ceb75e17",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/personal@2x.avif?v=bc8ae42b"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-en.webp?v=8fadf896",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-en@2x.webp?v=c0c8dac0"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/personal.webp?v=8fadf896",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/personal@2x.webp?v=c0c8dac0"
     }
   },
   "add-student/personal-filled-ar": {
@@ -301,12 +301,12 @@
     },
     "order": 8,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-filled.avif?v=6da202d0",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-filled@2x.avif?v=f2c102e9"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/personal-filled.avif?v=6da202d0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/personal-filled@2x.avif?v=f2c102e9"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-filled.webp?v=7b08e13a",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-filled@2x.webp?v=fc139a60"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/personal-filled.webp?v=7b08e13a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/personal-filled@2x.webp?v=fc139a60"
     }
   },
   "add-student/personal-filled-en": {
@@ -319,12 +319,12 @@
     },
     "order": 8,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-filled-en.avif?v=c133a7b5",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-filled-en@2x.avif?v=5577905f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/personal-filled.avif?v=c133a7b5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/personal-filled@2x.avif?v=5577905f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/personal-filled-en.webp?v=3be26a64",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/personal-filled-en@2x.webp?v=08f09b98"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/personal-filled.webp?v=3be26a64",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/personal-filled@2x.webp?v=08f09b98"
     }
   },
   "add-student/father-ar": {
@@ -337,12 +337,12 @@
     },
     "order": 9,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/father.avif?v=aaf9375b",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/father@2x.avif?v=8b9dc991"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/father.avif?v=aaf9375b",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/father@2x.avif?v=8b9dc991"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/father.webp?v=60713956",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/father@2x.webp?v=8f93c92e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/father.webp?v=60713956",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/father@2x.webp?v=8f93c92e"
     }
   },
   "add-student/father-en": {
@@ -355,12 +355,12 @@
     },
     "order": 9,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/father-en.avif?v=74ed45c3",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/father-en@2x.avif?v=639020a5"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/father.avif?v=74ed45c3",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/father@2x.avif?v=639020a5"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/father-en.webp?v=09b1bd2e",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/father-en@2x.webp?v=cde04a62"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/father.webp?v=09b1bd2e",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/father@2x.webp?v=cde04a62"
     }
   },
   "add-student/address-ar": {
@@ -373,12 +373,12 @@
     },
     "order": 10,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/address.avif?v=347ae6d6",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/address@2x.avif?v=a2887e26"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/address.avif?v=347ae6d6",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/address@2x.avif?v=a2887e26"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/address.webp?v=8a8c1aa8",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/address@2x.webp?v=42ac36e7"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/address.webp?v=8a8c1aa8",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/address@2x.webp?v=42ac36e7"
     }
   },
   "add-student/address-en": {
@@ -391,12 +391,12 @@
     },
     "order": 10,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/address-en.avif?v=ddcbce48",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/address-en@2x.avif?v=18dec331"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/address.avif?v=ddcbce48",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/address@2x.avif?v=18dec331"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/address-en.webp?v=be77fdaa",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/address-en@2x.webp?v=37be9e68"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/address.webp?v=be77fdaa",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/address@2x.webp?v=37be9e68"
     }
   },
   "add-student/academic-ar": {
@@ -409,12 +409,12 @@
     },
     "order": 11,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/academic.avif?v=5ae22ab4",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/academic@2x.avif?v=10a57410"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/academic.avif?v=5ae22ab4",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/academic@2x.avif?v=10a57410"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/academic.webp?v=35875db5",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/academic@2x.webp?v=5d7ada4c"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/academic.webp?v=35875db5",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/academic@2x.webp?v=5d7ada4c"
     }
   },
   "add-student/academic-en": {
@@ -427,12 +427,12 @@
     },
     "order": 11,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/academic-en.avif?v=bb588141",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/academic-en@2x.avif?v=3c951deb"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/academic.avif?v=bb588141",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/academic@2x.avif?v=3c951deb"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/academic-en.webp?v=4ea8c9e9",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/academic-en@2x.webp?v=317e861d"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/academic.webp?v=4ea8c9e9",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/academic@2x.webp?v=317e861d"
     }
   },
   "add-student/created-ar": {
@@ -445,12 +445,12 @@
     },
     "order": 12,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/created.avif?v=f28b6c43",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/created@2x.avif?v=e1fc53a8"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/created.avif?v=f28b6c43",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/created@2x.avif?v=e1fc53a8"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/created.webp?v=2105fc8f",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/created@2x.webp?v=fb167f7c"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/add/created.webp?v=2105fc8f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/add/created@2x.webp?v=fb167f7c"
     }
   },
   "add-student/created-en": {
@@ -463,12 +463,12 @@
     },
     "order": 12,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/created-en.avif?v=c34e1744",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/created-en@2x.avif?v=d149f99b"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/created.avif?v=c34e1744",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/created@2x.avif?v=d149f99b"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/add/created-en.webp?v=c4268966",
-      "2400": "https://cdn.databayt.org/hogwarts/students/add/created-en@2x.webp?v=7d06f737"
+      "1600": "https://cdn.databayt.org/hogwarts/en/students/add/created.webp?v=c4268966",
+      "2400": "https://cdn.databayt.org/hogwarts/en/students/add/created@2x.webp?v=7d06f737"
     }
   },
   "add-teacher/list-ar": {
@@ -481,12 +481,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/list.avif?v=950c472a",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/list@2x.avif?v=388797b9"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/list.avif?v=950c472a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/list@2x.avif?v=388797b9"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/list.webp?v=2c3fe729",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/list@2x.webp?v=b2468427"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/list.webp?v=2c3fe729",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/list@2x.webp?v=b2468427"
     }
   },
   "add-teacher/information-ar": {
@@ -499,12 +499,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information.avif?v=7d7f18d7",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information@2x.avif?v=48700804"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information.avif?v=7d7f18d7",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information@2x.avif?v=48700804"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information.webp?v=fedfd43e",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information@2x.webp?v=05885f2f"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information.webp?v=fedfd43e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information@2x.webp?v=05885f2f"
     }
   },
   "add-teacher/information-filled-ar": {
@@ -517,12 +517,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled.avif?v=2437d151",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled@2x.avif?v=75a0a7f4"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information-filled.avif?v=2437d151",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information-filled@2x.avif?v=75a0a7f4"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled.webp?v=f5685cd1",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled@2x.webp?v=1eb123dd"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information-filled.webp?v=f5685cd1",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/information-filled@2x.webp?v=1eb123dd"
     }
   },
   "add-teacher/expertise-ar": {
@@ -535,12 +535,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise.avif?v=6ea769a3",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise@2x.avif?v=c127ac70"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise.avif?v=6ea769a3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise@2x.avif?v=c127ac70"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise.webp?v=9ae7fd52",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise@2x.webp?v=6cc4dbc8"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise.webp?v=9ae7fd52",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise@2x.webp?v=6cc4dbc8"
     }
   },
   "add-teacher/expertise-picked-ar": {
@@ -553,12 +553,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked.avif?v=42405dd2",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked@2x.avif?v=98ccb012"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise-picked.avif?v=42405dd2",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise-picked@2x.avif?v=98ccb012"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked.webp?v=e0451eee",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked@2x.webp?v=f2edd7b1"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise-picked.webp?v=e0451eee",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/expertise-picked@2x.webp?v=f2edd7b1"
     }
   },
   "add-teacher/contact-ar": {
@@ -571,12 +571,12 @@
     },
     "order": 7,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/contact.avif?v=aac44599",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/contact@2x.avif?v=64a90a4c"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/contact.avif?v=aac44599",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/contact@2x.avif?v=64a90a4c"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/contact.webp?v=4e182e60",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/contact@2x.webp?v=a2936be5"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/contact.webp?v=4e182e60",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/contact@2x.webp?v=a2936be5"
     }
   },
   "add-teacher/address-ar": {
@@ -589,12 +589,12 @@
     },
     "order": 8,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/address.avif?v=4c0ef154",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/address@2x.avif?v=469dee45"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/address.avif?v=4c0ef154",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/address@2x.avif?v=469dee45"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/address.webp?v=c6f16752",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/address@2x.webp?v=500d46ac"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/address.webp?v=c6f16752",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/address@2x.webp?v=500d46ac"
     }
   },
   "add-teacher/employment-ar": {
@@ -607,12 +607,12 @@
     },
     "order": 9,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/employment.avif?v=f5473665",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/employment@2x.avif?v=d2c37473"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/employment.avif?v=f5473665",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/employment@2x.avif?v=d2c37473"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/employment.webp?v=a940a539",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/employment@2x.webp?v=33670207"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/employment.webp?v=a940a539",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/employment@2x.webp?v=33670207"
     }
   },
   "add-teacher/created-ar": {
@@ -625,12 +625,12 @@
     },
     "order": 10,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/created.avif?v=47e2ea1a",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/created@2x.avif?v=84f151d2"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/created.avif?v=47e2ea1a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/created@2x.avif?v=84f151d2"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/created.webp?v=88c03730",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/created@2x.webp?v=5cd3e108"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/created.webp?v=88c03730",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/created@2x.webp?v=5cd3e108"
     }
   },
   "bulk-student/bulk-ar": {
@@ -643,12 +643,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/bulk.avif?v=689c9b4f",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/bulk@2x.avif?v=c0e79a58"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/bulk.avif?v=689c9b4f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/bulk@2x.avif?v=c0e79a58"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/bulk.webp?v=0e647a02",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/bulk@2x.webp?v=60b59bde"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/bulk.webp?v=0e647a02",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/bulk@2x.webp?v=60b59bde"
     }
   },
   "bulk-student/bulk-en": {
@@ -661,12 +661,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/bulk-en.avif?v=b5818b42",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/bulk-en@2x.avif?v=c03b45fa"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/bulk.avif?v=b5818b42",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/bulk@2x.avif?v=c03b45fa"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/bulk-en.webp?v=1e86e27d",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/bulk-en@2x.webp?v=02cd14ce"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/bulk.webp?v=1e86e27d",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/bulk@2x.webp?v=02cd14ce"
     }
   },
   "bulk-student/finder-ar": {
@@ -679,12 +679,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/finder.avif?v=4cc98102",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/finder@2x.avif?v=96863d9e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/finder.avif?v=4cc98102",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/finder@2x.avif?v=96863d9e"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/finder.webp?v=f4266cea",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/finder@2x.webp?v=55e3dc0a"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/finder.webp?v=f4266cea",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/finder@2x.webp?v=55e3dc0a"
     }
   },
   "bulk-student/finder-en": {
@@ -697,12 +697,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/finder-en.avif?v=5cd50bbb",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/finder-en@2x.avif?v=d8bba66f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/finder.avif?v=5cd50bbb",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/finder@2x.avif?v=d8bba66f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/finder-en.webp?v=43c73773",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/finder-en@2x.webp?v=c5a4c9f9"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/finder.webp?v=43c73773",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/finder@2x.webp?v=c5a4c9f9"
     }
   },
   "bulk-student/map-ar": {
@@ -715,12 +715,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/map.avif?v=c7ff6f73",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/map@2x.avif?v=8b2ba043"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/map.avif?v=c7ff6f73",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/map@2x.avif?v=8b2ba043"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/map.webp?v=1774a26a",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/map@2x.webp?v=aa53f7a4"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/map.webp?v=1774a26a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/map@2x.webp?v=aa53f7a4"
     }
   },
   "bulk-student/map-en": {
@@ -733,12 +733,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/map-en.avif?v=59b400e1",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/map-en@2x.avif?v=57ff6455"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/map.avif?v=59b400e1",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/map@2x.avif?v=57ff6455"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/map-en.webp?v=564091dc",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/map-en@2x.webp?v=8e731694"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/map.webp?v=564091dc",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/map@2x.webp?v=8e731694"
     }
   },
   "bulk-student/review-ar": {
@@ -751,12 +751,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/review.avif?v=ea7fbb91",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/review@2x.avif?v=097fbfbd"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/review.avif?v=ea7fbb91",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/review@2x.avif?v=097fbfbd"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/review.webp?v=cfbd8b8b",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/review@2x.webp?v=d63db8e1"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/review.webp?v=cfbd8b8b",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/review@2x.webp?v=d63db8e1"
     }
   },
   "bulk-student/review-en": {
@@ -769,12 +769,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/review-en.avif?v=2b79071d",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/review-en@2x.avif?v=709224a6"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/review.avif?v=2b79071d",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/review@2x.avif?v=709224a6"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/review-en.webp?v=1bcb82c5",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/review-en@2x.webp?v=8b28760a"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/review.webp?v=1bcb82c5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/review@2x.webp?v=8b28760a"
     }
   },
   "bulk-student/done-ar": {
@@ -787,12 +787,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/done.avif?v=2a120dfa",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/done@2x.avif?v=7cd1ecb4"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/done.avif?v=2a120dfa",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/done@2x.avif?v=7cd1ecb4"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/done.webp?v=6e5f0ee6",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/done@2x.webp?v=3802a2f9"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/done.webp?v=6e5f0ee6",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/done@2x.webp?v=3802a2f9"
     }
   },
   "bulk-student/done-en": {
@@ -805,12 +805,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/done-en.avif?v=564e36d0",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/done-en@2x.avif?v=932e76ec"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/done.avif?v=564e36d0",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/done@2x.avif?v=932e76ec"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/done-en.webp?v=7c209737",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/done-en@2x.webp?v=b2b40bd8"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/done.webp?v=7c209737",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/done@2x.webp?v=b2b40bd8"
     }
   },
   "bulk-student/history-ar": {
@@ -823,12 +823,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/history.avif?v=223b611f",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/history@2x.avif?v=f877cec7"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/history.avif?v=223b611f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/history@2x.avif?v=f877cec7"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/history.webp?v=73010aae",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/history@2x.webp?v=81204972"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/history.webp?v=73010aae",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/history@2x.webp?v=81204972"
     }
   },
   "bulk-student/history-en": {
@@ -841,12 +841,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/history-en.avif?v=8bd04529",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/history-en@2x.avif?v=0372dbae"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/history.avif?v=8bd04529",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/history@2x.avif?v=0372dbae"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/bulk/history-en.webp?v=7ed60f65",
-      "2400": "https://cdn.databayt.org/hogwarts/students/bulk/history-en@2x.webp?v=46302691"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/history.webp?v=7ed60f65",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/student/history@2x.webp?v=46302691"
     }
   },
   "bulk-teacher/bulk-ar": {
@@ -859,12 +859,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-ar-1600.689c9b4f.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-ar-2400.c0e79a58.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/bulk.avif?v=689c9b4f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/bulk@2x.avif?v=c0e79a58"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-ar-1600.0e647a02.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-ar-2400.60b59bde.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/bulk.webp?v=0e647a02",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/bulk@2x.webp?v=60b59bde"
     }
   },
   "bulk-teacher/bulk-en": {
@@ -877,12 +877,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-en-1600.b5818b42.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-en-2400.c03b45fa.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/bulk.avif?v=b5818b42",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/bulk@2x.avif?v=c03b45fa"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-en-1600.1e86e27d.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-bulk-en-2400.02cd14ce.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/bulk.webp?v=1e86e27d",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/bulk@2x.webp?v=02cd14ce"
     }
   },
   "bulk-teacher/finder-ar": {
@@ -895,12 +895,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-ar-1600.8aaef632.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-ar-2400.adf07836.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/finder.avif?v=8aaef632",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/finder@2x.avif?v=adf07836"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-ar-1600.88ff3c55.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-ar-2400.b47f8142.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/finder.webp?v=88ff3c55",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/finder@2x.webp?v=b47f8142"
     }
   },
   "bulk-teacher/finder-en": {
@@ -913,12 +913,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-en-1600.97343219.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-en-2400.c401c199.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/finder.avif?v=97343219",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/finder@2x.avif?v=c401c199"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-en-1600.dedcf3d2.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-finder-en-2400.1ef068d3.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/finder.webp?v=dedcf3d2",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/finder@2x.webp?v=1ef068d3"
     }
   },
   "bulk-teacher/map-ar": {
@@ -931,12 +931,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-ar-1600.43aadc67.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-ar-2400.bb0f1b4c.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/map.avif?v=43aadc67",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/map@2x.avif?v=bb0f1b4c"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-ar-1600.5ec3bf4d.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-ar-2400.0de231b0.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/map.webp?v=5ec3bf4d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/map@2x.webp?v=0de231b0"
     }
   },
   "bulk-teacher/map-en": {
@@ -949,12 +949,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-en-1600.e1788124.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-en-2400.3b20d512.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/map.avif?v=e1788124",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/map@2x.avif?v=3b20d512"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-en-1600.6d8a8c73.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-map-en-2400.a581c024.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/map.webp?v=6d8a8c73",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/map@2x.webp?v=a581c024"
     }
   },
   "bulk-teacher/review-ar": {
@@ -967,12 +967,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-ar-1600.d2110653.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-ar-2400.c626157c.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/review.avif?v=d2110653",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/review@2x.avif?v=c626157c"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-ar-1600.9984cf77.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-ar-2400.a8e8c219.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/review.webp?v=9984cf77",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/review@2x.webp?v=a8e8c219"
     }
   },
   "bulk-teacher/review-en": {
@@ -985,12 +985,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-en-1600.8a4eb364.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-en-2400.4a824b28.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/review.avif?v=8a4eb364",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/review@2x.avif?v=4a824b28"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-en-1600.e8a648c0.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-review-en-2400.70d2c855.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/review.webp?v=e8a648c0",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/review@2x.webp?v=70d2c855"
     }
   },
   "bulk-teacher/done-ar": {
@@ -1003,12 +1003,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-ar-1600.5cca348a.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-ar-2400.80618451.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/done.avif?v=5cca348a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/done@2x.avif?v=80618451"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-ar-1600.a6af3346.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-ar-2400.e08ed862.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/done.webp?v=a6af3346",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/done@2x.webp?v=e08ed862"
     }
   },
   "bulk-teacher/done-en": {
@@ -1021,12 +1021,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-en-1600.6c58baf3.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-en-2400.7283e1bf.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/done.avif?v=6c58baf3",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/done@2x.avif?v=7283e1bf"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-en-1600.e5d98a39.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-done-en-2400.050a9317.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/done.webp?v=e5d98a39",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/done@2x.webp?v=050a9317"
     }
   },
   "bulk-teacher/history-ar": {
@@ -1039,12 +1039,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-ar-1600.d524792c.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-ar-2400.01ac0cfc.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/history.avif?v=d524792c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/history@2x.avif?v=01ac0cfc"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-ar-1600.630d7c08.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-ar-2400.bd56a11c.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/history.webp?v=630d7c08",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/history@2x.webp?v=bd56a11c"
     }
   },
   "bulk-teacher/history-en": {
@@ -1057,12 +1057,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-en-1600.b9271bfb.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-en-2400.bedd7f23.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/history.avif?v=b9271bfb",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/history@2x.avif?v=bedd7f23"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-en-1600.a23cdad4.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-history-en-2400.f54ab348.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/history.webp?v=a23cdad4",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/bulk/teacher/history@2x.webp?v=f54ab348"
     }
   },
   "add-teacher/list-en": {
@@ -1075,12 +1075,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/list-en.avif?v=1ef70d0f",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/list-en@2x.avif?v=fef044b0"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/list.avif?v=1ef70d0f",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/list@2x.avif?v=fef044b0"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/list-en.webp?v=27489c2f",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/list-en@2x.webp?v=b3d3ebcd"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/list.webp?v=27489c2f",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/list@2x.webp?v=b3d3ebcd"
     }
   },
   "add-teacher/information-en": {
@@ -1093,12 +1093,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-en.avif?v=7ca58695",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-en@2x.avif?v=ba184b2f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/information.avif?v=7ca58695",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/information@2x.avif?v=ba184b2f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-en.webp?v=566ea024",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-en@2x.webp?v=ddcaf631"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/information.webp?v=566ea024",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/information@2x.webp?v=ddcaf631"
     }
   },
   "add-teacher/information-filled-en": {
@@ -1111,12 +1111,12 @@
     },
     "order": 4,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled-en.avif?v=aa7b4b14",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled-en@2x.avif?v=2ed6f81f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/information-filled.avif?v=aa7b4b14",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/information-filled@2x.avif?v=2ed6f81f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled-en.webp?v=6f98772a",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/information-filled-en@2x.webp?v=e620b259"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/information-filled.webp?v=6f98772a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/information-filled@2x.webp?v=e620b259"
     }
   },
   "add-teacher/expertise-en": {
@@ -1129,12 +1129,12 @@
     },
     "order": 5,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-en.avif?v=01aebab1",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-en@2x.avif?v=6381320a"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise.avif?v=01aebab1",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise@2x.avif?v=6381320a"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-en.webp?v=8bd9ac2a",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-en@2x.webp?v=4cfdd3a2"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise.webp?v=8bd9ac2a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise@2x.webp?v=4cfdd3a2"
     }
   },
   "add-teacher/expertise-picked-en": {
@@ -1147,12 +1147,12 @@
     },
     "order": 6,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked-en.avif?v=0259ea18",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked-en@2x.avif?v=6fd9c361"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise-picked.avif?v=0259ea18",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise-picked@2x.avif?v=6fd9c361"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked-en.webp?v=e30743c3",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/expertise-picked-en@2x.webp?v=9d647bf9"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise-picked.webp?v=e30743c3",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/expertise-picked@2x.webp?v=9d647bf9"
     }
   },
   "add-teacher/contact-en": {
@@ -1165,12 +1165,12 @@
     },
     "order": 7,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/contact-en.avif?v=62e58ade",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/contact-en@2x.avif?v=8131534f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/contact.avif?v=62e58ade",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/contact@2x.avif?v=8131534f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/contact-en.webp?v=89df7742",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/contact-en@2x.webp?v=ecfe73cd"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/contact.webp?v=89df7742",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/contact@2x.webp?v=ecfe73cd"
     }
   },
   "add-teacher/address-en": {
@@ -1183,12 +1183,12 @@
     },
     "order": 8,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/address-en.avif?v=194993c8",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/address-en@2x.avif?v=c48cae78"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/address.avif?v=194993c8",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/address@2x.avif?v=c48cae78"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/address-en.webp?v=dab20ce8",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/address-en@2x.webp?v=272d3e08"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/address.webp?v=dab20ce8",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/address@2x.webp?v=272d3e08"
     }
   },
   "add-teacher/employment-en": {
@@ -1201,12 +1201,12 @@
     },
     "order": 9,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/employment-en.avif?v=8e4c4f87",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/employment-en@2x.avif?v=7e0d3f09"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/employment.avif?v=8e4c4f87",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/employment@2x.avif?v=7e0d3f09"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/employment-en.webp?v=e8f571d4",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/employment-en@2x.webp?v=cb717600"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/employment.webp?v=e8f571d4",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/employment@2x.webp?v=cb717600"
     }
   },
   "add-teacher/created-en": {
@@ -1219,12 +1219,12 @@
     },
     "order": 10,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/created-en.avif?v=381aeeea",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/created-en@2x.avif?v=acb6ecd9"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/created.avif?v=381aeeea",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/created@2x.avif?v=acb6ecd9"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/created-en.webp?v=9d2e2f05",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/created-en@2x.webp?v=bdd5262c"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/created.webp?v=9d2e2f05",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/created@2x.webp?v=bdd5262c"
     }
   },
   "add-student/video-ar": {
@@ -1233,23 +1233,23 @@
       "ar": "إضافة طالب",
       "en": "Add a student"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/students/add.poster.webp?v=c7a8d23e",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/students/add/video.poster.webp?v=c7a8d23e",
     "width": 1920,
     "height": 1080,
     "duration": 130.2,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add.av1.mp4?v=33aa7482",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/video.av1.mp4?v=33aa7482",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add.mp4?v=8bb3d639",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/video.mp4?v=8bb3d639",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add.vtt?v=0eb20a7a",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/video.vtt?v=0eb20a7a",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1267,13 +1267,13 @@
     "duration": 60.03,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/reel.mp4?v=0baf699a",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/reel.mp4?v=0baf699a",
         "type": "video/mp4; codecs=\"avc1.64002A\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/reel.vtt?v=0eb20a7a",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/reel.vtt?v=0eb20a7a",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1286,23 +1286,23 @@
       "ar": "إضافة طالب",
       "en": "Add a student"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/students/add/details.poster.webp?v=ae4bbc7f",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/students/add/details.poster.webp?v=ae4bbc7f",
     "width": 1920,
     "height": 1080,
     "duration": 17.47,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/details.av1.mp4?v=551ef9fa",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/details.av1.mp4?v=551ef9fa",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/details.mp4?v=91b3f1e7",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/details.mp4?v=91b3f1e7",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/details.vtt?v=fd99edc2",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/details.vtt?v=fd99edc2",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1319,10 +1319,10 @@
     },
     "order": 1,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/list.avif?v=bc53f6d3"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/list.avif?v=bc53f6d3"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/list.webp?v=7ba16fc4"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/list.webp?v=7ba16fc4"
     }
   },
   "add-student/iphone-16/documents-ar": {
@@ -1335,10 +1335,10 @@
     },
     "order": 2,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/documents.avif?v=c972d3d2"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/documents.avif?v=c972d3d2"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/documents.webp?v=cbe50400"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/documents.webp?v=cbe50400"
     }
   },
   "add-student/iphone-16/photo-uploaded-ar": {
@@ -1351,10 +1351,10 @@
     },
     "order": 3,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/photo-uploaded.avif?v=187321ba"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/photo-uploaded.avif?v=187321ba"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/photo-uploaded.webp?v=b0e62572"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/photo-uploaded.webp?v=b0e62572"
     }
   },
   "add-student/iphone-16/cv-uploaded-ar": {
@@ -1367,10 +1367,10 @@
     },
     "order": 4,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/cv-uploaded.avif?v=423bea02"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/cv-uploaded.avif?v=423bea02"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/cv-uploaded.webp?v=b6e89ff4"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/cv-uploaded.webp?v=b6e89ff4"
     }
   },
   "add-student/iphone-16/personal-ar": {
@@ -1383,10 +1383,10 @@
     },
     "order": 5,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/personal.avif?v=a27e0776"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal.avif?v=a27e0776"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/personal.webp?v=93c74953"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal.webp?v=93c74953"
     }
   },
   "add-student/iphone-16/personal-filled-ar": {
@@ -1399,10 +1399,10 @@
     },
     "order": 6,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/personal-filled.avif?v=0315d829"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal-filled.avif?v=0315d829"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/personal-filled.webp?v=7bfe7527"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal-filled.webp?v=7bfe7527"
     }
   },
   "add-student/iphone-16/father-ar": {
@@ -1415,10 +1415,10 @@
     },
     "order": 7,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/father.avif?v=05a79a4d"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/father.avif?v=05a79a4d"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/father.webp?v=5829cb84"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/father.webp?v=5829cb84"
     }
   },
   "add-student/iphone-16/address-ar": {
@@ -1431,10 +1431,10 @@
     },
     "order": 8,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/address.avif?v=e0b9a902"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/address.avif?v=e0b9a902"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/address.webp?v=e9140526"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/address.webp?v=e9140526"
     }
   },
   "add-student/iphone-16/academic-ar": {
@@ -1447,10 +1447,10 @@
     },
     "order": 9,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/academic.avif?v=923b9828"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/academic.avif?v=923b9828"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/academic.webp?v=889f214c"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/academic.webp?v=889f214c"
     }
   },
   "add-student/iphone-16/created-ar": {
@@ -1463,10 +1463,10 @@
     },
     "order": 10,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/created.avif?v=88173d42"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/created.avif?v=88173d42"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/students/add/iphone-16/created.webp?v=1640fd41"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/created.webp?v=1640fd41"
     }
   },
   "add-student/support-iphone-ar": {
@@ -1475,23 +1475,23 @@
       "ar": "إضافة طالب",
       "en": "Add a student"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/students/add/support-iphone.poster.webp?v=538dbda2",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/students/add/support-iphone.poster.webp?v=538dbda2",
     "width": 1080,
     "height": 2340,
     "duration": 48.7,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-iphone.av1.mp4?v=68a7f92f",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-iphone.av1.mp4?v=68a7f92f",
         "type": "video/mp4; codecs=\"av01.0.12M.10, mp4a.40.2\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-iphone.mp4?v=25f1d326",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-iphone.mp4?v=25f1d326",
         "type": "video/mp4; codecs=\"avc1.640033, mp4a.40.2\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-iphone.vtt?v=627be5db",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-iphone.vtt?v=627be5db",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1504,23 +1504,23 @@
       "ar": "إضافة طالب",
       "en": "Add a student"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/students/add/support-mac.poster.webp?v=81d5c7cd",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/students/add/support-mac.poster.webp?v=81d5c7cd",
     "width": 2560,
     "height": 1600,
     "duration": 51.8,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-mac.av1.mp4?v=49d5d4f2",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-mac.av1.mp4?v=49d5d4f2",
         "type": "video/mp4; codecs=\"av01.0.12M.10, mp4a.40.2\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-mac.mp4?v=00180e5f",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-mac.mp4?v=00180e5f",
         "type": "video/mp4; codecs=\"avc1.640033, mp4a.40.2\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/add/support-mac.vtt?v=033b84d2",
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/add/support-mac.vtt?v=033b84d2",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1536,12 +1536,12 @@
       "en": " — home"
     },
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/home-ar-1600.395d3aa3.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/home-ar-2400.19c0978a.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/page.avif?v=395d3aa3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/page@2x.avif?v=19c0978a"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/home-ar-1600.a5d53941.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/home-ar-2400.41d4d25f.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/page.webp?v=a5d53941",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/page@2x.webp?v=41d4d25f"
     }
   },
   "page/students-ar": {
@@ -1553,12 +1553,12 @@
       "en": " — students"
     },
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/students-ar-1600.d71826a1.avif",
-      "2400": "https://cdn.databayt.org/hogwarts/students/students-ar-2400.087cec7b.avif"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/page.avif?v=d71826a1",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/page@2x.avif?v=087cec7b"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/students/students-ar-1600.a0464924.webp",
-      "2400": "https://cdn.databayt.org/hogwarts/students/students-ar-2400.87ff5f97.webp"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/page.webp?v=a0464924",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/page@2x.webp?v=87ff5f97"
     }
   },
   "add-teacher/video-ar": {
@@ -1567,23 +1567,23 @@
       "ar": "إضافة معلم",
       "en": "Add a teacher"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/teachers/add.poster.webp?v=2b9c196f",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/teachers/add/video.poster.webp?v=2b9c196f",
     "width": 1920,
     "height": 1080,
     "duration": 70.27,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/teachers/add.av1.mp4?v=d33af6f0",
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/add/video.av1.mp4?v=d33af6f0",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/teachers/add.mp4?v=af55f4e6",
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/add/video.mp4?v=af55f4e6",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/teachers/add.vtt?v=bd1cdee5",
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/add/video.vtt?v=bd1cdee5",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1596,23 +1596,23 @@
       "ar": "إدخال الطلاب جماعيًا",
       "en": "Bulk-import students"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/students/bulk.poster.webp?v=d3baafd3",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/video.poster.webp?v=d3baafd3",
     "width": 1920,
     "height": 1080,
     "duration": 51.03,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/bulk.av1.mp4?v=db318eb1",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/video.av1.mp4?v=db318eb1",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/bulk.mp4?v=ed3724f0",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/video.mp4?v=ed3724f0",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/students/bulk.vtt?v=c6c4bb5f",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/student/video.vtt?v=c6c4bb5f",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1625,23 +1625,23 @@
       "ar": "إدخال المعلمين جماعيًا",
       "en": "Bulk-import teachers"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.poster.e4e3abb1.webp",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/video.poster.webp?v=e4e3abb1",
     "width": 1920,
     "height": 1080,
     "duration": 51.93,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.av1.05bc8a8a.mp4",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/video.av1.mp4?v=05bc8a8a",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.58ceb017.mp4",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/video.mp4?v=58ceb017",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/school/bulk/bulk-teacher-ar.5bb8529c.vtt",
+        "src": "https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/video.vtt?v=5bb8529c",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -1658,12 +1658,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/login.avif?v=8cf8dac6",
-      "2400": "https://cdn.databayt.org/hogwarts/login/login@2x.avif?v=80f9cee1"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/login.avif?v=8cf8dac6",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/login@2x.avif?v=80f9cee1"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/login.webp?v=6209fc4d",
-      "2400": "https://cdn.databayt.org/hogwarts/login/login@2x.webp?v=73a3d39c"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/login.webp?v=6209fc4d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/login@2x.webp?v=73a3d39c"
     }
   },
   "login/login-en": {
@@ -1676,12 +1676,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/login-en.avif?v=d97df513",
-      "2400": "https://cdn.databayt.org/hogwarts/login/login-en@2x.avif?v=3e98f59d"
+      "1600": "https://cdn.databayt.org/hogwarts/en/login/login.avif?v=d97df513",
+      "2400": "https://cdn.databayt.org/hogwarts/en/login/login@2x.avif?v=3e98f59d"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/login-en.webp?v=bd2a1a10",
-      "2400": "https://cdn.databayt.org/hogwarts/login/login-en@2x.webp?v=5d22be08"
+      "1600": "https://cdn.databayt.org/hogwarts/en/login/login.webp?v=bd2a1a10",
+      "2400": "https://cdn.databayt.org/hogwarts/en/login/login@2x.webp?v=5d22be08"
     }
   },
   "login/reset-ar": {
@@ -1694,12 +1694,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/reset.avif?v=f96baae2",
-      "2400": "https://cdn.databayt.org/hogwarts/login/reset@2x.avif?v=350a01b2"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/reset.avif?v=f96baae2",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/reset@2x.avif?v=350a01b2"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/reset.webp?v=e7aa891c",
-      "2400": "https://cdn.databayt.org/hogwarts/login/reset@2x.webp?v=ee655ca5"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/reset.webp?v=e7aa891c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/reset@2x.webp?v=ee655ca5"
     }
   },
   "login/reset-en": {
@@ -1712,12 +1712,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/reset-en.avif?v=39f11c2d",
-      "2400": "https://cdn.databayt.org/hogwarts/login/reset-en@2x.avif?v=a5843af2"
+      "1600": "https://cdn.databayt.org/hogwarts/en/login/reset.avif?v=39f11c2d",
+      "2400": "https://cdn.databayt.org/hogwarts/en/login/reset@2x.avif?v=a5843af2"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/login/reset-en.webp?v=ca013e40",
-      "2400": "https://cdn.databayt.org/hogwarts/login/reset-en@2x.webp?v=0b60f8ed"
+      "1600": "https://cdn.databayt.org/hogwarts/en/login/reset.webp?v=ca013e40",
+      "2400": "https://cdn.databayt.org/hogwarts/en/login/reset@2x.webp?v=0b60f8ed"
     }
   },
   "mark-attendance/manual-ar": {
@@ -1730,12 +1730,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual.avif?v=1355d095",
-      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual@2x.avif?v=0db998b6"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/attendance/mark/manual.avif?v=1355d095",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/attendance/mark/manual@2x.avif?v=0db998b6"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual.webp?v=ff241d0f",
-      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual@2x.webp?v=66ce0ce8"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/attendance/mark/manual.webp?v=ff241d0f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/attendance/mark/manual@2x.webp?v=66ce0ce8"
     }
   },
   "mark-attendance/manual-en": {
@@ -1748,12 +1748,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en.avif?v=f521bffc",
-      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en@2x.avif?v=48671b53"
+      "1600": "https://cdn.databayt.org/hogwarts/en/attendance/mark/manual.avif?v=f521bffc",
+      "2400": "https://cdn.databayt.org/hogwarts/en/attendance/mark/manual@2x.avif?v=48671b53"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en.webp?v=63dd2003",
-      "2400": "https://cdn.databayt.org/hogwarts/attendance/mark/manual-en@2x.webp?v=35636c07"
+      "1600": "https://cdn.databayt.org/hogwarts/en/attendance/mark/manual.webp?v=63dd2003",
+      "2400": "https://cdn.databayt.org/hogwarts/en/attendance/mark/manual@2x.webp?v=35636c07"
     }
   },
   "set-fees/overview-ar": {
@@ -1766,12 +1766,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview.avif?v=75d80776",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview@2x.avif?v=b5311641"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/finance/fees/overview.avif?v=75d80776",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/finance/fees/overview@2x.avif?v=b5311641"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview.webp?v=cd3b6d1e",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview@2x.webp?v=b148edcf"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/finance/fees/overview.webp?v=cd3b6d1e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/finance/fees/overview@2x.webp?v=b148edcf"
     }
   },
   "set-fees/overview-en": {
@@ -1784,12 +1784,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en.avif?v=f782cf3b",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en@2x.avif?v=eaffe5fb"
+      "1600": "https://cdn.databayt.org/hogwarts/en/finance/fees/overview.avif?v=f782cf3b",
+      "2400": "https://cdn.databayt.org/hogwarts/en/finance/fees/overview@2x.avif?v=eaffe5fb"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en.webp?v=642f46a9",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/overview-en@2x.webp?v=a16343a1"
+      "1600": "https://cdn.databayt.org/hogwarts/en/finance/fees/overview.webp?v=642f46a9",
+      "2400": "https://cdn.databayt.org/hogwarts/en/finance/fees/overview@2x.webp?v=a16343a1"
     }
   },
   "set-fees/payments-ar": {
@@ -1802,12 +1802,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments.avif?v=31a07a30",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments@2x.avif?v=9b67d4d0"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/finance/fees/payments.avif?v=31a07a30",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/finance/fees/payments@2x.avif?v=9b67d4d0"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments.webp?v=1d3f4afc",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments@2x.webp?v=6d25907d"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/finance/fees/payments.webp?v=1d3f4afc",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/finance/fees/payments@2x.webp?v=6d25907d"
     }
   },
   "set-fees/payments-en": {
@@ -1820,12 +1820,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en.avif?v=00c65979",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en@2x.avif?v=0474f983"
+      "1600": "https://cdn.databayt.org/hogwarts/en/finance/fees/payments.avif?v=00c65979",
+      "2400": "https://cdn.databayt.org/hogwarts/en/finance/fees/payments@2x.avif?v=0474f983"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en.webp?v=efa05cd8",
-      "2400": "https://cdn.databayt.org/hogwarts/finance/fees/payments-en@2x.webp?v=e7a4041d"
+      "1600": "https://cdn.databayt.org/hogwarts/en/finance/fees/payments.webp?v=efa05cd8",
+      "2400": "https://cdn.databayt.org/hogwarts/en/finance/fees/payments@2x.webp?v=e7a4041d"
     }
   },
   "parent-portal/children-ar": {
@@ -1838,12 +1838,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children.avif?v=6ea04460",
-      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children@2x.avif?v=516ce14e"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/parent/children.avif?v=6ea04460",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/parent/children@2x.avif?v=516ce14e"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children.webp?v=e3372440",
-      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children@2x.webp?v=07f9a71f"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/parent/children.webp?v=e3372440",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/parent/children@2x.webp?v=07f9a71f"
     }
   },
   "parent-portal/children-en": {
@@ -1856,12 +1856,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children-en.avif?v=2ac5b414",
-      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children-en@2x.avif?v=f6df5441"
+      "1600": "https://cdn.databayt.org/hogwarts/en/parent/children.avif?v=2ac5b414",
+      "2400": "https://cdn.databayt.org/hogwarts/en/parent/children@2x.avif?v=f6df5441"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/parent/portal/children-en.webp?v=96f13df5",
-      "2400": "https://cdn.databayt.org/hogwarts/parent/portal/children-en@2x.webp?v=dd6027d1"
+      "1600": "https://cdn.databayt.org/hogwarts/en/parent/children.webp?v=96f13df5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/parent/children@2x.webp?v=dd6027d1"
     }
   },
   "add-teacher/documents-ar": {
@@ -1874,12 +1874,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/documents.avif?v=9f9fe80a",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/documents@2x.avif?v=a6ff8284"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/documents.avif?v=9f9fe80a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/documents@2x.avif?v=a6ff8284"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/documents.webp?v=b64b3bcd",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/documents@2x.webp?v=54ee6f05"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/add/documents.webp?v=b64b3bcd",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/add/documents@2x.webp?v=54ee6f05"
     }
   },
   "add-teacher/documents-en": {
@@ -1892,12 +1892,692 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/documents-en.avif?v=b6963010",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/documents-en@2x.avif?v=9abbc15f"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/documents.avif?v=b6963010",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/documents@2x.avif?v=9abbc15f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/teachers/add/documents-en.webp?v=5290d3dd",
-      "2400": "https://cdn.databayt.org/hogwarts/teachers/add/documents-en@2x.webp?v=7aea3905"
+      "1600": "https://cdn.databayt.org/hogwarts/en/teachers/add/documents.webp?v=5290d3dd",
+      "2400": "https://cdn.databayt.org/hogwarts/en/teachers/add/documents@2x.webp?v=7aea3905"
+    }
+  },
+  "view-timetable/week-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "جدول الأسبوع للمدرسة كلها",
+      "en": "The whole school's week grid"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/week.avif?v=e67241b7",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/week@2x.avif?v=a34bb958"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/week.webp?v=12c93e01",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/week@2x.webp?v=0617153e"
+    }
+  },
+  "view-timetable/week-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "جدول الأسبوع للمدرسة كلها",
+      "en": "The whole school's week grid"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/week.avif?v=b1ab4bb7",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/week@2x.avif?v=cb8ccb54"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/week.webp?v=ed25cd2d",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/week@2x.webp?v=78ab5c3f"
+    }
+  },
+  "view-timetable/settings-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إعدادات اليوم الدراسي والحصص والاستراحة",
+      "en": "School-day settings: days, periods and breaks"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/settings.avif?v=a929c006",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/settings@2x.avif?v=0f9257f3"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/settings.webp?v=694ecda3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/settings@2x.webp?v=2dad8811"
+    }
+  },
+  "view-timetable/settings-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إعدادات اليوم الدراسي والحصص والاستراحة",
+      "en": "School-day settings: days, periods and breaks"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/settings.avif?v=ca8347d0",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/settings@2x.avif?v=105c93f0"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/settings.webp?v=05a8f138",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/settings@2x.webp?v=45d6dfa6"
+    }
+  },
+  "view-timetable/generate-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "توليد الجدول تلقائيًا مع القيود",
+      "en": "Generating the timetable with its constraints"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/generate.avif?v=f7827270",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/generate@2x.avif?v=ecdd754c"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/generate.webp?v=1977b67f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/generate@2x.webp?v=d503456b"
+    }
+  },
+  "view-timetable/generate-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "توليد الجدول تلقائيًا مع القيود",
+      "en": "Generating the timetable with its constraints"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/generate.avif?v=de31e502",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/generate@2x.avif?v=413bdf71"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/generate.webp?v=a471a359",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/generate@2x.webp?v=e0530602"
+    }
+  },
+  "view-timetable/conflicts-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "فحص التعارضات في الجدول",
+      "en": "Scanning the timetable for conflicts"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/conflicts.avif?v=9b5c4cb0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/conflicts@2x.avif?v=900b2163"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/conflicts.webp?v=38b7ea65",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/conflicts@2x.webp?v=f0f980a9"
+    }
+  },
+  "view-timetable/conflicts-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "فحص التعارضات في الجدول",
+      "en": "Scanning the timetable for conflicts"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/conflicts.avif?v=a505e1bb",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/conflicts@2x.avif?v=b6ba852e"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/timetable/conflicts.webp?v=92b4cffb",
+      "2400": "https://cdn.databayt.org/hogwarts/en/timetable/conflicts@2x.webp?v=f7cd2e54"
+    }
+  },
+  "enter-grades/gradebook-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الدرجات من الاختبارات والواجبات",
+      "en": "The gradebook: every exam and homework mark"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/gradebook.avif?v=29a057ac",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/gradebook@2x.avif?v=b33dc768"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/gradebook.webp?v=dd0ea6a3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/gradebook@2x.webp?v=a6998581"
+    }
+  },
+  "enter-grades/gradebook-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "سجل الدرجات من الاختبارات والواجبات",
+      "en": "The gradebook: every exam and homework mark"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/gradebook.avif?v=77b5e300",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/gradebook@2x.avif?v=f944ba67"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/gradebook.webp?v=e887c247",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/gradebook@2x.webp?v=d6e8f63f"
+    }
+  },
+  "enter-grades/reports-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إصدار الشهادات ونشرها",
+      "en": "Generating and publishing report cards"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/reports.avif?v=a6b41723",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/reports@2x.avif?v=d423dc6c"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/reports.webp?v=5ebd2e62",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/reports@2x.webp?v=efa8ff1d"
+    }
+  },
+  "enter-grades/reports-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إصدار الشهادات ونشرها",
+      "en": "Generating and publishing report cards"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/reports.avif?v=3e175ea7",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/reports@2x.avif?v=9b301577"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/reports.webp?v=dad240c5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/reports@2x.webp?v=75c51ac9"
+    }
+  },
+  "enter-grades/transcripts-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "السجلات الأكاديمية برمز تحقق",
+      "en": "Transcripts with a verification code"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/transcripts.avif?v=5bcec5ca",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/transcripts@2x.avif?v=da15640e"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/transcripts.webp?v=16dffa13",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/transcripts@2x.webp?v=297daea3"
+    }
+  },
+  "enter-grades/transcripts-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "السجلات الأكاديمية برمز تحقق",
+      "en": "Transcripts with a verification code"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/transcripts.avif?v=3fdbb4a9",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/transcripts@2x.avif?v=368c4f88"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/transcripts.webp?v=2581fb3a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/transcripts@2x.webp?v=c69e30d4"
+    }
+  },
+  "enter-grades/promotion-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قواعد الترفيع آخر العام",
+      "en": "Year-end promotion rules"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/promotion.avif?v=2c4ce505",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/promotion@2x.avif?v=67a77e0b"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/promotion.webp?v=b5cbaf51",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/promotion@2x.webp?v=ab4eb761"
+    }
+  },
+  "enter-grades/promotion-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قواعد الترفيع آخر العام",
+      "en": "Year-end promotion rules"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/promotion.avif?v=8be3e1e7",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/promotion@2x.avif?v=d45ba0c1"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/promotion.webp?v=ee5cc799",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/promotion@2x.webp?v=358b3157"
+    }
+  },
+  "create-exam/overview-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "نظرة عامة على الاختبارات",
+      "en": "The exams overview"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/overview.avif?v=35dda99e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/overview@2x.avif?v=eecd8de4"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/overview.webp?v=15460c9a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/overview@2x.webp?v=2e1aa779"
+    }
+  },
+  "create-exam/overview-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "نظرة عامة على الاختبارات",
+      "en": "The exams overview"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/overview.avif?v=8550627c",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/overview@2x.avif?v=627d2f87"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/overview.webp?v=b14eca47",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/overview@2x.webp?v=2df156c4"
+    }
+  },
+  "create-exam/new-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إنشاء اختبار: من قالب أو بالذكاء الاصطناعي أو فارغ",
+      "en": "Creating an exam: template, AI or blank"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/new.avif?v=6098bb13",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/new@2x.avif?v=998cc8f3"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/new.webp?v=d942dd5e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/new@2x.webp?v=85977c39"
+    }
+  },
+  "create-exam/new-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إنشاء اختبار: من قالب أو بالذكاء الاصطناعي أو فارغ",
+      "en": "Creating an exam: template, AI or blank"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/new.avif?v=1b090664",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/new@2x.avif?v=9f2e13dc"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/new.webp?v=5aefa11e",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/new@2x.webp?v=9a3e4255"
+    }
+  },
+  "create-exam/manage-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إدارة الاختبارات المجدولة",
+      "en": "Managing scheduled exams"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/manage.avif?v=6cfdaf4d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/manage@2x.avif?v=9cc2b217"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/manage.webp?v=0c3ff423",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/manage@2x.webp?v=aa3914fe"
+    }
+  },
+  "create-exam/manage-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إدارة الاختبارات المجدولة",
+      "en": "Managing scheduled exams"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/manage.avif?v=45610bfb",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/manage@2x.avif?v=14da78cd"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/manage.webp?v=4936b37c",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/manage@2x.webp?v=152300ec"
+    }
+  },
+  "create-exam/mark-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "رصد الدرجات بعد الاختبار",
+      "en": "Marking after the exam"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/mark.avif?v=91898dcf",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/mark@2x.avif?v=6459a734"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/exams/mark.webp?v=f6b870e3",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/exams/mark@2x.webp?v=3360b851"
+    }
+  },
+  "create-exam/mark-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "رصد الدرجات بعد الاختبار",
+      "en": "Marking after the exam"
+    },
+    "order": 4,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/mark.avif?v=776f1e5a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/mark@2x.avif?v=fa9f7383"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/exams/mark.webp?v=e8cad0b2",
+      "2400": "https://cdn.databayt.org/hogwarts/en/exams/mark@2x.webp?v=c562c33d"
+    }
+  },
+  "setup-academics/structure-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الهيكل الأكاديمي: الأعوام والفصول والتقييم",
+      "en": "Academic structure: years, terms and grading"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/structure.avif?v=758c27c5",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/structure@2x.avif?v=217c5fdd"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/structure.webp?v=7d7c3597",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/structure@2x.webp?v=8c990bee"
+    }
+  },
+  "setup-academics/structure-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الهيكل الأكاديمي: الأعوام والفصول والتقييم",
+      "en": "Academic structure: years, terms and grading"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/structure.avif?v=ac8d5afe",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/structure@2x.avif?v=0a9183e3"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/structure.webp?v=2242d935",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/structure@2x.webp?v=0d42ec1c"
+    }
+  },
+  "setup-academics/subjects-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المواد الدراسية لكل صف",
+      "en": "The subjects each grade studies"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/subjects.avif?v=621dca26",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/subjects@2x.avif?v=6d7ceb7d"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/subjects.webp?v=c448b64d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/subjects@2x.webp?v=47651fd6"
+    }
+  },
+  "setup-academics/subjects-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "المواد الدراسية لكل صف",
+      "en": "The subjects each grade studies"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/subjects.avif?v=45971002",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/subjects@2x.avif?v=569b18c9"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/subjects.webp?v=3a1af3c8",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/subjects@2x.webp?v=4adcb06a"
+    }
+  },
+  "setup-academics/classrooms-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الشعب والقاعات",
+      "en": "Sections and rooms"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/classrooms.avif?v=c54477fb",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/classrooms@2x.avif?v=ecfea5d3"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/classrooms.webp?v=e04b1776",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/classrooms@2x.webp?v=ec9563f9"
+    }
+  },
+  "manage-roles/members-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "أعضاء المدرسة بأدوارهم وحالاتهم",
+      "en": "School members with their roles and status"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/membership/members.avif?v=76c8dece",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/membership/members@2x.avif?v=374fa9f9"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/membership/members.webp?v=ca86d3e0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/membership/members@2x.webp?v=8b00673f"
+    }
+  },
+  "manage-roles/members-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "أعضاء المدرسة بأدوارهم وحالاتهم",
+      "en": "School members with their roles and status"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/membership/members.avif?v=09ad499c",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/membership/members@2x.avif?v=58261239"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/membership/members.webp?v=badfc37e",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/membership/members@2x.webp?v=38cc1c28"
+    }
+  },
+  "review-security/overview-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "درجة الأمان ومحاولات الدخول الفاشلة والتحقق الثنائي",
+      "en": "Security score, failed logins and 2FA"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/security/overview.avif?v=45f46d7c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/security/overview@2x.avif?v=125a65a5"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/school/security/overview.webp?v=6875245c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/school/security/overview@2x.webp?v=8c35f55b"
+    }
+  },
+  "review-security/overview-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "درجة الأمان ومحاولات الدخول الفاشلة والتحقق الثنائي",
+      "en": "Security score, failed logins and 2FA"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/security/overview.avif?v=aab30dec",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/security/overview@2x.avif?v=6eb5a24d"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/security/overview.webp?v=2d217c84",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/security/overview@2x.webp?v=da9fef4b"
+    }
+  },
+  "switch-language/dashboard-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "لوحة التحكم بلغة الواجهة واتجاهها",
+      "en": "The dashboard in its language and direction"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/language/dashboard.avif?v=138c9df9",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/language/dashboard@2x.avif?v=aa434e6b"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/language/dashboard.webp?v=e98a434b",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/language/dashboard@2x.webp?v=7fb56eeb"
+    }
+  },
+  "switch-language/dashboard-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "لوحة التحكم بلغة الواجهة واتجاهها",
+      "en": "The dashboard in its language and direction"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/dashboard/language/dashboard.avif?v=e5aab166",
+      "2400": "https://cdn.databayt.org/hogwarts/en/dashboard/language/dashboard@2x.avif?v=8e2ca385"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/dashboard/language/dashboard.webp?v=36e4083c",
+      "2400": "https://cdn.databayt.org/hogwarts/en/dashboard/language/dashboard@2x.webp?v=c5373886"
+    }
+  },
+  "install-app/iphone-16/dashboard-ar": {
+    "kind": "image",
+    "width": 1179,
+    "height": 1977,
+    "alt": {
+      "ar": "المدرسة على الجوال",
+      "en": "The school on a phone"
+    },
+    "order": 1,
+    "avif": {
+      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.avif?v=6681da19"
+    },
+    "webp": {
+      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.webp?v=eb0696e3"
+    }
+  },
+  "install-app/iphone-16/dashboard-en": {
+    "kind": "image",
+    "width": 1179,
+    "height": 1977,
+    "alt": {
+      "ar": "المدرسة على الجوال",
+      "en": "The school on a phone"
+    },
+    "order": 1,
+    "avif": {
+      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.avif?v=3f210f34"
+    },
+    "webp": {
+      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.webp?v=41523a2f"
+    }
+  },
+  "setup-academics/classrooms-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الشعب والقاعات",
+      "en": "Sections and rooms"
+    },
+    "order": 3,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms.avif?v=41c18da4",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms@2x.avif?v=28bb2e89"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms.webp?v=176b765a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/school/configuration/academic/classrooms@2x.webp?v=dd2eb5fd"
     }
   }
 }

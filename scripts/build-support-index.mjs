@@ -15,6 +15,11 @@
  * unless frontmatter `answer` overrides it (pricing: the live figures are in
  * the prompt). Committed, not built at runtime: Workers have no file system.
  *
+ * Media is checked too: a guide's `flow` must have published media in
+ * media-manifest.json and every `media:` id must exist — <FlowMedia> and the
+ * chat cards render nothing for a missing flow, so a gap would ship silently.
+ * A language with no media of its own falls back to Arabic and is only warned.
+ *
  *   node scripts/build-support-index.mjs          write the index
  *   node scripts/build-support-index.mjs --check  fail if it is out of date
  */
@@ -25,6 +30,9 @@ import fm from "front-matter"
 const ROOT = new URL("..", import.meta.url).pathname
 const DIR = (lang) => join(ROOT, "content", `docs-${lang}`, "support")
 const OUT = join(ROOT, "src/components/chatbot/support-index.json")
+const MANIFEST = JSON.parse(
+  readFileSync(join(ROOT, "src/components/docs/media-manifest.json"), "utf8")
+)
 const ROLES = new Set(["admin", "teacher", "parent"])
 
 // The sections the bot answers from, per language. Related links and media
@@ -36,6 +44,7 @@ const SECTIONS = {
 
 const errors = []
 const fail = (msg) => errors.push(msg)
+const warnings = []
 
 function read(lang, slug) {
   const file = join(DIR(lang), `${slug}.mdx`)
@@ -118,6 +127,25 @@ for (const slug of order) {
     fail(`${slug}: en and ar roles differ`)
   }
 
+  const flow = en.attributes.flow
+  if (flow && flow !== ar.attributes.flow)
+    fail(`${slug}: en and ar flow differ`)
+  if (flow) {
+    const ids = Object.keys(MANIFEST).filter((id) => id.startsWith(`${flow}/`))
+    if (!ids.length)
+      fail(
+        `${slug}: flow "${flow}" has no media in media-manifest.json — shoot + publish it first`
+      )
+    else if (!ids.some((id) => id.endsWith("-en")))
+      warnings.push(
+        `${slug}: flow "${flow}" has no English media (falls back to Arabic)`
+      )
+  }
+  for (const id of en.attributes.media ?? []) {
+    if (!MANIFEST[id])
+      fail(`${slug}: media id "${id}" is not in media-manifest.json`)
+  }
+
   const topic = {
     slug,
     ...(en.attributes.flow ? { flow: en.attributes.flow } : {}),
@@ -144,6 +172,7 @@ for (const slug of order) {
 }
 
 if (!topics.length) fail("no guides with a summary found")
+if (warnings.length) console.warn(`⚠ ${warnings.join("\n⚠ ")}`)
 if (errors.length) {
   console.error(
     `✗ support index: ${errors.length} problem(s)\n  ${errors.join("\n  ")}`

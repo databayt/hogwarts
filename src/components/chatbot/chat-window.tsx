@@ -480,7 +480,11 @@ export const ChatWindow = memo(function ChatWindow({
                             message.role === "user" && "text-white"
                           )}
                         >
-                          {message.content}
+                          {isAssistant ? (
+                            <Linkified text={message.content} />
+                          ) : (
+                            message.content
+                          )}
                         </p>
                       </div>
                     </div>
@@ -489,6 +493,7 @@ export const ChatWindow = memo(function ChatWindow({
                         resources={message.resources}
                         dictionary={dictionary}
                         onNavigate={onClose}
+                        lang={locale === "en" ? "en" : "ar"}
                       />
                     ) : null}
                     {isLastAssistant && ctaChips.length > 0 && (
@@ -605,3 +610,26 @@ export const ChatWindow = memo(function ChatWindow({
     </div>
   )
 })
+
+// A help-center or support link the model quotes from its guides — clickable,
+// in a new tab so the conversation stays. Text only: no HTML is ever parsed.
+const URL_RE = /(https?:\/\/[^\s<>()]+[^\s<>().,،؛:!?])/g
+
+function Linkified({ text }: { text: string }) {
+  return text.split(URL_RE).map((part, i) =>
+    i % 2 ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        dir="ltr"
+        className="text-primary break-all underline underline-offset-2"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}

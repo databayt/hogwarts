@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { ImageMedia, VideoMedia } from "@/components/docs/media"
+
 import type { SchoolChatbotContext } from "./prompts"
 
 export interface ChatMessage {
@@ -25,6 +27,10 @@ export interface ChatResource {
   thumb?: string
   /** Seconds — videos only. */
   duration?: number
+  /** The manifest entry itself, so the card plays the video in the chat. */
+  video?: VideoMedia
+  /** The manifest entry itself, so the card opens the still in the chat. */
+  image?: ImageMedia
 }
 
 export interface ChatbotState {
@@ -102,6 +108,8 @@ export interface ChatbotDictionary {
 
   // Support resources attached under an answer
   resourceVideo: string
+  resourceClose: string
+  resourceFullSize: string
   resourceGuide: string
 
   // Pricing-page proactive nudge

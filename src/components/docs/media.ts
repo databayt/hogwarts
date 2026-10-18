@@ -4,8 +4,9 @@
 /**
  * Typed access to media-manifest.json: the CDN-hosted videos and screenshots
  * the docs and marketing pages render. Media tooling writes entries in exactly
- * this shape. Flow media lives at short stable keys grouped by block
- * (hogwarts/students/add.mp4, hogwarts/students/add/list@2x.avif); each URL
+ * this shape. Flow media lives at stable keys that mirror the app URL,
+ * language first (hogwarts/ar/students/add/video.mp4,
+ * hogwarts/en/students/add/list@2x.avif — see src/lib/cdn.ts); each URL
  * carries ?v=<sha8>, so a re-encode reaches browsers as a new URL while the
  * publisher invalidates the edge copy.
  *
