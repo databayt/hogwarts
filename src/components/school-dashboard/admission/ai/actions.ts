@@ -15,6 +15,7 @@ import { db } from "@/lib/db"
 import { createProcessingJob } from "@/lib/document-extraction/queue-runner"
 import { logger } from "@/lib/logger"
 import { refreshPage } from "@/lib/refresh-page"
+import { UPLOAD_S3_HOST } from "@/lib/upload-url"
 
 import { assertAdmissionPermission, isPermissionDenied } from "../authorization"
 import { classifyAdmissionDocument } from "./classify"
@@ -36,11 +37,12 @@ import type {
 // classifyAdmissionDocument (which spends AI budget) or createProcessingJob.
 
 /** Allowed upload-bucket hostnames (suffix match) */
+// No `.amazonaws.com` / `.cloudfront.net` suffixes: those admit ANY bucket or
+// distribution on AWS, i.e. any attacker-hosted file. Our own upload bucket
+// and CloudFront domain are matched exactly below.
 const ALLOWED_HOST_SUFFIXES = [
   ".uploadthing.com",
   ".utfs.io",
-  ".amazonaws.com",
-  ".cloudfront.net",
   ".blob.vercel-storage.com",
   ".databayt.org",
 ]
@@ -49,10 +51,10 @@ const ALLOWED_HOST_SUFFIXES = [
 const ALLOWED_EXACT_HOSTS = [
   "uploadthing.com",
   "utfs.io",
-  "amazonaws.com",
-  "cloudfront.net",
   "databayt.org",
-]
+  UPLOAD_S3_HOST,
+  ...(process.env.CLOUDFRONT_DOMAIN ? [process.env.CLOUDFRONT_DOMAIN] : []),
+].map((h) => h.toLowerCase())
 
 /** RFC-1918 / link-local / loopback IPv4 ranges */
 function isPrivateIPv4(hostname: string): boolean {

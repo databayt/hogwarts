@@ -25,7 +25,7 @@ import { CDN_HOST } from "@/lib/cdn"
 // The real upload bucket host. Derived from env on the server; falls back to
 // the known constant on the client (also hard-coded in next.config image
 // remotePatterns) since AWS_S3_BUCKET is not a public env var.
-const UPLOAD_S3_HOST =
+export const UPLOAD_S3_HOST =
   typeof process !== "undefined" && process.env.AWS_S3_BUCKET
     ? `${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com`
     : "hogwarts-databayt.s3.us-east-1.amazonaws.com"
