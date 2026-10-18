@@ -59,10 +59,92 @@ export function normalize(text: string): string {
     .trim()
 }
 
+/**
+ * Words that say nothing about which guide a question wants. Normalised
+ * forms (see `normalize`), so Arabic is listed without hamza or ta-marbuta.
+ */
+const STOP_WORDS = new Set(
+  (
+    "how what when where which who why can could would should does did " +
+    "the and for with you your yours this that these those there then " +
+    "after before about from into have has had are was were will not " +
+    "please help want need get make know tell show some any all " +
+    "كيف ماذا متي اين هل لماذا ممكن اريد ابي ابغي عايز اعرف عندي لدي " +
+    "هذا هذه ذلك تلك التي الذي الذين على الي الى عن من في مع بعد قبل " +
+    "انا انت نحن هو هي كل اي او ثم لكن يمكن يمكنني استطيع ساعدني لو"
+  ).split(" ")
+)
+
+/**
+ * Fold the Arabic article, its prefixed particles and the sound feminine
+ * plural (امتحانات → امتحان), and English plurals.
+ */
+function stem(word: string): string {
+  if (/^[a-z0-9]+$/.test(word)) {
+    return word.length > 4 ? word.replace(/(es|s)$/, "") : word
+  }
+  return word
+    .replace(/^(وال|بال|كال|فال|لل|ال)(?=.{3,})/, "")
+    .replace(/(?<=.{3,})ات$/, "")
+}
+
+/** The content words of a text, stemmed — what the term score compares. */
+export function terms(text: string): string[] {
+  return normalize(text)
+    .split(" ")
+    .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
+    .map(stem)
+}
+
 const INDEX = SUPPORT_TOPICS.map((topic) => ({
   topic,
   phrases: topic.keywords.map((k) => normalize(k).split(" ").filter(Boolean)),
+  // The guide's own name and one-line summary in both languages: a
+  // question that uses the guide's words lands on it even when no
+  // keyword phrase was written for that wording.
+  terms: new Set(
+    terms(
+      [
+        topic.slug.replace(/-/g, " "),
+        topic.title.ar,
+        topic.title.en,
+        topic.summary.ar,
+        topic.summary.en,
+      ].join(" ")
+    )
+  ),
 }))
+
+/**
+ * How much one shared word says: a word in one guide's summary points at
+ * it; a word in every summary ("school", "student") says almost nothing.
+ */
+const IDF = (() => {
+  const df = new Map<string, number>()
+  for (const { terms } of INDEX)
+    for (const t of terms) df.set(t, (df.get(t) ?? 0) + 1)
+  const n = INDEX.length
+  return new Map([...df].map(([t, d]) => [t, Math.log(n / d)]))
+})()
+
+/** Term score of one text against one guide (IDF-weighted overlap). */
+function termScore(text: string, topicTerms: Set<string>): number {
+  let total = 0
+  for (const t of new Set(terms(text)))
+    if (topicTerms.has(t)) total += IDF.get(t) ?? 0
+  return total
+}
+
+/**
+ * Keywords stay the main signal; terms are the fallback. With a keyword
+ * hit, terms only break ties — capped below the role boost (0.5) so a
+ * teacher still gets the teacher's guide. Without one, a guide needs
+ * MIN_TERM_SCORE to count, and scores under one keyword part (1) so it
+ * never outranks a real keyword match.
+ */
+const TERM_TIEBREAK = 0.4
+const MIN_TERM_SCORE = 1
+const TERM_ONLY_CAP = 0.9
 
 /** Score of one text: each matched phrase counts its number of parts. */
 function score(text: string, phrases: string[][]): number {
@@ -83,7 +165,9 @@ function score(text: string, phrases: string[][]): number {
 /**
  * The guides a question is about, best first. `texts` is the latest user
  * message first, then earlier ones as context (weighted lower), so a
- * follow-up ("and then?") keeps the topic under discussion.
+ * follow-up ("and then?") keeps the topic under discussion. Keyword phrases
+ * decide; the guide's own words (title + summary, both languages) catch
+ * wordings no keyword was written for.
  */
 export function matchTopics(
   texts: string[],
@@ -91,17 +175,29 @@ export function matchTopics(
   role?: SupportRole
 ): SupportTopic[] {
   const normalized = texts.map(normalize)
-  return INDEX.map(({ topic, phrases }) => {
-    const hits = normalized.reduce(
-      (sum, text, i) => sum + score(text, phrases) / (i + 1) ** 2,
-      0
-    )
+  const scored = INDEX.map(({ topic, phrases, terms: topicTerms }) => {
+    let hits = 0
+    let termHits = 0
+    normalized.forEach((text, i) => {
+      const weight = 1 / (i + 1) ** 2
+      hits += score(text, phrases) * weight
+      termHits += termScore(text, topicTerms) * weight
+    })
+    const total =
+      hits > 0
+        ? hits + Math.min(termHits * 0.1, TERM_TIEBREAK)
+        : termHits >= MIN_TERM_SCORE
+          ? Math.min(termHits * 0.3, TERM_ONLY_CAP)
+          : 0
     // A signed-in teacher asking about "grades" means entering marks, not
     // the admin's grade setup: ties go to the guides written for them.
-    const boost = hits && role && topic.roles?.includes(role) ? 0.5 : 0
-    return { topic, score: hits + boost }
-  })
-    .filter((s) => s.score > 0)
+    const boost = total && role && topic.roles?.includes(role) ? 0.5 : 0
+    return { topic, keyword: hits > 0, score: total + boost }
+  }).filter((s) => s.score > 0)
+  // Guides found by their words alone only stand in when no keyword hit.
+  const anyKeyword = scored.some((s) => s.keyword)
+  return scored
+    .filter((s) => s.keyword || !anyKeyword)
     .sort((a, b) => b.score - a.score)
     .slice(0, n)
     .map((s) => s.topic)

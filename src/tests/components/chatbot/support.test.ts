@@ -8,6 +8,7 @@ import {
   normalize,
   SUPPORT_TOPICS,
   supportRoleOf,
+  terms,
 } from "@/components/chatbot/support"
 import { resourcesFor } from "@/components/chatbot/support-media"
 import { flowStills } from "@/components/docs/media"
@@ -22,7 +23,27 @@ describe("normalize", () => {
   })
 })
 
+describe("terms", () => {
+  it("drops stop words and folds the article, plurals and particles", () => {
+    expect(terms("كيف أرصد درجات الامتحانات؟")).toEqual([
+      "ارصد",
+      "درج",
+      "امتحان",
+    ])
+    expect(terms("How do I print the report cards")).toEqual([
+      "print",
+      "report",
+      "card",
+    ])
+  })
+})
+
 describe("matchTopics", () => {
+  it("attaches nothing to a question no guide covers", () => {
+    expect(matchTopics(["what's the weather today?"])).toEqual([])
+    expect(matchTopics(["مرحبا"])).toEqual([])
+  })
+
   it.each([
     ["كيف أضيف طالب جديد؟", "add-student"],
     ["ابغى اضافة الطالب", "add-student"],

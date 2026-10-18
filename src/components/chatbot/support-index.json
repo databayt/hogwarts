@@ -485,7 +485,7 @@
       "en": "Exams"
     },
     "summary": {
-      "ar": "إنشاء اختبار، بنك الأسئلة، التصحيح ونشر النتائج",
+      "ar": "إنشاء اختبار أو امتحان، بنك الأسئلة، التصحيح ورصد درجات الامتحان ونشر النتائج",
       "en": "Creating an exam, the question bank, marking and publishing results"
     },
     "answer": {
@@ -868,6 +868,46 @@
       "2fa"
     ],
     "guide": "/docs/support/security"
+  },
+  {
+    "slug": "assistant",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "اسأل مساعد الدعم",
+      "en": "Asking the help assistant"
+    },
+    "summary": {
+      "ar": "مساعد المحادثة: ماذا تسأله، والفيديوهات واللقطات التي يرفقها",
+      "en": "The chat assistant: what to ask, the videos and screenshots it attaches"
+    },
+    "answer": {
+      "ar": "1. اضغط زر المساعد الدائري في أسفل أي صفحة.\n2. اختر أحد الأسئلة المقترحة أو اكتب سؤالك بالعربية أو الإنجليزية.\n3. تظهر الإجابة أثناء كتابتها، خطوةً بعد خطوة.\n4. تحت إجابة «كيف أفعل…» تجد الدليل المطابق وفيديو الشرح ولقطات الشاشة، وتفتحها داخل المحادثة نفسها.\n5. اسأل سؤال متابعة مثل «وبعد ذلك؟»، فيبقى المساعد على الموضوع نفسه.\n\n- داخل لوحة مدرستك يعرف المساعد دورك، فيحصل المعلم وولي الأمر كلٌّ على الدليل المكتوب له.\n- اسأل «كيف تساعدني؟» لترى كل الأدلة التي يشرحها لك.\n- زر الميكروفون يتيح لك أن تنطق سؤالك بدل كتابته.\n- يمكنك إرسال بضع رسائل في الدقيقة؛ وإن ظهرت «رسائل كثيرة» فانتظر قليلًا.\n\nحل المشكلات:\n\n- **لا يظهر فيديو أو لقطات تحت الإجابة** — ليس لكل دليل فيديو بعد؛ استخدم رابط الدليل.\n- **«سجّل الدخول لتسأل مساعد الدعم»** — داخل لوحة المدرسة يجيب المساعد الأعضاء المسجّلين فقط؛ سجّل الدخول مجددًا.\n- **الإجابة لا تناسب مشكلتك** — استخدم **الإبلاغ عن مشكلة** أسفل الصفحة، أو تواصل مع الدعم.",
+      "en": "1. Click the round assistant button at the bottom corner of any page.\n2. Pick one of the suggested questions, or type your own, in Arabic or English.\n3. The answer appears as it is written, a step at a time.\n4. Under a how-to answer you get the matching guide, its tutorial video and screenshots. Open them right inside the chat.\n5. Ask a follow-up such as \"and after that?\". The assistant keeps the topic you were on.\n\n- Inside your school's dashboard, the assistant knows your role, so a teacher and a parent get the guide written for them.\n- Ask \"what can you help with?\" to see every guide it can walk you through.\n- The microphone button lets you speak the question instead of typing it.\n- You can send a few messages a minute. If you see \"too many messages\", wait a moment.\n\nTroubleshooting:\n\n- **No video or screenshots under the answer.** Not every guide has a video yet. Use the guide link instead.\n- **\"Sign in to ask the support assistant.\"** Inside a school dashboard, the assistant answers signed-in members only. Sign in again.\n- **The answer doesn't fit your problem.** Use **Report an issue** at the bottom of the page, or contact support."
+    },
+    "keywords": [
+      "مساعد",
+      "المساعد",
+      "شات",
+      "شات بوت",
+      "روبوت",
+      "المحادثه",
+      "نافذه المحادثه",
+      "زر المساعد",
+      "مساعد الدعم",
+      "assistant",
+      "chatbot",
+      "chat bot",
+      "ask the bot",
+      "help assistant",
+      "ai assistant",
+      "chat window",
+      "chat button"
+    ],
+    "guide": "/docs/support/assistant"
   },
   {
     "slug": "contact",
