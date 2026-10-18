@@ -34,7 +34,7 @@
     },
     "atom": {
       "path": "src/components/atom",
-      "context": [],
+      "context": ["README.md"],
       "docs": [],
       "routes": []
     },
@@ -126,23 +126,6 @@
         "content/docs-ar/compliance.mdx"
       ],
       "routes": ["/compliance"]
-    },
-    "conference": {
-      "path": "src/components/school-dashboard/conference",
-      "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
-      "docs": [
-        "content/docs-en/conference.mdx",
-        "content/docs-ar/conference.mdx"
-      ],
-      "routes": [
-        "/conference",
-        "/conference/[id]",
-        "/conference/[id]/recordings",
-        "/conference/[id]/room",
-        "/conference/network-test",
-        "/conference/schedule",
-        "/conference/settings"
-      ]
     },
     "context": {
       "path": "src/components/school-dashboard/context",
@@ -250,7 +233,7 @@
     "finance": {
       "path": "src/components/school-dashboard/finance",
       "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
-      "docs": ["content/docs-en/finance.mdx"],
+      "docs": ["content/docs-en/finance.mdx", "content/docs-ar/finance.mdx"],
       "routes": [
         "/finance",
         "/finance/accounts",
@@ -352,9 +335,9 @@
         "/grades/add/[id]/selection",
         "/grades/book",
         "/grades/certificates",
-        "/grades/settings",
         "/grades/promotion",
         "/grades/reports",
+        "/grades/settings",
         "/grades/templates",
         "/grades/transcripts"
       ]
@@ -411,7 +394,7 @@
     "library": {
       "path": "src/components/library",
       "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
-      "docs": ["content/docs-en/library.mdx"],
+      "docs": ["content/docs-en/library.mdx", "content/docs-ar/library.mdx"],
       "routes": [
         "/library",
         "/library/admin",
@@ -427,9 +410,24 @@
     },
     "listings": {
       "path": "src/components/school-dashboard/listings",
-      "context": [],
+      "context": ["README.md"],
       "docs": ["content/docs-en/listings.mdx"],
       "routes": []
+    },
+    "live": {
+      "path": "src/components/school-dashboard/live",
+      "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
+      "docs": ["content/docs-en/live.mdx", "content/docs-ar/live.mdx"],
+      "routes": [
+        "/live",
+        "/live/[id]",
+        "/live/[id]/recordings",
+        "/live/[id]/room",
+        "/live/dashboard",
+        "/live/network-test",
+        "/live/schedule",
+        "/live/settings"
+      ]
     },
     "lumos": {
       "path": "src/components/lumos",
@@ -501,7 +499,7 @@
     },
     "offline": {
       "path": "src/components/offline",
-      "context": [],
+      "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
       "docs": ["content/docs-en/offline.mdx", "content/docs-ar/offline.mdx"],
       "routes": ["/offline"]
     },
@@ -643,6 +641,7 @@
         "/school/communication/broadcast",
         "/school/communication/settings",
         "/school/communication/templates",
+        "/school/configuration",
         "/school/configuration/academic",
         "/school/configuration/branding",
         "/school/configuration/capacity",
@@ -652,10 +651,12 @@
         "/school/configuration/hero",
         "/school/configuration/join",
         "/school/configuration/legal",
+        "/school/configuration/live-classes",
         "/school/configuration/location",
         "/school/configuration/modules",
-        "/school/configuration/name-format",
         "/school/configuration/name-contact",
+        "/school/configuration/name-display",
+        "/school/configuration/name-format",
         "/school/configuration/plan",
         "/school/configuration/price",
         "/school/configuration/schedule",
@@ -692,7 +693,7 @@
     },
     "shared": {
       "path": "src/components/school-dashboard/shared",
-      "context": [],
+      "context": ["README.md"],
       "docs": [],
       "routes": []
     },
@@ -731,6 +732,12 @@
         "/teachers/settings"
       ]
     },
+    "teaching-scope": {
+      "path": "src/components/school-dashboard/teaching-scope",
+      "context": [],
+      "docs": [],
+      "routes": []
+    },
     "template": {
       "path": "src/components/template",
       "context": [],
@@ -752,14 +759,18 @@
     "timetable": {
       "path": "src/components/school-dashboard/timetable",
       "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
-      "docs": ["content/docs-en/timetable.mdx"],
+      "docs": [
+        "content/docs-en/timetable.mdx",
+        "content/docs-ar/timetable.mdx"
+      ],
       "routes": [
         "/timetable",
         "/timetable/analytics",
         "/timetable/conflicts",
         "/timetable/full",
         "/timetable/generate",
-        "/timetable/settings"
+        "/timetable/settings",
+        "/timetable/teachers"
       ]
     },
     "translation": {
@@ -782,6 +793,7 @@
         "/transportation",
         "/transportation/assignments",
         "/transportation/assignments/[id]",
+        "/transportation/dashboard",
         "/transportation/drivers",
         "/transportation/drivers/[id]",
         "/transportation/fees",
@@ -816,7 +828,7 @@
     },
     "whatsapp": {
       "path": "src/components/school-dashboard/whatsapp",
-      "context": [],
+      "context": ["README.md", "ISSUE.md", "CLAUDE.md"],
       "docs": [],
       "routes": ["/whatsapp"]
     }

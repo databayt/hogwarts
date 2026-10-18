@@ -4,9 +4,11 @@ Video conferencing for schools — one self-contained block mirrored 1:1 to the 
 Three meeting back-ends behind a single UI:
 
 - **External pasted-link** — live everywhere, zero infra (the default every school gets).
-- **LiveKit SFU** — in-app rooms, gated by `isLiveKitConfigured()`. Four env vars away from live;
-  `RUNBOOK.md` has the LiveKit Cloud quick path and the Aldar self-host sequence. Recording is a
-  SEPARATE gate (`isRecordingConfigured()`) — rooms no longer wait on an S3 bucket.
+- **LiveKit SFU** — in-app rooms, gated by `isLiveKitConfigured()`. **Live on prod and verified with
+  real classes on 2026-10-19** (join → room → webhook → attendance; see ISSUE.md). Runs on LiveKit
+  Cloud's free tier, which caps at 100 concurrent connections — not enough for an online school.
+  `RUNBOOK.md` has the Cloud path and the self-host sequence. Recording is a SEPARATE gate
+  (`isRecordingConfigured()`) — rooms no longer wait on an S3 bucket.
 - **Native Meet / Zoom / Teams** — `createMeeting` wired through each vendor API, but **dark** until
   OAuth credentials land (gated by each adapter's `isConfigured()`).
 
@@ -269,8 +271,8 @@ written up as `prisma/migrations/20260828000000_conference_online_school/`.
 
 **Every Vercel cron is off** (`"crons": []`, free-plan bridge — see `DEPLOYMENT.md`), and
 `live-class-reminders` is the only caller of `materializeOnlineSchools()`. An online school therefore
-materialized nothing after the day it saved its settings. Restored via
-`.github/workflows/conference-crons.yml`.
+materialized nothing after the day it saved its settings. Restored via a GitHub Actions bridge,
+replaced 2026-10-17 by Cloudflare Worker cron triggers (`cf/crons.json`) — see RUNBOOK "Verifying the crons".
 
 Also: recording no longer gates rooms; `createLiveClass` gained the server-side provider check the
 wizard only had client-side; notifications for a _started_ class link straight to the room; and

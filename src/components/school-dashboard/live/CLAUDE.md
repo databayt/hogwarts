@@ -592,14 +592,14 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   empty-credential fallback in `egress.ts` does not save it — set
   `LIVEKIT_S3_ACCESS_KEY`/`SECRET` whenever you set the bucket.
 
-- **The materialization sweep runs on GitHub Actions, not Vercel Cron.**
-  `vercel.json` is `"crons": []` (free-plan bridge, `DEPLOYMENT.md`), and
+- **The materialization sweep runs as a Cloudflare Worker cron trigger.**
   `live-class-reminders` is the ONLY caller of `materializeOnlineSchools()` — so
   with it off an online school materializes nothing after the day an admin saved
-  its settings. `.github/workflows/conference-crons.yml` restores the three
-  conference jobs and nothing else. Delete it when the Vercel cron array comes
-  back, or they fire twice. `process-email-notifications` is deliberately NOT in
-  the bridge: it drains ~19,996 unsent emails with no age gate.
+  its settings. Since 2026-10-17 the three conference jobs are Worker cron
+  triggers (`wrangler.jsonc` → `cf/crons.json`); the old GitHub Actions bridge
+  (`conference-crons.yml`) is deleted — it pinged a host that 301s and had
+  silently not run since the Cloudflare cutover. Check them per RUNBOOK
+  "Verifying the crons", never with `gh run list`.
 
 - **Only the `started` notification links to `/room`.** `startingSoon` fires 5–20
   minutes BEFORE the class, and `join-core` refuses a non-HOST on a `scheduled`
@@ -1303,8 +1303,7 @@ Rejoin). Everything inside the call is `room/`:
   live crons and `fee-due` 500'd on every run from 2026-08-31 to 09-03 while
   tsc, vitest and the build stayed green. `binaryTargets` now carries both
   Linux engines and `deploy-hobby.sh` refuses a bundle whose architecture has
-  no engine. Check the bridge with
-  `gh run list --workflow=conference-crons.yml --limit 20`.
+  no engine. (Vercel-era history: prod now runs the Cloudflare container.)
 
 ## Related Blocks
 
@@ -1533,3 +1532,25 @@ size on mobile and desktop, more tools for an interactive class. Supersedes the
   (`eventType "board"`, ≤400 strokes, validated); `use-board-memory.ts`
   restores on the host's return when the room's board is empty, saves 4s
   after the last change.
+
+## Verifying a real class end to end (2026-10-19)
+
+The only full-chain check is a real class on prod: the LiveKit webhook cannot reach localhost, so
+`room_finished` → attendance sync never fires locally. How it was done, and the traps:
+
+- **Script it, don't drive the Playwright MCP.** The MCP browsers have no fake media, so the host
+  cannot publish. A plain `@playwright/test` script with Chromium flags
+  `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream` and one context per role
+  (storageState from a login pass) runs the whole class in one process. Demo login is a role
+  picker: click "Sign in with email instead", then fill `identifier` + `password`.
+- **Pick a real anchored session.** A HOST may open a `scheduled` row at any hour (join-core has no
+  time window for hosts), so today's materialized slot for the student's section is the target —
+  that is what makes attendance sync run. Find it by `sectionId` + today's `scheduledStart`.
+- **Hold presence past `MIN_PRESENCE_MINUTES` (5)** or the student is synced ABSENT.
+- **End is two clicks** (`end-class-button.tsx`: arm, then confirm) — no dialog.
+- **Closing every browser also ends the class**: the room closes `departureTimeout` (120s) after
+  the last leave and `room_finished` arrives.
+- **CDP network emulation does not throttle WebRTC media.** `Network.emulateNetworkConditions`
+  shapes HTTP and the signal WebSocket only; the quality ladder and the reconnect overlay never
+  trigger. Test those on a real phone on a weak network.
+- Panel tabs are `aria-pressed` buttons, not `role="tab"`.

@@ -115,28 +115,23 @@ gates the auto-egress branch on the bucket; supply the credentials with it.
 
 ## Verifying the crons
 
-Rooms and recording being configured doesn't mean the bridge that materializes sessions and closes
-stale ones is actually running. `.github/workflows/conference-crons.yml` (see its header comment for
-why this exists instead of Vercel Cron) is the thing to check, not the SFU.
+Rooms and recording being configured doesn't mean the jobs that materialize sessions and close
+stale ones are actually running. Since 2026-10-17 the three conference jobs are **Cloudflare Worker
+cron triggers** (`wrangler.jsonc` `"triggers"` → `cf/crons.json`): `live-class-reminders` every 15
+minutes, `end-stale-live-classes` every 30, `expire-live-recordings` daily at 02:00 UTC. The old
+GitHub Actions bridge (`conference-crons.yml`) is deleted — it pinged `ed.databayt.org`, which 301s,
+so the jobs had silently not run since the Cloudflare cutover.
 
-**Check recent runs:**
+**Check they ran:** the cheapest signal is the data — today's sessions exist for an online school
+(`live_class_sessions` rows with today's `scheduledStart`, status `scheduled`) and yesterday's did not
+stay `scheduled`/`live`. For the invocations themselves use the `cloudflare-observability` MCP
+(`wrangler tail` does not work from this network — see `.claude/rules/cloudflare-deploy.md`).
 
-```bash
-gh run list --repo databayt/hogwarts --workflow=conference-crons.yml --limit 20
-```
-
-Every row `completed / failure` for more than a couple of ticks in a row is the bridge being down, not
-a blip — see the arm64 symptom below before assuming it's a code bug. A failing run now also comments
-on [#402](https://github.com/databayt/hogwarts/issues/402) with the failed step name and the run URL,
-rate-limited to one comment per hour (it searches the issue's last hour of comments for the marker
-`<!-- conference-crons-alert -->` before posting) — so #402 is the fast way to see whether the bridge
-is currently unhealthy without running the command above.
-
-**Trigger a tick by hand** (useful right after a fix lands, instead of waiting up to 15 minutes):
+**Trigger a tick by hand** (right after a fix lands, instead of waiting up to 15 minutes):
 
 ```bash
-gh workflow run conference-crons.yml --repo databayt/hogwarts -f job=stale
-# job: all | reminders | stale | recordings
+curl -s -H "Authorization: Bearer $CRON_SECRET" https://balqalam.com/api/cron/live-class-reminders
+# also: /api/cron/end-stale-live-classes · /api/cron/expire-live-recordings
 ```
 
 **Confirm the functions boot at all**, independent of the secret — every `/api/cron/*` route 401s

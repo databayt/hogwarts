@@ -561,9 +561,9 @@ and syncs when the connection returns; `/offline` shows what is waiting.
   credentials) and no longer blocks holding a call. `/live/network-test` reports both.
 - **A configured SFU does nothing on its own** — `School.conferenceProviderDefault` is `external`
   until a school opts in on `/live/settings`.
-- **The materialization sweep runs on GitHub Actions**, not Vercel Cron, while the project is on the
-  free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
-  sessions after the day it saved its settings — nothing to join, and no reminders.
+- **The materialization sweep is a Cloudflare cron trigger** (`cf/crons.json`, every 15 minutes).
+  Without it an online school materializes no sessions after the day it saved its settings —
+  nothing to join, and no reminders.
 - **Going live has one writer.** Three things can flip a class from scheduled to live — the
   teacher's Start, a host pressing Join on the title card, and the SFU's own `room_started`
   webhook — and whichever lands first now performs the side effects: the "class is live"
@@ -578,11 +578,11 @@ and syncs when the connection returns; `/offline` shows what is waiting.
 - **Check the cron bridge, it does not check itself.** From 2026-08-31 to 09-03 every scheduled run
   failed — the prebuilt deploy lacked the linux-arm64 Prisma engine, so the three live crons and
   `fee-due` returned 500 while every page stayed green. `binaryTargets` now carries both Linux
-  engines and `deploy-hobby.sh` refuses a bundle without the engine its functions need. One line
-  tells you the bridge's health:
+  engines and `deploy-hobby.sh` refuses a bundle without the engine its functions need. The jobs
+  moved to Cloudflare on 2026-10-17; trigger one by hand to see its health:
 
   ```bash
-  gh run list --repo databayt/hogwarts --workflow=conference-crons.yml --limit 20
+  curl -s -H "Authorization: Bearer $CRON_SECRET" https://balqalam.com/api/cron/live-class-reminders
   ```
 
 ## Demo and the hybrid school

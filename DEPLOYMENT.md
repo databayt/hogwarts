@@ -113,21 +113,18 @@ on databayt/hogwarts#314 and uses the same `CRON_SECRET` repo secret.
 
 **Delete that workflow too when you restore the cron array**, or the four jobs fire twice.
 
-### The three conference jobs run on GitHub Actions instead
+### The three conference jobs run as Cloudflare cron triggers
 
-`.github/workflows/conference-crons.yml` pings `live-class-reminders` (`*/15`),
-`end-stale-live-classes` (`*/30`) and `expire-live-recordings` (daily) with a `Bearer $CRON_SECRET`
-header. This is not a nicety: `live-class-reminders` is the only caller of `materializeOnlineSchools()`,
-so with every cron off a school that teaches online materializes **zero** sessions after the day it
-saved its settings — nothing to join and no reminders. It needs a `CRON_SECRET` **repo secret**
-matching the Vercel project value.
-
-**Delete that workflow when you restore the cron array below**, or the three jobs fire twice.
+`live-class-reminders` (`*/15`), `end-stale-live-classes` (`*/30`) and `expire-live-recordings`
+(daily) are Worker cron triggers in `cf/crons.json` since 2026-10-17. Their GitHub Actions bridge
+(`conference-crons.yml`) is deleted: it pinged `ed.databayt.org`, which 301s, so they had silently
+not run since the cutover. `live-class-reminders` is the only caller of `materializeOnlineSchools()`,
+so with it off a school that teaches online materializes **zero** sessions.
 
 ## Moving back to the paid account
 
 1. Restore the cron array: copy `vercel.crons.full.json`'s `crons` back into `vercel.json`,
-   and delete `.github/workflows/conference-crons.yml` and `.github/workflows/admission-crons.yml`
+   and delete `.github/workflows/admission-crons.yml`
    (see above).
 2. Move the five hostnames from the Hobby project to the Pro one.
 3. Redeploy from git on Pro. Its warm cache builds this in ~2.6 minutes.

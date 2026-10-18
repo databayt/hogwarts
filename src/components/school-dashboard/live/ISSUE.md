@@ -4,6 +4,60 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Verified on production with a real class — 2026-10-19
+
+First real classes on prod (`demo.balqalam.com`, LiveKit Cloud `hogwarts-jsmb894l`), driven by a
+scripted three-browser run (Chromium with fake camera/mic): teacher13 (HOST) · student@ (PARTICIPANT) ·
+parent18 (OBSERVER, student@'s guardian). Sessions `cmveddo6o0aei0901sexpfdv4` (EN) and
+`cmveddile0ace0901nxvx3xsb` (AR), both real timetable-anchored rows the cron materialized for
+section الثالث ثانوي - ب, opened early by their host.
+
+Passed:
+
+- [x] Student before host → waiting card ("hasn't started yet"); auto-joins ~20s after the host's Join.
+- [x] Host Join flips `scheduled → live`, `roomSid` stored; webhook `room_started`, `participant_joined`
+      ×3, `track_published`, `participant_left`, `room_finished` all landed and were recorded.
+- [x] Real media: student receives the teacher's camera; student enters muted, camera off.
+- [x] Role-aware controls in `/en` and `/ar`: observer gets no camera/mic/hand; host gets hands,
+      board, class tools, share. Every control label translated, RTL chrome mirrored.
+- [x] Hand raise → host toast "Give the floor / Lower" + badge; student sees "#1 in line".
+- [x] Chat both ways, persisted (`chat` event row). Questions (AR) reach the host with "mark answered".
+- [x] Everyone leaves → room closes after `departureTimeout` (120s) → `room_finished` → `ended`.
+- [x] Attendance sync: student@ PRESENT (VIRTUAL) with "left early" note; the 15 absent classmates
+      ABSENT; both rolled into VIRTUAL day rows. Presence durations 407–456s match the run.
+- [x] Console: zero errors for all three roles outside the deliberate offline window.
+
+Fixed in this pass:
+
+- [x] **Class detail page printed times in UTC** (`detail.tsx formatWhen` had no `timeZone`; the
+      container runs UTC) — 2 hours early for every Sudan school. Now formatted in `School.timezone`.
+- [x] Arabic dictionary mixed `الفصل` (term/classroom) with `الحصة` for a live class — "End class"
+      read "إنهاء الفصل" (end the term). Twelve strings now say الحصة; `termPrefix` keeps الفصل.
+- [x] Docs + RUNBOOK + DEPLOYMENT still told operators to check the deleted `conference-crons.yml`;
+      they now describe the Cloudflare cron triggers. `.claude/blocks.json` `conference` → `live`.
+
+Not verifiable from automation (needs a real device on a real weak network):
+
+- [ ] Quality ladder 720→360→180→audio+slides and the reconnect overlay / Rejoin. CDP network
+      emulation throttles HTTP/WebSocket but **not WebRTC media (UDP)**, so the ladder never sees a
+      bad sample. The signal socket did drop and reconnect cleanly under emulated offline.
+
+Findings, not fixed:
+
+- [ ] **Capacity — P0 before an online-heavy client.** LiveKit Build (free) hard-caps at 5,000
+      participant-min/month and **100 concurrent connections** — four 25-student classes at once
+      already exceed it. Ship/Scale or self-hosted `livekit-server`; set `LIVEKIT_TIER_*` with it.
+- [ ] Observers take a full empty tile in the camera grid. With guardians allowed to watch, a class
+      of 25 could show 25+ placeholder tiles; observers should not occupy the stage grid.
+- [ ] User text in chat / questions has no `dir="auto"` — a Latin question in the RTL panel renders
+      as "?e2e question".
+- [ ] The documented QA trio does not work on Mondays: `teacher@` does not teach `student@`'s
+      section that day, and `parent@`'s only child (student34) has no section, so `parent@` can
+      observe nothing. #402 should name a host per day or the seed should route teacher@ daily.
+- [ ] The test left real rows on prod demo for Mon 2026-10-19: both sessions `ended` early (their
+      13:20/12:25 slots are spent) and 16 VIRTUAL period + day attendance rows per session. The demo
+      has no compliance config, so no guardian follow-up fires.
+
 ## Quizzes and homework around the class — 2026-10-17 (Phase 4)
 
 Part of the ship-to-client pass on #402.
