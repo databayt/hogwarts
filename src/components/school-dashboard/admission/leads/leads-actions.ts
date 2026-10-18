@@ -20,6 +20,27 @@ import {
 } from "./leads-queries"
 
 // ============================================================================
+// Tenant resolution
+// ============================================================================
+
+// A server action runs without the dashboard layout, so the layout's
+// session-school == subdomain check never guards it. getTenantContext() prefers
+// the x-subdomain header over the session, which let a STAFF of school A read
+// and edit school B's leads by calling these actions on B's host. School roles
+// are bound to their own school; only DEVELOPER (no schoolId) follows the
+// tenant context (impersonation / subdomain).
+async function resolveLeadsSchoolId(user: {
+  role?: string | null
+  schoolId?: string | null
+}): Promise<string | null> {
+  if (user.role === "DEVELOPER") {
+    const { schoolId } = await getTenantContext()
+    return schoolId ?? null
+  }
+  return user.schoolId ?? null
+}
+
+// ============================================================================
 // Paginated fetch actions (called from client via usePlatformData)
 // ============================================================================
 
@@ -38,7 +59,7 @@ export async function getInquiries(params: {
     const role = session.user.role ?? ""
     assertAdmissionPermission(role, "viewApplications")
 
-    const { schoolId } = await getTenantContext()
+    const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
     const { rows, count } = await getInquiriesList(schoolId, {
@@ -74,7 +95,7 @@ export async function getTourBookings(params: {
     const role = session.user.role ?? ""
     assertAdmissionPermission(role, "viewApplications")
 
-    const { schoolId } = await getTenantContext()
+    const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
     const { rows, count } = await getTourBookingsList(schoolId, {
@@ -113,7 +134,7 @@ export async function updateInquiryStatus(params: {
     const role = session.user.role ?? ""
     assertAdmissionPermission(role, "updateStatus")
 
-    const { schoolId } = await getTenantContext()
+    const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
     // Verify the inquiry belongs to this school
@@ -139,7 +160,7 @@ export async function updateInquiryStatus(params: {
       },
     })
 
-    revalidatePath("/s/[subdomain]/admission/leads", "page")
+    revalidatePath("/[lang]/s/[subdomain]/admission/leads", "page")
     return { success: true, data: null }
   } catch (err) {
     console.error("[updateInquiryStatus]", err)
@@ -161,7 +182,7 @@ export async function markInquiryConverted(params: {
     const role = session.user.role ?? ""
     assertAdmissionPermission(role, "updateStatus")
 
-    const { schoolId } = await getTenantContext()
+    const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
     // Verify the inquiry belongs to this school
@@ -186,7 +207,7 @@ export async function markInquiryConverted(params: {
       },
     })
 
-    revalidatePath("/s/[subdomain]/admission/leads", "page")
+    revalidatePath("/[lang]/s/[subdomain]/admission/leads", "page")
     return { success: true, data: null }
   } catch (err) {
     console.error("[markInquiryConverted]", err)
@@ -212,7 +233,7 @@ export async function updateTourBookingStatus(params: {
     const role = session.user.role ?? ""
     assertAdmissionPermission(role, "updateStatus")
 
-    const { schoolId } = await getTenantContext()
+    const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
     // Verify the booking belongs to this school (tenant isolation)
@@ -225,6 +246,9 @@ export async function updateTourBookingStatus(params: {
     const now = new Date()
 
     if (params.status === "CANCELLED") {
+      // Already cancelled (by the family or another admin): the seats were
+      // released then — decrementing again drives currentBookings negative.
+      if (booking.status === "CANCELLED") return { success: true, data: null }
       // Decrement slot capacity when cancelling from dashboard
       await db.$transaction([
         db.tourBooking.update({
@@ -250,7 +274,7 @@ export async function updateTourBookingStatus(params: {
       })
     }
 
-    revalidatePath("/s/[subdomain]/admission/leads", "page")
+    revalidatePath("/[lang]/s/[subdomain]/admission/leads", "page")
     return { success: true, data: null }
   } catch (err) {
     console.error("[updateTourBookingStatus]", err)

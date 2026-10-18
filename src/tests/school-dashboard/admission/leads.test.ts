@@ -69,7 +69,7 @@ const SCHOOL_ID = "school-123"
 
 function mockAdminSession() {
   vi.mocked(auth).mockResolvedValue({
-    user: { id: "user-1", role: "ADMIN" },
+    user: { id: "user-1", role: "ADMIN", schoolId: SCHOOL_ID },
   } as never)
   vi.mocked(getTenantContext).mockResolvedValue({
     schoolId: SCHOOL_ID,
@@ -79,7 +79,7 @@ function mockAdminSession() {
 
 function mockStaffSession() {
   vi.mocked(auth).mockResolvedValue({
-    user: { id: "user-2", role: "STAFF" },
+    user: { id: "user-2", role: "STAFF", schoolId: SCHOOL_ID },
   } as never)
   vi.mocked(getTenantContext).mockResolvedValue({
     schoolId: SCHOOL_ID,
@@ -89,7 +89,7 @@ function mockStaffSession() {
 
 function mockAccountantSession() {
   vi.mocked(auth).mockResolvedValue({
-    user: { id: "user-3", role: "ACCOUNTANT" },
+    user: { id: "user-3", role: "ACCOUNTANT", schoolId: SCHOOL_ID },
   } as never)
   vi.mocked(getTenantContext).mockResolvedValue({
     schoolId: SCHOOL_ID,
@@ -486,6 +486,92 @@ describe("updateTourBookingStatus server action", () => {
     })
     expect(result.success).toBe(true)
     expect(db.$transaction).toHaveBeenCalled()
+  })
+
+  it("does not release seats twice for an already-cancelled booking", async () => {
+    mockAdminSession()
+    vi.mocked(db.tourBooking.findFirst).mockResolvedValue({
+      id: "tb-1",
+      status: "CANCELLED",
+      slotId: "slot-1",
+      numberOfAttendees: 3,
+    } as never)
+
+    const result = await updateTourBookingStatus({
+      id: "tb-1",
+      status: "CANCELLED",
+    })
+    expect(result.success).toBe(true)
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Tenant binding — a school role never follows the host to another school
+// ---------------------------------------------------------------------------
+
+describe("leads tenant binding", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("STAFF of school A calling on school B's host reads school A", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-2", role: "STAFF", schoolId: SCHOOL_ID },
+    } as never)
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId: "school-other",
+      subdomain: "other",
+    } as never)
+    vi.mocked(db.admissionInquiry.findMany).mockResolvedValue([])
+    vi.mocked(db.admissionInquiry.count).mockResolvedValue(0)
+
+    await getInquiries({})
+    expect(db.admissionInquiry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ schoolId: SCHOOL_ID }),
+      })
+    )
+  })
+
+  it("STAFF of school A cannot update school B's inquiry", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-2", role: "STAFF", schoolId: SCHOOL_ID },
+    } as never)
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId: "school-other",
+      subdomain: "other",
+    } as never)
+    vi.mocked(db.admissionInquiry.findFirst).mockResolvedValue(null)
+
+    const result = await updateInquiryStatus({
+      id: "inq-b",
+      status: "CONTACTED",
+    })
+    expect(result.success).toBe(false)
+    expect(db.admissionInquiry.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "inq-b", schoolId: SCHOOL_ID },
+      })
+    )
+    expect(db.admissionInquiry.update).not.toHaveBeenCalled()
+  })
+
+  it("DEVELOPER follows the tenant context", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "dev", role: "DEVELOPER", schoolId: null },
+    } as never)
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId: "school-other",
+      subdomain: "other",
+    } as never)
+    vi.mocked(db.admissionInquiry.findMany).mockResolvedValue([])
+    vi.mocked(db.admissionInquiry.count).mockResolvedValue(0)
+
+    await getInquiries({})
+    expect(db.admissionInquiry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ schoolId: "school-other" }),
+      })
+    )
   })
 })
 
