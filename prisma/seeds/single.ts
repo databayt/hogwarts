@@ -78,7 +78,6 @@ import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
 import { seedProfileActivity } from "./profile-activity"
 import { seedProfileExtras } from "./profile-extras"
-import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
 import { seedSalesNetwork } from "./sales-network"
 import { seedSchoolWithBranding } from "./school"
@@ -989,13 +988,6 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedExamTemplates(prisma)
-    },
-  },
-  "profile-images": {
-    description: "HP character avatars (Sharp/WebP → S3/CloudFront)",
-    global: true,
-    run: async (prisma) => {
-      await seedProfileImages(prisma)
     },
   },
   "profile-extras": {

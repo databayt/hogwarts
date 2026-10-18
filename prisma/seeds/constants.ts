@@ -100,7 +100,7 @@ export const BLOOD_GROUPS = [
 
 /**
  * Maps named accounts to Harry Potter characters.
- * Source images are in /public/site/ -- profile-images seed uploads to S3.
+ * Demo accounts carry no photo (initials) -- film stills are not ours to publish.
  */
 export const HP_CHARACTERS = {
   // Admin accounts
