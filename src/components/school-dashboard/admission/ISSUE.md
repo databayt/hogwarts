@@ -46,6 +46,22 @@ Shipped as atomic commits on `main`:
       to databayt.org** (`e8c54d6f3`).
 - [x] Inquiry update Zod + same-school assignee (`07ce2051d`); AI/extract URL
       allow-lists exact-match our bucket (`e3d3ac3f8`).
+- [x] **P1 — dashboard races** (`124c73590`): conditional status write;
+      enrollment-number collision retry; "already enrolled" on a double
+      confirm; journal entry posted after commit; KG grades via `parseGrade`;
+      placement rejects another grade's section; dead `recordPayment` /
+      `placeStudentInClass` / `getAvailableClassesForPlacement` deleted.
+- [x] **P1 — applicant side** (`69b5e1a01`): Tap return verified with Tap
+      before "paid"; offer error codes translated (`offer.errors`); wizard fee
+      preview on the campaign year; zero-fee manual intents refused; emails
+      HTML-escaped (`src/lib/escape-html.ts`); OTP hardened; tour wizard picks
+      by slot id on the chosen day.
+- [ ] `student-provisioning.ts` (~206) still derives the student code with
+      `extractGradeNumber` — KG labels mis-coded there.
+- [ ] Placement error codes (`STUDENT_ALREADY_IN_SECTION`, `INVALID_SECTION`, …)
+      have no dictionary keys yet — the dialog shows the generic message.
+- [ ] Merit: no stable tie-break, unscored applicants still ranked; offer email
+      bypasses `autoEmailNotifications`; wizard resume step / WhatsApp drop.
 
 Open — needs Abdout (schema / product / core):
 

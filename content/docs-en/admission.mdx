@@ -192,6 +192,8 @@ Three parallel read-only traces (dashboard block, applicant side, cross-cutting 
 | AI document URLs        | Allow-list admitted any `*.amazonaws.com` / `*.cloudfront.net`                                                                                      | Our upload bucket and CloudFront domain only                                                                                  |
 | Inquiry updates         | Unvalidated status and assignee                                                                                                                     | Zod-parsed; assignee must be a user of the school                                                                             |
 
+A second round fixed the P1s: status writes are conditional on the approved status, Confirm Enrollment retries an enrollment-number collision and posts the journal entry only after it commits, KG grades resolve with `parseGrade`, placement rejects another grade's section, a Tap return is verified with Tap before the page says "paid", offer errors are translated, the wizard's fee preview uses the campaign year, emails escape user input, and the OTP flow requires a normalised email and a cryptographic code.
+
 Found, not fixed — need a product decision or schema work:
 
 - **No UI creates tour time slots** — only the seed writes `AdmissionTimeSlot`, so a real school's `/tour` shows no times.
