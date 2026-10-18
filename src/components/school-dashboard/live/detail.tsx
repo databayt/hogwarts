@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,6 +16,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
 import { AttendanceReview } from "@/components/school-dashboard/live/attendance-review"
 import { ClassWork } from "@/components/school-dashboard/live/class-work"
+import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
@@ -33,12 +35,19 @@ function safeHttpUrl(url: string | null | undefined): string | null {
   return url && /^https?:\/\//i.test(url) ? url : null
 }
 
-function formatWhen(d: Date | string, locale: string): string {
+// In the SCHOOL's zone: this renders on the server, whose zone is UTC, so a
+// bare toLocaleString printed every class two hours early for Khartoum.
+function formatWhen(
+  d: Date | string,
+  locale: string,
+  timeZone: string
+): string {
   const date = typeof d === "string" ? new Date(d) : d
   try {
     return date.toLocaleString(locale === "ar" ? "ar-AE" : "en-AE", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone,
     })
   } catch {
     return date.toISOString()
@@ -74,7 +83,16 @@ export async function LiveClassDetailContent({
   if (!detail) {
     notFound()
   }
-  const nameDisplay = await schoolNameDisplay(tenant.schoolId)
+  const [nameDisplay, school] = await Promise.all([
+    schoolNameDisplay(tenant.schoolId),
+    tenant.schoolId
+      ? db.school.findUnique({
+          where: { id: tenant.schoolId },
+          select: { timezone: true },
+        })
+      : null,
+  ])
+  const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
   const {
     session,
     canJoin,
@@ -103,8 +121,8 @@ export async function LiveClassDetailContent({
         <div>
           <h1 className={typography.h2}>{session.title}</h1>
           <p className={typography.muted}>
-            {formatWhen(session.scheduledStart, locale)} —{" "}
-            {formatWhen(session.scheduledEnd, locale)}
+            {formatWhen(session.scheduledStart, locale, timeZone)} —{" "}
+            {formatWhen(session.scheduledEnd, locale, timeZone)}
           </p>
         </div>
         <Badge>{t?.status?.[session.status] ?? session.status}</Badge>
