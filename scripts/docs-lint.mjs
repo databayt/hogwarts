@@ -2,7 +2,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Lints content/docs-en/*.mdx against docs/STYLE.md rules.
+// Lints content/docs-en/*.mdx and content/docs-ar/*.mdx against docs/STYLE.md
+// rules. Arabic links resolve against both sets: /ar/docs falls back to the
+// English page while a translation is missing.
 // Reports duplicate body H1, placeholder descriptions, hardcoded text-* / font-* classes,
 // broken /docs/<slug> links, and files over category caps.
 //
@@ -22,6 +24,7 @@ import { fileURLToPath } from "node:url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, "..")
 const DOCS_DIR = join(ROOT, "content", "docs-en")
+const DOCS_AR_DIR = join(ROOT, "content", "docs-ar")
 const META_PATH = join(DOCS_DIR, "meta.json")
 const TMP_DIR = join(ROOT, "tmp")
 const AUDIT_PATH = join(TMP_DIR, "docs-link-audit.json")
@@ -180,12 +183,14 @@ function loadMeta() {
   return JSON.parse(readFileSync(META_PATH, "utf8"))
 }
 
-function listMdxFiles() {
-  return readdirSync(DOCS_DIR)
+function listMdxFiles(dir = DOCS_DIR, label = "") {
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
     .filter((f) => f.endsWith(".mdx"))
     .map((f) => ({
       slug: basename(f, ".mdx"),
-      path: join(DOCS_DIR, f),
+      label: `${label}${basename(f, ".mdx")}`,
+      path: join(dir, f),
     }))
 }
 
@@ -301,7 +306,10 @@ function main() {
     ...(meta.pages || []),
   ])
 
-  const results = files.map((f) => lintFile(f, knownSlugs))
+  const arFiles = listMdxFiles(DOCS_AR_DIR, "ar/")
+  for (const f of arFiles) knownSlugs.add(f.slug)
+
+  const results = [...files, ...arFiles].map((f) => lintFile(f, knownSlugs))
   const totalIssues = results.reduce((sum, r) => sum + r.issues.length, 0)
   const filesWithIssues = results.filter((r) => r.issues.length > 0)
 
@@ -319,7 +327,7 @@ function main() {
       knownSlugs: [...knownSlugs].sort(),
       links: results.flatMap((r) =>
         r.links.map((l) => ({
-          from: r.file.slug,
+          from: r.file.label,
           to: l.target,
           exists: l.exists,
         }))
@@ -338,7 +346,7 @@ function main() {
           totalIssues,
           byRule,
           filesWithIssues: filesWithIssues.map((r) => ({
-            slug: r.file.slug,
+            slug: r.file.label,
             lineCount: r.lineCount,
             category: r.category,
             issues: r.issues,
@@ -369,7 +377,7 @@ function main() {
   console.log("")
 
   for (const r of filesWithIssues) {
-    console.log(`${r.file.slug}.mdx (${r.lineCount} lines, ${r.category}):`)
+    console.log(`${r.file.label}.mdx (${r.lineCount} lines, ${r.category}):`)
     for (const i of r.issues) {
       console.log(`  • ${i.rule}: ${i.message}`)
       if (i.sample) console.log(`    sample: ${i.sample}`)

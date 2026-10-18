@@ -47,6 +47,15 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
     },
   ]
 
+  // MainNav and MobileNav are client components: a prop is serialized into
+  // the page, so they get the namespaces they read, not the whole dictionary.
+  const navDictionary = dictionary
+    ? ({
+        navigation: dictionary.navigation,
+        common: dictionary.common,
+      } as Dictionary)
+    : undefined
+
   return (
     // `data-slot` so the marketing layout can unpin the bar on a phone when
     // the page opens on its hero (`data-immersive`, see `ImmersiveHero`).
@@ -57,13 +66,13 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
     >
       <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
         {/* Left: Nav items */}
-        <MainNav dictionary={dictionary} />
+        <MainNav dictionary={navDictionary} />
         {/* Mobile: Popover-based menu */}
         <MobileNav
           items={navItems}
           sections={sections}
           className="flex lg:hidden"
-          dictionary={dictionary}
+          dictionary={navDictionary}
           locale={locale}
           showMarketingActions
         />

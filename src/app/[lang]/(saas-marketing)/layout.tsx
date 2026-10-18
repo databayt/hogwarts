@@ -9,7 +9,7 @@ import {
   getPlatformCoreDictionary,
   type Dictionary,
 } from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { LoadingWrapper } from "@/components/marketing/loading"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
@@ -32,8 +32,11 @@ export default async function MarketingLayout({
     lang as Locale
   )) as Dictionary
 
+  // Client components read the dictionary from a static per-locale chunk,
+  // not a prop: as a prop it was ~0.5 MB of JSON inside every marketing and
+  // docs page (see internationalization/CLAUDE.md).
   return (
-    <DictionaryProvider dictionary={dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       <LoadingWrapper>
         {/* `has-[[data-immersive]]` — a page that wraps its hero in
             `ImmersiveHero` unpins the header below `lg`, the lumos lesson's
@@ -52,6 +55,6 @@ export default async function MarketingLayout({
           <Chatbot lang={lang as Locale} promptType="saasMarketing" />
         </div>
       </LoadingWrapper>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

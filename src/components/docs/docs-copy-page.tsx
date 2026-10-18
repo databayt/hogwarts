@@ -33,7 +33,8 @@ Help me understand how to use it. Be ready to explain concepts, give examples, o
   )}`
 }
 
-type Dictionary = Awaited<ReturnType<typeof getDictionary>>
+/** Only the `docs` strings — the full dictionary is ~1 MB of page HTML. */
+type Dictionary = Pick<Awaited<ReturnType<typeof getDictionary>>, "docs">
 
 const getMenuItems = (dictionary?: Dictionary) => ({
   markdown: (url: string) => (

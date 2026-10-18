@@ -30,27 +30,13 @@ src/lib/detect-npm-command.ts  # Package-manager-tab logic
 
 There is no `getting-started/` or `components/` subdirectory. Files are flat; ordering is controlled entirely by `meta.json`.
 
-## Runtime shiki (the OOM story)
+An English page with no Arabic file still opens under `/ar/docs/<slug>`: it renders the English text left-to-right under a "not translated yet" notice, so links from Arabic pages never 404. `pnpm docs:lint` checks both folders.
 
-Build-time syntax highlighting via `rehype-pretty-code` was disabled because it OOM'd Vercel Hobby's 8 GB heap when compiling 111 MDX files with two themes (light + dark). After 12 deploy attempts we moved highlighting to render time.
+## Syntax highlighting
 
-```ts
-// source.config.ts
-export default defineConfig({
-  mdxOptions: {
-    rehypeCodeOptions: false, // build-time shiki off
-  },
-})
-```
+Code blocks are highlighted **at build time** by `rehype-pretty-code` (shiki), wired in `source.config.ts`, and every docs page is pre-rendered per locale (`generateStaticParams`). There is no runtime shiki and no hydration flash.
 
-Code blocks now highlight in the browser via `fumadocs-ui/DynamicCodeBlock`:
-
-- Lazy `import("shiki")` only when a code block enters the viewport
-- JS regex engine, no oniguruma WASM
-- See `src/mdx-components.tsx` for the `pre` / `code` overrides
-- See `src/lib/detect-npm-command.ts` for the package-manager tab logic that previously rode along with the shiki transformer
-
-**Trade-off**: a ~100-200 ms shiki hydration flash on the first code block visible. Acceptable for free-tier hosting; the alternative was paying for a build with more heap.
+History: highlighting was moved to render time while the site built on Vercel Hobby, where two-theme shiki over the whole doc set OOM'd the 8 GB heap. Production now builds a container for Cloudflare (`scripts/deploy-cloudflare.sh`) with `NODE_OPTIONS=--max-old-space-size=8192`, and build-time highlighting is back.
 
 ## Add a doc
 
@@ -183,7 +169,7 @@ pnpm build
 
 **Navigation not updating** — make sure the slug is listed in `meta.json` for the right language → run `pnpm fumadocs-mdx` → restart dev.
 
-**OOM on Vercel** — never re-enable `rehype-pretty-code`. If you need to, you must also drop one of the themes or shrink the docs surface; otherwise the build will fail at 8 GB heap. See the runtime shiki section above.
+**Build runs out of memory** — the build needs `NODE_OPTIONS=--max-old-space-size=8192` (build-time shiki over the whole doc set). See the syntax highlighting section above.
 
 ## See also
 

@@ -10,6 +10,7 @@ import { findNeighbour } from "fumadocs-core/page-tree"
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 import z from "zod"
 
+import { LIVE_ROOT_DOMAIN, mainHostFor } from "@/lib/root-domain"
 import { docsArabicSource, docsSource } from "@/lib/source"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,23 +26,48 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 // page-data build ceiling.
 export const runtime = "nodejs"
 
+// Static pages have no request host: canonical URLs use the live platform.
+const ORIGIN = `https://${mainHostFor(LIVE_ROOT_DOMAIN)}`
+
+/**
+ * The page for a locale. Arabic falls back to the English page while its
+ * translation is missing, so a link from an Arabic page never 404s; the
+ * page renders LTR under a "not translated yet" notice.
+ */
+function resolvePage(lang: string, slug: string[] | undefined) {
+  if (lang === "ar") {
+    const page = docsArabicSource.getPage(slug)
+    if (page) return { page, source: docsArabicSource, fallback: false }
+    const english = docsSource.getPage(slug)
+    if (english) return { page: english, source: docsSource, fallback: true }
+    return null
+  }
+  const page = docsSource.getPage(slug)
+  return page ? { page, source: docsSource, fallback: false } : null
+}
+
 export function generateStaticParams({ params }: { params: { lang: string } }) {
-  const source = params.lang === "ar" ? docsArabicSource : docsSource
-  return source.getPages().map((page) => ({ slug: page.slugs }))
+  const slugs = new Map(
+    docsSource.getPages().map((page) => [page.slugs.join("/"), page.slugs])
+  )
+  if (params.lang === "ar") {
+    for (const page of docsArabicSource.getPages())
+      slugs.set(page.slugs.join("/"), page.slugs)
+  }
+  return [...slugs.values()].map((slug) => ({ slug }))
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[]; lang: string }>
 }): Promise<Metadata> {
   const params = await props.params
-  const source = params.lang === "ar" ? docsArabicSource : docsSource
-  const page = source.getPage(params.slug)
+  const resolved = resolvePage(params.lang, params.slug)
 
-  if (!page) {
+  if (!resolved) {
     notFound()
   }
 
-  const doc = page.data
+  const doc = resolved.page.data
 
   if (!doc.title || !doc.description) {
     notFound()
@@ -54,7 +80,7 @@ export async function generateMetadata(props: {
       title: doc.title,
       description: doc.description,
       type: "article",
-      url: `https://ed.databayt.org${page.url}`,
+      url: `${ORIGIN}/${params.lang}${resolved.page.url}`,
     },
   }
 }
@@ -63,20 +89,20 @@ export default async function DocsPage(props: {
   params: Promise<{ slug?: string[]; lang: string }>
 }) {
   const params = await props.params
-  const source = params.lang === "ar" ? docsArabicSource : docsSource
-  const page = source.getPage(params.slug)
+  const resolved = resolvePage(params.lang, params.slug)
   const dictionary = await getDictionary(params.lang as Locale)
 
-  if (!page) {
+  if (!resolved) {
     notFound()
   }
+  const { page, source, fallback } = resolved
 
   const doc = page.data
   const MDX = doc.body
   const neighbours = findNeighbour(source.pageTree, page.url)
 
   const raw = (await (page.data as any).exports?.getText?.("raw")) || ""
-  const pageUrl = `https://ed.databayt.org${page.url}`
+  const pageUrl = `${ORIGIN}/${params.lang}${page.url}`
 
   const { attributes } = fm(raw)
   const { links } = z
@@ -105,7 +131,7 @@ export default async function DocsPage(props: {
                   <DocsCopyPage
                     page={raw}
                     url={pageUrl}
-                    dictionary={dictionary}
+                    dictionary={{ docs: dictionary.docs }}
                   />
                   {neighbours.previous && (
                     <Button
@@ -164,7 +190,19 @@ export default async function DocsPage(props: {
               </div>
             ) : null}
           </div>
-          <div className="w-full flex-1 *:data-[slot=alert]:first:mt-0">
+          {fallback && (
+            <p
+              role="note"
+              className="bg-muted text-muted-foreground rounded-lg px-4 py-3"
+            >
+              {dictionary.docs.notTranslated}
+            </p>
+          )}
+          <div
+            dir={fallback ? "ltr" : undefined}
+            lang={fallback ? "en" : undefined}
+            className="w-full flex-1 *:data-[slot=alert]:first:mt-0"
+          >
             <MDX components={mdxComponents} />
           </div>
         </div>
