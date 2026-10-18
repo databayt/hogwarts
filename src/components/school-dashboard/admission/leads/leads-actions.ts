@@ -4,7 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { BookingStatus, InquiryStatus } from "@prisma/client"
+import { InquiryStatus, type BookingStatus } from "@prisma/client"
+import { z } from "zod"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
@@ -18,6 +19,17 @@ import {
   type LeadsSortParam,
   type TourBookingListFilters,
 } from "./leads-queries"
+
+const updateInquiryStatusSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(InquiryStatus),
+  followUpDate: z
+    .string()
+    .refine((v) => !Number.isNaN(Date.parse(v)))
+    .nullish(),
+  notes: z.string().max(5000).nullish(),
+  assignedTo: z.string().min(1).nullish(),
+})
 
 // ============================================================================
 // Tenant resolution
@@ -137,12 +149,25 @@ export async function updateInquiryStatus(params: {
     const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
+    const parsed = updateInquiryStatusSchema.safeParse(params)
+    if (!parsed.success) return { success: false, error: "VALIDATION_ERROR" }
+    params = parsed.data
+
     // Verify the inquiry belongs to this school
     const inquiry = await db.admissionInquiry.findFirst({
       where: { id: params.id, schoolId },
       select: { id: true },
     })
     if (!inquiry) return { success: false, error: "INQUIRY_NOT_FOUND" }
+
+    // The assignee must be a member of this school's staff, not any user id.
+    if (params.assignedTo) {
+      const assignee = await db.user.findFirst({
+        where: { id: params.assignedTo, schoolId },
+        select: { id: true },
+      })
+      if (!assignee) return { success: false, error: "VALIDATION_ERROR" }
+    }
 
     await db.admissionInquiry.update({
       where: { id: params.id },

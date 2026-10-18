@@ -57,6 +57,9 @@ vi.mock("@/lib/db", () => ({
     application: {
       findFirst: vi.fn(),
     },
+    user: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -503,6 +506,41 @@ describe("updateTourBookingStatus server action", () => {
     })
     expect(result.success).toBe(true)
     expect(db.$transaction).not.toHaveBeenCalled()
+  })
+})
+
+describe("updateInquiryStatus validation", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("rejects a status outside the enum", async () => {
+    mockAdminSession()
+    const result = await updateInquiryStatus({
+      id: "inq-1",
+      status: "HACKED" as never,
+    })
+    expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
+    expect(db.admissionInquiry.update).not.toHaveBeenCalled()
+  })
+
+  it("rejects an assignee who is not this school's user", async () => {
+    mockAdminSession()
+    vi.mocked(db.admissionInquiry.findFirst).mockResolvedValue({
+      id: "inq-1",
+    } as never)
+    vi.mocked(db.user.findFirst).mockResolvedValue(null)
+
+    const result = await updateInquiryStatus({
+      id: "inq-1",
+      status: "CONTACTED",
+      assignedTo: "user-from-another-school",
+    })
+    expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
+    expect(db.user.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "user-from-another-school", schoolId: SCHOOL_ID },
+      })
+    )
+    expect(db.admissionInquiry.update).not.toHaveBeenCalled()
   })
 })
 
