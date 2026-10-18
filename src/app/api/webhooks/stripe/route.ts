@@ -1450,11 +1450,16 @@ export async function POST(req: Request) {
           // A and paid through session B must not have B's method/reference
           // wiped when A expires 24h later — that used to leave
           // `registrationFeePaid: true` with `registrationFeeMethod: null`.
+          // And only when THIS session is still the recorded one: a family
+          // that switched to bank transfer / Bankak after abandoning the card
+          // must keep that reference (proof upload checks it).
           const { count } = await db.application.updateMany({
             where: {
               id: expiredMeta.applicationId,
               schoolId: expiredMeta.schoolId,
               registrationFeePaid: false,
+              registrationFeeMethod: "stripe",
+              registrationFeeReference: expiredSession.id,
             },
             data: {
               registrationFeeMethod: null,

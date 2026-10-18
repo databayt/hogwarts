@@ -40,6 +40,19 @@ export type SettleRegistrationFeeResult =
   | "settled"
   | "already_paid"
   | "not_found"
+  /** The application was withdrawn / rejected — nothing flipped. */
+  | "not_live"
+  /**
+   * A gateway captured money the application cannot absorb: a second capture
+   * (a different session/charge after the fee was already paid) or a capture
+   * on a withdrawn / rejected application. ADMIN + ACCOUNTANT are told to
+   * refund it.
+   */
+  | "needs_refund"
+
+// A family that withdrew (or was rejected) holds no seat; money that lands
+// after that is a refund, not a registration.
+const DEAD_STATUSES = ["WITHDRAWN", "REJECTED"] as const
 
 const COPY = {
   familyTitle: {
@@ -74,6 +87,64 @@ const METHOD_LABEL: Record<string, { ar: string; en: string }> = {
 const t = (msg: { ar: string; en: string }, lang: string) =>
   lang === "en" ? msg.en : msg.ar
 
+const REFUND_COPY = {
+  title: { ar: "دفعة تحتاج إلى استرداد", en: "Payment needs a refund" },
+  duplicate: (name: string, applicationNumber: string, ref: string) => ({
+    ar: `دُفعت رسوم التسجيل مرة ثانية لـ ${name} (الطلب ${applicationNumber}، المرجع ${ref}). يرجى استرداد الدفعة المكررة.`,
+    en: `The registration fee for ${name} (application ${applicationNumber}) was paid a second time (reference ${ref}). Please refund the duplicate.`,
+  }),
+  not_live: (name: string, applicationNumber: string, ref: string) => ({
+    ar: `وصلت دفعة رسوم تسجيل لطلب مسحوب أو مرفوض: ${name} (الطلب ${applicationNumber}، المرجع ${ref}). يرجى استردادها.`,
+    en: `A registration fee arrived for a withdrawn or rejected application: ${name} (application ${applicationNumber}, reference ${ref}). Please refund it.`,
+  }),
+}
+
+async function alertRefundNeeded(input: {
+  schoolId: string
+  applicationId: string
+  applicationNumber: string
+  name: string
+  method: string
+  reference: string | null
+  amount: number | null
+  reason: "duplicate" | "not_live"
+}): Promise<void> {
+  console.error(
+    `[registration-fee] REFUND NEEDED (${input.reason}) via ${input.method}: application=${input.applicationId} ref=${input.reference ?? "-"} amount=${input.amount ?? "-"}`
+  )
+  try {
+    const { dispatchNotificationsToAudience, resolveSchoolLang } =
+      await import("@/lib/dispatch-notification")
+    const lang = await resolveSchoolLang(input.schoolId)
+    const ref = input.reference ?? "-"
+    await dispatchNotificationsToAudience({
+      schoolId: input.schoolId,
+      targetScope: "role",
+      targetRoles: ["ADMIN", "ACCOUNTANT"],
+      type: "fee_paid",
+      title: t(REFUND_COPY.title, lang),
+      body: t(
+        REFUND_COPY[input.reason](input.name, input.applicationNumber, ref),
+        lang
+      ),
+      lang,
+      priority: "high",
+      channels: ["in_app", "email"],
+      metadata: {
+        applicationId: input.applicationId,
+        paymentType: "registration_fee",
+        refundNeeded: true,
+        reason: input.reason,
+        reference: input.reference,
+        amount: input.amount,
+        url: `/admission/applications/${input.applicationId}`,
+      },
+    })
+  } catch (err) {
+    console.error("[registration-fee] refund alert failed:", err)
+  }
+}
+
 export async function settleRegistrationFee(
   input: SettleRegistrationFeeInput
 ): Promise<SettleRegistrationFeeResult> {
@@ -82,7 +153,12 @@ export async function settleRegistrationFee(
   // Conditional flip: only an UNPAID application transitions, so two callers
   // (webhook + return page) racing on the same capture can't both "win".
   const { count } = await db.application.updateMany({
-    where: { id: applicationId, schoolId, registrationFeePaid: false },
+    where: {
+      id: applicationId,
+      schoolId,
+      registrationFeePaid: false,
+      status: { notIn: [...DEAD_STATUSES] },
+    },
     data: {
       registrationFeePaid: true,
       registrationFeeAmount: amount,
@@ -92,12 +168,42 @@ export async function settleRegistrationFee(
     },
   })
   if (count === 0) {
-    const exists = await db.application.findFirst({
+    const current = await db.application.findFirst({
       where: { id: applicationId, schoolId },
-      select: { registrationFeePaid: true },
+      select: {
+        registrationFeePaid: true,
+        registrationFeeReference: true,
+        status: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        applicationNumber: true,
+      },
     })
-    if (!exists) return "not_found"
-    return "already_paid"
+    if (!current) return "not_found"
+
+    const isGateway = !(MANUAL_GATEWAYS as readonly string[]).includes(method)
+    const isDead = (DEAD_STATUSES as readonly string[]).includes(current.status)
+    // A replay of the capture that settled it (same session / charge) is
+    // the idempotent path. Anything else a gateway captured is money the
+    // school must hand back — say so instead of logging it.
+    const isReplay =
+      current.registrationFeePaid &&
+      (reference == null || current.registrationFeeReference === reference)
+    if (!isGateway) return isDead ? "not_live" : "already_paid"
+    if (isReplay) return "already_paid"
+
+    await alertRefundNeeded({
+      schoolId,
+      applicationId,
+      applicationNumber: current.applicationNumber,
+      name: displayName(current, "full"),
+      method,
+      reference,
+      amount,
+      reason: isDead ? "not_live" : "duplicate",
+    })
+    return "needs_refund"
   }
 
   console.log(

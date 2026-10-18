@@ -30,6 +30,7 @@ import {
 } from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { refreshPage } from "@/lib/refresh-page"
+import { getStripe, isStripeConfigured } from "@/lib/stripe"
 import { tenantUrl } from "@/components/school-marketing/admission/actions/urls"
 
 import { selectOfferFeeStructures, sumRegistrationFee } from "./fee-structures"
@@ -186,8 +187,18 @@ async function validateAccessToken(applicationId: string, accessToken: string) {
     return { error: "APPLICATION_NOT_FOUND" as const }
   }
 
+  // The token is a bearer credential in an emailed link: it lasts six months
+  // from submission (a re-offer extends it, the OTP tracker re-issues a lapsed
+  // one) and must stop working after that, as it does on the tracker.
   const application = await db.application.findFirst({
-    where: { id: applicationId, accessToken },
+    where: {
+      id: applicationId,
+      accessToken,
+      OR: [
+        { accessTokenExpiry: null },
+        { accessTokenExpiry: { gte: new Date() } },
+      ],
+    },
     select: {
       id: true,
       schoolId: true,
@@ -821,6 +832,32 @@ export async function createRegistrationFeeCheckout(
     // The webhook-side idempotency handles any race where the old session
     // completes concurrently (it simply marks paid on the correct reference).
     if (application.registrationFeeMethod && !application.registrationFeePaid) {
+      // A previous Stripe session is still payable for 24h; clearing our
+      // pointer alone left two live checkouts and a family who paid both was
+      // charged twice. Expire it first — and if it already completed (the
+      // webhook is just behind), don't open a second one.
+      const staleRef = application.registrationFeeReference
+      if (
+        application.registrationFeeMethod === "stripe" &&
+        staleRef?.startsWith("cs_") &&
+        isStripeConfigured()
+      ) {
+        try {
+          const stale = await getStripe().checkout.sessions.retrieve(staleRef)
+          if (stale.status === "complete") {
+            return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+          }
+          if (stale.status === "open") {
+            await getStripe().checkout.sessions.expire(staleRef)
+          }
+        } catch (err) {
+          console.error(
+            "[createRegistrationFeeCheckout] could not expire stale session",
+            staleRef,
+            err
+          )
+        }
+      }
       await db.application.update({
         where: { id: applicationId, schoolId: application.schoolId },
         data: {
@@ -949,12 +986,17 @@ export async function createRegistrationFeeCheckout(
       }
     }
 
-    // Record the payment method and amount
+    // Record the payment method and amount. A Stripe checkout stores its
+    // session id so a retry can expire it and the expired-session webhook
+    // clears only its own state (the family never sees a card reference).
     await db.application.update({
       where: { id: applicationId, schoolId },
       data: {
         registrationFeeMethod: gateway,
-        registrationFeeReference: referenceNumber,
+        registrationFeeReference:
+          gateway === "stripe" && checkoutResult.sessionId
+            ? checkoutResult.sessionId
+            : referenceNumber,
         registrationFeeAmount: feeAmount,
       },
     })

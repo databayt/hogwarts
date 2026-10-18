@@ -1937,6 +1937,10 @@ export async function confirmRegistrationPayment(params: {
     if (settled === "already_paid") {
       return actionError(ACTION_ERRORS.REGISTRATION_FEE_ALREADY_PAID)
     }
+    // Withdrawn / rejected: the office hands the cash back, nothing books.
+    if (settled === "not_live" || settled === "needs_refund") {
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
+    }
 
     refreshPage("/admission/enrollment")
     return { success: true, data: null }

@@ -16,6 +16,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     application: {
       update: vi.fn(),
+      updateMany: vi.fn(),
       findFirst: vi.fn(),
     },
     feeAssignment: { findFirst: vi.fn(), update: vi.fn() },
@@ -715,20 +716,28 @@ describe("Stripe Webhook - POST handler", () => {
         schoolId: "s1",
       })
       vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue(event as never)
-      vi.mocked(db.application.update).mockResolvedValue({} as never)
+      vi.mocked(db.application.updateMany).mockResolvedValue({
+        count: 1,
+      } as never)
 
       const response = await POST(makeRequest())
 
       expect(response.status).toBe(200)
-      expect(db.application.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "app-1", schoolId: "s1" },
-          data: {
-            registrationFeeMethod: null,
-            registrationFeeReference: null,
-          },
-        })
-      )
+      // Only an unpaid application whose recorded checkout IS this session —
+      // a later bank / wallet intent survives the card session expiring.
+      expect(db.application.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "app-1",
+          schoolId: "s1",
+          registrationFeePaid: false,
+          registrationFeeMethod: "stripe",
+          registrationFeeReference: "cs_expired_123",
+        },
+        data: {
+          registrationFeeMethod: null,
+          registrationFeeReference: null,
+        },
+      })
     })
 
     it("CHECKOUT-STUCK-STATE: clears application_fee method fields (legacy)", async () => {
