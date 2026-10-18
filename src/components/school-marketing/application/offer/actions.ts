@@ -1018,6 +1018,97 @@ export async function createRegistrationFeeCheckout(
 }
 
 // ============================================================================
+// 4b. Verify a Tap return
+// ============================================================================
+
+export type RegistrationReturnState = "success" | "failed" | "pending"
+
+/**
+ * Read a Tap charge back when the payer lands on the offer page.
+ *
+ * Tap has ONE redirect URL and sends the payer there on success AND failure
+ * (appending `?tap_id=chg_…`), so `?registration=success` on its own proves
+ * nothing. The charge is fetched from Tap with our secret key, must belong to
+ * THIS application (metadata stamped by `createRegistrationFeeCheckout`), and
+ * only a CAPTURED charge settles — through `settleRegistrationFee`, which is
+ * idempotent against the webhook racing this page.
+ */
+export async function verifyRegistrationFeeReturn(
+  applicationId: string,
+  accessToken: string,
+  tapId: string
+): Promise<ActionResponse<{ state: RegistrationReturnState }>> {
+  try {
+    const rl = await checkUserRateLimit(
+      `reg-return:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-return"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
+    const result = await validateAccessToken(applicationId, accessToken)
+    if ("error" in result) {
+      return { success: false, error: result.error }
+    }
+    const { application } = result
+
+    const { fetchTapCharge, TAP_CAPTURED_STATUSES, TAP_FAILED_STATUSES } =
+      await import("@/lib/payment/tap-api")
+    const fetched = await fetchTapCharge(tapId)
+    if (!fetched.ok) {
+      return {
+        success: true,
+        data: { state: fetched.reason === "not_found" ? "failed" : "pending" },
+      }
+    }
+    const charge = fetched.charge
+
+    // A charge id from another application / school is not a payment here.
+    if (
+      charge.metadata?.type !== "registration_fee" ||
+      charge.metadata?.applicationId !== application.id ||
+      charge.metadata?.schoolId !== application.schoolId
+    ) {
+      return { success: false, error: "APPLICATION_NOT_FOUND" }
+    }
+
+    if (TAP_CAPTURED_STATUSES.has(charge.status)) {
+      const { settleRegistrationFee } = await import("./settle")
+      const outcome = await settleRegistrationFee({
+        applicationId: application.id,
+        schoolId: application.schoolId,
+        method: "tap",
+        reference: charge.id,
+        amount: typeof charge.amount === "number" ? charge.amount : null,
+      })
+      // Called from the offer page's render (which reads the offer fresh right
+      // after), so no refresh/revalidate here — both throw during render.
+      return {
+        success: true,
+        data: {
+          state:
+            outcome === "settled" || outcome === "already_paid"
+              ? "success"
+              : "pending",
+        },
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        state: TAP_FAILED_STATUSES.has(charge.status) ? "failed" : "pending",
+      },
+    }
+  } catch (error) {
+    console.error("[verifyRegistrationFeeReturn]", error)
+    return { success: true, data: { state: "pending" } }
+  }
+}
+
+// ============================================================================
 // 5. Record Registration Cash Intent
 // ============================================================================
 
@@ -1098,6 +1189,12 @@ export async function recordRegistrationCashIntent(
         ? Number(application.campaign.applicationFee)
         : null
     )
+
+    // Nothing to collect — refuse like the card path instead of recording a
+    // zero-amount intent the office would then be asked to "confirm".
+    if (feeAmount <= 0) {
+      return { success: false, error: "NO_FEE_CONFIGURED" }
+    }
 
     const cashResult = await createPaymentCheckout("cash", {
       amount: feeAmount,
@@ -1240,6 +1337,10 @@ export async function recordRegistrationBankTransferIntent(
         ? Number(application.campaign.applicationFee)
         : null
     )
+
+    if (feeAmount <= 0) {
+      return { success: false, error: "NO_FEE_CONFIGURED" }
+    }
 
     const transferResult = await createPaymentCheckout("bank_transfer", {
       amount: feeAmount,
@@ -1422,6 +1523,10 @@ export async function recordRegistrationWalletIntent(
         ? Number(application.campaign.applicationFee)
         : null
     )
+
+    if (feeAmount <= 0) {
+      return { success: false, error: "NO_FEE_CONFIGURED" }
+    }
 
     await db.application.update({
       where: { id: applicationId, schoolId },

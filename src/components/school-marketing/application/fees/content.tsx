@@ -115,12 +115,12 @@ export default function FeesContent({ dictionary }: Props) {
       return
     }
     setLoading(true)
-    getApplicationFeePreview(applyingForClass)
+    getApplicationFeePreview(applyingForClass, id)
       .then((res) => {
         if (res.success && res.data) setPreview(res.data)
       })
       .finally(() => setLoading(false))
-  }, [applyingForClass])
+  }, [applyingForClass, id])
 
   const onNext = useCallback(async () => {
     setIsSubmitting(true)

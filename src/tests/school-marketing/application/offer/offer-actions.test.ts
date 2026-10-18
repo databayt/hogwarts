@@ -9,6 +9,7 @@ import {
   resolveSchoolLang,
 } from "@/lib/dispatch-notification"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
+import { fetchTapCharge } from "@/lib/payment/tap-api"
 import { checkUserRateLimit } from "@/lib/rate-limit"
 import {
   acceptOffer,
@@ -18,8 +19,10 @@ import {
   recordRegistrationBankTransferIntent,
   recordRegistrationCashIntent,
   submitRegistrationFeeProof,
+  verifyRegistrationFeeReturn,
 } from "@/components/school-marketing/application/offer/actions"
 import { computeAvailableGateways } from "@/components/school-marketing/application/offer/gateways"
+import { settleRegistrationFee } from "@/components/school-marketing/application/offer/settle"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -74,6 +77,16 @@ vi.mock("@/lib/dispatch-notification", () => ({
 vi.mock("@/lib/payment/provider", () => ({
   createPaymentCheckout: vi.fn(),
   resolveAvailableMethods: vi.fn().mockReturnValue(["stripe"]),
+}))
+
+vi.mock("@/lib/payment/tap-api", () => ({
+  fetchTapCharge: vi.fn(),
+  TAP_CAPTURED_STATUSES: new Set(["CAPTURED"]),
+  TAP_FAILED_STATUSES: new Set(["FAILED", "DECLINED", "CANCELLED"]),
+}))
+
+vi.mock("@/components/school-marketing/application/offer/settle", () => ({
+  settleRegistrationFee: vi.fn(),
 }))
 
 vi.mock("next/cache", () => ({
@@ -561,5 +574,150 @@ describe("submitRegistrationFeeProof", () => {
     )
     expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
     expect(mockFindFirst).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Manual intents refuse a zero fee (as the card path does)
+// ---------------------------------------------------------------------------
+
+describe("manual registration intents with no fee configured", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    allowRateLimit()
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+    mockSchoolFindUnique.mockResolvedValue({ currency: "SAR" })
+    mockAdmissionSettingsFindUnique.mockResolvedValue({
+      cashPaymentInstructions: "Pay at the office",
+      bankDetails: { bankName: "Bank" },
+    })
+    ;(db.class.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    ;(db.feeStructure.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
+      []
+    )
+  })
+
+  it("cash intent returns NO_FEE_CONFIGURED and records nothing", async () => {
+    const result = await recordRegistrationCashIntent(
+      APPLICATION_ID,
+      ACCESS_TOKEN
+    )
+    expect(result).toEqual({ success: false, error: "NO_FEE_CONFIGURED" })
+    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(dispatchNotificationsToAudience).not.toHaveBeenCalled()
+  })
+
+  it("bank-transfer intent returns NO_FEE_CONFIGURED and records nothing", async () => {
+    const result = await recordRegistrationBankTransferIntent(
+      APPLICATION_ID,
+      ACCESS_TOKEN
+    )
+    expect(result).toEqual({ success: false, error: "NO_FEE_CONFIGURED" })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// verifyRegistrationFeeReturn — Tap lands on the same URL on success AND failure
+// ---------------------------------------------------------------------------
+
+describe("verifyRegistrationFeeReturn", () => {
+  const mockFetchTapCharge = fetchTapCharge as ReturnType<typeof vi.fn>
+  const mockSettle = settleRegistrationFee as ReturnType<typeof vi.fn>
+  const ourCharge = (status: string) => ({
+    ok: true,
+    charge: {
+      id: "chg_123",
+      status,
+      amount: 500,
+      metadata: {
+        type: "registration_fee",
+        applicationId: APPLICATION_ID,
+        schoolId: SCHOOL_ID,
+      },
+    },
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    allowRateLimit()
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+  })
+
+  it("settles a CAPTURED charge via settleRegistrationFee and reports success", async () => {
+    mockFetchTapCharge.mockResolvedValue(ourCharge("CAPTURED"))
+    mockSettle.mockResolvedValue("settled")
+
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "chg_123"
+    )
+
+    expect(result).toEqual({ success: true, data: { state: "success" } })
+    expect(mockSettle).toHaveBeenCalledWith({
+      applicationId: APPLICATION_ID,
+      schoolId: SCHOOL_ID,
+      method: "tap",
+      reference: "chg_123",
+      amount: 500,
+    })
+  })
+
+  it("reports success when the webhook already settled it", async () => {
+    mockFetchTapCharge.mockResolvedValue(ourCharge("CAPTURED"))
+    mockSettle.mockResolvedValue("already_paid")
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "chg_123"
+    )
+    expect(result.data?.state).toBe("success")
+  })
+
+  it("reports failed for a declined charge and settles nothing", async () => {
+    mockFetchTapCharge.mockResolvedValue(ourCharge("DECLINED"))
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "chg_123"
+    )
+    expect(result).toEqual({ success: true, data: { state: "failed" } })
+    expect(mockSettle).not.toHaveBeenCalled()
+  })
+
+  it("reports pending when Tap cannot be reached", async () => {
+    mockFetchTapCharge.mockResolvedValue({ ok: false, reason: "network" })
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "chg_123"
+    )
+    expect(result).toEqual({ success: true, data: { state: "pending" } })
+    expect(mockSettle).not.toHaveBeenCalled()
+  })
+
+  it("refuses a captured charge that belongs to another application", async () => {
+    const other = ourCharge("CAPTURED")
+    other.charge.metadata.applicationId = "someone-else"
+    mockFetchTapCharge.mockResolvedValue(other)
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "chg_123"
+    )
+    expect(result.success).toBe(false)
+    expect(mockSettle).not.toHaveBeenCalled()
+  })
+
+  it("rejects an invalid access token before calling Tap", async () => {
+    mockFindFirst.mockResolvedValue(null)
+    const result = await verifyRegistrationFeeReturn(
+      APPLICATION_ID,
+      "bad-token",
+      "chg_123"
+    )
+    expect(result).toEqual({ success: false, error: "APPLICATION_NOT_FOUND" })
+    expect(mockFetchTapCharge).not.toHaveBeenCalled()
   })
 })

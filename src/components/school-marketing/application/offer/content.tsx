@@ -142,6 +142,10 @@ type OfferDict = Partial<{
   proofUploaded: string
   uploadFailed: string
   changeMethod: string
+  registrationPending: string
+  registrationPendingMessage: string
+  /** Server action error code → family-facing message. */
+  errors: Partial<Record<string, string>>
 }>
 
 interface OfferContentProps {
@@ -149,7 +153,12 @@ interface OfferContentProps {
   locale: string
   dictionary: Dictionary
   cancelled?: boolean
-  /** Value of the ?registration= query param: 'success' | 'cancelled' | undefined */
+  /**
+   * Registration-fee return state: 'success' | 'cancelled' | 'failed' |
+   * 'pending' | undefined. A Tap return is verified server-side by the page
+   * before it gets here; a bare `?registration=success` only shows the paid
+   * banner once the application really is paid (else "processing").
+   */
   registrationParam?: string
   accessToken: string
   /** School grade-naming country ("SD") — labels the stored grade name. */
@@ -185,6 +194,15 @@ export default function OfferContent({
 
   // Locale-aware amounts — same formatting the fees-preview step uses,
   // instead of raw "{amount} {currency}" concatenation.
+  // Offer actions return error CODES — resolve them through the dictionary so
+  // a family never sees "OFFER_NOT_ACCEPTED"; unknown codes get the fallback.
+  const errorMessage = (code: string | undefined, fallback?: string) =>
+    (code && t?.errors?.[code]) ||
+    fallback ||
+    t?.errors?.generic ||
+    t?.unexpectedError ||
+    "Something went wrong. Please try again."
+
   const fmtAmount = (amount: number) =>
     formatCurrency(amount, school.currency, locale === "ar" ? "ar-SD" : "en-US")
 
@@ -304,7 +322,7 @@ export default function OfferContent({
     if (result.success) {
       setAccepted(true)
     } else {
-      setError(result.error || t?.failedToAccept || "Failed to accept offer")
+      setError(errorMessage(result.error, t?.failedToAccept))
     }
   }
 
@@ -316,7 +334,7 @@ export default function OfferContent({
     if (result.success) {
       setDeclined(true)
     } else {
-      setError(result.error || t?.failedToDecline || "Failed to decline offer")
+      setError(errorMessage(result.error, t?.failedToDecline))
     }
   }
 
@@ -337,9 +355,7 @@ export default function OfferContent({
             cashInstructions: result.data.cashInstructions,
           })
         } else {
-          setError(
-            result.error || t?.failedPayment || "Failed to record payment"
-          )
+          setError(errorMessage(result.error, t?.failedPayment))
         }
       } else if (method === "bank_transfer") {
         const result = await recordRegistrationBankTransferIntent(
@@ -353,9 +369,7 @@ export default function OfferContent({
             bankDetails: result.data.bankDetails,
           })
         } else {
-          setError(
-            result.error || t?.failedPayment || "Failed to record payment"
-          )
+          setError(errorMessage(result.error, t?.failedPayment))
         }
       } else if (method === "bankak" || method === "cashi") {
         // Sudan's wallet rails have no merchant API — like cash and bank
@@ -374,9 +388,7 @@ export default function OfferContent({
             wallet: result.data.wallet,
           })
         } else {
-          setError(
-            result.error || t?.failedPayment || "Failed to record payment"
-          )
+          setError(errorMessage(result.error, t?.failedPayment))
         }
       } else {
         // Any other gateway in availableGateways is an online checkout rail
@@ -393,9 +405,7 @@ export default function OfferContent({
           window.location.href = result.data.checkoutUrl
           return
         }
-        setError(
-          result.error || t?.failedCheckout || "Failed to create checkout"
-        )
+        setError(errorMessage(result.error, t?.failedCheckout))
       }
     } catch {
       setError(t?.unexpectedError || "An unexpected error occurred")
@@ -752,7 +762,7 @@ export default function OfferContent({
         </div>
 
         {/* Registration fee payment result banners (Stripe redirect-back) */}
-        {registrationParam === "success" && (
+        {registrationParam === "success" && regPaid && (
           <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertTitle className="text-green-800 dark:text-green-200">
@@ -773,6 +783,20 @@ export default function OfferContent({
             <AlertDescription>
               {t?.paymentCancelledMessage ||
                 "Payment was cancelled. You can try again."}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {((registrationParam === "success" && !regPaid) ||
+          registrationParam === "pending") && (
+          <Alert>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <AlertTitle>
+              {t?.registrationPending || "Payment Processing"}
+            </AlertTitle>
+            <AlertDescription>
+              {t?.registrationPendingMessage ||
+                "We are confirming your payment with the payment provider. Refresh this page in a moment to see the result."}
             </AlertDescription>
           </Alert>
         )}

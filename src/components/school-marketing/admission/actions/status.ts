@@ -2,13 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { createHash } from "crypto"
+import { createHash, randomInt } from "crypto"
 import type { AdmissionApplicationStatus } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
+import { escapeHtml } from "@/lib/escape-html"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -88,9 +89,14 @@ const OTP_GENERIC_RESPONSE: ActionResult<{ message: string }> = {
 export async function requestStatusOTP(
   subdomain: string,
   applicationNumber: string,
-  email: string
+  rawEmail: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
+    // One canonical form for the rate-limit key, the OTP row and the lookup —
+    // verify normalises the same way, so "A@x.com " and "a@x.com" are one
+    // address (and one rate-limit bucket).
+    const email = (rawEmail ?? "").trim().toLowerCase()
+    if (!email) return OTP_GENERIC_RESPONSE
     // Rate-limit per (subdomain, email) — use checkUserRateLimit so it works
     // in serverless environments without a NextRequest.
     const rlResult = await checkUserRateLimit(
@@ -129,7 +135,11 @@ export async function requestStatusOTP(
 
     // Find the application — if not found, return generic (not an oracle)
     const application = await db.application.findFirst({
-      where: { schoolId, applicationNumber, email },
+      where: {
+        schoolId,
+        applicationNumber,
+        email: { equals: email, mode: "insensitive" },
+      },
     })
 
     if (!application) {
@@ -137,7 +147,8 @@ export async function requestStatusOTP(
     }
 
     // Generate OTP (6 digits) and store only its sha256 hash
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    // CSPRNG — Math.random() is predictable enough to matter for a login code.
+    const otp = randomInt(100000, 1000000).toString()
     const otpHash = hashOtp(otp)
     const expiresAt = new Date()
     expiresAt.setMinutes(expiresAt.getMinutes() + 10) // 10 minutes expiry
@@ -179,7 +190,7 @@ export async function requestStatusOTP(
             <h1 style="font-size: 32px; letter-spacing: 5px; color: #3B82F6;">${otp}</h1>
             <p>This code expires in 10 minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
-            <p>Best regards,<br>${schoolResult.data.name}</p>
+            <p>Best regards,<br>${escapeHtml(schoolResult.data.name)}</p>
           `,
         })
       } catch (emailError) {
@@ -223,11 +234,16 @@ export async function verifyStatusOTP(
    * The address the code was sent to. Binding the lookup to it closes an
    * attempt-burning hole: with the application number alone, anyone could
    * feed five wrong codes and lock the real applicant out of their own
-   * freshly-requested code.
+   * freshly-requested code. Required — a call without it is refused.
    */
-  email?: string
+  email: string
 ): Promise<ActionResult<{ accessToken: string }>> {
   try {
+    const normalizedEmail = (email ?? "").trim().toLowerCase()
+    if (!normalizedEmail) {
+      return { success: false, error: "Invalid or expired verification code" }
+    }
+
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
       return { success: false, error: "School not found" }
@@ -239,14 +255,11 @@ export async function verifyStatusOTP(
     // Find the most-recent active (non-expired, unverified) OTP record for
     // this application, regardless of hash — we need the record to atomically
     // increment attempts even on a wrong guess.
-    const normalizedEmail = email?.trim().toLowerCase()
     const existingOTP = await db.admissionOTP.findFirst({
       where: {
         schoolId,
         applicationNumber,
-        ...(normalizedEmail
-          ? { email: { equals: normalizedEmail, mode: "insensitive" } }
-          : {}),
+        email: { equals: normalizedEmail, mode: "insensitive" },
         expiresAt: { gte: new Date() },
         verified: false,
       },

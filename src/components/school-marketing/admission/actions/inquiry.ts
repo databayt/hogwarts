@@ -7,6 +7,7 @@ import { Resend } from "resend"
 import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { escapeHtml } from "@/lib/escape-html"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
@@ -152,15 +153,15 @@ export async function submitInquiry(
           subject: `Thank You for Your Inquiry - ${schoolResult.data.name}`,
           html: `
             <h2>Thank You for Your Interest!</h2>
-            <p>Dear ${validated.parentName},</p>
-            <p>Thank you for your inquiry about ${schoolResult.data.name}. We have received your message and our admissions team will get back to you soon.</p>
-            ${validated.studentName ? `<p>We look forward to learning more about <strong>${validated.studentName}</strong>.</p>` : ""}
+            <p>Dear ${escapeHtml(validated.parentName)},</p>
+            <p>Thank you for your inquiry about ${escapeHtml(schoolResult.data.name)}. We have received your message and our admissions team will get back to you soon.</p>
+            ${validated.studentName ? `<p>We look forward to learning more about <strong>${escapeHtml(validated.studentName)}</strong>.</p>` : ""}
             <p>In the meantime, you can:</p>
             <ul>
               <li><a href="${await tenantUrl(subdomain, "/tour", lang)}">Schedule a Campus Tour</a></li>
               <li><a href="${await tenantUrl(subdomain, "/application", lang)}">Start an Application</a></li>
             </ul>
-            <p>Best regards,<br>Admissions Team<br>${schoolResult.data.name}</p>
+            <p>Best regards,<br>Admissions Team<br>${escapeHtml(schoolResult.data.name)}</p>
           `,
         })
       } catch (emailError) {

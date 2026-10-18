@@ -13,6 +13,7 @@ import {
   buildTourCancelledEmail,
   buildTourRescheduledEmail,
 } from "@/lib/email-templates/admission"
+import { escapeHtml } from "@/lib/escape-html"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
@@ -355,7 +356,7 @@ export async function createTourBooking(
           subject: `Tour Booking Confirmed - ${bookingNumber}`,
           html: `
             <h2>Tour Booking Confirmed!</h2>
-            <p>Dear ${validated.parentName},</p>
+            <p>Dear ${escapeHtml(validated.parentName)},</p>
             <p>Your campus tour has been confirmed. Here are the details:</p>
             <table style="border-collapse: collapse; margin: 20px 0;">
               <tr>
@@ -375,7 +376,7 @@ export async function createTourBooking(
                   ? `
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;"><strong>Location</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${slot.location}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(slot.location)}</td>
               </tr>
               `
                   : ""
@@ -388,7 +389,7 @@ export async function createTourBooking(
             <p>If you need to reschedule or cancel, please visit:</p>
             <p><a href="${await tenantUrl(subdomain, `/tour/${bookingNumber}?k=${tourManageKey(booking.id)}`, lang)}">Manage Booking</a></p>
             <p>We look forward to meeting you!</p>
-            <p>Best regards,<br>${schoolResult.data.name}</p>
+            <p>Best regards,<br>${escapeHtml(schoolResult.data.name)}</p>
           `,
         })
       } catch (emailError) {
@@ -579,11 +580,13 @@ export async function cancelTourBooking(
     // Send cancellation email
     if (resend) {
       try {
+        // The template interpolates raw strings into HTML — escape what a
+        // family (parentName) or the caller (reason) typed.
         const cancelEmail = buildTourCancelledEmail({
           school: booking.school,
-          parentName: booking.parentName,
+          parentName: escapeHtml(booking.parentName),
           bookingNumber,
-          reason,
+          reason: reason ? escapeHtml(reason) : reason,
           rescheduleUrl: await tenantUrl(
             subdomain,
             "/tour",
@@ -715,7 +718,7 @@ export async function rescheduleTourBooking(
 
         const rescheduleEmail = buildTourRescheduledEmail({
           school: booking.school,
-          parentName: booking.parentName,
+          parentName: escapeHtml(booking.parentName),
           bookingNumber,
           date: formattedDate,
           time: `${startTime} - ${endTime}`,

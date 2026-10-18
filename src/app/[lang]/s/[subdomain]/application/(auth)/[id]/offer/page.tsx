@@ -7,7 +7,10 @@ import { notFound } from "next/navigation"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getOfferDetails } from "@/components/school-marketing/application/offer/actions"
+import {
+  getOfferDetails,
+  verifyRegistrationFeeReturn,
+} from "@/components/school-marketing/application/offer/actions"
 import OfferContent from "@/components/school-marketing/application/offer/content"
 
 export async function generateMetadata({
@@ -32,15 +35,36 @@ interface Props {
     token?: string
     cancelled?: string
     registration?: string
+    /** Tap appends `tap_id=chg_…` on success AND failure alike. */
+    tap_id?: string | string[]
   }>
 }
 
 export default async function OfferPage({ params, searchParams }: Props) {
   const { lang, id: applicationId } = await params
-  const { token: accessToken, cancelled, registration } = await searchParams
+  const {
+    token: accessToken,
+    cancelled,
+    registration,
+    tap_id: rawTapId,
+  } = await searchParams
 
   if (!accessToken) {
     notFound()
+  }
+
+  // Tap sends the payer back to the "success" URL whatever happened, so a Tap
+  // return is read back from Tap (and settled if captured) before the page
+  // says anything — and before the offer is read, so it reflects the result.
+  const tapId = Array.isArray(rawTapId) ? rawTapId[0] : rawTapId
+  let registrationState = registration
+  if (tapId) {
+    const verified = await verifyRegistrationFeeReturn(
+      applicationId,
+      accessToken,
+      tapId
+    )
+    registrationState = verified.success ? verified.data?.state : undefined
   }
 
   const result = await getOfferDetails(applicationId, accessToken)
@@ -60,7 +84,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
       locale={lang}
       dictionary={dictionary}
       cancelled={cancelled === "true"}
-      registrationParam={registration}
+      registrationParam={registrationState}
       accessToken={accessToken}
       gradeCountry={gradeCountry}
     />

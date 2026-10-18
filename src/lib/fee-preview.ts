@@ -581,11 +581,19 @@ export async function getFeePreviewByGradeId(
 export async function getFeePreviewByGradeLabel(
   schoolId: string,
   applyingForClass: string,
-  studentId: string | null = null
+  studentId: string | null = null,
+  /**
+   * The year to quote — pass the admission campaign's `academicYear` so the
+   * wizard quotes the same structures the offer will (the offer resolves fees
+   * by the campaign's year, not the school's latest SchoolYear).
+   */
+  academicYearOverride: string | null = null
 ): Promise<FeePreview> {
   const [settings, academicYear] = await Promise.all([
     loadSchoolSettings(schoolId),
-    loadAcademicYear(schoolId),
+    academicYearOverride
+      ? Promise.resolve(academicYearOverride)
+      : loadAcademicYear(schoolId),
   ])
 
   // Resolve AcademicGrade from the label (exact → case-insensitive → gradeNumber)

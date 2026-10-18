@@ -11422,7 +11422,28 @@
         "uploading": "Uploading...",
         "proofUploaded": "Receipt uploaded — the school will verify it.",
         "uploadFailed": "Could not upload the receipt. Please try again.",
-        "changeMethod": "Choose a different payment method"
+        "changeMethod": "Choose a different payment method",
+        "registrationPending": "Payment Processing",
+        "registrationPendingMessage": "We are confirming your payment with the payment provider. Refresh this page in a moment to see the result.",
+        "errors": {
+          "APPLICATION_NOT_FOUND": "This offer link is invalid or has expired. Please use the latest link from your email.",
+          "SCHOOL_NOT_FOUND": "The school could not be found.",
+          "OFFER_EXPIRED": "This offer has expired. Please contact the school.",
+          "OFFER_NOT_AVAILABLE": "This offer is no longer available.",
+          "OFFER_NOT_ACCEPTED": "Please accept the offer before paying the registration fee.",
+          "OFFER_ALREADY_ACCEPTED": "You have already accepted this offer.",
+          "OFFER_ACCEPT_FAILED": "Could not accept the offer. Please try again.",
+          "OFFER_DECLINE_FAILED": "Could not decline the offer. Please try again.",
+          "OFFER_FETCH_FAILED": "Could not load the offer. Please try again.",
+          "NO_FEE_CONFIGURED": "The school has not set a registration fee yet. Please contact the school.",
+          "RATE_LIMITED": "Too many attempts. Please wait a minute and try again.",
+          "PAYMENT_METHOD_NOT_AVAILABLE": "This payment method is not available. Please choose another.",
+          "CHECKOUT_FAILED": "Could not start the online payment. Please try again.",
+          "PAYMENT_RECORD_FAILED": "Could not record your payment choice. Please try again.",
+          "REGISTRATION_FEE_ALREADY_PAID": "The registration fee has already been paid.",
+          "VALIDATION_ERROR": "Please check your input and try again.",
+          "generic": "Something went wrong. Please try again."
+        }
       },
       "ai": {
         "extractedData": "Extracted Data",

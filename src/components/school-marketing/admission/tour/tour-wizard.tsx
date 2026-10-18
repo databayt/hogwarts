@@ -136,9 +136,25 @@ export function TourWizard({
       setIsLoadingSlots(true)
       setSelectedSlot(null)
       try {
-        const result = await getAvailableSlots(subdomain, "TOUR", date)
+        // Only the picked day: without an end date the action returned the
+        // next 30 days, and the period grid (matched by start time) could
+        // book a same-time slot on another day.
+        const y = date.getFullYear()
+        const mo = date.getMonth()
+        const d = date.getDate()
+        const dayStart = new Date(Date.UTC(y, mo, d, 0, 0, 0))
+        const dayEnd = new Date(Date.UTC(y, mo, d, 23, 59, 59, 999))
+        const result = await getAvailableSlots(
+          subdomain,
+          "TOUR",
+          dayStart,
+          dayEnd
+        )
         if (result.success && result.data) {
-          setAvailableSlots(result.data)
+          const key = localDayKey(date)
+          setAvailableSlots(
+            result.data.filter((slot) => slotDayKey(slot.date) === key)
+          )
         } else {
           setAvailableSlots([])
         }
@@ -168,7 +184,11 @@ export function TourWizard({
   }
 
   const handleSlotSelect = (slot: TourSlot) => {
-    setSelectedSlot(slot)
+    // Resolve by id against the picked day's list — never trust a match made
+    // on start time alone.
+    const match = availableSlots.find((s) => s.id === slot.id)
+    if (!match) return
+    setSelectedSlot(match)
     goTo("info")
   }
 
@@ -397,6 +417,19 @@ function DateStep({
   )
 }
 
+/**
+ * Calendar-day key. `AdmissionTimeSlot.date` is a `@db.Date` (UTC midnight),
+ * the calendar hands back LOCAL midnight — compare each on its own terms.
+ */
+function slotDayKey(date: Date | string): string {
+  return new Date(date).toISOString().slice(0, 10)
+}
+function localDayKey(date: Date): string {
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${m}-${d}`
+}
+
 // ---------------------------------------------------------------------------
 // Step 2: Time
 // ---------------------------------------------------------------------------
@@ -422,12 +455,15 @@ function TimeStep({
     locale: isRTL ? ar : enUS,
   })
 
-  // Match school periods to available admission slots by time overlap
+  // Match school periods to the picked day's slots by start time
+  const dayKey = localDayKey(selectedDate)
   const periodSlots =
     schoolPeriods.length > 0
       ? schoolPeriods.map((period) => {
           const matchingSlot = availableSlots.find(
-            (slot) => slot.startTime === period.startTime
+            (slot) =>
+              slotDayKey(slot.date) === dayKey &&
+              slot.startTime === period.startTime
           )
           return { period, slot: matchingSlot ?? null }
         })

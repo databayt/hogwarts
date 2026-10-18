@@ -136,6 +136,55 @@ describe("Status Tracking", () => {
       })
     })
 
+    it("normalises the email (trim + lowercase) for the lookup and the stored OTP", async () => {
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        id: "app-1",
+        applicationNumber: APP_NUMBER,
+        email: EMAIL,
+        schoolId: SCHOOL_ID,
+      } as any)
+      vi.mocked(db.admissionOTP.count).mockResolvedValue(0)
+      vi.mocked(db.admissionOTP.create).mockResolvedValue({
+        id: "otp-1",
+      } as any)
+
+      await requestStatusOTP(SUBDOMAIN, APP_NUMBER, "  Ahmed@Test.COM ")
+
+      expect(db.application.findFirst).toHaveBeenCalledWith({
+        where: {
+          schoolId: SCHOOL_ID,
+          applicationNumber: APP_NUMBER,
+          email: { equals: EMAIL, mode: "insensitive" },
+        },
+      })
+      expect(db.admissionOTP.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ email: EMAIL }),
+      })
+    })
+
+    it("generates the code with crypto.randomInt, not Math.random", async () => {
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        id: "app-1",
+        applicationNumber: APP_NUMBER,
+        email: EMAIL,
+        schoolId: SCHOOL_ID,
+      } as any)
+      vi.mocked(db.admissionOTP.count).mockResolvedValue(0)
+      vi.mocked(db.admissionOTP.create).mockResolvedValue({
+        id: "otp-1",
+      } as any)
+      const randomSpy = vi.spyOn(Math, "random")
+      const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+
+      await requestStatusOTP(SUBDOMAIN, APP_NUMBER, EMAIL)
+
+      expect(randomSpy).not.toHaveBeenCalled()
+      const line = logSpy.mock.calls.map((c) => String(c[0])).join("\n")
+      expect(line).toMatch(/OTP for .*: \d{6}$/m)
+      randomSpy.mockRestore()
+      logSpy.mockRestore()
+    })
+
     it("T-02: returns generic success when school not found (enumeration oracle hardened)", async () => {
       mockSchoolNotFound()
 
@@ -242,7 +291,12 @@ describe("Status Tracking", () => {
       } as any)
       vi.mocked(db.application.update).mockResolvedValue({} as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(true)
       expect(result.data?.accessToken).toBeDefined()
@@ -297,6 +351,19 @@ describe("Status Tracking", () => {
       )
     })
 
+    it("refuses to verify without the email the code was sent to", async () => {
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        "   "
+      )
+
+      expect(result.success).toBe(false)
+      expect(db.admissionOTP.findFirst).not.toHaveBeenCalled()
+      expect(db.admissionOTP.updateMany).not.toHaveBeenCalled()
+    })
+
     it("T-08: reuses existing valid access token", async () => {
       const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
@@ -317,7 +384,12 @@ describe("Status Tracking", () => {
         accessTokenExpiry: futureDate,
       } as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(true)
       expect(result.data?.accessToken).toBe("existing-token-abc")
@@ -339,7 +411,12 @@ describe("Status Tracking", () => {
       } as any)
 
       // Submit wrong OTP
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "999999")
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        "999999",
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Invalid or expired")
@@ -369,7 +446,12 @@ describe("Status Tracking", () => {
       } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "999999")
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        "999999",
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Too many invalid attempts")
@@ -398,7 +480,12 @@ describe("Status Tracking", () => {
       } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Too many invalid attempts")
@@ -407,7 +494,12 @@ describe("Status Tracking", () => {
     it("T-12: rejects expired OTP (no active record found)", async () => {
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce(null)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Invalid or expired")
@@ -416,7 +508,12 @@ describe("Status Tracking", () => {
     it("T-13: rejects when school not found", async () => {
       mockSchoolNotFound()
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("School not found")
@@ -436,7 +533,12 @@ describe("Status Tracking", () => {
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
       vi.mocked(db.application.findFirst).mockResolvedValue(null)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        EMAIL
+      )
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Application not found")
