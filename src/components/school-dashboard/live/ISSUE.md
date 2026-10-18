@@ -23,6 +23,10 @@ Passed:
 - [x] Hand raise → host toast "Give the floor / Lower" + badge; student sees "#1 in line".
 - [x] Chat both ways, persisted (`chat` event row). Questions (AR) reach the host with "mark answered".
 - [x] Everyone leaves → room closes after `departureTimeout` (120s) → `room_finished` → `ended`.
+- [x] Explicit End (host-only class `cmvedddza0aam09011bbtgu61`): "End class" → "End for everyone?" →
+      `ended` → `?homework=1` opens "Set homework for this class". An empty room wrote no attendance.
+- [x] Teacher's class page during the class: "attendance is taken automatically" + the live register
+      ("1 of 16 joined").
 - [x] Attendance sync: student@ PRESENT (VIRTUAL) with "left early" note; the 15 absent classmates
       ABSENT; both rolled into VIRTUAL day rows. Presence durations 407–456s match the run.
 - [x] Console: zero errors for all three roles outside the deliberate offline window.
