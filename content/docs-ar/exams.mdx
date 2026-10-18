@@ -1,0 +1,353 @@
+---
+title: الاختبارات
+description: امتحانات متكاملة — بنك الأسئلة، توليد الأوراق، الأداء الرقمي، التصحيح بالذكاء الاصطناعي، النتائج، الشهادات.
+---
+
+تغطي وحدة الاختبارات دورة الحياة كاملة: تأليف الأسئلة، وطباعة الأوراق، والأداء الرقمي، والتصحيح بمساعدة الذكاء الاصطناعي، والتحليلات، والشهادات، وتتبّع التقدّم. 18 وحدة فرعية، وأكثر من 40 مسارًا، ونحو 80 ملف مكوّنات.
+
+## على الهاتف
+
+تحت نقطة التحوّل `md` تُركَّب نظرة الاختبارات العامة بحسب الدور — لافتة للاختبار القادم، ولوحة أرقام، وأبواب بشكل أيقونات تطبيقات، وصفوف مؤرَّخة للاختبارات القادمة والنتائج — وتعرض صفحات التأليف (التوليد، الكتالوج، بنك الأسئلة، الشهادات) بطاقات رمادية بعمودين بأزرار بيضاوية. الأجهزة اللوحية وسطح المكتب دون تغيير، وتبقى جداول بيانات الاختبارات جداول.
+
+## الوحدات الفرعية
+
+| الوحدة الفرعية      | الغرض                                                           |
+| ------------------- | --------------------------------------------------------------- |
+| Question bank       | تخزين الأسئلة وإدارتها بحسب المادة والنوع والصعوبة ومستوى Bloom |
+| Psychometrics       | تحليل البنود، مؤشر التمييز، فعالية المموّهات                    |
+| Templates           | مخططات قابلة لإعادة الاستخدام مع قواعد توزيع الأسئلة            |
+| Catalog             | تصفّح قوالب الاختبارات المشتركة واستيرادها                      |
+| Blueprints          | هياكل اختبارات إقليمية (إعدادات وطنية مسبقة)                    |
+| Auto-generation     | توليد اختبارات من القوالب باختيار ذكي                           |
+| Versions            | نسخ متعددة بأسئلة مبعثرة وتتبّع المساهمات                       |
+| AI question gen     | توليد أسئلة من المنهج (تجريبي)                                  |
+| Management          | CRUD، الجدولة، كشف التعارضات، التحليلات                         |
+| Paper generation    | أوراق PDF بنظام قوالب قابل للتركيب                              |
+| Composition         | تركيب الخانات بحسب المتغيّرات                                   |
+| Regional presets    | تنسيق خاص بكل بلد (SD, SA, US, MENA)                            |
+| Digital taking      | مشغّل اختبار عبر الإنترنت مع المراقبة                           |
+| Quick exams         | اختبارات قصيرة خفيفة للمعلم تُؤدّى فورًا                        |
+| Auto-marking        | MCQ، T/F، fill-in-blank                                         |
+| AI grading          | المقالات والإجابات القصيرة                                      |
+| OCR                 | إجابات مكتوبة بخط اليد عبر GPT-4 Vision                         |
+| Bulk marking        | تصحيح اختبار كامل دفعة واحدة، عرض بحسب السؤال                   |
+| Results & analytics | تحليل الأداء، PDF دفعي، تصدير CSV                               |
+| Certificates        | قوالب قابلة للضبط مع تحقق QR                                    |
+| Grading             | الحدود، CGPA، إعادة الاختبار                                    |
+| Progress            | الجداول والمراقبة                                               |
+| Mock exams          | اختبارات تدريبية                                                |
+| Quiz games          | اختبارات قصيرة بأسلوب الألعاب                                   |
+
+## بنك الأسئلة
+
+7 أنواع أسئلة، 4 منها قابلة للتصحيح التلقائي، و2 بمساعدة الذكاء الاصطناعي.
+
+| النوع           | تصحيح تلقائي | القالب                       |
+| --------------- | :----------: | ---------------------------- |
+| Multiple choice |      Y       | `templates/multiple-choice/` |
+| True / false    |      Y       | `templates/true-false/`      |
+| Fill in blank   |      Y       | `templates/fill-blank/`      |
+| Short answer    |  بمساعدة AI  | `templates/short-answer/`    |
+| Essay           |  بمساعدة AI  | `templates/essay/`           |
+| Matching        |      Y       | `templates/matching/`        |
+| Ordering        |      Y       | `templates/ordering/`        |
+
+يوفّر `qbank/analytics/` مؤشر التمييز، وتحليل المموّهات، ومعايرة الصعوبة، ونسبة النجاح، وتكرار الاستخدام. ويتصفّح `qbank/catalog-tab.tsx` الأسئلة المشتركة.
+
+استيراد CSV جماعي:
+
+```csv
+questionText,questionType,difficulty,bloomLevel,points,options,sampleAnswer,tags
+"What is 2+2?",MULTIPLE_CHOICE,EASY,REMEMBER,1,"[{""text"":""4"",""isCorrect"":true},{""text"":""3"",""isCorrect"":false}]","","math,arithmetic"
+```
+
+## إنشاء اختبار — وضعان
+
+الباب الأمامي (`/exams/new`) شاشة واحدة تعرض وضعَي إنشاء. يلتقي الوضعان في المسار نفسه لاحقًا — `GeneratedExam` بأسئلة ← معاينة الورقة ← الجدولة — ولا يختلفان إلا في كيفية زرع المخطط والأسئلة.
+
+| الوضع                         | المسار                     | يبدأ من                                                                     | السرعة |
+| ----------------------------- | -------------------------- | --------------------------------------------------------------------------- | ------ |
+| **اعتماد قالب**               | `/exams/generate/catalog`  | `ExamTemplate` منسَّق من المنصة ومتوافق مع المنهج (تصفّح ← معاينة ← اعتماد) | الأسرع |
+| **التوليد بالذكاء الاصطناعي** | `/exams/qbank/ai-generate` | موجّه موضوع ← أسئلة يصيغها الذكاء الاصطناعي في بنكك (راجعها قبل الحفظ)      | سريع   |
+
+أُزيل معالج "ابنِ قالبًا من العناصر الأولية" داخل التطبيق — فصارت **صفحة** الورقة ملف `.docx` مرفوعًا (راجع [قوالب المستندات](#document-templates) أدناه)، بينما يعيش **توزيع أسئلتها** على مخطط `SchoolExamTemplate` يُزرع باعتماد مخطط من الكتالوج.
+
+## قوالب المستندات
+
+تطبع المدارس على قرطاسيتها الإلزامية، لذا فإن **صفحة** الورقة ملف `.docx` ترفعه المدرسة — لا شيء يُبنى داخل التطبيق. يدير `/exams/templates` (للكادر فقط: DEVELOPER / ADMIN / TEACHER) فئتين، **أوراق الاختبار** و**الشهادات**؛ أما تخطيطات بطاقات التقارير فتعيش في `/grades/templates`. لا توجد صفحة `/documents` مستقلة.
+
+اكتب ملف Word بعناصر نائبة `{{tag}}` وأقسام `{{#loop}}…{{/loop}}`، وارفعه، فتُكتشف حقول الدمج تلقائيًا وتُعرض عليك. المفردات الكاملة لكل فئة مسرودة في حوار الرفع.
+
+لا يلزمك البدء من صفحة بيضاء: يعطيك **قالب البداية** ملف `.docx` حقيقيًا لتلك الفئة بكل الوسوم صحيحة — عدّل التنسيق وأبقِ الوسوم. استخدمه.
+
+### ما الذي يفحصه الرفع
+
+كان كل عطل من هذه لا يظهر إلا حين تطبع المدرسة الورقة، لذا يفحص الرفع الآن الملف ويخبرك أيّها هو:
+
+| ما الخطأ                                                                | ما الذي يحدث                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| قسم مفتوح ولا يُغلق (أو يُغلق ولم يُفتح)                                | **يُرفض** — لا يمكن أن يمتلئ أبدًا. يُسمّى الوسم المخالف لتصلحه في Word وترفع من جديد |
+| أقواس مفردة: `{#questions}` بدل `{{#questions}}`                        | يُحفظ مع تحذير يسرد كل علامة. تُطبع داخل المستند نصًا وتُسقَط محتوياتها               |
+| وسم لا بيانات له في هذه الفئة — غالبًا خطأ إملائي، مثل `{{schoolNmae}}` | يُحفظ، ويُعلَّم ذلك الوسم في القائمة المكتشفة. يُملأ فارغًا                           |
+| لا وسوم إطلاقًا                                                         | يُحفظ مع تحذير. تعبئته تُرجع نسخة غير معدّلة من ملفك                                  |
+
+يُرفض الأول فقط؛ والبقية تُخزَّن لتستطيع استخدام القالب إن كان التحذير إنذارًا كاذبًا.
+
+### تعبئة ورقة اختبار
+
+يُربط قالب ورقة الاختبار المرفوع ببيانات الاختبار الحقيقية عبر **استخدام القالب**، الذي يقدّم مصدرين:
+
+| المصدر           | ما تختاره                                                            | ما الذي يحدث                                                                              |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| اختبار موجود     | `GeneratedExam` فيه أسئلة بالفعل                                     | يملأ تخطيطك مباشرة                                                                        |
+| ابنِ واحدًا الآن | مخطط + صف (فصل واحد أو كلها) + عنوان الورقة + التاريخ + نوع الاختبار | ينشئ `SchoolExam` + `GeneratedExam`، ويختار الأسئلة تلقائيًا من البنك وفق المخطط، ثم يملأ |
+
+قبل التوليد يعرض الحوار **التغطية** — كل وسم اكتُشف في قالبك، معلَّمًا بأنه قابل للتعبئة أو غير مدعوم — فيظهر عدم التطابق قبل التنزيل لا فراغًا في الورقة المطبوعة. الناتج `.docx`؛ وتحويل PDF مؤجَّل.
+
+#### طريقتان لتخطيط المتن
+
+يوفّر المحلِّل الاثنتين دائمًا، فيستخدم القالب ما يناسبه ولا يكلّف غير المستخدم شيئًا:
+
+| الحلقة                          | الشكل                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| `{{#questions}}…{{/questions}}` | قائمة مسطّحة واحدة بترقيم متواصل                                                            |
+| `{{#sections}}…{{/sections}}`   | الأسئلة نفسها مجمّعة بحسب النوع — "1. Multiple choice"، "2. Essay" — لكل منها مجموع درجاتها |
+
+داخل القسم تحتفظ الأسئلة بـ `{{order}}` على مستوى الورقة وتحمل أيضًا `{{numberInSection}}`، فتُرقَّم الورقة المقسّمة والمسطحة بالطريقة نفسها. يعرض كل سؤال `{{typeLabel}}`، وكتل `{{#hasOptions}}` / `{{#isMcq}}` الشرطية، و`{{#answerLines}}` — مساحة كتابة فارغة مسطّرة بحسب نوع السؤال (المقال 8 أسطر، الإجابة القصيرة 3، ملء الفراغ 1، لا شيء للاختيار من متعدد). يعرض قالب البداية كل ذلك.
+
+#### حين يقصر البنك
+
+اختيار الأسئلة **يتراجع ولا يفشل**: يملأ كل خانة توزيع يستطيع البنك تغطيتها ويسجّل الباقي. فمخطط يطلب ست مقالات صعبة من بنك لا يحوي أيًّا منها يُنتج ورقة مع ذلك — قصيرة. يبقى الحوار مفتوحًا بعد التنزيل ويسمّي الفئات غير المملوءة، لأن البديل أن يكتشف معلم ورقة بـ 12 درجة لاختبار من 50 في قاعة الامتحان. لا يفشل التوليد كليًا إلا حين لا يعطي البنك _أي_ سؤال، وفي تلك الحالة يُتراجع عن الاختبار المنشأ حديثًا بدل تركه فارغًا على الجدول.
+
+## التوليد
+
+| المسار                          | الغرض                                        |
+| ------------------------------- | -------------------------------------------- |
+| `/exams/generate/templates`     | قواعد التوزيع بحسب النوع والصعوبة وBloom     |
+| `/exams/generate/catalog`       | تصفّح القوالب المشتركة واستيرادها            |
+| `/exams/qbank/ai-generate`      | أسئلة يصيغها الذكاء الاصطناعي من موجّه موضوع |
+| `/exams/generate/versions`      | نسخ متعددة مبعثرة                            |
+| `/exams/generate/contributions` | تتبّع المؤلفين                               |
+| `/exams/templates`              | تخطيطات `.docx` الخاصة بك (رفع + تعبئة)      |
+
+الاختيار الذكي: التجميع بحسب النوع والصعوبة، وملء التوزيع، وتطبيق توزيع Bloom، وعشوائية مبذورة، ومنع التكرار عبر النسخ.
+
+## الإدارة
+
+| المسار             | الغرض                                         |
+| ------------------ | --------------------------------------------- |
+| `/exams/new`       | محدّد إنشاء الاختبار (اعتماد · AI · من الصفر) |
+| `/exams/[id]`      | التفاصيل + ملخص النتائج                       |
+| `/exams/[id]/edit` | التعديل قبل الإجراء                           |
+
+`manage/calendar.tsx` — الجدول المرئي. `manage/conflict-display.tsx` — تحذيرات التداخل. `manage/analytics-dashboard.tsx` — إحصاءات على مستوى المدرسة، وتغطية المعايير، وتوليد ورقة سريع، وتصدير.
+
+تعرض قائمة `/exams/manage` (`manage/columns.tsx`) سبعة أعمدة: **العنوان** (مرساة الصف)، و**الصف** (فصل الاختبار، وإلا صفّه)، و**المادة**، و**النوع**، و**الموعد** (التاريخ · وقت البدء · المدة، مدموجة في واحد)، و**الدرجات**، و**الحالة**. الاختبار موضوع لصف — فصل واحد منه أو الصف كله — ولمادة؛
+
+## توليد الورقة
+
+نظام قائم على `@react-pdf/renderer` بقالب قابل للتركيب من أربع طبقات:
+
+1. **الذرّات** (13 في `templates/atom/`) — `alignment-marker`, `answer-line`, `blank-slot`, `bubble`, `checkbox`, `divider`, `field-line`, `logo-block`, `option-label`, `points-badge`, `question-number`, `type-label`, `watermark`.
+2. **أقسام الأسئلة** — واحد لكل نوع سؤال.
+3. **أقسام الصفحة** — 6 خانات × متغيّرات:
+
+   | الخانة       | المتغيّرات                                       |
+   | ------------ | ------------------------------------------------ |
+   | Header       | standard, ministry, minimal, bilingual, centered |
+   | Footer       | standard, disclaimer, minimal, grading           |
+   | Student info | standard, bubble-id, table, photo                |
+   | Instructions | standard, compact, rules, sectioned              |
+   | Answer sheet | standard, omr, grid                              |
+   | Cover        | standard, toc, ministry                          |
+
+4. **التركيب** — يقرأ `ComposableDocument` الكائن `CompositionConfig` ويجمّع متغيّرات الخانات.
+
+```typescript
+interface CompositionConfig {
+  slots: Record<
+    | "header"
+    | "footer"
+    | "studentInfo"
+    | "instructions"
+    | "answerSheet"
+    | "cover",
+    string
+  >
+  decorations: {
+    accentBar: {
+      enabled: boolean
+      height?: number
+      colorKey?: "accent" | "primary"
+    }
+    watermark: { enabled: boolean; text?: string; opacity?: number }
+    frame: { enabled: boolean; outerWidth?: number; innerWidth?: number }
+  }
+  slotProps: Record<string, unknown>
+}
+```
+
+الحلّ: JSON الخاص بـ `blockConfig` ← تجاوزات الإعداد الإقليمي المسبق ← `DEFAULT_COMPOSITION`.
+
+يوفّر `paper/composition-panel.tsx` منتقي المتغيّرات. القوالب القديمة الأربعة (Classic, Modern, Formal, Custom) أغلفة مهجورة حول `ComposableDocument`.
+
+| الإعداد المسبق | أبرز ما فيه                                     |
+| -------------- | ----------------------------------------------- |
+| `sd-national`  | السودان — رأس وزاري، إخلاء مسؤولية، علامة مائية |
+| `sa-national`  | السعودية — وزاري، bubble-id، أوراق OMR          |
+| `us-standard`  | تخطيط USA القياسي                               |
+| `mena-private` | MENA الخاص — رأس ثنائي اللغة، هوية مخصّصة       |
+
+لكل نمط `PaperTheme` بلون وطباعة وتباعد واعية باللغة، واتجاه RTL/LTR، ونمط الأرقام (عربي / لاتيني).
+
+## الأداء الرقمي
+
+`take/exam-player.tsx` هو المشغّل بملء الشاشة: تنقّل لكل سؤال، ومؤقت تنازلي، وحفظ تلقائي، وتسليم مع تحقق. ويضيف `take/proctor-guard.tsx` بصمة الجهاز، والإبلاغ عن أعلام الأمان (تبديل التبويب، نسخ / لصق، التقاط الشاشة)، وحساب عقوبة إعادة الاختبار.
+
+```typescript
+startExamSession(input: StartExamSessionInput)
+autoSaveAnswers(input: AutoSaveAnswersInput)
+reportSecurityFlag(input: ReportSecurityFlagInput)
+submitExamAnswers(input: SubmitExamAnswersInput)
+```
+
+## التقييمات السريعة وتقارير التقدّم
+
+يُوضع التقييم السريع (تذكرة خروج، استطلاع، تسخين، متابعة) لجمهور كالاختبار: صف، وفصل منه أو الصف كله، ومادة، تُختار بـ `TeachingScopePicker` المشترك وتُفحص بـ `resolveTeachingScope`. لا يكتبها ولا يطلقها ولا يغلقها إلا المعلمون والمسؤولون؛ والطالب يرى ويجيب عن تقييمات جمهوره فقط، وتهبط الإجابة المعرَّفة في سجل الدرجات تحت فصل الطالب وصفه وفصله الدراسي. التقييمات التي أُنشئت قبل إلغاء المقررات تحتفظ بمقررها.
+
+جدول تقرير التقدّم يغطي فصلًا، أو صفًّا كاملًا، أو — دون أيٍّ منهما — المدرسة كلها؛ وحذف الصف أو الفصل يحذف جدوله بدل توسيعه. لا يدير الجداول أو يشغّلها إلا المعلمون والمسؤولون.
+
+## التصحيح
+
+`NOT_STARTED` ← `AUTO_GRADED` | `AI_GRADED` | `IN_PROGRESS` ← `REVIEWED` ← `COMPLETED`. التجاوز مدعوم في أي نقطة.
+
+```typescript
+autoGradeAnswer(studentAnswerId: string)
+aiGradeAnswer(studentAnswerId: string)
+manualGrade(answerId: string, points: number, feedback?: string)
+bulkGradeExam(examId: string, method: GradingMethod)
+overrideGrade(resultId: string, newScore: number, reason: string)
+```
+
+يستخدم OCR نموذج GPT-4 Vision للإجابات المكتوبة بخط اليد. ويستخدم التصحيح بالذكاء الاصطناعي معايير تقييم المقالات من بنك الأسئلة.
+
+## النتائج والتحليلات
+
+يسرد `/exams/result` الاختبارات مع متوسط الفصل ونسبة النجاح وتوزيع الدرجات. وتحليلات كل اختبار في `/exams/result/[id]/analytics`:
+
+- الفصل — المتوسط، الوسيط، المنوال، الانحراف المعياري، أفضل / أضعف الأداء، مخطط التوزيع، الاتجاه.
+- السؤال — مؤشر التمييز، تحليل المموّهات، الأكثر خطأً، متوسط الزمن لكل سؤال.
+
+PDF دفعي في `/exams/result/[id]/pdf/batch` — معالجة في الخلفية، وقوالب متعددة لبطاقات النتائج، وZIP. وتصدير CSV للبيانات الخام. ويخزّن `results/cache-manager.ts` النتائج المحسوبة مؤقتًا.
+
+## الشهادات
+
+| الخطوة            | السطح                                              |
+| ----------------- | -------------------------------------------------- |
+| Configs           | `/exams/certificates/configs/new`, `/configs/[id]` |
+| Generate (single) | نموذج لكل طالب                                     |
+| Generate (batch)  | إجراء دفعي على فصل                                 |
+| QR verification   | عام في `/exams/certificates/verify/[code]`         |
+| Revocation        | مع تتبّع السبب                                     |
+| Share             | رابط قابل للمشاركة                                 |
+
+```typescript
+createCertificateConfig(input)
+updateCertificateConfig(id, input)
+generateCertificate(input)
+batchGenerateCertificates(input)
+verifyCertificate(code) // public
+revokeCertificate(id, reason)
+shareCertificate(id)
+```
+
+## Server actions
+
+| الوحدة             | المسار                       | السطح                                                                                                                       |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Question analytics | `qbank/analytics/actions.ts` | `getQuestionAnalytics`, `getQuestionPsychometrics`                                                                          |
+| Generation         | `generate/actions.ts`        | `createTemplate`, `updateTemplate`, `deleteTemplate`, `generateExam`, `previewExamGeneration`, `regenerateExam`             |
+| Management         | `manage/actions.ts`          | `createExam`, `updateExam`, `deleteExam`, `getExams`, `getExamDetails`                                                      |
+| Paper              | `paper/actions/`             | `createPaperConfig`, `updatePaperConfig`, `generatePaperPDF`                                                                |
+| Marking            | `mark/actions.ts`            | انظر أعلاه                                                                                                                  |
+| Results            | `results/actions.ts`         | `getExamResults`, `getExamAnalytics`, `generateSinglePDF`, `generateBatchPDFs`, `exportResultsToCSV`                        |
+| Quick assessments  | `quick/actions/`             | `createQuickAssessment`, `getQuickAssessments`, `launchQuickAssessment`, `submitQuickResponse`, `getQuickAssessmentResults` |
+| Grading            | `grading/actions.ts`         | `getGradeBoundaries`, `updateGradeBoundaries`, `calculateCGPA`, `manageRetake`                                              |
+| Progress           | `progress/actions.ts`        | `createProgressSchedule`, `getProgressSchedules`, `updateProgressSchedule`, `generateProgressReports`                       |
+
+## Seed
+
+```bash
+pnpm db:seed:single exams                    # 70+ questions, 8 templates, 27 sample exams
+pnpm db:seed:single qbank                    # extended question bank + psychometrics
+pnpm db:seed:single exam-templates   # shared catalog templates
+pnpm db:seed:single exam-blueprints          # regional structures (SD, SA, …)
+```
+
+## استكشاف الأخطاء
+
+| العَرَض                         | السبب المرجّح                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- |
+| فشل توليد الاختبار              | المجموعة أصغر من التوزيع؛ أصلح القالب أو أضف أسئلة                                                 |
+| أخطاء التصحيح بالذكاء الاصطناعي | `OPENAI_API_KEY` مفقود، أو حد المعدّل، أو لا توجد معايير تقييم                                     |
+| تعطّل ورقة PDF                  | `@react-pdf/renderer` مفقود؛ أو رابط الشعار مفقود؛ أو خط Rubik غير متاح؛ أو ذاكرة غير كافية للدفعة |
+| لا يبدأ الاختبار الرقمي         | حالة الاختبار ليست `IN_PROGRESS`؛ أو الطالب غير مسجَّل                                             |
+| حارس المراقبة غير فعّال         | يتطلب HTTPS في الإنتاج                                                                             |
+| رمز QR للشهادة لا يُمسح         | `QR_CODE_SECRET` مفقود؛ أو الشهادة مُلغاة؛ أو مسار التحقق محجوب                                    |
+
+## خط الأتمتة
+
+حلقة الدرجات شبه آلية بالكامل متى صارت الأسئلة في البنك. الاختبارات الموضوعية لا تحتاج أي تصحيح يدوي؛ والاختبارات ذات الأسئلة الذاتية تحتاج نقرة واحدة.
+
+```
+1. Auto-generate from the bank  (exam-wizard-v2 → "Auto-generate from template")
+   └─ autoGenerateExamQuestions() selects questions per the template distribution,
+      assigns per-question points, writes GeneratedExamQuestion rows, drops the
+      stale answer key. (Adopting a catalog exam does the same in one transaction.)
+
+2. Exam opens on schedule  (/api/cron/exam-lifecycle, */15)
+   └─ PLANNED → IN_PROGRESS at the scheduled start; IN_PROGRESS → COMPLETED after
+      the end window (examDate + endTime + lateSubmitMinutes).
+
+3. Students take + submit  (take route → ExamPlayer)
+   └─ getExamForPlayer() loads the proctored runner, resolving the real Student.id
+      and stripping isCorrect from options. submitExamSession() instant-grades a
+      fully-objective paper on submit → finalizeStudentExam() → ExamResult + Result.
+
+4. Finalize exams with subjective questions  (one click)
+   └─ "Auto-mark & publish" → finalizeExamResults({ aiGradeSubjective: true,
+      publish: true }): objective auto-mark + AI-grade essay/short-answer, aggregate
+      MarkingResult → ExamResult (analytics, certificates) + Result (gradebook),
+      notify students.
+
+5. Report cards auto-generate at term end  (/api/cron/term-end-report-cards, daily)
+   └─ generateReportCardsCore() aggregates each term's results into ReportCard +
+      ReportCardGrade (dedup by examId), plus credit-weighted GPA, rank and
+      attendance days. Set-based: the whole cohort in a fixed handful of queries
+      (~1s for 970 students), so it finishes inside a cron/action budget.
+      Drafts only — does not publish.
+
+6. Admin reviews + publishes
+   └─ publishReportCards() → notifies guardians/students; process-report-card-pdfs
+      cron renders the PDF out-of-band → S3 → pdfUrl.
+
+7. Official documents  (documents block)
+   └─ Upload a .docx template (EXAM_PAPER / CERTIFICATE / REPORT_CARD) — or start from
+      the built-in Starter template — and fill it with real data via "Generate (my
+      template)" (generateFromDefaultTemplate). On /grades/reports, "Generate all"
+      fills the whole filtered term at once (generateFromDefaultTemplateBulk),
+      chunked 50 cards per zip.
+
+8. Reminders  (/api/cron/exam-reminders)
+   └─ sweeps upcoming exams, dispatches advance notifications to students + teachers.
+```
+
+الثابت الأساسي: `grades/lib/gradebook.ts` هو مسار الكتابة الوحيد لكل أسطح التصحيح الآلي (الاختبارات، التقييمات السريعة، اختبارات دروس lumos). وهو ليس `"use server"` — استورده من server actions.
+
+مؤجَّل: cron **بلا جلسة** يُنهي التصحيح بالذكاء الاصطناعي عند الإغلاق. تستمد حزمة التصحيح (`getOrCreateAnswerKey`, `batchAutoGradeWithKey`, `batchAIGrade`) قيمة `schoolId` من `auth()`، فلا يستطيع مؤقّت تشغيلها حتى تُستخرج نوى قابلة للاستدعاء من cron — وإلى ذلك الحين تُنهى الاختبارات الذاتية بزر "Auto-mark & publish" بنقرة واحدة.
+
+## انظر أيضًا
+
+- [معالج الاختبارات](/docs/exam-wizard) — معالجات القوالب والتوليد والشهادات
+- [المنافسون ← أدوات التقييم](/docs/competitors#assessment--exam-creation-tools) — أدوات إنشاء الاختبارات الخمس والعشرون تقريبًا التي شكّلت الباب الأمامي بثلاثة أوضاع
+- [تعدد المستأجرين](/docs/multi-tenancy) — RBAC + النطاق

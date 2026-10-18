@@ -1,0 +1,105 @@
+---
+title: الحسابات
+description: أساس القيد المزدوج — إدارة دليل الحسابات، وقيود اليومية اليدوية مع فرض تساوي المدين والدائن، ودفتر أستاذ عام للقراءة فقط. موطن محرك المحاسبة الذي يُفترض أن ترحّل إليه كل وحدات المالية الأخرى.
+---
+
+تدير وحدة الحسابات دليل الحسابات وقيود اليومية التي يُفترض أن ترحّل إليها كل وحدات المالية. اليوم لا يرحّل فعلياً سوى [الرسوم](/docs/fees)؛ أما واجهة هذه الوحدة فتقتصر على إدارة الحسابات، وإدخال القيد اليدوي، وعرض دفتر الأستاذ.
+
+## التدفق
+
+```
+Maintain chart of accounts (ASSET / LIABILITY / EQUITY / REVENUE / EXPENSE)
+  → record a manual journal entry (DRAFT, balanced debit = credit)
+  → post it (writes postedAt, entry becomes immutable)
+  → entries roll into the general ledger + account balances → Reports
+```
+
+## الحالة
+
+| الميزة                                               | الحالة                    |
+| ---------------------------------------------------- | ------------------------- |
+| إدارة دليل الحسابات (+ حماية من حذف الحساب المستخدم) | Production                |
+| إنشاء قيد اليومية (متوازن، ترقيم تلقائي)             | جاهز (إجراء فقط)          |
+| ترحيل قيد اليومية                                    | جاهز                      |
+| عرضا دفتر الأستاذ / الأرصدة                          | جاهز (للقراءة فقط)        |
+| نموذج إنشاء حساب في الواجهة                          | مؤقت — عنصر نائب "قريباً" |
+| نموذج إنشاء قيد يومية في الواجهة                     | مؤقت — عنصر نائب "قريباً" |
+| إقفال الفترة / قفل السنة المالية                     | مخطط                      |
+| سجل تدقيق لتعديلات الدليل                            | مخطط                      |
+| قيود يومية متعددة العملات                            | مخطط                      |
+
+## المسارات
+
+| المسار                                 | الصفحة             | الحالة           |
+| -------------------------------------- | ------------------ | ---------------- |
+| `/{lang}/finance/accounts`             | نظرة عامة          | جاهز             |
+| `/{lang}/finance/accounts/chart`       | دليل الحسابات      | جاهز             |
+| `/{lang}/finance/accounts/chart/new`   | إنشاء حساب         | مؤقت (عنصر نائب) |
+| `/{lang}/finance/accounts/journal`     | قائمة القيود       | جاهز             |
+| `/{lang}/finance/accounts/journal/new` | إنشاء قيد          | مؤقت (عنصر نائب) |
+| `/{lang}/finance/accounts/ledger`      | دفتر الأستاذ العام | جاهز             |
+
+## إجراءات الخادم
+
+تُفرض الصلاحيات (RBAC) في `content.tsx`. لاحظ أن هذه الإجراءات تستخرج المستأجر من `session.user.schoolId` مباشرة بدل `getTenantContext()` (تعارض مع الرواتب والراتب والرسوم — مُعلَّم للتنظيف). تُنشأ أسطر اليومية والدفتر عبر `create` متداخل في Prisma (ذرّي لكل استدعاء) دون `db.$transaction` يغلّفها.
+
+| الإجراء              | الغرض                                                  |
+| -------------------- | ------------------------------------------------------ |
+| `createAccount`      | إضافة حساب؛ يشتق `normalBalance`؛ حماية من تكرار الرمز |
+| `updateAccount`      | تحديث حساب                                             |
+| `deleteAccount`      | حذف ناعم (يُمنع إذا استُخدم الحساب في الدفتر)          |
+| `createJournalEntry` | قيد يدوي + أسطر دفتر متداخلة، رقم قيد تلقائي           |
+| `postJournalEntry`   | وسم القيد كمرحَّل (خاص بالوحدة، وليس من المحرك)        |
+| `getChartOfAccounts` | عرض الحسابات (تصفية بالنوع / النشاط)                   |
+| `getJournalEntries`  | عرض القيود + أسطر الدفتر                               |
+
+## المفاهيم
+
+| المفهوم         | القيم                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `AccountType`   | ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE                                                  |
+| الرصيد الطبيعي  | DEBIT (الأصول، المصروفات) · CREDIT (الخصوم، حقوق الملكية، الإيرادات)                        |
+| الرموز القياسية | CASH 1000, SALARY_PAYABLE 2100, TAX_PAYABLE 2200, TUITION_REVENUE 4000, SALARY_EXPENSE 5000 |
+| الوحدات المصدر  | FEES, PAYROLL, EXPENSES, INVOICE, WALLET, BANKING, MANUAL                                   |
+
+## محرك المحاسبة
+
+يعيش محرك القيد المزدوج القابل لإعادة الاستخدام في `finance/lib/accounting/` — `posting-rules.ts` (حدث المجال ← أسطر متوازنة)، و`actions.ts` (دوال `post*` الست)، و`seed-accounts.ts`، و`utils.ts` (`toCents`/`fromCents`/`validateDoubleEntry`)، و`types.ts`.
+
+أمران يجب الانتباه إليهما:
+
+1. **`postFeePayment` وحدها موصولة.** دوال الترحيل الخمس الأخرى بلا أي مستدعٍ، فلا يعكس الدفتر سوى مدفوعات الرسوم والقيود اليدوية (راجع [نظرة عامة على الكتلة](/docs/finance#double-entry-model)).
+2. **لهذه الوحدة `createJournalEntry` / `postJournalEntry` خاصتان** للقيد اليدوي في دفتر الأستاذ؛ ولا تتشاركان الكود مع مسار الترحيل في المحرك. أما نظيراتها في المحرك (`postJournalEntryAction` و`getChartOfAccounts` وغيرها) فغير مستخدمة حالياً.
+
+## المخطط
+
+`prisma/models/finance-core.prisma`:
+
+- **`ChartOfAccount`** — `code`، `name`، `type`، `subtype`، `parentId` (التسلسل الهرمي)، `normalBalance`، `isActive`، `description`.
+- **`FiscalYear`** — `name`، `startDate`، `endDate`، `isCurrent`، `isClosed`.
+- **`JournalEntry`** — `entryNumber`، `entryDate`، `description`، `sourceModule`، `sourceRecordId`، `isPosted`، `postedAt`، `isReversed`، `reversalEntryId`، `createdBy`. غير قابل للتعديل بعد الترحيل.
+- **`LedgerEntry`** — `debit`، `credit`، `description`.
+- **`AccountBalance`** — `balance`، `asOfDate`.
+
+لا يوجد حقل `lang` — يخزّن `ChartOfAccount.name`/`.description` و`JournalEntry`/`LedgerEntry.description` نصاً بلغة واحدة غير موسومة.
+
+## الاختبارات
+
+لا اختبارات للوحدة نفسها. وللمحرك ملف واحد، `finance/lib/accounting/__tests__/utils.test.ts` (10 اختبارات) يغطي دوال الحساب المساعدة (`validateDoubleEntry` و`toCents`/`fromCents` و`formatCurrency`). **لا يوجد اختبار يؤكد تساوي المدين والدائن عند تشغيل قاعدة ترحيل فعلية**، ولا اختبار لميزان المراجعة لكل مدرسة.
+
+## الملفات الرئيسية
+
+| المكوّن        | المسار                                                                             |
+| -------------- | ---------------------------------------------------------------------------------- |
+| إجراءات الخادم | `src/components/school-dashboard/finance/accounts/actions.ts`                      |
+| قواعد الترحيل  | `src/components/school-dashboard/finance/lib/accounting/posting-rules.ts`          |
+| إجراءات المحرك | `src/components/school-dashboard/finance/lib/accounting/actions.ts`                |
+| أدوات المحرك   | `src/components/school-dashboard/finance/lib/accounting/utils.ts`                  |
+| صفحة الدفتر    | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/accounts/ledger/page.tsx` |
+| المخطط         | `prisma/models/finance-core.prisma`                                                |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نموذج القيد المزدوج + مصفوفة الحالة
+- [التقارير](/docs/finance-reports) — الميزانية العمومية / الأرباح والخسائر / ميزان المراجعة من هذا الدفتر
+- [كشف الرواتب](/docs/finance-payroll) · [المصروفات](/docs/finance-expenses) — محرّكات المال التي ينبغي (ولا تفعل بعد) أن ترحّل هنا

@@ -1,0 +1,99 @@
+---
+title: البنوك
+description: الحسابات البنكية للمدرسة، والتحويلات، وسجل المعاملات، وتسوية كشوف الحساب عبر Plaid (ربط الحسابات) وDwolla (التحويلات). العرض والتحويلات يعملان؛ أما لوحة التسوية ومزامنة Plaid فمؤقتتان، ومعالج webhook الخاص بـ Dwolla مفقود.
+---
+
+تدير وحدة البنوك الحسابات البنكية للمدرسة، وتربطها عبر Plaid، وتحرّك الأموال عبر Dwolla، ومن المفترض أن تسوّي القيود الدفترية مع كشوف البنك. واجهة التسوية حالياً عنصر نائب.
+
+## التدفق
+
+```
+Link a bank (Plaid Link)  →  list accounts + balances  →  initiate transfer (Dwolla)
+  →  view transaction history  →  reconcile against statements (stubbed)
+```
+
+## الحالة
+
+| الميزة                                    | الحالة                                                   |
+| ----------------------------------------- | -------------------------------------------------------- |
+| عرض الحسابات البنكية (لكل مستأجر)         | Production                                               |
+| مسار تحويل المدفوعات + Dwolla SDK         | Production                                               |
+| تكامل Plaid Link                          | هيكل أولي (يحتاج بيانات اعتماد sandbox حية)              |
+| سجل المعاملات                             | جاهز                                                     |
+| إجراء مزامنة Plaid                        | مؤقت — "مزامنة البنك غير منفّذة بعد"                     |
+| لوحة التسوية                              | مؤقت — عنصر نائب (معطّلة بسبب حذف `actions-enhanced.ts`) |
+| معالج webhook الخاص بـ Dwolla             | مفقود (تحديثات الحالة لا تصل إلى لوحة التحكم)            |
+| استيراد كشف الحساب البنكي (CSV / PDF OCR) | مخطط                                                     |
+
+## المسارات
+
+| المسار                                        | الصفحة         | الحالة |
+| --------------------------------------------- | -------------- | ------ |
+| `/{lang}/finance/banking`                     | نظرة عامة      | جاهز   |
+| `/{lang}/finance/banking/my-banks`            | قائمة الحسابات | جاهز   |
+| `/{lang}/finance/banking/transaction-history` | سجل المعاملات  | جاهز   |
+| `/{lang}/finance/banking/payment-transfer`    | بدء التحويلات  | جاهز   |
+
+## إجراءات الخادم
+
+موزّعة على `banking/actions/` (`bank.actions.ts` و`transaction.actions.ts` و`transfer.actions.ts`) إضافة إلى `my-banks/actions.ts` و`payment-transfer/actions.ts`. كلها مقيّدة بـ `schoolId`؛ والصلاحيات عبر `banking/lib/permissions.ts`.
+
+| الإجراء                                                        | الغرض                                    |
+| -------------------------------------------------------------- | ---------------------------------------- |
+| `createBankAccount` / `getAccount` / `getAccounts`             | إدارة الحسابات البنكية + القراءة         |
+| `removeBank`                                                   | فك ربط بنك                               |
+| `createTransfer` / `getTransferHistory` / `getRecentTransfers` | تحويلات Dwolla + السجل                   |
+| `getTransactionsByBankId` / `getTransactionsByUserId`          | قراءة المعاملات                          |
+| `getBankInfo` / `prefetchAccounts`                             | معلومات حساب Plaid + الجلب المسبق        |
+| `syncBankData` / `syncTransactions`                            | المزامنة من المزوّد (مزامنة Plaid مؤقتة) |
+
+## دفتر الأستاذ / المحاسبة
+
+ليست محرّكاً لحركة المال في الدفتر. تتتبّع وحدة البنوك المسارات البنكية الخارجية، و*يُقصد* بها التسوية مع صرف الرواتب ومدفوعات المصروفات وإيداعات الرسوم — لكن لوحة التسوية مؤقتة، ولا ترحّل البنوك قيود يومية بنفسها (ادعاء README حول `lib/accounting/` طموح لا واقع).
+
+## المخطط
+
+`prisma/models/finance-banking.prisma`: `BankAccount` و`Transaction` و`Transfer` و`PlaidItem` و`DwollaCustomer` و`BankReconciliation` — كلها مقيّدة بـ `schoolId`. لا يوجد حقل `lang`.
+
+## التوطين والعملة
+
+تعرض لوحة البنوك المبالغ بعملة المدرسة نفسها، لا بعملة ثابتة.
+تفوّض `lib/utils.ts → formatAmount(amount, locale, currency)` إلى
+`@/lib/payment/currency`، و`currency` هي `School.currency` تُقرأ مرة واحدة في
+`dashboard/content.tsx` وتُمرَّر إلى الأسفل. لذا يرى مستأجر سوداني
+`٢٬٠١٠٬٠٠٠٫٠٠ ج.س.` على `/ar` و`SDG 2,010,000.00` على `/en`.
+
+تُخزَّن فئات المعاملات كـ slugs خام (`tuition` و`salary` و`utilities` …) وتُترجم للعرض عبر
+`finance.bankingTransactions.categories.<slug>`. عندما يصل slug فئة جديد إلى البيانات،
+أضف المفتاح في `dictionaries/en/finance.json` و
+`dictionaries/ar/finance.json` معاً — وإلا تعود الواجهة إلى طباعة الـ slug الخام.
+
+تقرأ التحية `User.username` من قاعدة البيانات. لا يملك نموذج `User` عمود `name`
+ولا تحمل جلسة NextAuth اسم عرض، لذا فكل ما يعتمد على
+`session.user.name` يعرض "Guest" لكل مستخدم.
+
+## العناصر المؤقتة
+
+- `banking/reconciliation-panel.tsx` — يعرض "Enhanced reconciliation panel is currently unavailable"؛ مهمة TODO لإعادة توليده من مخطط Prisma الحالي.
+- `banking/my-banks/actions.ts:162` — `// TODO: Implement Plaid sync logic`، ويعيد "Bank sync is not yet implemented".
+- `banking/payment-transfer/validation.ts:22` — رسالة تحقق مكتوبة يدوياً.
+
+## الاختبارات
+
+`banking/__tests__/banking-tenant.test.ts` — 5 اختبارات، لعزل المستأجرين فقط. لا اختبارات لاستدعاء Plaid الراجع (callback) أو إعادة محاولة التحويل أو تجميع الأرصدة.
+
+## الملفات الرئيسية
+
+| المكوّن          | المسار                                                                     |
+| ---------------- | -------------------------------------------------------------------------- |
+| إجراءات البنوك   | `src/components/school-dashboard/finance/banking/actions/`                 |
+| مكتبة Plaid      | `src/components/school-dashboard/finance/banking/lib/plaid.ts`             |
+| واجهة Plaid Link | `src/components/school-dashboard/finance/banking/shared/plaid-link.tsx`    |
+| التسوية (مؤقتة)  | `src/components/school-dashboard/finance/banking/reconciliation-panel.tsx` |
+| المخطط           | `prisma/models/finance-banking.prisma`                                     |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نظرة عامة على الكتلة + بوابات الدفع
+- [الحسابات](/docs/finance-accounts) — الدفتر الذي تسوّي البنوك مقابله
+- [لوحة التحكم](/docs/finance-dashboard) — تعرض أرصدة الحسابات البنكية

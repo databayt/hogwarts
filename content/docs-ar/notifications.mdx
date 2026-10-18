@@ -1,0 +1,238 @@
+---
+title: الإشعارات
+description: توصيل متعدّد القنوات (داخل التطبيق، بريد، دفع، SMS) مع تفضيلات لكل مستخدم، وRBAC، وعمليات دفعية، وتتبّع التسليم.
+---
+
+تُسلّم وحدة الإشعارات عبر أربع قنوات مع تفضيلات لكل مستخدم، وRBAC، وعمليات دفعية، وتتبّع للتسليم، واستطلاع بديل عند غياب Socket.IO. كل مُرسِل في المجال يمرّ عبر `dispatchNotification()` فيكون فحص التفضيلات والانتهاء موحّدًا.
+
+## المسارات
+
+| المسار                       | الأدوار | الغرض                              |
+| ---------------------------- | ------- | ---------------------------------- |
+| `/notifications`             | الكل    | مركز الإشعارات مع القائمة والفلاتر |
+| `/notifications/preferences` | الكل    | مصفوفة تبديل لكل نوع ولكل قناة     |
+
+## مصفوفة الدور × النوع
+
+جدول متقاطع يبيّن أي الأدوار تتلقى أي مجموعات إشعارات. `Y` = يتلقى الدور تلك المجموعة؛ `—` = لا يُرسَل. STUDENT افتراضيًا `email: false` (داخل التطبيق فقط ما لم يفعّل)؛ STAFF افتراضيًا `email: false`؛ DEVELOPER يمكنه تلقي أي شيء (داخل التطبيق افتراضيًا).
+
+| مجموعة الإشعارات                        | DEVELOPER | ADMIN | TEACHER | ACCOUNTANT | STAFF | STUDENT | GUARDIAN |
+| --------------------------------------- | :-------: | :---: | :-----: | :--------: | :---: | :-----: | :------: |
+| `attendance_alert`                      |     Y     |   Y   |    Y    |     —      |   —   |    —    |    Y     |
+| `absence_intention(_decision)`          |     Y     |   —   |    Y    |     —      |   —   |    —    |    Y     |
+| `assignment_*`                          |     Y     |   —   |    —    |     —      |   —   |    Y    |    —     |
+| `grade_posted`, `report_ready`          |     Y     |   —   |    —    |     —      |   —   |    Y    |    Y     |
+| `fee_due` / `fee_paid` / `fee_overdue`  |     Y     |   —   |    —    |     Y      |   —   |    Y    |    Y     |
+| `class_rescheduled` / `class_cancelled` |     Y     |   —   |    Y    |     —      |   —   |    —    |    —     |
+| `account_created`                       |     Y     |   Y   |    —    |     —      |   —   |    Y    |    —     |
+| `system_alert`                          |     Y     |   Y   |    Y    |     Y      |   Y   |    Y    |    —     |
+| `announcement`, `event_reminder`        |     Y     |   Y   |    Y    |     Y      |   Y   |    —    |    Y     |
+| `message`, `message_mention`            |     Y     |   Y   |    Y    |     Y      |   Y   |    Y    |    Y     |
+
+تتفاوت الأولوية بحسب الحدث: معظمها `normal`؛ و`attendance_alert` و`assignment_due` و`fee_due` و`report_ready` هي `high`؛ و`fee_overdue` و`system_alert` الحرج هما `urgent`. يُحجز SMS لـ `attendance_alert` إلى GUARDIAN. يتبع البريد الإعدادات الافتراضية لكل دور أدناه.
+
+## أنواع الإشعارات (23)
+
+| المجموعة  | الأنواع (مع مدة الانتهاء الافتراضية)                                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| المراسلة  | `message` (30 d), `message_mention` (30 d)                                                                                                    |
+| الأكاديمي | `assignment_created` (60 d), `assignment_due` (7 d), `assignment_graded` (60 d), `grade_posted` (90 d)                                        |
+| الحضور    | `attendance_marked` (30 d), `attendance_alert` (7 d), `absence_intention` (14 d), `absence_intention_decision` (14 d)                         |
+| المالية   | `fee_due` (30 d), `fee_overdue` (30 d), `fee_paid` (90 d)                                                                                     |
+| الأحداث   | `announcement` (90 d), `event_reminder` (7 d), `class_cancelled` (7 d), `class_rescheduled` (7 d)                                             |
+| النظام    | `system_alert` (30 d), `account_created` (90 d), `password_reset` (1 d), `login_alert` (7 d), `document_shared` (60 d), `report_ready` (30 d) |
+
+| الأولوية | حالة الاستخدام                           |
+| -------- | ---------------------------------------- |
+| `low`    | معلوماتي (مستند مشارَك، تقرير جاهز)      |
+| `normal` | عادي (الواجبات، الدرجات، الحضور)         |
+| `high`   | يتطلب انتباهًا (رسوم مستحقة، تنبيه حضور) |
+| `urgent` | إجراء فوري (رسوم متأخرة، تنبيه نظام)     |
+
+## خريطة المستلمين
+
+المصدر: `src/components/school-dashboard/notifications/recipient-map.ts`. أبرز ما فيها:
+
+- `attendance_alert` — نقاط إطلاق متعدّدة (تسجيل غياب، كرون العتبة، تقديم / قرار العذر، كرون عدم تسجيل المعلم). يتفاوت المستلمون.
+- `grade_posted`, `report_ready` — الطلاب + أولياء الأمور.
+- `fee_due` / `fee_paid` / `fee_overdue` — الطلاب + أولياء الأمور؛ والكرون يقود التأخّر.
+- `system_alert` — شامل لدورة حياة العضوية، ومسيرات الرواتب، وجدولة الاختبارات، والبدائل، وحالة الطلبات.
+- `account_created` — التهيئة إلى المسؤولين؛ واعتمادات العضوية والتسجيلات إلى المستخدم.
+- `message`, `message_mention` — المشاركون في المحادثة والمستخدمون المذكورون.
+
+عدد قليل من الأنواع معرَّف لكنه **لم يُرسَل بعد**: `attendance_marked` و`password_reset` و`login_alert` و`document_shared`.
+
+## المعمارية
+
+`src/lib/dispatch-notification.ts` هو نقطة الدخول الوحيدة.
+
+```typescript
+// single user — used by domain dispatchers
+await dispatchNotification({
+  userId,
+  schoolId,
+  type,
+  priority,
+  title,
+  body,
+  metadata,
+  actorId,
+})
+
+// bulk by audience — school / class / role scoped
+await dispatchNotificationsToAudience({
+  schoolId,
+  type,
+  priority,
+  title,
+  body,
+  scope: { type: "school" }, // or { type: "grade" } or { type: "section" } or { type: "role", role }
+})
+```
+
+يفحص `dispatchNotification()` الجدول `NotificationPreference`، ويختار القنوات، ويضبط `expiresAt` من الإعدادات، ثم يكتب السجل. ويفلتر `dispatchNotificationsToAudience()` بحسب التفضيلات ويستخدم `createMany({ skipDuplicates: true })`.
+
+كل مُرسِلي المجال يستدعون `dispatchNotification()`. لا شيفرة مجال تلمس `db.notification.create` مباشرة.
+
+يستخدم التسليم الفوري Socket.IO مع غرف مفتاحها `user:${userId}`. العميل المفرد هو `src/lib/websocket/socket-service.ts`. **خادم Socket.IO خارج هذا المستودع** — وبدونه يعود العميل إلى استطلاع كل 30 ثانية على `GET /api/notifications/bell` (معالج مسار عن قصد: لأن `auth()` يدوّر كوكي الجلسة داخل طلبات server action، فاستطلاع قائم على action سيشحن إعادة عرض RSC كاملة للصفحة كل 30 ثانية؛ بينما يعيد المسار نحو 2 KB من JSON). الاستطلاع واعٍ بالظهور — التبويبات المخفية تتخطى الرحلة وتلحق عند عودتها للواجهة — ونسخ الخطّاف المتزامنة تتشارك طلبًا واحدًا قيد التنفيذ.
+
+مطبّ واحد مكلف: عندما لا يُهيَّأ خادم socket، فإن `socketService.connect()` **يُحلّ دون socket**. يجب قراءة حالة الاتصال من `socketService.isConnected()` بعد استقرار الوعد — فالوثوق بالحلّ عطّل الاستطلاع البديل وجمّد جرس الإنتاج ثلاثة أسابيع (2026-07-19 ← 2026-08-11).
+
+## RBAC
+
+| الإجراء         | DEVELOPER |   ADMIN    | TEACHER (فصوله) | ACCOUNTANT (أنواع الرسوم) | STAFF (محدود) | STUDENT | GUARDIAN |
+| --------------- | :-------: | :--------: | :-------------: | :-----------------------: | :-----------: | :-----: | :------: |
+| قراءة إشعاراته  |     Y     |     Y      |        Y        |             Y             |       Y       |    Y    |    Y     |
+| وضع علامة مقروء |     Y     |     Y      |        Y        |             Y             |       Y       |    Y    |    Y     |
+| إنشاء           |     Y     | كل الأنواع |   أكاديمي فقط   |       أنواع الرسوم        |  مستند / حدث  |    —    |    —     |
+| إرسال دفعة      |     Y     |     Y      |    فصوله فقط    |             Y             |       —       |    —    |    —     |
+| تحديث التفضيلات |     Y     |     Y      |        Y        |             Y             |       Y       |    Y    |    Y     |
+
+## القنوات
+
+| القناة   | مفعّلة | المزوّد    | ملاحظات                                                                                  |
+| -------- | :----: | ---------- | ---------------------------------------------------------------------------------------- |
+| `in_app` |  نعم   | داخلي      | الجرس والمركز، مدعومان بقاعدة البيانات                                                   |
+| `email`  |  نعم   | Resend SDK | HTML مع RTL (خط Rubik)، وتسجيل التسليم                                                   |
+| `push`   |  نعم   | Web Push   | VAPID (`web-push`)؛ الاشتراك من `/notifications/preferences`؛ يتطلب iOS التطبيق المثبَّت |
+| `sms`    |   لا   | Twilio     | تحقق E.164، والافتراضي +966؛ `SMS_ENABLED=false`                                         |
+
+القنوات الافتراضية: يحصل كل دور على `in_app`؛ STUDENT وSTAFF افتراضيًا `email: false`؛ وكل الأدوار الأخرى افتراضيًا `email: true`. `push` و`sms` معطّلان افتراضيًا للجميع (مفاتيح المزوّد مفقودة).
+
+يستخدم تسليم البريد Resend، ويولّد HTML مع بديل نصي، ويحترم ساعات الهدوء لكل مستخدم، ويعمل دفعيًا عبر `cron/process-email-notifications`. في التطوير يُرسَل إلى `delivered@resend.dev`؛ وفي الإنتاج من `noreply@school.databayt.org`.
+
+### Web Push (2026-09-12)
+
+يصبح المتصفح — أو PWA المثبَّت — مستلمًا من صفحة التفضيلات: يطلب المفتاح الإذن عند النقر، ويشترك بمفتاح VAPID العام، ويخزّن الاشتراك مقيّدًا بالمستأجر (`PushSubscription`). يفرّغ `process-push-notifications` صفوف `channels has push` عبر `src/lib/notifications/push-web.ts`؛ ويعرض العامل (`public/service-worker.js`) `{title, body}` وتفتح النقرة `url` المطلق على مضيف المدرسة نفسها. الاشتراكات التي تبلّغ خدمة الدفع بأنها اختفت (404/410) تُحذف. على iPhone لا يصل Web Push إلا إلى تطبيق أُضيف إلى الشاشة الرئيسية، ولذلك يقول المفتاح "ثبّت أولًا" في Safari. راجع [العمل دون اتصال](/docs/offline) لهيكل PWA.
+
+جرّبه: على هاتف (Chrome على Android، أو التطبيق المثبَّت على iPhone) افتح _الإشعارات ← التفضيلات_، واضغط مفتاح **Push** ووافق على نافذة إذن المتصفح — يتحول الصف إلى "مفعّل" ويظهر صف اشتراك لهذا الجهاز. اطلب من معلم تسجيل طفل غائبًا في التحضير السريع: خلال دورة الكرون التالية (كل 15 دقيقة) يعرض هاتف ولي الأمر الغياب كإشعار نظام، والنقر عليه يفتح الإشعار في تطبيق المدرسة. إشعارات الاختبارات والحصص المباشرة تستخدم القناة نفسها.
+
+## التفضيلات
+
+`NotificationPreference` فريد على `[userId, type, channel]`. الحقول: `enabled`، و`quietHoursStart`/`quietHoursEnd` (0–23)، و`digestEnabled`، و`digestFrequency` (`daily` | `weekly`).
+
+تعرض صفحة التفضيلات صفًا لكل نوع إشعار × أربعة أعمدة قنوات، إضافة إلى عناصر تحكم ساعات الهدوء والملخّص. التفضيل المفقود يعود إلى الإعدادات الافتراضية للدور.
+
+## Server actions والاستعلامات
+
+الـactions في `actions.ts`:
+
+| الإجراء                         | الأدوار              | الغرض                                |
+| ------------------------------- | -------------------- | ------------------------------------ |
+| `createNotification()`          | الكادر، بحسب النوع   | إنشاء إشعار واحد                     |
+| `markAsRead()`                  | الكل (إشعاراته فقط)  | وضع علامة مقروء على واحد             |
+| `markAllAsRead()`               | الكل (إشعاراته فقط)  | وضع علامة مقروء على الكل             |
+| `deleteNotification()`          | الكل (إشعاراته فقط)  | حذف                                  |
+| `createBatch()`                 | admin, teacher, acct | دفعة بحسب الدور / الفصل / المستخدمين |
+| `updatePreferences()`           | الكل (إشعاراته فقط)  | تحديث التفضيل لكل قناة               |
+| `subscribe()` / `unsubscribe()` | الكل                 | اشتراكات الكيانات                    |
+
+الاستعلامات (`queries.ts`): `getNotifications` (مرقّم)، `getNotificationsCursor` (تمرير لا نهائي)، `getUnreadCount`، `getNotificationStats`، `getRecentNotifications`، `getByType`، `getExpired`، `getPreferences`، `getSubscriptions`، `getPendingEmailQueue`.
+
+## Schema
+
+```prisma
+model Notification {
+  id        String                 @id @default(cuid())
+  schoolId  String
+  userId    String
+  type      NotificationType
+  priority  NotificationPriority   @default(normal)
+  title     String
+  body      String                 @db.Text
+  metadata  Json?
+  actorId   String?
+  read      Boolean                @default(false)
+  readAt    DateTime?
+  channels  NotificationChannel[]
+  expiresAt DateTime?
+
+  emailSent Boolean? emailSentAt DateTime? emailError String?
+  pushSent  Boolean? pushSentAt  DateTime? pushError  String?
+  smsSent   Boolean? smsSentAt   DateTime? smsError   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, userId, read, createdAt])
+  @@index([schoolId, type])
+  @@index([schoolId, createdAt])
+  @@index([schoolId, emailSent])
+  @@index([schoolId, pushSent])
+  @@index([schoolId, smsSent])
+  @@index([expiresAt])
+}
+```
+
+النماذج الداعمة: `NotificationBatch` موصول بالكامل — `sendBroadcast` (school/communication) ينشئ واحدًا لكل بثّ، و`processNotificationBatch` يوزّعه، و`/api/cron/process-broadcast-batches` (كل 5 دقائق، أُضيف 2026-06-12) يكنس الدفعات المجدولة التي حان `scheduledFor` لها إضافة إلى أي دفعة `pending` عالقة تجاوزت مهلة 10 دقائق (كان البثّ المجدول سابقًا يبقى `pending` إلى الأبد). أما `NotificationTemplate` و`NotificationSubscription` و`NotificationSummary` فتبقى في الـschema فقط. المصدر: `prisma/models/notifications.prisma`.
+
+الـEnums: `NotificationType`، `NotificationPriority`، `NotificationChannel`.
+
+## مهام الكرون
+
+| مسار الكرون                             | الجدولة      | الغرض                                      |
+| --------------------------------------- | ------------ | ------------------------------------------ |
+| `/api/cron/process-email-notifications` | كل ساعة      | تفريغ طابور البريد المعلّق                 |
+| `/api/cron/process-broadcast-batches`   | كل 5 دقائق   | إطلاق دفعات البثّ المجدولة / العالقة       |
+| `/api/cron/cleanup-notifications`       | يوميًا 2 ص   | حذف المقروء+المنتهي، وأي شيء > 90 يومًا    |
+| `/api/cron/event-reminders`             | يوميًا 8 ص   | `event_reminder` لأحداث الـ24 ساعة القادمة |
+| `/api/cron/assignment-reminders`        | يوميًا 8 ص   | `assignment_due`                           |
+| `/api/cron/fee-overdue`                 | يوميًا 9 ص   | `fee_overdue`                              |
+| `/api/cron/attendance-policies`         | يوميًا 1 ص   | `attendance_alert` إلى المسؤولين           |
+| `/api/cron/teacher-reminders`           | كل ساعة 8–16 | تذكير المعلمين بتسجيل الحضور               |
+| `/api/cron/scheduled-reports`           | كل 6 ساعات   | `report_ready`                             |
+| `/api/cron/publish-announcements`       | منتصف الليل  | نشر الإعلانات المجدولة                     |
+| `/api/cron/expire-announcements`        | منتصف الليل  | إنهاء الإعلانات القديمة                    |
+
+## الواجهة
+
+`bell-icon.tsx` (شارة + نافذة الأحدث)، و`card.tsx` (عرض كل عنصر)، و`list.tsx` (تبويبات الكل/غير المقروء، وتجميع بالتاريخ)، و`notification-center-client.tsx` (SSR + دمج socket)، و`preferences-form.tsx` (مصفوفة تبديل لكل نوع ولكل قناة).
+
+تعرض الخطّافات البيانات — بقناتين (Socket.IO عند توفره، واستطلاع احتياطي كل 30 ثانية)، مع تحديثات متفائلة. يعمل جلب أوّلي دائمًا بصرف النظر عن وسيلة النقل (فالـsocket الحي يدفع الأحداث _الجديدة_ فقط)، وتُدمج اللقطات المستطلَعة عبر `poll-merge.ts` — مزامنة لحالة القراءة باتجاه واحد إلى الأمام، فالإشعار المقروء في تبويب آخر يُمسح هنا دون صراع مع التحديثات المتفائلة.
+
+كل خطّاف في تبويب يتشارك طلب جرس واحدًا. يُعاد استخدام النجاح 5 ثوانٍ. والطلب الفاشل أو غير OK يبدأ تهدئة 15 ثانية لجميعها، ويُحلّ الجلب المشترك بـ `null` بدل أن يُرفض، فلم يعد التحميل الأول دون اتصال يرمي رفضًا غير معالَج. قبل التهدئة (2026-09-13) كان خادم غير قابل للوصول يستجلب دفعات من نحو 120 طلب جرس: الفشل فوري، فصار كل إعادة تركيب وتركيز واستطلاع طلبًا مستقلًا.
+
+الخطّافات أثناء الاستخدام:
+
+```typescript
+const {
+  isConnected,
+  unreadCount,
+  recentNotifications,
+  markAsRead,
+  markAllAsRead,
+} = useNotifications({
+  autoConnect: true,
+  showToast: true,
+  pollInterval: 30000,
+})
+
+useNotificationBell() // count + 5 recent, no toast
+useNotificationCenter() // all recent + toasts
+```
+
+## انظر أيضًا
+
+- [الرسائل](/docs/messages) — إرسال الرسائل والإشارات
+- [الرسوم](/docs/fees) — `fee_due` / `fee_paid` / `fee_overdue`
+- [الحضور](/docs/attendance) — مُحفّزات `attendance_alert`

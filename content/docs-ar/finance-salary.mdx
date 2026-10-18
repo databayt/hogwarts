@@ -1,0 +1,107 @@
+---
+title: الراتب
+description: هياكل رواتب لكل معلم مع البدلات والخصومات، وحاسبة رواتب، وسير العلاوات. الإدارة والحاسبة تعملان، لكن الضريبة مجرد نسبة ثابتة 15%، ولا تحتفظ الهياكل بتاريخ، ونموذج الإنشاء عنصر نائب.
+---
+
+يحدّد الراتب الأجر الأساسي لكل معلم، والبدلات الخاضعة وغير الخاضعة للضريبة، والخصومات. وهذه الهياكل النشطة هي ما يقرؤه [كشف الرواتب](/docs/finance-payroll) عند توليد القسائم. إنشاء هيكل جديد يعطّل السابق تلقائياً — ولا يُحتفظ بأي تاريخ.
+
+## المسار
+
+```
+1. Create structure (deactivates the teacher's prior active one)  — createSalaryStructure
+2. Attach allowances / deductions                                 — addAllowance / addDeduction
+3. (optional) Calculate: gross, taxable income, tax (flat 15%), net — calculateSalary
+4. (optional) Apply increment (fixed or %) → new active structure  — applySalaryIncrement
+```
+
+## الحالة
+
+| الميزة                                    | الحالة                                           |
+| ----------------------------------------- | ------------------------------------------------ |
+| إدارة هياكل الرواتب + القائمة (DataTable) | Production                                       |
+| إدارة البدلات / الخصومات                  | Production                                       |
+| حاسبة الراتب                              | جاهز (الضريبة نسبة ثابتة 15%)                    |
+| العلاوة (مبلغ ثابت / نسبة مئوية)          | جاهز                                             |
+| تصدير الهياكل إلى CSV                     | Production (من جهة العميل، مقيّد بـ `canExport`) |
+| ترجمة الأسماء عند الطلب في القائمة        | Production (`getText` وقت القراءة)               |
+| نموذج إنشاء هيكل في الواجهة               | مؤقت — عنصر نائب "قريباً"                        |
+| تاريخ الراتب                              | مخطط (يُستبدل عند التحديث)                       |
+| بدلات بالمعادلة (مثل 20% من الأساسي)      | مخطط                                             |
+| ضريبة خاصة بكل بلد                        | مخطط                                             |
+| ترحيل اليومية                             | مخطط (لا شيء اليوم)                              |
+
+## المسارات
+
+| المسار                                   | الصفحة        | الحالة           |
+| ---------------------------------------- | ------------- | ---------------- |
+| `/{lang}/finance/salary`                 | نظرة عامة     | جاهز             |
+| `/{lang}/finance/salary/structures`      | قائمة الهياكل | جاهز             |
+| `/{lang}/finance/salary/structures/new`  | إنشاء هيكل    | مؤقت (عنصر نائب) |
+| `/{lang}/finance/salary/structures/[id]` | تعديل هيكل    | جاهز             |
+
+## إجراءات الخادم
+
+كلها تستخدم `auth()` + `getTenantContext()`. وتُفرض الصلاحيات (RBAC) في `content.tsx`. ولا يغلّف أيٌّ منها الكتابات بـ `db.$transaction`.
+
+| الإجراء                                                | الغرض                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------- |
+| `getSalaryStructures` / `getSalaryStructure`           | عرض / قراءة هيكل واحد (+ البدلات والخصومات وآخر القسائم) |
+| `createSalaryStructure`                                | تعطيل النشط السابق، وإنشاء هيكل نشط جديد                 |
+| `updateSalaryStructure` / `deactivateSalaryStructure`  | تحديث / إنهاء هيكل                                       |
+| `addAllowance` / `updateAllowance` / `deleteAllowance` | إدارة البدلات                                            |
+| `addDeduction` / `updateDeduction` / `deleteDeduction` | إدارة الخصومات                                           |
+| `calculateSalary`                                      | حساب الإجمالي / الخاضع للضريبة / الضريبة (15%) / الصافي  |
+| `applySalaryIncrement`                                 | تعطيل الهيكل وإنشاء خليفة بعد العلاوة                    |
+| `getSalarySummary`                                     | الأعداد + متوسط الراتب الأساسي                           |
+
+## المفاهيم
+
+| المفهوم         | القيم                                |
+| --------------- | ------------------------------------ |
+| `PayFrequency`  | MONTHLY, BI_WEEKLY, WEEKLY, DAILY    |
+| `DeductionType` | TAX, INSURANCE, LOAN, PENSION, OTHER |
+| أنواع العلاوة   | FIXED_AMOUNT, PERCENTAGE             |
+| أعلام البدلات   | `isTaxable`, `isRecurring`           |
+
+## دفتر الأستاذ / المحاسبة
+
+**لا يرحّل إلى الدفتر.** ادعاء README حول "قيود يومية عبر `lib/accounting/`" طموح لا واقع — فهذه الوحدة لا تستورد المحرك أبداً. ولا يصل مال الرواتب إلى الدفتر إلا إذا/عندما يُوصل صرف كشف الرواتب بـ `postSalaryPayment`.
+
+## المخطط
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`SalaryStructure`** — `teacherId`، `effectiveFrom/To`، `baseSalary`، `currency`، `payFrequency`، `isActive`، `notes`.
+- **`SalaryAllowance`** — `name`، `amount`، `isTaxable`، `isRecurring`، `description`.
+- **`SalaryDeduction`** — `name`، `amount`، `type`، `isRecurring`، `description`.
+
+لا يوجد حقل `lang`. تعالج صفحة قائمة الهياكل ذلك وقت القراءة عبر `getText`، لكن أسماء البدلات/الخصومات الأصلية تُخزَّن غير موسومة.
+
+## صيغ المخرجات
+
+تصدير CSV لهياكل الرواتب موصول من جهة العميل (`salary/table.tsx`) ومقيّد بصلاحية `canExport`. لا PDF.
+
+## العناصر المؤقتة
+
+- `salary/actions.ts:555` — ضريبة ثابتة 15% في الحاسبة.
+- `salary/table.tsx:167` — `// TODO: Implement bulk delete action`.
+- `salary/structures/new/page.tsx` — نموذج الإنشاء عنصر نائب.
+
+## الاختبارات
+
+لا يوجد.
+
+## الملفات الرئيسية
+
+| المكوّن          | المسار                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| إجراءات الخادم   | `src/components/school-dashboard/finance/salary/actions.ts`                          |
+| الجدول + التصدير | `src/components/school-dashboard/finance/salary/table.tsx`                           |
+| صفحة الهياكل     | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/salary/structures/page.tsx` |
+| المخطط           | `prisma/models/finance-payroll.prisma`                                               |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نظرة عامة على الكتلة + مصفوفة الحالة
+- [كشف الرواتب](/docs/finance-payroll) — يستهلك هياكل الرواتب النشطة
+- [سجلات الوقت](/docs/finance-timesheet) — تتبّع وقت الكادر

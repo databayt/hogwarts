@@ -1,0 +1,107 @@
+---
+title: كشف الرواتب
+description: دورات فترات الدفع التي تولّد قسائم رواتب لكل معلم مع سير اعتماد ← صرف. النواة تعمل، لكن الضريبة مجرد نسبة ثابتة 15%، ولا توجد قسيمة PDF، والصرف لا يرحّل إلى الدفتر.
+---
+
+يحوّل كشف الرواتب [هيكل الراتب](/docs/finance-salary) النشط لكل معلم إلى قسائم رواتب لفترة دفع، ويجمّع إجمالي الدورة، ويمرّرها عبر الاعتماد، وعند الدفع يضع كل قسيمة بحالة PAID مع إشعارات. الصرف مجرد قلب حالة — لا ملف بنكي ولا قيد يومية.
+
+## المسار
+
+```
+1. Create payroll run (DRAFT)                          — createPayrollRun
+2. Generate slips → PROCESSING → PENDING_APPROVAL      — generateSalarySlips
+     gross = base + allowances · tax = gross × 0.15 · net = gross − tax − deductions
+3. Approve (→ APPROVED) or Reject (→ DRAFT)            — approvePayroll / rejectPayroll
+4. Process payments → all slips PAID, run PAID, notify  — processPayments
+```
+
+## الحالة
+
+| الميزة                                    | الحالة                                               |
+| ----------------------------------------- | ---------------------------------------------------- |
+| إدارة دورات الرواتب + العرض               | Production                                           |
+| توليد قسائم الرواتب                       | Production (الحساب مؤقت — انظر أدناه)                |
+| سير الاعتماد / الرفض                      | Production (باتجاه واحد: APPROVED يطلق الصرف)        |
+| الصرف (وسم PAID) + الإشعارات              | Production                                           |
+| الضريبة التصاعدية / التأمينات الاجتماعية  | مؤقت — نسبة ثابتة 15%؛ شرائح `config.ts` غير مستخدمة |
+| `daysWorked` / `daysPresent` من سجل الوقت | مؤقت — مكتوب يدوياً 22                               |
+| نموذج إنشاء دورة في الواجهة               | مؤقت — صفحة عنصر نائب "قريباً"                       |
+| قسيمة راتب PDF                            | مخطط                                                 |
+| ملف دفعة تحويل بنكي (ACH/SWIFT)           | مخطط                                                 |
+| ترحيل قيد اليومية                         | مخطط — العلاقة موجودة ولا تُكتب أبداً                |
+
+## المسارات
+
+| المسار                              | الصفحة        | الحالة           |
+| ----------------------------------- | ------------- | ---------------- |
+| `/{lang}/finance/payroll`           | نظرة عامة     | جاهز             |
+| `/{lang}/finance/payroll/runs`      | قائمة الدورات | جاهز             |
+| `/{lang}/finance/payroll/runs/new`  | إنشاء دورة    | مؤقت (عنصر نائب) |
+| `/{lang}/finance/payroll/runs/[id]` | تفاصيل الدورة | جاهز             |
+
+## إجراءات الخادم
+
+كلها تستخدم `auth()` + `getTenantContext()` لاستخراج `schoolId`. وتُفرض الصلاحيات (RBAC) في `content.tsx` عبر `checkCurrentUserPermission()` (لا داخل الإجراءات). ولا يغلّف أيٌّ منها كتاباته بـ `db.$transaction`.
+
+| الإجراء                                   | الغرض                                          |
+| ----------------------------------------- | ---------------------------------------------- |
+| `getPayrollRuns`                          | عرض الدورات (تصفية اختيارية بالحالة)           |
+| `getPayrollRun`                           | دورة واحدة + القسائم + المعلم                  |
+| `createPayrollRun`                        | إنشاء دورة بحالة DRAFT                         |
+| `generateSalarySlips`                     | بناء القسائم، حساب الإجماليات، إشعار المسؤولين |
+| `approvePayroll`                          | PENDING_APPROVAL ← APPROVED + إشعار            |
+| `rejectPayroll`                           | PENDING_APPROVAL ← DRAFT + إشعار               |
+| `processPayments`                         | APPROVED ← PAID، القسائم PAID، إشعار كل معلم   |
+| `getTeacherSalarySlips` / `getSalarySlip` | قراءة قسائم معلم / قسيمة واحدة                 |
+| `getPayrollSummary`                       | الأعداد + إجمالي المدفوع                       |
+| `deletePayrollRun`                        | حذف (DRAFT فقط)                                |
+
+## الحالات
+
+| Enum            | القيم                                                          |
+| --------------- | -------------------------------------------------------------- |
+| `PayrollStatus` | DRAFT, PROCESSING, PENDING_APPROVAL, APPROVED, PAID, CANCELLED |
+| `SlipStatus`    | GENERATED, REVIEWED, PAID, CANCELLED                           |
+
+ملاحظة: يعرّف `config.ts` مجموعة حالات مختلفة (PENDING/COMPLETED/FAILED) لا تطابق enum في Prisma — فضّل قيم Prisma أعلاه.
+
+## دفتر الأستاذ / المحاسبة
+
+**لا يرحّل إلى الدفتر اليوم.** توجد `postSalaryPayment` في `finance/lib/accounting/actions.ts` لكن بلا أي مستدعٍ، و`PayrollRun.journalEntryId` محجوز في المخطط ولا يُضبط أبداً. فصرف الرواتب ينقل الدورة إلى PAID دون أي قيود مدين/دائن. راجع [نموذج القيد المزدوج](/docs/finance#double-entry-model).
+
+## المخطط
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`PayrollRun`** — `runNumber`، `payPeriodStart/End`، `payDate`، `status`، `totalGross/Deductions/Net`، `processedBy`، `approvedBy`، `journalEntryId` (محجوز).
+- **`SalarySlip`** — `slipNumber`، `baseSalary`، `allowances` (Json)، `grossSalary`، `taxAmount`، `otherDeductions` (Json)، `totalDeductions`، `netSalary`، `daysWorked/Present/Absent`، `hoursWorked`، `status`.
+
+لا يوجد حقل `lang`؛ وأسماء البدلات والخصومات المضمَّنة كـ JSON غير موسومة بدورها.
+
+## العناصر المؤقتة
+
+- `payroll/actions.ts:286` — `const taxAmount = grossSalary * 0.15 // Simplified 15% tax rate` (النسبة الثابتة نفسها في `salary/actions.ts`).
+- `payroll/actions.ts:257-258` — `daysWorked` / `daysPresent` مكتوبان يدوياً 22 (تكامل سجل الوقت غير موصول).
+- `payroll/runs/new/page.tsx` — نموذج إنشاء الدورة عنصر نائب "قريباً"؛ و`createPayrollRun` قابلة للاستدعاء برمجياً فقط.
+- يحوي `config.ts` مصفوفة `TAX_BRACKETS` حقيقية ونسب تأمينات اجتماعية يتجاهلها الإجراء.
+
+## الاختبارات
+
+لا يوجد.
+
+## الملفات الرئيسية
+
+| المكوّن                       | المسار                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| إجراءات الخادم                | `src/components/school-dashboard/finance/payroll/actions.ts`                         |
+| الإعدادات (شرائح غير مستخدمة) | `src/components/school-dashboard/finance/payroll/config.ts`                          |
+| المحتوى                       | `src/components/school-dashboard/finance/payroll/content.tsx`                        |
+| صفحة تفاصيل الدورة            | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/payroll/runs/[id]/page.tsx` |
+| المخطط                        | `prisma/models/finance-payroll.prisma`                                               |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نظرة عامة على الكتلة + مصفوفة الحالة
+- [الراتب](/docs/finance-salary) — الهياكل التي يقرأها كشف الرواتب
+- [سجلات الوقت](/docs/finance-timesheet) — المصدر المقصود (غير الموصول بعد) للأيام/الساعات
+- [الحسابات](/docs/finance-accounts) — حيث ينبغي أن ترحَّل مدفوعات الرواتب

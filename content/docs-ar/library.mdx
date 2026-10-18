@@ -1,0 +1,339 @@
+---
+title: المكتبة
+description: إدارة مكتبة المدرسة — كتالوج عالمي أولًا، استعارة تُجهَّز عند الطلب، مساهمات المجتمع، أدوات الإدارة، وRBAC.
+---
+
+تعتمد المكتبة **معمارية العالمي أولًا** — ترى كل مدرسة كتالوج `CatalogBook` على مستوى المنصة جاهزًا من الصندوق. بلا إعداد ولا ربط أثناء التهيئة. يمكن للمدارس إخفاء كتب بعينها؛ وتُتتبَّع الاستعارة عبر سجلات `Book` على مستوى المدرسة تُجهَّز عند الطلب.
+
+## المعمارية
+
+```
+GLOBAL (no schoolId)
+  CatalogBook (PUBLISHED + APPROVED)         ← all schools see by default
+
+OPT-OUT (schoolId-scoped)
+  SchoolBookSelection
+    isActive: false  →  hidden for this school
+    no record        →  visible (default)
+
+LAZY PROVISIONING
+  Book (school-scoped, auto-created on first detail page visit)
+    copied from CatalogBook, used for borrow / return tracking only
+
+  BorrowRecord (school-scoped)
+    userId, bookId, borrowDate, dueDate, status (BORROWED / RETURNED / OVERDUE)
+```
+
+| المقاربة                   | الإعداد      | البيانات لـ 100 مدرسة × 90 كتابًا | المشاركة        |
+| -------------------------- | ------------ | --------------------------------- | --------------- |
+| تجهيز لكل مدرسة            | يضيف المسؤول | 9,000 سجل Book                    | لا شيء          |
+| ربط أثناء التهيئة          | تلقائي       | 9,000 سجل Book                    | لا شيء          |
+| **العالمي أولًا (الحالي)** | **صفر**      | **90 CatalogBook** (مشتركة)       | **ظاهر للجميع** |
+
+الفوائد: لا إعداد، ولا تكرار، واستقلالية للمدرسة (تستطيع الإخفاء)، وكفاءة بالتجهيز عند الطلب، ومساهمات المجتمع تُثري كل المدارس.
+
+## تدفقات المستخدم
+
+### الطالب يتصفّح ويستعير
+
+```
+Student visits /library
+  → content.tsx queries CatalogBook directly (global)
+    excludes books hidden by school (SchoolBookSelection.isActive = false)
+    green banner, then ONE spotlighted book, then the rows
+    categorizes into rows: Latest, Featured, Literature, Science
+  → click book card → /library/books/[id]
+    loads CatalogBook by ID
+    finds or creates school-scoped Book (lazy)
+    tinted hero: cover, grade, title, author, rating, borrow card
+    then About, Information, video, "More by Author", "You Might Also Like"
+  → click "Borrow Book"
+    borrowBook() creates BorrowRecord + decrements availableCopies
+  → click "Return Book"
+    returnBook() updates status to RETURNED + increments availableCopies
+```
+
+### الكتاب المميّز
+
+بين اللافتة والرفوف، تمنح الصفحة الرئيسية كتابًا واحدًا العرض كله: صورة غلافه
+الفوتوغرافية، وعنوانه، ومؤلّفه، وفقرته الافتتاحية الخاصة لا ملخصًا عنها. الفقرة
+غير مقصوصة — بل تُبقى فقرة واحدة في بيانات seed بدلًا من ذلك.
+
+يُطابَق العنوان على النص الإنجليزي الخام، لأن الكتالوج يُؤلَّف مركزيًا بالإنجليزية،
+وهو العنوان الذي تمثّله صورة القسم. غيّر الكتاب فتتوقف الصورة عن مطابقة الكلمات.
+
+ترجمته العربية مكتوبة يدويًا لا آليًا. المترجم العام يعيد قراءة حرفية للعنوان حيث
+للطبعة العربية المنشورة اسم مستقر، ولذلك يُثبَّت العنوان والمقتطف معًا في
+`src/components/translation/canonical.ts`، الذي يستشيره كل مسار ترجمة قبل ذاكراته
+المؤقتة وقبل أي مزوّد.
+
+### المسؤول يدير المكتبة
+
+```
+/library/catalog       → browse global catalog, select / deselect, adjust copies + shelf
+/library/admin         → dashboard
+/library/admin/books   → manage table (add from catalog, edit details, delete)
+```
+
+### المعلم يساهم
+
+```
+/library/contribute    → contributeBook() creates CatalogBook (PENDING + DRAFT)
+                         sets contributedBy + contributedSchoolId
+SaaS /catalog/approvals → approve → APPROVED + PUBLISHED (visible to all)
+                          reject → REJECTED + reason
+```
+
+## المسارات
+
+| المسار                     | الغرض                           | الصلاحية                  |
+| -------------------------- | ------------------------------- | ------------------------- |
+| `/library`                 | الرئيسية (لافتة + رفوف)         | كل الأدوار                |
+| `/library/books`           | كل الكتب مع بحث / فلترة         | كل الأدوار                |
+| `/library/books/[id]`      | تفاصيل الكتاب + استعارة / إرجاع | كل الأدوار                |
+| `/library/catalog`         | تصفّح الكتالوج العالمي          | ADMIN, DEVELOPER          |
+| `/library/admin`           | لوحة المسؤول                    | ADMIN, DEVELOPER          |
+| `/library/admin/books`     | جدول إدارة الكتب                | ADMIN, DEVELOPER          |
+| `/library/admin/books/new` | إضافة كتاب من الكتالوج          | ADMIN, DEVELOPER          |
+| `/library/contribute`      | إرسال مساهمة كتاب               | ADMIN, TEACHER, DEVELOPER |
+| `/library/contributions`   | سجل مساهماتي                    | ADMIN, TEACHER, DEVELOPER |
+| `/library/my-profile`      | سجل الاستعارة + الإحصاءات       | كل الأدوار                |
+
+## لافتة الرئيسية
+
+تفتح `/library` على لافتة العلامة الخضراء نفسها في `/live`. هي كائن واحد يُعرَض من
+موضعين لا شبيهان: `hero.tsx` هنا و`status-hero.tsx` تحت وحدة live يتشاركان الأرضية
+والهندسة والخط والكبسولات. إذا تغيّر أحدهما فغيّر الآخر.
+
+- **الأرضية** `#00bc6d`، أخضر تسويق saas، مع حبر `#050505`. كلاهما قيمتان حرفيتان
+  مثبّتتان. اللافتة لا تتبع السمة، لأن الأبيض على هذا الأخضر يقيس نحو 2.5:1 وغير
+  مقروء.
+- **العنوان** بخط thmanyah sans بحجم ~38px، خفيف، مع عبارة واحدة بالخط الغامق. تسافر
+  هذه العبارة كمفتاح قاموس مستقل، `library.hero.titleMark`، ليحرّك المترجم الكلمات
+  دون حمل وسوم عبر نص من اليمين إلى اليسار. القالب الذي لا يحوي `{mark}` يُعرَض بلا
+  تمييز.
+- **صفّاه متطابقا العرض**، والتطويلات داخل النص العربي هي ما يطابقهما: 333px فوق
+  333px بالعربية، و320px فوق 312px بالإنجليزية، مقابل 331 فوق 333 في لافتة live. وهي
+  ليست أخطاء إملائية. تحرير العنوان يعني قياس صندوقي السطرين في المتصفح من جديد،
+  ولهذا تُبدَع اللغتان إبداعًا (transcreation) لا ترجمةً كلمة بكلمة -- فالمرآة الحرفية
+  لأيٍّ من السطرين تلتف على ثلاثة صفوف.
+- **كبسولتان**، لا أكثر: استكشاف الرفوف، ثم مفضّلات القارئ نفسه.
+- **الرسم** هو `public/anthropic/category-04-alpha.svg`، رسم خطي شفاف يجلس مباشرة على
+  الأخضر دون بطاقة خاصة به. مشتق من `category-04.svg` بإعادة تلوين شكل واحد إلى
+  النعناعي `#9FE5B1`؛ أعد توليده ولا تعدّله يدويًا أبدًا. تحت نقطة التحوّل `md`
+  تتكدّس البطاقة في عمود واحد ويُسقَط الرسم بدل تصغيره.
+
+## تدفق البيانات
+
+### استعلام الرئيسية
+
+```typescript
+// Get books hidden by this school
+const hiddenSelections = await db.schoolBookSelection.findMany({
+  where: { schoolId, isActive: false },
+  select: { catalogBookId: true },
+})
+const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
+
+// Query global catalog, excluding hidden
+const catalogBooks = await db.catalogBook.findMany({
+  where: {
+    status: "PUBLISHED",
+    approvalStatus: "APPROVED",
+    visibility: { in: ["PUBLIC", "SCHOOL"] },
+    ...(hiddenBookIds.size > 0
+      ? { id: { notIn: Array.from(hiddenBookIds) } }
+      : {}),
+  },
+  orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+})
+```
+
+### التجهيز الكسول للكتب
+
+```typescript
+// Load CatalogBook (global)
+const catalogBook = await db.catalogBook.findFirst({
+  where: { id: bookId, status: "PUBLISHED", approvalStatus: "APPROVED" },
+})
+
+// Find or create school Book (for borrowing)
+let schoolBook = await db.book.findFirst({
+  where: { schoolId, catalogBookId: bookId },
+})
+
+if (!schoolBook) {
+  schoolBook = await db.book.create({
+    data: {
+      schoolId,
+      catalogBookId: catalogBook.id,
+      title: catalogBook.title,
+      author: catalogBook.author,
+      // … copies CatalogBook fields
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+  })
+}
+```
+
+التصفّح يستخدم CatalogBook (صفر بيانات مدرسية). الاستعارة تستخدم Book المدرسة (يُنشأ عند الطلب). لا تجهيز جماعي.
+
+### آلية الإخفاء
+
+```typescript
+await db.schoolBookSelection.upsert({
+  where: { schoolId_catalogBookId: { schoolId, catalogBookId } },
+  create: { schoolId, catalogBookId, isActive: false },
+  update: { isActive: false },
+})
+```
+
+- لا سجل ← ظاهر (الافتراضي)
+- `isActive: true` ← مختار صراحةً (من واجهة الكتالوج)
+- `isActive: false` ← مخفي لهذه المدرسة
+
+## RBAC
+
+التفويض عبر `checkLibraryPermission(role, action)` في `authorization.ts`. الوصول عبر المدارس مرفوض دائمًا.
+
+| الدور      | read | create | update | delete | borrow | return | manage |
+| ---------- | :--: | :----: | :----: | :----: | :----: | :----: | :----: |
+| DEVELOPER  |  Y   |   Y    |   Y    |   Y    |   Y    |   Y    |   Y    |
+| ADMIN      |  Y   |   Y    |   Y    |   Y    |   Y    |   Y    |   Y    |
+| TEACHER    |  Y   |   —    |   —    |   —    |   Y    |   Y    |   —    |
+| STUDENT    |  Y   |   —    |   —    |   —    |   Y    |   Y    |   —    |
+| GUARDIAN   |  Y   |   —    |   —    |   —    |   Y    |   Y    |   —    |
+| STAFF      |  Y   |   —    |   —    |   —    |   —    |   —    |   —    |
+| ACCOUNTANT |  Y   |   —    |   —    |   —    |   —    |   —    |   —    |
+| USER       |  —   |   —    |   —    |   —    |   —    |   —    |   —    |
+
+## Server actions
+
+### CRUD الكتب (`actions.ts`)
+
+| الإجراء | الدالة               | ملاحظات                                |
+| ------- | -------------------- | -------------------------------------- |
+| إنشاء   | `createBook(params)` | يتطلب `catalogBookId` — لا إنشاء مستقل |
+| تحديث   | `updateBook(params)` | تحديثات جزئية، ويتحقق من ملكية المدرسة |
+| حذف     | `deleteBook(params)` | محظور عند وجود استعارات نشطة           |
+
+### الاستعارة / الإرجاع
+
+| الإجراء | الدالة                                     | ملاحظات                                  |
+| ------- | ------------------------------------------ | ---------------------------------------- |
+| استعارة | `borrowBook({ bookId, userId, schoolId })` | معاملة: إنشاء BorrowRecord + إنقاص النسخ |
+| إرجاع   | `returnBook({ borrowRecordId, schoolId })` | معاملة: تحديث الحالة + زيادة النسخ       |
+| تأخّر   | `markOverdueBooks()`                       | دفعة: BORROWED تجاوز موعده → OVERDUE     |
+
+### اختيار الكتالوج (`catalog/actions.ts`)
+
+| الإجراء | الدالة                                     | ملاحظات                               |
+| ------- | ------------------------------------------ | ------------------------------------- |
+| اختيار  | `selectCatalogBook(catalogBookId, copies)` | ينشئ الجسر + Book في معاملة           |
+| إلغاء   | `deselectCatalogBook(catalogBookId)`       | يزيل الجسر، ويفرّغ Book.catalogBookId |
+| تبديل   | `toggleBookSelection(selectionId)`         | يقلب isActive (إظهار / إخفاء)         |
+| تحديث   | `updateBookSelection(selectionId, data)`   | ضبط النسخ وموقع الرف                  |
+
+## مخططات التحقق
+
+| المخطط             | الحقول الأساسية                                    | القيود                                        |
+| ------------------ | -------------------------------------------------- | --------------------------------------------- |
+| `bookSchema`       | title, author, genre, rating, coverUrl, coverColor | rating 0-5، coverColor سداسي، totalCopies ≥ 1 |
+| `borrowBookSchema` | bookId, userId, schoolId, dueDate                  | dueDate يجب أن يكون مستقبليًا                 |
+| `returnBookSchema` | borrowRecordId, schoolId                           | كلاهما مطلوب                                  |
+| `updateBookSchema` | bookId + حقول الكتاب الجزئية                       | حقل واحد على الأقل مطلوب                      |
+| `deleteBookSchema` | bookId, schoolId                                   | كلاهما مطلوب                                  |
+
+## الأنواع
+
+```typescript
+interface BookListItem {
+  id: string
+  title: string
+  author: string
+  genre: string
+  coverUrl: string
+  coverColor: string | null
+  rating: number
+  createdAt: Date
+}
+
+interface Book extends BookListItem {
+  description: string
+  totalCopies: number
+  availableCopies: number
+  summary: string
+  gradeLevel: string
+  schoolId: string
+  // optional: isbn, publisher, publicationYear, language, pageCount, videoUrl
+}
+```
+
+`BookListItem` يصلح لنتائج استعلام CatalogBook وسجلات Book معًا — يستخدمه `BookList` و`BookCard`.
+
+## الإعدادات
+
+| الثابت                | القيمة    | الغرض                  |
+| --------------------- | --------- | ---------------------- |
+| `MAX_BORROW_DAYS`     | 14        | مدة الإعارة الافتراضية |
+| `MAX_BOOKS_PER_USER`  | 5         | حد الاستعارة لكل طالب  |
+| `BOOKS_PER_PAGE`      | 20        | حجم الترقيم            |
+| `DEFAULT_COVER_COLOR` | `#000000` | بديل للأغلفة المفقودة  |
+
+## الاختبارات
+
+```bash
+pnpm vitest run src/components/library/ --reporter=verbose                   # 160 tests
+pnpm vitest run src/components/catalog/__tests__/setup.test.ts --reporter=verbose   # 54 tests
+```
+
+| المجموعة                               | الاختبارات | التغطية                                                        |
+| -------------------------------------- | ---------- | -------------------------------------------------------------- |
+| `__tests__/actions.test.ts`            | 39         | كل الـactions الستة (إنشاء، تحديث، حذف، استعارة، إرجاع، تأخّر) |
+| `__tests__/authorization.test.ts`      | 35         | 8 أدوار × 7 إجراءات + عبر المدارس + حالات حدّية                |
+| `__tests__/validation.test.ts`         | 46         | كل مخططات Zod الخمسة                                           |
+| `catalog/__tests__/actions.test.ts`    | 33         | 4 actions لاختيار الكتالوج                                     |
+| `contribute/__tests__/actions.test.ts` | 7          | إرسال المساهمة                                                 |
+
+## طبقة البيانات (CatalogBook)
+
+تمدّد الكتبُ [الكتالوج الشامل](/docs/catalog) عبر `CatalogBook`. وكالمواد، تعيش الكتب عالميًا (بلا `schoolId`)؛ وتشير إليها المدارس عبر `SchoolBookSelection` و`Book` على مستوى المدرسة يُجهَّز عند الطلب لتتبّع الاستعارة.
+
+يحمل `CatalogBook` البيانات الوصفية المعتمدة (العنوان، المؤلف، النوع، ISBN، الغلاف، الملف الرقمي، التقييم، `usageCount`) مع سجل تدقيق المساهمة (`contributedBy`، `contributedSchoolId`، `approvalStatus`، `approvedBy`، `rejectionReason`). ويحمل `SchoolBookSelection` التجاوزات لكل مدرسة (`totalCopies`، `availableCopies`، `shelfLocation`، `customName`، `isActive`). و`Book.catalogBookId` قابل لأن يكون null ليحفظ إلغاء الاختيار سجل `BorrowRecord`.
+
+### تدفق المساهمة (خاص بـ CatalogBook)
+
+```
+Teacher / Admin → /library/contribute → contributeBook()
+  - auth + tenant context
+  - creates CatalogBook (PENDING + DRAFT)
+  - sets contributedBy + contributedSchoolId
+SaaS → /catalog/approvals
+  - approveContent("CatalogBook", id) → APPROVED
+  - rejectContent("CatalogBook", id)  → REJECTED + reason
+→ visible to all schools (PUBLIC visibility) or just the originating school (SCHOOL visibility)
+```
+
+يقع نموذج المساهمة في `/library/contribute`؛ وسجل المساهم في `/library/contributions` لدوري ADMIN وTEACHER كليهما.
+
+### CRUD في لوحة SaaS
+
+المسار `/catalog/books`. لـ DEVELOPER فقط — سجلات عالمية بلا `schoolId`. `createCatalogBook` و`updateCatalogBook` و`deleteCatalogBook` مع عرض تفصيلي في `/catalog/books/[bookId]` يعرض البيانات الوصفية الكاملة والغلاف ومعلومات الملف الرقمي وتفاصيل المساهمة وقائمة المدارس التي اختارته.
+
+### التكامل مع الاعتماد
+
+`CatalogBook` أحد خمسة أنواع محتوى في نظام الاعتماد الموحّد — إلى جانب `CatalogQuestion` و`CatalogMaterial` و`CatalogAssignment` و`LessonVideo`. تتشارك الخمسة `approveContent()` و`rejectContent()` في `approval-actions.ts`، الذي يتفرّع على `contentType`. وتستخدم enums نفسها (`ApprovalStatus`، `ContentVisibility`، `ContentStatus`) وواجهة المراجعة نفسها في SaaS على `/catalog/approvals`.
+
+### Seed
+
+```bash
+pnpm db:seed:single books
+```
+
+90 مدخلًا عبر 8 أنواع (الأدب العربي، الدراسات الإسلامية، العلوم، الرياضيات، علوم القرآن، التاريخ والجغرافيا، كتب الأطفال، الإنجليزية، علوم الحاسوب والمراجع) — كلها APPROVED + PUBLISHED + PUBLIC، مع أغلفة بديلة من picsum.photos. idempotent.
+
+## انظر أيضًا
+
+- [الكتالوج](/docs/catalog) — معمارية الكتالوج الشامل
+- [تعدد المستأجرين](/docs/multi-tenancy) — نطاق المستأجر

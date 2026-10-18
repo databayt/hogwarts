@@ -1,0 +1,283 @@
+---
+title: الفصول الدراسية
+description: إدارة القاعات الفعلية — الأنواع، السعة، الارتباط بالصف، توليد الفصول، قيود القاعات، التكامل مع الجدول الدراسي، وخريطة الوحدات المتقاطعة.
+---
+
+تدير وحدة الفصول الدراسية القاعات الفعلية في حرم المدرسة. لكل قاعة نوع وسعة وارتباط اختياري بصف، وتتكامل مع الفصول (الشُّعَب) لتجميع الصف الرئيسي. لدى DEVELOPER وADMIN صلاحية CRUD كاملة؛ أما TEACHER وSTAFF فللقراءة فقط.
+
+المخطط وبيانات seed وCRUD وتفاصيل القاعة وتوليد الفصول وإحصاءات السعة والتكامل مع الجدول الدراسي كلها في الإنتاج. المنطقة تبويبان — **القاعات** (القائمة + الإضافة/التعديل + Sync defaults، مع ملخّصات إحصاءات السعة مطوية في الرأس) و**الإعداد** (يضبط عدد الفصول لكل صف + السعة ويولّد القاعة الرئيسية الواحدة لكل فصل). تُسند قاعة المقرر في نموذج إضافة/تعديل **المقررات** وفي كل حصة داخل **الجدول الدراسي**؛ أما الجدول الأسبوعي لكل قاعة فيعيش في **صفحة تفاصيل القاعة** (`/classrooms/[id]`).
+
+> **جرى ترشيدها في 2026-06-17 / 2026-06-18.** أُزيلت ثلاثة تبويبات زائدة للحفاظ على نظافة المنطقة: **المواد** (محرّر قاعات جماعي لكل مادة، تتجاوزه كل حصة في الجدول الدراسي)، و**الجدول** (عرض فصل للقراءة فقط يكرّر ميزة الجدول الدراسي؛ والعرض الحقيقي لكل قاعة في صفحة تفاصيل القاعة)، و**السعة** (انتقلت بطاقات ملخصها إلى صفحة القاعات). ثم قُلّص تبويب **الإعداد** إلى النطاق الخفيف — عدد الفصول لكل صف + السعة + القاعة الرئيسية لكل فصل؛ وأُزيلت كتلتا _توليد المقررات من الكتالوج_ و*تسجيل الطلاب في المقررات* (فالمواد تُربط بالصفوف عند جسر الكتالوج؛ ويُلحَق الطلاب بالصفوف/الفصول في مكان آخر). يتشارك منطق التزويد (Sync defaults ↔ الإعداد) مساعد أسماء قاعات واحدًا (`catalog/room-naming.ts`).
+
+## التكامل
+
+الفصول الدراسية وحدة **خفيفة وعلوية (upstream)**: تملك فقط **الصفوف ← الفصول ← قاعة رئيسية لكل منها**. وهي لا تعرف الطلاب ولا المعلمين عن قصد — فكل وحدة أخرى ترتبط _بها_.
+
+| ترتبط بـ                     | الرابط                                                     | الاتجاه | ما يعنيه                                                                                                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **البنية الأكاديمية / الصف** | `AcademicGrade` ← `Section.gradeId`, `Classroom.gradeId`   | علوي    | ينتمي الفصل إلى صف؛ وتحمل القاعات ارتباطًا اختياريًا بالصف. الصف هو المفصل — فهو يستلزم المواد (عبر جسر الكتالوج).                                                                                     |
+| **الكتالوج / المواد**        | الصف ⇒ المواد عند **زمن الجسر**                            | علوي    | تختار المدرسة البلد/النوع/المستوى ← نجسر إلى المنهج الصحيح. معرفة الصف تعني معرفة المواد، لذا لا **تولّد** الفصول الدراسية مقررات من الكتالوج أبدًا.                                                   |
+| **الجدول الدراسي**           | `Timetable.classroomId` (مطلوب)                            | سفلي    | كل خانة تحجز قاعة. القاعة **الرئيسية** للفصل هي الصف الرئيسي الذي يفضّله المولِّد؛ أما المختبرات/القاعات الكبرى/الملاعب فتُبلَغ **لكل حصة هنا**، لا ترتبط بالفصل. ثلاثة قيود فريدة تمنع الحجز المزدوج. |
+| **الطلاب**                   | `Student.sectionId` ← `Section` ← القاعة الرئيسية          | سفلي    | يُلحَق الطلاب بصف + فصل **في مكان آخر**؛ وصفهم الرئيسي هو القاعة الرئيسية للفصل. الفصول الدراسية لا تملك الطلاب.                                                                                       |
+| **الحضور**                   | `Section.students`، واعٍ بالحصة عبر الجدول                 | سفلي    | الفصل (مع صفه الرئيسي) هو وحدة الكشف؛ ويؤخذ الحضور لكل حصة/قاعة عبر خانات الجدول.                                                                                                                      |
+| **المقررات (أُزيلت)**        | —                                                          | —       | أُزيل نموذج `Class` في 2026-10-04؛ قاعة الفصل هي قاعته الرئيسية، وقاعة الخانة تُضبط في الجدول الدراسي.                                                                                                 |
+| **المعلمون**                 | `Section.homeroomTeacherId`؛ المعلمون ↔ المواد في مكان آخر | سفلي    | قد يكون للفصل معلم صف رئيسي؛ وإسنادات تدريس المواد تعيش في مسارها الخاص. الفصول الدراسية لا تملك المعلمين.                                                                                             |
+| **المؤتمرات**                | `Section.conferenceRecordingOptOut`                        | سفلي    | تفضيل تسجيل الحصص المباشرة لكل فصل.                                                                                                                                                                    |
+
+**قاعدة القاعة الرئيسية.** يرتبط كل فصل بقاعة رئيسية **واحدة بالضبط** — `Section.classroomId` مفتاح خارجي مفرد، فلا يمكن أن يكون للفصل أكثر من واحدة. **نوع القاعة هو الحاكم**: القاعة الرئيسية هي الصف الرئيسي من النوع `classroom`؛ والمختبرات والقاعات الكبرى والملاعب مشتركة وتُبلَغ عبر الجدول الدراسي، ولا يملكها الفصل أبدًا. يُنشئ التزويد قاعة فريدة `A0x/B0x` لكل فصل (`defaultRoomName`)، محافظًا على الاقتران 1:1.
+
+**التدفق** (السلسلة الكاملة في [تدفق التكامل](/docs/integration-flow)):
+
+```text
+School: country + type + level
+  → bridge to catalog / curriculum        (grade ⇒ subjects)
+  → sections-per-grade + capacity
+  → each section ↔ one main classroom     ← classrooms stops here
+  → timetable (section × subject × period × room, teacher-less)
+  → students into sections · teachers onto subjects
+  → attendance · exams · grades · reports
+```
+
+## الحالة
+
+| الميزة                 | الحالة     | ملاحظات                                                           |
+| ---------------------- | ---------- | ----------------------------------------------------------------- |
+| مخطط القاعة            | Production | نموذج كامل بالنوع والسعة والارتباط بالصف و`lang`                  |
+| نموذج الفصل            | Production | مجموعات صف رئيسي داخل الصفوف، مرتبطة بالقاعات                     |
+| أنواع القاعات          | Production | 8 أنواع: classroom, lab, library, art, music, hall, sports, admin |
+| بيانات seed            | Production | 28 قاعة في 5 مبانٍ (A-E)                                          |
+| تبويب الإعداد          | Production | توليد جماعي للفصول والقاعات لكل صف                                |
+| تفاصيل القاعة          | Production | صفحة تفاصيل بشبكة جدول لكل قاعة، وقائمة المقررات، والاستخدام      |
+| إحصاءات السعة          | Production | بطاقات ملخص مطوية في رأس صفحة القاعات                             |
+| التنقّل بالتبويبات     | Production | تبويبان: القاعات، الإعداد                                         |
+| التفويض                | Production | RBAC — DEVELOPER / ADMIN يكتبان، TEACHER / STAFF يقرآن            |
+| التكامل مع الجدول      | Production | إسناد الخانات مع 3 قيود فريدة                                     |
+| قيود القاعات           | Production | قواعد الجدولة، وإمكانية الوصول، وحجوزات الصيانة                   |
+| واجهة القائمة المنسدلة | Production | `GET /api/classrooms`                                             |
+| واجهة CRUD             | Production | DataTable مع إنشاء / تعديل / حذف                                  |
+| القاعة ↔ الفصل         | Production | القاعة الرئيسية للفصل (`Section.classroomId`) + جدول لكل حصة      |
+
+## النماذج
+
+### Classroom
+
+```prisma
+model Classroom {
+  id       String  @id @default(cuid())
+  schoolId String
+  typeId   String
+  gradeId  String?
+  roomName String
+  capacity Int
+  lang     String  @default("ar")
+
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroomType ClassroomType  @relation(fields: [typeId], references: [id])
+  grade         AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  sections      Section[]
+  timetables    Timetable[]
+  constraints   RoomConstraint[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, roomName])
+  @@index([schoolId, gradeId])
+  @@map("classrooms")
+}
+```
+
+| الحقل      | النوع   | الوصف                                                |
+| ---------- | ------- | ---------------------------------------------------- |
+| `schoolId` | String  | عزل المستأجر                                         |
+| `typeId`   | String  | مفتاح خارجي إلى ClassroomType                        |
+| `gradeId`  | String? | مفتاح خارجي اختياري إلى AcademicGrade (ارتباط بالصف) |
+| `roomName` | String  | "A101", "Physics Lab"                                |
+| `capacity` | Int     | أقصى عدد للطلاب                                      |
+| `lang`     | String  | لغة التخزين للترجمة (الافتراضي `"ar"`)               |
+
+### Section
+
+مجموعة صف رئيسي داخل صف — تمثّل "الصف السابع - أ"، وتربط الطلاب بقاعة ومعلم صف رئيسي.
+
+```prisma
+model Section {
+  id       String @id @default(cuid())
+  schoolId String
+  gradeId  String
+  name     String   // "Grade 7-A"
+  letter   String   // "A"
+  lang     String   @default("ar")
+
+  homeroomTeacherId String?
+  classroomId       String?
+  maxCapacity       Int     @default(30)
+
+  school          School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade           AcademicGrade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  homeroomTeacher Teacher?       @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  classroom       Classroom?     @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  students        Student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeId, letter])
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([schoolId, gradeId])
+  @@map("sections")
+}
+```
+
+سلسلة العلاقات: `AcademicGrade → Section → Student`، `Section → Classroom`، `Section → Teacher` (الصف الرئيسي).
+
+### ClassroomType
+
+```prisma
+model ClassroomType {
+  id       String @id @default(cuid())
+  schoolId String
+  name     String
+  lang     String @default("ar")
+
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classrooms Classroom[]
+
+  @@unique([schoolId, name])
+  @@map("classroom_types")
+}
+```
+
+8 أنواع مزروعة: `classroom`, `lab`, `library`, `art`, `music`, `hall`, `sports`, `admin`.
+
+### RoomConstraint
+
+معرَّف في `prisma/models/timetable.prisma`. بيانات وصفية للجدولة وإمكانية الوصول.
+
+```prisma
+model RoomConstraint {
+  id          String  @id @default(cuid())
+  schoolId    String
+  classroomId String
+  termId      String?
+
+  allowedSubjectTypes  String[] @default([])
+  strictCapacityLimit  Boolean  @default(true)
+  capacityBuffer       Int      @default(0)
+
+  wheelchairAccessible Boolean @default(false)
+  hasElevatorAccess    Boolean @default(false)
+  floorLevel           Int?
+
+  reservedPeriods   Json @default("{}")
+  maintenanceBlocks Json @default("[]")
+
+  @@unique([schoolId, classroomId, termId])
+  @@map("room_constraints")
+}
+```
+
+يستخدم الـ seed عملية `upsert` — فتشغيله أكثر من مرة آمن.
+
+## تفاصيل التكامل
+
+تفاصيل كل وحدة خلف خريطة [التكامل](#integration) أعلاه.
+
+### الجدول الدراسي
+
+كل خانة جدول تُسند قاعة. ثلاثة قيود فريدة تمنع الحجز المزدوج:
+
+```
+@@unique([schoolId, termId, dayOfWeek, periodId, sectionId, weekOffset])
+@@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
+@@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
+```
+
+يضمن القيد الثالث ألا تستضيف قاعة فصلين في الحصة نفسها.
+
+- **جدول تفاصيل القاعة** (`/classrooms/[id]`) — شبكة أسبوعية بالمقرر والمادة والمعلم والصف. الاستخدام = `usedSlots / (teachingPeriods * workingDays)`.
+- **عرض القاعة في الجدول الدراسي** (`by-room/content.tsx`) — الجدول الأسبوعي الكامل + أداة الاستخدام.
+- **محرّر الخانة** (`slot-editor-dialog.tsx`) — يفلتر القاعات بحسب الإشغال فلا تظهر إلا المتاحة.
+- **التوليد التلقائي** (`algorithm.ts`) — يوجّه استدلال `requiresLab` المواد العلمية إلى قاعات من نوع مختبر. يُحمَّل `allowedSubjectTypes` لكن لا تستهلكه `isRoomAvailable()`.
+
+### الفصل
+
+`AcademicGrade → Section → Classroom` (عبر `classroomId`). `Student → Section → Classroom` (عبر `sectionId → classroomId`). تُنشأ الفصول عبر إجراء `generateSections()` في تبويب الإعداد، الذي ينشئ Section + Classroom ذريًا.
+
+**قاعدة التسمية الافتراضية.** المدارس الجديدة (`autoProvisionSections`) ومعالج الإعداد تولّد **قاعتين رئيسيتين مسنَدتين إلى الصف لكل صف**، تُسمّيان `{حرف الفصل}{رقم الصف بخانتين}` — الصف 1 ← `A01` (فصل A) / `B01` (فصل B)، الصف 12 ← `A12` / `B12`، وهكذا. تحمل هذه القاعات `gradeId` (قاعات صف رئيسي، تظهر بصفها لا بشارة **Shared**). ويحتفظ الفصل بتسميته الخاصة (`Grade 1-A`). القاعات بلا `gradeId` (المختبرات والقاعات الكبرى والصالة الرياضية وقاعات العرض التجريبي المزروعة) تظهر **Shared**.
+
+**عرض القائمة (صحيح لغويًا دون واجهة الترجمة).** يحلّ جدول القاعات عمودين على العميل ليُقرآ صحيحَين بأي لغة بغضّ النظر عن كيفية تخزين البيانات:
+
+- **الصف** — يُشتق كـ `"{Grade} {gradeNumber}"` من رقم الصف المنظَّم (مثل `Grade 1` / `الصف 1`)، لا من اسم الصف المخزَّن. يُرتَّب العمود بحسب رقم الصف ويكون تصاعديًا افتراضيًا؛ وتأتي صفوف `Shared` (بلا صف) أخيرًا.
+- **النوع** — يُحوَّل عبر قاموس `school.classrooms.roomTypes` (بمفتاح هو slug النوع بأحرف صغيرة: `classroom`, `lab`, `hall`, `admin`, `art`, `music`, `library`, `sports`). الأنواع غير المعروفة/المخصّصة ترجع إلى قيمتها الخام المخزَّنة. وهذا حتمي (يشبه الإعداد)، فلا يعتمد على ذاكرة الترجمة عند الطلب.
+
+يُفتح نموذج إضافة/تعديل القاعة كـ `Dialog` مضغوط من shadcn (لا النافذة القديمة بملء الشاشة)، موزّعًا على صفين — **اسم القاعة + الصف**، ثم **النوع + السعة**. يُغذّى بشكل متزامن: تُجلب قوائم خيارات النوع/الصف مرة واحدة على الخادم (في `content.tsx`) وتأتي القيم الحالية للصف المعدَّل من بيانات الجدول المحمّلة أصلًا (`values` في React Hook Form)، فلا يُطلق فتح قاعة موجودة جلب `getClassroom` عند الفتح. وهذا يُبقي الحوار مستقرًا عند الفتح — دون وميض فارغ←ممتلئ ودون إعادة توسيط للارتفاع.
+
+### الطلاب
+
+- الصف الرئيسي: `Student → Section → Classroom` (القاعة الرئيسية للفصل)
+- لكل حصة: `Student → Section → Timetable → Classroom`
+
+### المعلمون
+
+- لكل خانة: `Teacher → Timetable → Classroom` (القاعة الفعلية لكل حصة)
+- الصف الرئيسي: `Teacher → Section → Classroom` (عبر `homeroomTeacherId`)
+
+### بوابة أولياء الأمور
+
+`Guardian → Student → Timetable → Classroom` (عبر `getChildTimetable()`).
+
+### الاختبارات
+
+لا يوجد `classroomId` مباشر على `Exam`. اختبار الفصل يقع في قاعة الفصل (`Exam → Section → Classroom`)؛ واختبار الصف كله بلا قاعة وحيدة. يقبل كشف التعارض `classroomId` اختياريًا ويفحص تعارضات الجدول + تعارضات اختبار-اختبار.
+
+### لوحة التحكم / المرافق (فجوات)
+
+تعرض `UpcomingClassCard` بيانات وهمية مكتوبة ثابتة ("Room 101"، "Hall A"). وصفحة إدارة المرافق ثابتة تمامًا (42 مرفقًا). ولا تستعلم أيٌّ منهما عن `Classroom`.
+
+## جدول الإحالات المتقاطعة
+
+| الوحدة         | مفتاح خارجي مباشر | المسار                                     | الحالة     |
+| -------------- | ----------------- | ------------------------------------------ | ---------- |
+| Timetable      | `classroomId`     | مباشر                                      | Production |
+| Section        | `classroomId`     | مباشر                                      | Production |
+| RoomConstraint | `classroomId`     | مباشر                                      | Production |
+| Teacher        | لا                | Teacher → Timetable / Section → Classroom  | غير مباشر  |
+| Student        | لا                | Student → Section → Classroom              | غير مباشر  |
+| Parent portal  | لا                | Guardian → Student → Timetable → Classroom | غير مباشر  |
+| Exam           | لا                | Exam → Section → Classroom                 | غير مباشر  |
+| School config  | لا                | `db.classroom.count()`                     | قراءة فقط  |
+| CatalogSubject | لا                | لا مسار                                    | فجوة       |
+| Application    | لا                | لا اتصال                                   | فجوة       |
+| Dashboard      | لا                | بيانات وهمية ثابتة                         | فجوة       |
+| Facility page  | لا                | ثابتة مكتوبة                               | فجوة       |
+| Onboarding     | لا                | يحفظ العدد في `maxClasses` فقط             | فجوة       |
+
+## الواجهة البرمجية
+
+`GET /api/classrooms` — يُرجع القاعات لاختيارها من قائمة منسدلة.
+
+| الجانب           | التفصيل                                             |
+| ---------------- | --------------------------------------------------- |
+| الموقع           | `src/app/api/classrooms/route.ts`                   |
+| متعدد المستأجرين | مقيَّد بـ `schoolId` من سياق المستأجر (فارغ إن غاب) |
+| حد المعدّل       | تُطبَّق حدود مستوى API                              |
+| المصادقة         | لا فحص `auth()` — حد المعدّل + سياق المستأجر فقط    |
+| الاستجابة        | `{ classrooms: [{ id, roomName }] }`                |
+
+## الملفات الرئيسية
+
+```
+prisma/models/classrooms.prisma     # Classroom + Section + ClassroomType
+prisma/models/timetable.prisma      # RoomConstraint
+prisma/seeds/classrooms.ts          # Seed logic (types + rooms)
+prisma/seeds/constants.ts           # 28 classroom definitions
+src/app/api/classrooms/route.ts     # Dropdown API
+```
+
+## انظر أيضًا
+
+- [الجدول الدراسي](/docs/timetable) — إسناد الخانات، عرض القاعة
+- [تعدد المستأجرين](/docs/multi-tenancy) — نطاق `schoolId`
+- [القوائم](/docs/listings) — اصطلاحات DataTable

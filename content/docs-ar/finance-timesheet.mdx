@@ -1,0 +1,95 @@
+---
+title: سجلات الوقت
+description: تتبّع وقت الكادر عبر فترات الدفع وإدخالات يومية (ساعات، عمل إضافي، إجازة) بسير مفتوح ← مغلق ← معتمد. إدارة الفترات والإدخالات تعمل؛ ولا توجد واجهة تسجيل حضور/انصراف، ولا كشف للعمل الإضافي، ونموذج الإدخال اليدوي عنصر نائب.
+---
+
+تدير سجلات الوقت فترات الدفع وإدخالات الوقت داخلها. و*يُقصد* بسجلات الوقت المعتمدة أن تغذّي أعداد الأيام/الساعات في [كشف الرواتب](/docs/finance-payroll) — لكن هذا الربط غير موصول اليوم، فيكتب كشف الرواتب 22 يوماً يدوياً مهما كان.
+
+## التدفق
+
+```
+1. Create period (OPEN)                              — createTimesheet
+2. Add entries (hours / overtime / leave per day)    — addTimesheetEntry  (db.$transaction)
+3. Submit period (→ CLOSED)                          — submitTimesheet
+4. Approve / reject                                  — approveTimesheet
+```
+
+## الحالة
+
+| الميزة                                | الحالة                                       |
+| ------------------------------------- | -------------------------------------------- |
+| إدارة فترات سجل الوقت + القائمة       | Production                                   |
+| إنشاء إدخال وقت (بمعاملة)             | Production                                   |
+| تسليم الفترة                          | Production                                   |
+| اعتماد / رفض الفترة                   | Production                                   |
+| نموذج الإدخال اليدوي في الواجهة       | مؤقت — عنصر نائب "قريباً"                    |
+| كشف العمل الإضافي (علم > 8 ساعات/يوم) | مخطط                                         |
+| حضور/انصراف بالجوال / GPS / QR        | مخطط                                         |
+| التصدير إلى مدخلات كشف الرواتب        | مخطط                                         |
+| استهلاك كشف الرواتب للساعات المعتمدة  | غير موصول (كشف الرواتب يكتب 22 يوماً يدوياً) |
+
+## المسارات
+
+| المسار                                  | الصفحة          | الحالة           |
+| --------------------------------------- | --------------- | ---------------- |
+| `/{lang}/finance/timesheet`             | نظرة عامة       | جاهز             |
+| `/{lang}/finance/timesheet/periods`     | قائمة الفترات   | جاهز             |
+| `/{lang}/finance/timesheet/entries`     | قائمة الإدخالات | جاهز             |
+| `/{lang}/finance/timesheet/entries/new` | إدخال يدوي      | مؤقت (عنصر نائب) |
+
+## إجراءات الخادم
+
+تُفرض الصلاحيات (RBAC) في `content.tsx`. تستخرج هذه الإجراءات المستأجر من `session.user.schoolId` مباشرة بدل `getTenantContext()` (تعارض مع كشف الرواتب/الراتب — مُعلَّم للتنظيف). وتغلّف `addTimesheetEntry` كتابتها بـ `db.$transaction`.
+
+| الإجراء             | الغرض                                            |
+| ------------------- | ------------------------------------------------ |
+| `createTimesheet`   | إنشاء فترة (OPEN)                                |
+| `addTimesheetEntry` | إنشاء إدخال + إعادة تحميل الفترة في معاملة واحدة |
+| `submitTimesheet`   | الفترة ← CLOSED                                  |
+| `approveTimesheet`  | ضبط حالة الاعتماد/الرفض + `closedBy`             |
+| `getTimesheets`     | عرض الفترات + الإدخالات                          |
+
+## المفاهيم
+
+| المفهوم        | القيم                                                                        |
+| -------------- | ---------------------------------------------------------------------------- |
+| `PeriodStatus` | OPEN, CLOSED, LOCKED                                                         |
+| `EntryStatus`  | DRAFT, SUBMITTED, APPROVED, REJECTED                                         |
+| قواعد الإعداد  | `PERIOD_DURATION_DAYS` 14, `ROUNDING_INTERVAL` 0.25, `REQUIRE_APPROVAL` true |
+
+## دفتر الأستاذ / المحاسبة
+
+لا ترحيل يومية — سجل الوقت في أعلى مجرى كشف الرواتب وليس له حدث مالي خاص.
+
+## المخطط
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`TimesheetPeriod`** — `name`، `startDate`، `endDate`، `status`، `closedBy/At`؛ `@@unique([schoolId, name])`.
+- **`TimesheetEntry`** — `periodId`، `teacherId`، `entryDate`، `hoursWorked`، `overtimeHours`، `leaveHours`، `leaveType`، `notes`، `status`؛ `@@unique([schoolId, periodId, teacherId, entryDate])`.
+
+لا يوجد حقل `lang` (الحقول النصية الحرة هنا تسميات تشغيلية قصيرة).
+
+## العناصر المؤقتة
+
+- `timesheet/entries/new/page.tsx` — نموذج الإدخال اليدوي عنصر نائب.
+- `validation.ts:25` — رسالة Zod مكتوبة يدوياً (لم تُمرَّر بعد عبر `ValidationHelper`).
+
+## الاختبارات
+
+لا يوجد.
+
+## الملفات الرئيسية
+
+| المكوّن        | المسار                                                                               |
+| -------------- | ------------------------------------------------------------------------------------ |
+| إجراءات الخادم | `src/components/school-dashboard/finance/timesheet/actions.ts`                       |
+| الإعدادات      | `src/components/school-dashboard/finance/timesheet/config.ts`                        |
+| صفحة الإدخالات | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/timesheet/entries/page.tsx` |
+| المخطط         | `prisma/models/finance-payroll.prisma`                                               |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نظرة عامة على الكتلة
+- [كشف الرواتب](/docs/finance-payroll) — المستهلك المقصود للساعات المعتمدة
+- [الراتب](/docs/finance-salary) — تعريفات الأجور

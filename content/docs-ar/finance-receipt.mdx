@@ -1,0 +1,79 @@
+---
+title: الإيصالات
+description: التقاط إيصالات المصروفات مع استخراج بالذكاء الاصطناعي (التاجر، التاريخ، المبلغ، البنود) وتقييد الخطة عبر Schematic.io. تختلف عن إيصال دفع الرسوم PDF. الرفع والاستخراج وإعادة المحاولة تعمل؛ أما واجهة تعديل البيانات المستخرجة وربط الإيصال بالمصروف فمعلّقتان.
+---
+
+الإيصالات أداة **التقاط إيصالات المصروفات**: ترفع صورة أو PDF لإيصال فيستخرج مسار ذكاء اصطناعي التاجر والتاريخ والمبلغ والبنود لتتبّع المصروفات. وهي ليست مولّد إيصال الدفع — فالإيصال الصادر عن دفع الرسوم يُنتَج بواسطة [`fees/receipt-pdf.tsx`](/docs/fees) (مستند `@react-pdf/renderer` يعمل).
+
+## التدفق
+
+```
+Upload image / PDF  →  AI extraction (pending → processing → processed | error)
+  →  retry on failure  →  (manual) attach to an expense record
+```
+
+يمر تقييد الخطة عبر Schematic.io (مسار `receipt/manage-plan`)؛ وتأتي الاستحقاقات من `receipt/schematic/`.
+
+## الحالة
+
+| الميزة                                     | الحالة                                              |
+| ------------------------------------------ | --------------------------------------------------- |
+| الرفع (صورة / PDF)                         | Production                                          |
+| مسار الاستخراج بالذكاء الاصطناعي           | Production                                          |
+| آلة الحالات + إعادة المحاولة               | Production                                          |
+| تقييد الخطة / الاستحقاقات عبر Schematic.io | جاهز                                                |
+| واجهة "تعديل البيانات المستخرجة"           | مخطط (على المستخدم الحذف وإعادة المحاولة عند الخطأ) |
+| ربط الإيصال بالمصروف                       | مخطط (يدوي حالياً)                                  |
+| بديل OCR للصور منخفضة الجودة               | مخطط                                                |
+| كشف التكرار / الرفع الجماعي                | مخطط                                                |
+
+## المسارات
+
+| المسار                                | الصفحة              | الحالة |
+| ------------------------------------- | ------------------- | ------ |
+| `/{lang}/finance/receipt`             | قائمة الإيصالات     | جاهز   |
+| `/{lang}/finance/receipt/[id]`        | تفاصيل الإيصال      | جاهز   |
+| `/{lang}/finance/receipt/manage-plan` | إدارة خطة Schematic | جاهز   |
+
+## إجراءات الخادم
+
+| الإجراء                          | الغرض                                   |
+| -------------------------------- | --------------------------------------- |
+| `uploadReceipt`                  | الرفع + بدء الاستخراج بالذكاء الاصطناعي |
+| `getReceipts` / `getReceiptById` | عرض / قراءة الإيصالات                   |
+| `retryReceiptExtraction`         | إعادة الاستخراج بعد خطأ                 |
+| `deleteReceipt`                  | حذف (ينظّف التخزين وقاعدة البيانات)     |
+
+## دفتر الأستاذ / المحاسبة
+
+ليست محرّكاً للمال — الإيصالات أدلة مرفقة بالمصروفات؛ ولا ترحّل قيود يومية.
+
+## المخطط
+
+`prisma/models/finance-invoices.prisma`: `Receipt` و`ExpenseReceipt` — مقيّدان بـ `schoolId`. لا يوجد حقل `lang` (نص التاجر المستخرج يُخزَّن كما التُقط).
+
+## العناصر المؤقتة
+
+- `receipt/schematic/client.ts:7` — بديل وقت البناء `process.env.SCHEMATIC_API_KEY || "placeholder-api-key"`.
+- `receipt/upload-form.tsx:72` — `// This is a TODO for Phase 4 completion`.
+- `validation.ts:44,51` — رسائل تحقق مكتوبة يدوياً.
+
+## الاختبارات
+
+لا يوجد.
+
+## الملفات الرئيسية
+
+| المكوّن                     | المسار                                                                       |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| إجراءات الخادم              | `src/components/school-dashboard/finance/receipt/actions.ts`                 |
+| الاستخراج بالذكاء الاصطناعي | `src/components/school-dashboard/finance/receipt/ai/extract-receipt-data.ts` |
+| Schematic                   | `src/components/school-dashboard/finance/receipt/schematic/`                 |
+| نموذج الرفع                 | `src/components/school-dashboard/finance/receipt/upload-form.tsx`            |
+| PDF إيصال الدفع (في الرسوم) | `src/components/school-dashboard/finance/fees/receipt-pdf.tsx`               |
+
+## انظر أيضاً
+
+- [المالية](/docs/finance) — نظرة عامة على الكتلة
+- [المصروفات](/docs/finance-expenses) — الإيصالات تُرفق بسجلات المصروفات
+- [الرسوم](/docs/fees) — PDF إيصال الدفع العامل
