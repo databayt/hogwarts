@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [teacher, principal, student, parent]
 routes: [/ar/s/{school}/exams, /ar/s/{school}/exams/new, /ar/s/{school}/exams/manage, /ar/s/{school}/exams/qbank, /ar/s/{school}/exams/qbank/ai-generate, /ar/s/{school}/exams/generate/catalog, /ar/s/{school}/exams/templates, /ar/s/{school}/exams/mark, /ar/s/{school}/exams/result, /ar/s/{school}/exams/upcoming, /ar/s/{school}/exams/quick, /ar/s/{school}/exams/certificates]
 screenshots: []
+flows: [create-exam]
 readme: ./README.md
 docs: content/docs-en/exams.mdx
 updated: 2026-09-27
@@ -42,6 +43,15 @@ A teacher types each exam from scratch in Word, copying last year's questions ou
 - **Parent**: their child's exam results, reached from the parent view.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The exams overview: https://cdn.databayt.org/hogwarts/ar/exams/overview.webp
+- Creating an exam: template, AI or blank: https://cdn.databayt.org/hogwarts/ar/exams/new.webp
+- Managing scheduled exams: https://cdn.databayt.org/hogwarts/ar/exams/manage.webp
+- Marking after the exam: https://cdn.databayt.org/hogwarts/ar/exams/mark.webp
+<!-- cdn:end -->
 
 - None yet — capture with /record.
 - Routes to capture (Arabic, admin or teacher login on demo.balqalam.com): `/ar/s/{school}/exams` (the overview), `/ar/s/{school}/exams/new` (the two ways to start), `/ar/s/{school}/exams/qbank` (the question bank), `/ar/s/{school}/exams/generate/catalog` (adopting a blueprint), `/ar/s/{school}/exams/mark` (marking), `/ar/s/{school}/exams/result` (results). For students: `/ar/s/{school}/exams/upcoming` on a phone.

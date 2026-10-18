@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, principal, parent, student, finance, teacher]
 routes: [/ar/s/{school}/transportation, /ar/s/{school}/transportation/dashboard, /ar/s/{school}/transportation/routes, /ar/s/{school}/transportation/trips, /ar/s/{school}/transportation/me, /ar/s/{school}/transportation/fees, /ar/s/{school}/transportation/settings]
 screenshots: []
+flows: [track-transport]
 readme: ./README.md
 docs: content/docs-en/transportation.mdx
 updated: 2026-09-27
@@ -43,6 +44,13 @@ The transport officer keeps a notebook of which child rides which bus, and drive
 - **Finance:** the monthly transport fee for each student, exportable to a spreadsheet.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The school transport dashboard: https://cdn.databayt.org/hogwarts/ar/transportation/overview.webp
+- Bus routes and their stops: https://cdn.databayt.org/hogwarts/ar/transportation/routes.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Routes to capture (demo school, Arabic):
 

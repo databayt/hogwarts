@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, principal, it]
 routes: [/ar/s/{school}/school, /ar/s/{school}/school/configuration/title, /ar/s/{school}/school/membership, /ar/s/{school}/school/bulk, /ar/s/{school}/school/communication, /ar/s/{school}/school/security]
 screenshots: []
+flows: [setup-academics, manage-roles, review-security]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -41,6 +42,16 @@ The school's details live in the head of whoever set up the last system. Changin
 - IT / administrator: one place for invitations, password resets, the audit log and the custom-domain request.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- Academic structure: years, terms and grading: https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/structure.webp
+- The subjects each grade studies: https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/subjects.webp
+- Sections and rooms: https://cdn.databayt.org/hogwarts/ar/school/configuration/academic/classrooms.webp
+- School members with their roles and status: https://cdn.databayt.org/hogwarts/ar/school/membership/members.webp
+- Security score, failed logins and 2FA: https://cdn.databayt.org/hogwarts/ar/school/security/overview.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Routes to capture (Arabic first, on the public demo school):
 

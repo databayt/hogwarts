@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [teacher, principal, registrar, parent, student]
 routes: [/ar/s/{school}/attendance, /ar/s/{school}/attendance/manual, /ar/s/{school}/attendance/excuses, /ar/s/{school}/attendance/early-warning, /ar/s/{school}/attendance/reports, /ar/s/{school}/attendance/records]
 screenshots: [docs/evidence/quick-mobile-ar.png, docs/evidence/quick-mobile-saved.png, docs/evidence/attendance-overview-ar-after.png, docs/evidence/attendance-excuses.png, docs/evidence/attendance-manual-loaded.png, docs/evidence/attendance-settings-ar-after.png]
+flows: [mark-attendance]
 readme: ./README.md
 docs: content/docs-en/attendance.mdx
 updated: 2026-09-27
@@ -43,6 +44,12 @@ Each teacher fills a paper register, a runner carries the sheets to the office, 
 - **Student**: their own attendance record and history.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- Taking attendance from the class list: https://cdn.databayt.org/hogwarts/ar/attendance/mark/manual.webp
+<!-- cdn:end -->
 
 - `docs/evidence/quick-mobile-ar.png` — the teacher's quick register on a phone, in Arabic, with one student tapped absent (red "غائب" tag) and the Save button.
 - `docs/evidence/quick-mobile-saved.png` — the confirmation after saving: 27 present, 2 absent, 1 late, "2 guardians notified", Message guardian buttons (English interface).

@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, finance, principal, parent, teacher]
 routes: [/ar/s/{school}/finance, /ar/s/{school}/finance/fees, /ar/s/{school}/finance/fees/structures, /ar/s/{school}/finance/fees/payments, /ar/s/{school}/finance/fees/assignments/{id}, /ar/s/{school}/finance/invoice, /ar/s/{school}/finance/expenses, /ar/s/{school}/finance/budget, /ar/s/{school}/finance/payroll, /ar/s/{school}/finance/payroll/my, /ar/s/{school}/finance/banking, /ar/s/{school}/finance/reports, /ar/s/{school}/finance/permissions]
 screenshots: [docs/evidence/invoice-ar-after-ddl.png]
+flows: [set-fees]
 readme: ./README.md
 docs: content/docs-en/finance.mdx
 updated: 2026-09-27
@@ -58,6 +59,13 @@ Fees live in a notebook and a spreadsheet only the accountant understands. A fat
 - **Teacher:** their own payslips and expense claims; the school's money pages stay closed to them.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The fees overview: https://cdn.databayt.org/hogwarts/ar/finance/fees/overview.webp
+- Recorded payments: https://cdn.databayt.org/hogwarts/ar/finance/fees/payments.webp
+<!-- cdn:end -->
 
 - `docs/evidence/invoice-ar-after-ddl.png` — the Arabic invoice list: invoice numbers, family names, amounts in Sudanese pounds, paid and unpaid badges. Demo data; the best finance shot we have.
 

@@ -6,6 +6,7 @@ pillar: product-proof
 personas: [owner, registrar, it]
 routes: [/ar/s/{school}/school/bulk, /ar/onboarding/{id}/import]
 screenshots: []
+flows: [bulk-student, bulk-teacher]
 readme: ./README.md
 docs: content/docs-en/pilot.mdx
 updated: 2026-09-27
@@ -40,6 +41,25 @@ Moving to any new system usually means weeks of typing: someone sits with last y
 - **IT / admin:** one screen for students, teachers, staff and guardians, with a clear report of what went in and what did not.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The bulk import page: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/bulk.webp
+- Picking the students file in Finder: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/finder.webp
+- Students file columns matched automatically: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/map.webp
+- Reviewing six new students before saving: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/review.webp
+- Students imported, with their logins: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/done.webp
+- Import history with logins and undo: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/history.webp
+- Video — Bulk-import students: https://cdn.databayt.org/hogwarts/ar/school/bulk/student/video.mp4
+- The bulk import page: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/bulk.webp
+- Picking the teachers file in Finder: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/finder.webp
+- Teachers file columns matched automatically: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/map.webp
+- Reviewing four new teachers before saving: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/review.webp
+- Teachers imported, with their logins: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/done.webp
+- Import history with logins and undo: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/history.webp
+- Video — Bulk-import teachers: https://cdn.databayt.org/hogwarts/ar/school/bulk/teacher/video.mp4
+<!-- cdn:end -->
 
 None yet — capture with /record. Routes to capture:
 

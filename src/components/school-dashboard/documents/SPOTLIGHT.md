@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [teacher, registrar, principal, owner]
 routes: [/ar/s/{school}/exams/templates, /ar/s/{school}/grades/templates, /ar/s/{school}/grades/reports]
 screenshots: []
+flows: [view-documents]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -42,6 +43,13 @@ Every school already has its mandated format: the ministry's certificate, the he
 - **Owner**: the school keeps the formats it is required to use — nothing to redesign when moving to Balqalam.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- Exam paper templates: https://cdn.databayt.org/hogwarts/ar/grades/templates/exam-templates.webp
+- Certificate and grade sheet templates: https://cdn.databayt.org/hogwarts/ar/grades/templates/grade-templates.webp
+<!-- cdn:end -->
 
 - None yet — capture with /record.
 - Routes to capture (Arabic, as the demo admin or teacher): `/ar/s/{school}/exams/templates` (the template list and the upload dialog showing detected fields), `/ar/s/{school}/grades/templates`, the "Use this template" dialog for an exam paper, and `/ar/s/{school}/grades/reports` with the "Generate all" button. A short recording that ends by opening the filled Word file in Arabic would be the strongest asset.

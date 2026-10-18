@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [registrar, principal, owner, teacher, parent]
 routes: [/ar/s/{school}/students, /ar/s/{school}/students/add, /ar/s/{school}/students/archived, /ar/s/{school}/students/year-levels]
 screenshots: [docs/evidence/demo-students-ar.png]
+flows: [add-student]
 readme: ./README.md
 docs: content/docs-en/students.mdx
 updated: 2026-09-27
@@ -42,6 +43,38 @@ The student register is a ledger in the office and a copy in someone's spreadshe
 - **Parent**: is written into the record with phone and WhatsApp numbers when the child is added, so the school can reach them.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The students list before adding: https://cdn.databayt.org/hogwarts/ar/students/add/list.webp
+- The documents step of the add-student wizard: https://cdn.databayt.org/hogwarts/ar/students/add/documents.webp
+- Picking the student's photo in Finder: https://cdn.databayt.org/hogwarts/ar/students/add/finder-photo.webp
+- The student's photo uploaded: https://cdn.databayt.org/hogwarts/ar/students/add/photo-uploaded.webp
+- Picking the student file in Finder: https://cdn.databayt.org/hogwarts/ar/students/add/finder-cv.webp
+- The student file uploaded: https://cdn.databayt.org/hogwarts/ar/students/add/cv-uploaded.webp
+- The personal details step: https://cdn.databayt.org/hogwarts/ar/students/add/personal.webp
+- Personal details filled in: https://cdn.databayt.org/hogwarts/ar/students/add/personal-filled.webp
+- The father's details: https://cdn.databayt.org/hogwarts/ar/students/add/father.webp
+- The address step: https://cdn.databayt.org/hogwarts/ar/students/add/address.webp
+- Grade and section: https://cdn.databayt.org/hogwarts/ar/students/add/academic.webp
+- The student created, with their login: https://cdn.databayt.org/hogwarts/ar/students/add/created.webp
+- Video — Add a student: https://cdn.databayt.org/hogwarts/ar/students/add/video.mp4
+- Video — Add a student: https://cdn.databayt.org/hogwarts/ar/students/add/reel.mp4
+- Video — Add a student: https://cdn.databayt.org/hogwarts/ar/students/add/details.mp4
+- The students list before adding: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/list.webp
+- The documents step of the add-student wizard: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/documents.webp
+- The student's photo uploaded: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/photo-uploaded.webp
+- The student file uploaded: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/cv-uploaded.webp
+- The personal details step: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal.webp
+- Personal details filled in: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/personal-filled.webp
+- The father's details: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/father.webp
+- The address step: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/address.webp
+- Grade and section: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/academic.webp
+- The student created, with their login: https://cdn.databayt.org/hogwarts/ar/students/add/iphone-16/created.webp
+- Video — Add a student: https://cdn.databayt.org/hogwarts/ar/students/add/support-iphone.mp4
+- Video — Add a student: https://cdn.databayt.org/hogwarts/ar/students/add/support-mac.mp4
+<!-- cdn:end -->
 
 - `docs/evidence/demo-students-ar.png` — the Arabic students list with the page tabs (All, Enroll, Performance, Reports, Archive, Settings), search, grade and status filters, and "Draft" and "Active" badges. A "quick guide" welcome pop-up covers the middle of the table: re-capture without it, or crop to the left and right edges.
 - To capture more (with /record, Arabic, as admin): `/ar/s/{school}/students` with the "Unplaced" filter on, the four-step add form at `/ar/s/{school}/students/add`, the Link Parent code dialog from a row's menu, and `/ar/s/{school}/students/archived`.

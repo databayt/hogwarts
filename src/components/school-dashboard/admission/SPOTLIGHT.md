@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, principal, registrar, finance, parent]
 routes: [/ar/s/{school}/admission, /ar/s/{school}/admission/applications, /ar/s/{school}/admission/merit, /ar/s/{school}/admission/enrollment, /ar/s/{school}/admission/leads, /ar/s/{school}/admission/settings, /ar/s/{school}/admissions, /ar/s/{school}/application, /ar/s/{school}/application/status]
 screenshots: [docs/evidence/demo-admission-ar.png, docs/evidence/merit-desktop.png, docs/evidence/baseline-admission.jpeg]
+flows: [manage-admission]
 readme: ./README.md
 docs: content/docs-en/admission.mdx
 updated: 2026-09-27
@@ -43,6 +44,18 @@ Every new season the front office hands out paper folders, then someone types ea
 - **Parent:** apply from a phone, check the status without an account, accept the offer and pay from the same link.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- Admission campaigns with their seats and applications: https://cdn.databayt.org/hogwarts/ar/admission/campaigns.webp
+- Incoming applications: https://cdn.databayt.org/hogwarts/ar/admission/applications.webp
+- One application in detail: https://cdn.databayt.org/hogwarts/ar/admission/application.webp
+- The merit list: https://cdn.databayt.org/hogwarts/ar/admission/merit.webp
+- Enrolling accepted applicants: https://cdn.databayt.org/hogwarts/ar/admission/enrollment.webp
+- Enquiries and leads: https://cdn.databayt.org/hogwarts/ar/admission/leads.webp
+- Admission settings: https://cdn.databayt.org/hogwarts/ar/admission/settings.webp
+<!-- cdn:end -->
 
 - `docs/evidence/demo-admission-ar.png` — Arabic Applications tab: application numbers, applicant names, grade, status badges (accepted, waitlisted, rejected, shortlisted, withdrawn) and merit rank.
 - `docs/evidence/merit-desktop.png` — despite the name, the Arabic Applications tab on a phone-width screen. Crop the red development badge at the bottom left.

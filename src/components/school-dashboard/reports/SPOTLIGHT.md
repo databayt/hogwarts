@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [principal, teacher, parent, student]
 routes: [/ar/s/{school}/exams/report-cards, /ar/s/{school}/grades/reports, /ar/s/{school}/parent/children/{id}/report-cards]
 screenshots: []
+flows: [view-reports]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -42,6 +43,12 @@ At term end, teachers copy marks from their notebooks into a spreadsheet, someon
 - **Student:** the same notice, and their card available once published.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The term's report cards, ready to publish and download: https://cdn.databayt.org/hogwarts/ar/grades/reports/report-cards.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Routes to capture (demo school, Arabic):
 

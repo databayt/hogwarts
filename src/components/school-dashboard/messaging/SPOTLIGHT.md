@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [teacher, parent, student, principal]
 routes: [/ar/s/{school}/messages, /ar/s/{school}/messages?conversation={id}]
 screenshots: [student-messages.png]
+flows: [send-message]
 readme: ./README.md
 docs: content/docs-en/messages.mdx
 updated: 2026-09-27
@@ -42,6 +43,12 @@ A teacher's personal number sits in thirty parents' phones and the class WhatsAp
 - Principal / owner: school conversations stay on the school's system, not scattered across staff phones.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The inbox between the school and families: https://cdn.databayt.org/hogwarts/ar/messages/inbox.webp
+<!-- cdn:end -->
 
 - `student-messages.png` — the phone chat list in Arabic: search bar, filter chips, named chats and a class group, bottom tab bar. Crop out the red "1 Issue" developer badge in the bottom corner.
 - More to capture with /record: an open conversation on a phone at `/ar/s/{school}/messages` (log in as parent@ on the demo — the demo inboxes are seeded with real-looking threads), and the desktop split screen at the same route.

@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, principal, teacher, student, parent]
 routes: [/ar/s/{school}/timetable, /ar/s/{school}/timetable/full, /ar/s/{school}/timetable/generate, /ar/s/{school}/timetable/conflicts, /ar/s/{school}/timetable/settings, /ar/s/{school}/timetable/analytics]
 screenshots: []
+flows: [view-timetable]
 readme: ./README.md
 docs: content/docs-en/timetable.mdx
 updated: 2026-09-27
@@ -42,6 +43,15 @@ Before term starts, a deputy head sits with a large sheet of paper or a spreadsh
 - **Parent:** each child's weekly schedule, switchable between children.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The whole school's week grid: https://cdn.databayt.org/hogwarts/ar/timetable/week.webp
+- School-day settings: days, periods and breaks: https://cdn.databayt.org/hogwarts/ar/timetable/settings.webp
+- Generating the timetable with its constraints: https://cdn.databayt.org/hogwarts/ar/timetable/generate.webp
+- Scanning the timetable for conflicts: https://cdn.databayt.org/hogwarts/ar/timetable/conflicts.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Routes to capture (demo school, Arabic):
 

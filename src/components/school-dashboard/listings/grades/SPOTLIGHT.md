@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [teacher, principal, student, parent]
 routes: [/ar/s/{school}/grades, /ar/s/{school}/grades/{id}, /ar/s/{school}/parent/children/{child}/grades]
 screenshots: []
+flows: [enter-grades]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -41,6 +42,15 @@ Each teacher keeps marks in a personal notebook or spreadsheet, in their own for
 - **Parent**: their children's marks, from the parent area, without waiting for the term report.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The gradebook: every exam and homework mark: https://cdn.databayt.org/hogwarts/ar/grades/gradebook.webp
+- Generating and publishing report cards: https://cdn.databayt.org/hogwarts/ar/grades/reports.webp
+- Transcripts with a verification code: https://cdn.databayt.org/hogwarts/ar/grades/transcripts.webp
+- Year-end promotion rules: https://cdn.databayt.org/hogwarts/ar/grades/promotion.webp
+<!-- cdn:end -->
 
 - None yet — capture with /record.
 - Routes to capture (Arabic, demo.balqalam.com): `/ar/s/{school}/grades` as a teacher (the table) and as a student on a phone (own marks only), the add-mark steps from the same page, and `/ar/s/{school}/parent/children/{child}/grades` as a parent.

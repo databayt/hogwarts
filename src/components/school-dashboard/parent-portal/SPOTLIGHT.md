@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [parent, teacher, principal]
 routes: [/ar/s/{school}/parent, /ar/s/{school}/parent/children/{id}, /ar/s/{school}/parent/children/{id}/grades, /ar/s/{school}/parent/children/{id}/report-cards, /ar/s/{school}/parent/children/{id}/attendance, /ar/s/{school}/parent/children/{id}/timetable, /ar/s/{school}/parent/children/{id}/assignments, /ar/s/{school}/parent/announcements, /ar/s/{school}/parent/events]
 screenshots: []
+flows: [parent-portal]
 readme: ./README.md
 docs: none
 updated: 2026-09-27
@@ -41,6 +42,12 @@ A mother wants to know why her son's maths mark dropped, so she calls the office
 - **Principal:** parents can only ever see their own children — the portal checks the family link on every page — and report cards reach home the moment they are published.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- Choosing a child in the parent portal: https://cdn.databayt.org/hogwarts/ar/parent/children.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Sign in on the demo as parent@balqalam.com and capture:
 

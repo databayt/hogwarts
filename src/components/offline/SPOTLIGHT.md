@@ -6,6 +6,7 @@ pillar: trust
 personas: [teacher, parent, student, principal, owner]
 routes: [/ar/s/{school}/offline, /ar/s/{school}/attendance, /ar/s/{school}/dashboard]
 screenshots: []
+flows: [install-app]
 readme: ./README.md
 docs: content/docs-en/offline.mdx
 updated: 2026-09-27
@@ -41,6 +42,12 @@ The teacher stands in a classroom where the signal comes and goes. She marks the
 - **Principal and owner**: the system was designed around the connections their staff and families actually have.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The school on a phone: https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Suggested captures, on a real phone, in Arabic:
 

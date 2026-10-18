@@ -2705,5 +2705,221 @@
       "1600": "https://cdn.databayt.org/hogwarts/ar/admission/settings.webp?v=471b44d0",
       "2400": "https://cdn.databayt.org/hogwarts/ar/admission/settings@2x.webp?v=b8dde74b"
     }
+  },
+  "track-transport/overview-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "لوحة النقل المدرسي",
+      "en": "The school transport dashboard"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/transportation/overview.avif?v=eeb5fafd",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/transportation/overview@2x.avif?v=51452a52"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/transportation/overview.webp?v=831023f9",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/transportation/overview@2x.webp?v=d26b6730"
+    }
+  },
+  "track-transport/overview-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "لوحة النقل المدرسي",
+      "en": "The school transport dashboard"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/transportation/overview.avif?v=4c826836",
+      "2400": "https://cdn.databayt.org/hogwarts/en/transportation/overview@2x.avif?v=0ad878c2"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/transportation/overview.webp?v=17e64081",
+      "2400": "https://cdn.databayt.org/hogwarts/en/transportation/overview@2x.webp?v=b0979aac"
+    }
+  },
+  "track-transport/routes-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوط الحافلات ومحطاتها",
+      "en": "Bus routes and their stops"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/transportation/routes.avif?v=e0229ad1",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/transportation/routes@2x.avif?v=f0f4b7d3"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/transportation/routes.webp?v=bee1405f",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/transportation/routes@2x.webp?v=3c5dbe80"
+    }
+  },
+  "track-transport/routes-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "خطوط الحافلات ومحطاتها",
+      "en": "Bus routes and their stops"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/transportation/routes.avif?v=73a03e4b",
+      "2400": "https://cdn.databayt.org/hogwarts/en/transportation/routes@2x.avif?v=a13f7343"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/transportation/routes.webp?v=bac6c4a5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/transportation/routes@2x.webp?v=074ea11e"
+    }
+  },
+  "send-message/inbox-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صندوق الرسائل بين المدرسة والأسر",
+      "en": "The inbox between the school and families"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/messages/inbox.avif?v=cfa16270",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/messages/inbox@2x.avif?v=2d24af5b"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/messages/inbox.webp?v=ccfbbf63",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/messages/inbox@2x.webp?v=99a416c4"
+    }
+  },
+  "send-message/inbox-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صندوق الرسائل بين المدرسة والأسر",
+      "en": "The inbox between the school and families"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/messages/inbox.avif?v=f83a2513",
+      "2400": "https://cdn.databayt.org/hogwarts/en/messages/inbox@2x.avif?v=f6fada36"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/messages/inbox.webp?v=8e2e7ffc",
+      "2400": "https://cdn.databayt.org/hogwarts/en/messages/inbox@2x.webp?v=b9c8aed6"
+    }
+  },
+  "view-reports/report-cards-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "شهادات الطلاب للفصل الدراسي جاهزة للنشر والتنزيل",
+      "en": "The term's report cards, ready to publish and download"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/reports/report-cards.avif?v=a6b41723",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/reports/report-cards@2x.avif?v=d423dc6c"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/reports/report-cards.webp?v=5ebd2e62",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/reports/report-cards@2x.webp?v=efa8ff1d"
+    }
+  },
+  "view-reports/report-cards-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "شهادات الطلاب للفصل الدراسي جاهزة للنشر والتنزيل",
+      "en": "The term's report cards, ready to publish and download"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/reports/report-cards.avif?v=3e175ea7",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/reports/report-cards@2x.avif?v=9b301577"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/reports/report-cards.webp?v=dad240c5",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/reports/report-cards@2x.webp?v=75c51ac9"
+    }
+  },
+  "view-documents/exam-templates-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قوالب أوراق الامتحانات",
+      "en": "Exam paper templates"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/templates/exam-templates.avif?v=a58f0ff0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/templates/exam-templates@2x.avif?v=548d6c26"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/templates/exam-templates.webp?v=888210cf",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/templates/exam-templates@2x.webp?v=8353806f"
+    }
+  },
+  "view-documents/exam-templates-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قوالب أوراق الامتحانات",
+      "en": "Exam paper templates"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/templates/exam-templates.avif?v=06c80528",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/templates/exam-templates@2x.avif?v=4a22ef7c"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/templates/exam-templates.webp?v=34ff48e7",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/templates/exam-templates@2x.webp?v=cebc8c79"
+    }
+  },
+  "view-documents/grade-templates-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قوالب الشهادات وكشوف الدرجات",
+      "en": "Certificate and grade sheet templates"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/templates/grade-templates.avif?v=ed02ee72",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/templates/grade-templates@2x.avif?v=8ecab7ca"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/grades/templates/grade-templates.webp?v=e3624044",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/grades/templates/grade-templates@2x.webp?v=a1f37621"
+    }
+  },
+  "view-documents/grade-templates-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قوالب الشهادات وكشوف الدرجات",
+      "en": "Certificate and grade sheet templates"
+    },
+    "order": 2,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates.avif?v=2ef2fdfa",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates@2x.avif?v=9958b3f8"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates.webp?v=0f7b87b6",
+      "2400": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates@2x.webp?v=55a253b7"
+    }
   }
 }

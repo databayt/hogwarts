@@ -6,6 +6,7 @@ pillar: trust
 personas: [principal, registrar, teacher, parent]
 routes: [/ar/s/{school}/grades/reports, /ar/s/{school}/grades/transcripts, /ar/s/{school}/grades/promotion, /ar/s/{school}/grades/templates, /ar/s/{school}/parent/children/{child}/report-cards, /ar/verify/transcript/{code}]
 screenshots: []
+flows: [enter-grades]
 readme: ./README.md
 docs: content/docs-en/exams.mdx
 updated: 2026-09-27
@@ -42,6 +43,15 @@ At term end, teachers hand their mark sheets to the office. Someone copies every
 - **Student**: is notified when the report card is published. (A student's own report-card and transcript screen is not built yet; students see their marks in the gradebook.)
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The gradebook: every exam and homework mark: https://cdn.databayt.org/hogwarts/ar/grades/gradebook.webp
+- Generating and publishing report cards: https://cdn.databayt.org/hogwarts/ar/grades/reports.webp
+- Transcripts with a verification code: https://cdn.databayt.org/hogwarts/ar/grades/transcripts.webp
+- Year-end promotion rules: https://cdn.databayt.org/hogwarts/ar/grades/promotion.webp
+<!-- cdn:end -->
 
 - None yet — capture with /record.
 - Routes to capture (Arabic, admin login on demo.balqalam.com): `/ar/s/{school}/grades/reports` (report cards list with Generate and Publish), `/ar/s/{school}/grades/promotion` (promotion dashboard), `/ar/s/{school}/grades/transcripts`. As a parent: `/ar/s/{school}/parent/children/{child}/report-cards` on a phone. Also the public transcript check page.

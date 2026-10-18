@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [owner, teacher, student, parent, finance]
 routes: [/ar/s/{school}/dashboard, /ar/s/{school}/dashboard/settings]
 screenshots: [docs/evidence/demo-dashboard-ar.png]
+flows: [switch-language]
 readme: ./README.md
 docs: content/docs-en/dashboard.mdx
 updated: 2026-09-27
@@ -42,6 +43,12 @@ A teacher checks a printed timetable taped inside a cupboard door to find the ne
 - **Accountant:** counts of unpaid and overdue invoices, and the invoice history.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The dashboard in its language and direction: https://cdn.databayt.org/hogwarts/ar/dashboard/language/dashboard.webp
+<!-- cdn:end -->
 
 - `docs/evidence/demo-dashboard-ar.png` — the administrator view in Arabic, full page. **Out of date, do not post as-is:** it shows a "Quick Guide" pop-up that no longer opens, and an attendance overview (91%, 196 students) that was sample data and has since been removed from the product.
 - Nothing yet shows the phone view (the date widget, the green next-action banner, today's classes). Capture with /record:

@@ -6,6 +6,7 @@ pillar: school-operations
 personas: [parent, student, finance]
 routes: [/ar/s/{school}/my-fees, /ar/s/{school}/parent/fees, /ar/s/{school}/finance, /ar/s/{school}/finance/fees/my]
 screenshots: []
+flows: [set-fees]
 readme: ./README.md
 docs: content/docs-en/fees.mdx
 updated: 2026-09-27
@@ -39,6 +40,13 @@ A mother does not know what she owes until the office calls, or until a letter c
 - **Finance (accountant):** fewer "how much do I owe?" calls, and each family's preferred way to pay is recorded against the student.
 
 ## Real screens to show
+
+<!-- cdn:start — generated from the shoot/record flows above (flows:); re-run after a re-shoot -->
+On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the English screen):
+
+- The fees overview: https://cdn.databayt.org/hogwarts/ar/finance/fees/overview.webp
+- Recorded payments: https://cdn.databayt.org/hogwarts/ar/finance/fees/payments.webp
+<!-- cdn:end -->
 
 None yet — capture with /record. Sign in on the demo as parent@balqalam.com (or student@balqalam.com) and capture, on a phone:
 
