@@ -12,6 +12,9 @@ import {
   createTourBooking,
   rescheduleTourBooking,
 } from "@/components/school-marketing/admission/actions/tour"
+import { tourManageKey } from "@/components/school-marketing/admission/actions/tour-manage-key"
+
+process.env.AUTH_SECRET ??= "test-auth-secret"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -67,6 +70,8 @@ const SCHOOL_ID = "school-abc"
 const SUBDOMAIN = "demo"
 const SLOT_ID = "slot-1"
 const BOOKING_NUMBER = "TOUR-2601-ABCDEF"
+// Both cancel and reschedule fixtures use booking id "booking-1".
+const KEY = tourManageKey("booking-1")
 
 function mockSchoolFound() {
   vi.mocked(getSchoolBySubdomain).mockResolvedValue({
@@ -289,14 +294,50 @@ describe("Tour Booking Actions", () => {
 
     it("TB-08: decrements slot by numberOfAttendees (not 1)", async () => {
       vi.mocked(db.tourBooking.findFirst).mockResolvedValue(booking as any)
-      vi.mocked(db.$transaction).mockResolvedValue([{}, {}] as any)
+      const tx = {
+        tourBooking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+        admissionTimeSlot: { update: vi.fn().mockResolvedValue({}) },
+      }
+      vi.mocked(db.$transaction).mockImplementation((async (fn: any) =>
+        fn(tx)) as any)
 
-      await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER)
+      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER, KEY)
 
-      const txCall = vi.mocked(db.$transaction).mock.calls[0][0] as any[]
-      // Second element in the array-form transaction is the slot update
-      // We can't inspect the deferred ops directly, so verify $transaction was called
-      expect(db.$transaction).toHaveBeenCalledTimes(1)
+      expect(result.success).toBe(true)
+      expect(tx.admissionTimeSlot.update).toHaveBeenCalledWith({
+        where: { id: SLOT_ID },
+        data: { currentBookings: { decrement: 3 } },
+      })
+    })
+
+    it("TB-08b: a racing second cancel does not release the seats again", async () => {
+      vi.mocked(db.tourBooking.findFirst).mockResolvedValue(booking as any)
+      const tx = {
+        tourBooking: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+        admissionTimeSlot: { update: vi.fn() },
+      }
+      vi.mocked(db.$transaction).mockImplementation((async (fn: any) =>
+        fn(tx)) as any)
+
+      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER, KEY)
+
+      expect(result.success).toBe(false)
+      expect(tx.admissionTimeSlot.update).not.toHaveBeenCalled()
+    })
+
+    it("TB-08c: refuses a booking number without the emailed key", async () => {
+      vi.mocked(db.tourBooking.findFirst).mockResolvedValue(booking as any)
+
+      const missing = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER, "")
+      const wrong = await cancelTourBooking(
+        SUBDOMAIN,
+        BOOKING_NUMBER,
+        tourManageKey("some-other-booking")
+      )
+
+      expect(missing).toEqual({ success: false, error: "BOOKING_NOT_FOUND" })
+      expect(wrong).toEqual({ success: false, error: "BOOKING_NOT_FOUND" })
+      expect(db.$transaction).not.toHaveBeenCalled()
     })
 
     it("TB-09: rejects cancelling an already-cancelled booking", async () => {
@@ -305,7 +346,7 @@ describe("Tour Booking Actions", () => {
         status: "CANCELLED",
       } as any)
 
-      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER)
+      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER, KEY)
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("already cancelled")
@@ -318,7 +359,7 @@ describe("Tour Booking Actions", () => {
         status: "COMPLETED",
       } as any)
 
-      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER)
+      const result = await cancelTourBooking(SUBDOMAIN, BOOKING_NUMBER, KEY)
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Cannot cancel")
@@ -381,6 +422,7 @@ describe("Tour Booking Actions", () => {
       const result = await rescheduleTourBooking(
         SUBDOMAIN,
         BOOKING_NUMBER,
+        KEY,
         NEW_SLOT_ID
       )
 
@@ -408,6 +450,7 @@ describe("Tour Booking Actions", () => {
       const result = await rescheduleTourBooking(
         SUBDOMAIN,
         BOOKING_NUMBER,
+        KEY,
         NEW_SLOT_ID
       )
 
@@ -439,6 +482,7 @@ describe("Tour Booking Actions", () => {
       const result = await rescheduleTourBooking(
         SUBDOMAIN,
         BOOKING_NUMBER,
+        KEY,
         NEW_SLOT_ID
       )
 
@@ -469,6 +513,7 @@ describe("Tour Booking Actions", () => {
       const result = await rescheduleTourBooking(
         SUBDOMAIN,
         BOOKING_NUMBER,
+        KEY,
         NEW_SLOT_ID
       )
 

@@ -31,16 +31,19 @@ interface SlotOption {
 interface Props {
   subdomain: string
   bookingNumber: string
+  /** `?k=` from the confirmation email's link — the capability to change it. */
+  manageKey: string | null
   isRTL: boolean
   locale: string
 }
 
-// Public-facing tour self-management. The booking number is the capability;
-// the server actions re-validate, so no auth is added here. Replaces the old
+// Public-facing tour self-management. The emailed link's `?k=` key is the
+// capability (booking numbers are guessable); the server actions verify it. Replaces the old
 // mailto:admissions@{subdomain}.edu links (a domain that never existed).
 export default function ManageBooking({
   subdomain,
   bookingNumber,
+  manageKey,
   isRTL,
   locale,
 }: Props) {
@@ -78,7 +81,11 @@ export default function ManageBooking({
       return
     setError("")
     startTransition(async () => {
-      const res = await cancelTourBooking(subdomain, bookingNumber)
+      const res = await cancelTourBooking(
+        subdomain,
+        bookingNumber,
+        manageKey ?? ""
+      )
       if (res.success) {
         setMessage(t("تم إلغاء الحجز", "Your booking has been cancelled"))
         router.refresh()
@@ -108,6 +115,7 @@ export default function ManageBooking({
       const res = await rescheduleTourBooking(
         subdomain,
         bookingNumber,
+        manageKey ?? "",
         selectedSlot
       )
       if (res.success) {
@@ -134,6 +142,21 @@ export default function ManageBooking({
     return (
       <div className="border-t pt-4">
         <p className="text-sm font-medium">{message}</p>
+      </div>
+    )
+  }
+
+  // Opened without the emailed link's key (a typed booking number): the
+  // server would refuse the change, so point the family at the email.
+  if (!manageKey) {
+    return (
+      <div className="border-t pt-4">
+        <p className="text-muted-foreground text-sm">
+          {t(
+            "لتغيير الموعد أو إلغائه استخدم رابط «إدارة الحجز» في رسالة التأكيد.",
+            "To reschedule or cancel, use the Manage Booking link in your confirmation email."
+          )}
+        </p>
       </div>
     )
   }

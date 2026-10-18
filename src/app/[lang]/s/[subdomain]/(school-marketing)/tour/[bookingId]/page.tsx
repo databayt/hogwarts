@@ -32,6 +32,7 @@ import ManageBooking from "@/components/school-marketing/admission/tour/manage-b
 
 interface BookingPageProps {
   params: Promise<{ lang: Locale; subdomain: string; bookingId: string }>
+  searchParams: Promise<{ k?: string }>
 }
 
 export async function generateMetadata({
@@ -45,8 +46,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function BookingPage({ params }: BookingPageProps) {
+export default async function BookingPage({
+  params,
+  searchParams,
+}: BookingPageProps) {
   const { lang, subdomain, bookingId } = await params
+  const { k: manageKey } = await searchParams
   const dictionary = await getDictionary(lang)
   const schoolResult = await getSchoolBySubdomain(subdomain)
 
@@ -189,6 +194,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
               <ManageBooking
                 subdomain={subdomain}
                 bookingNumber={booking.bookingNumber}
+                manageKey={manageKey ?? null}
                 isRTL={isRTL}
                 locale={lang}
               />

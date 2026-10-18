@@ -24,6 +24,7 @@ import type {
 } from "../types"
 import { createTourBookingSchema } from "../validation"
 import { getAdmissionPortalFlags } from "./portal-flags"
+import { tourManageKey, verifyTourManageKey } from "./tour-manage-key"
 import { tenantUrl } from "./urls"
 
 // Initialize Resend for email
@@ -385,7 +386,7 @@ export async function createTourBooking(
               </tr>
             </table>
             <p>If you need to reschedule or cancel, please visit:</p>
-            <p><a href="${await tenantUrl(subdomain, `/tour/${bookingNumber}`, lang)}">Manage Booking</a></p>
+            <p><a href="${await tenantUrl(subdomain, `/tour/${bookingNumber}?k=${tourManageKey(booking.id)}`, lang)}">Manage Booking</a></p>
             <p>We look forward to meeting you!</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
@@ -508,6 +509,7 @@ export async function getBookingDetails(
 export async function cancelTourBooking(
   subdomain: string,
   bookingNumber: string,
+  manageKey: string,
   reason?: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
@@ -532,8 +534,10 @@ export async function cancelTourBooking(
       },
     })
 
-    if (!booking) {
-      return { success: false, error: "Booking not found" }
+    // The booking number alone is guessable — only the emailed link's key
+    // may change a booking. A wrong key reads as "not found" (no oracle).
+    if (!booking || !verifyTourManageKey(booking.id, manageKey)) {
+      return { success: false, error: "BOOKING_NOT_FOUND" }
     }
 
     if (booking.status === "CANCELLED") {
@@ -544,23 +548,33 @@ export async function cancelTourBooking(
       return { success: false, error: "Cannot cancel a completed booking" }
     }
 
-    // Cancel booking and decrement slot count by the actual numberOfAttendees
-    await db.$transaction([
-      db.tourBooking.update({
-        where: { id: booking.id },
+    // Cancel booking and decrement slot count by the actual numberOfAttendees.
+    // The status flip is conditional so two cancels racing (two tabs, or the
+    // family and the office) release the seats once.
+    const cancelled = await db.$transaction(async (tx) => {
+      const { count } = await tx.tourBooking.updateMany({
+        where: {
+          id: booking.id,
+          status: { notIn: ["CANCELLED", "COMPLETED"] },
+        },
         data: {
           status: "CANCELLED",
           cancelledAt: new Date(),
           cancelReason: reason,
         },
-      }),
-      db.admissionTimeSlot.update({
+      })
+      if (count !== 1) return false
+      await tx.admissionTimeSlot.update({
         where: { id: booking.slotId },
         data: {
           currentBookings: { decrement: booking.numberOfAttendees },
         },
-      }),
-    ])
+      })
+      return true
+    })
+    if (!cancelled) {
+      return { success: false, error: "Booking is already cancelled" }
+    }
 
     // Send cancellation email
     if (resend) {
@@ -570,7 +584,11 @@ export async function cancelTourBooking(
           parentName: booking.parentName,
           bookingNumber,
           reason,
-          rescheduleUrl: `https://${booking.school.domain}.databayt.org/tour`,
+          rescheduleUrl: await tenantUrl(
+            subdomain,
+            "/tour",
+            booking.school.preferredLanguage === "en" ? "en" : "ar"
+          ),
         })
         await resend.emails.send({
           from: "noreply@databayt.org",
@@ -599,6 +617,7 @@ export async function cancelTourBooking(
 export async function rescheduleTourBooking(
   subdomain: string,
   bookingNumber: string,
+  manageKey: string,
   newSlotId: string
 ): Promise<ActionResult<TourBookingConfirmation>> {
   try {
@@ -623,8 +642,10 @@ export async function rescheduleTourBooking(
       },
     })
 
-    if (!booking) {
-      return { success: false, error: "Booking not found" }
+    // The booking number alone is guessable — only the emailed link's key
+    // may change a booking. A wrong key reads as "not found" (no oracle).
+    if (!booking || !verifyTourManageKey(booking.id, manageKey)) {
+      return { success: false, error: "BOOKING_NOT_FOUND" }
     }
 
     if (booking.status !== "CONFIRMED" && booking.status !== "PENDING") {
