@@ -9105,7 +9105,12 @@
         "footer": {
           "submit": "Submit"
         }
-      }
+      },
+      "hoursLabel": "School day",
+      "daysLabel": "Days",
+      "period": "Period",
+      "break": "Break",
+      "lunch": "Lunch"
     },
     "library": {
       "title": "Library",

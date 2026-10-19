@@ -108,7 +108,10 @@ export async function loadSubmissionReview(input: {
           content: r.content,
           attachments: r.attachments.map((raw, i) => ({
             url: signed[i] ?? null,
-            name: decodeURIComponent(raw.split("/").pop() ?? "file"),
+            // Stored keys are `<timestamp>_<name>`; show the name.
+            name: decodeURIComponent(
+              raw.split("/").pop()?.split("?")[0] ?? "file"
+            ).replace(/^\d{10,}[_-]/, ""),
           })),
           score: r.score === null ? null : Number(r.score),
           feedback: r.feedback,

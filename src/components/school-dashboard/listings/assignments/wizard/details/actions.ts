@@ -7,16 +7,17 @@ import { Decimal } from "@prisma/client/runtime/library"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { wizardEditor } from "../guard"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
 export async function getAssignmentDetails(
   assignmentId: string
 ): Promise<ActionResponse<DetailsFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -52,8 +53,9 @@ export async function updateAssignmentDetails(
   input: DetailsFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     const parsed = detailsSchema.parse(input)
 

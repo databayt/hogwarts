@@ -14,6 +14,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertAssignmentPermission, getAuthContext } from "../authorization"
 import { notifyAssignmentPublished } from "../notify"
+import { wizardEditor } from "./guard"
 import type { AssignmentWizardData } from "./use-assignment-wizard"
 
 /** Fetch full assignment data for the wizard */
@@ -24,8 +25,9 @@ export async function getAssignmentForWizard(
   | { success: false; error: string }
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -74,15 +76,9 @@ export async function createDraftAssignment(): Promise<
   ActionResponse<{ id: string }>
 > {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const editor = await wizardEditor("create")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     // Default due date: 7 days from now
     const dueDate = new Date()
@@ -93,7 +89,7 @@ export async function createDraftAssignment(): Promise<
     const assignment = await db.schoolAssignment.create({
       data: {
         schoolId,
-        createdById: session.user.id ?? null,
+        createdById: editor.userId ?? null,
         title: "",
         type: "HOMEWORK",
         totalPoints: new Decimal(100),
@@ -182,11 +178,9 @@ export async function updateAssignmentWizardStep(
   step: string
 ): Promise<void> {
   try {
-    const session = await auth()
-    if (!session?.user) return
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return
+    const editor = await wizardEditor("update")
+    if (!editor) return
+    const { schoolId } = editor
 
     await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
@@ -202,15 +196,9 @@ export async function deleteDraftAssignment(
   assignmentId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const editor = await wizardEditor("delete")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     // Atomic delete — only if it's still a draft
     const { count } = await db.schoolAssignment.deleteMany({

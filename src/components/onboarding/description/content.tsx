@@ -26,8 +26,18 @@ export default function DescriptionContent({
   const router = useRouter()
   const schoolId = params.id as string
   const lang = params.lang as string
-  const { enableNext, setCustomNavigation } = useHostValidation()
+  const { enableNext, disableNext, setCustomNavigation } = useHostValidation()
   const { data: descriptionData, loading } = useDescription(schoolId)
+  // Saved = a type AND a level are stored. The picker saves only when the
+  // level is chosen, and Next used to be enabled regardless — so picking a
+  // type and pressing Next stored nothing, leaving schoolType null (and the
+  // schedule step with no structure to recommend).
+  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    if (descriptionData?.schoolType && descriptionData?.schoolLevel) {
+      setSaved(true)
+    }
+  }, [descriptionData?.schoolType, descriptionData?.schoolLevel])
   const [step, setStep] = useState<"type" | "level">("type")
   const dict = ((dictionary?.school as Record<string, unknown> | undefined)
     ?.onboarding ?? {}) as Record<string, string>
@@ -43,10 +53,11 @@ export default function DescriptionContent({
     }
   }, [descriptionData?.schoolType, descriptionData?.schoolLevel])
 
-  // Enable next button
+  // Next once the choice is stored
   useEffect(() => {
-    enableNext()
-  }, [enableNext])
+    if (saved) enableNext()
+    else disableNext()
+  }, [saved, enableNext, disableNext])
 
   // Set up custom navigation to handle the Next button
   useEffect(() => {
@@ -97,6 +108,7 @@ export default function DescriptionContent({
         schoolId={schoolId}
         initialData={descriptionData || undefined}
         onStepChange={setStep}
+        onSuccess={() => setSaved(true)}
         dictionary={dictionary}
       />
     </FormLayout>

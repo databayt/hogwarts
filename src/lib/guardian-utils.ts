@@ -72,8 +72,24 @@ export type ParentRole = "father" | "mother"
 // capitalise ("Father"), and the wizard and admission create lowercase
 // English. Anything that decides "does this student have a parent" or "which
 // tab does this guardian belong to" must go through these, never a literal.
-const FATHER_TYPE_NAMES = ["father", "Father", "FATHER", "الأب", "أب", "الوالد", "والد"] as const
-const MOTHER_TYPE_NAMES = ["mother", "Mother", "MOTHER", "الأم", "أم", "الوالدة", "والدة"] as const
+const FATHER_TYPE_NAMES = [
+  "father",
+  "Father",
+  "FATHER",
+  "الأب",
+  "أب",
+  "الوالد",
+  "والد",
+] as const
+const MOTHER_TYPE_NAMES = [
+  "mother",
+  "Mother",
+  "MOTHER",
+  "الأم",
+  "أم",
+  "الوالدة",
+  "والدة",
+] as const
 
 /** Stored names for one parent role — for `name: { in }` filters, which are
  *  case-sensitive in Prisma. */
@@ -172,7 +188,13 @@ export async function createOrLinkGuardian(
       where: {
         schoolId_emailAddress: { schoolId, emailAddress: email },
       },
-      create: { schoolId, firstName, middleName, lastName, emailAddress: email },
+      create: {
+        schoolId,
+        firstName,
+        middleName,
+        lastName,
+        emailAddress: email,
+      },
       update: {},
     })
   } else if (phone) {
@@ -250,6 +272,8 @@ export async function createOrLinkGuardian(
           schoolId,
           emailVerified: new Date(),
           password: hashed,
+          // Temporary, like every other minted login: changed at first sign-in.
+          mustChangePassword: true,
         },
       })
       guardianUserId = created.id

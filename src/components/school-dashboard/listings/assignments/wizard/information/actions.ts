@@ -2,22 +2,21 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { auth } from "@/auth"
-
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 
+import { wizardEditor } from "../guard"
 import { informationSchema, type InformationFormData } from "./validation"
 
 export async function getAssignmentInformation(
   assignmentId: string
 ): Promise<ActionResponse<InformationFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -57,11 +56,9 @@ export async function updateAssignmentInformation(
   input: InformationFormData
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const { schoolId } = editor
 
     const parsed = informationSchema.safeParse(input)
     if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)

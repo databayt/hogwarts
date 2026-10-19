@@ -56,9 +56,10 @@ export function StudentSubmissionCard({
 
   const graded = state?.status === "GRADED" || state?.status === "RETURNED"
 
+  // Stored keys are `<timestamp>_<name>` (presignUpload); show the name.
   const fileName = (url: string) =>
-    decodeURIComponent(url.split("/").pop() ?? "file").replace(
-      /^\d+-[a-z0-9]+-/i,
+    decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "file").replace(
+      /^\d{10,}[_-]/,
       ""
     )
 

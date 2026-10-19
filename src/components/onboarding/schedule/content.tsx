@@ -63,18 +63,23 @@ export default function ScheduleContent({ dictionary }: Props) {
           selectedStructure: saved,
         } = result.data
 
-        const { autoSelect } = getRecommendedStructures(
+        const { autoSelect, recommended, others } = getRecommendedStructures(
           country,
           schoolType,
           schoolLevel
         )
+        // Without a clear best match (no school type yet, say) fall back to
+        // the best recommended, then the best of the rest. Using autoSelect
+        // alone told a Sudan school "No structures available" while three
+        // Sudan structures were recommended for it.
+        const best = autoSelect ?? recommended[0] ?? others[0] ?? null
 
         const base = saved
-          ? (TIMETABLE_STRUCTURES.find((s) => s.slug === saved) ?? autoSelect)
-          : autoSelect
+          ? (TIMETABLE_STRUCTURES.find((s) => s.slug === saved) ?? best)
+          : best
 
         if (base) {
-          setAutoSelectStructure(autoSelect)
+          setAutoSelectStructure(best)
           setSelectedStructure(base)
           if (!saved) {
             startTransition(async () => {

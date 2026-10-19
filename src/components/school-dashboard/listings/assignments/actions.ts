@@ -308,7 +308,18 @@ export async function getAssignment(input: {
       },
     })
 
-    return { success: true, data: assignment as AssignmentSelectResult | null }
+    // Decimal columns → numbers: this row is handed to a client component, and
+    // a Prisma Decimal cannot be serialized across that boundary.
+    return {
+      success: true,
+      data: assignment
+        ? ({
+            ...assignment,
+            totalPoints: Number(assignment.totalPoints),
+            weight: Number(assignment.weight),
+          } as AssignmentSelectResult)
+        : null,
+    }
   } catch (error) {
     console.error("[getAssignment] Error:", error)
 
@@ -371,7 +382,7 @@ export async function getAssignments(
       id: a.id as string,
       title: a.title as string,
       type: a.type as string,
-      totalPoints: a.totalPoints as number,
+      totalPoints: Number(a.totalPoints),
       dueDate: (a.dueDate as Date).toISOString(),
       createdAt: (a.createdAt as Date).toISOString(),
     }))
@@ -447,8 +458,8 @@ export async function getAssignmentsCSV(
       class: audienceLabel(assignment) || "",
       subject: assignment.subject?.name || "",
       type: assignment.type || "",
-      totalPoints: assignment.totalPoints || 0,
-      weight: assignment.weight || 0,
+      totalPoints: Number(assignment.totalPoints ?? 0),
+      weight: Number(assignment.weight ?? 0),
       dueDate: assignment.dueDate
         ? new Date(assignment.dueDate).toISOString().split("T")[0]
         : "",
@@ -562,7 +573,8 @@ export async function getAssignmentsExportData(
       name: (assignment.subject?.name as string) || null,
       teacherName: null,
       dueDate: assignment.dueDate as Date | null,
-      totalPoints: assignment.totalPoints as number | null,
+      totalPoints:
+        assignment.totalPoints == null ? null : Number(assignment.totalPoints),
       status: assignment.status as string,
       submissionCount: assignment._count.submissions as number,
       gradedCount:

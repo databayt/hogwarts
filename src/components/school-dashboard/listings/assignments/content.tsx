@@ -81,7 +81,8 @@ export default async function AssignmentsContent({
       id: a.id,
       title: titleById.get(a.id) ?? a.title,
       type: a.type,
-      totalPoints: a.totalPoints,
+      // Prisma Decimal → number: a Decimal cannot cross to a client component.
+      totalPoints: Number(a.totalPoints),
       dueDate: (a.dueDate as Date).toISOString(),
       createdAt: (a.createdAt as Date).toISOString(),
     }))

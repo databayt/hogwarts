@@ -8,6 +8,7 @@ import React, {
   useImperativeHandle,
   useTransition,
 } from "react"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -36,9 +37,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     const { dictionary } = useDictionary()
     const fd = (dictionary?.school as Record<string, any>)?.assignments
       ?.form as Record<string, any> | undefined
-    const locale = (dictionary as Record<string, any>)?.locale as
-      | string
-      | undefined
+    // The route's language — the dictionary carries no `locale`, so the type
+    // list fell back to English on /ar.
+    const { lang: locale } = useParams<{ lang: string }>()
     const typeOptions = getAssignmentTypes(locale)
 
     const form = useForm<InformationFormData>({

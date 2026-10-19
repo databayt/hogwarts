@@ -23,12 +23,12 @@
 import type { AdmissionChannel, Prisma } from "@prisma/client"
 
 import { mintTempPassword } from "@/lib/credentials"
-import { allocateLoginCode } from "@/lib/login-code"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { parseGrade } from "@/lib/grade"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { createOrLinkGuardian } from "@/lib/guardian-utils"
+import { allocateLoginCode } from "@/lib/login-code"
 import { generateStudentUsername } from "@/lib/student-username"
 import { ensureDirectAdmitApplication } from "@/lib/system-campaign"
 import { detectLang } from "@/components/translation/util"
@@ -732,7 +732,10 @@ export async function provisionStudent(
     const { plain, hashed } = await mintTempPassword()
     await tx.user.update({
       where: { id: userId },
-      data: { password: hashed },
+      // A TEMPORARY password: the credentials dialog tells the admin it must
+      // be changed at first sign-in, and the other mint paths set the flag.
+      // Without it the easy 4-digit PIN stayed the account's password forever.
+      data: { password: hashed, mustChangePassword: true },
     })
     credentials = { username: loginUsername ?? studentCode, password: plain }
   }
