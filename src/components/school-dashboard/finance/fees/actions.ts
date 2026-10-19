@@ -51,6 +51,7 @@ import {
   buildFeeStructureWhere,
   calculateSiblingDiscount,
   getFeeAssignmentList,
+  getFeeStudents,
   getFineList,
   getPayableAssignments,
   getPaymentList,
@@ -63,6 +64,7 @@ import {
   toPayableRows,
   toPaymentRows,
   toScholarshipRows,
+  toStudentOptions,
 } from "./rows"
 import { resolveTenantBaseUrl } from "./tenant-url"
 import { feeStructureSchema } from "./validation"
@@ -2114,11 +2116,19 @@ export async function issueFine(data: FormData): Promise<ActionResult<string>> {
     if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
+    const studentId = formData.studentId as string
+
+    // The student must be this school's — the id arrives from the client.
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId: ctx.schoolId },
+      select: { id: true },
+    })
+    if (!student) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     const fine = await db.fine.create({
       data: {
         schoolId: ctx.schoolId,
-        studentId: formData.studentId as string,
+        studentId,
         fineType: formData.fineType as any,
         amount: parseFloat(formData.amount as string),
         reason: formData.reason as string,
@@ -3259,6 +3269,34 @@ export async function searchPayableAssignments(search: string) {
       displayLang: lang,
     })
     return await toPayableRows(rows, lang, gate.schoolId)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Fee student pickers — matches for `search`, or a whole grade's active
+ * students (`gradeId`, no search) for bulk fee assignment.
+ */
+export async function searchFeeStudents(params: {
+  search?: string
+  gradeId?: string
+}) {
+  const gate = await requireFeePermission("create")
+  if (isAuthError(gate)) return []
+  const search = params.search?.slice(0, 100).trim() || undefined
+  const gradeId = params.gradeId || undefined
+  if (!search && !gradeId) return []
+  try {
+    const lang = await getDisplayLang()
+    const rows = await getFeeStudents(gate.schoolId, {
+      search,
+      gradeId,
+      displayLang: lang,
+      // A whole grade for bulk assignment; a short list for a search.
+      take: search ? 30 : 1000,
+    })
+    return await toStudentOptions(rows, lang, gate.schoolId)
   } catch {
     return []
   }

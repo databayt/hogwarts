@@ -26,6 +26,7 @@ import type { FineRow } from "./fine-columns"
 import type { PaymentRow } from "./payment-columns"
 import type { PayableAssignment } from "./payment-form"
 import type { ScholarshipRow } from "./scholarship-columns"
+import type { FeeStudentOption } from "./student-picker"
 
 const iso = (d: unknown): string =>
   d instanceof Date ? d.toISOString() : String(d)
@@ -214,6 +215,32 @@ export async function toPayableRows(
       finalAmount,
       totalPaid,
       remaining: finalAmount - totalPaid,
+    }
+  })
+}
+
+/** The fee student pickers' options — `getFeeStudents` rows. */
+export async function toStudentOptions(
+  rows: any[],
+  lang: Lang,
+  schoolId: string
+): Promise<FeeStudentOption[]> {
+  if (rows.length === 0) return []
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const [names, labels] = await Promise.all([
+    getNames(rows, (s) => shortNameParts(s, nameDisplay), lang, schoolId),
+    getLabels(
+      rows.map((s) => s.academicGrade?.name),
+      lang,
+      schoolId
+    ),
+  ])
+  return rows.map((s) => {
+    const grade = s.academicGrade?.name
+    return {
+      id: s.id,
+      name: nameOf(names, s, nameDisplay),
+      grade: grade ? (labels.get(grade) ?? grade) : null,
     }
   })
 }

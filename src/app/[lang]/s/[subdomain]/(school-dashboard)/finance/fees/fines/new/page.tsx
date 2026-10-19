@@ -5,12 +5,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FineForm } from "@/components/school-dashboard/finance/fees/fine-form"
+import { getFeeStudents } from "@/components/school-dashboard/finance/fees/queries"
+import { toStudentOptions } from "@/components/school-dashboard/finance/fees/rows"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
@@ -35,16 +36,12 @@ export default async function NewFinePage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const students = await db.student.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      firstName: true,
-      middleName: true,
-      lastName: true,
-    },
-    orderBy: { firstName: "asc" },
-  })
+  // A first page for the picker; it searches the rest of the school.
+  const students = await toStudentOptions(
+    await getFeeStudents(schoolId, { take: 20 }),
+    lang,
+    schoolId
+  )
 
   return (
     <div className="space-y-6">

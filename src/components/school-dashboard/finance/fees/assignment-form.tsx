@@ -7,7 +7,6 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,30 +22,28 @@ import {
 } from "@/components/ui/select"
 import { SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { assignFee, bulkAssignFees } from "./actions"
+import { useFeeStudentSearch, type FeeStudentOption } from "./student-picker"
 
 interface FeeAssignmentFormProps {
   lang: string
-  feeStructures: { id: string; name: string; totalAmount: number }[]
-  students: {
+  feeStructures: {
     id: string
-    firstName: string
-    middleName?: string | null
-    lastName: string
+    name: string
+    totalAmount: number
+    gradeId: string | null
+    gradeName: string | null
   }[]
 }
 
 export function FeeAssignmentForm({
   lang,
   feeStructures,
-  students,
 }: FeeAssignmentFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
-  const nameDisplay = useNameDisplay()
   const af = (dictionary as any)?.finance?.assignmentForm as
     | Record<string, string>
     | undefined
@@ -60,7 +57,19 @@ export function FeeAssignmentForm({
   const [academicYear, setAcademicYear] = useState("")
   const [totalDiscount, setTotalDiscount] = useState("")
   const [scholarshipId, setScholarshipId] = useState("")
-  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
+  // Picked students by id — kept across searches, so a selection made from
+  // one result list survives typing the next query.
+  const [picked, setPicked] = useState<Map<string, FeeStudentOption>>(
+    () => new Map()
+  )
+  const selectedStudentIds = [...picked.keys()]
+  const [search, setSearch] = useState("")
+  const structure = feeStructures.find((fs) => fs.id === feeStructureId)
+  // A structure for a grade lists that grade's students; a search covers
+  // the whole school (still within the grade when one is set).
+  const { options: students, loading } = useFeeStudentSearch(search, {
+    gradeId: structure?.gradeId ?? undefined,
+  })
 
   function handleFeeStructureChange(value: string) {
     setFeeStructureId(value)
@@ -70,18 +79,28 @@ export function FeeAssignmentForm({
     }
   }
 
-  function toggleStudent(studentId: string) {
-    setSelectedStudentIds((curr) =>
-      curr.includes(studentId)
-        ? curr.filter((id) => id !== studentId)
-        : [...curr, studentId]
-    )
+  function toggleStudent(student: FeeStudentOption) {
+    setPicked((curr) => {
+      const next = new Map(curr)
+      if (next.has(student.id)) next.delete(student.id)
+      else next.set(student.id, student)
+      return next
+    })
   }
 
+  const allShownPicked =
+    students.length > 0 && students.every((s) => picked.has(s.id))
+
+  /** Select or clear every student in the current list. */
   function toggleAll() {
-    setSelectedStudentIds((curr) =>
-      curr.length === students.length ? [] : students.map((s) => s.id)
-    )
+    setPicked((curr) => {
+      const next = new Map(curr)
+      for (const s of students) {
+        if (allShownPicked) next.delete(s.id)
+        else next.set(s.id, s)
+      }
+      return next
+    })
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -268,19 +287,52 @@ export function FeeAssignmentForm({
           <CardTitle>{af?.selectStudents || "Select Students"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 border-b pb-3">
-            <Checkbox
-              id="select-all"
-              checked={
-                students.length > 0 &&
-                selectedStudentIds.length === students.length
-              }
-              onCheckedChange={toggleAll}
-            />
-            <Label htmlFor="select-all" className="font-medium">
-              {fc?.selectAll || "Select All"} ({selectedStudentIds.length}/
-              {students.length})
-            </Label>
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={
+              af?.searchStudents || "Search by name or student number…"
+            }
+            aria-label={af?.searchStudents || "Search students"}
+          />
+
+          <div className="flex items-center justify-between gap-2 border-b pb-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="select-all"
+                checked={allShownPicked}
+                disabled={students.length === 0}
+                onCheckedChange={toggleAll}
+              />
+              <Label htmlFor="select-all" className="font-medium">
+                {!search.trim() && structure?.gradeName
+                  ? (af?.studentsInGrade || "Students in {grade}").replace(
+                      "{grade}",
+                      structure.gradeName
+                    )
+                  : fc?.selectAll || "Select All"}{" "}
+                ({loading ? "…" : students.length})
+              </Label>
+            </div>
+            {picked.size > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">
+                  {(af?.selectedCount || "{count} selected").replace(
+                    "{count}",
+                    String(picked.size)
+                  )}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPicked(new Map())}
+                >
+                  {af?.clearSelection || "Clear"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -288,17 +340,31 @@ export function FeeAssignmentForm({
               <div key={student.id} className="flex items-center gap-2">
                 <Checkbox
                   id={`student-${student.id}`}
-                  checked={selectedStudentIds.includes(student.id)}
-                  onCheckedChange={() => toggleStudent(student.id)}
+                  checked={picked.has(student.id)}
+                  onCheckedChange={() => toggleStudent(student)}
                 />
                 <Label
                   htmlFor={`student-${student.id}`}
                   className="font-normal"
                 >
-                  <bdi dir="auto">{displayName(student, nameDisplay)}</bdi>
+                  <bdi dir="auto">{student.name}</bdi>
+                  {student.grade && !structure?.gradeId && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — <bdi dir="auto">{student.grade}</bdi>
+                    </span>
+                  )}
                 </Label>
               </div>
             ))}
+            {!loading && students.length === 0 && (
+              <p className="text-muted-foreground py-4 text-center text-sm">
+                {search.trim() || structure?.gradeId
+                  ? af?.noMatchingStudents || "No active student matches."
+                  : af?.typeToSearch ||
+                    "Pick a fee structure for a grade, or search for students."}
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

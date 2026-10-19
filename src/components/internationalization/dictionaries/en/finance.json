@@ -2655,6 +2655,8 @@
     "selectTargetUser": "Please select a target user"
   },
   "fineForm": {
+    "searchStudent": "Search by name or student number…",
+    "noMatchingStudents": "No active student matches.",
     "studentLabel": "Student",
     "selectStudent": "Select a student",
     "fineType": "Fine Type",
@@ -2754,6 +2756,12 @@
     "coverageTypeFixed": "Fixed Amount"
   },
   "assignmentForm": {
+    "searchStudents": "Search by name or student number…",
+    "noMatchingStudents": "No active student matches.",
+    "studentsInGrade": "Students in {grade}",
+    "typeToSearch": "Pick a fee structure for a grade, or search for students.",
+    "selectedCount": "{count} selected",
+    "clearSelection": "Clear",
     "fillRequiredFields": "Please fill in all required fields",
     "selectAtLeastOneStudent": "Please select at least one student",
     "failedAssignFee": "Failed to assign fee",

@@ -942,6 +942,71 @@ export async function getPayableAssignments(
   return rows.map((r) => ({ ...r, paid: paidById.get(r.id) ?? 0 }))
 }
 
+// ============================================================================
+// Student pickers (issue a fine, assign a fee)
+// ============================================================================
+
+/**
+ * Students for the fee pickers: matches for `search` (every word must hit a
+ * name part or the GR/student number, display-language words mapped back as
+ * in `getPayableAssignments`), narrowed to `gradeId` when given. Active
+ * students only — a fee or fine is not issued to a graduate.
+ *
+ * The pages used to ship every student up front: fines/new all 985 demo
+ * students into a Select, assignments/new the first 500 by first name — so
+ * the rest of the school could not be assigned a fee from that form at all.
+ */
+export async function getFeeStudents(
+  schoolId: string,
+  {
+    search,
+    gradeId,
+    displayLang,
+    take = 30,
+  }: { search?: string; gradeId?: string; displayLang?: string; take?: number }
+) {
+  const words = (search ?? "").trim().split(/\s+/).filter(Boolean).slice(0, 4)
+  const contains = (value: string) => ({
+    contains: value,
+    mode: Prisma.QueryMode.insensitive,
+  })
+  const stored = displayLang
+    ? await storedWordsFor(schoolId, words, displayLang)
+    : words.map(() => ({ words: [], texts: [] }))
+  return db.student.findMany({
+    where: {
+      schoolId,
+      status: "ACTIVE",
+      ...(gradeId ? { academicGradeId: gradeId } : {}),
+      AND: words.map((w, i) => ({
+        OR: [
+          { firstName: contains(w) },
+          { middleName: contains(w) },
+          { lastName: contains(w) },
+          { grNumber: contains(w) },
+          { studentId: contains(w) },
+          ...(stored[i].words.length
+            ? [
+                { firstName: { in: stored[i].words } },
+                { middleName: { in: stored[i].words } },
+                { lastName: { in: stored[i].words } },
+              ]
+            : []),
+        ],
+      })),
+    },
+    select: {
+      id: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      academicGrade: { select: { name: true } },
+    },
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+    take,
+  })
+}
+
 /**
  * For each typed word, the stored words it translates from. A cached
  * translation "Sarah Hasan" ← "سارة حسن" maps "sarah" to "سارة" by position

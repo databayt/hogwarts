@@ -23,6 +23,24 @@ Radix Select. Now 196 KB.
   read US$; the assignments table's "Record payment" opened the form blank —
   it now deep-links `?assignment=<id>` and arrives preselected.
 
+## 2026-10-19 — fine + assignment student pickers (local, not pushed)
+
+Same pattern as the payment picker, via a shared `student-picker.tsx`
+(`useFeeStudentSearch` + `StudentCombobox`) over `getFeeStudents` /
+`searchFeeStudents` — active students only, bilingual search.
+
+- **fines/new**: shipped all 985 demo students into a Select (306 KB) → a
+  searched combobox seeded with 20 (195 KB). Names now translated (were raw).
+- **assignments/new**: loaded the first 500 students by first name — the
+  other 485 in demo **could not be assigned a fee from this form**. Now no
+  list up front: picking a grade's fee structure loads that grade's students
+  ("Students in {grade}", select all), search covers the rest (inside the
+  grade for a grade structure, school-wide otherwise), and picks persist
+  across searches. Structure and grade names are translated.
+- **`issueFine` security**: took `studentId` from the form unchecked — a fine
+  could be written against another school's student. Now verified against
+  the tenant first.
+
 ## 2026-10-04 — fees by grade (class removal S12, local, not pushed)
 
 - A fee structure charges a grade: `FeeStructure.gradeId` (migration

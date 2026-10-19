@@ -2655,6 +2655,8 @@
     "selectTargetUser": "يرجى اختيار المستخدم المستهدف"
   },
   "fineForm": {
+    "searchStudent": "ابحث بالاسم أو رقم الطالب…",
+    "noMatchingStudents": "لا يوجد طالب نشط مطابق.",
     "studentLabel": "الطالب",
     "selectStudent": "اختر طالباً",
     "fineType": "نوع الغرامة",
@@ -2754,6 +2756,12 @@
     "coverageTypeFixed": "مبلغ ثابت"
   },
   "assignmentForm": {
+    "searchStudents": "ابحث بالاسم أو رقم الطالب…",
+    "noMatchingStudents": "لا يوجد طالب نشط مطابق.",
+    "studentsInGrade": "طلاب {grade}",
+    "typeToSearch": "اختر هيكل رسوم لصف، أو ابحث عن الطلاب.",
+    "selectedCount": "{count} محدد",
+    "clearSelection": "مسح",
     "fillRequiredFields": "يرجى تعبئة جميع الحقول المطلوبة",
     "selectAtLeastOneStudent": "يرجى اختيار طالب واحد على الأقل",
     "failedAssignFee": "فشل تعيين الرسوم",

@@ -7,7 +7,6 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { displayName } from "@/lib/name-utils"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,9 +22,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 
 import { issueFine } from "./actions"
+import { StudentCombobox, type FeeStudentOption } from "./student-picker"
 
 const getFineTypes = (ff?: Record<string, string>) =>
   [
@@ -40,18 +39,13 @@ const getFineTypes = (ff?: Record<string, string>) =>
   ] as const
 
 interface FineFormProps {
-  students: Array<{
-    id: string
-    firstName: string | null
-    middleName?: string | null
-    lastName: string | null
-  }>
+  /** A first page of active students; the picker searches the rest. */
+  students: FeeStudentOption[]
   lang: Locale
 }
 
 export function FineForm({ students, lang }: FineFormProps) {
   const router = useRouter()
-  const nameDisplay = useNameDisplay()
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
   const ff = (dictionary as any)?.finance?.fineForm as
@@ -64,6 +58,10 @@ export function FineForm({ students, lang }: FineFormProps) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    if (!formData.get("studentId")) {
+      toast.error(ff?.selectStudent || "Select a student")
+      return
+    }
 
     startTransition(async () => {
       const result = await issueFine(formData)
@@ -86,20 +84,16 @@ export function FineForm({ students, lang }: FineFormProps) {
     <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
       <div className="space-y-2">
         <Label htmlFor="studentId">{ff?.studentLabel || "Student"}</Label>
-        <Select name="studentId" required>
-          <SelectTrigger id="studentId">
-            <SelectValue
-              placeholder={ff?.selectStudent || "Select a student"}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {students.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                <bdi dir="auto">{displayName(s, nameDisplay)}</bdi>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <StudentCombobox
+          id="studentId"
+          name="studentId"
+          initial={students}
+          placeholder={ff?.selectStudent || "Select a student"}
+          searchPlaceholder={
+            ff?.searchStudent || "Search by name or student number…"
+          }
+          emptyMessage={ff?.noMatchingStudents || "No active student matches."}
+        />
       </div>
 
       <div className="space-y-2">
