@@ -4,16 +4,22 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   productId: string
 }
 
-export function ProductDetailContent({ dictionary, lang, productId }: Props) {
+export function ProductDetailContent({
+  dictionary: dictionaryProp,
+  lang,
+  productId,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   return (
     <PageContainer>
       <div className="flex-1 space-y-4">

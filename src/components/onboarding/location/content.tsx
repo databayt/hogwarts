@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { LocationForm } from "./form"
@@ -19,7 +20,8 @@ interface Props {
   dictionary?: Dictionary
 }
 
-export default function LocationContent({ dictionary }: Props) {
+export default function LocationContent({ dictionary: dictionaryProp }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const dict = ((dictionary?.school as Record<string, unknown> | undefined)
     ?.onboarding ?? {}) as Record<string, string>
   const params = useParams()

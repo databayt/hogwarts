@@ -11,6 +11,7 @@ import { asset } from "@/lib/asset-url"
 import { gradeLabel } from "@/lib/grade"
 import { Card, CardContent } from "@/components/ui/card"
 import { SeeMore } from "@/components/atom/see-more"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 import type { ContinueWatchingItem } from "@/components/lumos/data/catalog/get-continue-watching"
 import type { CourseShelf as CourseShelfData } from "@/components/lumos/data/catalog/get-course-shelves"
@@ -34,7 +35,7 @@ const RECOMMENDED_COUNT = 6
 const OTHERS_PAGE_SIZE = 12
 
 interface Props {
-  dictionary: Record<string, any>
+  dictionary?: Record<string, any>
   lang: string
   courses: CatalogCourseType[]
   totalCount: number
@@ -78,7 +79,7 @@ interface Props {
 }
 
 export function LumosCoursesContent({
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   courses,
   totalCount,
@@ -92,6 +93,10 @@ export function LumosCoursesContent({
   effectiveGrade = null,
   startHere = null,
 }: Props) {
+  // Reads the `lumos` namespace, so take that slice of the layout's
+  // dictionary rather than serializing it from the page.
+  const fullDictionary = useDictionaryFallback()
+  const dictionary = dictionaryProp ?? fullDictionary.lumos
   const isRTL = lang === "ar"
   // Rendered width of each headline line, per 100px of font size, measured in
   // the browser against thmanyah sans at the weights the h1 uses: the title at

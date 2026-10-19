@@ -55,7 +55,6 @@ export default async function DescriptionPage({ params }: Props) {
             | "secondary"
             | "both") || undefined,
       }}
-      dictionary={dictionary}
     />
   )
 }

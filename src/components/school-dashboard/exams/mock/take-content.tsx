@@ -21,19 +21,26 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
 
 import type { MockExamData, MockQuestionWithAnswer } from "./take-actions"
 import { submitMockExam } from "./take-actions"
 
 interface MockExamTakingProps {
   exam: MockExamData
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 type Phase = "taking" | "submitting" | "results"
 
-export function MockExamTaking({ exam, dictionary }: MockExamTakingProps) {
+export function MockExamTaking({
+  exam,
+  dictionary: dictionaryProp,
+}: MockExamTakingProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>("taking")
   const [currentIndex, setCurrentIndex] = useState(0)

@@ -8,6 +8,7 @@ import { parseAsInteger, useQueryStates } from "nuqs"
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { CommunityFilterOptions } from "./types"
 import { gradesFromGradeRange } from "./util"
@@ -20,7 +21,7 @@ interface Props {
   options: CommunityFilterOptions
   /** Curriculum.code currently selected (for resetting an out-of-range grade). */
   currentCurriculum: string
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 /**
@@ -39,8 +40,9 @@ export function CommunityTabsNav({
   active,
   options,
   currentCurriculum,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [, setQuery] = useQueryStates(
     { grade: parseAsInteger },
     { shallow: false }

@@ -9,20 +9,22 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolNameFormat } from "./actions"
 
 interface Props {
   schoolId: string
   initialNameFormat: NameFormat
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 export function ConfigNameFormatForm({
   schoolId,
   initialNameFormat,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t = dictionary?.school?.configuration?.nameFormat
   const [nameFormat, setNameFormat] = useState<NameFormat>(initialNameFormat)
   const [isPending, startTransition] = useTransition()

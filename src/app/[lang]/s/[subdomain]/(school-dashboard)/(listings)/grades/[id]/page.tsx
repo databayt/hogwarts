@@ -113,7 +113,6 @@ export default async function GradeDetailPage({ params }: Props) {
         classStats={classStats}
         studentRank={studentRank}
         gradedByName={gradedByName}
-        dictionary={dictionary}
         lang={lang}
       />
     </ModalProvider>

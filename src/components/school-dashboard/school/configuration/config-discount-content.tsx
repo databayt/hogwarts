@@ -7,12 +7,14 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 interface Props {
   dictionary?: any
 }
 
-export function ConfigDiscountContent({ dictionary }: Props) {
+export function ConfigDiscountContent({ dictionary: dictionaryProp }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([
     "new-listing",
     "last-minute",

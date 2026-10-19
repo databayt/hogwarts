@@ -32,13 +32,14 @@ import { ErrorToast } from "@/components/atom/toast"
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { School } from "../../types"
 import { resumeApplicationSession } from "../actions"
 
 interface Props {
   school: School
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   subdomain: string
   initialToken?: string
@@ -55,11 +56,12 @@ type ContinueFormData = z.infer<ReturnType<typeof createContinueSchema>>
 
 export default function ContinueApplicationContent({
   school,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   subdomain,
   initialToken,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const isRTL = lang === "ar"

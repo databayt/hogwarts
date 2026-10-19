@@ -155,7 +155,7 @@ interface Subject {
 
 interface Props {
   subject: Subject
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 

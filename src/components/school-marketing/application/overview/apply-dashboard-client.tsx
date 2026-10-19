@@ -5,6 +5,8 @@
 import React from "react"
 import { useRouter } from "next/navigation"
 
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+
 import {
   type DraftApplication,
   type SubmittedApplication,
@@ -18,7 +20,7 @@ interface ApplyDashboardClientProps {
   /** The open campaign to start a new application in; null when admissions
    *  are closed — existing applications still render, nothing new starts. */
   campaignId: string | null
-  dictionary: any
+  dictionary?: any
   lang: string
   subdomain: string
 }
@@ -28,10 +30,11 @@ export default function ApplyDashboardClient({
   draftApplications,
   submittedApplications = [],
   campaignId,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   subdomain,
 }: ApplyDashboardClientProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
 
   const handleViewOffer = (application: SubmittedApplication) => {

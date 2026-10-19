@@ -42,7 +42,6 @@ export default async function VisibilityPage({ params }: Props) {
     <ConfigVisibilityForm
       schoolId={schoolId || ""}
       initialVisibility={branding?.informationSharing ?? "limited-sharing"}
-      dictionary={dictionary}
     />
   )
 }

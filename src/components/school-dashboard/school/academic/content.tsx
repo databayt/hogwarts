@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ModalProvider } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { ScoreRangeTable } from "./grading/table"
 import type { ScoreRangeRow } from "./grading/types"
@@ -33,7 +34,7 @@ import type { SchoolYearRow } from "./year/types"
 
 interface AcademicContentProps {
   lang: Locale
-  dictionary: Dictionary
+  dictionary?: Dictionary
   initialYears?: SchoolYearRow[]
   totalYears?: number
   initialTerms?: TermRow[]
@@ -64,7 +65,7 @@ function TableSkeleton() {
 
 export function AcademicContent({
   lang,
-  dictionary,
+  dictionary: dictionaryProp,
   initialYears = [],
   totalYears = 0,
   initialTerms = [],
@@ -76,6 +77,7 @@ export function AcademicContent({
   initialGrades = [],
   totalGrades = 0,
 }: AcademicContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const c = dictionary?.school?.configuration?.academic
 
   const t = {

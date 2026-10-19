@@ -50,7 +50,6 @@ export default async function CapacityPage({ params }: Props) {
         sectionsPerGrade: 2,
         studentsPerSection: 30,
       }}
-      dictionary={dictionary}
     />
   )
 }

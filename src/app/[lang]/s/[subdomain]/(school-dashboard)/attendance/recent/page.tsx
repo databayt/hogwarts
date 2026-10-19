@@ -39,5 +39,5 @@ export default async function Page({ params }: Props) {
 
   const dictionary = await getDictionary(lang)
 
-  return <RecentActivityContent dictionary={dictionary} locale={lang} />
+  return <RecentActivityContent locale={lang} />
 }

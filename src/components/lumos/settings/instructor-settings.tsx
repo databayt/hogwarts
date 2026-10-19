@@ -31,6 +31,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import type { InstructorRoster } from "@/components/lumos/settings/queries"
 import {
   setInstructorDefault,
@@ -40,7 +41,7 @@ import {
 
 interface InstructorSettingsContentProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dictionary: Record<string, any>
+  dictionary?: Record<string, any>
   lang: string
   roster: InstructorRoster
 }
@@ -49,9 +50,10 @@ interface InstructorSettingsContentProps {
 const LOCK_OFF = "__off__"
 
 export function InstructorSettingsContent({
-  dictionary,
+  dictionary: dictionaryProp,
   roster,
 }: InstructorSettingsContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const d = dictionary?.lumos?.instructors ?? {}
   const brand = dictionary?.lumos?.instructorSwitcher?.hogwarts ?? "balqalam"
   const [isPending, startTransition] = useTransition()

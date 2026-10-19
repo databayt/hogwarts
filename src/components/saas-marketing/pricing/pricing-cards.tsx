@@ -6,6 +6,7 @@ import { useState } from "react"
 
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { BillingToggle } from "./billing-toggle"
 import { PricingCard } from "./card"
@@ -16,7 +17,13 @@ interface PricingCardsProps {
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
-export function PricingCards({ lang = "en", dictionary }: PricingCardsProps) {
+export function PricingCards({
+  lang = "en",
+  dictionary: dictionaryProp,
+}: PricingCardsProps) {
+  // From the marketing layout's cached chunk — a prop here serialized the
+  // whole dictionary into /pricing (~3 MB of HTML).
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const pricing = dictionary?.marketing?.pricing
   const plans = getPricingData(pricing)
   // Display only: one rate, shown per month or per year — no yearly discount.

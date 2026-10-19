@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useRef, useState, useTransition } from "react"
 
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { MapForm } from "@/components/onboarding/location/map-form"
 import type { LocationFormData } from "@/components/onboarding/location/validation"
 
@@ -19,8 +20,9 @@ interface Props {
 export function ConfigLocationForm({
   schoolId,
   initialData,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [, startTransition] = useTransition()
   const [error, setError] = useState("")
   const [isDirty, setIsDirty] = useState(false)

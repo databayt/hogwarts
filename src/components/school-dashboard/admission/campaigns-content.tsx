@@ -90,7 +90,6 @@ export default async function CampaignsContent({
       <CampaignsTable
         initialData={data}
         total={total}
-        dictionary={t}
         lang={lang}
         perPage={sp.perPage}
       />

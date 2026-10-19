@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { IMPORT_TYPES, TEMPLATES, type ImportType } from "./fields"
 import { ImportHistory } from "./history"
@@ -23,7 +24,7 @@ import { ImportDialog } from "./import-dialog"
 import type { BulkText } from "./text"
 
 interface Props {
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
 }
 
@@ -138,7 +139,13 @@ function UploadCard({
   )
 }
 
-export default function BulkContent({ dictionary, lang }: Props) {
+export default function BulkContent({
+  dictionary: dictionaryProp,
+  lang,
+}: Props) {
+  // From the dashboard layout's cached chunk — as a prop the whole dictionary
+  // was serialized into /school/bulk (1.2 MB of its 1.4 MB HTML).
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t = dictionary.school.bulk
   const [active, setActive] = useState<{ type: ImportType; file: File } | null>(
     null

@@ -68,7 +68,6 @@ export default async function TitlePage({ params }: Props) {
       }}
       editLang={lang}
       storedLang={storedLang}
-      dictionary={dictionary}
     />
   )
 }

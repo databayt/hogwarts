@@ -31,9 +31,9 @@ export default async function PricingContent(props: Props) {
         <PricingHeader dictionary={dictionary} />
       </ImmersiveHero>
       <CurrencyProvider rates={rates} updated={updated}>
-        <PricingCards lang={lang} dictionary={dictionary} />
+        <PricingCards lang={lang} />
         <div id="calculator" className="w-full scroll-mt-24">
-          <Calculator lang={lang} dictionary={dictionary} />
+          <Calculator lang={lang} />
         </div>
       </CurrencyProvider>
       <ComparePlans dictionary={dictionary} />

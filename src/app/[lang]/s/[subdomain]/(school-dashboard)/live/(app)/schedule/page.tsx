@@ -76,7 +76,6 @@ export default async function Page({ params }: Props) {
     <div>
       <ScheduleLiveClassForm
         locale={lang}
-        dictionary={dictionary}
         sections={sections}
         subjects={subjects}
         teacherId={teacherId}

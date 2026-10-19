@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { Icons } from "@/components/icons"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolCapacity } from "./actions"
 import { capacitySchema, type CapacityFormData } from "./validation"
@@ -163,8 +164,9 @@ export function CapacityForm({
   initialData,
   schoolLevel,
   onSuccess,
-  dictionary,
+  dictionary: dictionaryProp,
 }: CapacityFormProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const dict = dictionary?.onboarding || {}
   // Keep the transition for the background save, but don't read `isPending`:
   // toggling it disabled the whole control set mid-save, which flickered the

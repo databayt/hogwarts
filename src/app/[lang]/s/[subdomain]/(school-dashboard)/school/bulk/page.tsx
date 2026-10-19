@@ -27,7 +27,7 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <BreadcrumbTitle title={dictionary.schoolConsole.meta.bulk} />
-      <BulkContent dictionary={dictionary} lang={lang} />
+      <BulkContent lang={lang} />
     </>
   )
 }

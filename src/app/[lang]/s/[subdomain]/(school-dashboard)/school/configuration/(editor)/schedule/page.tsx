@@ -27,11 +27,5 @@ export default async function SchedulePage({ params }: Props) {
   const { schoolId } = await getTenantContext()
   const dictionary = await getDictionary(lang)
 
-  return (
-    <ConfigScheduleForm
-      schoolId={schoolId || ""}
-      lang={lang}
-      dictionary={dictionary}
-    />
-  )
+  return <ConfigScheduleForm schoolId={schoolId || ""} lang={lang} />
 }

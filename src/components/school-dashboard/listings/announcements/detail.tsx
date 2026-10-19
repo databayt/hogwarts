@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { InfoRows } from "@/components/school-dashboard/shared"
 
 // Type for announcement detail - matches the select result from actions.ts
@@ -44,16 +45,17 @@ interface AnnouncementDetailResult {
 interface AnnouncementDetailContentProps {
   data: AnnouncementDetailResult | null
   error?: string | null
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
 }
 
 export function AnnouncementDetailContent({
   data,
   error,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: AnnouncementDetailContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const d = dictionary?.school?.announcements
 

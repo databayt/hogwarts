@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { updateSchoolDescription } from "@/components/onboarding/description/actions"
 import type { DescriptionFormData } from "@/components/onboarding/description/validation"
 
@@ -37,8 +38,9 @@ interface Props {
 export function ConfigDescriptionForm({
   schoolId,
   initialData,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [schoolType, setSchoolType] = useState<SchoolType | undefined>(
     initialData.schoolType
   )

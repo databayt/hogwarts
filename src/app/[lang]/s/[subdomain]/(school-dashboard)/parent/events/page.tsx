@@ -19,5 +19,5 @@ export default async function ParentEventsPage({
 }) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <ParentEventsContent lang={lang} dictionary={dictionary} />
+  return <ParentEventsContent lang={lang} />
 }

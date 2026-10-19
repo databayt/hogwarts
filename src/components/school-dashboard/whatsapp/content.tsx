@@ -57,7 +57,6 @@ export async function WhatsAppContent({ locale = "en" }: WhatsAppContentProps) {
       messages={messages}
       templates={templates}
       stats={stats}
-      dictionary={dictionary}
       locale={locale}
     />
   )

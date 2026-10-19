@@ -18,5 +18,5 @@ export default async function Visibility({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <VisibilityContent dictionary={dictionary} lang={lang} id={id} />
+  return <VisibilityContent lang={lang} id={id} />
 }

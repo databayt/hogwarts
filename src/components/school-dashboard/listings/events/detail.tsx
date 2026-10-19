@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 // Type for event detail - matches the select result from actions.ts
 interface EventDetailResult {
@@ -50,16 +51,17 @@ interface EventDetailResult {
 interface EventDetailContentProps {
   data: EventDetailResult | null
   error?: string | null
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
 }
 
 export function EventDetailContent({
   data,
   error,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: EventDetailContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const isRTL = lang === "ar"
 

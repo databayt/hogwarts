@@ -5,6 +5,7 @@
 import { useState, useTransition } from "react"
 
 import { ErrorToast } from "@/components/atom/toast"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateJoinAndSharing } from "./actions"
 import { SaveStatus } from "./ui/save-status"
@@ -18,8 +19,9 @@ interface Props {
 export function ConfigVisibilityForm({
   schoolId,
   initialVisibility,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [selectedOption, setSelectedOption] = useState(initialVisibility)
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()

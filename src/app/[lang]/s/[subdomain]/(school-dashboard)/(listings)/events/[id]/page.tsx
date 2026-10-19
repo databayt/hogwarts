@@ -21,7 +21,6 @@ export default async function EventDetailPage({ params }: Props) {
     <EventDetailContent
       data={(result.success ? result.data : null) ?? null}
       error={result.success ? null : result.error}
-      dictionary={dictionary}
       lang={lang}
     />
   )

@@ -17,5 +17,5 @@ export default async function Congratulations({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <CongratulationsContent dictionary={dictionary} lang={lang} id={id} />
+  return <CongratulationsContent lang={lang} id={id} />
 }

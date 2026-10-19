@@ -31,7 +31,7 @@ interface SchoolData extends Pick<
 > {}
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   id: string
 }

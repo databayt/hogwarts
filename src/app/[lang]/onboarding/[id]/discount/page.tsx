@@ -18,5 +18,5 @@ export default async function Discount({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <DiscountContent dictionary={dictionary} lang={lang} id={id} />
+  return <DiscountContent lang={lang} id={id} />
 }

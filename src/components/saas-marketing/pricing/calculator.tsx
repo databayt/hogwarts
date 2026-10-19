@@ -15,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { CurrencyToggle, useCurrency } from "./currency"
 import {
@@ -34,7 +35,11 @@ interface CalculatorProps {
   lang?: string
 }
 
-export function Calculator({ dictionary, lang = "en" }: CalculatorProps) {
+export function Calculator({
+  dictionary: dictionaryProp,
+  lang = "en",
+}: CalculatorProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const pricing = dictionary?.marketing?.pricing
   const t = pricing?.calculator as Record<string, string> | undefined
   const { currency, rates, updated } = useCurrency()

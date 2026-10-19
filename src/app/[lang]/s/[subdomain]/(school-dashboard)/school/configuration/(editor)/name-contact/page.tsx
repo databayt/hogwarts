@@ -67,7 +67,6 @@ export default async function NameContactPage({ params }: Props) {
         staff: asNameContact(school?.staffNameContact, "staff"),
         member: asNameContact(school?.memberNameContact, "member"),
       }}
-      dictionary={dictionary}
     />
   )
 }

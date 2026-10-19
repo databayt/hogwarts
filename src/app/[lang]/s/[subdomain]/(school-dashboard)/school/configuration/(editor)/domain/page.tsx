@@ -49,7 +49,6 @@ export default async function DomainPage({ params }: Props) {
     <ConfigDomainForm
       currentDomain={school?.domain || ""}
       existingRequests={domainRequests}
-      dictionary={dictionary}
     />
   )
 }

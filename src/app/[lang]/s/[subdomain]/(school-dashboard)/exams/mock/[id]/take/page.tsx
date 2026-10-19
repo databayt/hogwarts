@@ -22,5 +22,5 @@ export default async function MockExamTakePage({ params }: Props) {
     notFound()
   }
 
-  return <MockExamTaking exam={result.data} dictionary={dictionary} />
+  return <MockExamTaking exam={result.data} />
 }

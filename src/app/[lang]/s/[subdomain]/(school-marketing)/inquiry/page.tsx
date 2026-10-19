@@ -49,7 +49,6 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
       <div className="container mx-auto max-w-2xl px-4">
         <InquiryFormContent
           school={schoolResult.data}
-          dictionary={dictionary}
           lang={lang}
           subdomain={subdomain}
           gradeCountry={gradeCountry}

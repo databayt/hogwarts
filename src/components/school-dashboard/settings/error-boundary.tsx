@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { DictionaryContext } from "@/components/internationalization/dictionary-context"
 
 interface Props {
   children: React.ReactNode
@@ -26,6 +27,11 @@ interface State {
 }
 
 export class SettingsErrorBoundary extends React.Component<Props, State> {
+  // A class can't call hooks; contextType reads the layout's dictionary so the
+  // page doesn't serialize the whole school namespace as a prop.
+  static contextType = DictionaryContext
+  declare context: React.ContextType<typeof DictionaryContext>
+
   constructor(props: Props) {
     super(props)
     this.state = { hasError: false, error: null }
@@ -46,7 +52,7 @@ export class SettingsErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const { dictionary } = this.props
+      const dictionary = this.props.dictionary ?? this.context?.school
 
       return (
         <div className="py-10">

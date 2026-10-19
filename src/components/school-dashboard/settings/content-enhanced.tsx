@@ -9,6 +9,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 import { ChangePasswordForm, type ChangePasswordLabels } from "./password/form"
@@ -26,16 +27,19 @@ const AppearanceSettings = React.lazy(() =>
 )
 
 interface Props {
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   hasPassword: boolean
 }
 
 export function EnhancedSettingsContent({
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   hasPassword,
 }: Props) {
+  // From the dashboard layout's cached chunk; as a prop this page carried the
+  // whole dictionary (1.2 MB of its 1.4 MB HTML).
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [activeTab, setActiveTab] = React.useState("appearance")
 
   const tabs = React.useMemo(

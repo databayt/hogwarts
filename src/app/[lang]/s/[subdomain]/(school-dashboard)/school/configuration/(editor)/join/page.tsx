@@ -46,7 +46,6 @@ export default async function JoinPage({ params }: Props) {
           ? "manual-enrollment"
           : "invite-with-codes"
       }
-      dictionary={dictionary}
     />
   )
 }

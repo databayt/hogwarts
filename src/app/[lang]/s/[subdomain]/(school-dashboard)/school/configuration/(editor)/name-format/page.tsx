@@ -42,7 +42,6 @@ export default async function NameFormatPage({ params }: Props) {
     <ConfigNameFormatForm
       schoolId={schoolId || ""}
       initialNameFormat={(school?.nameFormat as NameFormat) ?? "full"}
-      dictionary={dictionary}
     />
   )
 }

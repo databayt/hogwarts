@@ -40,7 +40,7 @@ export async function PaymentSettingsContent({ lang }: Props) {
             "Configure how families pay the school, and when unpaid fees are chased."}
         </p>
       </div>
-      <PaymentSettingsForm initial={result.data} dictionary={dictionary} />
+      <PaymentSettingsForm initial={result.data} />
     </div>
   )
 }

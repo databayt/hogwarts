@@ -11,6 +11,7 @@ import { ar, enUS } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { formatCompactMoney } from "../../lib/format-money"
 import { RecentInvoicesCard, StatsCards } from "./card"
@@ -40,12 +41,17 @@ interface DashboardData {
 }
 
 interface Props {
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   initialData?: DashboardData | null
 }
 
-export function DashboardContent({ dictionary, lang, initialData }: Props) {
+export function DashboardContent({
+  dictionary: dictionaryProp,
+  lang,
+  initialData,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const fd = (dictionary as any)?.finance
   const ip = fd?.invoicePage as Record<string, string> | undefined
   const dateLocale = lang === "ar" ? ar : enUS

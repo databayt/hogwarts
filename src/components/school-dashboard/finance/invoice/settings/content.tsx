@@ -31,6 +31,7 @@ import {
 } from "@/components/file"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import {
   getSettings,
   updateSettings,
@@ -43,11 +44,12 @@ type TSignatureData = {
 }
 
 interface Props {
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
 }
 
-export function SettingsContent({ dictionary, lang }: Props) {
+export function SettingsContent({ dictionary: dictionaryProp, lang }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const fd = (dictionary as any)?.finance
   const is = fd?.invoiceSettings as Record<string, string> | undefined
 

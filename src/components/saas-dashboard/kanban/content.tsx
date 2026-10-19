@@ -12,7 +12,7 @@ import { KanbanBoard } from "./components/kanban-board"
 import NewTaskDialog from "./components/new-task-dialog"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 

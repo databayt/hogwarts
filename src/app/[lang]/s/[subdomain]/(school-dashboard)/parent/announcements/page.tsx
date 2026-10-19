@@ -19,5 +19,5 @@ export default async function ParentAnnouncementsPage({
 }) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <ParentAnnouncementsContent lang={lang} dictionary={dictionary} />
+  return <ParentAnnouncementsContent lang={lang} />
 }

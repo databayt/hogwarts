@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import {
   ArrowDown,
@@ -15,6 +14,8 @@ import {
 
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { BlurImage } from "@/components/atom/blur-image"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import {
   COURSE_SLIDE_BASIS,
   CourseCarousel,
@@ -46,7 +47,7 @@ interface AdminStats {
 }
 
 interface Props {
-  dictionary: any
+  dictionary?: any
   lang: string
   schoolId: string | null
   userId: string
@@ -54,7 +55,12 @@ interface Props {
   stats: AdminStats | null
 }
 
-export function LumosAdminDashboardContent({ dictionary, lang, stats }: Props) {
+export function LumosAdminDashboardContent({
+  dictionary: dictionaryProp,
+  lang,
+  stats,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const d = dictionary?.lumos?.adminDashboard || dictionary?.adminDashboard
 
   const formatRevenue = (amount: number) => {

@@ -18,5 +18,5 @@ export default async function Join({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <JoinContent dictionary={dictionary} lang={lang} id={id} />
+  return <JoinContent lang={lang} id={id} />
 }

@@ -205,7 +205,6 @@ export default async function LumosDashboardPage({ params }: Props) {
     return (
       <div className="space-y-12">
         <LumosAdminDashboardContent
-          dictionary={dictionary}
           lang={lang}
           schoolId={schoolId}
           userId={session.user.id}

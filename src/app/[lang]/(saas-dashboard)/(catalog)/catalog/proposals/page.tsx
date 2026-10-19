@@ -22,7 +22,7 @@ export default async function ProposalsPage({ params }: Props) {
           "Catalog Proposals"
         }
       />
-      <ProposalReviewContent dictionary={dictionary} lang={lang} />
+      <ProposalReviewContent lang={lang} />
     </>
   )
 }

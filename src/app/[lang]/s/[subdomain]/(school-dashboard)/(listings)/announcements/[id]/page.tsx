@@ -22,7 +22,6 @@ export default async function AnnouncementDetailPage({ params }: Props) {
     <AnnouncementDetailContent
       data={result.success ? result.data : null}
       error={result.success ? null : result.error}
-      dictionary={dictionary}
       lang={lang}
     />
   )

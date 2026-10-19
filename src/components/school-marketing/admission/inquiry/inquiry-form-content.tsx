@@ -42,6 +42,7 @@ import { DateField } from "@/components/form"
 import { AnthropicIcons, Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { School } from "../../types"
 import { submitInquiry } from "../actions"
@@ -54,7 +55,7 @@ import {
 
 interface Props {
   school: School
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   subdomain: string
   /** School grade-naming country ("SD") — see `getSchoolGradeCountry`. */
@@ -79,11 +80,12 @@ type InquiryForm = z.infer<ReturnType<typeof createInquirySchema>>
 
 export default function InquiryFormContent({
   school,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   subdomain,
   gradeCountry = null,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const isRTL = lang === "ar"

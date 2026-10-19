@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import {
@@ -61,8 +62,9 @@ function withLtr(tpl: string, key: string, value: React.ReactNode) {
 export function ConfigDomainForm({
   currentDomain,
   existingRequests = [],
-  dictionary,
+  dictionary: dictionaryProp,
 }: ConfigDomainFormProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t: Partial<Dictionary["schoolSettings"]["domain"]> =
     dictionary?.schoolSettings?.domain ?? {}
   const statusLabels = t.status as Record<string, string> | undefined

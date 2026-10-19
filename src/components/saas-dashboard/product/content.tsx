@@ -13,7 +13,7 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { Shell as PageContainer } from "@/components/table/shell"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 

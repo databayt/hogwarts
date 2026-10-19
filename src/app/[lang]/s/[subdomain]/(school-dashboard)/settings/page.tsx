@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
+  const session = await auth()
 
   let hasPassword = false
   if (session?.user?.id) {
@@ -39,12 +39,8 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <SettingsErrorBoundary dictionary={dictionary.school}>
-      <EnhancedSettingsContent
-        dictionary={dictionary}
-        lang={lang}
-        hasPassword={hasPassword}
-      />
+    <SettingsErrorBoundary>
+      <EnhancedSettingsContent lang={lang} hasPassword={hasPassword} />
     </SettingsErrorBoundary>
   )
 }

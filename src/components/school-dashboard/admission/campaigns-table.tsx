@@ -13,6 +13,7 @@ import Modal from "@/components/atom/modal/modal"
 import { DeleteToast, ErrorToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import {
   GridCard,
   GridContainer,
@@ -30,7 +31,7 @@ import { getCampaignColumns } from "./campaigns-columns"
 interface CampaignsTableProps {
   initialData: CampaignRow[]
   total: number
-  dictionary: Dictionary["school"]["admission"]
+  dictionary?: Dictionary["school"]["admission"]
   lang: Locale
   perPage?: number
 }
@@ -42,7 +43,10 @@ export function CampaignsTable({
   lang,
   perPage = 20,
 }: CampaignsTableProps) {
-  const t = dictionary
+  // The admission slice is ~45 KB of Arabic; read it from the dashboard
+  // layout's cached chunk instead of serializing it into the page.
+  const contextDictionary = useDictionaryFallback()
+  const t = dictionary ?? contextDictionary.school.admission
   const { openModal } = useModal()
 
   const { view, toggleView } = usePlatformView({ defaultView: "table" })

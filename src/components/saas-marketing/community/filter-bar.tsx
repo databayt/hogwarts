@@ -12,12 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { CommunityFilterOptions } from "./types"
 
 interface Props {
   options: CommunityFilterOptions
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 /**
@@ -38,7 +39,11 @@ interface Props {
  * between the selected text and the chevron — it reads like a tab control
  * sitting next to the grade pills, not a form field.
  */
-export function CommunityFilterBar({ options, dictionary }: Props) {
+export function CommunityFilterBar({
+  options,
+  dictionary: dictionaryProp,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [{ curriculum }, setFilters] = useQueryStates(
     { curriculum: parseAsString.withDefault("US") },
     { shallow: false }

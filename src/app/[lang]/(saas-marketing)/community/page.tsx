@@ -2,10 +2,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { PageHeader } from "@/components/atom/page-header"
 import { TwoButtons } from "@/components/atom/two-buttons"
 import { type Locale } from "@/components/internationalization/config"
@@ -139,10 +139,9 @@ export default async function CommunityHubPage({
             active={activeGrade}
             options={options}
             currentCurriculum={activeCurriculum}
-            dictionary={dictionary}
           />
         </div>
-        <CommunityFilterBar options={options} dictionary={dictionary} />
+        <CommunityFilterBar options={options} />
       </div>
       <div id="subjects" className="mt-6 scroll-mt-24">
         {subjects.length === 0 ? (

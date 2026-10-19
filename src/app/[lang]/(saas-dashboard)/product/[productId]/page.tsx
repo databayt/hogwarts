@@ -31,11 +31,7 @@ export default async function ProductDetail({ params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={n?.detail || "Product Detail"} />
       <PageNav pages={productPages} />
-      <ProductDetailContent
-        dictionary={dictionary}
-        lang={lang}
-        productId={productId}
-      />
+      <ProductDetailContent lang={lang} productId={productId} />
     </div>
   )
 }

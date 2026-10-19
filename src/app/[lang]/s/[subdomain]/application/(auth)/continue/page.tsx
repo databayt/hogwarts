@@ -46,7 +46,6 @@ export default async function ContinuePage({
   return (
     <ContinueApplicationContent
       school={schoolResult.data}
-      dictionary={dictionary}
       lang={lang}
       subdomain={subdomain}
       initialToken={token}

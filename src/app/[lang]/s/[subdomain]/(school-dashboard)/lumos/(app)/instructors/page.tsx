@@ -31,11 +31,5 @@ export default async function LumosInstructorsPage({ params }: Props) {
     schoolId ? getInstructorRoster(schoolId) : Promise.resolve(emptyRoster),
   ])
 
-  return (
-    <InstructorSettingsContent
-      dictionary={dictionary}
-      lang={lang}
-      roster={roster}
-    />
-  )
+  return <InstructorSettingsContent lang={lang} roster={roster} />
 }

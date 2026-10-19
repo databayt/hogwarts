@@ -20,18 +20,20 @@ import { SuccessToast } from "@/components/atom/toast"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { reserveSubdomainForSchool } from "@/components/onboarding/actions"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 import { useListing } from "@/components/onboarding/use-listing"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   id: string
 }
 
 export default function SubdomainContent(props: Props) {
-  const { dictionary, lang, id } = props
+  const { dictionary: dictionaryProp, lang, id } = props
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const { enableNext, disableNext } = useHostValidation()
   const { listing, updateListingData } = useListing()
   const [subdomain, setSubdomain] = useState<string>("")

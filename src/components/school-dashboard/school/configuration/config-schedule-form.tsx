@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import {
   getSchoolScheduleData,
   saveScheduleChoice,
@@ -30,7 +31,12 @@ interface Props {
   dictionary?: any
 }
 
-export function ConfigScheduleForm({ schoolId, lang, dictionary }: Props) {
+export function ConfigScheduleForm({
+  schoolId,
+  lang,
+  dictionary: dictionaryProp,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const dict = dictionary?.onboarding || {}
   const [isPending, startTransition] = useTransition()
   const [loading, setLoading] = useState(true)

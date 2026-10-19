@@ -26,6 +26,7 @@ import { useDraftLauncher } from "@/components/form/wizard"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { canPerformAdmissionAction } from "@/components/school-dashboard/admission/authorization"
 import { PlacementDialogHost } from "@/components/school-dashboard/admission/placement-dialog-host"
 import { openPlacementDialog } from "@/components/school-dashboard/admission/placement-store"
@@ -73,8 +74,8 @@ interface StudentsTableProps {
 function StudentsTableInner({
   initialData,
   total,
-  dictionary,
-  admissionDictionary,
+  dictionary: dictionaryProp,
+  admissionDictionary: admissionDictionaryProp,
   lang,
   perPage = 20,
   gradeOptions = [],
@@ -85,6 +86,12 @@ function StudentsTableInner({
   nameContact = "phone",
 }: StudentsTableProps) {
   const router = useRouter()
+  // Both slices come from the dashboard layout's cached dictionary chunk; as
+  // props they serialized ~100 KB of Arabic JSON into every /students load.
+  const contextDictionary = useDictionaryFallback()
+  const dictionary = dictionaryProp ?? contextDictionary?.school?.students
+  const admissionDictionary =
+    admissionDictionaryProp ?? contextDictionary?.school?.admission
 
   // Translations with fallbacks
   const t = {

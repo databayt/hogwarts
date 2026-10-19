@@ -91,7 +91,6 @@ async function CoursesRenderer({
   if (!schoolId) {
     return (
       <LumosCoursesContent
-        dictionary={dictionary}
         lang={lang}
         courses={[]}
         totalCount={0}
@@ -166,7 +165,6 @@ async function CoursesRenderer({
 
   return (
     <LumosCoursesContent
-      dictionary={dictionary}
       lang={lang}
       courses={rows}
       totalCount={count}

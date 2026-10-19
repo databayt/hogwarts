@@ -36,7 +36,7 @@ export default async function BookDetailPage({ params }: Props) {
   return (
     <>
       <PageHeadingSetter title={book.title} />
-      <BookDetailView book={book} lang={lang} dictionary={dictionary} />
+      <BookDetailView book={book} lang={lang} />
     </>
   )
 }

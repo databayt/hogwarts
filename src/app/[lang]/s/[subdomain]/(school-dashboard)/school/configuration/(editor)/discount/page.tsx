@@ -25,5 +25,5 @@ export default async function DiscountPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <ConfigDiscountContent dictionary={dictionary} />
+  return <ConfigDiscountContent />
 }

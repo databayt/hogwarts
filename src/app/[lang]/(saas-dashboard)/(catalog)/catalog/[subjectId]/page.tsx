@@ -62,7 +62,7 @@ export default async function SubjectPage({ params }: Props) {
   return (
     <>
       <PageHeadingSetter title={subject.name} />
-      <CatalogDetail subject={subject} dictionary={dictionary} lang={lang} />
+      <CatalogDetail subject={subject} lang={lang} />
     </>
   )
 }

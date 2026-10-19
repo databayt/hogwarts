@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { StudentSubmissionCard } from "./submission-card"
 import type { OwnSubmission } from "./submit-core"
@@ -45,7 +46,7 @@ interface AssignmentDetailResult {
 interface AssignmentDetailContentProps {
   data: AssignmentDetailResult | null
   error?: string | null
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   /** Present for a signed-in student: unlocks the hand-in card. */
   viewer?: { role: "STUDENT"; submission: OwnSubmission | null }
@@ -54,10 +55,11 @@ interface AssignmentDetailContentProps {
 export function AssignmentDetailContent({
   data,
   error,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   viewer,
 }: AssignmentDetailContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const t = dictionary?.school?.assignments?.detail || {}
 

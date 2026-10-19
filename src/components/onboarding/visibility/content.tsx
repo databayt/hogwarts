@@ -8,16 +8,18 @@ import { useRouter } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   id: string
 }
 
 const VisibilityContent = (props: Props) => {
-  const { dictionary, lang, id } = props
+  const { dictionary: dictionaryProp, lang, id } = props
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const { isRTL } = useLocale()
   const [selectedOption, setSelectedOption] =

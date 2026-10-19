@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import {
   cancelEventRegistration,
@@ -73,11 +74,12 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 
 export function ParentEventsContent({
   lang = "ar",
-  dictionary,
+  dictionary: dictionaryProp,
 }: {
   lang?: "ar" | "en"
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t = dictionary.parentPortal.events
   const getEventTypeLabel = (type: string) =>
     t.typeLabels[type as keyof typeof t.typeLabels] || type

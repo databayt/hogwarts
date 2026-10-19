@@ -114,7 +114,6 @@ function transliterateRoomCode(code: string, lang: string): string {
 export default async function StudentsContent({
   searchParams,
   school,
-  dictionary,
   lang,
 }: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
@@ -284,8 +283,6 @@ export default async function StudentsContent({
     <StudentsTable
       initialData={data}
       total={total}
-      dictionary={dictionary?.students}
-      admissionDictionary={dictionary?.admission}
       lang={lang}
       perPage={sp.perPage}
       gradeOptions={gradeOptions}

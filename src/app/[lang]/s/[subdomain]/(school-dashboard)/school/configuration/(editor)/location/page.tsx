@@ -56,7 +56,6 @@ export default async function LocationPage({ params }: Props) {
         latitude: school?.latitude ? Number(school.latitude) : 0,
         longitude: school?.longitude ? Number(school.longitude) : 0,
       }}
-      dictionary={dictionary}
     />
   )
 }

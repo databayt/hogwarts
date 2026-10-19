@@ -46,7 +46,6 @@ export default async function NameDisplayPage({ params }: Props) {
           ? school.nameDisplay
           : NAME_DISPLAY_DEFAULT
       }
-      dictionary={dictionary}
       lang={lang}
     />
   )

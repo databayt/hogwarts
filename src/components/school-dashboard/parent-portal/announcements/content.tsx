@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 import { getParentAnnouncements } from "./actions"
@@ -60,11 +61,12 @@ interface Student {
 
 export function ParentAnnouncementsContent({
   lang = "ar",
-  dictionary,
+  dictionary: dictionaryProp,
 }: {
   lang?: "ar" | "en"
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t = dictionary.parentPortal.announcements
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [students, setStudents] = useState<Student[]>([])

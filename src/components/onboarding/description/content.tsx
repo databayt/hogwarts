@@ -8,6 +8,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { DescriptionForm } from "./form"
@@ -17,7 +18,10 @@ interface Props {
   dictionary?: Dictionary
 }
 
-export default function DescriptionContent({ dictionary }: Props) {
+export default function DescriptionContent({
+  dictionary: dictionaryProp,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const params = useParams()
   const router = useRouter()
   const schoolId = params.id as string

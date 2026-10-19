@@ -16,11 +16,5 @@ export default async function InvoiceAnalysis({ params }: Props) {
   const statsResult = await getDashboardStats()
   const initialData = statsResult.success ? statsResult.data : null
 
-  return (
-    <DashboardContent
-      dictionary={dictionary}
-      lang={lang}
-      initialData={initialData}
-    />
-  )
+  return <DashboardContent lang={lang} initialData={initialData} />
 }

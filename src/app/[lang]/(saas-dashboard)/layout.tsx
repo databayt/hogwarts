@@ -10,11 +10,7 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
-import {
-  getSaasDashboardDictionary,
-  type Dictionary,
-} from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { ReportIssue } from "@/components/report-issue"
 import { getCatalogPendingCounts } from "@/components/saas-dashboard/catalog/pending-counts"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
@@ -53,11 +49,10 @@ export default async function OperatorLayout({
   }
 
   // Only DEVELOPER role reaches this point.
-  // Subtree consumes core + sales + messages + notifications — the scoped
-  // loader still sheds lumos + 16 unused feature namespaces from the RSC
-  // payload. `notifications` is there for the operator bell in SaasHeader.
-  const [dictionary, isRTL, pendingCounts] = await Promise.all([
-    getSaasDashboardDictionary(lang as Locale).then((d) => d as Dictionary),
+  // The dictionary comes from the cached per-locale chunk, not a prop: the
+  // scoped subset used to ride inside every operator document and every
+  // Server Action response that re-rendered the layout.
+  const [isRTL, pendingCounts] = await Promise.all([
     Promise.resolve(checkIsRTL(lang as Locale)),
     // Shared with the (catalog) layout via React cache() — one set of queries
     // per request, not two.
@@ -66,7 +61,7 @@ export default async function OperatorLayout({
 
   // DEVELOPER role - allow access
   return (
-    <DictionaryProvider dictionary={dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       <SidebarProvider>
         <ModalProvider>
           <PageHeadingProvider>
@@ -91,6 +86,6 @@ export default async function OperatorLayout({
           </PageHeadingProvider>
         </ModalProvider>
       </SidebarProvider>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

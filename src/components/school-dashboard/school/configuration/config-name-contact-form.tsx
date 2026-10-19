@@ -8,6 +8,7 @@ import type { NameContact, NameContactListing } from "@/lib/name-utils"
 import { resolveActionError } from "@/lib/resolve-action-error"
 import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolNameContact } from "./actions"
 import { SaveStatus } from "./ui/save-status"
@@ -17,7 +18,7 @@ import { SettingsGroup, SettingsRow } from "./ui/settings-group"
 interface Props {
   schoolId: string
   initial: Record<NameContactListing, NameContact>
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 const LISTINGS: Array<{
@@ -36,8 +37,9 @@ const SAMPLE_PHONE = "+249 912 345 678"
 export function ConfigNameContactForm({
   schoolId,
   initial,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t: Partial<Dictionary["schoolSettings"]["nameContact"]> =
     dictionary?.schoolSettings?.nameContact ?? {}
   const [values, setValues] = useState(initial)

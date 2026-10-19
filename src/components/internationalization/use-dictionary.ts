@@ -52,7 +52,9 @@ export function useDictionary() {
  * 1.4 MB). Under LocaleDictionaryProvider the same object is already in
  * context from a cached chunk, so call sites can simply stop passing it.
  */
-export function useDictionaryFallback(prop?: Dictionary | null): Dictionary {
+export function useDictionaryFallback<T = Dictionary>(prop?: T | null): T {
   const contextDict = useContext(DictionaryContext)
-  return (prop ?? contextDict) as Dictionary
+  // T follows the caller's declared prop type (some legacy props are `any` or
+  // a namespace record); the context always holds the full dictionary.
+  return (prop ?? contextDict) as T
 }

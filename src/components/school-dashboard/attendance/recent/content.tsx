@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { Segmented } from "@/components/school-dashboard/school/configuration/ui/segmented"
 
 import { getRecentAttendance, getSectionsForSelection } from "../actions"
@@ -61,7 +62,11 @@ const STATUS_DOT: Record<string, string> = {
   SICK: "bg-violet-500",
 }
 
-export function RecentActivityContent({ dictionary, locale = "ar" }: Props) {
+export function RecentActivityContent({
+  dictionary: dictionaryProp,
+  locale = "ar",
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const lang = locale
   const d = dictionary as any
   const t = d?.attendanceReports?.activity ?? {}

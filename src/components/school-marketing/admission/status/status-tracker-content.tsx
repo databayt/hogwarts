@@ -31,6 +31,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { School } from "../../types"
 import {
@@ -43,7 +44,7 @@ import StatusDisplay from "./status-display"
 
 interface Props {
   school: School
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   subdomain: string
   initialToken?: string
@@ -71,11 +72,12 @@ function createVerifySchema(messages: Record<string, string>) {
 
 export default function StatusTrackerContent({
   school,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
   subdomain,
   initialToken,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [step, setStep] = useState<Step>(initialToken ? "display" : "request")
   const [isLoading, setIsLoading] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(

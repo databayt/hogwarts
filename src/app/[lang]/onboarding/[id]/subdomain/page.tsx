@@ -17,5 +17,5 @@ export default async function Subdomain({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <SubdomainContent dictionary={dictionary} lang={lang} id={id} />
+  return <SubdomainContent lang={lang} id={id} />
 }

@@ -121,7 +121,6 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
       draftApplications={draftApplications || []}
       submittedApplications={submittedApplications || []}
       campaignId={campaignId}
-      dictionary={dictionary}
       lang={lang}
       subdomain={subdomain}
     />

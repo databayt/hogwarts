@@ -66,7 +66,6 @@ export default async function StatusPage({
   return (
     <StatusTrackerContent
       school={schoolResult.data}
-      dictionary={dictionary}
       lang={lang}
       subdomain={subdomain}
       initialToken={token}

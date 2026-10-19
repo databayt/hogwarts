@@ -44,7 +44,6 @@ export default async function HeroPage({ params }: Props) {
         heroImageUrl: branding?.heroImageUrl || "",
       }}
       lang={lang}
-      dictionary={dictionary}
     />
   )
 }

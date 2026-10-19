@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { createLiveClass } from "@/components/school-dashboard/live/actions/sessions"
 import { resolveLiveClassError } from "@/components/school-dashboard/live/error-map"
 
 interface Props {
   locale: string
-  dictionary: Dictionary
+  dictionary?: Dictionary
   // Pre-resolved options (passed from server)
   sections: { id: string; name: string }[]
   subjects: { id: string; name: string }[]
@@ -28,13 +29,14 @@ interface Props {
 
 export function ScheduleLiveClassForm({
   locale,
-  dictionary,
+  dictionary: dictionaryProp,
   sections,
   subjects,
   teacherId: ownTeacherId,
   teachers = [],
   recordingAvailable = false,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)

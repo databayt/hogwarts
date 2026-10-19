@@ -37,7 +37,7 @@ export default async function Price({ params }: Props) {
         </div>
       }
     >
-      <PriceContent dictionary={dictionary} lang={lang} id={id} />
+      <PriceContent lang={lang} id={id} />
     </HostStepLayout>
   )
 }

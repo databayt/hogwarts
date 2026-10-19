@@ -82,7 +82,6 @@ export default async function OfferPage({ params, searchParams }: Props) {
     <OfferContent
       offer={result.data}
       locale={lang}
-      dictionary={dictionary}
       cancelled={cancelled === "true"}
       registrationParam={registrationState}
       accessToken={accessToken}

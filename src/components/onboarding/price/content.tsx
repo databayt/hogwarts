@@ -10,18 +10,24 @@ import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { getSchoolPricing, updateSchoolTuition } from "./actions"
 import { createTuitionSchema } from "./validation"
 
 interface Props {
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
   id: string
 }
 
-export default function PriceContent({ dictionary, lang, id }: Props) {
+export default function PriceContent({
+  dictionary: dictionaryProp,
+  lang,
+  id,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const schoolId = id
   const router = useRouter()
   const { enableNext, setCustomNavigation } = useHostValidation()

@@ -13,5 +13,5 @@ export default async function Settings({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <SettingsContent dictionary={dictionary} lang={lang} />
+  return <SettingsContent lang={lang} />
 }

@@ -15,6 +15,7 @@ import {
 } from "@/components/file/upload/file-uploader"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateHeroImage } from "./actions"
 import { useAutoSave } from "./use-auto-save"
@@ -25,15 +26,16 @@ interface Props {
     heroImageUrl: string
   }
   lang: Locale
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 export function ConfigHeroForm({
   schoolId,
   initialData,
   lang,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t = dictionary?.school?.configuration?.hero
   const [, startTransition] = useTransition()
   const [error, setError] = useState("")

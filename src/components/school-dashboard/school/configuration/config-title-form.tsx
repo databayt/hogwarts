@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { requestSubdomainChange, updateSchoolName } from "./actions"
@@ -37,8 +38,9 @@ export function ConfigTitleForm({
   schoolId,
   initialTitle,
   editLang,
-  dictionary,
+  dictionary: dictionaryProp,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [name, setName] = useState(initialTitle.title)
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()

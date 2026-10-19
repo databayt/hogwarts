@@ -8,6 +8,7 @@ import { displayName, type NameDisplay } from "@/lib/name-utils"
 import { resolveActionError } from "@/lib/resolve-action-error"
 import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolNameDisplay } from "./actions"
 import { SaveStatus } from "./ui/save-status"
@@ -17,7 +18,7 @@ import { SettingsGroup, SettingsRow } from "./ui/settings-group"
 interface Props {
   schoolId: string
   initialNameDisplay: NameDisplay
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: string
 }
 
@@ -30,9 +31,10 @@ const SAMPLE = {
 export function ConfigNameDisplayForm({
   schoolId,
   initialNameDisplay,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const t: Partial<Dictionary["schoolSettings"]["nameDisplay"]> =
     dictionary?.schoolSettings?.nameDisplay ?? {}
   const [value, setValue] = useState<NameDisplay>(initialNameDisplay)

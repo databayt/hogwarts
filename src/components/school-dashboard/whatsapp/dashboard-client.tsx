@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { ConnectCard } from "./connect-card"
 import { GroupsList } from "./groups-list"
@@ -30,7 +31,7 @@ interface WhatsAppDashboardClientProps {
   templates: WhatsAppTemplateDTO[]
   stats: WhatsAppStats
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dictionary: any
+  dictionary?: any
   locale: string
 }
 
@@ -40,9 +41,10 @@ export function WhatsAppDashboardClient({
   messages,
   templates,
   stats,
-  dictionary,
+  dictionary: dictionaryProp,
   locale,
 }: WhatsAppDashboardClientProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const d: Dict | undefined = useMemo(
     () => dictionary?.school?.whatsapp,
     [dictionary]

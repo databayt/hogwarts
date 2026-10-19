@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { updatePaymentSettings, type PaymentSettingsData } from "./actions"
 import {
@@ -40,7 +41,7 @@ import {
 
 interface Props {
   initial: PaymentSettingsData
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 /**
@@ -51,7 +52,11 @@ interface Props {
  * in order to transfer from their own app: an account to send to, optionally a
  * QR to scan, and any school-specific instructions.
  */
-export function PaymentSettingsForm({ initial, dictionary }: Props) {
+export function PaymentSettingsForm({
+  initial,
+  dictionary: dictionaryProp,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [isPending, startTransition] = useTransition()
   const { validation: v, toast: t } = useMemo(
     () => createI18nHelpers(dictionary.messages),

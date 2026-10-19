@@ -8,6 +8,7 @@ import { HelpCircle } from "lucide-react"
 
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
@@ -15,13 +16,14 @@ import SuccessCompletionModal from "../success-completion-modal"
 import { completeOnboarding } from "./actions"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   id: string
 }
 
 const LegalContent = (props: Props) => {
-  const { dictionary, lang, id } = props
+  const { dictionary: dictionaryProp, lang, id } = props
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const { isRTL } = useLocale()
   const schoolId = id

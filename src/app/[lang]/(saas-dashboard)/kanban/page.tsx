@@ -32,7 +32,7 @@ export default async function Kanban({ params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={n?.kanban || "Kanban"} />
       <PageNav pages={kanbanPages} />
-      <KanbanContent dictionary={dictionary} lang={lang} />
+      <KanbanContent lang={lang} />
     </div>
   )
 }

@@ -57,6 +57,7 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useNameDisplay } from "@/components/school-dashboard/context/use-name-display"
 import { deleteResult } from "@/components/school-dashboard/listings/grades/actions"
 
@@ -79,7 +80,7 @@ interface GradeDetailContentProps {
   studentRank: { rank: number; percentile: number; totalStudents: number }
   /** The grader's display name, resolved server-side from `gradedBy`. */
   gradedByName?: string | null
-  dictionary: Dictionary
+  dictionary?: Dictionary
   lang: Locale
 }
 
@@ -125,9 +126,10 @@ export function GradeDetailContent({
   classStats,
   studentRank,
   gradedByName,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: GradeDetailContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
   const nameDisplay = useNameDisplay()
   const t = dictionary.school.grades

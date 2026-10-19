@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import {
   approveProposal,
@@ -209,9 +210,10 @@ interface ProposalReviewContentProps {
 }
 
 export function ProposalReviewContent({
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: ProposalReviewContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const d = dictionary?.operator?.catalog
   const [proposals, setProposals] = useState<ProposalReviewItem[]>([])
   const [statusFilter, setStatusFilter] = useState("SUBMITTED")

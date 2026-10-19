@@ -30,7 +30,7 @@ export default async function Product({ params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={n?.allProducts || "Products"} />
       <PageNav pages={productPages} />
-      <ProductContent dictionary={dictionary} lang={lang} />
+      <ProductContent lang={lang} />
     </div>
   )
 }

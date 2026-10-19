@@ -48,6 +48,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { DeleteToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import { deleteBook, updateBook } from "./book-actions"
@@ -94,7 +95,12 @@ const STATUS_OPTIONS = [
   "DEPRECATED",
 ] as const
 
-export function BookDetailView({ book, lang, dictionary }: Props) {
+export function BookDetailView({
+  book,
+  lang,
+  dictionary: dictionaryProp,
+}: Props) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const d = dictionary?.operator?.catalog
   const actions = dictionary?.operator?.common?.actions
   const [isPending, startTransition] = useTransition()

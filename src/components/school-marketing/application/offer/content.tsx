@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table"
 import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import type { OfferDetails } from "./actions"
 import {
@@ -151,7 +152,7 @@ type OfferDict = Partial<{
 interface OfferContentProps {
   offer: OfferDetails
   locale: string
-  dictionary: Dictionary
+  dictionary?: Dictionary
   cancelled?: boolean
   /**
    * Registration-fee return state: 'success' | 'cancelled' | 'failed' |
@@ -168,12 +169,13 @@ interface OfferContentProps {
 export default function OfferContent({
   offer,
   locale,
-  dictionary,
+  dictionary: dictionaryProp,
   cancelled,
   registrationParam,
   accessToken,
   gradeCountry = null,
 }: OfferContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   // Use the narrow OfferDict type — no any-cast needed.
   const t: OfferDict | undefined = (
     dictionary as {

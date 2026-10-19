@@ -18,5 +18,5 @@ export default async function Legal({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  return <LegalContent dictionary={dictionary} lang={lang} id={id} />
+  return <LegalContent lang={lang} id={id} />
 }

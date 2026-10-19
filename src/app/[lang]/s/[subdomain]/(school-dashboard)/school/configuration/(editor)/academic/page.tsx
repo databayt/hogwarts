@@ -121,7 +121,6 @@ export default async function AcademicConfigPage({ params }: Props) {
   return (
     <AcademicContent
       lang={lang}
-      dictionary={dictionary}
       initialYears={transformedYears}
       totalYears={totalYears}
       initialTerms={transformedTerms}
