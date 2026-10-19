@@ -52,6 +52,7 @@ import {
   calculateSiblingDiscount,
   getFeeAssignmentList,
   getFineList,
+  getPayableAssignments,
   getPaymentList,
   getScholarshipList,
   type DiscountPolicy,
@@ -59,6 +60,7 @@ import {
 import {
   toAssignmentRows,
   toFineRows,
+  toPayableRows,
   toPaymentRows,
   toScholarshipRows,
 } from "./rows"
@@ -900,7 +902,11 @@ export async function bulkAssignFees(
         try {
           await ensureInvoicesForAssignment(ctx.schoolId, a.id)
         } catch (invoiceErr) {
-          console.error("[bulkAssignFees] invoice sync failed:", a.id, invoiceErr)
+          console.error(
+            "[bulkAssignFees] invoice sync failed:",
+            a.id,
+            invoiceErr
+          )
         }
       }
       const { postFeeAssignment } = await import("../lib/accounting/actions")
@@ -1817,7 +1823,10 @@ export async function applyScholarship(
         : scholarship.coverageType === "PERCENTAGE"
           ? (base * coverage) / 100
           : coverage
-    const amount = Math.min(Math.max(Math.round(rawAmount * 100) / 100, 0), base)
+    const amount = Math.min(
+      Math.max(Math.round(rawAmount * 100) / 100, 0),
+      base
+    )
 
     type DiscountEntry = { type: string; amount: number; reason: string }
     const others = Array.isArray(assignment.discounts)
@@ -3237,4 +3246,20 @@ async function generateUniqueReceiptNumber(schoolId: string): Promise<string> {
     if (!exists) return candidate
   }
   return `REC-${year}-${Date.now().toString(36).toUpperCase()}`
+}
+
+/** Record-payment picker search — the matching payable assignments. */
+export async function searchPayableAssignments(search: string) {
+  const gate = await requireFeePermission("create")
+  if (isAuthError(gate)) return []
+  try {
+    const lang = await getDisplayLang()
+    const rows = await getPayableAssignments(gate.schoolId, {
+      search: search.slice(0, 100),
+      displayLang: lang,
+    })
+    return await toPayableRows(rows, lang, gate.schoolId)
+  } catch {
+    return []
+  }
 }

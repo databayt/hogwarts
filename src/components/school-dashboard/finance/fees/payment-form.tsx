@@ -3,16 +3,31 @@
 
 "use client"
 
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { Check, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatCurrency } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -24,12 +39,13 @@ import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { recordPayment } from "./actions"
+import { recordPayment, searchPayableAssignments } from "./actions"
 
-interface Assignment {
+export interface PayableAssignment {
   id: string
   studentName: string
   feeStructureName: string
+  status: string
   finalAmount: number
   totalPaid: number
   remaining: number
@@ -37,8 +53,11 @@ interface Assignment {
 
 interface Props {
   lang: string
-  assignments: Assignment[]
+  /** The newest payable assignments; the picker searches the rest. */
+  assignments: PayableAssignment[]
   currency?: string
+  /** `?assignment=` — the assignments table's "Record payment". */
+  preselectedId?: string
 }
 
 const getPaymentMethods = (pf?: Record<string, string>) => [
@@ -73,6 +92,7 @@ export default function PaymentForm({
   lang,
   assignments,
   currency = "USD",
+  preselectedId,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -83,7 +103,17 @@ export default function PaymentForm({
   const fc = (dictionary as any)?.finance?.common as
     | Record<string, string>
     | undefined
-  const [selectedId, setSelectedId] = useState("")
+  const [selected, setSelected] = useState<PayableAssignment | undefined>(() =>
+    assignments.find((a) => a.id === preselectedId)
+  )
+  const selectedId = selected?.id ?? ""
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const [options, setOptions] = useState(assignments)
+  const [searching, setSearching] = useState(false)
+  // cmdk's highlighted item. Async results replace the list, which clears
+  // cmdk's own pick — without this, Enter does nothing after a search.
+  const [active, setActive] = useState("")
   const [amount, setAmount] = useState("")
   const [amountError, setAmountError] = useState("")
   // P2.1 — controlled paymentMethod so we can conditionally render the
@@ -91,10 +121,37 @@ export default function PaymentForm({
   const [paymentMethod, setPaymentMethod] = useState<string>("CASH")
   const requiresVerification = OFFLINE_METHODS.has(paymentMethod)
 
-  const selected = useMemo(
-    () => assignments.find((a) => a.id === selectedId),
-    [assignments, selectedId]
-  )
+  // Server search, debounced; an empty box goes back to the first page.
+  useEffect(() => {
+    const term = search.trim()
+    if (!term) {
+      setOptions(assignments)
+      setActive(assignments[0]?.id ?? "")
+      setSearching(false)
+      return
+    }
+    let alive = true
+    setSearching(true)
+    const timer = setTimeout(() => {
+      searchPayableAssignments(term).then((rows) => {
+        if (!alive) return
+        setOptions(rows)
+        setActive(rows[0]?.id ?? "")
+        setSearching(false)
+      })
+    }, 250)
+    return () => {
+      alive = false
+      clearTimeout(timer)
+    }
+  }, [search, assignments])
+
+  const optionLabel = (a: PayableAssignment) =>
+    `${a.studentName} — ${a.feeStructureName} — ${formatCurrency(
+      a.remaining,
+      lang as Locale,
+      currency
+    )} ${pf?.remaining || "remaining"}`
 
   const today = useMemo(() => {
     const d = new Date()
@@ -184,33 +241,87 @@ export default function PaymentForm({
             <Label htmlFor="feeAssignmentId">
               {pf?.selectFeeAssignment || "Select Fee Assignment *"}
             </Label>
-            <Select
-              name="feeAssignmentId"
-              value={selectedId}
-              onValueChange={(v) => {
-                setSelectedId(v)
-                setAmount("")
-                setAmountError("")
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    pf?.selectFeeAssignmentPlaceholder ||
-                    "Select a fee assignment"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {assignments.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.studentName} — {a.feeStructureName} —{" "}
-                    {formatCurrency(a.remaining, lang as Locale, currency)}{" "}
-                    {pf?.remaining || "remaining"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <input type="hidden" name="feeAssignmentId" value={selectedId} />
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="feeAssignmentId"
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={pickerOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="truncate">
+                    {selected ? (
+                      <bdi dir="auto">{optionLabel(selected)}</bdi>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {pf?.selectFeeAssignmentPlaceholder ||
+                          "Select a fee assignment"}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-(--radix-popover-trigger-width) p-0"
+                align="start"
+              >
+                {/* The server filters; cmdk must not filter the page again. */}
+                <Command
+                  shouldFilter={false}
+                  value={active}
+                  onValueChange={setActive}
+                >
+                  <CommandInput
+                    value={search}
+                    onValueChange={setSearch}
+                    placeholder={
+                      pf?.searchAssignment || "Search by student or fee…"
+                    }
+                  />
+                  <CommandList>
+                    {!searching && (
+                      <CommandEmpty>
+                        {pf?.noMatchingAssignments || "No open fee matches."}
+                      </CommandEmpty>
+                    )}
+                    <CommandGroup>
+                      {options.map((a) => (
+                        <CommandItem
+                          key={a.id}
+                          value={a.id}
+                          onSelect={() => {
+                            setSelected(a)
+                            setAmount("")
+                            setAmountError("")
+                            setPickerOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "size-4",
+                              a.id === selectedId ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <bdi
+                            dir="auto"
+                            className={cn(
+                              "truncate",
+                              a.status === "OVERDUE" && "text-destructive"
+                            )}
+                          >
+                            {optionLabel(a)}
+                          </bdi>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {selected && (

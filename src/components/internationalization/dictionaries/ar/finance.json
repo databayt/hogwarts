@@ -780,6 +780,8 @@
     }
   },
   "paymentForm": {
+    "searchAssignment": "ابحث باسم الطالب أو الرسوم…",
+    "noMatchingAssignments": "لا توجد رسوم مستحقة مطابقة.",
     "feeAssignment": "تعيين الرسوم",
     "selectFeeAssignment": "اختر تعيين الرسوم *",
     "selectFeeAssignmentPlaceholder": "اختر تعيين رسوم",

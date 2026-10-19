@@ -780,6 +780,8 @@
     }
   },
   "paymentForm": {
+    "searchAssignment": "Search by student or fee…",
+    "noMatchingAssignments": "No open fee matches.",
     "feeAssignment": "Fee Assignment",
     "selectFeeAssignment": "Select Fee Assignment *",
     "selectFeeAssignmentPlaceholder": "Select a fee assignment",

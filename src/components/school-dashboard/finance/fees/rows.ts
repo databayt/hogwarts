@@ -24,6 +24,7 @@ import { fullName } from "@/components/translation/util"
 import type { FeeAssignmentRow } from "./assignment-columns"
 import type { FineRow } from "./fine-columns"
 import type { PaymentRow } from "./payment-columns"
+import type { PayableAssignment } from "./payment-form"
 import type { ScholarshipRow } from "./scholarship-columns"
 
 const iso = (d: unknown): string =>
@@ -178,4 +179,41 @@ export async function toScholarshipRows(
     isActive: s.isActive,
     createdAt: iso(s.createdAt),
   }))
+}
+
+/** The record-payment picker's options — `getPayableAssignments` rows. */
+export async function toPayableRows(
+  rows: any[],
+  lang: Lang,
+  schoolId: string
+): Promise<PayableAssignment[]> {
+  if (rows.length === 0) return []
+  const nameDisplay = await schoolNameDisplay(schoolId)
+  const [names, labels] = await Promise.all([
+    getNames(
+      rows,
+      (fa) => shortNameParts(fa.student ?? {}, nameDisplay),
+      lang,
+      schoolId
+    ),
+    getLabels(
+      rows.map((fa) => fa.feeStructure?.name),
+      lang,
+      schoolId
+    ),
+  ])
+  return rows.map((fa) => {
+    const structure = fa.feeStructure?.name
+    const finalAmount = Number(fa.finalAmount)
+    const totalPaid = Number(fa.paid ?? 0)
+    return {
+      id: fa.id,
+      studentName: nameOf(names, fa.student, nameDisplay),
+      feeStructureName: structure ? (labels.get(structure) ?? structure) : "-",
+      status: fa.status,
+      finalAmount,
+      totalPaid,
+      remaining: finalAmount - totalPaid,
+    }
+  })
 }

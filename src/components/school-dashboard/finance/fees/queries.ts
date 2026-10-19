@@ -827,3 +827,157 @@ export async function getFeeStats(schoolId: string) {
     unpaidFines,
   }
 }
+
+// ============================================================================
+// Record-payment picker
+// ============================================================================
+
+/** Assignments that can still take a payment. OVERDUE is the one most in need. */
+const PAYABLE_STATUSES = ["PENDING", "PARTIAL", "OVERDUE"] as const
+
+/**
+ * A page of payable assignments for the record-payment picker, each with the
+ * SUCCESS total already paid.
+ *
+ * The page used to load every open assignment with all its payments into one
+ * Select — 3,780 rows / 945 KB of HTML for the demo school. Now: the newest
+ * `take`, or the matches for `search` (every word must hit a name part, the
+ * student number or the fee name), plus `includeId` when a row action deep-
+ * links to one assignment. Paid totals come from one grouped sum.
+ *
+ * Names and fee labels are stored in the school's language but shown in the
+ * viewer's, so a word typed as displayed ("Sarah") is also mapped back through
+ * the translation cache to the stored word ("سارة") — cache-only, no API call.
+ */
+export async function getPayableAssignments(
+  schoolId: string,
+  {
+    search,
+    displayLang,
+    includeId,
+    take = 20,
+  }: {
+    search?: string
+    displayLang?: string
+    includeId?: string
+    take?: number
+  } = {}
+) {
+  const words = (search ?? "").trim().split(/\s+/).filter(Boolean).slice(0, 4)
+  const contains = (value: string) => ({
+    contains: value,
+    mode: Prisma.QueryMode.insensitive,
+  })
+  const stored = displayLang
+    ? await storedWordsFor(schoolId, words, displayLang)
+    : words.map(() => ({ words: [], texts: [] }))
+  const where: Prisma.FeeAssignmentWhereInput = {
+    schoolId,
+    status: { in: [...PAYABLE_STATUSES] },
+    AND: words.map((w, i) => ({
+      OR: [
+        { student: { firstName: contains(w) } },
+        { student: { middleName: contains(w) } },
+        { student: { lastName: contains(w) } },
+        { student: { grNumber: contains(w) } },
+        { student: { studentId: contains(w) } },
+        { feeStructure: { name: contains(w) } },
+        ...(stored[i].words.length
+          ? [
+              { student: { firstName: { in: stored[i].words } } },
+              { student: { middleName: { in: stored[i].words } } },
+              { student: { lastName: { in: stored[i].words } } },
+            ]
+          : []),
+        ...(stored[i].texts.length
+          ? [{ feeStructure: { name: { in: stored[i].texts } } }]
+          : []),
+      ],
+    })),
+  }
+  const select = {
+    id: true,
+    finalAmount: true,
+    status: true,
+    student: {
+      select: { firstName: true, middleName: true, lastName: true },
+    },
+    feeStructure: { select: { name: true } },
+  } satisfies Prisma.FeeAssignmentSelect
+
+  const [page, pinned] = await Promise.all([
+    db.feeAssignment.findMany({
+      where,
+      select,
+      orderBy: { createdAt: "desc" },
+      take,
+    }),
+    includeId
+      ? db.feeAssignment.findFirst({
+          where: {
+            id: includeId,
+            schoolId,
+            status: { in: [...PAYABLE_STATUSES] },
+          },
+          select,
+        })
+      : null,
+  ])
+  const rows =
+    pinned && !page.some((r) => r.id === pinned.id) ? [pinned, ...page] : page
+  if (rows.length === 0) return []
+
+  const paid = await db.payment.groupBy({
+    by: ["feeAssignmentId"],
+    where: {
+      schoolId,
+      status: "SUCCESS",
+      feeAssignmentId: { in: rows.map((r) => r.id) },
+    },
+    _sum: { amount: true },
+  })
+  const paidById = new Map(
+    paid.map((p) => [p.feeAssignmentId, Number(p._sum.amount ?? 0)])
+  )
+  return rows.map((r) => ({ ...r, paid: paidById.get(r.id) ?? 0 }))
+}
+
+/**
+ * For each typed word, the stored words it translates from. A cached
+ * translation "Sarah Hasan" ← "سارة حسن" maps "sarah" to "سارة" by position
+ * (same word count only — otherwise the alignment is a guess), and every
+ * matching source text is kept whole for label fields (fee names).
+ */
+async function storedWordsFor(
+  schoolId: string,
+  words: string[],
+  displayLang: string
+): Promise<{ words: string[]; texts: string[] }[]> {
+  return Promise.all(
+    words.map(async (word) => {
+      const cached = await db.translation.findMany({
+        where: {
+          schoolId,
+          targetLanguage: displayLang,
+          translatedText: { contains: word, mode: "insensitive" },
+        },
+        select: { sourceText: true, translatedText: true },
+        take: 200,
+      })
+      const needle = word.toLocaleLowerCase()
+      const stored = new Set<string>()
+      for (const { sourceText, translatedText } of cached) {
+        const from = sourceText.trim().split(/\s+/)
+        const to = translatedText.trim().split(/\s+/)
+        if (from.length !== to.length) continue
+        to.forEach((t, i) => {
+          if (t.toLocaleLowerCase().includes(needle)) stored.add(from[i])
+        })
+      }
+      return {
+        words: [...stored],
+        texts: cached.map((c) => c.sourceText),
+      }
+    })
+  )
+}

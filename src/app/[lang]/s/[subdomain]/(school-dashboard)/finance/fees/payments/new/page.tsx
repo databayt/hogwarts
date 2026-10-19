@@ -3,19 +3,20 @@
 
 import type { Metadata } from "next"
 
-import { db } from "@/lib/db"
-import { shortNameParts } from "@/lib/name-utils"
-import { schoolNameDisplay } from "@/lib/school-name-format"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import PaymentForm from "@/components/school-dashboard/finance/fees/payment-form"
+import {
+  getFeeCurrency,
+  getPayableAssignments,
+} from "@/components/school-dashboard/finance/fees/queries"
+import { toPayableRows } from "@/components/school-dashboard/finance/fees/rows"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
-import { getLabels, getNames } from "@/components/translation/person"
-import { fullName } from "@/components/translation/util"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<{ assignment?: string | string[] }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -26,8 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function RecordPaymentPage({ params }: Props) {
-  const { lang } = await params
+export default async function RecordPaymentPage({
+  params,
+  searchParams,
+}: Props) {
+  const [{ lang }, sp] = await Promise.all([params, searchParams])
   const dictionary = await getDictionary(lang)
   const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
@@ -44,56 +48,27 @@ export default async function RecordPaymentPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const assignments = await db.feeAssignment.findMany({
-    where: { schoolId, status: { in: ["PENDING", "PARTIAL"] } },
-    include: {
-      student: {
-        select: { firstName: true, middleName: true, lastName: true },
-      },
-      feeStructure: { select: { name: true } },
-      payments: { where: { status: "SUCCESS" }, select: { amount: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  })
-
-  // One batched resolution for student names and structure labels — never
-  // per row. Stored text is in the school's language, the viewer's may differ.
-  // The picker shows the school's short name display.
-  const nameDisplay = await schoolNameDisplay(schoolId)
-  const short = (s: Parameters<typeof shortNameParts>[0]) =>
-    shortNameParts(s, nameDisplay)
-  const [names, labels] = await Promise.all([
-    getNames(
-      assignments,
-      (a) => (a.student ? short(a.student) : {}),
-      lang,
-      schoolId
-    ),
-    getLabels(
-      assignments.map((a) => a.feeStructure?.name),
-      lang,
-      schoolId
-    ),
+  // The newest payable assignments; the picker searches the rest on the
+  // server. `?assignment=` (the assignments table's "Record payment") arrives
+  // preselected.
+  const preselectedId =
+    typeof sp.assignment === "string" ? sp.assignment : undefined
+  const [rows, currency] = await Promise.all([
+    getPayableAssignments(schoolId, { includeId: preselectedId }),
+    getFeeCurrency(schoolId),
   ])
-  const mapped = assignments.map((a: any) => {
-    const totalPaid = (a.payments ?? []).reduce(
-      (sum: number, p: any) => sum + Number(p.amount),
-      0
-    )
-    const finalAmount = Number(a.finalAmount)
-    return {
-      id: a.id,
-      studentName: a.student
-        ? (names.get(fullName(short(a.student))) ?? fullName(short(a.student)))
-        : "",
-      feeStructureName: a.feeStructure?.name
-        ? (labels.get(a.feeStructure.name) ?? a.feeStructure.name)
-        : "-",
-      finalAmount,
-      totalPaid,
-      remaining: finalAmount - totalPaid,
-    }
-  })
+  const assignments = await toPayableRows(rows, lang, schoolId)
 
-  return <PaymentForm lang={lang} assignments={mapped} />
+  return (
+    <PaymentForm
+      lang={lang}
+      assignments={assignments}
+      currency={currency}
+      preselectedId={
+        assignments.some((a) => a.id === preselectedId)
+          ? preselectedId
+          : undefined
+      }
+    />
+  )
 }

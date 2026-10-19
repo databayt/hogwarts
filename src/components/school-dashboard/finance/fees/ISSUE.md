@@ -5,6 +5,24 @@
 > Last updated: 2026-06-13
 > Aldar UAE source of truth: [hogwarts#356](https://github.com/databayt/hogwarts/issues/356)
 
+## 2026-10-19 — record-payment picker (local, not pushed)
+
+Measured every fees route on the dev server (admin, demo): warm renders are
+100–300 ms. The outlier was `/finance/fees/payments/new` at **945 KB of HTML**:
+it put every open assignment (3,780 in demo) with all its payments into one
+Radix Select. Now 196 KB.
+
+- `getPayableAssignments` (queries.ts): newest 20, or the server search
+  (each word must hit a name part, GR/student number or fee name; words typed
+  in the display language map back to stored words through the translation
+  cache, by position). Paid totals from one `payment.groupBy`.
+- The picker is a cmdk combobox (`searchPayableAssignments` action, 250 ms
+  debounce, controlled highlight so Enter works after async results).
+- **Bugs fixed on the way:** OVERDUE assignments were not payable from this
+  form (only PENDING/PARTIAL); the page passed no currency, so an SDG school
+  read US$; the assignments table's "Record payment" opened the form blank —
+  it now deep-links `?assignment=<id>` and arrives preselected.
+
 ## 2026-10-04 — fees by grade (class removal S12, local, not pushed)
 
 - A fee structure charges a grade: `FeeStructure.gradeId` (migration
