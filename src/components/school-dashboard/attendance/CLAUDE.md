@@ -149,6 +149,11 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   in the room → PRESENT/LATE, roster non-joiners → ABSENT. System context
   (`markedBy: null`), section unique key, same revive-on-update upsert as
   `markPeriodAttendance`. Opt-in (`School.conferenceAttendanceSync`) + LiveKit-only.
+  **The day register (`getAttendanceList`) reads the DAY row only** (2026-10-19):
+  its query returns period rows too, and "last row wins" showed a random
+  period. No day row → the day is derived with `dailyStatusFromPeriods`
+  (the live roll-up's rule) and returned WITHOUT `method`, so the client
+  treats it as unsaved and Save stores it. Keep the two rules one function.
 - [Compliance](../compliance/README.md) — ADEK eSIS submission + 2h parent-contact
   SLA cron consume attendance ABSENT marks.
 - [Students](../listings/CLAUDE.md) — `Student.sectionId` / `StudentClass` /

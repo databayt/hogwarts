@@ -17,6 +17,7 @@ import {
 } from "@/components/school-dashboard/live/actions/sessions"
 import { isLiveKitConfigured } from "@/components/school-dashboard/live/livekit/client"
 import { stopEgress } from "@/components/school-dashboard/live/livekit/egress"
+import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import {
   endRoom,
   ensureRoom,
@@ -62,6 +63,16 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+// Run `after()` callbacks inline so the post-response work is observable.
+vi.mock("next/server", async (orig) => ({
+  ...(await orig<typeof import("next/server")>()),
+  after: vi.fn((cb: () => unknown) => {
+    void cb()
+  }),
+}))
+vi.mock("@/components/school-dashboard/live/actions/attendance-sync", () => ({
+  syncLiveAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
+}))
 
 // Stub LiveKit lib so we don't hit env-var or network at module init.
 vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
@@ -460,6 +471,35 @@ describe("endLiveClass", () => {
     const result = await endLiveClass({ id: SESSION_ID })
     expect("success" in result && result.success).toBe(true)
     expect(endRoom).toHaveBeenCalled()
+  })
+
+  // The teacher's End usually beats the SFU's room_finished webhook, and the
+  // webhook only syncs when ITS transition wins — so the action must sync, or
+  // an explicitly ended class never gets its register written.
+  it("writes attendance when THIS action ends the class", async () => {
+    mockTeacher()
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "live",
+      roomName: "x",
+      teacher: { userId: TEACHER_USER_ID },
+    } as never)
+    vi.mocked(db.conference.updateMany).mockResolvedValueOnce({ count: 1 })
+    await endLiveClass({ id: SESSION_ID })
+    expect(syncLiveAttendance).toHaveBeenCalledWith(SCHOOL_ID, SESSION_ID)
+  })
+
+  it("leaves the sync to the webhook when the webhook ended it first", async () => {
+    mockTeacher()
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "live",
+      roomName: "x",
+      teacher: { userId: TEACHER_USER_ID },
+    } as never)
+    vi.mocked(db.conference.updateMany).mockResolvedValueOnce({ count: 0 })
+    await endLiveClass({ id: SESSION_ID })
+    expect(syncLiveAttendance).not.toHaveBeenCalled()
   })
 
   it("already-ended class → no-op success", async () => {

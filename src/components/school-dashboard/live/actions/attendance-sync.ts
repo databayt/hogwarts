@@ -42,6 +42,9 @@ const MIN_PRESENCE_MINUTES = 5
 /** Minutes before the scheduled end within which leaving still counts as staying. */
 const EARLY_LEAVE_MINUTES = 10
 
+/** See the write below: a whole section of updates must fit. */
+const TX_OPTIONS = { maxWait: 10_000, timeout: 30_000 }
+
 type Presence = {
   joinedAt: Date | null
   leftAt: Date | null
@@ -128,39 +131,43 @@ export async function syncLiveAttendance(
     const sectionId = session.sectionId
     const timetableId = session.timetableId
 
-    const slot = await db.timetable.findFirst({
-      where: { id: timetableId, schoolId },
-      select: {
-        periodId: true,
-        period: { select: { name: true } },
-      },
-    })
+    // Slot (→ periodId), roster and presence depend only on the session, so
+    // they are read together — three sequential trips to Neon were most of
+    // this function's wall time.
+    const [slot, roster, participants] = await Promise.all([
+      db.timetable.findFirst({
+        where: { id: timetableId, schoolId },
+        select: {
+          periodId: true,
+          period: { select: { name: true } },
+        },
+      }),
+      // Roster = every student placed in the section (id + userId for the
+      // presence map). This is the authority for who should have attended.
+      db.student.findMany({
+        where: { schoolId, sectionId },
+        select: { id: true, userId: true },
+      }),
+      // Presence: PARTICIPANT (student) rows for this session, keyed by
+      // userId. ConferenceParticipant is unique on (sessionId, userId).
+      db.conferenceParticipant.findMany({
+        where: { sessionId, schoolId, role: "PARTICIPANT" },
+        select: {
+          userId: true,
+          joinedAt: true,
+          leftAt: true,
+          durationSeconds: true,
+          activeSince: true,
+        },
+      }),
+    ])
     if (!slot?.periodId) return { marked: 0, updated: 0, skipped: "no_period" }
     const periodId = slot.periodId
     const periodName = slot.period?.name ?? null
-
-    // Roster = every student placed in the section (id + userId for the
-    // presence map). This is the authority for who should have attended.
-    const roster = await db.student.findMany({
-      where: { schoolId, sectionId },
-      select: { id: true, userId: true },
-    })
     if (roster.length === 0) {
       return { marked: 0, updated: 0, skipped: "empty_roster" }
     }
 
-    // Presence: PARTICIPANT (student) rows for this session, keyed by userId.
-    // ConferenceParticipant is unique on (sessionId, userId), so one row each.
-    const participants = await db.conferenceParticipant.findMany({
-      where: { sessionId, schoolId, role: "PARTICIPANT" },
-      select: {
-        userId: true,
-        joinedAt: true,
-        leftAt: true,
-        durationSeconds: true,
-        activeSince: true,
-      },
-    })
     const presenceByUser = new Map<string, Presence>()
     for (const p of participants) presenceByUser.set(p.userId, p)
 
@@ -257,6 +264,12 @@ export async function syncLiveAttendance(
 
     let marked = 0
     let updated = 0
+    // An explicit timeout: on a re-sync, or in a hybrid school whose teacher
+    // took the register first, every roster row is an UPDATE, one trip each.
+    // Prisma's 5s default is ~50 of those at ~90 ms to Neon, and timing out
+    // throws away the WHOLE class's register (the catch below returns
+    // "error"). The writes are idempotent, so holding the transaction longer
+    // costs nothing but the connection.
     await db.$transaction(async (tx) => {
       const toCreate: Prisma.AttendanceCreateManyInput[] = []
 
@@ -367,7 +380,7 @@ export async function syncLiveAttendance(
           skipDuplicates: true,
         })
       }
-    })
+    }, TX_OPTIONS)
 
     await rollUpDailyAttendance(schoolId, sectionId, dateObj, studentIds)
 
@@ -460,6 +473,9 @@ export async function rollUpDailyAttendance(
     let created = 0
     let updated = 0
     const toCreate: Prisma.AttendanceCreateManyInput[] = []
+    // Daily rows to rewrite, grouped by their new status: at most six
+    // `updateMany`s instead of one `update` per student.
+    const idsByStatus = new Map<DailyStatus, string[]>()
     for (const [studentId, statuses] of statusesByStudent) {
       const status = dailyStatusFromPeriods(statuses)
       const daily = dailyByStudent.get(studentId)
@@ -480,12 +496,20 @@ export async function rollUpDailyAttendance(
       const ours = daily.method === "VIRTUAL" && daily.markedBy == null
       if (!ours) continue
       if (daily.status === status && daily.deletedAt == null) continue
-      await db.attendance.update({
-        where: { id: daily.id },
-        data: { status, markedAt: new Date(), deletedAt: null },
-      })
-      updated++
+      const ids = idsByStatus.get(status) ?? []
+      ids.push(daily.id)
+      idsByStatus.set(status, ids)
     }
+    const markedAt = new Date()
+    const results = await Promise.all(
+      [...idsByStatus].map(([status, ids]) =>
+        db.attendance.updateMany({
+          where: { id: { in: ids }, schoolId },
+          data: { status, markedAt, deletedAt: null },
+        })
+      )
+    )
+    for (const r of results) updated += r?.count ?? 0
     if (toCreate.length > 0) {
       const res = await db.attendance.createMany({
         data: toCreate,

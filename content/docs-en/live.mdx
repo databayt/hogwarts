@@ -508,6 +508,10 @@ either provider works from every surface above.
 the class, and a non-HOST joining a still-`scheduled` session is refused — an early room link would
 land a student on an error rather than a waiting room.
 
+## Attendance from the room
+
+Whoever moves a session `live → ended` writes its attendance: the `room_finished` webhook, the end-stale cron, or the teacher's **End class** (`endLiveClass`, added 2026-10-19). Before that, End usually won the race against the webhook, the webhook saw nothing left to transition, and the register was never written. The sync reads slot, roster and presence in parallel; its write transaction has a 30-second timeout, so a hybrid section where every row is an update can't throw away the whole register; and the day roll-up writes one `updateMany` per status.
+
 ## In the room
 
 The room is the app's own — every control is labelled from the dictionary and

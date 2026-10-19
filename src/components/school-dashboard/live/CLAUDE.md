@@ -617,6 +617,13 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `notifications/card.tsx` additionally treats any host under one of our
   `ROOT_DOMAINS` as internal, which repairs rows written before the change.
 
+- **Whoever ends the session writes the attendance** (2026-10-19). Three writers
+  move `live → ended` — the webhook, the end-stale cron and `endLiveClass` — and
+  each calls `syncLiveAttendance` only when ITS status-guarded update returned
+  `count > 0`. `endLiveClass` used to skip it, and since the teacher's End
+  normally beats `room_finished`, an explicitly ended class wrote no register.
+  A fourth writer must follow the same rule.
+
 - **Attendance needs a DURATION, not a ping.** `MIN_PRESENCE_MINUTES` (5) in
   `attendance-sync.ts`. Compute it as `(leftAt ?? scheduledEnd) - joinedAt` —
   never from `durationSeconds`, and never treating a null `leftAt` as a

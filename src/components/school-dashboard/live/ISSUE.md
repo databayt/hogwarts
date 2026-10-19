@@ -17,7 +17,16 @@
 - [ ] Pre-existing, not from this pass: `room/side-panel.test.tsx` + `room/room-shell.test.tsx` fail
       (5 tests, "No room provided" — the room-chat commits `ce64855b7` / `02fabd495`).
 
-## Verified on production with a real class — 2026-10-19
+## Live ↔ attendance pass — 2026-10-19 (LOCAL, not pushed)
+
+- [x] **End class never wrote attendance** — `endLiveClass` flips `live → ended` itself, usually
+      before the SFU's `room_finished` lands; the webhook only syncs when ITS update wins and the cron
+      only sweeps `live` rows. Now whoever transitions syncs (`after()`); 2 tests in `sessions.test.ts`.
+- [x] Sync reads slot + roster + presence in parallel (−2 sequential trips); write tx timeout 30s
+      (an all-update hybrid section could exceed Prisma's 5s and lose the whole register).
+- [x] Day roll-up: one `updateMany` per status instead of one `update` per student.
+- [x] Attendance day register showed a random period row — fixed on the attendance side.
+
 
 First real classes on prod (`demo.balqalam.com`, LiveKit Cloud `hogwarts-jsmb894l`), driven by a
 scripted three-browser run (Chromium with fake camera/mic): teacher13 (HOST) · student@ (PARTICIPANT) ·

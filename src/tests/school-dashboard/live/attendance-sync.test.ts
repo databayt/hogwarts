@@ -20,6 +20,7 @@ vi.mock("@/lib/db", () => ({
     attendance: {
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       createMany: vi.fn(),
       groupBy: vi.fn(),
     },
@@ -35,6 +36,7 @@ const mockDb = db as unknown as {
   attendance: {
     findMany: ReturnType<typeof vi.fn>
     update: ReturnType<typeof vi.fn>
+    updateMany: ReturnType<typeof vi.fn>
     createMany: ReturnType<typeof vi.fn>
     groupBy: ReturnType<typeof vi.fn>
   }
@@ -800,6 +802,7 @@ describe("daily roll-up (attn-02)", () => {
 
     expect(res).toEqual({ created: 0, updated: 0 })
     expect(mockDb.attendance.update).not.toHaveBeenCalled()
+    expect(mockDb.attendance.updateMany).not.toHaveBeenCalled()
     expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
   })
 
@@ -822,9 +825,10 @@ describe("daily roll-up (attn-02)", () => {
     const res = await rollUpDailyAttendance("school1", "sec1", DAY, ["sA"])
 
     expect(res.updated).toBe(1)
-    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+    // Grouped by the new status: one updateMany per status, not per student.
+    expect(mockDb.attendance.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "d-A" },
+        where: { id: { in: ["d-A"] }, schoolId: "school1" },
         data: expect.objectContaining({ status: "PRESENT" }),
       })
     )

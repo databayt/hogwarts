@@ -59,6 +59,8 @@ Flat inline toolbar (`PlatformToolbar`): section selector, date picker, bulk sta
 
 The **roster unit is the section** — `Section.students` defines who is in the class. Each section has exactly one main classroom (homeroom) via `Section.classroomId`; non-homeroom rooms (labs, halls, fields) are reached per-period through the timetable slot (`Timetable.classroomId`), which is also what `getCurrentPeriod()` resolves for period-aware attendance. See [Classrooms › Integration](/docs/classrooms#integration).
 
+**Live classes and the day register (2026-10-19).** A live class writes a *period* row per student when it ends (`syncLiveAttendance`, method `VIRTUAL`) and rolls the day up into the *day* row. The class list is the day register, so it shows the **day row**. If a student has only period rows that day, the list shows the day derived from them (any period attended → present) but leaves it unsaved, so Save stores it. Before this fix the list showed whichever period row the database returned last. Pressing **End class** now writes the register too; before, the sync only ran when the LiveKit webhook closed the session, and the teacher's End normally got there first.
+
 ## Capture methods
 
 | Method      | Route                  | Notes                                                                                                     |

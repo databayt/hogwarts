@@ -26,6 +26,7 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
+import { syncLiveAttendance } from "./attendance-sync"
 import {
   canAccessSession,
   concurrentCapError,
@@ -475,10 +476,20 @@ export async function endLiveClass(input: IdOnly) {
     }
     // Status-guarded so a webhook `room_finished` racing this action keeps its
     // earlier actualEnd; count 0 just means the webhook won — still a success.
-    await db.conference.updateMany({
+    const { count: endedHere } = await db.conference.updateMany({
       where: { id: session.id, schoolId: ctx.schoolId, status: "live" },
       data: { status: "ended", actualEnd: new Date() },
     })
+    // Whoever makes the `live → ended` transition writes the attendance. The
+    // webhook only syncs when ITS update wins, and the end-stale cron only
+    // sweeps rows still `live` — so when the teacher's End beat the webhook
+    // (the usual order: this update lands before the SFU's room_finished
+    // does), nothing ever marked the register. Opt-in and LiveKit-only
+    // inside; `after()`, never a bare promise.
+    if (endedHere > 0) {
+      const { schoolId } = ctx
+      after(() => syncLiveAttendance(schoolId, session.id))
+    }
 
     for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")

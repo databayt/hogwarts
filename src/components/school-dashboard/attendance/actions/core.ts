@@ -20,6 +20,7 @@ import {
   isAdminRole,
 } from "@/components/school-dashboard/attendance/authorization"
 import { markAttendanceSchema } from "@/components/school-dashboard/attendance/validation"
+import { dailyStatusFromPeriods } from "@/components/school-dashboard/live/actions/attendance-sync"
 import { getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
@@ -520,27 +521,33 @@ export async function getAttendanceList(input: {
       })
       .parse(input)
 
-    // The section's students
-    const students = await db.student.findMany({
-      where: { schoolId, sectionId: parsed.sectionId },
-      select: {
-        id: true,
-        firstName: true,
-        middleName: true,
-        lastName: true,
-        userId: true,
-      },
-      orderBy: { firstName: "asc" },
-    })
-
-    // The section's marks for the day
-    const [marks, school] = await Promise.all([
+    // Roster, the day's marks, the storage language and the name format are
+    // independent — read together (was roster first, then the rest).
+    const [students, marks, school, nameDisplay] = await Promise.all([
+      db.student.findMany({
+        where: { schoolId, sectionId: parsed.sectionId },
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          userId: true,
+        },
+        orderBy: { firstName: "asc" },
+      }),
       db.attendance.findMany({
         where: {
           schoolId,
           sectionId: parsed.sectionId,
           date: new Date(parsed.date),
           deletedAt: null, // Exclude soft-deleted records
+        },
+        select: {
+          studentId: true,
+          status: true,
+          checkInTime: true,
+          method: true,
+          periodId: true,
         },
       }),
       parsed.lang
@@ -549,28 +556,48 @@ export async function getAttendanceList(input: {
             select: { preferredLanguage: true },
           })
         : null,
+      schoolNameDisplay(schoolId),
     ])
 
     const contentLang = (school?.preferredLanguage as "ar" | "en") || "ar"
     const displayLang = (parsed.lang as "ar" | "en") || contentLang
     const needsTranslation = contentLang !== displayLang
 
+    // This is the DAY register, so the day row (periodId null) is the mark.
+    // The query also returns PERIOD rows — every live-class sync and period
+    // register writes them — and "last row wins" used to show whichever
+    // period the database happened to return last: absent in the morning,
+    // present at noon, and the register said either. With no day row yet the
+    // day is DERIVED from its periods (the live roll-up's own rule) but left
+    // unstored (no `method`), so Save persists it like any other default.
     const statusByStudent: Record<
       string,
       { status: string; checkInTime?: Date; method?: string }
     > = {}
-    marks.forEach((m) => {
-      statusByStudent[m.studentId] = {
-        status: String(m.status).toLowerCase(),
-        checkInTime: m.checkInTime || undefined,
-        method: m.method || undefined,
+    const periodStatuses = new Map<string, string[]>()
+    for (const m of marks) {
+      if (m.periodId == null) {
+        statusByStudent[m.studentId] = {
+          status: String(m.status).toLowerCase(),
+          checkInTime: m.checkInTime || undefined,
+          method: m.method || undefined,
+        }
+      } else {
+        const list = periodStatuses.get(m.studentId) ?? []
+        list.push(String(m.status))
+        periodStatuses.set(m.studentId, list)
       }
-    })
+    }
+    for (const [studentId, statuses] of periodStatuses) {
+      if (statusByStudent[studentId]) continue
+      statusByStudent[studentId] = {
+        status: dailyStatusFromPeriods(statuses).toLowerCase(),
+      }
+    }
 
     // PERF: one batched, deduped name resolution for the whole roster (was a
     // getText call per student inside Promise.all — N translation lookups, which
     // the translation rules explicitly forbid in a .map()).
-    const nameDisplay = await schoolNameDisplay(schoolId)
     const nameMap = needsTranslation
       ? await getNames(
           students,
