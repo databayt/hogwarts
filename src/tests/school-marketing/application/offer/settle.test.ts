@@ -23,6 +23,9 @@ vi.mock("@/lib/db", () => ({
       updateMany: vi.fn(),
       findFirst: vi.fn(),
     },
+    notification: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
   },
 }))
 
@@ -49,7 +52,10 @@ const APP = {
 }
 
 describe("settleRegistrationFee", () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(db.notification.findFirst).mockResolvedValue(null)
+  })
 
   it("flips only an unpaid, live application", async () => {
     vi.mocked(db.application.updateMany).mockResolvedValue({ count: 1 })
@@ -119,6 +125,33 @@ describe("settleRegistrationFee", () => {
         }),
       })
     )
+  })
+
+  it("alerts once per capture — a reloaded return page does not re-send", async () => {
+    vi.mocked(db.application.updateMany).mockResolvedValue({ count: 0 })
+    vi.mocked(db.application.findFirst).mockResolvedValue({
+      ...APP,
+      registrationFeePaid: false,
+      registrationFeeReference: null,
+      status: "WITHDRAWN",
+    } as never)
+    vi.mocked(db.notification.findFirst).mockResolvedValue({
+      id: "n1",
+    } as never)
+
+    const result = await settleRegistrationFee({
+      ...BASE,
+      method: "tap",
+      reference: "chg_1",
+    })
+
+    expect(result).toBe("needs_refund")
+    expect(db.notification.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ schoolId: "school-1" }),
+      })
+    )
+    expect(dispatchNotificationsToAudience).not.toHaveBeenCalled()
   })
 
   it("flags a capture on a withdrawn application for refund", async () => {

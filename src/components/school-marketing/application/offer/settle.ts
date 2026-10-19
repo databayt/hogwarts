@@ -113,6 +113,21 @@ async function alertRefundNeeded(input: {
     `[registration-fee] REFUND NEEDED (${input.reason}) via ${input.method}: application=${input.applicationId} ref=${input.reference ?? "-"} amount=${input.amount ?? "-"}`
   )
   try {
+    // One alert per capture: the Tap return page re-verifies on every load,
+    // and each reload would otherwise email ADMIN + ACCOUNTANT again.
+    if (input.reference) {
+      const already = await db.notification.findFirst({
+        where: {
+          schoolId: input.schoolId,
+          AND: [
+            { metadata: { path: ["refundNeeded"], equals: true } },
+            { metadata: { path: ["reference"], equals: input.reference } },
+          ],
+        },
+        select: { id: true },
+      })
+      if (already) return
+    }
     const { dispatchNotificationsToAudience, resolveSchoolLang } =
       await import("@/lib/dispatch-notification")
     const lang = await resolveSchoolLang(input.schoolId)

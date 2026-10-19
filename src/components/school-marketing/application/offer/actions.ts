@@ -839,9 +839,15 @@ export async function createRegistrationFeeCheckout(
       const staleRef = application.registrationFeeReference
       if (
         application.registrationFeeMethod === "stripe" &&
-        staleRef?.startsWith("cs_") &&
-        isStripeConfigured()
+        staleRef?.startsWith("cs_")
       ) {
+        // Fail closed: unless Stripe confirms the old session is expired (or
+        // we just expired it), opening another would leave two payable
+        // checkouts. A session paid between retrieve and expire makes
+        // expire() throw, which lands here too.
+        if (!isStripeConfigured()) {
+          return { success: false, error: "CHECKOUT_FAILED" }
+        }
         try {
           const stale = await getStripe().checkout.sessions.retrieve(staleRef)
           if (stale.status === "complete") {
@@ -856,16 +862,26 @@ export async function createRegistrationFeeCheckout(
             staleRef,
             err
           )
+          return { success: false, error: "CHECKOUT_FAILED" }
         }
       }
-      await db.application.update({
-        where: { id: applicationId, schoolId: application.schoolId },
+      // Only an unpaid row is cleared — a webhook that settled in the
+      // meantime keeps its method + reference.
+      const cleared = await db.application.updateMany({
+        where: {
+          id: applicationId,
+          schoolId: application.schoolId,
+          registrationFeePaid: false,
+        },
         data: {
           registrationFeeMethod: null,
           registrationFeeReference: null,
           registrationFeeAmount: null,
         },
       })
+      if (cleared.count === 0) {
+        return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+      }
       // Reflect the cleared state in our local copy so the rest of the
       // function proceeds as if no method was ever recorded.
       application.registrationFeeMethod = null
@@ -989,8 +1005,8 @@ export async function createRegistrationFeeCheckout(
     // Record the payment method and amount. A Stripe checkout stores its
     // session id so a retry can expire it and the expired-session webhook
     // clears only its own state (the family never sees a card reference).
-    await db.application.update({
-      where: { id: applicationId, schoolId },
+    const recorded = await db.application.updateMany({
+      where: { id: applicationId, schoolId, registrationFeePaid: false },
       data: {
         registrationFeeMethod: gateway,
         registrationFeeReference:
@@ -1000,6 +1016,22 @@ export async function createRegistrationFeeCheckout(
         registrationFeeAmount: feeAmount,
       },
     })
+    if (recorded.count === 0) {
+      // Paid while the session was being created — withdraw the new one so
+      // it can't be paid a second time.
+      if (gateway === "stripe" && checkoutResult.sessionId) {
+        await getStripe()
+          .checkout.sessions.expire(checkoutResult.sessionId)
+          .catch((err: unknown) =>
+            console.error(
+              "[createRegistrationFeeCheckout] could not expire new session",
+              checkoutResult.sessionId,
+              err
+            )
+          )
+      }
+      return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+    }
 
     refreshPage("/application")
 

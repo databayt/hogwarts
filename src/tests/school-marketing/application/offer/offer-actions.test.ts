@@ -33,6 +33,7 @@ vi.mock("@/lib/db", () => ({
     application: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     school: {
       findUnique: vi.fn(),
@@ -77,6 +78,15 @@ vi.mock("@/lib/dispatch-notification", () => ({
 vi.mock("@/lib/payment/provider", () => ({
   createPaymentCheckout: vi.fn(),
   resolveAvailableMethods: vi.fn().mockReturnValue(["stripe"]),
+}))
+
+const stripeSessions = {
+  retrieve: vi.fn(),
+  expire: vi.fn(),
+}
+vi.mock("@/lib/stripe", () => ({
+  isStripeConfigured: vi.fn().mockReturnValue(true),
+  getStripe: () => ({ checkout: { sessions: stripeSessions } }),
 }))
 
 vi.mock("@/lib/payment/tap-api", () => ({
@@ -142,6 +152,7 @@ function makeApplication(overrides: Record<string, unknown> = {}) {
 const mockRL = checkUserRateLimit as ReturnType<typeof vi.fn>
 const mockFindFirst = db.application.findFirst as ReturnType<typeof vi.fn>
 const mockUpdate = db.application.update as ReturnType<typeof vi.fn>
+const mockUpdateMany = db.application.updateMany as ReturnType<typeof vi.fn>
 const mockSchoolFindUnique = db.school.findUnique as ReturnType<typeof vi.fn>
 const mockAdmissionSettingsFindUnique = db.admissionSettings
   .findUnique as ReturnType<typeof vi.fn>
@@ -397,10 +408,14 @@ describe("createRegistrationFeeCheckout", () => {
       "stripe"
     )
 
-    // Stale state was cleared before proceeding
-    expect(mockUpdate).toHaveBeenCalledWith(
+    // Stale state was cleared before proceeding — only on an unpaid row
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
+        where: {
+          id: APPLICATION_ID,
+          schoolId: SCHOOL_ID,
+          registrationFeePaid: false,
+        },
         data: {
           registrationFeeMethod: null,
           registrationFeeReference: null,
@@ -410,6 +425,76 @@ describe("createRegistrationFeeCheckout", () => {
     )
     // Did NOT short-circuit with PAYMENT_ALREADY_RECORDED
     expect(result.error).not.toBe("PAYMENT_ALREADY_RECORDED")
+  })
+
+  it("expires an open stale Stripe session before retrying", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({
+        offerAccepted: true,
+        registrationFeeMethod: "stripe",
+        registrationFeeReference: "cs_old",
+      })
+    )
+    mockSchoolFindUnique.mockResolvedValue({ currency: "SAR", domain: "demo" })
+    stripeSessions.retrieve.mockResolvedValue({ status: "open" })
+    stripeSessions.expire.mockResolvedValue({})
+    mockUpdateMany.mockResolvedValue({ count: 1 })
+
+    await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+
+    expect(stripeSessions.expire).toHaveBeenCalledWith("cs_old")
+  })
+
+  it("fails closed when the stale Stripe session can't be expired", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({
+        offerAccepted: true,
+        registrationFeeMethod: "stripe",
+        registrationFeeReference: "cs_old",
+      })
+    )
+    stripeSessions.retrieve.mockResolvedValue({ status: "open" })
+    // Paid between retrieve and expire — Stripe refuses the expire.
+    stripeSessions.expire.mockRejectedValue(new Error("session complete"))
+
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+
+    expect(result).toEqual({ success: false, error: "CHECKOUT_FAILED" })
+    expect(mockUpdateMany).not.toHaveBeenCalled()
+  })
+
+  it("never clears a row the webhook settled mid-retry", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({
+        offerAccepted: true,
+        registrationFeeMethod: "stripe",
+        registrationFeeReference: "cs_old",
+      })
+    )
+    stripeSessions.retrieve.mockResolvedValue({ status: "expired" })
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 })
+
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+
+    expect(result).toEqual({
+      success: false,
+      error: "REGISTRATION_FEE_ALREADY_PAID",
+    })
   })
 
   it("returns NO_FEE_CONFIGURED when calculated fee is zero", async () => {
