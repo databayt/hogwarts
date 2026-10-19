@@ -18,6 +18,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { confirmEnrollment, updateApplicationStatus } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
+import { resolveAdmissionErrorMessage } from "./error-messages"
 import { getAllowedTransitions } from "./status-machine"
 import {
   STATUSES_WITH_REASON,
@@ -102,9 +103,11 @@ export default function ApplicationDetailActions({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed ||
-            result.error ||
-            "Failed to update status"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })
@@ -130,7 +133,11 @@ export default function ApplicationDetailActions({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })

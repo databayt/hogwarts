@@ -25,6 +25,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 
 import { updateApplicationStatus } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
+import { resolveAdmissionErrorMessage } from "./error-messages"
 import { getAllowedTransitions } from "./status-machine"
 import {
   STATUSES_WITH_REASON,
@@ -112,9 +113,11 @@ function ApplicationActionsCell({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed ||
-            result.error ||
-            "Failed to update status"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })

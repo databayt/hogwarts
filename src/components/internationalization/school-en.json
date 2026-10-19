@@ -11513,6 +11513,16 @@
       "errors": {
         "forbidden": "You don't have permission to do this.",
         "sectionAtCapacity": "This section is full. Choose another section.",
+        "studentAlreadyInSection": "This student is already in that section.",
+        "placementInvalidStatus": "Only an admitted applicant can be placed in a section.",
+        "placementNoUser": "This applicant has no student account yet. Confirm enrollment first.",
+        "notFound": "We couldn't find this record. It may have been removed.",
+        "invalidSection": "That section isn't in the student's grade. Choose a section of the right grade.",
+        "studentAlreadyEnrolled": "This applicant is already enrolled.",
+        "statusConflict": "Someone else changed this application a moment ago. Refresh and try again.",
+        "applicationStatusInvalid": "This action isn't allowed for the application's current status.",
+        "bookingCancelled": "This tour was cancelled and its seats released. Ask the family to book again.",
+        "inquiryAlreadyConverted": "This inquiry is already linked to an application.",
         "validationError": "Please check your input and try again.",
         "generic": "Something went wrong. Please try again."
       },

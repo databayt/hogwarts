@@ -618,7 +618,7 @@ export async function updateApplicationStatus(params: {
       data,
     })
     if (count === 0) {
-      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_CONFLICT)
     }
 
     // Notify applicant about status change (non-blocking)
@@ -1964,6 +1964,12 @@ export async function getAvailableSectionsForPlacement(params: {
    * is often empty, and an empty label used to match EVERY section.
    */
   gradeId?: string | null
+  /**
+   * PORTAL path: resolve the enrolled student's own grade server-side. It is
+   * the grade placeStudentInSection checks against, so the list can't offer a
+   * section the placement will then refuse.
+   */
+  applicationId?: string
 }): Promise<
   ActionResponse<
     Array<{
@@ -1981,8 +1987,23 @@ export async function getAvailableSectionsForPlacement(params: {
     if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
     assertAdmissionPermission(role, "viewApplications")
 
+    let gradeId = params.gradeId ?? null
+    if (!gradeId && params.applicationId) {
+      const application = await db.application.findFirst({
+        where: { id: params.applicationId, schoolId },
+        select: { userId: true },
+      })
+      if (application?.userId) {
+        const student = await db.student.findFirst({
+          where: { userId: application.userId, schoolId },
+          select: { academicGradeId: true },
+        })
+        gradeId = student?.academicGradeId ?? null
+      }
+    }
+
     const label = params.applyingForClass?.trim() ?? ""
-    if (!params.gradeId && !label) {
+    if (!gradeId && !label) {
       // Nothing to match on — never fall through to "every section".
       return { success: true, data: [] }
     }
@@ -1992,14 +2013,16 @@ export async function getAvailableSectionsForPlacement(params: {
     // grades with, it reads KG labels ("روضة 1" was matching Grade 1), and
     // KG2 is 0 — so compare against null, never truthiness.
     const gradeNum = label ? parseGrade(label) : null
-    const gradeWhere = params.gradeId
-      ? { gradeId: params.gradeId }
+    // A parsed number matches exactly: `contains` let "Grade 1" pull in the
+    // Grade 10–12 sections.
+    const gradeWhere = gradeId
+      ? { gradeId }
       : gradeNum !== null
         ? {
             OR: [
               {
                 grade: {
-                  name: { contains: label, mode: "insensitive" as const },
+                  name: { equals: label, mode: "insensitive" as const },
                 },
               },
               { grade: { gradeNumber: gradeNum } },

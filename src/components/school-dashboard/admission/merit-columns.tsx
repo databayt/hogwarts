@@ -32,44 +32,11 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { updateApplicationScores, updateApplicationStatus } from "./actions"
+import { resolveAdmissionErrorMessage } from "./error-messages"
 import {
   STATUSES_WITH_REASON,
   StatusReasonDialog,
 } from "./status-reason-dialog"
-
-/**
- * Dict-first mapping for admission action error CODES (see ACTION_ERRORS in
- * src/lib/action-errors.ts) — a raw code like "SECTION_AT_CAPACITY" must
- * never reach the toast. New keys are staged under
- * dictionary.school.admission.errors (see dictkeys-dashboard.json) — cast
- * defensively until the dictionary JSON carries them.
- */
-function resolveAdmissionErrorMessage(
-  code: string | undefined,
-  dictionary: Dictionary["school"]["admission"]
-): string {
-  const staged = dictionary as unknown as {
-    errors?: {
-      forbidden?: string
-      sectionAtCapacity?: string
-      validationError?: string
-      generic?: string
-    }
-  }
-  const e = staged.errors
-  switch (code) {
-    case "FORBIDDEN":
-      return e?.forbidden || "You don't have permission to do this."
-    case "SECTION_AT_CAPACITY":
-      return (
-        e?.sectionAtCapacity || "This section is full. Choose another section."
-      )
-    case "VALIDATION_ERROR":
-      return e?.validationError || "Please check your input and try again."
-    default:
-      return e?.generic || "Something went wrong. Please try again."
-  }
-}
 
 export type MeritRow = {
   id: string
@@ -238,9 +205,11 @@ function MeritActionsCell({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed ||
-            result.error ||
-            "Failed to update status"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })

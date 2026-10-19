@@ -26,63 +26,8 @@ import {
   getAvailableSectionsForPlacement,
   placeStudentInSection,
 } from "./actions"
+import { resolveAdmissionErrorMessage } from "./error-messages"
 import { translateEnrollmentWarning } from "./warning-messages"
-
-/**
- * Dict-first mapping for admission action error CODES (see ACTION_ERRORS in
- * src/lib/action-errors.ts) — a raw code like "SECTION_AT_CAPACITY" must
- * never reach the toast. New keys are staged under
- * dictionary.school.admission.errors (see dictkeys-dashboard.json) — cast
- * defensively until the dictionary JSON carries them.
- */
-function resolveAdmissionErrorMessage(
-  code: string | undefined,
-  dictionary: Dictionary["school"]["admission"]
-): string {
-  const staged = dictionary as unknown as {
-    errors?: {
-      forbidden?: string
-      sectionAtCapacity?: string
-      validationError?: string
-      generic?: string
-      studentAlreadyInSection?: string
-      placementInvalidStatus?: string
-      placementNoUser?: string
-      notFound?: string
-      invalidSection?: string
-    }
-  }
-  const e = staged.errors
-  switch (code) {
-    case "FORBIDDEN":
-      return e?.forbidden || "You don't have permission to do this."
-    case "SECTION_AT_CAPACITY":
-      return (
-        e?.sectionAtCapacity || "This section is full. Choose another section."
-      )
-    case "VALIDATION_ERROR":
-      return e?.validationError || "Please check your input and try again."
-    // Codes the placement action returns that have no dictionary entry yet:
-    // read a staged key when one lands, else the localized generic message
-    // (never a raw code).
-    case "STUDENT_ALREADY_IN_SECTION":
-      if (e?.studentAlreadyInSection) return e.studentAlreadyInSection
-      break
-    case "PLACEMENT_INVALID_STATUS":
-      if (e?.placementInvalidStatus) return e.placementInvalidStatus
-      break
-    case "PLACEMENT_NO_USER":
-      if (e?.placementNoUser) return e.placementNoUser
-      break
-    case "NOT_FOUND":
-      if (e?.notFound) return e.notFound
-      break
-    case "INVALID_SECTION":
-      if (e?.invalidSection) return e.invalidSection
-      break
-  }
-  return e?.generic || "Something went wrong. Please try again."
-}
 
 interface SectionOption {
   id: string
@@ -145,7 +90,11 @@ export function PlacementDialog({
   useEffect(() => {
     if (!open || isControlled) return
     setOwnLoading(true)
-    getAvailableSectionsForPlacement({ applyingForClass, gradeId })
+    getAvailableSectionsForPlacement({
+      applyingForClass,
+      gradeId,
+      applicationId,
+    })
       .then((result) => {
         if (result.success && result.data) {
           setOwnSections(result.data)
@@ -154,7 +103,7 @@ export function PlacementDialog({
         }
       })
       .finally(() => setOwnLoading(false))
-  }, [open, applyingForClass, gradeId, isControlled])
+  }, [open, applyingForClass, gradeId, applicationId, isControlled])
 
   const sections = isControlled ? controlledSections : ownSections
   const isLoadingSections = isControlled ? !!sectionsLoading : ownLoading

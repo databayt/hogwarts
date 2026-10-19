@@ -693,7 +693,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("APPLICATION_STATUS_INVALID")
+      expect(result.error).toBe("APPLICATION_STATUS_CONFLICT")
       expect(db.application.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "a-1", schoolId: SCHOOL_ID, status: "UNDER_REVIEW" },
@@ -1637,6 +1637,44 @@ describe("Admission Actions", () => {
       expect(result.success).toBe(true)
       expect(result.data).toEqual([])
       expect(db.section.findMany).not.toHaveBeenCalled()
+    })
+  })
+
+  // =========================================================================
+  // getAvailableSectionsForPlacement
+  // =========================================================================
+
+  describe("getAvailableSectionsForPlacement", () => {
+    it("lists the enrolled student's own grade, not a label match", async () => {
+      mockAuthenticated()
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        userId: "user-student",
+      } as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        academicGradeId: "grade-1",
+      } as any)
+      vi.mocked(db.section.findMany).mockResolvedValue([])
+
+      await getAvailableSectionsForPlacement({
+        applyingForClass: "Grade 1",
+        applicationId: "a-1",
+      })
+
+      expect(db.section.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { schoolId: SCHOOL_ID, gradeId: "grade-1" },
+        })
+      )
+    })
+
+    it("matches a parsed grade exactly — Grade 1 never pulls in Grade 10", async () => {
+      mockAuthenticated()
+      vi.mocked(db.section.findMany).mockResolvedValue([])
+
+      await getAvailableSectionsForPlacement({ applyingForClass: "Grade 1" })
+
+      const where = vi.mocked(db.section.findMany).mock.calls[0][0]?.where
+      expect(JSON.stringify(where)).not.toContain("contains")
     })
   })
 

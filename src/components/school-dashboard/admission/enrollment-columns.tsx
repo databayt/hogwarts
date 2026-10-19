@@ -25,6 +25,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 
 import { confirmEnrollment, confirmRegistrationPayment } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
+import { resolveAdmissionErrorMessage } from "./error-messages"
 import { openPlacementDialog } from "./placement-store"
 import { isManuallyConfirmableRegistrationMethod } from "./registration-methods"
 import { translateEnrollmentWarning } from "./warning-messages"
@@ -172,7 +173,11 @@ function EnrollmentActionsCell({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })
@@ -192,7 +197,11 @@ function EnrollmentActionsCell({
         router.refresh()
       } else {
         ErrorToast(
-          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
+          resolveAdmissionErrorMessage(
+            result.error,
+            t,
+            t?.applicationDetail?.statusUpdateFailed
+          )
         )
       }
     })
