@@ -339,6 +339,15 @@ export const circle: SfGlyph = {
   d: "M45.4 0.1C29.3 1.7 15.3 10.5 7 24.2C0.2 35.5 -1.7 49.4 1.6 62.3C6.6 81.4 22.7 95.9 42.1 98.9C47.2 99.7 52.7 99.7 57.8 98.8C79.5 95.3 96.4 77.8 99.2 56C101.8 34.9 91 14.7 71.9 5.2C66.5 2.5 61.5 1 55 0.2C53.2 0 47.4 0 45.4 0.1ZM52 8.3C77.4 9.8 95.4 33.1 90.5 58C87.1 74.5 74 87.5 57.3 90.5C54.5 91 53.4 91.2 49.9 91.2C45.6 91.2 43.4 90.9 39.8 90C19.2 84.9 5.8 65.1 8.7 44C10.3 32.3 16.9 21.8 26.7 15.2C34.3 10.2 43.1 7.8 52 8.3Z",
 }
 
+/** `circle.lefthalf.filled` · regular — live room: appearance (light / dark).
+ *  The `circle` ring above plus its left half filled; the half-disc sits
+ *  inside the ring's hole, so the nonzero fill paints it solid. */
+export const circleLefthalfFilled: SfGlyph = {
+  w: circle.w,
+  h: circle.h,
+  d: `${circle.d}M49.8 8.3A41.45 41.45 0 0 0 49.8 91.2Z`,
+}
+
 /** `trash` · regular — live board rail: clear */
 export const trash: SfGlyph = {
   w: 94.5,

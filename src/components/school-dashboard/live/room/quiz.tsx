@@ -162,14 +162,14 @@ export function QuizTab({
 
         {live.kind === "quick" && (
           <>
-            <p className="text-white/70 tabular-nums">
+            <p className="text-muted-foreground tabular-nums">
               {labels.quizAnswered.replace(
                 "{n}",
                 String(results?.totalResponses ?? 0)
               )}
             </p>
             {results && results.totalResponses === 0 && (
-              <p className="text-white/50">{labels.quizNoAnswers}</p>
+              <p className="text-muted-foreground">{labels.quizNoAnswers}</p>
             )}
             <ol className="space-y-3">
               {results?.questionResults.map((q, i) => {
@@ -186,7 +186,7 @@ export function QuizTab({
                       return (
                         <div
                           key={j}
-                          className="relative overflow-hidden rounded-md border border-white/15 px-2.5 py-1.5"
+                          className="border-border relative overflow-hidden rounded-md border px-2.5 py-1.5"
                         >
                           <div
                             aria-hidden
@@ -210,7 +210,7 @@ export function QuizTab({
                             <span className="min-w-0 flex-1 truncate">
                               {String(r.answer)}
                             </span>
-                            <span className="text-white/70 tabular-nums">
+                            <span className="text-muted-foreground tabular-nums">
                               {r.count}
                             </span>
                           </div>
@@ -224,15 +224,15 @@ export function QuizTab({
           </>
         )}
         {live.kind === "exam" && (
-          <p className="text-white/60">{labels.quizExamHint}</p>
+          <p className="text-muted-foreground">{labels.quizExamHint}</p>
         )}
 
-        {error && <p className="text-rose-300">{labels.quizFailed}</p>}
+        {error && <p className="text-destructive">{labels.quizFailed}</p>}
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="mt-auto border-white/30 bg-transparent text-white hover:bg-white/20 hover:text-white"
+          className="border-border text-foreground hover:bg-accent hover:text-accent-foreground mt-auto bg-transparent"
           disabled={busy !== null}
           onClick={() => void end()}
         >
@@ -245,7 +245,7 @@ export function QuizTab({
   if (items === null) {
     return (
       <div className="flex justify-center p-6">
-        <Loader2 className="size-5 animate-spin text-white/60" />
+        <Loader2 className="text-muted-foreground size-5 animate-spin" />
       </div>
     )
   }
@@ -253,13 +253,15 @@ export function QuizTab({
   const linked = items.filter((q) => q.linked)
   const more = items.filter((q) => !q.linked)
   if (items.length === 0) {
-    return <p className="p-3 text-sm text-white/60">{labels.quizEmpty}</p>
+    return (
+      <p className="text-muted-foreground p-3 text-sm">{labels.quizEmpty}</p>
+    )
   }
 
   const row = (item: RoomQuizItem) => (
     <li
       key={item.id}
-      className="flex min-h-[52px] items-center gap-3 rounded-2xl bg-white/[0.07] py-1.5 ps-3 pe-1.5"
+      className="bg-muted flex min-h-[52px] items-center gap-3 rounded-2xl py-1.5 ps-3 pe-1.5"
     >
       <span className="min-w-0 flex-1 truncate text-[15px]">{item.title}</span>
       <Button
@@ -280,10 +282,10 @@ export function QuizTab({
 
   return (
     <div className="h-full space-y-4 overflow-y-auto p-3 text-sm">
-      {error && <p className="text-rose-300">{labels.quizFailed}</p>}
+      {error && <p className="text-destructive">{labels.quizFailed}</p>}
       {linked.length > 0 && (
         <section className="space-y-1.5">
-          <h3 className="text-xs font-medium text-white/60">
+          <h3 className="text-muted-foreground text-xs font-medium">
             {labels.quizLinked}
           </h3>
           <ul className="space-y-1.5">{linked.map(row)}</ul>
@@ -291,7 +293,7 @@ export function QuizTab({
       )}
       {more.length > 0 && (
         <section className="space-y-1.5">
-          <h3 className="text-xs font-medium text-white/60">
+          <h3 className="text-muted-foreground text-xs font-medium">
             {labels.quizMore}
           </h3>
           <ul className="space-y-1.5">{more.map(row)}</ul>

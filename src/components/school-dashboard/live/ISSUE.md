@@ -247,6 +247,28 @@ Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
   long ago (local test data, not new).
 - A student's hand order is local to each client (first seen), unchanged.
 
+## Light and dark, on the app's theme — 2026-10-19
+
+- [x] **One theme model.** The room reads and writes next-themes (`system` ·
+      `light` · `dark`, `.dark` on <html>) through `room/theme-toggle.tsx` — a
+      choice in the room is the dashboard's choice, and the reverse.
+- [x] **Toggles.** Pre-join card top bar: a `circle.lefthalf.filled` glyph
+      beside Share flips light ↔ dark (`card.toggleTheme`). In the call: ⋯ →
+      **Appearance** → Match device / Light / Dark, current one ticked.
+- [x] **What follows the theme:** the side panel — WhatsApp cream thread in
+      light, the dark one in dark (`--wa-surface-primary` ground, no forced
+      `dark` scope) — and its Questions · Poll · Quiz · Raised hands tabs
+      (white-alpha classes → `muted` / `secondary` / `border` / `foreground`
+      tokens). The pre-join page and the student quiz sheet already did.
+- [x] **What stays dark on purpose:** everything ON the video — the stage,
+      top pills, bottom discs, scrim, menus and toasts over the picture, the
+      participants popover, the pre-join hero card. The video-player
+      convention (the lumos player does the same); light glass over a moving
+      picture loses its controls.
+- Verified locally (1440): toggle on pre-join stores `theme`; light room =
+  cream thread + light chips; ⋯ → Appearance → Dark flips the panel; Poll tab
+  legible in light.
+
 ## Room chat panel = the /messages WhatsApp group thread — 2026-10-19
 
 - [x] **The panel is the thread, not a glass slab with pills.** `room/side-panel.tsx`

@@ -116,6 +116,10 @@
     "chatFailed": "Failed",
     "chatJumpLatest": "Jump to latest",
     "chatLoadingOlder": "Loading earlier messages",
+    "appearance": "Appearance",
+    "appearanceSystem": "Match device",
+    "appearanceLight": "Light",
+    "appearanceDark": "Dark",
     "chatNotice": "Everyone in this class can read these messages. They are saved with the class.",
     "questions": "Questions",
     "askQuestion": "Ask a question",
@@ -213,7 +217,8 @@
       "add": "ADD",
       "addToCalendar": "Add to calendar",
       "share": "Share",
-      "linkCopied": "Link copied"
+      "linkCopied": "Link copied",
+      "toggleTheme": "Light or dark"
     },
     "shelf": {
       "seeAll": "See All",

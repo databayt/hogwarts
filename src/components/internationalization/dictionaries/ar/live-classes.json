@@ -116,6 +116,10 @@
     "chatFailed": "فشل الإرسال",
     "chatJumpLatest": "الانتقال إلى الأحدث",
     "chatLoadingOlder": "جارٍ تحميل الرسائل الأقدم",
+    "appearance": "المظهر",
+    "appearanceSystem": "مثل الجهاز",
+    "appearanceLight": "فاتح",
+    "appearanceDark": "داكن",
     "chatNotice": "يقرأ هذه الرسائل كل من في هذا الفصل، وتُحفظ مع الحصة.",
     "questions": "الأسئلة",
     "askQuestion": "اطرح سؤالًا",
@@ -213,7 +217,8 @@
       "add": "إضافة",
       "addToCalendar": "أضِف إلى التقويم",
       "share": "مشاركة",
-      "linkCopied": "تم نسخ الرابط"
+      "linkCopied": "تم نسخ الرابط",
+      "toggleTheme": "فاتح أو داكن"
     },
     "shelf": {
       "seeAll": "عرض الكل",

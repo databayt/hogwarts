@@ -19,6 +19,7 @@ import {
 import type { RoomTools } from "@/components/school-dashboard/live/types"
 
 import { downloadClassIcs } from "./calendar-file"
+import { ThemeToggleButton } from "./theme-toggle"
 
 /**
  * What the card says. Resolved on the SERVER — the times are formatted in the
@@ -113,6 +114,8 @@ export interface RoomTitleCardLabels {
   /** Confirmation for the clipboard path, where nothing else happens on
    *  screen to say the share worked. */
   linkCopied: string
+  /** The light ↔ dark switch beside Share. */
+  toggleTheme: string
 }
 
 /**
@@ -374,6 +377,10 @@ export function RoomTitleCard({
               {labels.add}
             </button>
           )}
+          <ThemeToggleButton
+            label={labels.toggleTheme}
+            className={cn(titleCardTopGlyph, "size-9 justify-center")}
+          />
           <button
             type="button"
             onClick={() => void onShare()}

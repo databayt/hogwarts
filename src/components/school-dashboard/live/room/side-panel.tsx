@@ -84,11 +84,12 @@ export function SidePanel(props: SidePanelProps) {
     })
 
   return (
-    // The panel IS a WhatsApp group thread in the app's dark theme: the class
+    // The panel IS a WhatsApp group thread in the app's theme — light or dark,
+    // whichever the viewer chose (next-themes' `.dark` on <html>): the class
     // as the group in a floating glass header, the tools as the inbox's filter
     // chips, the doodle wallpaper under the chat. Full width on a phone, where
     // it covers the stage the way an open chat covers the inbox.
-    <aside className="dark flex h-full w-screen max-w-full flex-col bg-[#0B141A] text-white sm:w-[360px] sm:border-s sm:border-white/10">
+    <aside className="text-foreground sm:border-border flex h-full w-screen max-w-full flex-col bg-[color:var(--wa-surface-primary)] sm:w-[360px] sm:border-s">
       <PanelHeader
         title={props.title}
         labels={labels}
@@ -199,22 +200,22 @@ function QuestionsTab({
     <div className="flex h-full flex-col">
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
         {questions.length === 0 && (
-          <li className="text-white/60">{labels.noQuestions}</li>
+          <li className="text-muted-foreground">{labels.noQuestions}</li>
         )}
         {questions.map((q) => (
           <li
             key={q.id}
             className={
-              "rounded-lg bg-white/10 p-2 " + (q.answered ? "opacity-60" : "")
+              "bg-muted rounded-lg p-2 " + (q.answered ? "opacity-60" : "")
             }
           >
-            <div className="text-[11px] text-white/60">
+            <div className="text-muted-foreground text-[11px]">
               {q.from === localIdentity ? labels.you : q.name}
             </div>
             <div>{q.text}</div>
             <div className="mt-1 flex items-center gap-2 text-xs">
               {q.answered ? (
-                <span className="flex items-center gap-1 text-emerald-300">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
                   <Check className="h-3 w-3" aria-hidden />
                   {labels.answered}
                 </span>
@@ -234,7 +235,7 @@ function QuestionsTab({
         ))}
       </ul>
       {canAsk && (
-        <div className="dark">
+        <div>
           <InputBar
             textOnly
             maxLength={500}
@@ -285,7 +286,9 @@ function PollTab({
 
   if (!poll || (composing && isHost && !poll.open)) {
     if (!isHost)
-      return <p className="p-3 text-sm text-white/60">{labels.noPoll}</p>
+      return (
+        <p className="text-muted-foreground p-3 text-sm">{labels.noPoll}</p>
+      )
     return (
       <form
         className="space-y-2 p-3 text-sm"
@@ -299,7 +302,7 @@ function PollTab({
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder={labels.pollQuestion}
-          className="border-white/20 bg-white/5 text-white placeholder:text-white/40"
+          className="border-border bg-muted text-foreground placeholder:text-muted-foreground"
           maxLength={200}
         />
         {options.map((o, i) => (
@@ -310,7 +313,7 @@ function PollTab({
               setOptions((s) => s.map((x, j) => (j === i ? e.target.value : x)))
             }
             placeholder={`${labels.pollOption} ${i + 1}`}
-            className="border-white/20 bg-white/5 text-white placeholder:text-white/40"
+            className="border-border bg-muted text-foreground placeholder:text-muted-foreground"
             maxLength={80}
           />
         ))}
@@ -320,7 +323,7 @@ function PollTab({
               type="button"
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20 hover:text-white"
+              className="text-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => setOptions((s) => [...s, ""])}
             >
               {labels.addOption}
@@ -346,7 +349,9 @@ function PollTab({
     <div className="space-y-3 p-3 text-sm">
       <div className="font-medium">{poll.question}</div>
       {!poll.open && (
-        <div className="text-xs text-amber-300">{labels.pollClosed}</div>
+        <div className="text-xs text-amber-600 dark:text-amber-300">
+          {labels.pollClosed}
+        </div>
       )}
       <ul className="space-y-2">
         {poll.options.map((opt, i) => {
@@ -358,7 +363,7 @@ function PollTab({
               {poll.open && !isHost && canAsk && voted !== poll.id ? (
                 <button
                   type="button"
-                  className="w-full rounded-md border border-white/20 px-3 py-2 text-start hover:bg-white/10"
+                  className="border-border hover:bg-accent w-full rounded-md border px-3 py-2 text-start"
                   onClick={() => {
                     setVoted(poll.id)
                     void channel.send(
@@ -370,7 +375,7 @@ function PollTab({
                   {opt}
                 </button>
               ) : (
-                <div className="relative overflow-hidden rounded-md border border-white/20 px-3 py-2">
+                <div className="border-border relative overflow-hidden rounded-md border px-3 py-2">
                   {showResults && (
                     <div
                       className="absolute inset-y-0 start-0 bg-sky-600/40"
@@ -381,7 +386,7 @@ function PollTab({
                   <div className="relative flex justify-between">
                     <span>{opt}</span>
                     {showResults && (
-                      <span className="text-white/70">
+                      <span className="text-muted-foreground">
                         {count} · {pct}%
                       </span>
                     )}
@@ -392,19 +397,21 @@ function PollTab({
           )
         })}
       </ul>
-      <div className="flex items-center gap-2 text-xs text-white/70">
+      <div className="text-muted-foreground flex items-center gap-2 text-xs">
         <span>
           {total} {labels.votes}
         </span>
         {voted === poll.id && !isHost && (
-          <span className="text-emerald-300">{labels.voted}</span>
+          <span className="text-emerald-600 dark:text-emerald-300">
+            {labels.voted}
+          </span>
         )}
         {isHost && poll.open && (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="ms-auto h-7 border-white/30 bg-transparent text-white hover:bg-white/20 hover:text-white"
+            className="border-border text-foreground hover:bg-accent hover:text-accent-foreground ms-auto h-7 bg-transparent"
             onClick={() => void close()}
           >
             {labels.closePoll}
@@ -415,7 +422,7 @@ function PollTab({
             type="button"
             size="sm"
             variant="ghost"
-            className="ms-auto h-7 text-white hover:bg-white/20 hover:text-white"
+            className="text-foreground hover:bg-accent hover:text-accent-foreground ms-auto h-7"
             onClick={() => setComposing(true)}
           >
             {labels.newPoll}
@@ -461,7 +468,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
         {channel.hands.length > 1 && (
           <button
             type="button"
-            className="min-h-9 rounded-full bg-white/15 px-3 text-sm font-medium hover:bg-white/25"
+            className="bg-secondary hover:bg-secondary/80 min-h-9 rounded-full px-3 text-sm font-medium"
             onClick={() => void channel.clearAllHands()}
           >
             {labels.lowerAllHands}
@@ -475,7 +482,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
           <span className="min-w-0 flex-1 truncate">{spotName}</span>
           <button
             type="button"
-            className="min-h-9 shrink-0 rounded-full bg-white/15 px-3 font-medium hover:bg-white/25"
+            className="bg-secondary hover:bg-secondary/80 min-h-9 shrink-0 rounded-full px-3 font-medium"
             onClick={() => {
               void channel.send({ t: "spotlight", identity: null })
               if (channel.state.grant === spotlight) void channel.setGrant(null)
@@ -487,8 +494,12 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
       )}
 
       {channel.hands.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 pb-10 text-center text-white/55">
-          <SfSymbol glyph={handRaisedFill} pt={34} className="text-white/30" />
+        <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 px-6 pb-10 text-center">
+          <SfSymbol
+            glyph={handRaisedFill}
+            pt={34}
+            className="text-muted-foreground/60"
+          />
           <p className="text-sm">{labels.noHands}</p>
         </div>
       ) : (
@@ -500,11 +511,11 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
             return (
               <li
                 key={id}
-                className="flex min-h-[52px] items-center gap-3 rounded-2xl bg-white/[0.07] py-1.5 ps-2 pe-1.5"
+                className="bg-muted flex min-h-[52px] items-center gap-3 rounded-2xl py-1.5 ps-2 pe-1.5"
               >
                 <span className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-400/90 text-sm font-bold text-black">
                   {initials(name)}
-                  <span className="absolute -end-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-amber-300 tabular-nums ring-2 ring-black">
+                  <span className="bg-background ring-background absolute -end-1 -bottom-1 flex size-5 items-center justify-center rounded-full text-[11px] font-semibold text-amber-600 tabular-nums ring-2 dark:text-amber-300">
                     {i + 1}
                   </span>
                 </span>
@@ -512,7 +523,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
                   <span className="block truncate text-[15px] font-medium">
                     {name}
                   </span>
-                  <span className="block text-[12px] text-white/55">
+                  <span className="text-muted-foreground block text-[12px]">
                     {mins < 1
                       ? labels.handJustNow
                       : labels.handMinutes.replace("{n}", String(mins))}
@@ -521,7 +532,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
                 {onGiveFloor && (
                   <button
                     type="button"
-                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-black transition-opacity active:opacity-60"
+                    className="bg-foreground text-background flex size-11 shrink-0 items-center justify-center rounded-full transition-opacity active:opacity-60"
                     aria-label={`${labels.giveFloor}: ${name}`}
                     title={labels.giveFloor}
                     onClick={() => onGiveFloor(id)}
@@ -531,7 +542,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
                 )}
                 <button
                   type="button"
-                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-opacity hover:bg-white/25 active:opacity-60"
+                  className="bg-secondary text-foreground hover:bg-secondary/80 flex size-11 shrink-0 items-center justify-center rounded-full transition-opacity active:opacity-60"
                   aria-label={`${labels.clearHand}: ${name}`}
                   title={labels.clearHand}
                   onClick={() => void channel.clearHand(id)}

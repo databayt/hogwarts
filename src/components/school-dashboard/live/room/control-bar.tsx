@@ -26,6 +26,7 @@ import {
   checkmark,
   chevronLeft,
   chevronRight,
+  circleLefthalfFilled,
   docRichtext,
   ellipsis,
   faceSmiling,
@@ -60,6 +61,7 @@ import type { RoomLabels } from "./labels"
 import { QUALITY_TONE } from "./overlays"
 import type { PanelTab } from "./side-panel"
 import type { SlideOption } from "./slide-options"
+import { useAppearance, type Appearance } from "./theme-toggle"
 import type { AdaptiveDelivery } from "./use-adaptive-delivery"
 import type { ClassChannel } from "./use-class-channel"
 
@@ -631,7 +633,7 @@ function ShareDisc({ labels }: { labels: RoomLabels }) {
   )
 }
 
-type MoreView = "root" | "quality" | "mic" | "camera" | "slides"
+type MoreView = "root" | "quality" | "mic" | "camera" | "slides" | "appearance"
 
 interface MoreMenuProps {
   role: ConferenceParticipantRole
@@ -667,6 +669,9 @@ export function ClassMoreMenu({
 }: MoreMenuProps) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<MoreView>("root")
+  // The app's theme, not a room-only one: the stage stays dark either way
+  // (it is video), the panel and the pre-join page follow this.
+  const { appearance, setAppearance } = useAppearance()
   const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     onPinned?.(open)
@@ -760,6 +765,12 @@ export function ClassMoreMenu({
                   onClick={() => setView("slides")}
                 />
               )}
+              <DrillRow
+                glyph={circleLefthalfFilled}
+                label={labels.appearance}
+                value={appearanceLabel(appearance, labels)}
+                onClick={() => setView("appearance")}
+              />
               <p className="px-8 pt-1 pb-1.5 text-[13px] leading-snug text-white/50">
                 {labels.attendanceAuto}
               </p>
@@ -808,6 +819,18 @@ export function ClassMoreMenu({
                     ))}
                   </>
                 )}
+                {view === "appearance" &&
+                  (["system", "light", "dark"] as const).map((a) => (
+                    <ChoiceRow
+                      key={a}
+                      label={appearanceLabel(a, labels)}
+                      selected={appearance === a}
+                      onClick={() => {
+                        setAppearance(a)
+                        close()
+                      }}
+                    />
+                  ))}
                 {view === "mic" && (
                   <DeviceRows kind="audioinput" onDone={close} />
                 )}
@@ -853,6 +876,14 @@ export function ClassMoreMenu({
       )}
     </div>
   )
+}
+
+function appearanceLabel(a: Appearance, labels: RoomLabels): string {
+  return a === "light"
+    ? labels.appearanceLight
+    : a === "dark"
+      ? labels.appearanceDark
+      : labels.appearanceSystem
 }
 
 export function tierLabel(t: DeliveryTier, labels: RoomLabels): string {

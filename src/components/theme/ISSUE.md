@@ -50,3 +50,12 @@ None
 ---
 
 **Last Review:** 2026-03-19
+
+## Live room joins the theme — 2026-10-19
+
+- The live room (`school-dashboard/live/room/theme-toggle.tsx`) now reads and
+  writes the same next-themes value: a half-moon toggle on the pre-join card
+  and ⋯ → Appearance (system / light / dark) in the call. Video chrome stays
+  dark by design; the side panel follows. The WhatsApp chat wallpaper got a
+  real dark tile (`public/icons/whatsapp/wp-wa-chat-bg-dark.svg`).
+

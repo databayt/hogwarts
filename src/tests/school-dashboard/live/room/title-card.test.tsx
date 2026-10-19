@@ -48,6 +48,7 @@ const labels: RoomTitleCardLabels = {
   addToCalendar: "Add to calendar",
   share: "Share",
   linkCopied: "Link copied",
+  toggleTheme: "Light or dark",
 }
 
 const baseData: RoomTitleCardData = {

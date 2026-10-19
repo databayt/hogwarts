@@ -587,6 +587,7 @@ export default async function Page({ params }: Props) {
           addToCalendar: c?.addToCalendar ?? "Add to calendar",
           share: c?.share ?? "Share",
           linkCopied: c?.linkCopied ?? "Link copied",
+          toggleTheme: c?.toggleTheme ?? "Light or dark",
         },
         participants: {
           title: t?.room?.participants ?? "Participants",

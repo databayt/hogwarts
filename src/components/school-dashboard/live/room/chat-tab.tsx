@@ -29,11 +29,11 @@ interface ChatTabProps {
 }
 
 /**
- * The room chat IS the /messages WhatsApp thread, in its dark theme: the
+ * The room chat IS the /messages WhatsApp thread, in the app's theme: the
  * doodle wallpaper, the notice card at the head, the same bubbles, tails,
  * ticks, day pills, composer and scroll rules (opens at the newest, never
- * yanks a reader out of the history, jump button with a count). The panel's
- * `dark` scope picks the WhatsApp dark tokens.
+ * yanks a reader out of the history, jump button with a count). The WhatsApp
+ * tokens follow the app's `.dark` class, so light mode is the cream thread.
  *
  * Kept mounted across tab switches (hidden, not unmounted), so the scroll
  * position and a half-typed message survive a look at the poll.
