@@ -251,7 +251,7 @@ export interface ChatbotConfig {
 export type PromptType = "saasMarketing" | "schoolSite" | "schoolSupport"
 
 /** The help-center audience a signed-in user belongs to. */
-export type SupportRole = "admin" | "teacher" | "parent"
+export type SupportRole = "admin" | "teacher" | "parent" | "student"
 
 /**
  * Display fields for the school site mode — what the client needs to render

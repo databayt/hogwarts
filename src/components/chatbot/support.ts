@@ -39,7 +39,7 @@ export interface SupportTopic {
   /** A pre-sale question (getting started): keep the trial ask on. */
   sales?: boolean
   /** The audiences the guide serves — also its docs sidebar groups. */
-  roles?: ("admin" | "teacher" | "parent")[]
+  roles?: SupportRole[]
 }
 
 export const SUPPORT_TOPICS = supportIndex as SupportTopic[]
@@ -191,7 +191,7 @@ export function matchTopics(
           : 0
     // A signed-in teacher asking about "grades" means entering marks, not
     // the admin's grade setup: ties go to the guides written for them.
-    const boost = total && role && topic.roles?.includes(role) ? 0.5 : 0
+    const boost = total && role && writtenFor(topic, role) ? 0.5 : 0
     return { topic, keyword: hits > 0, score: total + boost }
   }).filter((s) => s.score > 0)
   // Guides found by their words alone only stand in when no keyword hit.
@@ -232,14 +232,27 @@ export function isSupportQuestion(matched: SupportTopic[]): boolean {
 }
 
 /**
- * The help-center audience of a signed-in user's `UserRole`. Students read
- * the parent guides (same portal, same screens); every staff role that
- * isn't a teacher reads the admin ones.
+ * The help-center audience of a signed-in user's `UserRole`. Students have
+ * their own guides (joining a live class, handing in homework) and still read
+ * the parent ones — same portal, same screens. Every staff role that isn't a
+ * teacher reads the admin ones.
  */
 export function supportRoleOf(userRole: string | undefined): SupportRole {
   if (userRole === "TEACHER") return "teacher"
-  if (userRole === "GUARDIAN" || userRole === "STUDENT") return "parent"
+  if (userRole === "STUDENT") return "student"
+  if (userRole === "GUARDIAN") return "parent"
   return "admin"
+}
+
+/** Is this guide for this audience? A student also reads parent guides. */
+export function writtenFor(
+  topic: { roles?: SupportRole[] },
+  role: SupportRole
+): boolean {
+  const roles = topic.roles ?? []
+  return (
+    roles.includes(role) || (role === "student" && roles.includes("parent"))
+  )
 }
 
 /**
@@ -257,7 +270,7 @@ export function formatSupport(
   const lang = locale === "ar" ? "ar" : "en"
   const { role, attached = [] } = options
   const index = SUPPORT_TOPICS.filter(
-    (t) => !role || !t.roles?.length || t.roles.includes(role)
+    (t) => !role || !t.roles?.length || writtenFor(t, role)
   )
     .map((t) => `- ${t.title[lang]}: ${t.summary[lang]}`)
     .join("\n")

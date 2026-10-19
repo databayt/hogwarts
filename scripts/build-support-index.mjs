@@ -33,7 +33,7 @@ const OUT = join(ROOT, "src/components/chatbot/support-index.json")
 const MANIFEST = JSON.parse(
   readFileSync(join(ROOT, "src/components/docs/media-manifest.json"), "utf8")
 )
-const ROLES = new Set(["admin", "teacher", "parent"])
+const ROLES = new Set(["admin", "teacher", "parent", "student"])
 
 // The sections the bot answers from, per language. Related links and media
 // stay on the page.
@@ -120,7 +120,7 @@ for (const slug of order) {
   const roles = en.attributes.roles ?? []
   if (!roles.length || roles.some((r) => !ROLES.has(r))) {
     fail(
-      `en/${slug}.mdx: roles must be a non-empty subset of admin, teacher, parent`
+      `en/${slug}.mdx: roles must be a non-empty subset of admin, teacher, parent, student`
     )
   }
   if (JSON.stringify(roles) !== JSON.stringify(ar.attributes.roles ?? [])) {

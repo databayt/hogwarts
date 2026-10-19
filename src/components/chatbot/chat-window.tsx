@@ -52,23 +52,30 @@ export const ChatWindow = memo(function ChatWindow({
       })
       if (supportRole === "teacher")
         return [
+          ask("supportStartLive", TimeIcon),
           ask("supportAttendance", TimeIcon),
           ask("supportGrades", ServicesIcon),
+          ask("supportPassword", InfoIcon),
+        ]
+      if (supportRole === "student")
+        return [
+          ask("supportJoinLive", TimeIcon),
+          ask("supportHomework", ServicesIcon),
           ask("supportTimetable", TimeIcon),
           ask("supportPassword", InfoIcon),
         ]
       if (supportRole === "parent")
         return [
+          ask("supportWatchLive", TimeIcon),
           ask("supportChildGrades", ServicesIcon),
           ask("supportChildFees", PriceIcon),
           ask("supportPassword", InfoIcon),
-          ask("saasSupport", InfoIcon),
         ]
       return [
+        ask("supportOnlineSchool", TimeIcon),
         ask("supportAddStudent", ServicesIcon),
         ask("supportFees", PriceIcon),
         ask("supportRoles", InfoIcon),
-        ask("saasSupport", InfoIcon),
       ]
     }
     if (promptType === "schoolSite") {

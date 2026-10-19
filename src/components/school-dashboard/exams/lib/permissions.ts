@@ -671,6 +671,9 @@ export function getExamTabsForRole(
     mark: { name: d.mark || "Mark", href: `/${lang}/exams/mark` },
     results: { name: d.record || "Results", href: `/${lang}/exams/result` },
     quiz: { name: d.quiz || "Quiz", href: `/${lang}/exams/quiz` },
+    // Quick checks (exit tickets, polls) — the ones the live room launches.
+    // The pages existed with no tab, so teachers could not find them.
+    quick: { name: d.quick || "Quick checks", href: `/${lang}/exams/quick` },
     mock: { name: d.mock || "Mock", href: `/${lang}/exams/mock` },
     upcoming: {
       name: d.upcoming || "Upcoming",
@@ -693,6 +696,7 @@ export function getExamTabsForRole(
         tabs.mark,
         tabs.results,
         tabs.quiz,
+        tabs.quick,
         tabs.mock,
         tabs.upcoming,
         tabs.templates,
@@ -706,6 +710,7 @@ export function getExamTabsForRole(
         tabs.mark,
         tabs.results,
         tabs.quiz,
+        tabs.quick,
         tabs.mock,
         tabs.upcoming,
         tabs.templates,

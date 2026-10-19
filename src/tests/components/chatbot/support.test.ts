@@ -16,6 +16,47 @@ import type { ImageMedia, VideoMedia } from "@/components/docs/media"
 
 const top = (...texts: string[]) => matchTopics(texts)[0]?.slug
 
+// The online-school guides (2026-10-19): what students, teachers, parents
+// and admins actually ask, in both languages.
+describe("matchTopics — online school", () => {
+  it.each([
+    ["كيف أنضم إلى حصتي المباشرة؟", "live-classes"],
+    ["ما اقدر انضم للحصة", "live-classes"],
+    ["How do I join my live class?", "live-classes"],
+    ["كيف أبدأ الحصة المباشرة وأنهيها؟", "teach-live"],
+    ["how do I start and end my live class", "teach-live"],
+    ["كيف أسلّم واجبي مع ملف؟", "homework"],
+    ["how do I hand in my homework with a photo", "homework"],
+    ["كيف أصحح الواجبات", "homework"],
+    ["كيف أشغّل مدرستي عن بُعد؟", "online-school"],
+    ["how do I run my school online", "online-school"],
+    ["كيف أعلن عطلة العيد", "holidays"],
+    ["how do I declare a holiday", "holidays"],
+    ["لا تصلني إشعارات", "notifications"],
+    ["how do I turn on push notifications", "notifications"],
+    ["كيف أنشئ بطاقة خروج", "quick-checks"],
+    ["create an exit ticket", "quick-checks"],
+    // the dashboard quick asks themselves
+    ["How do I join my live class?", "live-classes"],
+    ["How do I hand in my homework with a file?", "homework"],
+    ["How do I start and end my live class?", "teach-live"],
+    ["How can I watch my child's live class?", "live-classes"],
+    ["How do I run my school online?", "online-school"],
+    ["كيف أتابع حصة ابني المباشرة؟", "live-classes"],
+  ])("%s → %s", (question, slug) => {
+    expect(top(question)).toBe(slug)
+  })
+
+  it("a student reads student guides and still the parent ones", () => {
+    const index = formatSupport("en", [], { role: "student" })
+    expect(index).toContain("Join a live class")
+    expect(index).toContain("Homework")
+    // parents.mdx is a parent guide; students share the portal
+    expect(index).toMatch(/Parents|parent/i)
+    expect(index).not.toContain("Run your school online")
+  })
+})
+
 describe("normalize", () => {
   it("folds alef, ta-marbuta and tashkeel", () => {
     expect(normalize("إِضافةُ طالبٍ")).toBe("اضافه طالب")
@@ -260,7 +301,7 @@ describe("dashboard support desk", () => {
   it("maps every UserRole to a help-center audience", () => {
     expect(supportRoleOf("TEACHER")).toBe("teacher")
     expect(supportRoleOf("GUARDIAN")).toBe("parent")
-    expect(supportRoleOf("STUDENT")).toBe("parent")
+    expect(supportRoleOf("STUDENT")).toBe("student")
     for (const r of ["ADMIN", "DEVELOPER", "ACCOUNTANT", "STAFF", undefined])
       expect(supportRoleOf(r)).toBe("admin")
   })

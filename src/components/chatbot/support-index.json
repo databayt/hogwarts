@@ -16,8 +16,8 @@
       "en": "Signing a school up, setting it up, its own web address"
     },
     "answer": {
-      "ar": "1. اضغط **ابدأ الآن** على balqalam.com، ثم سجّل الدخول أو أنشئ حسابًا إن لم يكن لديك واحد.\n2. **المعلومات الأساسية**: اسم المدرسة ووصف قصير وموقعها.\n3. **الإعداد**: السعة، والهوية والشعار. ويمكنك هنا استيراد طلابك من ملف CSV أو Excel إن رغبت، أو لاحقًا من الإدخال الجماعي.\n4. **العمل**: الظهور، والسعر، والشروط، وعنوان مدرستك، مثل `yourschool.balqalam.com`.\n5. وافق على الشروط، فتُفعَّل المدرسة وتصبح صفوفها وأقسامها وفصولها الدراسية وأدوارها الافتراضية جاهزة.\n6. ثم افتح مدرستك على عنوانها وسجّل الدخول. أضف طلابك ومعلميك بالإدخال الجماعي من Excel أو واحدًا واحدًا، وراجع الإعداد الأكاديمي، وألقِ نظرة على الجدول الدراسي الذي تملؤه «بالقلم» لك، واضبط الرسوم، ثم وزّع بيانات الدخول.\n\n- يستغرق الإعداد عادةً بين 10 و30 دقيقة.\n- تحصل كل مدرسة على **تجربة مجانية كاملة لثلاثة أشهر**، بلا رسوم وبلا التزام، ويبقى أول 100 طالب مجانًا إلى الأبد بعدها.\n- يمكنك تغيير الاسم والشعار ومعظم البيانات لاحقًا من **المدرسة ← الإعدادات**.\n\nحل المشكلات:\n\n- **العنوان محجوز** — اختر عنوانًا آخر، مثلًا أضف اسم مدينتك: `yourschool-khartoum`.\n- **توقف الإعداد في منتصفه** — اضغط **ابدأ الآن** من جديد وسجّل الدخول بالحساب نفسه، فتقدّمك محفوظ.\n- **عنوان المدرسة لا يفتح** — تأكد من كتابة العنوان، ثم أعد المحاولة بعد دقائق.",
-      "en": "1. On balqalam.com, click **Get Started**. Sign in, or create an account if you don't have one.\n2. **Basic information**: your school's name, a short description and its location.\n3. **Setup**: capacity, branding and logo. If you like, import your students from a CSV or Excel file now, or later from bulk import.\n4. **Business**: visibility, price, terms, and your school's web address, for example `yourschool.balqalam.com`.\n5. Accept the terms. The school is activated, with its default grades, departments, terms and roles ready to use.\n6. Then open your school at its address and sign in. Add your people by bulk import from Excel or one by one, check the academic setup, look over the timetable Balqalam fills for you, set up fees, and hand out logins.\n\n- Setup usually takes 10–30 minutes.\n- Every school gets a full **three-month free trial**, with no fees and no commitment. After it, the first 100 students stay free forever.\n- You can change the name, logo and most details later in **School → Configuration**.\n\nTroubleshooting:\n\n- **The web address is taken** — pick another one, for example add your city: `yourschool-khartoum`.\n- **The setup stopped halfway** — click **Get Started** again and sign in with the same account. Your progress is kept.\n- **The school address doesn't open** — check the spelling of the address, then try again after a few minutes."
+      "ar": "1. اضغط **ابدأ الآن** على balqalam.com، ثم سجّل الدخول أو أنشئ حسابًا إن لم يكن لديك واحد.\n2. **المعلومات الأساسية**: اسم المدرسة ووصف قصير وموقعها.\n3. **الإعداد**: السعة، والهوية والشعار. ويمكنك هنا استيراد طلابك من ملف CSV أو Excel إن رغبت، أو لاحقًا من الإدخال الجماعي.\n4. **العمل**: الظهور، والسعر، والشروط، وعنوان مدرستك، مثل `yourschool.balqalam.com`.\n5. وافق على الشروط، فتُفعَّل المدرسة وتصبح صفوفها وأقسامها وفصولها الدراسية وأدوارها الافتراضية جاهزة.\n6. ثم افتح مدرستك على عنوانها وسجّل الدخول. أضف طلابك ومعلميك بالإدخال الجماعي من Excel أو واحدًا واحدًا، وراجع الإعداد الأكاديمي، وألقِ نظرة على الجدول الدراسي الذي تملؤه «بالقلم» لك، واضبط الرسوم، ثم وزّع بيانات الدخول.\n\n- يستغرق الإعداد عادةً بين 10 و30 دقيقة.\n- تحصل كل مدرسة على **تجربة مجانية كاملة لثلاثة أشهر**، بلا رسوم وبلا التزام، ويبقى أول 100 طالب مجانًا إلى الأبد بعدها.\n- يمكنك تغيير الاسم والشعار ومعظم البيانات لاحقًا من **المدرسة ← الإعدادات**.\n- تدرّس عن بُعد؟ اضبط **طريقة التدريس** على **مباشر** أو **كلاهما**، واتبع تشغيل المدرسة عن بُعد.\n\nحل المشكلات:\n\n- **العنوان محجوز** — اختر عنوانًا آخر، مثلًا أضف اسم مدينتك: `yourschool-khartoum`.\n- **توقف الإعداد في منتصفه** — اضغط **ابدأ الآن** من جديد وسجّل الدخول بالحساب نفسه، فتقدّمك محفوظ.\n- **عنوان المدرسة لا يفتح** — تأكد من كتابة العنوان، ثم أعد المحاولة بعد دقائق.",
+      "en": "1. On balqalam.com, click **Get Started**. Sign in, or create an account if you don't have one.\n2. **Basic information**: your school's name, a short description and its location.\n3. **Setup**: capacity, branding and logo. If you like, import your students from a CSV or Excel file now, or later from bulk import.\n4. **Business**: visibility, price, terms, and your school's web address, for example `yourschool.balqalam.com`.\n5. Accept the terms. The school is activated, with its default grades, departments, terms and roles ready to use.\n6. Then open your school at its address and sign in. Add your people by bulk import from Excel or one by one, check the academic setup, look over the timetable Balqalam fills for you, set up fees, and hand out logins.\n\n- Setup usually takes 10–30 minutes.\n- Every school gets a full **three-month free trial**, with no fees and no commitment. After it, the first 100 students stay free forever.\n- You can change the name, logo and most details later in **School → Configuration**.\n- Running classes online? Set **Teaching mode** to **Live** or **Both** and follow Run your school online.\n\nTroubleshooting:\n\n- **The web address is taken** — pick another one, for example add your city: `yourschool-khartoum`.\n- **The setup stopped halfway** — click **Get Started** again and sign in with the same account. Your progress is kept.\n- **The school address doesn't open** — check the spelling of the address, then try again after a few minutes."
     },
     "keywords": [
       "ابدا",
@@ -32,6 +32,9 @@
       "كيف ابدا",
       "التجربه المجانيه",
       "رابط المدرسه",
+      "مدرسة عن بعد",
+      "تدريس عن بعد",
+      "حصص مباشرة",
       "get started",
       "sign up",
       "signup",
@@ -46,10 +49,70 @@
       "set up",
       "setup",
       "trial",
-      "first steps"
+      "first steps",
+      "online school",
+      "teach online",
+      "live classes"
     ],
     "guide": "/docs/support/get-started",
     "sales": true
+  },
+  {
+    "slug": "online-school",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "تشغيل المدرسة عن بُعد",
+      "en": "Run your school online"
+    },
+    "summary": {
+      "ar": "ضبط المدرسة للتدريس عن بُعد وتشغيل أول حصة مباشرة",
+      "en": "Setting the school to teach online and getting the first live class running"
+    },
+    "answer": {
+      "ar": "1. افتح **المدرسة ← الإعدادات ← طريقة التدريس** واختر طريقة تشغيل الحصص:\n   - **حضوري**: كل الحصص داخل المدرسة، بلا غرف مباشرة ولا أزرار انضمام.\n   - **مباشر**: كل حصة تُقدَّم مباشرة أيضاً، وينضم الطلاب والمعلمون إليها من الجدول.\n   - **كلاهما**: حضوري ومباشر معاً؛ تختار الصفوف والفصول التي تُقدَّم مباشرة، أو تفتح فترة مؤقتة للتعليم عن بُعد.\n2. افتح **مباشر** من القائمة الجانبية. تعرض لوحة **جاهزية المدرسة للتدريس عبر الإنترنت** ما يعمل الآن وما يحتاج إلى إعداد.\n3. إن ظهر أن بعض الحصص الأسبوعية **بلا معلّم** فاضغط **تعيين المعلمين**؛ فالحصة بلا معلّم لا مضيف لها ولا تصبح حصة مباشرة. في **إسناد المعلمين** اضغط خانة **بلا معلم** واختر معلّم المادة لذلك الفصل.\n4. أعلن أيام العطل من **المدرسة ← الإعدادات ← العطلات**، فلا تُنشأ حصص ولا تُرسل تذكيرات في تلك الأيام.\n5. أضف طلابك وأولياء أمورهم (انظر إضافة طالب)، وشارك معهم بيانات الدخول.\n6. انتهى الإعداد. في كل يوم دراسي تُنشأ حصص الجدول حصصاً مباشرة تلقائياً، وينضم الطلاب والمعلمون بالضغط على الحصة في جدولهم أو من البطاقة أعلى صفحتهم الرئيسية.\n\n- الحصة المباشرة تُضاف إلى الحصة ولا تحلّ محلها؛ يبقى الفصل في الجدول في كل الأحوال.\n- في **المدرسة ← الإعدادات ← الحصص المباشرة** الخيارات التفصيلية: الصفوف والفصول المباشرة، تسجيل الحضور تلقائياً، مشاهدة أولياء الأمور، أدوات الغرفة، التذكيرات، والتسجيل.\n- فعّل **تسجيل الحضور تلقائياً** هناك إن أردت أن يُكتب الحضور ممن انضم إلى كل حصة.\n- تحتاج التدريس عن بُعد لأيام قليلة (طقس سيئ أو طارئ)؟ اختر **كلاهما** وافتح فترة مؤقتة في **الحصص المباشرة**، وتنتهي وحدها.\n\nحل المشكلات:\n\n- **لا تظهر حصص مباشرة اليوم**: تأكد أن طريقة التدريس **مباشر** أو **كلاهما**، وأن اليوم ليس عطلة معلنة، وأن للحصة معلّماً.\n- **تقول لوحة الجاهزية إن منصة الاجتماع تحتاج إعداداً**: تواصل معنا؛ تُفعَّل الغرف داخل التطبيق لكل مدرسة.\n- **تظهر الحصة ولا يستطيع أحد الدخول**: يبدأ المعلّم الحصة، ويستطيع الطلاب الدخول بعد بدئها.",
+      "en": "1. Open **School → Settings → Teaching mode** and choose how classes run:\n   - **In person**: every class meets in the building. There are no live rooms or join buttons.\n   - **Live**: every class is also taught live. Students and teachers join it from the timetable.\n   - **Both**: in person and live together. You choose which grades and sections go live, or open a temporary online window.\n2. Open **Live** from the sidebar. The **School readiness for online teaching** panel shows what works now and what still needs setting up.\n3. If it says some weekly periods have **no teacher**, click **Assign teachers**. A period with no teacher has no host, so it never becomes a live class. On **Assign teachers**, click a **No teacher** cell and choose the teacher for that subject and section.\n4. Declare your days off under **School → Settings → Holidays**, so no classes are created and no reminders are sent on those days.\n5. Add your students and their guardians (see Add a student), and share their login details.\n6. That's it. Each school day the classes of the timetable are created as live classes on their own. Students and teachers join by clicking the class in their timetable, or from the card on their home page.\n\n- Live classes are added to the class, never instead of it: the classroom stays on the timetable either way.\n- **School → Settings → Live classes** holds the detailed options: which grades and sections go live, automatic attendance, whether guardians may watch, room tools, reminders, and recording.\n- Turn on **Auto-mark attendance** there if you want attendance written from who joined each class.\n- Going online for a few days (bad weather, an emergency)? Choose **Both** and open a temporary online window in **Live classes**. It ends on its own.\n\nTroubleshooting:\n\n- **No live classes appear today**: check the teaching mode is **Live** or **Both**, today is not a declared holiday, and the period has a teacher.\n- **The readiness panel says the meeting platform needs setting up**: contact us; in-app rooms are enabled per school.\n- **A class shows but nobody can enter**: the teacher starts the class; students can enter once it has started."
+    },
+    "keywords": [
+      "مدرسة عن بعد",
+      "التدريس عن بعد",
+      "تعليم عن بعد",
+      "أونلاين",
+      "اونلاين",
+      "إلكتروني",
+      "مدرسة إلكترونية",
+      "حصص مباشرة",
+      "طريقة التدريس",
+      "حضوري",
+      "كلاهما",
+      "إغلاق المدرسة",
+      "طوارئ",
+      "online school",
+      "teach online",
+      "go online",
+      "remote",
+      "distance learning",
+      "teaching mode",
+      "عن بعد",
+      "عن بُعد",
+      "مدرستي عن بعد",
+      "تشغيل المدرسة",
+      "أشغل مدرستي",
+      "المدرسة أونلاين",
+      "e-learning",
+      "virtual school",
+      "live classes",
+      "in person",
+      "hybrid",
+      "online",
+      "start online",
+      "closure",
+      "lockdown",
+      "war",
+      "emergency online"
+    ],
+    "guide": "/docs/support/online-school"
   },
   {
     "slug": "add-student",
@@ -442,8 +505,8 @@
       "en": "The weekly timetable: generating it, editing a lesson, fixing clashes"
     },
     "answer": {
-      "ar": "1. افتح **الجدول الدراسي** من القائمة الجانبية. يرى المدير أسبوع المدرسة كاملًا مع فلاتر حسب الفصل والمعلم.\n2. اضبط اليوم الدراسي مرة واحدة من **الجدول الدراسي ← الإعدادات**: **أيام العمل** والحصص و**الاستراحة والغداء**.\n3. لبناء الأسبوع تلقائيًا، افتح **إنشاء**، واختر الفصل الدراسي، وراجع **القيود الصارمة** و**حدود عبء العمل**، ثم اضغط **إنشاء معاينة**.\n4. راجع المعاينة، ثم اضغط **دمج** لتبقى حصصك الحالية وتُملأ الفراغات، أو **استبدال الكل** لتبدأ من جديد.\n5. لتعديل حصة واحدة، اضغط خانتها في الجدول، واختر المادة والمعلم والقاعة، ثم احفظ.\n6. افتح **التعارضات** واضغط **فحص التعارضات** لتجد أي معلم أو قاعة محجوزة مرتين في الفصل الدراسي.\n\n- تبدأ كل مدرسة بأسبوع مملوء مسبقًا من صفوفها وموادها. والحصة التي لا يتوفر لها معلم تظهر **غير معيّن**.\n- يُرفض حفظ الحصة إذا كانت ستضع معلمًا أو قاعة أو فصلًا في مكانين في الحصة نفسها.\n- يرى المعلم أسبوعه (**اليوم** و**عرض الأسبوع**)، ويرى الطالب أسبوع فصله، ويرى ولي الأمر أسبوع كل ابن من أبنائه.\n- اطبع الجدول على ورق A4 من المتصفح.\n- من يدرّس ماذا يأتي من تبويب **المعلمون** ومن مواد كل معلم.\n\nحل المشكلات:\n\n- **حصة تظهر «غير معيّن»** — لم يتوفر معلم لتلك المادة. أضف المادة إلى **تخصص** أحد المعلمين، ثم أعد الإنشاء مع **دمج**.\n- **«إنشاء جزئي» أو «فصول غير مُوزَّعة»** — تحقق من توفر المعلمين وسعة القاعات، أو خفّف **أقصى حصص/يوم** في **حدود عبء العمل**، ثم اضغط **إعادة الإنشاء**.\n- **«تم اكتشاف تعارض» عند الحفظ** — المعلم أو القاعة محجوزان في تلك الحصة. اختر حصة أو معلمًا آخر، أو عالجه من **التعارضات**.\n- **المعلم لا يرى جدوله** — يجب أن يكون المعلم معيّنًا على الحصص. راجع تبويب **المعلمون**، ثم اطلب منه تحديث الصفحة.\n- **تظهر أيام أو حصص خاطئة** — صحّح **أيام العمل** والحصص من **الجدول الدراسي ← الإعدادات** للفصل الدراسي الصحيح.",
-      "en": "1. Open **Timetable** from the sidebar. Admins see the whole school's week grid, with filters by class and teacher.\n2. Set the school day once in **Timetable → Settings**: **Working Days**, the periods and **Break & Lunch**.\n3. To build the week automatically, open **Generate**, choose the term, check the **Hard Constraints** and **Workload Limits**, then click **Generate Preview**.\n4. Review the preview. Click **Merge** to keep your current lessons and fill the gaps, or **Replace All** to start fresh.\n5. To change one lesson, click its cell in the grid, pick the subject, teacher and room, and save.\n6. Open **Conflicts** and click **Scan for Conflicts** to find any teacher or room booked twice in the term.\n\n- Every school starts with a week already filled from its grades and subjects. A slot with no free teacher shows as **Unassigned**.\n- Saving a lesson is refused if it would put a teacher, a room or a class in two places in the same period.\n- Teachers see their own teaching week (**Today** and **Week View**), students see their class's week, and parents see each child's week.\n- Print the timetable on A4 from the browser.\n- Who teaches what comes from the **Teachers** tab and each teacher's subjects.\n\nTroubleshooting:\n\n- **A lesson shows Unassigned** — no teacher of that subject was free. Give a teacher that subject in their **Expertise**, then generate again with **Merge**.\n- **\"Generation Partial\" or Unplaced Classes** — check teacher availability and room capacity, or relax **Max Periods/Day** in **Workload Limits**, then **Regenerate**.\n- **\"Conflict Detected\" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.\n- **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.\n- **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term."
+      "ar": "1. افتح **الجدول الدراسي** من القائمة الجانبية. يرى المدير أسبوع المدرسة كاملًا مع فلاتر حسب الفصل والمعلم.\n2. اضبط اليوم الدراسي مرة واحدة من **الجدول الدراسي ← الإعدادات**: **أيام العمل** والحصص و**الاستراحة والغداء**.\n3. لبناء الأسبوع تلقائيًا، افتح **إنشاء**، واختر الفصل الدراسي، وراجع **القيود الصارمة** و**حدود عبء العمل**، ثم اضغط **إنشاء معاينة**.\n4. راجع المعاينة، ثم اضغط **دمج** لتبقى حصصك الحالية وتُملأ الفراغات، أو **استبدال الكل** لتبدأ من جديد.\n5. لتعديل حصة واحدة، اضغط خانتها في الجدول، واختر المادة والمعلم والقاعة، ثم احفظ.\n6. افتح **التعارضات** واضغط **فحص التعارضات** لتجد أي معلم أو قاعة محجوزة مرتين في الفصل الدراسي.\n\n- تبدأ كل مدرسة بأسبوع مملوء مسبقًا من صفوفها وموادها. والحصة التي لا يتوفر لها معلم تظهر **غير معيّن**.\n- يُرفض حفظ الحصة إذا كانت ستضع معلمًا أو قاعة أو فصلًا في مكانين في الحصة نفسها.\n- يرى المعلم أسبوعه (**اليوم** و**عرض الأسبوع**)، ويرى الطالب أسبوع فصله، ويرى ولي الأمر أسبوع كل ابن من أبنائه.\n- اطبع الجدول على ورق A4 من المتصفح.\n- من يدرّس ماذا يأتي من تبويب **المعلمون** ومن مواد كل معلم.\n- إن كانت المدرسة تدرّس مباشرة، اضغط حصة اليوم في الجدول وهي جارية (أو قبلها بعشر دقائق) للانضمام إليها، وضغطة المعلّم تبدأ الحصة.\n\nحل المشكلات:\n\n- **حصة تظهر «غير معيّن»** — لم يتوفر معلم لتلك المادة. أضف المادة إلى **تخصص** أحد المعلمين، ثم أعد الإنشاء مع **دمج**.\n- **«إنشاء جزئي» أو «فصول غير مُوزَّعة»** — تحقق من توفر المعلمين وسعة القاعات، أو خفّف **أقصى حصص/يوم** في **حدود عبء العمل**، ثم اضغط **إعادة الإنشاء**.\n- **«تم اكتشاف تعارض» عند الحفظ** — المعلم أو القاعة محجوزان في تلك الحصة. اختر حصة أو معلمًا آخر، أو عالجه من **التعارضات**.\n- **المعلم لا يرى جدوله** — يجب أن يكون المعلم معيّنًا على الحصص. راجع تبويب **المعلمون**، ثم اطلب منه تحديث الصفحة.\n- **تظهر أيام أو حصص خاطئة** — صحّح **أيام العمل** والحصص من **الجدول الدراسي ← الإعدادات** للفصل الدراسي الصحيح.",
+      "en": "1. Open **Timetable** from the sidebar. Admins see the whole school's week grid, with filters by class and teacher.\n2. Set the school day once in **Timetable → Settings**: **Working Days**, the periods and **Break & Lunch**.\n3. To build the week automatically, open **Generate**, choose the term, check the **Hard Constraints** and **Workload Limits**, then click **Generate Preview**.\n4. Review the preview. Click **Merge** to keep your current lessons and fill the gaps, or **Replace All** to start fresh.\n5. To change one lesson, click its cell in the grid, pick the subject, teacher and room, and save.\n6. Open **Conflicts** and click **Scan for Conflicts** to find any teacher or room booked twice in the term.\n\n- Every school starts with a week already filled from its grades and subjects. A slot with no free teacher shows as **Unassigned**.\n- Saving a lesson is refused if it would put a teacher, a room or a class in two places in the same period.\n- Teachers see their own teaching week (**Today** and **Week View**), students see their class's week, and parents see each child's week.\n- Print the timetable on A4 from the browser.\n- Who teaches what comes from the **Teachers** tab and each teacher's subjects.\n- When the school teaches live, click today's class in the timetable while it runs (or up to 10 minutes before) to join it. A teacher's click starts the class.\n\nTroubleshooting:\n\n- **A lesson shows Unassigned** — no teacher of that subject was free. Give a teacher that subject in their **Expertise**, then generate again with **Merge**.\n- **\"Generation Partial\" or Unplaced Classes** — check teacher availability and room capacity, or relax **Max Periods/Day** in **Workload Limits**, then **Regenerate**.\n- **\"Conflict Detected\" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.\n- **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.\n- **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term."
     },
     "keywords": [
       "جدول",
@@ -457,6 +520,9 @@
       "متعارض",
       "ايام العمل",
       "اليوم الدراسي",
+      "الانضمام من الجدول",
+      "حصة مباشرة",
+      "انضمام",
       "timetable",
       "time table",
       "schedule",
@@ -469,9 +535,187 @@
       "conflict",
       "double booked",
       "working days",
-      "school day"
+      "school day",
+      "join from timetable",
+      "live class",
+      "join class"
     ],
     "guide": "/docs/support/timetable"
+  },
+  {
+    "slug": "live-classes",
+    "roles": [
+      "student",
+      "parent",
+      "teacher"
+    ],
+    "title": {
+      "ar": "الانضمام إلى حصة مباشرة",
+      "en": "Join a live class"
+    },
+    "summary": {
+      "ar": "الانضمام إلى حصة مباشرة واستخدام رفع اليد والدردشة والأسئلة والسبورة",
+      "en": "Joining a live class and using hands, chat, questions and the board"
+    },
+    "answer": {
+      "ar": "1. افتح **الجدول** واضغط على حصة اليوم وهي جارية، أو قبل بدئها بعشر دقائق. ويمكنك أيضاً الضغط على بطاقة الحصة أعلى صفحتك الرئيسية.\n2. تُفتح صفحة الحصة بصورتها ومعلّمها ووقتها. اضغط **انضمام**.\n3. اسمح للمتصفح باستخدام الكاميرا والميكروفون إن طلب ذلك. يدخل الطلاب بميكروفون مغلق وكاميرا معطّلة.\n4. داخل الحصة:\n   - **رفع اليد** لتطلب الكلام، ويرى المعلّم ترتيبك.\n   - **الدردشة** لرسائل الفصل، و**الأسئلة** لأسئلة يجيب عنها المعلّم.\n   - قد يعرض المعلّم **السبورة** أو الشرائح أو شاشته، فتملأ الشاشة وحدها.\n5. اضغط **مغادرة** للخروج. إن انقطع الاتصال تظهر **جارٍ إعادة الاتصال…**، وإن تعذّر ذلك فاضغط **إعادة الانضمام**.\n\n- يستطيع أولياء الأمور مشاهدة حصة أبنائهم إن سمحت المدرسة بذلك، ويدخلون مشاهدين بلا كاميرا ولا ميكروفون ولا أسئلة.\n- قد يُسجَّل حضورك من الحصة: البقاء في الغرفة يُحتسب، والزيارة القصيرة لا تُحتسب.\n- الحصة التي فاتتك تظهر في صفحة **مباشر** ضمن الحصص التي يمكنك تعويضها، مع تسجيلها إن كانت المدرسة تسجّل الحصص.\n\nحل المشكلات:\n\n- **«لم يبدأ معلمك الحصة بعد»**: انتظر في صفحة الحصة، وستنضم تلقائياً عندما يبدؤها المعلّم.\n- **«أنت غير مسجّل في هذه الحصة»**: الحصة لفصل آخر؛ تأكد أنك فتحت حصتك من جدولك.\n- **لا صوت أو صورة**: اضغط **اختبر الكاميرا والاتصال** تحت زر الانضمام، وتأكد من إذن المتصفح للكاميرا والميكروفون.\n- **لا يظهر الانضمام في الجدول**: الحصة ليست مباشرة اليوم، أو بقي على بدئها أكثر من عشر دقائق.",
+      "en": "1. Open **Timetable** and click today's class while it is running, or up to 10 minutes before it starts. You can also click the class card at the top of your home page.\n2. The class page opens with its picture, teacher and time. Click **Join**.\n3. Allow the browser to use your camera and microphone if it asks. Students enter with the microphone off and the camera off.\n4. In the class:\n   - **Raise hand** to ask to speak. The teacher sees your place in line.\n   - **Chat** for messages to the class, and **Questions** for questions the teacher answers.\n   - The teacher may share the **Whiteboard**, slides or their screen. They fill the screen on their own.\n5. Click **Leave** to leave. If the connection drops, the class says **Reconnecting…**; if that fails, click **Rejoin**.\n\n- Parents can watch a child's class when the school allows it. They join as observers, with no camera, microphone or questions.\n- Your attendance can be taken from the class: staying in the room counts, a short visit does not.\n- A class you missed shows on the **Live** page under the classes you can catch up on, with its recording when the school records classes.\n\nTroubleshooting:\n\n- **\"Your teacher hasn't started the class yet\"**: wait on the class page. You join automatically when the teacher starts it.\n- **\"You are not enrolled in this class\"**: the class belongs to another section. Check you opened your own class from your timetable.\n- **No sound or picture**: click **Test my camera and connection** under the Join button, and check the browser has permission to use the camera and microphone.\n- **No Join on the timetable**: the class is not online today, or it is more than 10 minutes away."
+    },
+    "keywords": [
+      "حصة مباشرة",
+      "انضمام",
+      "انضم",
+      "الانضمام للحصة",
+      "حصة أونلاين",
+      "حصة عن بعد",
+      "فيديو",
+      "زوم",
+      "رفع اليد",
+      "الدردشة",
+      "الأسئلة",
+      "السبورة",
+      "الكاميرا",
+      "الميكروفون",
+      "لا أستطيع الانضمام",
+      "الحصة لم تبدأ",
+      "مشاهدة الحصة",
+      "إعادة الانضمام",
+      "live class",
+      "join class",
+      "online class",
+      "raise hand",
+      "حصتي المباشرة",
+      "الحصة المباشرة",
+      "أنضم",
+      "انضم للحصة",
+      "أنضم إلى الحصة",
+      "حصة ابني",
+      "أتابع حصة",
+      "مشاهدة حصة ابني",
+      "join live",
+      "video class",
+      "classroom online",
+      "zoom",
+      "meet",
+      "chat",
+      "questions",
+      "whiteboard",
+      "camera",
+      "microphone",
+      "can't join",
+      "class not started",
+      "watch class",
+      "observe",
+      "rejoin",
+      "reconnecting",
+      "my live class",
+      "watch my child's class"
+    ],
+    "guide": "/docs/support/live-classes"
+  },
+  {
+    "slug": "teach-live",
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "تقديم حصة مباشرة",
+      "en": "Teach a live class"
+    },
+    "summary": {
+      "ar": "بدء الحصة المباشرة وإدارتها وإنهاؤها للمعلّم",
+      "en": "Starting, running and ending a live class as the teacher"
+    },
+    "answer": {
+      "ar": "1. افتح **الجدول** واضغط على حصتك وهي جارية أو قبلها بعشر دقائق. إن لم تكن للحصة غرفة بعد فالضغطة تبدأ الحصة لك.\n2. في صفحة الحصة اضغط **انضمام**. أنت المضيف، وتصبح الحصة مباشرة لطلابك.\n3. أدر الحصة:\n   - تظهر **الأيدي المرفوعة** بالترتيب، و**منح الكلمة** يُبرز الطالب على الشاشة.\n   - افتح **السبورة**، أو اعرض الشرائح أو شاشتك، وأطلق **استطلاعاً** أو تقييماً سريعاً.\n   - أجب عن **الأسئلة** وتابع **الدردشة**.\n4. اضغط **إنهاء الحصة** وأكّد **إنهاء الحصة للجميع؟** لإغلاق الغرفة.\n5. بعد الحصة اختر **تحديد واجب** لتعطي الفصل واجباً فوراً، ويُخطَر الطلاب.\n\n- يُكتب الحضور وحده عند انتهاء الحصة إن فعّلت المدرسة **تسجيل الحضور تلقائياً**، ويمكنك تصحيح أي طالب من صفحة الحصة.\n- المعلّم البديل المؤكَّد لحصتك يستضيفها بدلاً منك.\n- يدخل الطلاب بميكروفون وكاميرا مغلقين، ويمكنك تغيير ذلك لكل حصة.\n\nحل المشكلات:\n\n- **الضغط في الجدول لا يبدأ الحصة**: المدرسة مضبوطة على **حضوري**، أو الحصة ليست حصتك. راجع الإدارة.\n- **طالب لا يسمعك**: تحقّق من الميكروفون في **المزيد**، واطلب منه الضغط على **اختبر الكاميرا والاتصال**.\n- **لم يُكتب الحضور**: تسجيل الحضور التلقائي مغلق للمدرسة، أو لم ينضم أحد من الكشف.",
+      "en": "1. Open **Timetable** and click your class while it is running, or up to 10 minutes before. If no room exists yet, the click starts the class for you.\n2. On the class page, click **Join**. You are the host; the class becomes live for your students.\n3. Run the class:\n   - **Raised hands** show in order. **Give the floor** brings a student to the stage.\n   - Open the **Whiteboard**, share slides or your screen, and run a **Poll** or a quick check.\n   - Answer the **Questions** and keep an eye on the **Chat**.\n4. Click **End class** and confirm **End for everyone?** to close the room.\n5. After the class, choose **Set homework** to give the section homework straight away. Students are notified.\n\n- Attendance is written on its own when the class ends, if your school has turned on **Auto-mark attendance**. You can correct any student on the class page.\n- A substitute teacher who has been confirmed for your period hosts the class instead of you.\n- Students enter with the microphone and camera off; you can change that per class.\n\nTroubleshooting:\n\n- **The click on the timetable doesn't start the class**: your school is set to **In person**, or it isn't your period. Ask the admin.\n- **A student can't hear you**: check your microphone in **More**, and ask them to click **Test my camera and connection**.\n- **Attendance wasn't written**: automatic attendance is off for the school, or nobody on the roster joined."
+    },
+    "keywords": [
+      "بدء الحصة",
+      "بدء البث المباشر",
+      "تدريس عن بعد",
+      "مضيف",
+      "إنهاء الحصة",
+      "منح الكلمة",
+      "السبورة",
+      "مشاركة الشاشة",
+      "الشرائح",
+      "استطلاع",
+      "كتم",
+      "إخراج طالب",
+      "تحديد واجب",
+      "حضور الحصة المباشرة",
+      "start class",
+      "end class",
+      "teach live",
+      "share screen",
+      "أبدأ الحصة",
+      "ابدأ الحصة",
+      "أبدأ الحصة المباشرة",
+      "أنهي الحصة",
+      "إنهاء الحصة المباشرة",
+      "بدء الحصة المباشرة",
+      "start live",
+      "teach online",
+      "host",
+      "end live",
+      "give the floor",
+      "whiteboard",
+      "slides",
+      "poll",
+      "mute",
+      "remove student",
+      "set homework",
+      "live attendance",
+      "teacher live",
+      "start my live class",
+      "end my live class"
+    ],
+    "guide": "/docs/support/teach-live"
+  },
+  {
+    "slug": "holidays",
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "العطلات",
+      "en": "Holidays"
+    },
+    "summary": {
+      "ar": "إعلان العطلات وأيام إغلاق المدرسة",
+      "en": "Declaring holidays and school closures"
+    },
+    "answer": {
+      "ar": "1. افتح **المدرسة ← الإعدادات ← العطلات**.\n2. تحت **إضافة يوم عطلة** أدخل الاسم (مثلاً عيد الفطر)، واختر **عطلة** أو **المدرسة مغلقة**.\n3. اختر أول يوم في **من**، وآخر يوم في **إلى** (اتركه فارغاً ليوم واحد).\n4. اضغط **إضافة**. ولإلغاء يوم اضغط سلة المهملات بجانبه.\n\n- في هذه الأيام لا تُنشأ حصص مباشرة ولا تُرسل تذكيرات الحصص، ويعلن الجدول أن المدرسة مغلقة.\n- يبقى الجدول كما هو؛ الأيام فقط بلا حصص.\n\nحل المشكلات:\n\n- **ما زالت الحصص تظهر في يوم العطلة**: الحصص التي أُنشئت قبل إضافة العطلة تبقى؛ أضف العطلات مسبقاً.\n- **أُغلق يوم خطأ**: احذف الإدخال وأضفه مجدداً بالتواريخ الصحيحة.",
+      "en": "1. Open **School → Settings → Holidays**.\n2. Under **Add a day off**, enter a name (for example Eid al-Fitr) and choose **Holiday** or **School closed**.\n3. Choose the first day in **From**, and the last day in **Until** (leave it empty for a single day).\n4. Click **Add**. To cancel one, click the bin next to it.\n\n- On these days no live classes are created and no class reminders are sent, and the timetable says the school is closed.\n- The timetable itself is kept; the days simply have no classes.\n\nTroubleshooting:\n\n- **Classes still appear on a holiday**: classes created before the holiday was added stay; add holidays ahead of time.\n- **The wrong day was closed**: delete the entry and add it again with the right dates."
+    },
+    "keywords": [
+      "عطلة",
+      "عطلات",
+      "إجازة",
+      "اجازة",
+      "يوم عطلة",
+      "عيد",
+      "عيد الفطر",
+      "عيد الأضحى",
+      "إغلاق المدرسة",
+      "المدرسة مغلقة",
+      "عطلة رسمية",
+      "إلغاء الحصص",
+      "holiday",
+      "day off",
+      "eid",
+      "school closed",
+      "holidays",
+      "closure",
+      "vacation",
+      "break",
+      "public holiday",
+      "cancel classes"
+    ],
+    "guide": "/docs/support/holidays"
   },
   {
     "slug": "exams",
@@ -489,8 +733,8 @@
       "en": "Creating an exam, the question bank, marking and publishing results"
     },
     "answer": {
-      "ar": "1. افتح **الامتحانات** من القائمة الجانبية. اضغط **إنشاء امتحان** في النظرة العامة، أو الزر الدائري **+** في **إدارة**.\n2. اختر طريقة البدء: **ابدأ من قالب** (الأسرع)، أو **إنشاء بالذكاء الاصطناعي**، أو **أو جدول اختبارًا فارغًا**.\n3. املأ الاختبار: **المعلومات الأساسية** (العنوان والفصل والمادة والنوع)، ثم **الجدول والدرجات** (التاريخ والمدة والدرجة الكلية ودرجة النجاح)، ثم **التعليمات والتفاصيل**.\n4. احفظ أسئلتك في **بنك الأسئلة**: اضغط **إضافة سؤال** أو استوردها، مصنّفة بالمادة والنوع والصعوبة.\n5. بعد الاختبار، افتح **تصحيح**. أسئلة الاختيار من متعدد والصواب والخطأ وملء الفراغ تُصحَّح وحدها، وأدخل الباقي في **أدخل الدرجات** ثم اضغط **حفظ الدرجات**، أو استخدم **استيراد CSV**.\n6. اضغط زر التصحيح والنشر (**Auto-mark & publish**). يصل إشعار للطلاب وتنتقل الدرجات إلى سجل الدرجات.\n\n- للمقالي والإجابات القصيرة يقترح الذكاء الاصطناعي درجة، وللمعلم أن يغيّر أي درجة قبل النشر وبعده.\n- تُنزَّل ورقة الاختبار ملف Word معبّأً بقالب المدرسة نفسها (**القوالب**).\n- يرى الطالب **القادمة**، ويؤدي الاختبار على الشاشة بعدّاد للوقت، ويرى نتائجه في **السجلات**. ويرى ولي الأمر نتائج ابنه.\n- تظهر تعارضات المواعيد في تقويم الامتحانات بعبارة **تعارض في الجدول**.\n\nحل المشكلات:\n\n- **«لا يمكن أن تتجاوز الدرجات …»** — الدرجة أعلى من الدرجة الكلية للاختبار. صحّح الدرجة، أو ارفع **الدرجة الكلية** في الاختبار.\n- **طالب غير موجود في قائمة التصحيح** — يجب أن يكون الطالب في فصل الاختبار. راجع صف الطالب وشعبته، ثم أعد فتح **تصحيح**.\n- **الورقة فيها أسئلة أقل من المطلوب** — بنك الأسئلة لا يكفي لذلك النوع أو الصعوبة. أضف أسئلة في **بنك الأسئلة**، ثم أعد الإنشاء.\n- **الطلاب لا يرون نتائجهم** — تظهر النتائج بعد الضغط على **Auto-mark & publish** فقط.\n- **رُفض ملف CSV** — ابدأ من **تحميل قالب CSV** واحتفظ بأعمدته وأرقام الطلاب.",
-      "en": "1. Open **Exams** from the sidebar. Click **Create Exam** on the overview, or the round **+** button in **Manage**.\n2. Choose how to start: **Start from a template** (fastest), **Generate with AI**, or **Or schedule a blank exam**.\n3. Fill in the exam: **Basic Information** (title, class, subject, type), **Schedule & Marks** (date, duration, total and passing marks), then **Instructions & Details**.\n4. Keep your questions in **Qbank**: click **Add Question**, or import them, tagged by subject, type and difficulty.\n5. After the exam, open **Mark**. Multiple choice, true/false and fill-in-the-blank mark themselves; type the rest under **Enter marks** and click **Save Marks**, or use **Import CSV**.\n6. Click **Auto-mark & publish**. Students are notified and the marks go into the gradebook.\n\n- For essays and short answers, the AI suggests a mark. The teacher can change any mark before and after publishing.\n- The exam paper downloads as a Word file filled into the school's own template (**Templates**).\n- Students see **Upcoming**, take on-screen exams with a timer, and see their results under **Record**. Parents see their child's results.\n- Scheduling clashes show on the exam calendar as **Schedule conflict detected**.\n\nTroubleshooting:\n\n- **\"Marks cannot exceed …\"** — the mark is above the exam's total. Fix the mark, or raise **Total Marks** on the exam.\n- **A student is missing from the marks list** — the student must be in the exam's class. Check the student's grade and section, then reload **Mark**.\n- **The paper has fewer questions than planned** — the question bank is short for that type or difficulty. Add questions in **Qbank**, then generate again.\n- **Students can't see their results** — results appear only after **Auto-mark & publish**.\n- **The CSV import is rejected** — start from **Download CSV Template** and keep its columns and student IDs."
+      "ar": "1. افتح **الامتحانات** من القائمة الجانبية. اضغط **إنشاء امتحان** في النظرة العامة، أو الزر الدائري **+** في **إدارة**.\n2. اختر طريقة البدء: **ابدأ من قالب** (الأسرع)، أو **إنشاء بالذكاء الاصطناعي**، أو **أو جدول اختبارًا فارغًا**.\n3. املأ الاختبار: **المعلومات الأساسية** (العنوان والفصل والمادة والنوع)، ثم **الجدول والدرجات** (التاريخ والمدة والدرجة الكلية ودرجة النجاح)، ثم **التعليمات والتفاصيل**.\n4. احفظ أسئلتك في **بنك الأسئلة**: اضغط **إضافة سؤال** أو استوردها، مصنّفة بالمادة والنوع والصعوبة.\n5. بعد الاختبار، افتح **تصحيح**. أسئلة الاختيار من متعدد والصواب والخطأ وملء الفراغ تُصحَّح وحدها، وأدخل الباقي في **أدخل الدرجات** ثم اضغط **حفظ الدرجات**، أو استخدم **استيراد CSV**.\n6. اضغط زر التصحيح والنشر (**Auto-mark & publish**). يصل إشعار للطلاب وتنتقل الدرجات إلى سجل الدرجات.\n\n- للمقالي والإجابات القصيرة يقترح الذكاء الاصطناعي درجة، وللمعلم أن يغيّر أي درجة قبل النشر وبعده.\n- تُنزَّل ورقة الاختبار ملف Word معبّأً بقالب المدرسة نفسها (**القوالب**).\n- يرى الطالب **القادمة**، ويؤدي الاختبار على الشاشة بعدّاد للوقت، ويرى نتائجه في **السجلات**. ويرى ولي الأمر نتائج ابنه.\n- تظهر تعارضات المواعيد في تقويم الامتحانات بعبارة **تعارض في الجدول**.\n- يؤدي الطلاب الامتحانات عبر الإنترنت على الشاشة بمؤقت، وتُحفظ الإجابات أولاً بأول، فإن انتهى الوقت أو انقطع الاتصال سُلِّم ما أجابوا عنه.\n\nحل المشكلات:\n\n- **«لا يمكن أن تتجاوز الدرجات …»** — الدرجة أعلى من الدرجة الكلية للاختبار. صحّح الدرجة، أو ارفع **الدرجة الكلية** في الاختبار.\n- **طالب غير موجود في قائمة التصحيح** — يجب أن يكون الطالب في فصل الاختبار. راجع صف الطالب وشعبته، ثم أعد فتح **تصحيح**.\n- **الورقة فيها أسئلة أقل من المطلوب** — بنك الأسئلة لا يكفي لذلك النوع أو الصعوبة. أضف أسئلة في **بنك الأسئلة**، ثم أعد الإنشاء.\n- **الطلاب لا يرون نتائجهم** — تظهر النتائج بعد الضغط على **Auto-mark & publish** فقط.\n- **رُفض ملف CSV** — ابدأ من **تحميل قالب CSV** واحتفظ بأعمدته وأرقام الطلاب.",
+      "en": "1. Open **Exams** from the sidebar. Click **Create Exam** on the overview, or the round **+** button in **Manage**.\n2. Choose how to start: **Start from a template** (fastest), **Generate with AI**, or **Or schedule a blank exam**.\n3. Fill in the exam: **Basic Information** (title, class, subject, type), **Schedule & Marks** (date, duration, total and passing marks), then **Instructions & Details**.\n4. Keep your questions in **Qbank**: click **Add Question**, or import them, tagged by subject, type and difficulty.\n5. After the exam, open **Mark**. Multiple choice, true/false and fill-in-the-blank mark themselves; type the rest under **Enter marks** and click **Save Marks**, or use **Import CSV**.\n6. Click **Auto-mark & publish**. Students are notified and the marks go into the gradebook.\n\n- For essays and short answers, the AI suggests a mark. The teacher can change any mark before and after publishing.\n- The exam paper downloads as a Word file filled into the school's own template (**Templates**).\n- Students see **Upcoming**, take on-screen exams with a timer, and see their results under **Record**. Parents see their child's results.\n- Scheduling clashes show on the exam calendar as **Schedule conflict detected**.\n- Students take online exams on screen with a timer. Answers are saved as they go, so if time runs out or the connection drops, what they answered is handed in.\n\nTroubleshooting:\n\n- **\"Marks cannot exceed …\"** — the mark is above the exam's total. Fix the mark, or raise **Total Marks** on the exam.\n- **A student is missing from the marks list** — the student must be in the exam's class. Check the student's grade and section, then reload **Mark**.\n- **The paper has fewer questions than planned** — the question bank is short for that type or difficulty. Add questions in **Qbank**, then generate again.\n- **Students can't see their results** — results appear only after **Auto-mark & publish**.\n- **The CSV import is rejected** — start from **Download CSV Template** and keep its columns and student IDs."
     },
     "keywords": [
       "اختبار",
@@ -508,6 +752,9 @@
       "اختبار الكتروني",
       "نصفي",
       "نهائي",
+      "امتحان بمؤقت",
+      "امتحان أونلاين",
+      "انتهى الوقت",
       "exam",
       "exams",
       "test",
@@ -524,9 +771,107 @@
       "enter marks",
       "publish results",
       "online exam",
-      "mock"
+      "mock",
+      "timed exam",
+      "exam timer",
+      "time ran out"
     ],
     "guide": "/docs/support/exams"
+  },
+  {
+    "slug": "quick-checks",
+    "roles": [
+      "teacher"
+    ],
+    "title": {
+      "ar": "التقييمات السريعة",
+      "en": "Quick checks"
+    },
+    "summary": {
+      "ar": "إنشاء تقييم سريع وإطلاقه في الحصة",
+      "en": "Creating a quick check and launching it in class"
+    },
+    "answer": {
+      "ar": "1. افتح **الامتحانات ← تقييم سريع** واضغط **تقييم جديد**.\n2. أدخل العنوان واختر النوع: **بطاقة خروج** أو **استطلاع** أو **إحماء** أو **تسجيل حضور**، والمدة.\n3. اختر الصف، والفصل (أو الصف كاملاً)، والمادة.\n4. اختر الأسئلة من بنك أسئلة المادة، ثم اضغط **إنشاء تقييم**.\n5. في الحصة المباشرة افتح **أدوات الحصة** وأطلقه؛ يجيب الطلاب داخل الغرفة، وتصل النتائج إلى سجل الدرجات.\n\n- الأسئلة من بنك أسئلة المدرسة لتلك المادة، وبنك المدرسة الجديدة فارغ: أضف الأسئلة أولاً من **الامتحانات ← بنك الأسئلة**.\n- **إجابات مجهولة** تُخفي من أجاب، و**عرض النتائج للطلاب** يعرضها عليهم بعد الانتهاء.\n\nحل المشكلات:\n\n- **«لا توجد أسئلة لهذه المادة في البنك بعد»**: أضف أسئلة للمادة في **بنك الأسئلة** ثم عد.\n- **لا يظهر التقييم في الغرفة**: أُنشئ لصف أو مادة غير صف الحصة ومادتها.",
+      "en": "1. Open **Exams → Quick checks** and click **New assessment**.\n2. Enter a title and choose the type: **Exit ticket**, **Poll**, **Warm-up** or **Check-in**, and a time limit.\n3. Choose the grade, the section (or the whole grade) and the subject.\n4. Tick the questions from the subject's question bank, then click **Create assessment**.\n5. In a live class, open **Class tools** and launch it. Students answer in the room, and the results reach the gradebook.\n\n- Questions come from the school's question bank for that subject. A new school's bank is empty: add questions under **Exams → Question bank** first.\n- **Anonymous responses** hide who answered; **Show results to students** shows them the results afterwards.\n\nTroubleshooting:\n\n- **\"This subject has no questions in the bank yet\"**: add questions to the subject in **Question bank**, then come back.\n- **The check doesn't show in the room**: it was created for another grade or subject than the class."
+    },
+    "keywords": [
+      "تقييم سريع",
+      "بطاقة خروج",
+      "استطلاع",
+      "إحماء",
+      "تسجيل حضور",
+      "اختبار قصير في الحصة",
+      "تقييم تكويني",
+      "بنك الأسئلة",
+      "إطلاق الاختبار",
+      "quick check",
+      "exit ticket",
+      "poll",
+      "warm up",
+      "quick assessment",
+      "check-in",
+      "quiz in class",
+      "formative",
+      "question bank",
+      "launch quiz",
+      "live quiz"
+    ],
+    "guide": "/docs/support/quick-checks"
+  },
+  {
+    "slug": "homework",
+    "roles": [
+      "student",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الواجبات",
+      "en": "Homework"
+    },
+    "summary": {
+      "ar": "تسليم الواجبات وتصحيحها",
+      "en": "Handing in homework and marking it"
+    },
+    "answer": {
+      "ar": "**الطالب: التسليم**\n\n1. افتح **واجباتي**؛ يظهر الواجب الجديد أولاً مع موعد تسليمه.\n2. اكتب إجابتك، واضغط **إرفاق ملفات** لإضافة صور عملك أو ملف PDF أو مستند أو تسجيل صوتي (حتى 25 ميغابايت للملف، و10 ملفات).\n3. اضغط **تسليم**. يمكنك إعادة التسليم حتى يصحّحه المعلّم، وإعادة التسليم تستبدل ما سلّمته.\n\n**المعلّم: الإنشاء والتصحيح**\n\n1. افتح **الواجبات ← إنشاء واجب**، واختر الصف، والفصل أو الصف كاملاً، والمادة والنوع، ثم الدرجة وموعد التسليم. إنهاء المعالج ينشر الواجب ويُخطر الطلاب.\n2. افتح الواجب ثم تبويب **التسليمات**؛ ترى من سلّم (مثلاً «سلّم 12 من 25») ونصوصهم وملفاتهم.\n3. أدخل **الدرجة** و**الملاحظات** لكل تسليم واضغط **حفظ**.\n\n- بعد الحصة المباشرة يعطي **تحديد واجب** في صفحة الحصة الفصلَ واجباً بخطوة واحدة.\n- يصل الطلابَ تذكير قبل موعد التسليم بيوم، والتسليم بعد الموعد يُوسم **متأخر**.\n- يرى أولياء الأمور واجبات أبنائهم ودرجاتهم في بوابة أولياء الأمور.\n\nحل المشكلات:\n\n- **الطالب لا يرى الواجب**: تأكد أنه لصفه أو فصله، وأن معالج الواجب اكتمل.\n- **«الملفات تحتاج اتصالاً لتسليمها»**: لا تُحفظ الملفات دون اتصال؛ سلّم عند عودة الاتصال، أما النص وحده فيُحفظ دون اتصال.\n- **فشل رفع ملف**: تحقّق من نوعه وحجمه (25 ميغابايت حداً أقصى) ثم أعد المحاولة.",
+      "en": "**Student: hand in**\n\n1. Open **My assignments**. New homework is listed first, with its due date.\n2. Write your answer, and click **Attach files** to add photos of your work, a PDF, a document or a voice note (up to 25MB each, 10 files).\n3. Click **Submit**. You can resubmit until the teacher marks it; resubmitting replaces what you handed in.\n\n**Teacher: set and mark**\n\n1. Open **Assignments → Create assignment**, choose the grade, the section or the whole grade, the subject and the type, then the points and due date. Finishing publishes it and notifies the students.\n2. Open the assignment and the **Submissions** tab. You see who handed in (for example \"12 of 25 handed in\"), their text and their files.\n3. Enter the **Score** and **Feedback** for each hand-in and click **Save**.\n\n- After a live class, **Set homework** on the class page gives the section homework in one step.\n- Students get a reminder the day before the due date. Work handed in after the due date is marked **Late**.\n- Parents see their child's homework and marks in the parent portal.\n\nTroubleshooting:\n\n- **A student doesn't see the homework**: check it was set for their grade or section, and that the assignment wizard was finished.\n- **\"Files need a connection to hand in\"**: files can't be saved offline. Hand in when you're back online; text alone can be saved offline.\n- **An upload fails**: check the file type and size (25MB at most), then try again."
+    },
+    "keywords": [
+      "واجب",
+      "واجبات",
+      "واجب منزلي",
+      "تسليم",
+      "سلم الواجب",
+      "رفع ملف",
+      "إرفاق ملف",
+      "صورة الواجب",
+      "تصحيح الواجب",
+      "درجة الواجب",
+      "ملاحظات",
+      "متأخر",
+      "موعد التسليم",
+      "واجباتي",
+      "تحديد واجب",
+      "homework",
+      "assignment",
+      "hand in",
+      "submit",
+      "attach file",
+      "submission",
+      "upload",
+      "photo of work",
+      "pdf",
+      "mark homework",
+      "grade homework",
+      "feedback",
+      "late",
+      "due date",
+      "my assignments",
+      "set homework"
+    ],
+    "guide": "/docs/support/homework"
   },
   {
     "slug": "grades",
@@ -598,8 +943,8 @@
       "en": "Taking attendance and the ways to do it"
     },
     "answer": {
-      "ar": "1. افتح **الحضور** من القائمة الجانبية. المعلم يصل مباشرة إلى **التحضير السريع**.\n2. اختر الفصل، والحصة الحالية عليها علامة **الآن**.\n3. الجميع حاضرون في البداية: اضغط على الطالب مرة ليصبح **غائب**، ومرتين ليصبح **متأخر**، وثلاثًا ليعود **حاضر**.\n4. اضغط **حفظ التحضير**، فيُبلَّغ أولياء أمور الغائبين تلقائيًا.\n5. تريد طريقة أخرى؟ افتح تبويب **التسجيل** واختر:\n   - **قائمة الفصل**: شعبة ويوم، مع **تحديد الجميع حاضرين** واختصارات P وA وL.\n   - **رمز الاستجابة**: اعرض رمزًا على السبورة يمسحه الطلاب من تطبيق المدرسة، ويتجدد وحده.\n   - **بطاقات الطلاب**: امسح بطاقة الطالب أو اكتب رقمها.\n   - **المزيد ← جهاز التسجيل الذاتي**، أو **رفع ملف** (CSV أو Excel، شعبة واحدة ويوم واحد، وفق النموذج)، أو **تصاريح الخروج**.\n\n- التحضير السريع يعمل دون إنترنت: تظهر رسالة **حُفظ التحضير على هذا الجهاز**، ويتزامن ويُبلَّغ أولياء الأمور عند عودة الاتصال.\n- يقدّم أولياء الأمور الأعذار من بوابة ولي الأمر، وتراجعها في تبويب **الأعذار**.\n- يرى المدير أيضًا **الطلاب المتابَعون** و**التقارير** و**الإعدادات**.\n\nحل المشكلات:\n\n- **«لا توجد فصول مسندة إليك بعد»**: لم تُعيَّن معلمًا لأي شعبة. اطلب من المدير إسناد شعبك إليك.\n- **«لا يوجد دوام اليوم»**: اليوم ليس يومًا دراسيًا في تقويم المدرسة، فلا يُنتظر تحضير.\n- **«فشل حفظ التحضير»**: تأكد من الاتصال واضغط **حفظ التحضير** مرة أخرى. على الجوال يُحفظ على الجهاز ويتزامن لاحقًا.\n- **«صفوف بها مشكلات» عند رفع ملف**: نزّل النموذج من جديد، وحافظ على أعمدته، وارفع شعبة واحدة ويومًا واحدًا لكل ملف.\n- **«هذه البطاقة غير مسجّلة»**: أضف البطاقة أولًا من **بطاقات الطلاب ← البطاقات**.",
-      "en": "1. Open **Attendance** from the sidebar. As a teacher you land on **Quick Attendance**.\n2. Choose your section. The class you teach now is marked **Now**.\n3. Everyone starts as present. Tap a student once for **absent**, again for **late**, and a third time for **present** again.\n4. Click **Save attendance**. Guardians of absent students are notified automatically.\n5. Want another way? Open the **Take attendance** tab and pick a method:\n   - **Class list**: one section and day, with **Mark all present** and the keyboard shortcuts P, A and L.\n   - **QR code**: show a code on the board. Students scan it from the school app, and it refreshes on its own.\n   - **ID cards**: scan a student's card, or type its number.\n   - **More → Self check-in kiosk**, **Upload a file** (CSV or Excel, one section and one day, from the template) or **Hall passes**.\n\n- Quick Attendance works offline. With no connection it says **Attendance saved on this device**, and it syncs and notifies guardians when you're back online.\n- Parents submit excuses from the parent portal, and you review them in the **Excuses** tab.\n- Admins also see **Students at risk**, **Reports** and **Settings**.\n\nTroubleshooting:\n\n- **\"No sections assigned to you yet\"**: you aren't set as the teacher of any section. Ask an admin to assign you to your sections.\n- **\"No school today\"**: today isn't a school day in the school calendar, so attendance isn't expected.\n- **\"Failed to save attendance\"**: check your connection and click **Save attendance** again. On a phone it saves on the device and syncs later.\n- **Upload says some rows had issues**: download the template again, keep its columns, and upload only one section and one day per file.\n- **A card says \"This card isn't registered\"**: add the card under **ID cards → Cards** first."
+      "ar": "1. افتح **الحضور** من القائمة الجانبية. المعلم يصل مباشرة إلى **التحضير السريع**.\n2. اختر الفصل، والحصة الحالية عليها علامة **الآن**.\n3. الجميع حاضرون في البداية: اضغط على الطالب مرة ليصبح **غائب**، ومرتين ليصبح **متأخر**، وثلاثًا ليعود **حاضر**.\n4. اضغط **حفظ التحضير**، فيُبلَّغ أولياء أمور الغائبين تلقائيًا.\n5. تريد طريقة أخرى؟ افتح تبويب **التسجيل** واختر:\n   - **قائمة الفصل**: شعبة ويوم، مع **تحديد الجميع حاضرين** واختصارات P وA وL.\n   - **رمز الاستجابة**: اعرض رمزًا على السبورة يمسحه الطلاب من تطبيق المدرسة، ويتجدد وحده.\n   - **بطاقات الطلاب**: امسح بطاقة الطالب أو اكتب رقمها.\n   - **المزيد ← جهاز التسجيل الذاتي**، أو **رفع ملف** (CSV أو Excel، شعبة واحدة ويوم واحد، وفق النموذج)، أو **تصاريح الخروج**.\n\n- التحضير السريع يعمل دون إنترنت: تظهر رسالة **حُفظ التحضير على هذا الجهاز**، ويتزامن ويُبلَّغ أولياء الأمور عند عودة الاتصال.\n- يقدّم أولياء الأمور الأعذار من بوابة ولي الأمر، وتراجعها في تبويب **الأعذار**.\n- يرى المدير أيضًا **الطلاب المتابَعون** و**التقارير** و**الإعدادات**.\n- تستطيع الحصص المباشرة تسجيل الحضور وحدها: عند انتهاء الحصة يُسجَّل من بقي حاضراً أو متأخراً والباقون غائبين. فعّل **تسجيل الحضور تلقائياً** من **المدرسة ← الإعدادات ← الحصص المباشرة**.\n\nحل المشكلات:\n\n- **«لا توجد فصول مسندة إليك بعد»**: لم تُعيَّن معلمًا لأي شعبة. اطلب من المدير إسناد شعبك إليك.\n- **«لا يوجد دوام اليوم»**: اليوم ليس يومًا دراسيًا في تقويم المدرسة، فلا يُنتظر تحضير.\n- **«فشل حفظ التحضير»**: تأكد من الاتصال واضغط **حفظ التحضير** مرة أخرى. على الجوال يُحفظ على الجهاز ويتزامن لاحقًا.\n- **«صفوف بها مشكلات» عند رفع ملف**: نزّل النموذج من جديد، وحافظ على أعمدته، وارفع شعبة واحدة ويومًا واحدًا لكل ملف.\n- **«هذه البطاقة غير مسجّلة»**: أضف البطاقة أولًا من **بطاقات الطلاب ← البطاقات**.",
+      "en": "1. Open **Attendance** from the sidebar. As a teacher you land on **Quick Attendance**.\n2. Choose your section. The class you teach now is marked **Now**.\n3. Everyone starts as present. Tap a student once for **absent**, again for **late**, and a third time for **present** again.\n4. Click **Save attendance**. Guardians of absent students are notified automatically.\n5. Want another way? Open the **Take attendance** tab and pick a method:\n   - **Class list**: one section and day, with **Mark all present** and the keyboard shortcuts P, A and L.\n   - **QR code**: show a code on the board. Students scan it from the school app, and it refreshes on its own.\n   - **ID cards**: scan a student's card, or type its number.\n   - **More → Self check-in kiosk**, **Upload a file** (CSV or Excel, one section and one day, from the template) or **Hall passes**.\n\n- Quick Attendance works offline. With no connection it says **Attendance saved on this device**, and it syncs and notifies guardians when you're back online.\n- Parents submit excuses from the parent portal, and you review them in the **Excuses** tab.\n- Admins also see **Students at risk**, **Reports** and **Settings**.\n- Live classes can take attendance on their own: when the class ends, students who stayed are marked present or late, and the rest absent. Turn on **Auto-mark attendance** in **School → Settings → Live classes**.\n\nTroubleshooting:\n\n- **\"No sections assigned to you yet\"**: you aren't set as the teacher of any section. Ask an admin to assign you to your sections.\n- **\"No school today\"**: today isn't a school day in the school calendar, so attendance isn't expected.\n- **\"Failed to save attendance\"**: check your connection and click **Save attendance** again. On a phone it saves on the device and syncs later.\n- **Upload says some rows had issues**: download the template again, keep its columns, and upload only one section and one day per file.\n- **A card says \"This card isn't registered\"**: add the card under **ID cards → Cards** first."
     },
     "keywords": [
       "حضور",
@@ -616,6 +961,9 @@
       "عذر",
       "ما يحفظ",
       "التحضير ما",
+      "حضور الحصة المباشرة",
+      "الحضور عن بعد",
+      "حضور تلقائي",
       "attendance",
       "absent",
       "absence",
@@ -629,7 +977,10 @@
       "take attendance",
       "excuse",
       "attendance not saving",
-      "geofence"
+      "geofence",
+      "live attendance",
+      "online attendance",
+      "auto attendance"
     ],
     "guide": "/docs/support/attendance"
   },
@@ -649,8 +1000,8 @@
       "en": "Parent logins and what parents see"
     },
     "answer": {
-      "ar": "1. **أضف الطالب**، فيحفظ المعالج ولي الأمر كجهة اتصال.\n2. **أعطِ ولي الأمر دخولًا**: في **أولياء الأمور** افتح صفه واضغط **إنشاء بيانات الدخول**، ثم أرسل الرمز والرقم السري بواتساب أو رسالة نصية أو بريد، أو انسخهما. ويمكن أيضًا إدخال أولياء الأمور جماعيًا.\n3. **اربط ولي الأمر بابن آخر**: في **الطلاب** افتح صف الابن واضغط **ربط ولي أمر** لتحصل على رمز وصول قابل للطباعة. ثم في **أولياء الأمور** افتح صف ولي الأمر واضغط **ربط طفل**، وأدخل **رمز الوصول**، واضغط **تحقق من الرمز**، واختر العلاقة، ثم **تأكيد الربط**.\n4. **يسجّل ولي الأمر دخوله** على عنوان المدرسة ويفتح **بوابة ولي الأمر** من القائمة الجانبية.\n5. يختار ابنه ويتنقل بين التبويبات: **نظرة عامة** و**الدرجات** و**بطاقات التقرير** و**الحضور** و**الجدول** و**الواجبات**.\n\n- يرى ولي الأمر أيضًا الإعلانات والأحداث والرسائل، ورسوم أبنائه من **المالية**.\n- عند غياب الابن يُبلَّغ ولي الأمر، ويستطيع الضغط على **تقديم عذر** في تبويب **الحضور** مع السبب ومرفق اختياري، ثم يراجعه المعلم.\n- يختار ولي الأمر كلمة مروره بنفسه عند أول دخول.\n\nحل المشكلات:\n\n- **لا يظهر أي ابن لولي الأمر**: الحساب غير مربوط بعد. استخدم **ربط ولي أمر** و**ربط طفل** كما في الخطوة ٣.\n- **رمز الوصول مرفوض**: للرموز مدة صلاحية. أنشئ رمزًا جديدًا بـ**ربط ولي أمر**.\n- **ولي الأمر لا يستطيع الدخول**: راجع الدخول ونسيان كلمة المرور. تستطيع إدارة المدرسة إعادة تعيين كلمة مروره بـ**إنشاء بيانات الدخول**.\n- **لديه ابنان ويظهر واحد فقط**: اربط الابن الثاني برمز الوصول الخاص به.",
-      "en": "1. **Add the student.** The wizard saves the parent as a contact.\n2. **Give the parent a login.** In **Parents**, open the parent's row and click **Generate Credentials**. Share the login code and PIN by WhatsApp, SMS or email, or copy them. Importing guardians in bulk works too.\n3. **Link a parent to another child.** In **Students**, open the child's row and click **Link Parent** to get an access code you can print. Then in **Parents**, open the parent's row, click **Link Child**, enter the **Access Code**, click **Validate Code**, choose the relationship and click **Confirm Link**.\n4. **The parent signs in** at the school's address and opens **Parent portal** from the sidebar.\n5. They pick a child and use the tabs: **Overview**, **Grades**, **Report cards**, **Attendance**, **Timetable** and **Assignments**.\n\n- Parents also see announcements, events and messages, and their children's fees under **Finance**.\n- When a child is marked absent, the parent is notified. They can click **Submit Excuse** on the child's **Attendance** tab, with a reason and an optional attachment. A teacher then reviews it.\n- On first sign-in, parents choose their own password.\n\nTroubleshooting:\n\n- **A parent sees no children**: the login isn't linked yet. Use **Link Parent** and **Link Child** from step 3.\n- **The access code is rejected**: codes expire. Generate a new one with **Link Parent**.\n- **A parent can't sign in**: see Signing in and passwords. The school office can reset their password with **Generate Credentials**.\n- **A parent with two children only sees one**: link the second child with its own access code."
+      "ar": "1. **أضف الطالب**، فيحفظ المعالج ولي الأمر كجهة اتصال.\n2. **أعطِ ولي الأمر دخولًا**: في **أولياء الأمور** افتح صفه واضغط **إنشاء بيانات الدخول**، ثم أرسل الرمز والرقم السري بواتساب أو رسالة نصية أو بريد، أو انسخهما. ويمكن أيضًا إدخال أولياء الأمور جماعيًا.\n3. **اربط ولي الأمر بابن آخر**: في **الطلاب** افتح صف الابن واضغط **ربط ولي أمر** لتحصل على رمز وصول قابل للطباعة. ثم في **أولياء الأمور** افتح صف ولي الأمر واضغط **ربط طفل**، وأدخل **رمز الوصول**، واضغط **تحقق من الرمز**، واختر العلاقة، ثم **تأكيد الربط**.\n4. **يسجّل ولي الأمر دخوله** على عنوان المدرسة ويفتح **بوابة ولي الأمر** من القائمة الجانبية.\n5. يختار ابنه ويتنقل بين التبويبات: **نظرة عامة** و**الدرجات** و**بطاقات التقرير** و**الحضور** و**الجدول** و**الواجبات**.\n\n- يرى ولي الأمر أيضًا الإعلانات والأحداث والرسائل، ورسوم أبنائه من **المالية**.\n- عند غياب الابن يُبلَّغ ولي الأمر، ويستطيع الضغط على **تقديم عذر** في تبويب **الحضور** مع السبب ومرفق اختياري، ثم يراجعه المعلم.\n- يختار ولي الأمر كلمة مروره بنفسه عند أول دخول.\n- إن كانت حصة ابنك مباشرة اليوم فتظهر أعلى صفحتك الرئيسية، ويمكنك مشاهدتها إن سمحت المدرسة لأولياء الأمور، مشاهداً بلا كاميرا ولا ميكروفون.\n\nحل المشكلات:\n\n- **لا يظهر أي ابن لولي الأمر**: الحساب غير مربوط بعد. استخدم **ربط ولي أمر** و**ربط طفل** كما في الخطوة ٣.\n- **رمز الوصول مرفوض**: للرموز مدة صلاحية. أنشئ رمزًا جديدًا بـ**ربط ولي أمر**.\n- **ولي الأمر لا يستطيع الدخول**: راجع الدخول ونسيان كلمة المرور. تستطيع إدارة المدرسة إعادة تعيين كلمة مروره بـ**إنشاء بيانات الدخول**.\n- **لديه ابنان ويظهر واحد فقط**: اربط الابن الثاني برمز الوصول الخاص به.",
+      "en": "1. **Add the student.** The wizard saves the parent as a contact.\n2. **Give the parent a login.** In **Parents**, open the parent's row and click **Generate Credentials**. Share the login code and PIN by WhatsApp, SMS or email, or copy them. Importing guardians in bulk works too.\n3. **Link a parent to another child.** In **Students**, open the child's row and click **Link Parent** to get an access code you can print. Then in **Parents**, open the parent's row, click **Link Child**, enter the **Access Code**, click **Validate Code**, choose the relationship and click **Confirm Link**.\n4. **The parent signs in** at the school's address and opens **Parent portal** from the sidebar.\n5. They pick a child and use the tabs: **Overview**, **Grades**, **Report cards**, **Attendance**, **Timetable** and **Assignments**.\n\n- Parents also see announcements, events and messages, and their children's fees under **Finance**.\n- When a child is marked absent, the parent is notified. They can click **Submit Excuse** on the child's **Attendance** tab, with a reason and an optional attachment. A teacher then reviews it.\n- On first sign-in, parents choose their own password.\n- When your child's class is online today it shows at the top of your home page. You can watch it when the school allows guardians to, as an observer with no camera or microphone.\n\nTroubleshooting:\n\n- **A parent sees no children**: the login isn't linked yet. Use **Link Parent** and **Link Child** from step 3.\n- **The access code is rejected**: codes expire. Generate a new one with **Link Parent**.\n- **A parent can't sign in**: see Signing in and passwords. The school office can reset their password with **Generate Credentials**.\n- **A parent with two children only sees one**: link the second child with its own access code."
     },
     "keywords": [
       "ولي الامر",
@@ -664,6 +1015,9 @@
       "رمز الوصول",
       "دخول ولي",
       "تقديم عذر",
+      "مشاهدة الحصة",
+      "حصة ابني المباشرة",
+      "حصة مباشرة",
       "parent",
       "guardian",
       "father",
@@ -673,7 +1027,11 @@
       "link parent",
       "access code",
       "parent login",
-      "submit excuse"
+      "submit excuse",
+      "watch class",
+      "watch live",
+      "child live class",
+      "online class"
     ],
     "guide": "/docs/support/parents"
   },
@@ -789,8 +1147,8 @@
       "en": "Installing the app on a phone, working offline"
     },
     "answer": {
-      "ar": "1. افتح عنوان مدرستك على جوالك (مثل `yourschool.balqalam.com`) وسجّل الدخول.\n2. تظهر نافذة **أضف بالقلم إلى الشاشة الرئيسية**، فاضغط **متابعة**.\n3. **أندرويد (كروم)**: وافق على نافذة التثبيت، فتُضاف أيقونة التطبيق إلى الشاشة الرئيسية.\n4. **آيفون (سفاري)**: اختر **إضافة إلى الشاشة الرئيسية** من قائمة المشاركة، ثم **إضافة**.\n5. افتح «بالقلم» من أيقونته، فيعمل بملء الشاشة كأي تطبيق.\n\n- لا يوجد تنزيل من App Store أو Play Store، فالتطبيق يُثبَّت من الموقع باسم مدرستك وألوانها.\n- دون إنترنت تُحفظ على الجوال: **التحضير السريع**، ودروس «لوموس» واختباراتها، وتسليم الواجبات، وتُرسَل عند عودة الاتصال.\n- الصفحات التي فتحتها من قبل تُفتح دون إنترنت، وتُمسح عند تسجيل الخروج إن كان الجوال مشتركًا.\n\nحل المشكلات:\n\n- **لا تظهر نافذة التثبيت**: تظهر على الجوال فقط، لا على الكمبيوتر ولا بعد التثبيت، وتختفي ١٤ يومًا بعد إغلاقها. ثبّت من قائمة المتصفح: كروم **⋮ ← تثبيت التطبيق**، أو سفاري **مشاركة ← إضافة إلى الشاشة الرئيسية**.\n- **لا يوجد «إضافة إلى الشاشة الرئيسية» على الآيفون**: افتح العنوان في **سفاري**، لا في متصفح واتساب الداخلي أو تطبيق آخر.\n- **رسالة «حُفظ التحضير على هذا الجهاز» لا تختفي**: اتصل بالإنترنت وافتح التطبيق، فيتزامن وحده.\n- **صفحة لا تفتح دون إنترنت**: لم تفتحها على هذا الجوال من قبل. افتحها مرة وأنت متصل.",
-      "en": "1. On your phone, open your school's address (for example `yourschool.balqalam.com`) and sign in.\n2. A sheet appears: **Add balqalam to your Home Screen**. Tap **Continue**.\n3. **Android (Chrome)**: confirm the install prompt. The app icon is added to your home screen.\n4. **iPhone (Safari)**: in the share sheet, choose **Add to Home Screen**, then **Add**.\n5. Open Balqalam from its icon. It opens full screen like a normal app.\n\n- There's no App Store or Play Store download. The app installs from the website, with your school's name and colours.\n- Offline, **Quick Attendance**, Lumos lessons, quizzes and assignment submissions are saved on the phone and sent when the connection returns.\n- Pages you've already opened can be reopened offline. On a shared phone they're cleared when you sign out.\n\nTroubleshooting:\n\n- **The install sheet doesn't appear**: it only shows on phones, not on a computer or once the app is installed, and it stays hidden for 14 days after you close it. Install from the browser menu instead: Chrome **⋮ → Install app**, or Safari **Share → Add to Home Screen**.\n- **iPhone has no \"Add to Home Screen\"**: open the address in **Safari**, not in WhatsApp's built-in browser or another app.\n- **\"Attendance saved on this device\" won't go away**: connect to the internet and open the app. It syncs on its own.\n- **A page says it can't load offline**: you haven't opened that page on this phone yet. Open it once while you're online."
+      "ar": "1. افتح عنوان مدرستك على جوالك (مثل `yourschool.balqalam.com`) وسجّل الدخول.\n2. تظهر نافذة **أضف بالقلم إلى الشاشة الرئيسية**، فاضغط **متابعة**.\n3. **أندرويد (كروم)**: وافق على نافذة التثبيت، فتُضاف أيقونة التطبيق إلى الشاشة الرئيسية.\n4. **آيفون (سفاري)**: اختر **إضافة إلى الشاشة الرئيسية** من قائمة المشاركة، ثم **إضافة**.\n5. افتح «بالقلم» من أيقونته، فيعمل بملء الشاشة كأي تطبيق.\n\n- لا يوجد تنزيل من App Store أو Play Store، فالتطبيق يُثبَّت من الموقع باسم مدرستك وألوانها.\n- دون إنترنت تُحفظ على الجوال: **التحضير السريع**، ودروس «لوموس» واختباراتها، وتسليم الواجبات، وتُرسَل عند عودة الاتصال.\n- الصفحات التي فتحتها من قبل تُفتح دون إنترنت، وتُمسح عند تسجيل الخروج إن كان الجوال مشتركًا.\n- فعّل الإشعارات الفورية لتصلك بداية الحصص والواجبات الجديدة حتى والتطبيق مغلق. انظر الإشعارات.\n\nحل المشكلات:\n\n- **لا تظهر نافذة التثبيت**: تظهر على الجوال فقط، لا على الكمبيوتر ولا بعد التثبيت، وتختفي ١٤ يومًا بعد إغلاقها. ثبّت من قائمة المتصفح: كروم **⋮ ← تثبيت التطبيق**، أو سفاري **مشاركة ← إضافة إلى الشاشة الرئيسية**.\n- **لا يوجد «إضافة إلى الشاشة الرئيسية» على الآيفون**: افتح العنوان في **سفاري**، لا في متصفح واتساب الداخلي أو تطبيق آخر.\n- **رسالة «حُفظ التحضير على هذا الجهاز» لا تختفي**: اتصل بالإنترنت وافتح التطبيق، فيتزامن وحده.\n- **صفحة لا تفتح دون إنترنت**: لم تفتحها على هذا الجوال من قبل. افتحها مرة وأنت متصل.",
+      "en": "1. On your phone, open your school's address (for example `yourschool.balqalam.com`) and sign in.\n2. A sheet appears: **Add balqalam to your Home Screen**. Tap **Continue**.\n3. **Android (Chrome)**: confirm the install prompt. The app icon is added to your home screen.\n4. **iPhone (Safari)**: in the share sheet, choose **Add to Home Screen**, then **Add**.\n5. Open Balqalam from its icon. It opens full screen like a normal app.\n\n- There's no App Store or Play Store download. The app installs from the website, with your school's name and colours.\n- Offline, **Quick Attendance**, Lumos lessons, quizzes and assignment submissions are saved on the phone and sent when the connection returns.\n- Pages you've already opened can be reopened offline. On a shared phone they're cleared when you sign out.\n- Turn on push notifications to hear about classes starting and new homework, even with the app closed. See Notifications.\n\nTroubleshooting:\n\n- **The install sheet doesn't appear**: it only shows on phones, not on a computer or once the app is installed, and it stays hidden for 14 days after you close it. Install from the browser menu instead: Chrome **⋮ → Install app**, or Safari **Share → Add to Home Screen**.\n- **iPhone has no \"Add to Home Screen\"**: open the address in **Safari**, not in WhatsApp's built-in browser or another app.\n- **\"Attendance saved on this device\" won't go away**: connect to the internet and open the app. It syncs on its own.\n- **A page says it can't load offline**: you haven't opened that page on this phone yet. Open it once while you're online."
     },
     "keywords": [
       "جوال",
@@ -807,6 +1165,8 @@
       "بدون نت",
       "اوفلاين",
       "الشاشه الرئيسيه",
+      "إشعارات الهاتف",
+      "إشعارات فورية",
       "mobile",
       "phone",
       "app",
@@ -817,9 +1177,57 @@
       "internet",
       "home screen",
       "no connection",
-      "download app"
+      "download app",
+      "push notifications",
+      "notifications on phone"
     ],
     "guide": "/docs/support/mobile"
+  },
+  {
+    "slug": "notifications",
+    "roles": [
+      "student",
+      "parent",
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "الإشعارات",
+      "en": "Notifications"
+    },
+    "summary": {
+      "ar": "تفعيل الإشعارات الفورية وما يصلك منها",
+      "en": "Turning on push notifications and what you are notified about"
+    },
+    "answer": {
+      "ar": "1. اضغط الجرس أعلى الصفحة لفتح **الإشعارات**، ثم تبويب **الإعدادات**.\n2. تحت **الإشعارات الفورية على هذا الجهاز** اضغط **تفعيل**، واسمح بالإشعارات عندما يطلب المتصفح.\n3. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً (مشاركة ← إضافة إلى الشاشة الرئيسية)، ثم فعّل الإشعارات من التطبيق المثبَّت.\n4. اختر أنواع الإشعارات التي تريدها بالبريد وبالإشعار الفوري.\n\n- يصلك إشعار عندما تقترب حصة أنت فيها وعندما تبدأ (مع رابط يدخلك الحصة مباشرة)، وعند تحديد واجب، وعن الغياب والإعلانات والرسائل.\n- يعرض الجرس أعلى لوحة التحكم كل الإشعارات حتى مع إيقاف الإشعارات الفورية.\n- فعّل الإشعارات على كل جهاز تستخدمه على حدة.\n\nحل المشكلات:\n\n- **«الإشعارات محظورة لهذا الموقع»**: اسمح بإشعارات الموقع من إعدادات المتصفح، ثم اضغط **تفعيل** مجدداً.\n- **«هذا المتصفح لا يدعم الإشعارات الفورية»**: استخدم إصداراً حديثاً من Chrome أو Edge أو Safari أو Firefox، أو ثبّت التطبيق على هاتفك.\n- **وصل تذكير الحصة متأخراً أو لم يصل**: تُرسل التذكيرات قبيل كل حصة؛ تأكد أن الإشعارات الفورية مفعّلة على هذا الجهاز.",
+      "en": "1. Click the bell at the top of the page to open **Notifications**, then the **Settings** tab.\n2. Under **Push notifications on this device**, click **Turn on** and allow notifications when the browser asks.\n3. On iPhone, first add the app to your Home Screen (Share → Add to Home Screen), then turn notifications on from the installed app.\n4. Choose which kinds of notification you want by email and by push.\n\n- You're notified when a class you belong to is starting soon and when it starts (with a link straight into the class), when homework is set, and about absences, announcements and messages.\n- The bell at the top of the dashboard shows every notification, even with push off.\n- Turn notifications on separately on each device you use.\n\nTroubleshooting:\n\n- **\"Notifications are blocked for this site\"**: allow notifications for the site in your browser settings, then click **Turn on** again.\n- **\"This browser does not support push notifications\"**: use a current Chrome, Edge, Safari or Firefox, or install the app on your phone.\n- **A class reminder came late or not at all**: reminders are sent shortly before each class; check push is on for this device."
+    },
+    "keywords": [
+      "إشعارات",
+      "اشعارات",
+      "إشعار",
+      "تنبيهات",
+      "تذكير",
+      "تذكير الحصة",
+      "لا تصلني إشعارات",
+      "تفعيل الإشعارات",
+      "إشعارات الهاتف",
+      "الجرس",
+      "إشعارات البريد",
+      "notifications",
+      "push",
+      "alerts",
+      "reminder",
+      "notify",
+      "class reminder",
+      "no notifications",
+      "turn on notifications",
+      "phone notifications",
+      "bell",
+      "email notifications"
+    ],
+    "guide": "/docs/support/notifications"
   },
   {
     "slug": "security",
