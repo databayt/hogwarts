@@ -136,6 +136,8 @@ export interface OwnSubmission {
   content: string | null
   score: number | null
   feedback: string | null
+  /** Stored file URLs (this school's bucket). */
+  attachments?: string[]
 }
 
 /** The full stored row, for readers that need more than the web card shows. */

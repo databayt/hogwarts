@@ -2,8 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
-import { CheckCircle2, Clock, Send, WifiOff } from "lucide-react"
+import { useRef, useState, useTransition } from "react"
+import { CheckCircle2, Clock, Paperclip, Send, WifiOff, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { enqueue } from "@/lib/offline/outbox"
@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 
-import { submitAssignment } from "./submit-actions"
+import { presignSubmissionUpload, submitAssignment } from "./submit-actions"
 import type { OwnSubmission } from "./submit-core"
 
 interface SubmissionCardProps {
@@ -44,17 +44,76 @@ export function StudentSubmissionCard({
     return typeof v === "string" ? v : fallback
   }
   const [content, setContent] = useState(existing?.content ?? "")
+  // Uploaded file URLs for this hand-in. The server always took attachments;
+  // the card only took typed text, and an online school hands in photos of
+  // work.
+  const [files, setFiles] = useState<string[]>(existing?.attachments ?? [])
+  const [uploading, setUploading] = useState(false)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<OwnSubmission | null>(existing)
   const [queued, setQueued] = useState(false)
   const [pending, startTransition] = useTransition()
 
   const graded = state?.status === "GRADED" || state?.status === "RETURNED"
 
+  const fileName = (url: string) =>
+    decodeURIComponent(url.split("/").pop() ?? "file").replace(
+      /^\d+-[a-z0-9]+-/i,
+      ""
+    )
+
+  const handleFiles = async (list: FileList | null) => {
+    if (!list || list.length === 0) return
+    setUploading(true)
+    try {
+      for (const file of Array.from(list).slice(0, 10 - files.length)) {
+        const res = await presignSubmissionUpload({
+          assignmentId,
+          filename: file.name,
+          contentType: file.type,
+          size: file.size,
+        })
+        if (!res.success) {
+          toast.error(
+            t("uploadFailed", "Couldn't upload {name}").replace(
+              "{name}",
+              file.name
+            )
+          )
+          continue
+        }
+        const put = await fetch(res.data.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+        if (!put.ok) {
+          toast.error(
+            t("uploadFailed", "Couldn't upload {name}").replace(
+              "{name}",
+              file.name
+            )
+          )
+          continue
+        }
+        setFiles((prev) => [...prev, res.data.fileUrl])
+      }
+    } finally {
+      setUploading(false)
+      if (fileInput.current) fileInput.current.value = ""
+    }
+  }
+
   const handleSubmit = () => {
     const text = content.trim()
-    if (!text) return
+    if (!text && files.length === 0) return
 
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      // The outbox carries text only — files need the connection to upload.
+      if (files.length > 0) {
+        toast.error(t("offlineFiles", "Files need a connection to hand in"))
+        return
+      }
       void enqueue({
         kind: "assignment",
         coalesceKey: `assignment:${assignmentId}`,
@@ -64,7 +123,11 @@ export function StudentSubmissionCard({
     }
 
     startTransition(async () => {
-      const res = await submitAssignment({ assignmentId, content: text })
+      const res = await submitAssignment({
+        assignmentId,
+        content: text,
+        attachments: files,
+      })
       if (!res.success || !res.data) {
         toast.error(t("submitFailed", "Couldn't submit — please try again"))
         return
@@ -75,6 +138,7 @@ export function StudentSubmissionCard({
         content: text,
         score: null,
         feedback: null,
+        attachments: files,
       })
       SuccessToast(t("submitted", "Submitted"))
     })
@@ -113,7 +177,22 @@ export function StudentSubmissionCard({
 
         {graded ? (
           <div className="space-y-2">
-            <p className="whitespace-pre-wrap">{state?.content}</p>
+            <p dir="auto" className="whitespace-pre-wrap">
+              {state?.content}
+            </p>
+            {(state?.attachments?.length ?? 0) > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {state!.attachments!.map((url) => (
+                  <li
+                    key={url}
+                    className="bg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs"
+                  >
+                    <Paperclip className="h-3 w-3" aria-hidden />
+                    <span dir="auto">{fileName(url)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {state?.score !== null && state?.score !== undefined && (
               <p className="font-medium">
                 {t("score", "Score")}: {state.score}
@@ -149,11 +228,57 @@ export function StudentSubmissionCard({
               maxLength={20000}
               disabled={pending}
             />
-            <div className="flex items-center gap-2">
+            {files.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {files.map((url) => (
+                  <li
+                    key={url}
+                    className="bg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs"
+                  >
+                    <Paperclip className="h-3 w-3" aria-hidden />
+                    <span dir="auto">{fileName(url)}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFiles((prev) => prev.filter((f) => f !== url))
+                      }
+                      aria-label={t("removeFile", "Remove")}
+                      className="relative ms-1 after:absolute after:-inset-2 after:content-['']"
+                    >
+                      <X className="h-3 w-3" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              accept="image/*,application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,audio/*"
+              className="sr-only"
+              onChange={(e) => void handleFiles(e.target.files)}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInput.current?.click()}
+                disabled={pending || uploading || files.length >= 10}
+              >
+                <Paperclip className="me-2 h-4 w-4" aria-hidden />
+                {uploading
+                  ? t("uploading", "Uploading…")
+                  : t("attachFiles", "Attach files")}
+              </Button>
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={pending || !content.trim()}
+                disabled={
+                  pending ||
+                  uploading ||
+                  (!content.trim() && files.length === 0)
+                }
               >
                 {state?.submittedAt
                   ? t("resubmit", "Resubmit")

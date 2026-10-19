@@ -8,6 +8,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getAssignment } from "@/components/school-dashboard/listings/assignments/actions"
 import { AssignmentDetailContent } from "@/components/school-dashboard/listings/assignments/detail"
+import { loadSubmissionReview } from "@/components/school-dashboard/listings/assignments/submissions-core"
 import { getOwnSubmission } from "@/components/school-dashboard/listings/assignments/submit-core"
 
 interface Props {
@@ -30,6 +31,16 @@ export default async function AssignmentDetailPage({ params }: Props) {
     isStudent && schoolId && result.success && result.data
       ? await getOwnSubmission(session!.user.id, schoolId, id)
       : null
+  // Staff get the hand-ins to mark (a TEACHER only for work they teach).
+  const review =
+    !isStudent && schoolId && session?.user?.id && result.success
+      ? await loadSubmissionReview({
+          schoolId,
+          userId: session.user.id,
+          role: session.user.role ?? "",
+          assignmentId: id,
+        })
+      : null
 
   return (
     <AssignmentDetailContent
@@ -37,6 +48,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
       error={result.success ? null : result.error}
       lang={lang}
       viewer={isStudent ? { role: "STUDENT", submission } : undefined}
+      review={review}
     />
   )
 }

@@ -25,6 +25,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { StudentSubmissionCard } from "./submission-card"
+import type { SubmissionReview } from "./submissions-core"
+import { SubmissionsReview } from "./submissions-review"
 import type { OwnSubmission } from "./submit-core"
 
 // Type for assignment detail - matches the select result from actions.ts
@@ -50,6 +52,8 @@ interface AssignmentDetailContentProps {
   lang: Locale
   /** Present for a signed-in student: unlocks the hand-in card. */
   viewer?: { role: "STUDENT"; submission: OwnSubmission | null }
+  /** Present for staff who may mark this assignment. */
+  review?: SubmissionReview | null
 }
 
 export function AssignmentDetailContent({
@@ -58,6 +62,7 @@ export function AssignmentDetailContent({
   dictionary: dictionaryProp,
   lang,
   viewer,
+  review,
 }: AssignmentDetailContentProps) {
   const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
@@ -317,10 +322,19 @@ export function AssignmentDetailContent({
               <CardTitle>{t.submissions || "Submissions"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                {t.submissionsListPlaceholder ||
-                  "Submissions list will be displayed here"}
-              </p>
+              {review ? (
+                <SubmissionsReview
+                  review={review}
+                  totalPoints={data.totalPoints}
+                  labels={t}
+                  locale={lang}
+                />
+              ) : (
+                <p className="text-muted-foreground">
+                  {t.submissionsListPlaceholder ||
+                    "Submissions list will be displayed here"}
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
