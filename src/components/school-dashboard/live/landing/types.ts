@@ -127,5 +127,11 @@ export interface LandingReadiness {
   /** Standing meeting link — without one an uncovered pair materializes nothing. */
   hasFallback: boolean
   /** Null when the coverage read failed or the school has no active term. */
-  coverage: { total: number; covered: number; gapCount: number } | null
+  coverage: {
+    total: number
+    covered: number
+    gapCount: number
+    /** Weekly slots with no teacher — no host, so no live class. */
+    teacherlessSlots: number
+  } | null
 }

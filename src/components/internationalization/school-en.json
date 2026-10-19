@@ -5728,7 +5728,9 @@
           "ready": "Ready",
           "notProvisioned": "Not provisioned",
           "unknown": "Unavailable",
-          "noFallback": "{count} class-subject pairs have no room of their own, and there is no standing meeting link — nothing will be created for them."
+          "noFallback": "{count} class-subject pairs have no room of their own, and there is no standing meeting link — nothing will be created for them.",
+          "noTeacher": "{count} weekly periods have no teacher, so they have no host and no live class.",
+          "assignTeachers": "Assign teachers"
         },
         "guide": {
           "title": "What you can do here",

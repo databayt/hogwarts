@@ -503,6 +503,10 @@ export async function materializeOnlineSchools(
   const schools = await db.school.findMany({
     where: {
       OR: [
+        // The teaching mode itself, not only the switch derived from it: a
+        // school set to online by any writer (seed, ops, a future action)
+        // that skipped the derivation would otherwise never be swept.
+        { conferenceDeliveryMode: "online" },
         { conferenceOnlineDefault: true },
         { sections: { some: { conferenceOnline: true } } },
         // The per-grade override (hybrid mode: section ?? GRADE ?? school).

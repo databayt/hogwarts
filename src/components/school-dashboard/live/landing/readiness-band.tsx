@@ -133,6 +133,17 @@ export function LiveReadinessBand({
       {/* Only worth saying when it changes what happens: without a standing
           link, a section+subject pair with no room of its own materializes
           nothing at all rather than falling back to a shared one. */}
+      {coverage && coverage.teacherlessSlots > 0 ? (
+        <p className="text-muted-foreground mt-3 text-xs">
+          {r?.noTeacher?.replace(
+            "{count}",
+            num(lang, coverage.teacherlessSlots)
+          )}{" "}
+          <a className="underline" href={`/${lang}/timetable/teachers`}>
+            {r?.assignTeachers}
+          </a>
+        </p>
+      ) : null}
       {coverage && coverage.gapCount > 0 && !readiness.hasFallback ? (
         <p className="text-muted-foreground mt-3 text-xs">
           {r?.noFallback?.replace("{count}", num(lang, coverage.gapCount))}

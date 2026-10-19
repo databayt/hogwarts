@@ -105,6 +105,7 @@ export default async function Page({ params }: Props) {
                 total: coverage.data.total,
                 covered: coverage.data.covered,
                 gapCount: coverage.data.gapCount,
+                teacherlessSlots: coverage.data.teacherlessSlots,
               }
             : null,
         }

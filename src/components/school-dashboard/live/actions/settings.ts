@@ -221,7 +221,17 @@ export async function updateDeliveryMode(input: unknown) {
           conferenceOnlineNote: null,
         }
       : mode === "online"
-        ? { conferenceDeliveryMode: mode, conferenceOnlineDefault: true }
+        ? {
+            conferenceDeliveryMode: mode,
+            conferenceOnlineDefault: true,
+            // An online school has no building to fall back on: with the
+            // `external` default every slot needs a pasted link, and without
+            // one each is skipped `no_link` — "Live" produced no classes. When
+            // in-app rooms exist, use them. (Hybrid keeps the admin's choice.)
+            ...(isLiveKitConfigured()
+              ? { conferenceProviderDefault: "livekit" as const }
+              : {}),
+          }
         : { conferenceDeliveryMode: mode }
 
   try {

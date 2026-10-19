@@ -32,13 +32,14 @@ export async function computeLiveLinkCoverage(schoolId: string) {
         covered: 0,
         gaps: [] as Array<{ section: string; subject: string }>,
         gapCount: 0,
+        teacherlessSlots: 0,
         hasFallback: Boolean(school?.conferenceFallbackUrl),
         truncated: false,
       },
     }
   }
 
-  const [slots, links] = await Promise.all([
+  const [slots, links, teacherlessSlots] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId: schoolId,
@@ -62,6 +63,19 @@ export async function computeLiveLinkCoverage(schoolId: string) {
     db.conferenceLink.findMany({
       where: { schoolId: schoolId, termId: term.id },
       select: { sectionId: true, subjectId: true },
+    }),
+    // A slot with no teacher has no host, so it never becomes a live class —
+    // silently. Onboarding builds the timetable before anyone is hired, so a
+    // new online school starts with every slot in this state.
+    db.timetable.count({
+      where: {
+        schoolId,
+        termId: term.id,
+        weekOffset: 0,
+        sectionId: { not: null },
+        teacherId: null,
+        period: { isBreak: false },
+      },
     }),
   ])
 
@@ -101,6 +115,7 @@ export async function computeLiveLinkCoverage(schoolId: string) {
       // school with 400 uncovered pairs doesn't ship 400 rows to the client.
       gaps: gaps.slice(0, 50),
       gapCount: gaps.length,
+      teacherlessSlots,
       // With a fallback set, an uncovered pair is still joinable (on a SHARED
       // room). Without one, it materializes nothing at all.
       hasFallback: Boolean(school?.conferenceFallbackUrl),
