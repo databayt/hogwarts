@@ -81,3 +81,15 @@ student. The list, detail, CSV and certificate name the section, falling back to
 - **The nightly purge** (`/api/cron/purge-empty-drafts`, 02:00 UTC, beside cleanup-notifications) removes empty drafts older than 24 hours: closed tabs, Back, a lost connection.
 
 A draft with any data (even just a name) is kept, and shows as "Incomplete" with a link to resume it.
+
+## Assignments: publish, hand in, mark (2026-10-19)
+
+- `wizard/actions.ts completeAssignmentWizard` publishes a DRAFT (status + publishDate) and has the
+  `update` role gate. Before, nothing on the web set PUBLISHED, so wizard-made homework reached no student.
+- `assignments/notify.ts notifyAssignmentPublished` sends `assignment_created` to the audience
+  (school language, due date in its timezone). Called by the wizard and by live `setClassHomework`.
+- `assignments/submissions-core.ts` + `submissions-review.tsx`: the Submissions tab (signed attachments
+  via `@/lib/tenant-storage`, roster count, `gradeSubmission`). TEACHER scope = `teacherAssignmentsWhere`.
+- `submit-actions.ts presignSubmissionUpload` (students, `attachment` kind) and the
+  `isTenantStorageUrl` guard on `submitAssignment`.
+

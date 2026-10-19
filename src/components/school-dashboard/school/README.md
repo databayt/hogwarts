@@ -135,3 +135,13 @@ slips, certificates and exports keep the **full** name. Separate from
 `nameFormat`, which only controls how names are **typed** (one field or two).
 Names split by `tokenizeName()` — عبد الله, أبو بكر, نور الدين, فضل الله stay
 one name.
+
+## Teaching mode and holidays (2026-10-19)
+
+- `/school/configuration/teaching-mode`: In person · Live · Both → `School.conferenceDeliveryMode`
+  through the live block's `updateDeliveryMode`. Choosing Live switches the provider to in-app rooms
+  when LiveKit is configured. The detailed knobs stay on `/school/configuration/live-classes`.
+- `/school/configuration/holidays`: HOLIDAY / CANCELLED `ScheduleException` rows
+  (`holidays-actions.ts`, admins only). Days are sent as `YYYY-MM-DD` and stored at noon school time.
+  The live sweep stops creating classes on these days, and the timetable shows the school as closed.
+
