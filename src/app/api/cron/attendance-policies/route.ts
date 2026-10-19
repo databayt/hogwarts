@@ -60,16 +60,28 @@ export async function GET(request: Request) {
         }
 
         // 3. Count absences per student in the current term
-        const absenceCounts = await db.attendance.groupBy({
-          by: ["studentId"],
+        // Absent DAYS, not rows: an online school writes an ABSENT row per
+        // missed period, so a row count reached a "5 absences" tier in under
+        // one day. VIRTUAL period rows are left out (the live roll-up's day
+        // row speaks for them) and a student is counted once per date.
+        const absentDays = await db.attendance.groupBy({
+          by: ["studentId", "date"],
           where: {
             schoolId: school.id,
             status: "ABSENT",
             date: { gte: activeTerm.startDate },
             deletedAt: null,
+            NOT: { method: "VIRTUAL", periodId: { not: null } },
           },
-          _count: true,
         })
+        const daysByStudent = new Map<string, number>()
+        for (const r of absentDays) {
+          daysByStudent.set(r.studentId, (daysByStudent.get(r.studentId) ?? 0) + 1)
+        }
+        const absenceCounts = [...daysByStudent].map(([studentId, n]) => ({
+          studentId,
+          _count: n,
+        }))
 
         // 4. Get existing triggers to avoid duplicates
         const existingTriggers = await db.policyTrigger.findMany({

@@ -12,6 +12,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getGuardiansForStudent } from "@/lib/guardian-utils"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
+import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,9 @@ export async function GET(request: Request) {
       select: {
         schoolId: true,
         parentContactSlaMinutes: true,
-        school: { select: { name: true, preferredLanguage: true } },
+        school: {
+          select: { name: true, preferredLanguage: true, timezone: true },
+        },
       },
     })
 
@@ -97,6 +100,9 @@ export async function GET(request: Request) {
           studentId: true,
           date: true,
           markedAt: true,
+          periodId: true,
+          method: true,
+          markedBy: true,
           student: {
             select: { firstName: true, middleName: true, lastName: true },
           },
@@ -105,8 +111,37 @@ export async function GET(request: Request) {
       })
       absencesScanned += candidates.length
 
+      // Live classes write ABSENT per PERIOD and roll the day up into a
+      // system-written day row, so an online school produced one alert per
+      // missed period — "absent today" for missing period 1 while the child
+      // sat periods 2–6. So: VIRTUAL period rows never alert (their day row
+      // speaks for them); a system VIRTUAL day row waits until the school
+      // day's last period has ended, because a later class can still raise
+      // it; and a guardian hears about a student once per run, not once per
+      // row. Manual period registers keep alerting as before.
+      const dayOver = await schoolDayOver(
+        config.schoolId,
+        config.school?.timezone,
+        now
+      )
+      const seen = new Set<string>()
+      const toContact = candidates.filter((a) => {
+        if (a.method === "VIRTUAL" && a.periodId != null) return false
+        if (
+          a.method === "VIRTUAL" &&
+          a.periodId == null &&
+          a.markedBy == null &&
+          !dayOver
+        ) {
+          return false
+        }
+        if (seen.has(a.studentId)) return false
+        seen.add(a.studentId)
+        return true
+      })
+
       const nameDisplay = await schoolNameDisplay(config.schoolId)
-      for (const absence of candidates) {
+      for (const absence of toContact) {
         const guardians = await getGuardiansForStudent(
           db,
           config.schoolId,
@@ -213,4 +248,34 @@ export async function GET(request: Request) {
       { status: 500 }
     )
   }
+}
+
+/**
+ * Has this school's teaching day ended, in its own timezone? Period times
+ * are stored as UTC wall-clock (`getUTCHours` is the hour on the bell
+ * schedule). No bell schedule → treat the day as over, which is the old
+ * behaviour.
+ */
+async function schoolDayOver(
+  schoolId: string,
+  timezone: string | null | undefined,
+  now: Date
+): Promise<boolean> {
+  const last = await db.period.findFirst({
+    where: { schoolId, isBreak: false },
+    orderBy: { endTime: "desc" },
+    select: { endTime: true },
+  })
+  if (!last) return true
+  const endMin = last.endTime.getUTCHours() * 60 + last.endTime.getUTCMinutes()
+  const [h, m] = new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone || DEFAULT_SCHOOL_TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .format(now)
+    .split(":")
+    .map(Number)
+  return h * 60 + m >= endMin
 }

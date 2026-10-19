@@ -44,6 +44,14 @@ function authedRequest() {
   })
 }
 
+// The cron counts absent DAYS: groupBy (studentId, date) rows, one per day.
+function absentDays(studentId: string, n: number) {
+  return Array.from({ length: n }, (_, i) => ({
+    studentId,
+    date: new Date(Date.UTC(2026, 0, 2 + i)),
+  }))
+}
+
 describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
   const originalEnv = { ...process.env }
 
@@ -113,7 +121,7 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
       startDate: new Date("2026-01-01"),
     } as any)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([
-      { studentId: "student-1", _count: 3 },
+      ...absentDays("student-1", 3),
     ] as any)
     vi.mocked(db.policyTrigger.create).mockResolvedValue({ id: "t1" } as any)
 
@@ -140,7 +148,7 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
       startDate: new Date("2026-01-01"),
     } as any)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([
-      { studentId: "student-1", _count: 15 },
+      ...absentDays("student-1", 15),
     ] as any)
 
     const res = await GET(authedRequest())
@@ -160,7 +168,7 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
       startDate: new Date("2026-01-01"),
     } as any)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([
-      { studentId: "exempt-student", _count: 10 },
+      ...absentDays("exempt-student", 10),
     ] as any)
     vi.mocked(db.policyExemption.findMany).mockResolvedValue([
       { studentId: "exempt-student" },
@@ -182,7 +190,7 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
       startDate: new Date("2026-01-01"),
     } as any)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([
-      { studentId: "student-1", _count: 10 },
+      ...absentDays("student-1", 10),
     ] as any)
     vi.mocked(db.policyTrigger.findMany).mockResolvedValue([
       { studentId: "student-1", policyId: "default", tier: 3 },
@@ -203,7 +211,7 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
       startDate: new Date("2026-01-01"),
     } as any)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([
-      { studentId: "student-1", _count: 10 },
+      ...absentDays("student-1", 10),
     ] as any)
     vi.mocked(db.user.findMany).mockResolvedValue([{ id: "admin-1" }] as any)
 

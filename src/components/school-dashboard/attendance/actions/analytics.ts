@@ -38,6 +38,16 @@ async function teacherScope(
   return sectionScopeWhere({ teacherSectionIds, sectionId })
 }
 
+/**
+ * A live class writes an ABSENT/PRESENT row per PERIOD and rolls the day up
+ * into a day row; counting both inflated every figure by the periods taught
+ * online. The day row speaks for its VIRTUAL periods, so analytics leave
+ * those out. Manual period registers have no roll-up and still count.
+ */
+const NOT_VIRTUAL_PERIOD: Prisma.AttendanceWhereInput = {
+  NOT: { method: "VIRTUAL", periodId: { not: null } },
+}
+
 export async function getAttendanceStats(input?: {
   sectionId?: string
   dateFrom?: string
@@ -80,6 +90,7 @@ export async function getAttendanceStats(input?: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
     ...(await teacherScope(
       schoolId,
       role,
@@ -186,6 +197,7 @@ export async function getAttendanceTrends(input: {
     const where: Prisma.AttendanceWhereInput = {
       schoolId,
       deletedAt: null,
+      ...NOT_VIRTUAL_PERIOD,
       date: {
         gte: new Date(input.dateFrom),
         lte: new Date(input.dateTo),
@@ -274,6 +286,7 @@ export async function getMethodUsageStats(input?: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
     ...(await teacherScope(
       schoolId,
       session.user.role,
@@ -326,7 +339,11 @@ export async function getDayWisePatterns(input?: {
     return { success: false, error: "Unauthorized" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
+  }
 
   Object.assign(
     where,
@@ -417,6 +434,7 @@ export async function getCalendarData(input: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
     date: {
       gte: startDate,
       lte: endDate,
@@ -620,7 +638,11 @@ export async function getSectionComparisonStats(input?: {
     return { success: false, error: "Unauthorized" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
+  }
 
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -718,7 +740,11 @@ export async function getStudentsAtRisk(input?: {
 
   const threshold = input?.threshold ?? 80
 
-  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...NOT_VIRTUAL_PERIOD,
+  }
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
     if (input.dateFrom) where.date.gte = new Date(input.dateFrom)

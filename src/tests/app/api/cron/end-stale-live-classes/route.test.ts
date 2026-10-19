@@ -12,6 +12,9 @@ vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findMany: vi.fn(), updateMany: vi.fn() },
+    conferenceRecording: {
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
   },
 }))
 vi.mock("@/components/school-dashboard/live/actions/attendance-sync", () => ({

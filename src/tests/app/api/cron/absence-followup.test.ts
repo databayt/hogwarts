@@ -21,6 +21,8 @@ vi.mock("@/lib/db", () => ({
     schoolComplianceConfig: { findMany: vi.fn() },
     attendance: { findMany: vi.fn() },
     attendanceIntervention: { create: vi.fn() },
+    // No bell schedule → the school day counts as over (old behaviour).
+    period: { findFirst: vi.fn(async () => null) },
   },
 }))
 vi.mock("@/lib/dispatch-notification", () => ({
@@ -195,5 +197,73 @@ describe("GET /api/cron/absence-followup (2h SLA)", () => {
     const res = await GET(new Request("http://x"))
 
     expect(res.status).toBe(500)
+  })
+
+  // An online school writes ABSENT per period and a system day row; the cron
+  // used to alert once per row — "absent today" for missing period 1.
+  describe("live-class rows", () => {
+    const config = [
+      {
+        schoolId: "school-1",
+        parentContactSlaMinutes: 120,
+        school: { name: "Online", preferredLanguage: "en", timezone: "UTC" },
+      },
+    ]
+    const row = (over: Record<string, unknown>) => ({
+      id: "a",
+      studentId: "s1",
+      date: new Date(),
+      markedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      periodId: null,
+      method: "MANUAL",
+      markedBy: "teacher-1",
+      student: { firstName: "Ahmed", middleName: null, lastName: "Hassan" },
+      ...over,
+    })
+
+    beforeEach(() => {
+      vi.mocked(isAuthorizedCron).mockReturnValue(true)
+      vi.mocked(db.schoolComplianceConfig.findMany).mockResolvedValue(
+        config as any
+      )
+      vi.mocked(getGuardiansForStudent).mockResolvedValue([
+        { userId: "g1", phoneNumber: null, email: null } as any,
+      ])
+      vi.mocked(dispatchNotification).mockResolvedValue(undefined as any)
+      vi.mocked(db.attendanceIntervention.create).mockResolvedValue({
+        id: "i1",
+      } as any)
+    })
+
+    it("never alerts from a VIRTUAL period row — its day row speaks for it", async () => {
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        row({ id: "p1", periodId: "period-1", method: "VIRTUAL", markedBy: null }),
+      ] as any)
+      const body = await (await GET(new Request("http://x"))).json()
+      expect(body.interventionsCreated).toBe(0)
+      expect(dispatchNotification).not.toHaveBeenCalled()
+    })
+
+    it("alerts once per student, not once per absent row", async () => {
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        row({ id: "m1", periodId: "period-1" }),
+        row({ id: "m2", periodId: "period-2" }),
+        row({ id: "d1" }),
+      ] as any)
+      const body = await (await GET(new Request("http://x"))).json()
+      expect(body.interventionsCreated).toBe(1)
+    })
+
+    it("holds a system VIRTUAL day row until the school day has ended", async () => {
+      // Last period ends 23:59 UTC wall-clock — the day is not over yet.
+      vi.mocked(db.period.findFirst).mockResolvedValueOnce({
+        endTime: new Date(Date.UTC(1970, 0, 1, 23, 59)),
+      } as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        row({ id: "d1", method: "VIRTUAL", markedBy: null }),
+      ] as any)
+      const body = await (await GET(new Request("http://x"))).json()
+      expect(body.interventionsCreated).toBe(0)
+    })
   })
 })
