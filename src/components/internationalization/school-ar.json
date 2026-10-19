@@ -684,6 +684,11 @@
           "online": "عبر الإنترنت",
           "hybrid": "مختلط"
         },
+        "holidays": {
+          "title": "العطلات",
+          "description": "أيام بلا حصص",
+          "upcoming": "{count} قادمة"
+        },
         "schedule": {
           "title": "الجدول الزمني",
           "description": "الحصص وأيام الدراسة"

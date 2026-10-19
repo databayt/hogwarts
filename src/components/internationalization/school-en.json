@@ -684,6 +684,11 @@
           "online": "Online",
           "hybrid": "Hybrid"
         },
+        "holidays": {
+          "title": "Holidays",
+          "description": "Days with no classes",
+          "upcoming": "{count} upcoming"
+        },
         "schedule": {
           "title": "Schedule",
           "description": "Periods and school days"

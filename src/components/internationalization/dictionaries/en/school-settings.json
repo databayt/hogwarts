@@ -223,5 +223,21 @@
     "footer": "Live classes are added to the class, never instead of it — the classroom stays on the timetable either way.",
     "moreSettings": "Live-class settings",
     "updateError": "Couldn't save. Try again."
+  },
+  "holidays": {
+    "footer": "No classes on these days: live classes are not created, reminders are not sent, and the timetable says the school is closed.",
+    "empty": "No holidays declared.",
+    "holiday": "Holiday",
+    "closed": "School closed",
+    "remove": "Remove",
+    "addTitle": "Add a day off",
+    "name": "Name",
+    "namePlaceholder": "Eid al-Fitr",
+    "type": "Type",
+    "from": "From",
+    "until": "Until",
+    "untilHint": "Leave empty for a single day.",
+    "add": "Add",
+    "saveError": "Couldn't save. Try again."
   }
 }

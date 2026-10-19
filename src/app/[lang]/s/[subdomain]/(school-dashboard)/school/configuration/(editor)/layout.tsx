@@ -43,6 +43,7 @@ export default async function EditorLayout({ children, params }: Props) {
     gradeCount,
     discountCount,
     pendingDomainRequest,
+    upcomingHolidays,
   ] = await Promise.all([
     schoolId
       ? db.school
@@ -111,6 +112,17 @@ export default async function EditorLayout({ children, params }: Props) {
           })
           .catch(() => null)
       : null,
+    schoolId
+      ? db.scheduleException
+          .count({
+            where: {
+              schoolId,
+              exceptionType: { in: ["HOLIDAY", "CANCELLED"] },
+              endDate: { gte: new Date() },
+            },
+          })
+          .catch(() => 0)
+      : 0,
   ])
 
   // One card per section, in the order a new admin fills things in.
@@ -123,6 +135,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "academic",
     "teaching-mode",
     "live-classes",
+    "holidays",
     "branding",
     "hero",
     "name-format",
@@ -259,6 +272,13 @@ export default async function EditorLayout({ children, params }: Props) {
           : ((cs?.limitedSharing as string) ?? "Limited sharing")
       case "discount":
         return count("discount", discountCount)
+      case "holidays":
+        return upcomingHolidays > 0
+          ? (
+              ((cs?.holidays as Record<string, string>)?.upcoming ??
+                "{count} upcoming") as string
+            ).replace("{count}", String(upcomingHolidays))
+          : null
       case "legal": {
         if (!school.planType) return null
         const planId = normalizePlanType(school.planType)
