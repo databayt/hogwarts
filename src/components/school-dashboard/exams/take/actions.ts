@@ -23,7 +23,11 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
 import { examReachesStudents } from "../lib/roster"
-import { finalizeStudentExam } from "../mark/actions/finalize"
+import {
+  persistAndSubmit,
+  sessionDeadline,
+  snapshotAnswersBy,
+} from "./finalize-session"
 import type {
   ExamData,
   ExamQuestion,
@@ -415,19 +419,19 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Check if within time limit (with late submission grace period if enabled)
-    const startTime = examSession.startedAt
-    if (startTime) {
-      const examDurationMs = examSession.exam.duration * 60 * 1000
-      const lateAllowanceMs = examSession.exam.allowLateSubmit
-        ? examSession.exam.lateSubmitMinutes * 60 * 1000
-        : 0
-      const deadline = new Date(
-        startTime.getTime() + examDurationMs + lateAllowanceMs
+    // Past the deadline (late allowance + network grace), the answers in this
+    // request are not taken — but what the student AUTO-SAVED by the deadline
+    // is. Before, an auto-submit landing a moment after time-up was refused
+    // and the whole attempt marked EXPIRED with every answer thrown away.
+    const deadline = sessionDeadline(examSession)
+    let toSave = answers
+    if (deadline && new Date() > deadline) {
+      toSave = snapshotAnswersBy(
+        examSession.answerSnapshot,
+        examSession.lastSavedAt,
+        deadline
       )
-
-      if (new Date() > deadline) {
-        // Mark as expired instead of allowing submission
+      if (toSave.length === 0) {
         await db.examSession.update({
           where: { id: sessionId },
           data: { status: "EXPIRED" },
@@ -436,72 +440,14 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
       }
     }
 
-    // Create/update student answers in transaction
-    await db.$transaction(async (tx) => {
-      for (const answer of answers) {
-        await tx.studentAnswer.upsert({
-          where: {
-            examId_questionId_studentId: {
-              examId,
-              questionId: answer.questionId,
-              studentId: examSession.studentId,
-            },
-          },
-          create: {
-            schoolId,
-            examId,
-            questionId: answer.questionId,
-            studentId: examSession.studentId,
-            submissionType: "DIGITAL",
-            answerText: answer.answerText,
-            selectedOptionIds: answer.selectedOptionIds || [],
-            submittedAt: new Date(),
-          },
-          update: {
-            answerText: answer.answerText,
-            selectedOptionIds: answer.selectedOptionIds || [],
-            submittedAt: new Date(),
-          },
-        })
-      }
-
-      // Update session status
-      await tx.examSession.update({
-        where: { id: sessionId },
-        data: {
-          status: "SUBMITTED",
-          submittedAt: new Date(),
-        },
-      })
+    const { submitted } = await persistAndSubmit({
+      schoolId,
+      examId,
+      sessionId,
+      studentId: examSession.studentId,
+      answers: toSave,
     })
-
-    // Instant-grade fully-objective exams so the student sees their score now.
-    // Subjective exams stay pending for teacher review.
-    try {
-      const gen = await db.generatedExam.findFirst({
-        where: { examId, schoolId },
-        select: {
-          questions: {
-            select: { question: { select: { questionType: true } } },
-          },
-        },
-      })
-      const allObjective =
-        !!gen &&
-        gen.questions.length > 0 &&
-        gen.questions.every((q) =>
-          ["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_BLANK"].includes(
-            q.question.questionType
-          )
-        )
-      if (allObjective) {
-        await finalizeStudentExam(examId, examSession.studentId, {
-          notify: true,
-        })
-      }
-    } catch (err) {
-      console.error("Auto-finalize on submit error:", err)
-    }
+    if (!submitted) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     revalidatePath(`/exams/${examId}`)
     revalidatePath(`/exams/${examId}/take`)

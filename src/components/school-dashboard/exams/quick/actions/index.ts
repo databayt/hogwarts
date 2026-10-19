@@ -58,6 +58,52 @@ async function getAuthor(): Promise<{
 }
 
 /**
+ * The school's bank questions for one subject — the quick-check form's
+ * picker. The form used to ask a teacher to TYPE question ids, which nobody
+ * can; this lets them tick questions instead. Authors only, tenant-scoped,
+ * bounded.
+ */
+export async function listQuickCheckQuestions(input: {
+  subjectId: string
+}): Promise<
+  | {
+      success: true
+      data: Array<{
+        id: string
+        questionText: string
+        questionType: string
+        difficulty: string
+      }>
+    }
+  | { success: false; error: string }
+> {
+  const author = await getAuthor()
+  if (!author) return { success: false, error: "Unauthorized" }
+  if (typeof input?.subjectId !== "string" || !input.subjectId) {
+    return { success: false, error: "VALIDATION_ERROR" }
+  }
+  const rows = await db.questionBank.findMany({
+    where: { schoolId: author.schoolId, subjectId: input.subjectId },
+    select: {
+      id: true,
+      questionText: true,
+      questionType: true,
+      difficulty: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  })
+  return {
+    success: true,
+    data: rows.map((r) => ({
+      ...r,
+      questionType: String(r.questionType),
+      difficulty: String(r.difficulty),
+    })),
+  }
+}
+
+/**
  * The assessments a viewer may see: a student their audience's (section,
  * or whole grade), a guardian their children's; staff the
  * school's.

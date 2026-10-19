@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { finalizeAbandonedSessions } from "@/components/school-dashboard/exams/take/finalize-session"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -107,12 +108,22 @@ export async function GET(request: Request) {
       closed = r.count
     }
 
+    // Attempts still IN_PROGRESS past their deadline (tab closed, phone died,
+    // connection lost at time-up) are submitted from their auto-save
+    // snapshot, or EXPIRED when nothing was saved — not left hanging with the
+    // student's work invisible to marking.
+    const abandoned = await finalizeAbandonedSessions().catch((err) => {
+      console.error("[exam-lifecycle] abandoned sessions failed", err)
+      return { submitted: 0, expired: 0 }
+    })
+
     console.log(
       JSON.stringify({
         action: "exam_lifecycle",
         scanned: candidates.length,
         opened,
         closed,
+        abandoned,
         durationMs: Date.now() - startedAt,
       })
     )
@@ -122,6 +133,7 @@ export async function GET(request: Request) {
       scanned: candidates.length,
       opened,
       closed,
+      abandoned,
       durationMs: Date.now() - startedAt,
       timestamp: new Date().toISOString(),
     })

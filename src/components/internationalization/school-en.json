@@ -6417,8 +6417,12 @@
           "selectClass": "Select class",
           "subject": "Subject",
           "selectSubject": "Select subject",
-          "questionIds": "Question IDs",
-          "questionIdsPlaceholder": "Enter question IDs separated by commas"
+          "questionIds": "Questions",
+          "questionIdsPlaceholder": "Tick the questions from the question bank",
+          "pickSubjectFirst": "Choose the subject first to see its questions.",
+          "noBankQuestions": "This subject has no questions in the bank yet.",
+          "questionsSelected": "{count} selected",
+          "loadingQuestions": "Loading questions…"
         },
         "list": {
           "class": "Class:",

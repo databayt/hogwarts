@@ -6433,8 +6433,12 @@
           "selectClass": "اختر الفصل",
           "subject": "المادة",
           "selectSubject": "اختر المادة",
-          "questionIds": "أرقام الأسئلة",
-          "questionIdsPlaceholder": "أدخل أرقام الأسئلة مفصولة بفواصل"
+          "questionIds": "الأسئلة",
+          "questionIdsPlaceholder": "اختر الأسئلة من بنك الأسئلة",
+          "pickSubjectFirst": "اختر المادة أولاً لتظهر أسئلتها.",
+          "noBankQuestions": "لا توجد أسئلة لهذه المادة في البنك بعد.",
+          "questionsSelected": "تم اختيار {count}",
+          "loadingQuestions": "جارٍ تحميل الأسئلة…"
         },
         "list": {
           "class": "الفصل:",

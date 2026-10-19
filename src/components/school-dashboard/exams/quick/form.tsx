@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -27,13 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
 import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
-import { createQuickAssessment } from "./actions"
+import { createQuickAssessment, listQuickCheckQuestions } from "./actions"
 import { quickAssessmentCreateSchema } from "./validation"
 
 export function QuickAssessmentForm() {
@@ -207,28 +208,13 @@ export function QuickAssessmentForm() {
           name="questionIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t?.form?.questionIds ?? "Question IDs"}</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={
-                    t?.form?.questionIdsPlaceholder ??
-                    "Enter question IDs separated by commas"
-                  }
-                  value={field.value.join(", ")}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value
-                        .split(",")
-                        .map((id) => id.trim())
-                        .filter(Boolean)
-                    )
-                  }
-                />
-              </FormControl>
-              <FormDescription>
-                {t?.form?.questionIdsPlaceholder ??
-                  "Enter question IDs from QBank, separated by commas"}
-              </FormDescription>
+              <FormLabel>{t?.form?.questionIds ?? "Questions"}</FormLabel>
+              <QuestionPicker
+                subjectId={subjectId}
+                value={field.value}
+                onChange={field.onChange}
+                labels={t?.form}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -300,5 +286,103 @@ export function QuickAssessmentForm() {
         </div>
       </form>
     </Form>
+  )
+}
+
+type BankQuestion = { id: string; questionText: string; difficulty: string }
+
+/**
+ * Tick questions from the school's bank for the chosen subject. Replaces a
+ * text box that asked a teacher to type raw question ids.
+ */
+function QuestionPicker({
+  subjectId,
+  value,
+  onChange,
+  labels,
+}: {
+  subjectId: string
+  value: string[]
+  onChange: (ids: string[]) => void
+  labels?: Partial<Record<string, unknown>> & {
+    pickSubjectFirst?: string
+    loadingQuestions?: string
+    noBankQuestions?: string
+    questionsSelected?: string
+  }
+}) {
+  const [rows, setRows] = useState<BankQuestion[] | null>(null)
+
+  useEffect(() => {
+    if (!subjectId) {
+      setRows(null)
+      return
+    }
+    let cancelled = false
+    setRows(null)
+    void listQuickCheckQuestions({ subjectId }).then((res) => {
+      if (!cancelled) setRows(res.success ? res.data : [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [subjectId])
+
+  if (!subjectId) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        {labels?.pickSubjectFirst ??
+          "Choose the subject first to see its questions."}
+      </p>
+    )
+  }
+  if (rows === null) {
+    return (
+      <p className="text-muted-foreground text-sm" role="status">
+        {labels?.loadingQuestions ?? "Loading questions…"}
+      </p>
+    )
+  }
+  if (rows.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        {labels?.noBankQuestions ??
+          "This subject has no questions in the bank yet."}
+      </p>
+    )
+  }
+
+  const selected = new Set(value)
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground text-xs">
+        {(labels?.questionsSelected ?? "{count} selected").replace(
+          "{count}",
+          String(selected.size)
+        )}
+      </p>
+      <ul className="max-h-72 divide-y overflow-y-auto rounded-lg border">
+        {rows.map((q) => (
+          <li key={q.id}>
+            <label className="flex cursor-pointer items-start gap-3 p-3">
+              <Checkbox
+                checked={selected.has(q.id)}
+                onCheckedChange={(on) =>
+                  onChange(
+                    on
+                      ? [...value, q.id]
+                      : value.filter((id) => id !== q.id)
+                  )
+                }
+                className="mt-0.5"
+              />
+              <span dir="auto" className="line-clamp-2 text-sm">
+                {q.questionText}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
