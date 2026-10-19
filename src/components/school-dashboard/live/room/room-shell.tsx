@@ -564,6 +564,7 @@ export function RoomShell({
           )}
         >
           <SidePanel
+            title={title}
             tab={panel ?? (config.tools.chat ? "chat" : "questions")}
             onTab={setPanel}
             onClose={() => setPanel(null)}

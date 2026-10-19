@@ -19,6 +19,9 @@ type Props = {
   backLabel?: string
   videoLabel?: string
   phoneLabel?: string
+  /** False drops the video · phone capsule (the live-class chat, which is
+   *  already the call). */
+  calls?: boolean
   className?: string
 }
 
@@ -46,6 +49,7 @@ export const TopContactHeader = memo(function TopContactHeader({
   backLabel,
   videoLabel,
   phoneLabel,
+  calls = true,
   className,
 }: Props) {
   return (
@@ -122,24 +126,26 @@ export const TopContactHeader = memo(function TopContactHeader({
           carry their own transparent inset (video 3.2, phone 5.9), so the
           padding and gap below are what put the *ink* where the capture has
           it, not what centres the boxes. */}
-      <div className="wa-glass-control pointer-events-auto flex h-[44px] w-[102px] shrink-0 items-center justify-start gap-[17px] rounded-full ps-[10px]">
-        <button
-          type="button"
-          onClick={onVideo}
-          aria-label={videoLabel ?? "Video call"}
-          className="flex size-[32px] items-center justify-center"
-        >
-          <WaIcon name="ic-wa-video-32" className="size-[32px]" />
-        </button>
-        <button
-          type="button"
-          onClick={onPhone}
-          aria-label={phoneLabel ?? "Voice call"}
-          className="flex size-[32px] items-center justify-center"
-        >
-          <WaIcon name="ic-wa-phone-32" className="size-[32px]" />
-        </button>
-      </div>
+      {calls && (
+        <div className="wa-glass-control pointer-events-auto flex h-[44px] w-[102px] shrink-0 items-center justify-start gap-[17px] rounded-full ps-[10px]">
+          <button
+            type="button"
+            onClick={onVideo}
+            aria-label={videoLabel ?? "Video call"}
+            className="flex size-[32px] items-center justify-center"
+          >
+            <WaIcon name="ic-wa-video-32" className="size-[32px]" />
+          </button>
+          <button
+            type="button"
+            onClick={onPhone}
+            aria-label={phoneLabel ?? "Voice call"}
+            className="flex size-[32px] items-center justify-center"
+          >
+            <WaIcon name="ic-wa-phone-32" className="size-[32px]" />
+          </button>
+        </div>
+      )}
     </div>
   )
 })

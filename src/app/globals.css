@@ -649,7 +649,10 @@ body {
     auto repeat;
 }
 .dark .wa-doodle-bg {
+  /* The light tile paints its own opaque cream rect, so the colour alone
+     never showed — swap the tile itself. */
   background-color: #0b141a;
+  background-image: url("/icons/whatsapp/wp-wa-chat-bg-dark.svg");
 }
 
 /* WhatsApp-style curved message bubble tails */

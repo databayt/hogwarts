@@ -785,3 +785,12 @@ normalized digits-only phone format and `actions.test.ts` to the batched
 ---
 
 **Last Review:** 2026-09-12 (performance / interaction / fidelity pass)
+
+## Dark chat wallpaper — 2026-10-19
+
+- [x] `ChatWallpaper` in dark mode showed the light cream tile: the SVG paints
+      its own opaque `#F4F0E9` rect over any background colour. Added
+      `public/icons/whatsapp/wp-wa-chat-bg-dark.svg` (same doodles on `#0B141A`)
+      and switched tiles with `dark:`. `TopContactHeader` gained `calls`
+      (default true) so the live-class room can drop the call capsule.
+

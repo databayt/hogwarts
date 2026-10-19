@@ -4,12 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useParticipants } from "@livekit/components-react"
-import { Check, X } from "lucide-react"
+import { Check } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { glassPill } from "@/components/lumos/shared/video-player/glass"
 import {
   handRaisedFill,
   handRaisedSlashFill,
@@ -17,7 +15,11 @@ import {
   SfSymbol,
 } from "@/components/lumos/shared/video-player/sf-symbols"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
-import { InputBar } from "@/components/school-dashboard/messaging/mobile"
+import {
+  InputBar,
+  IosFilterChip,
+  TopContactHeader,
+} from "@/components/school-dashboard/messaging/mobile"
 
 import { ChatTab } from "./chat-tab"
 import type { Poll } from "./class-channel"
@@ -29,6 +31,8 @@ import type { LiveChat } from "./use-live-chat"
 export type PanelTab = "chat" | "questions" | "poll" | "quiz" | "hands"
 
 interface SidePanelProps {
+  /** The class — the group's name in the header. */
+  title: string
   tab: PanelTab
   onTab: (tab: PanelTab) => void
   onClose: () => void
@@ -80,50 +84,33 @@ export function SidePanel(props: SidePanelProps) {
     })
 
   return (
-    // Glass rather than a solid slab, so the class stays faintly visible
-    // behind the panel on a phone, where it covers the whole stage.
-    <aside className="flex h-full w-80 max-w-full flex-col border-s border-white/10 bg-black/80 text-white backdrop-blur-[40px]">
-      <div className="flex items-center gap-1 border-b border-white/10 px-2 py-1.5">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => onTab(t.id)}
-            aria-pressed={tab === t.id}
-            className={cn(
-              glassPill,
-              // Visually still the compact pill — the extra reach is an
-              // `::after` that stretches past the box (`position: absolute`
-              // takes it out of flow, so the strip's own height is
-              // untouched) rather than a taller button, which would have
-              // grown the whole tab row past its glassPill density.
-              "relative px-2.5 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-2.5 after:content-['']",
-              tab === t.id
-                ? "bg-white/15 font-medium"
-                : "text-white/70 hover:bg-white/10"
-            )}
-          >
-            {t.label}
-            {t.badge ? (
-              <span className="ms-1 rounded-full bg-amber-400 px-1.5 text-[10px] font-semibold text-black">
-                {t.badge}
-              </span>
-            ) : null}
-          </button>
-        ))}
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          // Same out-of-flow `::after` reach as the tabs beside it — the
-          // visible 28px glyph stays put, only the tap target grows to 44px.
-          className="relative ms-auto h-7 w-7 text-white after:absolute after:-inset-2 after:content-[''] hover:bg-white/20 hover:text-white"
-          onClick={onClose}
-          aria-label={labels.close}
+    // The panel IS a WhatsApp group thread in the app's dark theme: the class
+    // as the group in a floating glass header, the tools as the inbox's filter
+    // chips, the doodle wallpaper under the chat. Full width on a phone, where
+    // it covers the stage the way an open chat covers the inbox.
+    <aside className="dark flex h-full w-screen max-w-full flex-col bg-[#0B141A] text-white sm:w-[360px] sm:border-s sm:border-white/10">
+      <PanelHeader
+        title={props.title}
+        labels={labels}
+        localIdentity={props.localIdentity}
+        locale={props.locale}
+        onClose={onClose}
+      />
+      {tabs.length > 1 && (
+        <div
+          role="toolbar"
+          className="flex shrink-0 gap-[8px] overflow-x-auto px-[16px] pt-[2px] pb-[8px] [scrollbar-width:none]"
         >
-          <X className="h-4 w-4" aria-hidden />
-        </Button>
-      </div>
+          {tabs.map((t) => (
+            <IosFilterChip
+              key={t.id}
+              label={t.badge ? `${t.label} ${t.badge}` : t.label}
+              active={tab === t.id}
+              onClick={() => onTab(t.id)}
+            />
+          ))}
+        </div>
+      )}
       <div className="min-h-0 flex-1">
         {tools.chat && (
           <ChatTab
@@ -150,6 +137,44 @@ export function SidePanel(props: SidePanelProps) {
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * The group header of the /messages thread: back disc (closes the panel), the
+ * class's initial in the avatar, and WhatsApp's group subtitle — who is in the
+ * room, the viewer last as "You". No call capsule: this is the call.
+ * Its own component so a join or leave re-renders the header alone.
+ */
+function PanelHeader({
+  title,
+  labels,
+  localIdentity,
+  locale,
+  onClose,
+}: {
+  title: string
+  labels: RoomLabels
+  locale: "ar" | "en"
+  localIdentity: string
+  onClose: () => void
+}) {
+  const participants = useParticipants()
+  const members = participants
+    .filter((p) => p.identity !== localIdentity)
+    .map((p) => p.name || p.identity)
+  members.push(labels.you)
+  return (
+    <TopContactHeader
+      name={title || labels.chat}
+      subtitle={members.join(locale === "ar" ? "، " : ", ")}
+      calls={false}
+      onBack={onClose}
+      backLabel={labels.close}
+      // In flow, not floating: nothing scrolls under it here (the chips sit
+      // below), so the scroll-edge frost would only smear the chip row.
+      className="relative shrink-0 [&_.wa-scroll-edge]:hidden"
+    />
+  )
+}
 
 function QuestionsTab({
   channel,

@@ -247,6 +247,36 @@ Part of the ship-to-client pass on #402 (Phase 0, the prod wiring, is
   long ago (local test data, not new).
 - A student's hand order is local to each client (first seen), unchanged.
 
+## Room chat panel = the /messages WhatsApp group thread — 2026-10-19
+
+- [x] **The panel is the thread, not a glass slab with pills.** `room/side-panel.tsx`
+      now opens on the messaging block's `TopContactHeader` (back disc closes
+      the panel; the class title as the group; WhatsApp's member line — names,
+      "You" last; no call capsule via the new `calls={false}`), the inbox's
+      `IosFilterChip`s for Chat · Questions · Poll · Quiz · Raised hands (counts
+      inline, "Chat 3", as WhatsApp's chips do), all in the `dark` WhatsApp scope.
+- [x] **`room/chat-tab.tsx`** sits on `ChatWallpaper`, opens with the notice
+      card (`chatNotice`, en+ar: everyone in the class reads it, it is saved
+      with the class) where the thread has no older page, and uses the real
+      composer (the transparent override is gone).
+- [x] **Full screen on a phone** (`w-screen`), 360px beside the stage from `sm`.
+- [x] **Dark wallpaper fixed for everyone.** The light tile paints an opaque
+      cream rect, so `dark:bg-[#0B141A]` never showed — the dark /messages
+      thread had the same bug. New `public/icons/whatsapp/wp-wa-chat-bg-dark.svg`;
+      `ChatWallpaper` switches tiles on `dark:`.
+- Verified locally (admin co-host on the demo `clockshow1` room): desktop 1920
+  and phone 390 in `/ar` — header, chips, notice, bubbles with ticks, history
+  after reload, RTL mirrored.
+
+### Found while here, NOT fixed
+
+- A non-participant (demo `teacher@`) pressing Join gets
+  `LIVE_CLASS_PARTICIPANT_DENIED` from the action but nothing visible changes
+  on the pre-join card.
+- Playwright's real `press("Enter")` right after typing cleared the composer
+  without a send twice; a dispatched Enter keydown and the Send disc both
+  send. Not reproduced by hand — worth one manual check on a desktop keyboard.
+
 ## Room chat on the WhatsApp thread, with history — 2026-10-16
 
 - [x] **One chat UI.** `room/chat-tab.tsx` renders through the messaging

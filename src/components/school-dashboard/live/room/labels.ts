@@ -34,6 +34,8 @@ export const DEFAULT_ROOM_LABELS = {
   chatFailed: "Failed",
   chatJumpLatest: "Jump to latest",
   chatLoadingOlder: "Loading earlier messages",
+  chatNotice:
+    "Everyone in this class can read these messages. They are saved with the class.",
   questions: "Questions",
   askQuestion: "Ask a question",
   questionPlaceholder: "Type your question…",

@@ -116,6 +116,7 @@
     "chatFailed": "فشل الإرسال",
     "chatJumpLatest": "الانتقال إلى الأحدث",
     "chatLoadingOlder": "جارٍ تحميل الرسائل الأقدم",
+    "chatNotice": "يقرأ هذه الرسائل كل من في هذا الفصل، وتُحفظ مع الحصة.",
     "questions": "الأسئلة",
     "askQuestion": "اطرح سؤالًا",
     "questionPlaceholder": "اكتب سؤالك…",
