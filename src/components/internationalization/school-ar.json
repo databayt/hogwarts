@@ -685,7 +685,7 @@
         },
         "schedule": {
           "title": "الجدول الزمني",
-          "description": "السنوات والفصول الدراسية"
+          "description": "الحصص وأيام الدراسة"
         },
         "name-format": {
           "title": "تنسيق الاسم",

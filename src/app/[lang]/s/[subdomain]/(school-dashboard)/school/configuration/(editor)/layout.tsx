@@ -15,6 +15,7 @@ import {
   joinList,
   plural,
 } from "@/components/school-dashboard/school/configuration/ui/format"
+import { TIMETABLE_STRUCTURES } from "@/components/school-dashboard/timetable/structures"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
 
@@ -73,6 +74,7 @@ export default async function EditorLayout({ children, params }: Props) {
               paymentSchedule: true,
               enabledModules: true,
               conferenceDeliveryMode: true,
+              timetableStructure: true,
             },
           })
           .catch(() => null)
@@ -231,11 +233,15 @@ export default async function EditorLayout({ children, params }: Props) {
           .filter(Boolean)
           .join(" ")
       }
-      case "schedule":
-        return joinList(
-          [count("year", yearCount), count("term", termCount)],
-          lang
+      case "schedule": {
+        const structure = TIMETABLE_STRUCTURES.find(
+          (s) => s.slug === school.timetableStructure
         )
+        if (!structure) return null
+        return lang === "ar"
+          ? structure.name
+          : (structure.nameEn ?? structure.name)
+      }
       case "academic":
         return [
           count("year", yearCount),

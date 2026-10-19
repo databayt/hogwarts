@@ -685,7 +685,7 @@
         },
         "schedule": {
           "title": "Schedule",
-          "description": "Academic years and terms"
+          "description": "Periods and school days"
         },
         "name-format": {
           "title": "Name Format",

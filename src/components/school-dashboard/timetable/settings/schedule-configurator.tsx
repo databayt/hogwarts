@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Loader2 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -38,6 +39,10 @@ interface Props {
   applying?: boolean
   dictionary?: any
   lang?: string
+  /** Preset to open on (e.g. the school's saved choice); defaults to the recommendation. */
+  initialSlug?: string
+  /** Hide the preset picker when the host page already owns it. */
+  hidePreset?: boolean
   /** Applies the nearest named structure's periods (parent owns the action). */
   onApply: (slug: string) => Promise<void> | void
 }
@@ -55,6 +60,8 @@ export function ScheduleConfigurator({
   applying,
   dictionary,
   lang = "en",
+  initialSlug,
+  hidePreset,
   onApply,
 }: Props) {
   const dict = dictionary || {}
@@ -75,8 +82,12 @@ export function ScheduleConfigurator({
           schoolType,
           schoolLevel
         )
-        const base = autoSelect ?? recommended[0] ?? TIMETABLE_STRUCTURES[0]
-        setRecommendedSlug(base.slug)
+        const recommendedBase =
+          autoSelect ?? recommended[0] ?? TIMETABLE_STRUCTURES[0]
+        const base =
+          TIMETABLE_STRUCTURES.find((s) => s.slug === initialSlug) ??
+          recommendedBase
+        setRecommendedSlug(recommendedBase.slug)
         setSlug(base.slug)
         setConfig(extractConfig(base))
       })
@@ -84,7 +95,7 @@ export function ScheduleConfigurator({
     return () => {
       alive = false
     }
-  }, [])
+  }, [initialSlug])
 
   const selected =
     TIMETABLE_STRUCTURES.find((s) => s.slug === slug) ?? TIMETABLE_STRUCTURES[0]
@@ -129,11 +140,17 @@ export function ScheduleConfigurator({
     return onApply(target.slug)
   }
 
+  // A preset can start off the quick-pick grid (07:15); keep its own time
+  // selectable so the trigger never renders empty.
+  const startTimeOptions = START_TIME_OPTIONS.includes(config.startTime)
+    ? START_TIME_OPTIONS
+    : [...START_TIME_OPTIONS, config.startTime].sort()
+
   const getName = (s: TimetableStructure) => (lang === "ar" ? s.name : s.nameEn)
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2">
+      <div className={cn("flex flex-col gap-2", hidePreset && "hidden")}>
         <Label>{dict.preset || "Schedule preset"}</Label>
         <Select
           value={slug}
@@ -154,89 +171,93 @@ export function ScheduleConfigurator({
       </div>
 
       {/* Quick-config knobs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="flex flex-col gap-2">
-          <Label className="text-xs">{dict.weekend || "Weekend"}</Label>
-          <Select
-            value={config.weekendType}
-            onValueChange={(v) =>
-              patchConfig({ weekendType: v as ScheduleConfig["weekendType"] })
-            }
-            disabled={disabled}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {WEEKEND_OPTIONS.map((w) => (
-                <SelectItem key={w.value} value={w.value}>
-                  {(w.value === "fri-sat"
-                    ? dict.weekendFriSat
-                    : dict.weekendSatSun) || w.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="@container">
+        <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs">{dict.weekend || "Weekend"}</Label>
+            <Select
+              value={config.weekendType}
+              onValueChange={(v) =>
+                patchConfig({ weekendType: v as ScheduleConfig["weekendType"] })
+              }
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {WEEKEND_OPTIONS.map((w) => (
+                  <SelectItem key={w.value} value={w.value}>
+                    {(w.value === "fri-sat"
+                      ? dict.weekendFriSat
+                      : dict.weekendSatSun) || w.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <Label className="text-xs">{dict.periodsDay || "Periods/day"}</Label>
-          <Select
-            value={String(config.periodsPerDay)}
-            onValueChange={(v) => patchConfig({ periodsPerDay: Number(v) })}
-            disabled={disabled}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIOD_COUNT_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs">
+              {dict.periodsDay || "Periods/day"}
+            </Label>
+            <Select
+              value={String(config.periodsPerDay)}
+              onValueChange={(v) => patchConfig({ periodsPerDay: Number(v) })}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_COUNT_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <Label className="text-xs">{dict.duration || "Duration"}</Label>
-          <Select
-            value={String(config.durationMinutes)}
-            onValueChange={(v) => patchConfig({ durationMinutes: Number(v) })}
-            disabled={disabled}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DURATION_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n} {dict.minutesSuffix || "min"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs">{dict.duration || "Duration"}</Label>
+            <Select
+              value={String(config.durationMinutes)}
+              onValueChange={(v) => patchConfig({ durationMinutes: Number(v) })}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATION_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n} {dict.minutesSuffix || "min"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <Label className="text-xs">{dict.startTime || "Start"}</Label>
-          <Select
-            value={config.startTime}
-            onValueChange={(v) => patchConfig({ startTime: v })}
-            disabled={disabled}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {START_TIME_OPTIONS.map((tt) => (
-                <SelectItem key={tt} value={tt}>
-                  {tt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs">{dict.startTime || "Start"}</Label>
+            <Select
+              value={config.startTime}
+              onValueChange={(v) => patchConfig({ startTime: v })}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {startTimeOptions.map((tt) => (
+                  <SelectItem key={tt} value={tt}>
+                    {tt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

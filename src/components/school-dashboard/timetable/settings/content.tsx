@@ -80,6 +80,15 @@ const DAY_LABELS = [
 interface Props {
   dictionary: Dictionary["school"]
   lang: Locale
+  /** Preset the schedule configurator opens on (the school's saved choice). */
+  initialStructureSlug?: string
+  /** Told after a structure is applied, so an embedding page can follow it. */
+  onStructureApplied?: (slug: string) => void
+  /**
+   * Rendered inside another page (school configuration → schedule): drops the
+   * page-level title and the preset picker, which that page already shows.
+   */
+  embedded?: boolean
 }
 
 type PeriodData = {
@@ -93,7 +102,13 @@ type PeriodData = {
 
 type SchoolYear = { id: string; name: string; isCurrent: boolean }
 
-export default function TimetableSettingsContent({ dictionary, lang }: Props) {
+export default function TimetableSettingsContent({
+  dictionary,
+  lang,
+  initialStructureSlug,
+  onStructureApplied,
+  embedded,
+}: Props) {
   const d = dictionary?.timetable
   const s = d?.settings as Record<string, string> | undefined
   const getDayLabel = (value: number, label: string) => {
@@ -111,6 +126,26 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       label
     )
   }
+  const listSeparator = lang === "ar" ? "، " : ", "
+  // Structures write English period names ("Period 1", "Break", "Lunch");
+  // show those in the page language. Names the school typed stay as typed.
+  const periodLabel = (name: string) => {
+    const numbered = /^period\s+(\d+)$/i.exec(name.trim())
+    if (numbered) return `${d?.period || "Period"} ${numbered[1]}`
+    if (/^break$/i.test(name.trim())) return d?.break || name
+    if (/^lunch$/i.test(name.trim())) return d?.lunch || name
+    return name
+  }
+  const periodShort = (name: string) => {
+    const numbered = /^period\s+(\d+)$/i.exec(name.trim())
+    return numbered ? numbered[1] : periodLabel(name)
+  }
+  // The day timeline reads left to right (period 1 first) in both languages,
+  // like a clock face; its hour markers follow the page locale.
+  const hourMarker = (hour: number) =>
+    new Intl.DateTimeFormat(lang, { hour: "numeric", timeZone: "UTC" }).format(
+      new Date(Date.UTC(1970, 0, 1, hour))
+    )
   const { toast } = useToast()
 
   const [isPending, startTransition] = useTransition()
@@ -168,6 +203,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
     try {
       const { years } = await getSchoolYearsForSelection()
       setSchoolYears(years)
+      // Periods are year-scoped: open on the current year (else the newest)
+      // so the schedule tools are usable without an extra pick.
+      const preferred = years.find((y) => y.isCurrent) ?? years[0]
+      if (preferred) setSelectedYearId((prev) => prev || preferred.id)
     } catch {
       // Silently fail - years are optional for some operations
     }
@@ -386,6 +425,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         title: d?.settings?.structureApplied || "Structure Applied",
         description: `${d?.settings?.created || "Created"} ${result.createdCount} ${d?.settings?.periods || "periods"}`,
       })
+      onStructureApplied?.(slug)
       loadConfig()
     } catch (err) {
       toast({
@@ -405,7 +445,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       {/* Header Card */}
       <Card>
-        <CardHeader>
+        <CardHeader className={cn(embedded && "hidden")}>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             {d?.settings?.title || "Timetable Settings"}
@@ -415,7 +455,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
               "Configure periods, working days, and scheduling constraints"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={cn(embedded && "pt-6")}>
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col gap-2">
               <Label>{d?.settings?.term || "Term"}</Label>
@@ -519,6 +559,8 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                 applying={isApplyingStructure}
                 dictionary={d?.settings}
                 lang={lang}
+                initialSlug={initialStructureSlug}
+                hidePreset={embedded}
                 onApply={handleApplyStructure}
               />
             ) : (
@@ -554,13 +596,13 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                     type="button"
                     onClick={() => toggleDay(day.value)}
                     className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-medium transition-all",
+                      "flex h-10 min-w-12 items-center justify-center rounded-full border-2 px-3 text-sm font-medium transition-all",
                       workingDays.includes(day.value)
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-muted-foreground/20 bg-muted text-muted-foreground hover:border-primary/50"
                     )}
                   >
-                    {getDayLabel(day.value, day.label).slice(0, 3)}
+                    {getDayLabel(day.value, day.label)}
                   </button>
                 ))}
               </div>
@@ -575,9 +617,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                             dayVal,
                             DAY_LABELS.find((l) => l.value === dayVal)?.label ||
                               ""
-                          ).slice(0, 3)
+                          )
                         )
-                        .join(", ")
+                        .join(listSeparator)
                     : d?.settings?.noDaysSelected || "No days selected"}
                 </p>
               </div>
@@ -830,6 +872,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                       from assistive tech to avoid a meaningless reading. */}
                   <div
                     aria-hidden="true"
+                    dir="ltr"
                     className="bg-muted/50 relative h-16 overflow-hidden rounded-lg"
                   >
                     {periods.map((period) => {
@@ -857,10 +900,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                             insetInlineStart: `${Math.max(0, leftPercent)}%`,
                             width: `${widthPercent}%`,
                           }}
-                          title={`${period.name}: ${formatTime(period.startTime)} - ${formatTime(period.endTime)}`}
+                          title={`${periodLabel(period.name)}: ${formatTime(period.startTime)} - ${formatTime(period.endTime)}`}
                         >
                           <span className="truncate px-1">
-                            {period.name.replace("Period ", "P")}
+                            {periodShort(period.name)}
                           </span>
                         </div>
                       )
@@ -871,25 +914,25 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         className="absolute"
                         style={{ insetInlineStart: "0%" }}
                       >
-                        6AM
+                        {hourMarker(6)}
                       </span>
                       <span
                         className="absolute"
                         style={{ insetInlineStart: "25%" }}
                       >
-                        10AM
+                        {hourMarker(10)}
                       </span>
                       <span
                         className="absolute"
                         style={{ insetInlineStart: "50%" }}
                       >
-                        2PM
+                        {hourMarker(14)}
                       </span>
                       <span
                         className="absolute"
                         style={{ insetInlineStart: "75%" }}
                       >
-                        6PM
+                        {hourMarker(18)}
                       </span>
                     </div>
                   </div>
@@ -909,13 +952,16 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         )}
                       >
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="font-medium">{period.name}</span>
+                          <span className="font-medium">
+                            {periodLabel(period.name)}
+                          </span>
                           <div className="flex items-center gap-1">
-                            {period.isBreak && (
-                              <Badge variant="secondary" className="text-xs">
-                                {d?.break || "Break"}
-                              </Badge>
-                            )}
+                            {period.isBreak &&
+                              periodLabel(period.name) !== d?.break && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {d?.break || "Break"}
+                                </Badge>
+                              )}
                             <Button
                               variant="ghost"
                               size="icon"

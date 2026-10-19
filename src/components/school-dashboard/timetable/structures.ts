@@ -2041,17 +2041,30 @@ export function getStructuresByCountry(): Record<string, TimetableStructure[]> {
 /** Day names for display */
 const DAY_NAMES_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-/** Format working days for display, e.g. "Sun - Thu" */
-export function formatWorkingDays(days: number[]): string {
+/**
+ * Format working days for display, e.g. "Sun - Thu". Pass a locale to get the
+ * day names from Intl ("الأحد - الخميس" for `ar`); without one the English
+ * short names are used.
+ */
+export function formatWorkingDays(days: number[], locale?: string): string {
   if (days.length === 0) return ""
   const sorted = [...days].sort((a, b) => a - b)
+  // 2026-01-04 is a Sunday, so day index d lands on the matching weekday.
+  const dayName = locale
+    ? (d: number) =>
+        new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          timeZone: "UTC",
+        }).format(new Date(Date.UTC(2026, 0, 4 + d)))
+    : (d: number) => DAY_NAMES_SHORT[d]
+  const separator = locale?.startsWith("ar") ? "، " : ", "
   const isContiguous = sorted.every(
     (d, i) => i === 0 || d === sorted[i - 1] + 1
   )
   if (isContiguous && sorted.length > 1) {
-    return `${DAY_NAMES_SHORT[sorted[0]]} - ${DAY_NAMES_SHORT[sorted[sorted.length - 1]]}`
+    return `${dayName(sorted[0])} - ${dayName(sorted[sorted.length - 1])}`
   }
-  return sorted.map((d) => DAY_NAMES_SHORT[d]).join(", ")
+  return sorted.map(dayName).join(separator)
 }
 
 // ---------------------------------------------------------------------------

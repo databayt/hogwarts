@@ -219,6 +219,15 @@ A Sudanese school day has exactly **one** break: the mid-morning **فسحة** (4
 
 Section letters, section names, and homeroom codes are generated from `School.preferredLanguage` via `sectionLetters()` / `defaultSectionName()` in `catalog/room-naming.ts` — shared by `autoProvisionSections` and the classrooms Configure tab so the two provisioning paths cannot drift. An Arabic school gets أ/ب/ج (أبجد order), sections named `الصف الأول - أ` composed from the grade's own name, and homerooms `أ01`…`أ12`; digits stay Latin to match how the UI renders numbers everywhere else (الحصة 1, 07:15). English schools are unchanged (`Grade 1-A`, `A01`). Both paths persist `lang` on the rows they create — a row whose stored `lang` disagrees with the language it is actually written in cannot be fixed at read time, because the translation layer trusts the tag.
 
+## Fine-tuning from school configuration
+
+**School → Configuration → Schedule** shows the preset picker and a preview of
+the school day (periods run left to right, period 1 first). **Fine-tune** opens
+the full timetable settings in place, under the preview: school year and term,
+quick knobs (weekend, periods a day, duration, start time), working days, the
+break and the period editor. Applying a structure there also records it as the
+school's preset, so the preview follows.
+
 ## Generating a timetable
 
 The **Generate** tab is a two-step, preview-then-commit flow:

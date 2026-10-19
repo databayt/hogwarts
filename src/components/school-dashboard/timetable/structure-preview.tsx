@@ -16,10 +16,13 @@ interface StructurePreviewProps {
   periodsPerDayOverride?: number
   dictionary?: any
   lang?: string
+  /** `card` (default) draws its own tinted frame; `plain` sits inside a parent surface. */
+  variant?: "card" | "plain"
+  className?: string
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  class: "bg-primary/15 border-primary/30",
+  class: "bg-primary/10 border-primary/25 text-foreground",
   break:
     "bg-amber-100 border-amber-300 dark:bg-amber-900/30 dark:border-amber-700",
   lunch:
@@ -27,9 +30,9 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 /**
- * Shared schedule-structure preview. Used by both the onboarding schedule step
- * and the timetable Settings schedule configurator so the two surfaces share
- * one visual vocabulary.
+ * Shared schedule-structure preview. Used by the onboarding schedule step, the
+ * school configuration schedule page and the timetable Settings schedule
+ * configurator so the three surfaces share one visual vocabulary.
  */
 export function StructurePreview({
   structure,
@@ -40,75 +43,142 @@ export function StructurePreview({
   periodsPerDayOverride,
   dictionary,
   lang = "en",
+  variant = "card",
+  className,
 }: StructurePreviewProps) {
   const dict = dictionary || {}
   const periods = periodsOverride ?? structure.periods
   const schoolStart = schoolStartOverride ?? structure.schoolStart
   const schoolEnd = schoolEndOverride ?? structure.schoolEnd
   const periodsPerDay = periodsPerDayOverride ?? structure.periodsPerDay
-  const name = lang === "ar" ? structure.name : structure.nameEn
-  const description =
-    lang === "ar" ? structure.description : structure.descriptionEn
+  const isAr = lang === "ar"
+  const name = isAr ? structure.name : (structure.nameEn ?? structure.name)
+  const description = isAr
+    ? structure.description
+    : (structure.descriptionEn ?? structure.description)
+  const totalMinutes = periods.reduce((sum, p) => sum + p.durationMinutes, 0)
+
+  const typeLabel: Record<string, string> = {
+    class: dict.period || "Period",
+    break: dict.break || "Break",
+    lunch: dict.lunch || "Lunch",
+  }
+  const hasLunch = periods.some((p) => p.type === "lunch")
+  const hasBreak = periods.some((p) => p.type === "break")
+
+  let classNumber = 0
+
+  const stats = [
+    {
+      label: dict.periodsLabel || dict.periodsDay || "Periods/day",
+      value: periodsPerDay,
+    },
+    {
+      label: dict.hoursLabel || "School day",
+      value: `${schoolStart} – ${schoolEnd}`,
+    },
+    {
+      label: dict.daysLabel || "Days",
+      value: formatWorkingDays(structure.workingDays, lang),
+    },
+  ]
 
   return (
-    <div className="border-primary bg-primary/5 w-full rounded-lg border p-4">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
+    <div
+      className={cn(
+        "w-full space-y-4",
+        variant === "card" &&
+          "border-primary bg-primary/5 rounded-lg border p-4",
+        className
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h4 className="font-semibold">{name}</h4>
-          <p className="text-muted-foreground text-sm">{description}</p>
+          {description ? (
+            <p className="text-muted-foreground text-sm">{description}</p>
+          ) : null}
         </div>
         {badge === "best-match" && (
-          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
+          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium">
             {dict.bestMatch || "Best Match"}
           </span>
         )}
         {badge === "custom" && (
-          <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
+          <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium">
             {dict.customSchedule || "Custom"}
           </span>
         )}
       </div>
 
-      <div className="text-muted-foreground mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-        <span>
-          {periodsPerDay} {dict.periodsDay || "periods/day"}
-        </span>
-        <span>
-          {schoolStart} - {schoolEnd}
-        </span>
-        <span>{formatWorkingDays(structure.workingDays)}</span>
-      </div>
+      <dl className="grid grid-cols-3 gap-3">
+        {stats.map((s) => (
+          <div key={s.label} className="min-w-0">
+            <dt className="text-muted-foreground truncate text-xs">
+              {s.label}
+            </dt>
+            <dd className="truncate text-sm font-medium tabular-nums">
+              {s.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
-      <div className="flex gap-0.5">
+      {/* The day reads left to right (period 1 first) in both languages. */}
+      <div dir="ltr" className="flex gap-0.5">
         {periods.map((period, i) => {
-          const totalMinutes = periods.reduce(
-            (sum, p) => sum + p.durationMinutes,
-            0
-          )
+          const isClass = period.type === "class"
+          if (isClass) classNumber++
           const widthPercent = (period.durationMinutes / totalMinutes) * 100
+          const label = isClass
+            ? `${typeLabel.class} ${classNumber}`
+            : typeLabel[period.type] || typeLabel.class
           return (
             <div
               key={i}
               className={cn(
-                "flex items-center justify-center rounded border text-[10px]",
+                "flex h-8 items-center justify-center rounded-md border text-[11px] font-medium tabular-nums",
                 TYPE_COLORS[period.type] || TYPE_COLORS.class
               )}
               style={{
                 width: `${widthPercent}%`,
-                minWidth: period.type === "class" ? "28px" : "16px",
-                height: "28px",
+                minWidth: isClass ? "24px" : "12px",
               }}
-              title={`${period.name} (${period.startTime}-${period.endTime})`}
+              title={`${label} (${period.startTime} – ${period.endTime})`}
+              aria-label={`${label} ${period.startTime} – ${period.endTime}`}
             >
-              {period.type === "class" && (
-                <span className="truncate px-0.5">
-                  {period.name.replace("Period ", "P")}
-                </span>
+              {isClass && (
+                <span className="truncate px-0.5">{classNumber}</span>
               )}
             </div>
           )
         })}
       </div>
+
+      <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <LegendItem className={TYPE_COLORS.class} label={typeLabel.class} />
+        {hasBreak && (
+          <LegendItem className={TYPE_COLORS.break} label={typeLabel.break} />
+        )}
+        {hasLunch && (
+          <LegendItem className={TYPE_COLORS.lunch} label={typeLabel.lunch} />
+        )}
+      </div>
     </div>
+  )
+}
+
+function LegendItem({
+  className,
+  label,
+}: {
+  className: string
+  label: string
+}) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={cn("size-2.5 rounded-sm border", className)} />
+      {label}
+    </span>
   )
 }

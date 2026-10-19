@@ -166,6 +166,15 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   `timetable/structure-preview.tsx`; the onboarding schedule step re-exports it.
   Settings `schedule-configurator.tsx` reuses it so onboarding + dashboard share
   one schedule UI (preset Select + live preview + quick-config knobs).
+- **Configuration → Schedule embeds the settings** (2026-10-19): the school
+  config schedule page (`school/configuration/config-schedule-form.tsx`) renders
+  `TimetableSettingsContent` inline with `embedded` (no page title, no preset
+  picker — the page owns those) behind a Fine-tune toggle, lazy via
+  `next/dynamic`. `applyTimetableStructure` now writes `School.timetableStructure`
+  so the saved preset follows what was applied. Period bars (preview + settings
+  timeline) are `dir="ltr"`, period 1 on the left, in both languages — Abdout's
+  call. Structure-written English period names ("Period 1", "Break") are
+  localized at display (`periodLabel`); never rename the rows to fix it.
 - **Section is the slot axis** (2026-06-12): `Timetable.sectionId` + `subjectId`
   are the operational identity of a slot; `classId` survives only on legacy
   rows for exams/results history. `upsertTimetableSlot` requires

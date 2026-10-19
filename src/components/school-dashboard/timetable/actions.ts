@@ -4242,6 +4242,13 @@ export async function applyTimetableStructure(input: {
     })
   }
 
+  // Keep the school's recorded preset in step, so the configuration page and
+  // re-provisioning read the structure that was actually applied.
+  await db.school.update({
+    where: { id: schoolId },
+    data: { timetableStructure: slug },
+  })
+
   await logTimetableAction("apply_structure", {
     entityType: "period",
     metadata: {

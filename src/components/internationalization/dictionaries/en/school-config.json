@@ -30,5 +30,25 @@
     "teacher": { "one": "1 teacher", "other": "{n} teachers" },
     "module": { "one": "1 module on", "other": "{n} modules on" },
     "discount": { "one": "1 active discount", "other": "{n} active discounts" }
+  },
+  "schedule": {
+    "preset": "Schedule preset",
+    "presetHint": "The starting point for your periods and school day",
+    "periodsLabel": "Periods a day",
+    "hoursLabel": "School day",
+    "daysLabel": "School days",
+    "period": "Period",
+    "break": "Break",
+    "lunch": "Lunch",
+    "bestMatch": "Best match",
+    "customSchedule": "Custom",
+    "note": "Pick the closest preset, then fine-tune periods, breaks and school days to match your school.",
+    "empty": "No presets are available for your country yet. Use Fine-tune to set up periods by hand.",
+    "fineTune": "Fine-tune",
+    "fineTuneLabel": "Customize the timetable",
+    "fineTuneHint": "Period times, breaks and school days",
+    "fineTuneTitle": "Fine-tune the timetable",
+    "fineTuneDescription": "Changes apply to the school year you pick and show on the timetable right away.",
+    "loadError": "Couldn't load the schedule. Try again."
   }
 }
