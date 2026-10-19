@@ -126,6 +126,9 @@ export default function GuardianView({
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
+  // The school lets guardians watch a class (join-core refuses them
+  // otherwise). The Online marker shows either way — the child joins.
+  const [canJoin, setCanJoin] = useState(false)
   const [closure, setClosure] = useState<SchoolClosureInfo>(null)
 
   // Load children on mount
@@ -187,6 +190,7 @@ export default function GuardianView({
       // Same early-return branch omits `liveJoin`; narrow the same way.
       setLiveJoin("liveJoin" in result ? result.liveJoin : {})
       setTodaySchedule(today.schedule)
+      setCanJoin("canJoin" in today ? Boolean(today.canJoin) : false)
       setClosure(today.closure ?? null)
     } catch (err) {
       setError(
@@ -425,19 +429,20 @@ export default function GuardianView({
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
-              {isLiveJoinable(
-                currentClassInfo.type as "current" | "next",
-                currentClassInfo.item.startTime
-              ) && (
-                <LiveJoinButton
-                  liveClass={currentClassInfo.item.liveClass}
-                  lang={lang}
-                  label={
-                    (dictionary as any)?.liveClasses?.join ??
-                    (isRTL ? "انضمام" : "Join")
-                  }
-                />
-              )}
+              {canJoin &&
+                isLiveJoinable(
+                  currentClassInfo.type as "current" | "next",
+                  currentClassInfo.item.startTime
+                ) && (
+                  <LiveJoinButton
+                    liveClass={currentClassInfo.item.liveClass}
+                    lang={lang}
+                    label={
+                      (dictionary as any)?.liveClasses?.join ??
+                      (isRTL ? "انضمام" : "Join")
+                    }
+                  />
+                )}
             </div>
           </CardContent>
         </Card>
@@ -501,7 +506,8 @@ export default function GuardianView({
                     )}
                     {/* Same as the student view: a guardian sees Join on each
                         of the child's online periods, not only the current one. */}
-                    {!item.isBreak &&
+                    {canJoin &&
+                      !item.isBreak &&
                       isRowLiveJoinable(item.startTime, item.endTime) && (
                         <LiveJoinButton
                           liveClass={item.liveClass}

@@ -597,6 +597,7 @@
           "assignmentOverdue": "**{mark}** is past its due date",
           "assignmentDue": "**{mark}** is still waiting on you",
           "nextClass": "**{mark}** is your next class",
+          "liveClass": "**{mark}** is live — join the class",
           "pendingGrading": "**{mark} submissions** need your marking",
           "attendanceDue": "**{mark} classes** still need their attendance today",
           "childOverdue": "**{mark}'s homework** is overdue",

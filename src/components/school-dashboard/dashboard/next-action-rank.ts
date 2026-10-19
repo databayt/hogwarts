@@ -18,6 +18,7 @@ export type NextActionKind =
   | "assignmentOverdue"
   | "assignmentDue"
   | "nextClass"
+  | "liveClass"
   | "pendingGrading"
   | "attendanceDue"
   | "childOverdue"
@@ -121,6 +122,11 @@ export function rankNextActions(
 
   switch ((role || "").toUpperCase()) {
     case "STUDENT": {
+      // A class that is live (or about to be) outranks everything: it is the
+      // one thing on the dashboard that is over in minutes. It opens the room.
+      const live = liveAction(d.nextClass)
+      if (live) actions.push(live)
+
       const assignments = Array.isArray(d.assignments)
         ? (d.assignments as Unknown[])
         : []
@@ -146,7 +152,7 @@ export function rankNextActions(
       }
 
       const nextClass = d.nextClass as Unknown | undefined
-      if (nextClass && str(nextClass.subject)) {
+      if (!live && nextClass && str(nextClass.subject)) {
         actions.push({
           kind: "nextClass",
           mark: str(nextClass.subject),
@@ -157,6 +163,8 @@ export function rankNextActions(
     }
 
     case "TEACHER": {
+      const live = liveAction(d.nextClass)
+      if (live) actions.push(live)
       if (num(d.pendingGrading) > 0) {
         actions.push({
           kind: "pendingGrading",
@@ -172,7 +180,7 @@ export function rankNextActions(
         })
       }
       const nextClass = d.nextClass as Unknown | undefined
-      if (nextClass && str(nextClass.subject)) {
+      if (!live && nextClass && str(nextClass.subject)) {
         actions.push({
           kind: "nextClass",
           mark: str(nextClass.subject),
@@ -274,4 +282,12 @@ export function rankNextActions(
   }
 
   return actions.filter((a) => a.mark).slice(0, MAX_ACTIONS)
+}
+
+/** The live room of the current/next class, when the data says it has one. */
+function liveAction(raw: unknown): NextAction | null {
+  const c = raw as Unknown | undefined
+  const id = c ? str(c.liveSessionId) : ""
+  if (!c || !id || !str(c.subject)) return null
+  return { kind: "liveClass", mark: str(c.subject), href: `/live/${id}/room` }
 }

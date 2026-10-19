@@ -104,10 +104,7 @@ import {
   isPlaceholderTeacherId,
   stripPlaceholderTeachers,
 } from "./generate/teacher-plan"
-import {
-  attachLiveClasses,
-  resolveTodayLive,
-} from "./live-class-join"
+import { attachLiveClasses, resolveTodayLive } from "./live-class-join"
 import {
   getPermissionContext,
   logTimetableAction,
@@ -3008,7 +3005,7 @@ export async function getChildTodaySchedule(input: {
   })
   const schoolTz = schoolRow?.timezone || DEFAULT_SCHOOL_TZ
   // A guardian may only WATCH a child's class when the school allows it;
-  // join-core refuses otherwise, so a Join here could only ever fail.
+  // join-core refuses otherwise.
   const guardiansObserve = schoolRow?.conferenceGuardiansObserve ?? false
   const dayOfWeek = schoolDayOfWeek(schoolTz, targetDate)
 
@@ -3115,9 +3112,10 @@ export async function getChildTodaySchedule(input: {
   ])
 
   return {
-    schedule: guardiansObserve
-      ? scheduleWithLiveClasses
-      : scheduleWithLiveClasses.map((row) => ({ ...row, liveClass: null })),
+    schedule: scheduleWithLiveClasses,
+    // The Online marker stays either way (it is still true — the CHILD joins);
+    // only the guardian's own Join is gated, because join-core refuses them.
+    canJoin: guardiansObserve,
     dayOfWeek,
     date: targetDate.toISOString(),
     closure,

@@ -20,6 +20,12 @@ import { schoolNameDisplay } from "@/lib/school-name-format"
 import { studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+  slotInstantsOn,
+} from "@/components/school-dashboard/live/day-window"
+import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
 
 import type { EmergencyAlert } from "./actions"
 
@@ -48,6 +54,72 @@ export async function loadUpcomingData(
     default:
       return getAdminUpcomingData(schoolId)
   }
+}
+
+/** Minutes before a period's start that its live room counts as "now". */
+const LIVE_JOIN_LEAD_MS = 10 * 60_000
+
+type TodaySlot = {
+  id: string
+  termId: string
+  sectionId: string | null
+  subjectId: string | null
+  period: { startTime: Date; endTime: Date } | null
+}
+
+/**
+ * The class happening now or next, by the SCHOOL's clock — and its live room
+ * when it has one. `nextClass` used to be the day's FIRST slot (no time
+ * filter, and the server's `getDay()`), so at 11:00 the card still said
+ * period 1. `live` is set only when a real session exists today and the
+ * period is running or within ten minutes of starting.
+ */
+async function currentOrNextSlot<T extends TodaySlot>(
+  schoolId: string,
+  tz: string,
+  now: Date,
+  slots: T[]
+): Promise<{ slot: T; live: { sessionId: string } | null } | null> {
+  const timed = slots
+    .map((slot) => ({
+      slot,
+      at: slot.period ? slotInstantsOn(tz, now, slot.period) : null,
+    }))
+    .filter((x) => x.at && x.at.scheduledEnd.getTime() > now.getTime())
+    .sort(
+      (a, b) => a.at!.scheduledStart.getTime() - b.at!.scheduledStart.getTime()
+    )
+  const pick = timed[0]
+  if (!pick) return null
+
+  let live: { sessionId: string } | null = null
+  if (pick.at!.scheduledStart.getTime() - LIVE_JOIN_LEAD_MS <= now.getTime()) {
+    const [attached] = await attachLiveClasses(
+      schoolId,
+      pick.slot.termId,
+      now,
+      [
+        {
+          timetableId: pick.slot.id,
+          sectionId: pick.slot.sectionId,
+          subjectId: pick.slot.subjectId,
+        },
+      ],
+      tz
+    )
+    if (attached?.liveClass?.sessionId) {
+      live = { sessionId: attached.liveClass.sessionId }
+    }
+  }
+  return { slot: pick.slot, live }
+}
+
+async function schoolTimezone(schoolId: string): Promise<string> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  return school?.timezone || DEFAULT_SCHOOL_TZ
 }
 
 async function getStudentUpcomingData(userId: string, schoolId: string) {
@@ -83,24 +155,28 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
       })
     : []
 
-  // Get next class
-  const dayOfWeek = today.getDay()
-  const nextClass = !student.sectionId
-    ? null
-    : await db.timetable.findFirst({
+  // The class happening now or next, by the school's clock.
+  const now = new Date()
+  const tz = await schoolTimezone(schoolId)
+  const todaySlots = !student.sectionId
+    ? []
+    : await db.timetable.findMany({
         where: {
           schoolId,
-          dayOfWeek,
+          dayOfWeek: schoolDayOfWeek(tz, now),
           weekOffset: 0,
           sectionId: student.sectionId,
+          period: { isBreak: false },
         },
         include: {
           subject: { select: { name: true } },
           classroom: { select: { roomName: true } },
-          period: { select: { startTime: true } },
+          period: { select: { startTime: true, endTime: true } },
         },
         orderBy: { period: { startTime: "asc" } },
       })
+  const next = await currentOrNextSlot(schoolId, tz, now, todaySlots)
+  const nextClass = next?.slot ?? null
 
   return {
     assignments: assignments.map((a) => ({
@@ -124,6 +200,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
               })
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
+          liveSessionId: next?.live?.sessionId ?? null,
         }
       : undefined,
   }
@@ -141,7 +218,9 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  const dayOfWeek = today.getDay()
+  const now = new Date()
+  const tz = await schoolTimezone(schoolId)
+  const dayOfWeek = schoolDayOfWeek(tz, now)
 
   // Get today's classes
   const todaysClasses = await db.timetable.findMany({
@@ -150,6 +229,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
       dayOfWeek,
       weekOffset: 0,
       teacherId: teacher.id,
+      period: { isBreak: false },
     },
     include: {
       section: {
@@ -157,7 +237,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
       },
       subject: { select: { name: true } },
       classroom: { select: { roomName: true } },
-      period: { select: { startTime: true } },
+      period: { select: { startTime: true, endTime: true } },
     },
     orderBy: { period: { startTime: "asc" } },
   })
@@ -198,7 +278,8 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   ])
   const attendanceDue = todaySectionIds.length - markedSections.length
 
-  const nextClass = todaysClasses[0]
+  const next = await currentOrNextSlot(schoolId, tz, now, todaysClasses)
+  const nextClass = next?.slot ?? null
 
   return {
     nextClass: nextClass
@@ -212,6 +293,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
           students: nextClass.section?._count.students ?? 0,
+          liveSessionId: next?.live?.sessionId ?? null,
         }
       : undefined,
     pendingGrading,

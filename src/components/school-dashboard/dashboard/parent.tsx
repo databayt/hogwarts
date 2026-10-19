@@ -26,6 +26,7 @@ import { loadDashboardHero } from "./hero-data"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection, ComparisonLineChart } from "./lazy-charts"
 import { MetricCard } from "./metric-card"
+import { ParentLiveToday } from "./parent-live-today"
 import { ProgressCard } from "./progress-card"
 import { ResourceUsageSection } from "./resource-usage-section"
 
@@ -241,6 +242,13 @@ export async function ParentDashboard({
             </div>
           </CardContent>
         </Card>
+
+        {/* A child's class that is online today comes before everything
+            else on the page — it is the one item that is over in minutes. */}
+        <ParentLiveToday
+          childrenList={data.children.map((c) => ({ id: c.id, name: c.name }))}
+          lang={locale === "en" ? "en" : "ar"}
+        />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">

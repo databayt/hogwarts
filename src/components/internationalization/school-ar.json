@@ -597,6 +597,7 @@
           "assignmentOverdue": "**تسليم {mark}** تأخّر عن موعده",
           "assignmentDue": "**تسليم {mark}** ما زال ينتظرك",
           "nextClass": "**حصة {mark}** هي القادمة",
+          "liveClass": "**حصة {mark}** مباشرة الآن — انضم إليها",
           "pendingGrading": "**{mark} تسليم** ينتظر تصحيحك اليوم",
           "attendanceDue": "**{mark} فصل** ينتظر تسجيل حضوره اليوم",
           "childOverdue": "**واجب {mark}** تأخّر عن موعده",
