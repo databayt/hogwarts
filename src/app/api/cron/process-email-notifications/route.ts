@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   try {
     console.log("[Cron] Processing pending notification emails...")
 
-    const result = await processPendingEmailNotifications(undefined, 100)
+    const result = await processPendingEmailNotifications(undefined, 200)
 
     console.log(
       `[Cron] Processed ${result.processed} emails: ${result.succeeded} succeeded, ${result.failed} failed`

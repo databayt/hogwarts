@@ -90,12 +90,26 @@ interface PendingRow {
   body: string
   lang: string
   metadata: unknown
+  priority: string
+  expiresAt: Date | null
 }
 
+/**
+ * Most urgent first, then oldest. It was oldest-first only, across every
+ * school, so one school-wide "class is live" to 600 people queued behind the
+ * day's reminders and arrived hours later. Rows past `expiresAt` are retired
+ * here instead of delivered: a "join now" for a class that has ended is
+ * worse than nothing.
+ */
 async function pullPending(limit: number): Promise<PendingRow[]> {
+  const now = new Date()
+  await db.notification.updateMany({
+    where: { pushSent: false, channels: { has: "push" }, expiresAt: { lte: now } },
+    data: { pushSent: true, pushSentAt: now, pushError: "expired" },
+  })
   const rows = await db.notification.findMany({
     where: { pushSent: false, channels: { has: "push" } },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
     take: limit,
     select: {
       id: true,
@@ -105,9 +119,11 @@ async function pullPending(limit: number): Promise<PendingRow[]> {
       body: true,
       lang: true,
       metadata: true,
+      priority: true,
+      expiresAt: true,
     },
   })
-  return rows
+  return rows.map((r) => ({ ...r, priority: String(r.priority) }))
 }
 
 /** `metadata.url` is stored relative; absolutify on the school's own host. */
@@ -153,7 +169,7 @@ export async function processPendingWebPushes(
   let failed = 0
   let pruned = 0
 
-  for (const row of pending) {
+  async function sendOne(row: PendingRow) {
     const subs = await db.pushSubscription.findMany({
       where: { userId: row.userId },
       select: { id: true, endpoint: true, p256dh: true, auth: true },
@@ -167,7 +183,7 @@ export async function processPendingWebPushes(
         data: { pushSent: true, pushSentAt: new Date() },
       })
       succeeded++
-      continue
+      return
     }
 
     const payload = JSON.stringify(
@@ -187,7 +203,21 @@ export async function processPendingWebPushes(
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           payload,
-          { TTL: 60 * 60 * 24, urgency: "normal" }
+          {
+            // A class alert means nothing once the class is over: the push
+            // service drops it at expiry instead of delivering it late.
+            TTL: row.expiresAt
+              ? Math.max(
+                  60,
+                  Math.floor((row.expiresAt.getTime() - Date.now()) / 1000)
+                )
+              : 60 * 60 * 24,
+            // "high" wakes a sleeping phone; class alerts are high priority.
+            urgency:
+              row.priority === "high" || row.priority === "urgent"
+                ? "high"
+                : "normal",
+          }
         )
         delivered++
         await db.pushSubscription.update({
@@ -225,6 +255,13 @@ export async function processPendingWebPushes(
       failed++
       console.error("[push-web] send failed", { notificationId: row.id, error: lastError })
     }
+  }
+
+  // Rows are independent; a few at a time keeps one slow push service from
+  // holding up the whole batch without opening hundreds of sockets at once.
+  const CONCURRENCY = 20
+  for (let i = 0; i < pending.length; i += CONCURRENCY) {
+    await Promise.all(pending.slice(i, i + CONCURRENCY).map(sendOne))
   }
 
   return { processed: pending.length, succeeded, failed, pruned, skippedReason: null }

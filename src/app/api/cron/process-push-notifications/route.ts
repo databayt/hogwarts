@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   try {
     // Web Push first: it owns the queue rows today. The FCM scaffold below
     // stays a no-op until a native app registers device tokens.
-    const web = await processPendingWebPushes(50)
+    const web = await processPendingWebPushes(400)
     if (web.skippedReason === "not_configured") {
       console.warn(
         "[Cron] process-push-notifications: Web Push not configured (set NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)"

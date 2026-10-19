@@ -139,6 +139,8 @@ async function loadSession(
   session: ResolvedSession
   lang: "ar" | "en"
   userIds: string[]
+  /** The host's User.id — left out of the "class is live" notice. */
+  teacherUserId: string | null
 } | null> {
   const session = await db.conference.findFirst({
     where: { id: sessionId, schoolId },
@@ -219,6 +221,7 @@ async function loadSession(
     },
     lang,
     userIds: Array.from(userIds),
+    teacherUserId: session.teacher.userId ?? null,
   }
 }
 
@@ -241,7 +244,14 @@ async function dispatch(
   try {
     const resolved = await loadSession(schoolId, sessionId)
     if (!resolved || resolved.userIds.length === 0) return { created: 0 }
-    const { session, lang, userIds } = resolved
+    const { session, lang, teacherUserId } = resolved
+    // "Your class is live" is news to everyone except the teacher who just
+    // started it — they are already in the room.
+    const userIds =
+      kind === "started" && teacherUserId
+        ? resolved.userIds.filter((id) => id !== teacherUserId)
+        : resolved.userIds
+    if (userIds.length === 0) return { created: 0 }
     const vars: Record<string, string> = {
       title: session.title,
       teacher: session.teacherFullName,

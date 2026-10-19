@@ -496,7 +496,18 @@ export async function processPendingEmailNotifications(
         emailError: `Expired: older than ${EMAIL_QUEUE_MAX_AGE_DAYS} days when the email drain ran`,
       },
     })
-    expired = swept.count
+    // And anything past its own `expiresAt`: a "class starting soon" email
+    // that drains after the class has ended is noise, and it costs a send.
+    const lapsed = await db.notification.updateMany({
+      where: {
+        ...(schoolId && { schoolId }),
+        emailSent: false,
+        channels: { has: "email" },
+        expiresAt: { lte: new Date() },
+      },
+      data: { emailSent: true, emailError: "Expired: past expiresAt" },
+    })
+    expired = swept.count + lapsed.count
   } catch (error) {
     console.error("[NotificationEmail] Age-gate sweep failed:", error)
   }
