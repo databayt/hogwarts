@@ -1,5 +1,20 @@
 # Assignments -- Production Readiness Tracker
 
+## 2026-10-19 — online-school pass (LOCAL, not pushed) · `c45032510` `60fa1bdec`
+
+- [x] **The wizard never published.** Finishing it left the row DRAFT; students' lists hide drafts and
+      no web path set PUBLISHED. Finishing now publishes (DRAFT only) and has the role gate it lacked.
+- [x] **`assignment_created` was never sent** — `notify.ts` tells the audience from the wizard and
+      from the live room's Set homework. The due reminder now speaks the school's language.
+- [x] **Web marking.** The Submissions tab was a placeholder; `submissions-core.ts` +
+      `submissions-review.tsx`: hand-ins, signed attachments, "12 of 25", score + feedback on
+      `gradeSubmission`. TEACHER sees only work they teach.
+- [x] **Students attach files** (`presignSubmissionUpload`, attachment kind, 25MB). `submitAssignment`
+      now accepts only this school's stored objects (it took any URL, `javascript:` included).
+- [ ] Records drift: README lists `teacher-review.tsx` / `submission-form.tsx` / `student-view.tsx`,
+      which do not exist, and a publish notification that did not exist until today.
+- [ ] Report-card marks ignore `weight`; in-room polls count toward the report card (decision).
+
 **Status:** IN PROGRESS
 **Completion:** 80%
 **Last Updated:** 2026-10-04

@@ -4,6 +4,30 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Related blocks for a fully online school — reviewed 2026-10-19 (LOCAL, not pushed)
+
+Three read-only reviews (learning · communication · setup/ops), each finding checked in code before a
+fix. Fixed, by commit: exams `d230577d8` · attendance `0762547f7` · live setup `046c176fd` · alert
+delivery `44473ab4b` · assignments `c45032510` `60fa1bdec` · dashboard `087f194a8` · holidays `02a620571`.
+Detail lives in each block's ISSUE.md.
+
+**Decisions owed (Abdout):**
+- Timetable-materialized classes carry no `catalogLessonId`, so recordings never reach a lumos lesson
+  and the lesson's live strip never lists them. A "covering lesson" picker in the room, or an
+  automatic next-lesson pointer per section+subject?
+- Attendance sync is OFF by default even for an online school — auto-enable on choosing Live?
+- Report cards ignore assignment `weight`, and in-room polls count toward them.
+- Recordings published to lumos are visible school-wide (needs a section visibility level).
+- WhatsApp for live alerts / announcements (templates), SMS (no drain), socket server (#262), a
+  section group chat (schema).
+- An absent teacher with no substitute: the class is created, nobody can enter, the cron cancels it silently.
+
+**Still open, small:** lab subjects need a "lab" room an online school never has (no slots); terms
+are active by flag, not by date; onboarding never asks the teaching mode; the setup guide does not
+mention it; placement notices say nothing about live classes and skip guardians; `absence-followup`
+day window is UTC. Browser verification of today's UI changes is owed (port 3000 was held by
+another project's dev server all session).
+
 ## Production gap list + first fixes — 2026-10-19 (LOCAL, not pushed)
 
 Full ranked list: `~/.claude/plans/now-tell-me-what-refactored-bubble.md`. **Still open, not code:**

@@ -13,6 +13,7 @@ last_audited: 2026-09-13
 
 ## Log
 
+- 2026-10-19 — Delivery for an online school (`44473ab4b`, LOCAL): web push pulls most-urgent first, retires rows past `expiresAt`, sends class alerts `urgency: high` with a TTL ending at expiry, 400 rows/run 20 at a time; the email drain also retires expired rows and takes 200/run; the teacher no longer gets "your class is live" for their own class. Still OPS: VAPID keys unset on prod (push delivers nothing), Resend key unconfirmed, FCM `firebase-admin` not installed, no WhatsApp/SMS for live alerts, `DEFAULT_NOTIFICATION_PREFERENCES` is never read.
 - 2026-10-04 — Classes retired (class removal S10): `dispatchNotificationsToAudience` takes `targetScope: "grade" | "section"` (+ `targetGradeId` / `targetSectionId`) and resolves them through `audienceUserIds` (students, guardians, teachers); the legacy `class` scope now resolves within the school only (it looked the class up by id alone). Notification batches target a grade or a section (`targetGradeId` / `targetSectionId`, checked by `batch-target.ts`) instead of a class; the school broadcast form offers grades and sections. Test: `src/tests/lib/dispatch-notification-audience.test.ts`.
 - 2026-09-28 — The bell's list (`list.tsx`, framer-motion) loads when the popover first opens, warmed on hover/focus; `atom/count-badge.tsx` pops in with CSS. Both kept framer-motion in the initial JS of every dashboard route (`f889607ca`).
 

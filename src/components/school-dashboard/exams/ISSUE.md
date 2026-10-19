@@ -11,6 +11,21 @@ docs: https://ed.databayt.org/en/docs/exams
 last_audited: 2026-10-04
 ---
 
+## 2026-10-19 — online-school pass (LOCAL, not pushed) · `d230577d8`
+
+- [x] **A timed-out attempt lost every answer.** The player auto-submits AT time-up; with no late
+      allowance the server refused it and marked the session EXPIRED. Now: 30s network grace, and
+      past the deadline the answers AUTO-SAVED by the deadline are submitted (`take/finalize-session.ts`).
+- [x] **Abandoned attempts** (tab closed, phone died) are submitted from the snapshot by the
+      exam-lifecycle cron, or EXPIRED when nothing was saved. Cron path does not instant-grade
+      (`finalizeStudentExam` is session-bound) — the teacher's Auto-mark picks them up.
+- [x] `/exams/quick/new` existed only as a link. The page exists, with a question-bank picker
+      (`listQuickCheckQuestions`) instead of a box for raw question ids.
+- [ ] Exams launched from the live room open a new tab, and the proctor guard counts every switch
+      back to the class as a violation; teachers never see `tabSwitchCount` anywhere.
+- [ ] `attachLiveClassResource` takes only quick checks / assignments — no exam from inside the room.
+- [ ] Ending an in-room quick check does not complete the exam. Practice tests save no score.
+
 ## 2026-10-04 — exams without classes (LOCAL, not pushed) · #429 #428
 
 New schools have no `Class` rows, so exam creation died in three places: the catalog

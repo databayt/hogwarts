@@ -57,6 +57,10 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### 3) School Settings
 
+- [x] **Holidays (2026-10-19)** — `/school/configuration/holidays`: declare HOLIDAY / CANCELLED days
+      (`holidays-actions.ts`, admins only, stored at noon school time). The live sweep and the
+      timetable already read these; nothing could write one before.
+
 - [x] **Teaching mode (2026-10-19)** — `/school/configuration/teaching-mode`:
       In person · Live · Both → `School.conferenceDeliveryMode` (live block's
       `updateDeliveryMode`). Card sits before "Live classes", whose card now
