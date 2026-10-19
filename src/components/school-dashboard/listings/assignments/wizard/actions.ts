@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
 
@@ -11,6 +12,8 @@ import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { assertAssignmentPermission, getAuthContext } from "../authorization"
+import { notifyAssignmentPublished } from "../notify"
 import type { AssignmentWizardData } from "./use-assignment-wizard"
 
 /** Fetch full assignment data for the wizard */
@@ -116,7 +119,8 @@ export async function completeAssignmentWizard(
 ): Promise<ActionResponse> {
   try {
     const session = await auth()
-    if (!session?.user) {
+    const authContext = getAuthContext(session)
+    if (!authContext) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
@@ -124,11 +128,14 @@ export async function completeAssignmentWizard(
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
+    // Finishing publishes — the same role gate as editing an assignment.
+    // This action checked sign-in only.
+    assertAssignmentPermission(authContext, "update", { schoolId })
 
     // Validate required fields are present
     const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
-      select: { title: true, gradeId: true },
+      select: { title: true, gradeId: true, status: true },
     })
 
     if (!assignment) {
@@ -144,10 +151,20 @@ export async function completeAssignmentWizard(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "scope_required")
     }
 
+    // Finishing the wizard PUBLISHES. It used to clear the step and leave the
+    // row DRAFT — and students' lists hide drafts, and nothing else on the
+    // web ever set PUBLISHED — so homework built here reached no student.
+    const publishing = assignment.status === "DRAFT"
     await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
-      data: { wizardStep: null },
+      data: {
+        wizardStep: null,
+        ...(publishing ? { status: "PUBLISHED", publishDate: new Date() } : {}),
+      },
     })
+    if (publishing) {
+      after(() => notifyAssignmentPublished(schoolId, assignmentId))
+    }
 
     refreshPage("/assignments")
     return { success: true }

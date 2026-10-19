@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
   FormControl,
@@ -27,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -369,9 +369,7 @@ function QuestionPicker({
                 checked={selected.has(q.id)}
                 onCheckedChange={(on) =>
                   onChange(
-                    on
-                      ? [...value, q.id]
-                      : value.filter((id) => id !== q.id)
+                    on ? [...value, q.id] : value.filter((id) => id !== q.id)
                   )
                 }
                 className="mt-0.5"

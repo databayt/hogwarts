@@ -47,8 +47,8 @@ export interface WebPushPayload {
 function isConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-      process.env.VAPID_PRIVATE_KEY?.trim() &&
-      process.env.VAPID_SUBJECT?.trim()
+    process.env.VAPID_PRIVATE_KEY?.trim() &&
+    process.env.VAPID_SUBJECT?.trim()
   )
 }
 
@@ -104,7 +104,11 @@ interface PendingRow {
 async function pullPending(limit: number): Promise<PendingRow[]> {
   const now = new Date()
   await db.notification.updateMany({
-    where: { pushSent: false, channels: { has: "push" }, expiresAt: { lte: now } },
+    where: {
+      pushSent: false,
+      channels: { has: "push" },
+      expiresAt: { lte: now },
+    },
     data: { pushSent: true, pushSentAt: now, pushError: "expired" },
   })
   const rows = await db.notification.findMany({
@@ -161,7 +165,13 @@ export async function processPendingWebPushes(
 
   const pending = await pullPending(limit)
   if (pending.length === 0) {
-    return { processed: 0, succeeded: 0, failed: 0, pruned: 0, skippedReason: null }
+    return {
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      pruned: 0,
+      skippedReason: null,
+    }
   }
 
   const domainCache = new Map<string, string>()
@@ -201,7 +211,10 @@ export async function processPendingWebPushes(
     for (const sub of subs) {
       try {
         await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
           payload,
           {
             // A class alert means nothing once the class is over: the push
@@ -228,7 +241,9 @@ export async function processPendingWebPushes(
         const status = err instanceof WebPushError ? err.statusCode : 0
         if (status === 404 || status === 410) {
           // The browser unsubscribed or the app was uninstalled.
-          await db.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {})
+          await db.pushSubscription
+            .delete({ where: { id: sub.id } })
+            .catch(() => {})
           pruned++
           continue
         }
@@ -253,7 +268,10 @@ export async function processPendingWebPushes(
         data: { pushError: lastError.slice(0, 1000) },
       })
       failed++
-      console.error("[push-web] send failed", { notificationId: row.id, error: lastError })
+      console.error("[push-web] send failed", {
+        notificationId: row.id,
+        error: lastError,
+      })
     }
   }
 
@@ -264,5 +282,11 @@ export async function processPendingWebPushes(
     await Promise.all(pending.slice(i, i + CONCURRENCY).map(sendOne))
   }
 
-  return { processed: pending.length, succeeded, failed, pruned, skippedReason: null }
+  return {
+    processed: pending.length,
+    succeeded,
+    failed,
+    pruned,
+    skippedReason: null,
+  }
 }

@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         title: true,
         dueDate: true,
         school: {
-          select: { preferredLanguage: true },
+          select: { preferredLanguage: true, timezone: true },
         },
       },
     })
@@ -69,14 +69,23 @@ export async function GET(request: NextRequest) {
     let totalCreated = 0
 
     for (const assignment of upcomingAssignments) {
+      // In the school's own language: the copy was English for every school,
+      // which on an Arabic-first platform is most of them.
+      const lang = assignment.school?.preferredLanguage === "en" ? "en" : "ar"
       const dueDate = assignment.dueDate
-        ? new Date(assignment.dueDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "soon"
+        ? new Date(assignment.dueDate).toLocaleDateString(
+            lang === "ar" ? "ar-EG" : "en-US",
+            {
+              timeZone: assignment.school?.timezone || "Africa/Khartoum",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          )
+        : lang === "ar"
+          ? "قريباً"
+          : "soon"
 
       // The students it's for: its section, or its whole grade.
       const targetUserIds = await audienceUserIds(
@@ -89,15 +98,21 @@ export async function GET(request: NextRequest) {
       const { created } = await dispatchNotificationsToAudience({
         schoolId: assignment.schoolId,
         type: "assignment_due",
-        title: `Assignment Due: ${assignment.title}`,
-        body: `"${assignment.title}" is due ${dueDate}. Make sure to submit before the deadline.`,
+        title:
+          lang === "ar"
+            ? `موعد تسليم واجب: ${assignment.title}`
+            : `Assignment Due: ${assignment.title}`,
+        body:
+          lang === "ar"
+            ? `«${assignment.title}» موعد تسليمه ${dueDate}. احرص على التسليم قبل الموعد.`
+            : `"${assignment.title}" is due ${dueDate}. Make sure to submit before the deadline.`,
         priority: "high",
         channels: ["in_app", "email"],
         metadata: {
           assignmentId: assignment.id,
           url: `/assignments/${assignment.id}`,
         },
-        lang: assignment.school?.preferredLanguage ?? "ar",
+        lang,
         targetUserIds,
       })
       totalCreated += created

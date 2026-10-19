@@ -76,7 +76,10 @@ export async function GET(request: Request) {
         })
         const daysByStudent = new Map<string, number>()
         for (const r of absentDays) {
-          daysByStudent.set(r.studentId, (daysByStudent.get(r.studentId) ?? 0) + 1)
+          daysByStudent.set(
+            r.studentId,
+            (daysByStudent.get(r.studentId) ?? 0) + 1
+          )
         }
         const absenceCounts = [...daysByStudent].map(([studentId, n]) => ({
           studentId,

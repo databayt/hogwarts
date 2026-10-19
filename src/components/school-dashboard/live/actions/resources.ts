@@ -8,6 +8,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import { notifyAssignmentPublished } from "@/components/school-dashboard/listings/assignments/notify"
 import { prewarm } from "@/components/translation/prewarm"
 
 import { requireContext } from "./helpers"
@@ -268,6 +269,10 @@ export async function setClassHomework(input: {
       order: (last?.order ?? -1) + 1,
     },
   })
+
+  // Tell the section — the class just ended, and homework nobody hears about
+  // waits for the reminder the day before it is due.
+  after(() => notifyAssignmentPublished(ctx.schoolId, assignment.id))
 
   refreshPage("/assignments")
   return { success: true as const, data: { id: assignment.id } }
