@@ -14,13 +14,20 @@
  * takes its state as a prop, so a stub chat is enough.
  */
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { initialClassState } from "@/components/school-dashboard/live/room/class-channel"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import { SidePanel } from "@/components/school-dashboard/live/room/side-panel"
 import type { ClassChannel } from "@/components/school-dashboard/live/room/use-class-channel"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
+
+// The chat tab's header (the /messages WhatsApp group header) lists who is in
+// the room through `useParticipants`, which needs a LiveKit Room context.
+vi.mock("@livekit/components-react", async (orig) => ({
+  ...(await orig<typeof import("@livekit/components-react")>()),
+  useParticipants: () => [],
+}))
 
 const labels = resolveRoomLabels(undefined)
 const tools: RoomTools = {
@@ -80,30 +87,30 @@ function renderPanel() {
 }
 
 describe("SidePanel hit targets (lr-05)", () => {
-  it("every tab button carries the out-of-flow 44px hit area", () => {
+  // Since 2026-10-19 the panel is the /messages WhatsApp chrome: 32px filter
+  // chips for the tabs, a 44px glass back disc for close.
+  it("every tab chip carries the out-of-flow 44px hit area", () => {
     renderPanel()
     for (const name of [labels.chat, labels.questions, labels.poll]) {
       const btn = screen.getByRole("button", { name })
       expect(btn.className).toContain("after:absolute")
-      expect(btn.className).toMatch(/after:-inset-y-2\.5/)
+      expect(btn.className).toMatch(/after:-inset-y-1\.5/)
+      // The chip's own overflow-clip would swallow the ::after.
+      expect(btn.className).toContain("overflow-visible")
+      expect(btn.className).not.toContain("overflow-clip")
     }
   })
 
-  it("the close button carries the out-of-flow 44px hit area", () => {
+  it("the close button is itself a 44px target", () => {
     renderPanel()
     const close = screen.getByRole("button", { name: labels.close })
-    expect(close.className).toContain("after:absolute")
-    expect(close.className).toMatch(/after:-inset-2\b/)
+    expect(close.className).toContain("size-[44px]")
   })
 
-  it("the visible pill/icon stay their original compact size", () => {
+  it("the visible chip stays its compact 32px", () => {
     renderPanel()
-    // Still the pre-existing compact classes — only the hit area grew.
     expect(
       screen.getByRole("button", { name: labels.questions }).className
-    ).toContain("px-2.5")
-    expect(
-      screen.getByRole("button", { name: labels.close }).className
-    ).toContain("h-7")
+    ).toContain("h-[32px]")
   })
 })

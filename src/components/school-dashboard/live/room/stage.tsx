@@ -79,7 +79,16 @@ export function Stage({ channel, labels }: StageProps) {
   const share = tracks.find(
     (t) => t.source === Track.Source.ScreenShare && isTrackReference(t)
   )
-  const allCameras = tracks.filter((t) => t.source === Track.Source.Camera)
+  // Observers (watching guardians) hold a subscribe-only grant and can never
+  // publish, so their camera slot is a permanent empty placeholder — 25
+  // parents watching drew 25 blank tiles over the class. They stay in the
+  // people list; the stage is for people who can be seen. A real track is
+  // always kept, whatever the grant says.
+  const allCameras = tracks.filter(
+    (t) =>
+      t.source === Track.Source.Camera &&
+      (isTrackReference(t) || t.participant.permissions?.canPublish !== false)
+  )
   const { whiteboard, slides, spotlight } = channel.state
   // The spotlit student leads the strip; the teacher comes next.
   const spot = spotlight
@@ -121,9 +130,10 @@ export function Stage({ channel, labels }: StageProps) {
     // drawing the SDK's grey silhouette across the whole stage (Abdout,
     // 2026-09-13). A camera that is on still shows the reader to themselves.
     if (
-      cameras.length === 1 &&
-      cameras[0].participant.isLocal &&
-      !localParticipant.isCameraEnabled
+      cameras.length === 0 ||
+      (cameras.length === 1 &&
+        cameras[0].participant.isLocal &&
+        !localParticipant.isCameraEnabled)
     ) {
       return (
         <div className="flex h-full w-full items-center justify-center px-6">

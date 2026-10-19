@@ -100,7 +100,9 @@ export function SidePanel(props: SidePanelProps) {
       {tabs.length > 1 && (
         <div
           role="toolbar"
-          className="flex shrink-0 gap-[8px] overflow-x-auto px-[16px] pt-[2px] pb-[8px] [scrollbar-width:none]"
+          // pt 6px, not 2px: the scroller clips vertically too, and the chips'
+          // hit area reaches 6px above them.
+          className="flex shrink-0 gap-[8px] overflow-x-auto px-[16px] pt-[6px] pb-[8px] [scrollbar-width:none]"
         >
           {tabs.map((t) => (
             <IosFilterChip
@@ -108,6 +110,11 @@ export function SidePanel(props: SidePanelProps) {
               label={t.badge ? `${t.label} ${t.badge}` : t.label}
               active={tab === t.id}
               onClick={() => onTab(t.id)}
+              // The chip is 32px, the room's touch target is 44px (lr-05): an
+              // out-of-flow ::after adds 6px above and below without moving
+              // anything. `overflow-visible` because the chip's own
+              // `overflow-clip` would clip that ::after.
+              className="relative overflow-visible after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']"
             />
           ))}
         </div>
@@ -212,7 +219,10 @@ function QuestionsTab({
             <div className="text-muted-foreground text-[11px]">
               {q.from === localIdentity ? labels.you : q.name}
             </div>
-            <div>{q.text}</div>
+            {/* `dir="auto"`: a question takes its own direction, like a chat
+                bubble — an English question in the Arabic panel rendered as
+                "?question" with its punctuation on the wrong end. */}
+            <div dir="auto">{q.text}</div>
             <div className="mt-1 flex items-center gap-2 text-xs">
               {q.answered ? (
                 <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-300">

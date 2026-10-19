@@ -454,6 +454,12 @@ w-1/2` and slid by `translate-x-full rtl:-translate-x-full`. Copy its
   ONE `resolveTodayLive` — don't reintroduce separate `getLiveClassIndicators`
   / `resolveTodayJoinTargets` calls there (each re-read the school timezone).
 
+- **A guardian gets no join targets when guardians may not watch** (2026-10-19):
+  `resolveTodayLive(..., { forGuardian: true })` from `getChildTimetable` (via
+  the internal `getTimetableBySection`) and `getChildTodaySchedule` drop
+  `liveClass` when `School.conferenceGuardiansObserve` is off — join-core
+  refuses them anyway, so those Join buttons could only fail.
+
 - **The standing link obeys the online policy; a materialized session does not**
   (2026-09-03): tier 3 of `attachLiveClasses` is the only tier with no
   Conference row behind it, so it is the only one that can outlive the decision

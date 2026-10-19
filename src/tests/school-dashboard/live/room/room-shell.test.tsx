@@ -128,7 +128,11 @@ describe("RoomShell info label (lr-01)", () => {
     render(
       <RoomShell {...baseProps} clock={{ startsAtMs: null, endsAtMs: null }} />
     )
-    expect(screen.getByText("Mathematics")).toBeInTheDocument()
+    // The info label is the stage's <p>; the chat panel's WhatsApp header
+    // (mounted, hidden) names the class too, so scope to the label.
+    expect(
+      screen.getByText("Mathematics", { selector: "p" })
+    ).toBeInTheDocument()
   })
 
   it("prints the title on a TIMED room too — the lumos player's info label", () => {
@@ -139,6 +143,10 @@ describe("RoomShell info label (lr-01)", () => {
         clock={{ startsAtMs: now - 60_000, endsAtMs: now + 60_000 }}
       />
     )
-    expect(screen.getByText("Mathematics")).toBeInTheDocument()
+    // The info label is the stage's <p>; the chat panel's WhatsApp header
+    // (mounted, hidden) names the class too, so scope to the label.
+    expect(
+      screen.getByText("Mathematics", { selector: "p" })
+    ).toBeInTheDocument()
   })
 })

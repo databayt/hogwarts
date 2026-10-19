@@ -324,7 +324,13 @@ type TodaySlot = {
 export async function resolveTodayLive(
   schoolId: string,
   termId: string,
-  slots: TodaySlot[]
+  slots: TodaySlot[],
+  /**
+   * The reader is a GUARDIAN: they only get join targets when the school lets
+   * guardians watch (`conferenceGuardiansObserve`) — join-core refuses them
+   * otherwise, so the targets would be Join buttons that can only fail.
+   */
+  opts: { forGuardian?: boolean } = {}
 ): Promise<{
   liveIndicators: Record<string, "live" | "scheduled">
   liveJoin: Record<string, LiveClassJoinInfo>
@@ -332,12 +338,19 @@ export async function resolveTodayLive(
 }> {
   const school = await db.school.findUnique({
     where: { id: schoolId },
-    select: { timezone: true, conferenceDeliveryMode: true },
+    select: {
+      timezone: true,
+      conferenceDeliveryMode: true,
+      conferenceGuardiansObserve: true,
+    },
   })
   const tz = school?.timezone || DEFAULT_SCHOOL_TZ
+  const joinable = !opts.forGuardian || !!school?.conferenceGuardiansObserve
   const [liveIndicators, liveJoin] = await Promise.all([
     getLiveClassIndicators(schoolId, tz),
-    resolveTodayJoinTargets(schoolId, termId, slots, tz),
+    joinable
+      ? resolveTodayJoinTargets(schoolId, termId, slots, tz)
+      : Promise.resolve({} as Record<string, LiveClassJoinInfo>),
   ])
   return {
     liveIndicators,

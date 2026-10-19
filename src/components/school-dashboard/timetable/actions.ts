@@ -1577,6 +1577,8 @@ async function getTimetableBySection(input: {
   termId: string
   sectionId: string
   weekOffset?: 0 | 1
+  /** A guardian's read: join targets only when guardians may watch. */
+  forGuardian?: boolean
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -1653,7 +1655,9 @@ async function getTimetableBySection(input: {
     // Dots, join targets (TODAY's slots only, so another day's cell misses
     // the map) and whether the school teaches live — one pass, after the slot
     // fetch because it needs the slots.
-    ...(await resolveTodayLive(schoolId, input.termId, slots)),
+    ...(await resolveTodayLive(schoolId, input.termId, slots, {
+      forGuardian: input.forGuardian,
+    })),
   }
 }
 
@@ -2942,6 +2946,7 @@ export async function getChildTimetable(input: {
     termId: input.termId,
     sectionId: student.sectionId,
     weekOffset: input.weekOffset,
+    forGuardian: true,
   })
 
   return {
@@ -2997,13 +3002,14 @@ export async function getChildTodaySchedule(input: {
   // (UTC on Vercel). Outside school hours a bare `getDay()` disagreed with the
   // day the conference sweep materializes sessions for, so this card could show
   // yesterday's slots while today's live classes already existed.
-  const schoolTz =
-    (
-      await db.school.findUnique({
-        where: { id: schoolId },
-        select: { timezone: true },
-      })
-    )?.timezone || DEFAULT_SCHOOL_TZ
+  const schoolRow = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true, conferenceGuardiansObserve: true },
+  })
+  const schoolTz = schoolRow?.timezone || DEFAULT_SCHOOL_TZ
+  // A guardian may only WATCH a child's class when the school allows it;
+  // join-core refuses otherwise, so a Join here could only ever fail.
+  const guardiansObserve = schoolRow?.conferenceGuardiansObserve ?? false
   const dayOfWeek = schoolDayOfWeek(schoolTz, targetDate)
 
   const { term } = await getActiveTerm()
@@ -3109,7 +3115,9 @@ export async function getChildTodaySchedule(input: {
   ])
 
   return {
-    schedule: scheduleWithLiveClasses,
+    schedule: guardiansObserve
+      ? scheduleWithLiveClasses
+      : scheduleWithLiveClasses.map((row) => ({ ...row, liveClass: null })),
     dayOfWeek,
     date: targetDate.toISOString(),
     closure,

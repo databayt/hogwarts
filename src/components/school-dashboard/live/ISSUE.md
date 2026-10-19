@@ -4,6 +4,27 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Production gap list + first fixes — 2026-10-19 (LOCAL, not pushed)
+
+Full ranked list: `~/.claude/plans/now-tell-me-what-refactored-bubble.md`. **Still open, not code:**
+P0 capacity (LiveKit free tier = 100 concurrent; Ship/Scale/self-host, Abdout's call) · P0 the app is
+ONE `standard-1` container (`max_instances: 1`), the bell-time join burst never load-tested; set
+Upstash before scaling out (rate limits are in-memory otherwise) · P0 deploy + prod verification
+(End → attendance, crons firing) · P0 confirm prod's Resend key (#401 found it dead) · P0 a real-phone
+weak-network class.
+
+Fixed in this pass:
+- [x] Observers (watching guardians) no longer draw an empty camera tile each (`room/stage.tsx`:
+      subscribe-only participants without a track are left out of the grid; people list keeps them).
+- [x] Questions take their own direction (`dir="auto"`); chat already had it via the messaging bubbles.
+- [x] Guardian timetable (weekly grid + Today cards) offers no Join when the school does not let
+      guardians watch — `resolveTodayLive({ forGuardian })` + `getChildTodaySchedule`.
+- [x] Room tab chips regain the 44px hit area lost in the WhatsApp panel redesign (they are 32px
+      chips; `overflow-clip` was swallowing the ::after); toolbar pt 6px so the scroller keeps it.
+- [x] The 5 failing room tests now pass (missing `useParticipants` mock; title now printed twice).
+- [x] Verified (not a bug any more): a non-participant's Join shows «أنت غير مسجّل في هذه الحصة.» under the pill.
+- [ ] Observer-tile change not verified in a live room (no SFU locally).
+
 ## Teaching mode + join from the timetable cell — 2026-10-19 (LOCAL, not pushed)
 
 - [x] `/school/configuration/teaching-mode` — In person · Live · Both (`School.conferenceDeliveryMode`)
