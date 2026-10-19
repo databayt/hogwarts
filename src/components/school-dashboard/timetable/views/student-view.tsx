@@ -20,6 +20,7 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -108,6 +109,12 @@ export default function StudentView({
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
+  // A click on today's live cell IS the join; any other cell opens the dialog.
+  const { open: openSlot } = useSlotOpen({
+    lang,
+    liveJoin,
+    onInspect: setInspectedSlotId,
+  })
 
   // Today's schedule is fetched for its CLOSURE only — the day list and the
   // current/next card it used to feed are both gone, but a declared holiday
@@ -266,10 +273,7 @@ export default function StudentView({
             // whole day grey instead of admin's coloured cells.
             highlightToday={viewRange === "week"}
             liveIndicators={liveIndicators}
-            onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
-            // Join is the corner icon now: it replaces the live dot rather
-            // than sitting beside it, because in a 128px cell a dot next to a
-            // link says the same thing twice. Still time-gated — a target only
+            onSlotInspect={openSlot}
             dictionary={{
               period: d?.period,
               break: d?.break,

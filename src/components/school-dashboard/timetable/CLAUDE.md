@@ -443,6 +443,17 @@ w-1/2` and slid by `translate-x-full rtl:-translate-x-full`. Copy its
   `stopPropagation` span — verified both ways: Join does not open the editor,
   the cell still does.
 
+- **A read-only cell click IS the join when its class is live** (2026-10-19,
+  Abdout): `views/use-slot-open.ts` — today + inside the join window + a target
+  → room / meeting URL; a teacher's period with no target and `liveEnabled` →
+  `createLiveClassFromTimetable` → room; anything else → the detail dialog.
+  `onSlotInspect` now passes `(slot, period)`. Teacher Start (cell, Today rows,
+  Current/Next card) requires `liveEnabled` = teaching mode ≠ `physical`, and
+  the in-cell one also today's column (it used to render on every weekday's
+  current period). The four weekly reads take dots + joins + `liveEnabled` from
+  ONE `resolveTodayLive` — don't reintroduce separate `getLiveClassIndicators`
+  / `resolveTodayJoinTargets` calls there (each re-read the school timezone).
+
 - **The standing link obeys the online policy; a materialized session does not**
   (2026-09-03): tier 3 of `attachLiveClasses` is the only tier with no
   Conference row behind it, so it is the only one that can outlive the decision

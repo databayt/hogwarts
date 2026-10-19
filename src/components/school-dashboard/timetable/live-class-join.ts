@@ -50,7 +50,9 @@ export async function attachLiveClasses<
   schoolId: string,
   termId: string,
   date: Date,
-  entries: T[]
+  entries: T[],
+  /** The school's timezone, when the caller already read it — saves a query. */
+  timezone?: string | null
 ): Promise<(T & { liveClass: LiveClassJoinInfo | null })[]> {
   const sectionIds = [
     ...new Set(entries.map((e) => e.sectionId).filter(Boolean)),
@@ -67,20 +69,24 @@ export async function attachLiveClasses<
   // straddles the UTC boundary the window covered the wrong day and the Join
   // button appeared on the wrong date. Same bug class the 2026-08-12 pass
   // fixed for schedule storage; this is the read side of it.
-  const school = await db.school.findUnique({
-    where: { id: schoolId },
-    select: { timezone: true },
-  })
+  const tz =
+    timezone ??
+    (
+      await db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    )?.timezone
   const { start: dayStart, end: dayEnd } = schoolDayWindow(
-    school?.timezone || DEFAULT_SCHOOL_TZ,
+    tz || DEFAULT_SCHOOL_TZ,
     date
   )
 
   // Is each of these sections actually online right now? Only tier 3 needs the
-  // answer — see the suppression note where it is applied.
-  const policies = await resolveOnlinePolicies(schoolId, sectionIds, date)
-
-  const [sessions, openRooms, defaults] = await Promise.all([
+  // answer — see the suppression note where it is applied. Independent of the
+  // three reads below, so it runs beside them rather than in front of them.
+  const [policies, sessions, openRooms, defaults] = await Promise.all([
+    resolveOnlinePolicies(schoolId, sectionIds, date),
     db.conference.findMany({
       where: {
         schoolId,
@@ -253,15 +259,20 @@ export async function attachLiveClasses<
  * from the request context upstream, never from client input).
  */
 export async function getLiveClassIndicators(
-  schoolId: string
+  schoolId: string,
+  timezone?: string | null
 ): Promise<Record<string, "live" | "scheduled">> {
   // School-calendar day, for the same reason as `attachLiveClasses` above.
-  const school = await db.school.findUnique({
-    where: { id: schoolId },
-    select: { timezone: true },
-  })
+  const tz =
+    timezone ??
+    (
+      await db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    )?.timezone
   const { start: dayStart, end: dayEnd } = schoolDayWindow(
-    school?.timezone || DEFAULT_SCHOOL_TZ
+    tz || DEFAULT_SCHOOL_TZ
   )
 
   const sessions = await db.conference.findMany({
@@ -286,6 +297,53 @@ export async function getLiveClassIndicators(
       session.status === "live" ? "live" : "scheduled"
   }
   return indicators
+}
+
+type TodaySlot = {
+  id: string
+  dayOfWeek: number
+  sectionId?: string | null
+  subjectId?: string | null
+}
+
+/**
+ * Everything the weekly grid needs about today's live classes, in ONE pass:
+ * the dots, the join targets, and whether this school teaches live at all.
+ *
+ * The four weekly reads used to call `getLiveClassIndicators` and
+ * `resolveTodayJoinTargets` separately, and between them and
+ * `attachLiveClasses` the school's timezone was read three times, one after
+ * another, before the first conference query could start. This reads the
+ * school row once and runs the indicator query beside the join resolution.
+ *
+ * `liveEnabled` is `School.conferenceDeliveryMode !== "physical"` — the school
+ * configuration's "teaching mode". It gates the TEACHER's Start affordance
+ * (which needs no existing row) — never a join to a real session, because
+ * online is additive and a room someone is sitting in must stay reachable.
+ */
+export async function resolveTodayLive(
+  schoolId: string,
+  termId: string,
+  slots: TodaySlot[]
+): Promise<{
+  liveIndicators: Record<string, "live" | "scheduled">
+  liveJoin: Record<string, LiveClassJoinInfo>
+  liveEnabled: boolean
+}> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true, conferenceDeliveryMode: true },
+  })
+  const tz = school?.timezone || DEFAULT_SCHOOL_TZ
+  const [liveIndicators, liveJoin] = await Promise.all([
+    getLiveClassIndicators(schoolId, tz),
+    resolveTodayJoinTargets(schoolId, termId, slots, tz),
+  ])
+  return {
+    liveIndicators,
+    liveJoin,
+    liveEnabled: (school?.conferenceDeliveryMode ?? "physical") !== "physical",
+  }
 }
 
 /**
@@ -318,21 +376,21 @@ export async function getLiveClassIndicators(
 export async function resolveTodayJoinTargets(
   schoolId: string,
   termId: string,
-  slots: Array<{
-    id: string
-    dayOfWeek: number
-    sectionId?: string | null
-    subjectId?: string | null
-  }>
+  slots: TodaySlot[],
+  timezone?: string | null
 ): Promise<Record<string, LiveClassJoinInfo>> {
   if (slots.length === 0) return {}
 
-  const school = await db.school.findUnique({
-    where: { id: schoolId },
-    select: { timezone: true },
-  })
+  const tz =
+    timezone ??
+    (
+      await db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    )?.timezone
   const now = new Date()
-  const today = schoolDayOfWeek(school?.timezone || DEFAULT_SCHOOL_TZ, now)
+  const today = schoolDayOfWeek(tz || DEFAULT_SCHOOL_TZ, now)
 
   const todaySlots = slots.filter((s) => s.dayOfWeek === today)
   if (todaySlots.length === 0) return {}
@@ -345,7 +403,8 @@ export async function resolveTodayJoinTargets(
       timetableId: s.id,
       sectionId: s.sectionId ?? null,
       subjectId: s.subjectId ?? null,
-    }))
+    })),
+    tz
   )
 
   const map: Record<string, LiveClassJoinInfo> = {}

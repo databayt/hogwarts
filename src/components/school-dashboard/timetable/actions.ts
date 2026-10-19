@@ -106,8 +106,7 @@ import {
 } from "./generate/teacher-plan"
 import {
   attachLiveClasses,
-  getLiveClassIndicators,
-  resolveTodayJoinTargets,
+  resolveTodayLive,
 } from "./live-class-join"
 import {
   getPermissionContext,
@@ -1603,10 +1602,7 @@ async function getTimetableBySection(input: {
     },
   })
 
-  // Slots + today's live/scheduled Conference indicators load in parallel —
-  // both are read-only and independent (see getLiveClassIndicators for the
-  // tenant-scoped query it runs).
-  const [slots, liveIndicators] = await Promise.all([
+  const [slots] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId,
@@ -1631,7 +1627,6 @@ async function getTimetableBySection(input: {
         },
       },
     }),
-    getLiveClassIndicators(schoolId),
   ])
 
   return {
@@ -1655,12 +1650,10 @@ async function getTimetableBySection(input: {
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
-    liveIndicators,
-    // Dots say "something is on today"; this says where to go. Keyed by slot id
-    // and holding TODAY's slots only, so a cell in another day's column simply
-    // misses the map and renders no Join. Runs after the slot fetch rather than
-    // beside it because it needs the slots.
-    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
+    // Dots, join targets (TODAY's slots only, so another day's cell misses
+    // the map) and whether the school teaches live — one pass, after the slot
+    // fetch because it needs the slots.
+    ...(await resolveTodayLive(schoolId, input.termId, slots)),
   }
 }
 
@@ -1736,10 +1729,8 @@ export async function getTimetableByStudentGrade(input: {
 
   const studentSectionId = student.sectionId
 
-  // Get the student's section slots, alongside today's live/scheduled
-  // Conference indicators — both read-only and independent, so they run in
-  // parallel.
-  const [slots, liveIndicators] = await Promise.all([
+  // Get the student's section slots.
+  const [slots] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId,
@@ -1768,7 +1759,6 @@ export async function getTimetableByStudentGrade(input: {
         },
       },
     }),
-    getLiveClassIndicators(schoolId),
   ])
 
   // Count the distinct subjects the student is actually timetabled for.
@@ -1809,12 +1799,10 @@ export async function getTimetableByStudentGrade(input: {
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
-    liveIndicators,
-    // Dots say "something is on today"; this says where to go. Keyed by slot id
-    // and holding TODAY's slots only, so a cell in another day's column simply
-    // misses the map and renders no Join. Runs after the slot fetch rather than
-    // beside it because it needs the slots.
-    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
+    // Dots, join targets (TODAY's slots only, so another day's cell misses
+    // the map) and whether the school teaches live — one pass, after the slot
+    // fetch because it needs the slots.
+    ...(await resolveTodayLive(schoolId, input.termId, slots)),
   }
 }
 
@@ -1860,9 +1848,7 @@ export async function getTimetableByTeacher(input: {
     },
   })
 
-  // Slots + today's live/scheduled Conference indicators load in parallel —
-  // both are read-only and independent.
-  const [slots, teacherInfo, liveIndicators] = await Promise.all([
+  const [slots, teacherInfo] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId,
@@ -1889,7 +1875,6 @@ export async function getTimetableByTeacher(input: {
         emailAddress: true,
       },
     }),
-    getLiveClassIndicators(schoolId),
   ])
 
   // Calculate workload
@@ -1951,12 +1936,10 @@ export async function getTimetableByTeacher(input: {
       ).size,
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
-    liveIndicators,
-    // Dots say "something is on today"; this says where to go. Keyed by slot id
-    // and holding TODAY's slots only, so a cell in another day's column simply
-    // misses the map and renders no Join. Runs after the slot fetch rather than
-    // beside it because it needs the slots.
-    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
+    // Dots, join targets (TODAY's slots only, so another day's cell misses
+    // the map) and whether the school teaches live — one pass, after the slot
+    // fetch because it needs the slots.
+    ...(await resolveTodayLive(schoolId, input.termId, slots)),
   }
 }
 
@@ -2000,9 +1983,7 @@ export async function getTimetableByRoom(input: {
     },
   })
 
-  // Slots + today's live/scheduled Conference indicators load in parallel —
-  // both are read-only and independent.
-  const [slots, liveIndicators] = await Promise.all([
+  const [slots] = await Promise.all([
     db.timetable.findMany({
       where: {
         schoolId,
@@ -2026,7 +2007,6 @@ export async function getTimetableByRoom(input: {
         },
       },
     }),
-    getLiveClassIndicators(schoolId),
   ])
 
   const roomInfo = await db.classroom.findFirst({
@@ -2088,12 +2068,10 @@ export async function getTimetableByRoom(input: {
       rate: Math.round(utilizationRate),
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
-    liveIndicators,
-    // Dots say "something is on today"; this says where to go. Keyed by slot id
-    // and holding TODAY's slots only, so a cell in another day's column simply
-    // misses the map and renders no Join. Runs after the slot fetch rather than
-    // beside it because it needs the slots.
-    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
+    // Dots, join targets (TODAY's slots only, so another day's cell misses
+    // the map) and whether the school teaches live — one pass, after the slot
+    // fetch because it needs the slots.
+    ...(await resolveTodayLive(schoolId, input.termId, slots)),
   }
 }
 
@@ -3125,7 +3103,7 @@ export async function getChildTodaySchedule(input: {
   })
 
   const [scheduleWithLiveClasses, closure] = await Promise.all([
-    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule),
+    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule, schoolTz),
     // Same as getTodaySchedule — informs, never blanks. See the note there.
     findSchoolClosure(schoolId, schoolTz, targetDate),
   ])

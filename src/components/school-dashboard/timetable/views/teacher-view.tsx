@@ -47,6 +47,7 @@ import {
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
 import { StartLiveClassButton } from "./start-live-class-button"
+import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -125,6 +126,21 @@ export default function TeacherView({
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
+  // Whether the school teaches live at all (its teaching mode). An in-person
+  // school offers no Start — Join to an existing room is never gated.
+  const [liveEnabled, setLiveEnabled] = useState(false)
+  const startErrorLabel =
+    dictionary?.liveClasses?.startError ??
+    (isRTL ? "تعذّر بدء البث المباشر" : "Couldn't start the live class")
+  // A click on today's live cell IS the join (or, inside the window with no
+  // room yet, the start); any other cell opens the dialog.
+  const { open: openSlot } = useSlotOpen({
+    lang,
+    liveJoin,
+    onInspect: setInspectedSlotId,
+    canStart: liveEnabled,
+    startErrorLabel,
+  })
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -162,6 +178,7 @@ export default function TeacherView({
       setWorkload(weeklyResult.workload)
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setLiveJoin(weeklyResult.liveJoin ?? {})
+      setLiveEnabled(weeklyResult.liveEnabled ?? false)
       setTodaySchedule(todayResult.schedule)
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
@@ -390,7 +407,7 @@ export default function TeacherView({
                       (isRTL ? "انضمام" : "Join")
                     }
                   />
-                ) : (
+                ) : liveEnabled ? (
                   <StartLiveClassButton
                     timetableId={currentClassInfo.item.timetableId}
                     lang={lang}
@@ -409,7 +426,7 @@ export default function TeacherView({
                         : "Couldn't start the live class")
                     }
                   />
-                ))}
+                ) : null)}
             </div>
           </CardContent>
         </Card>
@@ -536,7 +553,7 @@ export default function TeacherView({
                             (isRTL ? "انضمام" : "Join")
                           }
                         />
-                      ) : item.timetableId ? (
+                      ) : liveEnabled && item.timetableId ? (
                         <StartLiveClassButton
                           timetableId={item.timetableId}
                           lang={lang}
@@ -576,10 +593,12 @@ export default function TeacherView({
               viewMode="teacher"
               editable={false}
               liveIndicators={liveIndicators}
-              onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
-              // Corner icon to walk into a running class; the Start button
-              // keeps its label and stays below the text, because "bring this
+              onSlotInspect={openSlot}
+              // The cell itself joins or starts (see useSlotOpen); this keeps a
+              // visible Start label on the teacher's period that has no room yet.
               renderSlotAction={(slot, period) => {
+                if (!liveEnabled || slot.dayOfWeek !== new Date().getDay())
+                  return null
                 if (!isRowLiveJoinable(period.startTime, period.endTime))
                   return null
                 if (liveJoin[slot.id]) return null

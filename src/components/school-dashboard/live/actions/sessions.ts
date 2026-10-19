@@ -225,11 +225,17 @@ export async function createLiveClassFromTimetable(input: {
         conferenceRecordingDefault: true,
         preferredLanguage: true,
         timezone: true,
+        conferenceDeliveryMode: true,
       },
     }),
   ])
   if (!slot) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
   if (!slot.teacherId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  // The school's teaching mode. An in-person school has no live rooms, so the
+  // timetable never offers Start there — and a crafted POST must not mint one.
+  if (school?.conferenceDeliveryMode === "physical") {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+  }
 
   // Idempotent WITHIN THE SCHOOL DAY. A slot recurs weekly, so an undated
   // lookup ("any scheduled/live session on this slot") reuses last week's row

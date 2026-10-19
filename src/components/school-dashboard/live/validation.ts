@@ -16,6 +16,12 @@ export const SCHOOL_DELIVERY_MODE_VALUES = [
   "hybrid",
 ] as const
 
+/** The school configuration hub's teaching-mode control — one field. */
+export const deliveryModeSchema = z.object({
+  mode: z.enum(SCHOOL_DELIVERY_MODE_VALUES),
+})
+export type SchoolDeliveryMode = z.infer<typeof deliveryModeSchema>["mode"]
+
 // ============================================================================
 // Enums (mirror Prisma enums)
 // ============================================================================

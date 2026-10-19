@@ -119,6 +119,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "capacity",
     "schedule",
     "academic",
+    "teaching-mode",
     "live-classes",
     "branding",
     "hero",
@@ -265,8 +266,11 @@ export default async function EditorLayout({ children, params }: Props) {
           return (cs?.allModulesEnabled as string) ?? "All modules enabled"
         return count("module", em.length)
       }
-      case "live-classes": {
-        const lc = cs?.["live-classes"] as Record<string, string> | undefined
+      // The mode is the teaching-mode card's line; the live-classes card keeps
+      // its static description (what lives behind it), so the list does not
+      // say the same word twice.
+      case "teaching-mode": {
+        const lc = cs?.[key] as Record<string, string> | undefined
         const modes: Record<string, string | undefined> = {
           physical: lc?.physical,
           online: lc?.online,

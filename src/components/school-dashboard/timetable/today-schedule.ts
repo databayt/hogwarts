@@ -217,7 +217,7 @@ export async function loadTodaySchedule(input: {
   // Attach the Join target (today's session, else the recurring default link)
   // for each entry. Scoped by schoolId + active term.
   const [scheduleWithLiveClasses, closure] = await Promise.all([
-    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule),
+    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule, schoolTz),
     // Informs, never blanks. A declared holiday is reported alongside the
     // normal day so the view can say so; the pattern still renders, because
     // ScheduleException rows are hand-entered and a stale one must not take a

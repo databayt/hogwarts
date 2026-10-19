@@ -712,7 +712,8 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
               todaysSlots.map((slot) => ({
                 ...slot,
                 timetableId: slot.id,
-              }))
+              })),
+              teacherSchoolRow?.timezone
             )
           : todaysSlots.map((slot) => ({
               ...slot,
@@ -956,7 +957,8 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         todaysSlots.map((slot) => ({
           ...slot,
           timetableId: slot.id,
-        }))
+        })),
+        schoolRow?.timezone
       )
     : todaysSlots.map((slot) => ({
         ...slot,

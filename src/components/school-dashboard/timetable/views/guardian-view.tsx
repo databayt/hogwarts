@@ -39,6 +39,7 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -116,6 +117,12 @@ export default function GuardianView({
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
+  // A click on today's live cell IS the join; any other cell opens the dialog.
+  const { open: openSlot } = useSlotOpen({
+    lang,
+    liveJoin,
+    onInspect: setInspectedSlotId,
+  })
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -525,8 +532,7 @@ export default function GuardianView({
               viewMode="class"
               editable={false}
               liveIndicators={liveIndicators}
-              onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
-              // A guardian joins their child's class on the same terms the
+              onSlotInspect={openSlot}
               dictionary={{
                 period: d?.period,
                 break: d?.break,

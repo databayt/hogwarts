@@ -682,6 +682,13 @@ feeds the policy engine must include `conferenceDeliveryMode`
 (`settings-panel.tsx`) mounted from both `/live/settings` and
 `/school/configuration/live-classes` — add fields there, not in a page.
 
+**Teaching mode (2026-10-19).** `/school/configuration/teaching-mode` is the plain
+three-way answer (In person · Live · Both) and writes ONLY through `updateDeliveryMode`,
+never `updateLiveSettings` — that one is a whole-form save, and an omitted window field
+clears the window. Both actions derive the default/window from the mode identically; keep
+them in step. `physical` also makes `createLiveClassFromTimetable` refuse, and the timetable
+hides Start (`liveEnabled` from `resolveTodayLive`); joins to existing rooms are never gated.
+
 ## Room configuration (2026-08-30)
 
 `RoomJoinTicket.roomConfig` is the ONLY way school/session configuration

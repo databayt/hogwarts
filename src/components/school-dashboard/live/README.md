@@ -190,6 +190,8 @@ reached from a row, not a tab.
 | Session states on the detail page (en+ar)                  | ✅ live (`session-state.tsx`)                                                                                 |
 | Videos + materials view-only (no download, watermark)      | ✅ policy 2026-08-30 — see lumos records                                                                      |
 | School delivery mode: in person / online / hybrid          | ✅ `School.conferenceDeliveryMode` (policy-first)                                                             |
+| Teaching mode as its own config section                    | ✅ `/school/configuration/teaching-mode` → `updateDeliveryMode` (2026-10-19)                                  |
+| Timetable cell click = join / teacher start                | ✅ `timetable/views/use-slot-open.ts`; Start gated on teaching mode, server-checked                           |
 | Settings in the school configuration hub                   | ✅ `/school/configuration/live-classes` (same panel)                                                          |
 | Attendance thresholds per school (late/present/early)      | ✅ settings → `attendance-sync.ts`                                                                            |
 | Consent notice · auto-publish · guardians · join-muted     | ✅ settings + ticket `roomConfig`                                                                             |

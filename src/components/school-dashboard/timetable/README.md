@@ -102,7 +102,8 @@ src/components/school-dashboard/timetable/
     admin-view.tsx, teacher-view.tsx, student-view.tsx, guardian-view.tsx
     simple-grid.tsx         #   the weekly grid primitive
     grid-skeleton.tsx       #   TimetableGridSkeleton — mirrors simple-grid's DOM
-    preview.tsx, live-join-button.tsx, start-live-class-button.tsx, index.ts
+    preview.tsx, live-join-button.tsx, start-live-class-button.tsx,
+    use-slot-open.ts (cell click → join / start / detail), index.ts
 ```
 
 Tests live under `src/tests/school-dashboard/timetable/` and

@@ -669,9 +669,16 @@
           "title": "Academic Structure",
           "description": "Years, terms, grading, and schedule"
         },
+        "teaching-mode": {
+          "title": "Teaching mode",
+          "description": "In person, live, or both",
+          "physical": "In person",
+          "online": "Live",
+          "hybrid": "Both"
+        },
         "live-classes": {
           "title": "Live classes",
-          "description": "In person, online, or hybrid",
+          "description": "Grades and sections online, room tools, recordings",
           "physical": "In person",
           "online": "Online",
           "hybrid": "Hybrid"

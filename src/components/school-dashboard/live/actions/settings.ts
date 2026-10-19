@@ -21,7 +21,10 @@ import {
   isRecordingConfigured,
 } from "@/components/school-dashboard/live/livekit/client"
 import { isOnlineWindowActive } from "@/components/school-dashboard/live/online-policy"
-import { liveClassSettingsSchema } from "@/components/school-dashboard/live/validation"
+import {
+  deliveryModeSchema,
+  liveClassSettingsSchema,
+} from "@/components/school-dashboard/live/validation"
 
 import {
   liveListRevalidatePaths,
@@ -190,6 +193,70 @@ export async function updateLiveSettings(input: unknown) {
     revalidatePath(path, "page")
   }
   return { success: true as const, data }
+}
+
+/**
+ * The school's TEACHING MODE alone — in person / online / hybrid — for the
+ * school configuration hub's own section. `updateLiveSettings` is a whole-form
+ * save (an omitted window field CLEARS the window), so a one-control page must
+ * not call it. Derives the legacy switch and the window exactly as it does:
+ * `physical` turns the default off and clears the window, `online` forces the
+ * default on, `hybrid` leaves both as the admin set them.
+ */
+export async function updateDeliveryMode(input: unknown) {
+  const ctx = await requireContext("manage_settings")
+  if (!ctx.ok) return ctx.response
+
+  const parsed = deliveryModeSchema.safeParse(input)
+  if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  const mode = parsed.data.mode
+
+  const data =
+    mode === "physical"
+      ? {
+          conferenceDeliveryMode: mode,
+          conferenceOnlineDefault: false,
+          conferenceOnlineFrom: null,
+          conferenceOnlineUntil: null,
+          conferenceOnlineNote: null,
+        }
+      : mode === "online"
+        ? { conferenceDeliveryMode: mode, conferenceOnlineDefault: true }
+        : { conferenceDeliveryMode: mode }
+
+  try {
+    await db.school.update({
+      where: { id: ctx.schoolId },
+      data,
+      select: { id: true },
+    })
+  } catch {
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+
+  // Same reasoning as updateLiveSettings: an online flip should make today's
+  // classes joinable now, not at the next */15 tick.
+  if (mode !== "physical") {
+    const schoolId = ctx.schoolId
+    after(async () => {
+      try {
+        await materializeSchoolDay(schoolId)
+      } catch (err) {
+        console.error("[conference] delivery-mode materialization failed", {
+          schoolId,
+          err: err instanceof Error ? err.message : String(err),
+        })
+      }
+    })
+  }
+
+  revalidatePath("/[lang]/s/[subdomain]/school/configuration", "layout")
+  revalidatePath("/[lang]/s/[subdomain]/timetable", "layout")
+  revalidatePath(liveRevalidatePath("settings"), "page")
+  for (const path of liveListRevalidatePaths()) {
+    revalidatePath(path, "page")
+  }
+  return { success: true as const }
 }
 
 /**

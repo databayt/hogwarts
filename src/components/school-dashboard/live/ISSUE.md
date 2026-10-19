@@ -4,6 +4,19 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Teaching mode + join from the timetable cell — 2026-10-19 (LOCAL, not pushed)
+
+- [x] `/school/configuration/teaching-mode` — In person · Live · Both (`School.conferenceDeliveryMode`)
+      via `updateDeliveryMode` (single field; physical clears the default + window; an online flip
+      materializes today). Verified on demo.localhost: save persists across reload.
+- [x] Timetable cell click joins (student/guardian) or starts (teacher, `liveEnabled` only) the class.
+      Verified: student@ clicked today's live English cell → `/live/<id>/room` pre-join card.
+- [x] `createLiveClassFromTimetable` refuses an in-person school (`LIVE_CLASS_PROVIDER_UNAVAILABLE`).
+- [x] Perf: `resolveTodayLive` — 3 fewer sequential DB round trips per timetable load.
+- [ ] Teacher start-by-click not browser-verified (same action as the existing Start button).
+- [ ] Pre-existing, not from this pass: `room/side-panel.test.tsx` + `room/room-shell.test.tsx` fail
+      (5 tests, "No room provided" — the room-chat commits `ce64855b7` / `02fabd495`).
+
 ## Verified on production with a real class — 2026-10-19
 
 First real classes on prod (`demo.balqalam.com`, LiveKit Cloud `hogwarts-jsmb894l`), driven by a

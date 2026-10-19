@@ -211,5 +211,17 @@
       "full": "Round"
     },
     "updateError": "Couldn't save branding. Try again."
+  },
+  "teachingMode": {
+    "label": "Classes run",
+    "physical": "In person",
+    "online": "Live",
+    "hybrid": "Both",
+    "physicalHint": "Every class meets in the building. No live rooms and no join buttons on the timetable.",
+    "onlineHint": "Every class is also taught live. Students and teachers join it by clicking the class on the timetable.",
+    "hybridHint": "In person and live together. Choose which grades and sections go live, or open a temporary online window.",
+    "footer": "Live classes are added to the class, never instead of it — the classroom stays on the timetable either way.",
+    "moreSettings": "Live-class settings",
+    "updateError": "Couldn't save. Try again."
   }
 }

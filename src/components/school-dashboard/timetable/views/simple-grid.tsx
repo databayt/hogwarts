@@ -73,7 +73,7 @@ interface SimpleGridProps {
    * `onSlotClick` by construction — an editable cell opens the slot EDITOR, a
    * read-only one opens the detail view. Same gesture, different verb.
    */
-  onSlotInspect?: (slot: Slot) => void
+  onSlotInspect?: (slot: Slot, period: Period) => void
   /**
    * Label teacher-less slots as waiting for a teacher. Admin-only: a student
    * or parent gains nothing from a staffing gap they can't act on.
@@ -490,7 +490,7 @@ export default function SimpleGrid({
                       )}
                       onClick={() => {
                         if (editable) onSlotClick?.(day, period.id, slot)
-                        else if (slot) onSlotInspect?.(slot)
+                        else if (slot) onSlotInspect?.(slot, period)
                       }}
                     >
                       {status && (

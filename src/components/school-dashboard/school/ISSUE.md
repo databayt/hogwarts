@@ -57,6 +57,14 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### 3) School Settings
 
+- [x] **Teaching mode (2026-10-19)** — `/school/configuration/teaching-mode`:
+      In person · Live · Both → `School.conferenceDeliveryMode` (live block's
+      `updateDeliveryMode`). Card sits before "Live classes", whose card now
+      describes its detail settings instead of repeating the mode.
+- [ ] Local DB lacks `schools.memberNameContact` — the config layout's school
+      read throws, so EVERY card falls back to its static description locally.
+      Check prod with `prisma migrate diff` before the next deploy.
+
 - [ ] Settings form (name, logo, timezone, locale)
   - Validation: Zod; parse on server; `revalidatePath`
   - Acceptance: updates persist; optimistic UI optional; tenant-safe

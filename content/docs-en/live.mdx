@@ -488,7 +488,17 @@ Five surfaces reach a live class, and they differ in how tightly they gate on ti
 | Notification                                            | `started` links straight to the room; the rest to the session detail                        |
 | **Mobile**                                              | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/live/:id/join` |
 
-The timetable weekly grid deliberately shows only a live dot — awareness, not a Join affordance.
+The timetable **weekly grid cell is itself the way in** (2026-10-19). Clicking today's cell while its
+class is running, or within 10 minutes of starting, opens the class: the room's pre-join card for a
+LiveKit session, the meeting URL for an external one. A teacher clicking their own period inside
+that window, with no room yet, starts the class and walks into it — but only when the school's
+**teaching mode** is not *in person*. Any other cell opens the slot's detail dialog, as before.
+
+**Teaching mode** is its own section of the school configuration
+(`/school/configuration/teaching-mode`): *In person* · *Live* · *Both*, writing
+`School.conferenceDeliveryMode` through `updateDeliveryMode`. *In person* removes the timetable's
+Start affordance and the server refuses `createLiveClassFromTimetable`; joining a room that already
+exists is never blocked, because online is additive.
 
 A LiveKit session opens the in-app room at `/live/[id]/room`; an external session opens its
 vendor URL directly. The room route redirects external sessions after the enrollment-gated read, so
