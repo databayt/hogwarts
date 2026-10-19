@@ -58,8 +58,22 @@ Shipped as atomic commits on `main`:
       by slot id on the chosen day.
 - [ ] `student-provisioning.ts` (~206) still derives the student code with
       `extractGradeNumber` — KG labels mis-coded there.
-- [ ] Placement error codes (`STUDENT_ALREADY_IN_SECTION`, `INVALID_SECTION`, …)
-      have no dictionary keys yet — the dialog shows the generic message.
+- [x] **Review of the fixes, round 3** (`cceee0a6c` `a801a9137` `a164dbb8c`):
+      card retry fails closed (CHECKOUT_FAILED unless the old session is
+      confirmed expired) and never clears or restamps a paid row; refund alert
+      deduped per reference (Tap return page reloads); placement + enrollment +
+      status codes translated via one `error-messages.ts`, new
+      `APPLICATION_STATUS_CONFLICT`; placement dialog lists the student's own
+      grade (exact grade number, no `contains`); dashboard tour cancel/status
+      atomic and can't revive a cancelled booking; `markInquiryConverted`
+      Zod-checked and never retargets a link.
+- [ ] Still open from that review (P2): email drain has no claim, so overlapping
+      runs can double-send; EXPIRED notice can reach a row the flip skipped;
+      pre-change `REG-…` card sessions and rail switches don't expire an open
+      card session (detected via refund alert, not prevented); no Tap void;
+      double-click opens two sessions; expired token blocks proof upload and
+      the Tap return; 12 cron routes hit the container at :00/:30 with no
+      timeout; `AUTH_SECRET` must be a Worker secret or tour emails drop.
 - [ ] Merit: no stable tie-break, unscored applicants still ranked; offer email
       bypasses `autoEmailNotifications`; wizard resume step / WhatsApp drop.
 
