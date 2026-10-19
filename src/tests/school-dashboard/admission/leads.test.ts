@@ -44,12 +44,14 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     tourBooking: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     admissionTimeSlot: {
       update: vi.fn(),
@@ -408,25 +410,60 @@ describe("markInquiryConverted server action", () => {
     mockAdminSession()
     vi.mocked(db.admissionInquiry.findFirst).mockResolvedValue({
       id: "i1",
+      convertedToApplicationId: null,
     } as never)
     vi.mocked(db.application.findFirst).mockResolvedValue({
       id: "app-1",
     } as never)
-    vi.mocked(db.admissionInquiry.update).mockResolvedValue({} as never)
+    vi.mocked(db.admissionInquiry.updateMany).mockResolvedValue({
+      count: 1,
+    } as never)
 
     const result = await markInquiryConverted({
       id: "i1",
       convertedToApplicationId: "app-1",
     })
     expect(result.success).toBe(true)
-    expect(db.admissionInquiry.update).toHaveBeenCalledWith(
+    expect(db.admissionInquiry.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          id: "i1",
+          schoolId: SCHOOL_ID,
+          convertedToApplicationId: null,
+        },
         data: expect.objectContaining({
           status: "CONVERTED",
           convertedToApplicationId: "app-1",
         }),
       })
     )
+  })
+
+  it("never retargets an inquiry that is already converted", async () => {
+    mockAdminSession()
+    vi.mocked(db.admissionInquiry.findFirst).mockResolvedValue({
+      id: "i1",
+      convertedToApplicationId: "app-old",
+    } as never)
+
+    const result = await markInquiryConverted({
+      id: "i1",
+      convertedToApplicationId: "app-1",
+    })
+    expect(result).toEqual({
+      success: false,
+      error: "INQUIRY_ALREADY_CONVERTED",
+    })
+    expect(db.admissionInquiry.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("rejects malformed ids", async () => {
+    mockAdminSession()
+    const result = await markInquiryConverted({
+      id: "",
+      convertedToApplicationId: "app-1",
+    })
+    expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
   })
 })
 
@@ -457,19 +494,53 @@ describe("updateTourBookingStatus server action", () => {
       slotId: "slot-1",
       numberOfAttendees: 2,
     } as never)
-    vi.mocked(db.tourBooking.update).mockResolvedValue({} as never)
+    vi.mocked(db.tourBooking.updateMany).mockResolvedValue({
+      count: 1,
+    } as never)
 
     const result = await updateTourBookingStatus({
       id: "tb-1",
       status: "CONFIRMED",
     })
     expect(result.success).toBe(true)
-    expect(db.tourBooking.update).toHaveBeenCalledWith(
+    expect(db.tourBooking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "tb-1" },
+        where: {
+          id: "tb-1",
+          schoolId: SCHOOL_ID,
+          status: { not: "CANCELLED" },
+        },
         data: expect.objectContaining({ status: "CONFIRMED" }),
       })
     )
+  })
+
+  it("refuses to revive a cancelled booking (its seats were released)", async () => {
+    mockAdminSession()
+    vi.mocked(db.tourBooking.findFirst).mockResolvedValue({
+      id: "tb-1",
+      status: "CANCELLED",
+      slotId: "slot-1",
+      numberOfAttendees: 2,
+    } as never)
+    vi.mocked(db.tourBooking.updateMany).mockResolvedValue({
+      count: 0,
+    } as never)
+
+    const result = await updateTourBookingStatus({
+      id: "tb-1",
+      status: "CONFIRMED",
+    })
+    expect(result).toEqual({ success: false, error: "BOOKING_CANCELLED" })
+  })
+
+  it("rejects a status outside the allowed set", async () => {
+    mockAdminSession()
+    const result = await updateTourBookingStatus({
+      id: "tb-1",
+      status: "PENDING" as never,
+    })
+    expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
   })
 
   it("cancels a booking via $transaction (decrements slot capacity)", async () => {
@@ -480,7 +551,12 @@ describe("updateTourBookingStatus server action", () => {
       slotId: "slot-1",
       numberOfAttendees: 3,
     } as never)
-    vi.mocked(db.$transaction).mockResolvedValue([{}, {}] as never)
+    vi.mocked(db.$transaction).mockImplementation((async (
+      fn: (tx: typeof db) => unknown
+    ) => fn(db)) as never)
+    vi.mocked(db.tourBooking.updateMany).mockResolvedValue({
+      count: 1,
+    } as never)
 
     const result = await updateTourBookingStatus({
       id: "tb-1",
@@ -488,16 +564,25 @@ describe("updateTourBookingStatus server action", () => {
       cancelReason: "Conflicting schedule",
     })
     expect(result.success).toBe(true)
-    expect(db.$transaction).toHaveBeenCalled()
+    expect(db.admissionTimeSlot.update).toHaveBeenCalledWith({
+      where: { id: "slot-1" },
+      data: { currentBookings: { decrement: 3 } },
+    })
   })
 
-  it("does not release seats twice for an already-cancelled booking", async () => {
+  it("does not release seats twice when a concurrent cancel won", async () => {
     mockAdminSession()
     vi.mocked(db.tourBooking.findFirst).mockResolvedValue({
       id: "tb-1",
-      status: "CANCELLED",
+      status: "CONFIRMED", // read before the family's cancel landed
       slotId: "slot-1",
       numberOfAttendees: 3,
+    } as never)
+    vi.mocked(db.$transaction).mockImplementation((async (
+      fn: (tx: typeof db) => unknown
+    ) => fn(db)) as never)
+    vi.mocked(db.tourBooking.updateMany).mockResolvedValue({
+      count: 0,
     } as never)
 
     const result = await updateTourBookingStatus({
@@ -505,7 +590,7 @@ describe("updateTourBookingStatus server action", () => {
       status: "CANCELLED",
     })
     expect(result.success).toBe(true)
-    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(db.admissionTimeSlot.update).not.toHaveBeenCalled()
   })
 })
 

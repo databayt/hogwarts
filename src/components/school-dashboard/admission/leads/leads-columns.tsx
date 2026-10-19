@@ -22,6 +22,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
+import { resolveAdmissionErrorMessage } from "../error-messages"
 import {
   markInquiryConverted,
   updateInquiryStatus,
@@ -273,7 +274,13 @@ function TourBookingActionsCell({
         SuccessToast(t?.statusUpdated || "Status updated")
         router.refresh()
       } else {
-        ErrorToast(t?.statusUpdateFailed || "Failed to update status")
+        ErrorToast(
+          resolveAdmissionErrorMessage(
+            result.error,
+            dictionary,
+            t?.statusUpdateFailed
+          )
+        )
       }
     })
   }
@@ -288,7 +295,10 @@ function TourBookingActionsCell({
       { value: "NO_SHOW", label: t?.bookingStatus?.NO_SHOW || "Mark No Show" },
       { value: "CANCELLED", label: t?.bookingStatus?.CANCELLED || "Cancel" },
     ] as const
-  ).filter((opt) => opt.value !== row.status)
+  ).filter(
+    // A cancelled booking has released its seats; it can't be revived.
+    (opt) => row.status !== "CANCELLED" && opt.value !== row.status
+  )
 
   return (
     <DropdownMenu>

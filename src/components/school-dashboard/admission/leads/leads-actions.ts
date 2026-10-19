@@ -31,6 +31,17 @@ const updateInquiryStatusSchema = z.object({
   assignedTo: z.string().min(1).nullish(),
 })
 
+const updateTourBookingStatusSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW"]),
+  cancelReason: z.string().max(1000).nullish(),
+})
+
+const markInquiryConvertedSchema = z.object({
+  id: z.string().min(1),
+  convertedToApplicationId: z.string().min(1),
+})
+
 // ============================================================================
 // Tenant resolution
 // ============================================================================
@@ -210,12 +221,23 @@ export async function markInquiryConverted(params: {
     const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
+    const parsed = markInquiryConvertedSchema.safeParse(params)
+    if (!parsed.success) return { success: false, error: "VALIDATION_ERROR" }
+    params = parsed.data
+
     // Verify the inquiry belongs to this school
     const inquiry = await db.admissionInquiry.findFirst({
       where: { id: params.id, schoolId },
-      select: { id: true },
+      select: { id: true, convertedToApplicationId: true },
     })
     if (!inquiry) return { success: false, error: "INQUIRY_NOT_FOUND" }
+    // An existing link is a record of what happened, not a field to retarget.
+    if (inquiry.convertedToApplicationId) {
+      return inquiry.convertedToApplicationId ===
+        params.convertedToApplicationId
+        ? { success: true, data: null }
+        : { success: false, error: "INQUIRY_ALREADY_CONVERTED" }
+    }
 
     // Verify the application belongs to this school
     const application = await db.application.findFirst({
@@ -224,13 +246,16 @@ export async function markInquiryConverted(params: {
     })
     if (!application) return { success: false, error: "APPLICATION_NOT_FOUND" }
 
-    await db.admissionInquiry.update({
-      where: { id: params.id },
+    const { count } = await db.admissionInquiry.updateMany({
+      where: { id: params.id, schoolId, convertedToApplicationId: null },
       data: {
         status: "CONVERTED",
         convertedToApplicationId: params.convertedToApplicationId,
       },
     })
+    if (count === 0) {
+      return { success: false, error: "INQUIRY_ALREADY_CONVERTED" }
+    }
 
     revalidatePath("/[lang]/s/[subdomain]/admission/leads", "page")
     return { success: true, data: null }
@@ -261,6 +286,10 @@ export async function updateTourBookingStatus(params: {
     const schoolId = await resolveLeadsSchoolId(session.user)
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
 
+    const parsed = updateTourBookingStatusSchema.safeParse(params)
+    if (!parsed.success) return { success: false, error: "VALIDATION_ERROR" }
+    params = parsed.data
+
     // Verify the booking belongs to this school (tenant isolation)
     const booking = await db.tourBooking.findFirst({
       where: { id: params.id, schoolId },
@@ -271,32 +300,35 @@ export async function updateTourBookingStatus(params: {
     const now = new Date()
 
     if (params.status === "CANCELLED") {
-      // Already cancelled (by the family or another admin): the seats were
-      // released then — decrementing again drives currentBookings negative.
-      if (booking.status === "CANCELLED") return { success: true, data: null }
-      // Decrement slot capacity when cancelling from dashboard
-      await db.$transaction([
-        db.tourBooking.update({
-          where: { id: params.id },
-          data: {
-            status: "CANCELLED",
-            cancelledAt: now,
-            cancelReason: params.cancelReason ?? null,
-          },
-        }),
-        db.admissionTimeSlot.update({
-          where: { id: booking.slotId },
-          data: { currentBookings: { decrement: booking.numberOfAttendees } },
-        }),
-      ])
+      // Conditional flip: only the call that actually moves the booking out of
+      // a live status releases its seats. A family cancel or a second admin
+      // racing this one gets count 0 and leaves currentBookings alone.
+      const cancelReason = params.cancelReason ?? null
+      await db.$transaction(async (tx) => {
+        const { count } = await tx.tourBooking.updateMany({
+          where: { id: params.id, schoolId, status: { not: "CANCELLED" } },
+          data: { status: "CANCELLED", cancelledAt: now, cancelReason },
+        })
+        if (count === 1) {
+          await tx.admissionTimeSlot.update({
+            where: { id: booking.slotId },
+            data: {
+              currentBookings: { decrement: booking.numberOfAttendees },
+            },
+          })
+        }
+      })
     } else {
-      await db.tourBooking.update({
-        where: { id: params.id },
+      // A cancelled booking already gave its seats back; reviving it would
+      // oversell the slot. The family books again instead.
+      const { count } = await db.tourBooking.updateMany({
+        where: { id: params.id, schoolId, status: { not: "CANCELLED" } },
         data: {
           status: params.status,
           ...(params.status === "COMPLETED" && { attendedAt: now }),
         },
       })
+      if (count === 0) return { success: false, error: "BOOKING_CANCELLED" }
     }
 
     revalidatePath("/[lang]/s/[subdomain]/admission/leads", "page")
