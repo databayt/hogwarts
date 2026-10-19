@@ -22,6 +22,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { fill, formatConsoleNumber } from "./format"
+import { GlanceCharts, type GlanceChart } from "./glance-charts"
 
 interface Props {
   dictionary: Dictionary
@@ -44,6 +45,8 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   let totalDepartments = 0
   let totalClassrooms = 0
   let pendingApprovals = 0
+  let totalGuardians = 0
+  let genderGroups: Array<{ gender: string; _count: { _all: number } }> = []
 
   if (schoolId) {
     try {
@@ -55,6 +58,8 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         totalDepartments,
         totalClassrooms,
         pendingApprovals,
+        totalGuardians,
+        genderGroups,
       ] = await Promise.all([
         db.user.count({ where: { schoolId } }).catch(() => 0),
         db.user
@@ -77,6 +82,14 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             },
           })
           .catch(() => 0),
+        db.guardian.count({ where: { schoolId } }).catch(() => 0),
+        db.student
+          .groupBy({
+            by: ["gender"],
+            where: { schoolId },
+            _count: { _all: true },
+          })
+          .catch(() => []),
       ])
     } catch (error) {
       console.error("Error fetching admin data:", error)
@@ -86,20 +99,78 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   const t = dictionary.schoolConsole.overview
   const num = (v: number) => formatConsoleNumber(v, lang)
 
-  const stats = [
+  const c = t.charts
+
+  // Seeds and imports wrote both "M"/"F" and "male"/"female".
+  let boys = 0
+  let girls = 0
+  for (const group of genderGroups) {
+    const g = group.gender.trim().toLowerCase()
+    if (g === "m" || g === "male") boys += group._count._all
+    else if (g === "f" || g === "female") girls += group._count._all
+  }
+  const unspecified = Math.max(0, totalStudents - boys - girls)
+
+  const slice = (key: string, label: string, value: number) => ({
+    key,
+    label,
+    value,
+    display: num(value),
+  })
+
+  const verifiedPercent = totalUsers
+    ? Math.floor((activeUsers / totalUsers) * 100)
+    : 0
+
+  const charts: GlanceChart[] = [
     {
-      label: t.stats.users,
-      value: totalUsers,
-      sub: fill(t.stats.verifiedCount, { count: num(activeUsers) }),
+      id: "people",
+      title: c.people,
+      description: c.peopleDescription,
+      total: num(totalStudents + totalTeachers + totalGuardians),
+      totalLabel: c.peopleTotal,
+      footer: fill(c.structure, {
+        departments: num(totalDepartments),
+        classrooms: num(totalClassrooms),
+      }),
+      slices: [
+        slice("students", t.stats.students, totalStudents),
+        slice("teachers", t.stats.teachers, totalTeachers),
+        slice("guardians", c.guardians, totalGuardians),
+      ],
     },
-    { label: t.stats.teachers, value: totalTeachers, sub: t.stats.teachersSub },
-    { label: t.stats.students, value: totalStudents, sub: t.stats.studentsSub },
     {
-      label: t.stats.departments,
-      value: totalDepartments,
-      sub: t.stats.departmentsSub,
+      id: "accounts",
+      title: c.accounts,
+      description: c.accountsDescription,
+      total: num(totalUsers),
+      totalLabel: c.accountsTotal,
+      footer: totalUsers
+        ? fill(c.verifiedShare, {
+            percent: formatConsoleNumber(verifiedPercent / 100, lang, {
+              style: "percent",
+            }),
+          })
+        : undefined,
+      slices: [
+        slice("verified", t.stats.verified, activeUsers),
+        slice("pending", c.pending, pendingApprovals),
+      ],
     },
-    { label: t.stats.classrooms, value: totalClassrooms },
+    {
+      id: "gender",
+      title: c.gender,
+      description: c.genderDescription,
+      total: num(totalStudents),
+      totalLabel: c.genderTotal,
+      slices: [
+        slice("male", c.male, boys),
+        slice("female", c.female, girls),
+        ...(unspecified > 0
+          ? [slice("unspecified", c.unspecified, unspecified)]
+          : []),
+      ],
+    },
   ]
 
   const modules: Array<{
@@ -171,19 +242,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </p>
         </div>
 
-        <ul className="divide-border grid grid-cols-1 divide-y rounded-xl border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-5">
-          {stats.map((stat) => (
-            <li key={stat.label} className="p-4 text-start">
-              <span className={typographyVariants.hint}>{stat.label}</span>
-              <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
-                {num(stat.value)}
-              </p>
-              {stat.sub ? (
-                <p className="text-muted-foreground mt-1 text-xs">{stat.sub}</p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <GlanceCharts charts={charts} emptyLabel={c.empty} />
 
         {pendingApprovals > 0 ? (
           <Link

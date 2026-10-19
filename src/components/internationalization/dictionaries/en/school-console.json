@@ -82,6 +82,25 @@
       "database": "Database",
       "storage": "Storage",
       "email": "Email Service"
+    },
+    "charts": {
+      "people": "People",
+      "peopleDescription": "Student, teacher and guardian records",
+      "guardians": "Guardians",
+      "peopleTotal": "People",
+      "structure": "{departments} departments · {classrooms} classrooms",
+      "accounts": "Accounts",
+      "accountsDescription": "Users signed in to the school",
+      "pending": "Pending",
+      "accountsTotal": "Users",
+      "verifiedShare": "{percent} of accounts verified",
+      "gender": "Students",
+      "genderDescription": "Enrolled students by gender",
+      "male": "Boys",
+      "female": "Girls",
+      "unspecified": "Unspecified",
+      "genderTotal": "Students",
+      "empty": "No records yet"
     }
   },
   "billing": {

@@ -82,6 +82,25 @@
       "database": "قاعدة البيانات",
       "storage": "التخزين",
       "email": "خدمة البريد الإلكتروني"
+    },
+    "charts": {
+      "people": "الأفراد",
+      "peopleDescription": "سجلات الطلاب والمعلمين وأولياء الأمور",
+      "guardians": "أولياء الأمور",
+      "peopleTotal": "فرد",
+      "structure": "{departments} أقسام · {classrooms} قاعات",
+      "accounts": "الحسابات",
+      "accountsDescription": "مستخدمو المدرسة",
+      "pending": "قيد الانتظار",
+      "accountsTotal": "مستخدم",
+      "verifiedShare": "{percent} من الحسابات موثّقة",
+      "gender": "الطلاب",
+      "genderDescription": "الطلاب المسجّلون حسب الجنس",
+      "male": "بنون",
+      "female": "بنات",
+      "unspecified": "غير محدد",
+      "genderTotal": "طالب",
+      "empty": "لا توجد سجلات بعد"
     }
   },
   "billing": {

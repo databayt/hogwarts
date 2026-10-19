@@ -245,3 +245,10 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Validation**: Double validation (client UX + server security)
 
 For detailed version requirements and architecture patterns, see [Platform Technology Stack](../ISSUE.md#technology-stack--version-requirements).
+
+- [x] **Overview "at a glance" as shadcn donut charts (2026-10-19)** — the
+      five-number strip on `/school` is now three `chart-pie-donut-text` cards
+      (`glance-charts.tsx`): people (students / teachers / guardians, with
+      departments · classrooms underneath), accounts (verified / pending) and
+      students by gender (normalises both `M/F` and `male/female`). Keys under
+      `schoolConsole.overview.charts` in ar + en.
