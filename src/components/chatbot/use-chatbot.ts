@@ -127,13 +127,10 @@ export function useChatbot({
         }
       } catch (err) {
         console.error("Chat error:", err)
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error occurred"
-        setError(errorMessage)
-
-        // The bubble speaks the visitor's language; a raw network or
-        // runtime error stays in the console.
+        // The bubble and the error line speak the visitor's language; a raw
+        // network or runtime error stays in the console.
         const bubble = err instanceof ChatError ? err.message : errorText
+        setError(bubble)
         setMessages((prev) => [
           ...prev,
           {

@@ -88,20 +88,16 @@ export const ChatWindow = memo(function ChatWindow({
       // Context-aware: show scholarships or events when available
       if (schoolContext?.hasScholarships) {
         buttons.push({
-          label: dictionary.schoolScholarships || "Scholarships",
-          question:
-            dictionary.schoolScholarshipsQuestion ||
-            "What scholarships are available?",
+          label: dictionary.schoolScholarships,
+          question: dictionary.schoolScholarshipsQuestion,
           icon: PriceIcon,
         })
       }
 
       if (schoolContext?.hasUpcomingEvents) {
         buttons.push({
-          label: dictionary.schoolEvents || "Events",
-          question:
-            dictionary.schoolEventsQuestion ||
-            "What upcoming events does the school have?",
+          label: dictionary.schoolEvents,
+          question: dictionary.schoolEventsQuestion,
           icon: TimeIcon,
         })
       }
