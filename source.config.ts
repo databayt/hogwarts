@@ -32,7 +32,7 @@ export default defineConfig({
 // frontmatter — scripts/build-support-index.mjs reads them. `roles` also places
 // a guide under the sidebar's audience groups (one page, several groups).
 const schema = frontmatterSchema.extend({
-  roles: z.array(z.enum(["admin", "teacher", "parent"])).optional(),
+  roles: z.array(z.enum(["admin", "teacher", "parent", "student"])).optional(),
   summary: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   flow: z.string().optional(),

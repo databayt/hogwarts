@@ -3,7 +3,7 @@
 
 import { docsArabicSource, docsSource } from "@/lib/source"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { DocsSidebar, type DocsRoleMap } from "@/components/docs/docs-sidebar"
+import { DocsSidebar, type DocsRole, type DocsRoleMap } from "@/components/docs/docs-sidebar"
 
 interface DocsLayoutProps {
   children: React.ReactNode
@@ -21,7 +21,16 @@ export default async function DocsLayout({
     source
       .getPages()
       .filter((page) => page.data.roles?.length)
-      .map((page) => [page.url, page.data.roles!])
+      // The sidebar's parent group is "Parents & students": a student guide
+      // sits there (deduped when a guide is for both).
+      .map((page) => [
+        page.url,
+        [
+          ...new Set(
+            page.data.roles!.map((r) => (r === "student" ? "parent" : r))
+          ),
+        ] as DocsRole[],
+      ])
   )
 
   return (
