@@ -4,6 +4,18 @@ This backlog tracks the in-tenant Admin area to MVP. Follow shadcn/ui, mirror pa
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
+### 0) Configuration — Modules
+
+- [x] **Module cards back; the sidebar follows a click instantly (2026-10-20)** —
+      the grouped switch rows (`6cab9d551`) were reverted to the earlier card
+      grid at Abdout's request (3 columns, 2 on phones; active = `border-foreground
+    bg-muted`; translated labels, count, Enable/Disable all and its confirm kept).
+      `SchoolProvider` holds an optimistic `enabledModules` override
+      (`setEnabledModules`) that `platform-sidebar/content.tsx` reads, so the
+      sidebar changes in the same frame (~23 ms measured) instead of after the
+      250 ms debounce + save + `router.refresh()`. The override drops once the
+      server value matches; a failed save rolls cards and sidebar back together.
+
 ### 1) Shell & Protection
 
 - [ ] Layout and route guard for Owner/Admin
