@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 
 import { parseEnabledModules } from "@/lib/enabled-modules"
 import { resolveActionError } from "@/lib/resolve-action-error"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Switch } from "@/components/ui/switch"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -27,66 +28,13 @@ import {
   toggleableModules,
   type PlatformNavItem,
 } from "@/components/template/platform-sidebar/config"
-import { Icons } from "@/components/template/platform-sidebar/icons"
 
 import { updateEnabledModules } from "./actions"
 import { formatCount, plural } from "./ui/format"
-import { SettingsGroup, SettingsRow } from "./ui/settings-group"
 
 // Short enough to feel real-time, long enough to coalesce rapid toggles
 // (and Enable-all / Disable-all) into a single round-trip.
 const DEBOUNCE_MS = 250
-
-// Module keys grouped the way an admin thinks about them. Any toggleable
-// module missing here (a newly added nav item) lands in the last group, so
-// nothing silently disappears from the settings list.
-const GROUPS: Array<{ key: string; modules: string[] }> = [
-  {
-    key: "learning",
-    modules: [
-      "subjects",
-      "classrooms",
-      "timetable",
-      "attendance",
-      "exams",
-      "grades",
-      "myAssignments",
-      "library",
-      "lumos",
-      "liveClasses",
-    ],
-  },
-  {
-    key: "people",
-    modules: ["students", "teachers", "parents", "admission", "parentPortal"],
-  },
-  { key: "finance", modules: ["finance", "sales", "billing"] },
-  { key: "communication", modules: ["announcements", "events"] },
-  {
-    key: "transport",
-    modules: [
-      "transportation",
-      "transportationTrips",
-      "transportationFees",
-      "myTransportation",
-    ],
-  },
-  { key: "insights", modules: ["compliance", "charts", "stats"] },
-]
-
-const byKey = new Map(toggleableModules.map((m) => [m.key, m]))
-const grouped = (() => {
-  const placed = new Set(GROUPS.flatMap((g) => g.modules))
-  const rest = toggleableModules
-    .filter((m) => !placed.has(m.key))
-    .map((m) => m.key)
-  return GROUPS.map((g, i) => ({
-    key: g.key,
-    items: [...g.modules, ...(i === GROUPS.length - 1 ? rest : [])]
-      .map((k) => byKey.get(k))
-      .filter((m): m is PlatformNavItem => Boolean(m)),
-  })).filter((g) => g.items.length > 0)
-})()
 
 interface ConfigModulesFormProps {
   /** platform.sidebar — fallback labels for modules not in schoolSettings. */
@@ -94,14 +42,13 @@ interface ConfigModulesFormProps {
 }
 
 export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
-  const { school } = useSchool()
+  const { school, setEnabledModules } = useSchool()
   const router = useRouter()
   const [, startTransition] = useTransition()
   const { dictionary: fullDict } = useDictionary()
   const { locale } = useLocale()
   const t: Partial<Dictionary["schoolSettings"]["modules"]> =
     (fullDict as Dictionary | null)?.schoolSettings?.modules ?? {}
-  const groupTitles = t.groups as Record<string, string> | undefined
   const itemText = t.items as
     | Record<string, { label?: string; description?: string }>
     | undefined
@@ -109,44 +56,36 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   const total = toggleableModules.length
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  // Current enabled state: null = all enabled
-  const [enabledSet, setEnabledSet] = useState<Set<string>>(() => {
-    const initialEnabled = parseEnabledModules(school.enabledModules)
-    return initialEnabled
-      ? new Set(initialEnabled)
-      : new Set(toggleableModules.map((m) => m.key))
-  })
-
+  // The school context is the single source of truth: writing to it moves
+  // the dashboard sidebar in the same frame as the card, and the save below
+  // only has to make the server agree. null = all enabled.
+  const current = parseEnabledModules(school.enabledModules)
+  const enabledSet = new Set(current ?? toggleableModules.map((m) => m.key))
   const allEnabled = enabledSet.size === total
 
-  // Debounced save: batches rapid toggles into a single server call.
-  // `lastSavedRef` holds the last server-confirmed state so we can roll back
-  // optimistic UI if the action ever fails.
+  // Debounced save: batches rapid clicks into a single server call.
+  // `lastSavedRef` holds the last server-confirmed state so a failed save
+  // rolls the cards and the sidebar back together.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastSavedRef = useRef<Set<string>>(enabledSet)
+  const lastSavedRef = useRef<string[] | null>(current)
 
   const failMessage = t.updateError ?? "Couldn't update modules. Try again."
 
-  async function saveAndRefresh(nextSet: Set<string>) {
-    const payload = nextSet.size === total ? null : Array.from(nextSet)
-    const previous = lastSavedRef.current
-
+  async function save(next: string[] | null) {
     try {
       const result = await updateEnabledModules(school.id, {
-        enabledModules: payload,
+        enabledModules: next,
       })
 
       if (result.success) {
-        lastSavedRef.current = new Set(nextSet)
-        // router.refresh() pulls a fresh RSC payload for the current route
-        // AND its parent layouts -- so the dashboard left sidebar (which
-        // filters by enabledModules) and the navigator's "Modules" row
-        // description update without a page reload.
+        lastSavedRef.current = next
+        // Brings the server's copy in line (the navigator's "Modules" row
+        // count, the layout's school prop) in the background.
         startTransition(() => {
           router.refresh()
         })
       } else {
-        setEnabledSet(previous)
+        setEnabledModules(lastSavedRef.current)
         ErrorToast(
           result.error
             ? resolveActionError(result.error, fullDict)
@@ -154,33 +93,30 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         )
       }
     } catch {
-      setEnabledSet(previous)
+      setEnabledModules(lastSavedRef.current)
       ErrorToast(failMessage)
     }
   }
 
-  function scheduleSave(nextSet: Set<string>) {
+  function apply(nextSet: Set<string>) {
+    const next = nextSet.size === total ? null : Array.from(nextSet)
+    setEnabledModules(next)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null
-      void saveAndRefresh(nextSet)
+      void save(next)
     }, DEBOUNCE_MS)
   }
 
-  function handleToggle(key: string, checked: boolean) {
+  function handleToggle(key: string) {
     const next = new Set(enabledSet)
-    if (checked) next.add(key)
-    else next.delete(key)
-    setEnabledSet(next)
-    scheduleSave(next)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    apply(next)
   }
 
   function setAll(on: boolean) {
-    const next = on
-      ? new Set(toggleableModules.map((m) => m.key))
-      : new Set<string>()
-    setEnabledSet(next)
-    scheduleSave(next)
+    apply(on ? new Set(toggleableModules.map((m) => m.key)) : new Set())
   }
 
   const countLabel = plural(
@@ -190,8 +126,8 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   ).replace("{total}", formatCount(total, locale))
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between gap-3 px-4">
+    <div className="w-full max-w-[560px] space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-muted-foreground text-sm">{countLabel}</p>
         <button
           type="button"
@@ -204,23 +140,24 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         </button>
       </div>
 
-      {grouped.map((group) => (
-        <SettingsGroup key={group.key} title={groupTitles?.[group.key]}>
-          {group.items.map((item) => (
-            <ModuleRow
-              key={item.key}
-              item={item}
-              enabled={enabledSet.has(item.key)}
-              onToggle={handleToggle}
-              text={itemText?.[item.key]}
-              fallbackLabel={dictionary?.[item.title] ?? item.title}
-            />
-          ))}
-        </SettingsGroup>
-      ))}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {toggleableModules.map((item) => (
+          <ModuleCard
+            key={item.key}
+            item={item}
+            enabled={enabledSet.has(item.key)}
+            onToggle={handleToggle}
+            label={
+              itemText?.[item.key]?.label ??
+              dictionary?.[item.title] ??
+              item.title
+            }
+          />
+        ))}
+      </div>
 
       {t.footer ? (
-        <p className="text-muted-foreground px-4 text-xs leading-relaxed">
+        <p className="text-muted-foreground text-xs leading-relaxed">
           {t.footer}
         </p>
       ) : null}
@@ -248,34 +185,40 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   )
 }
 
-function ModuleRow({
+function ModuleCard({
   item,
   enabled,
   onToggle,
-  text,
-  fallbackLabel,
+  label,
 }: {
   item: PlatformNavItem
   enabled: boolean
-  onToggle: (key: string, checked: boolean) => void
-  text?: { label?: string; description?: string }
-  fallbackLabel: string
+  onToggle: (key: string) => void
+  label: string
 }) {
-  const Icon = Icons[item.icon]
-  const label = text?.label ?? fallbackLabel
-  const id = `module-${item.key}`
-
   return (
-    <SettingsRow
-      icon={Icon ? <Icon /> : null}
-      label={<label htmlFor={id}>{label}</label>}
-      description={text?.description}
+    // Card visual mirrors config-sidebar.tsx:
+    //   inactive: default border, hover:border-foreground
+    //   active:   border-foreground bg-muted
+    <Card
+      role="button"
+      tabIndex={0}
+      aria-pressed={enabled}
+      onClick={() => onToggle(item.key)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onToggle(item.key)
+        }
+      }}
+      className={cn(
+        "hover:border-foreground cursor-pointer transition-colors select-none",
+        enabled && "border-foreground bg-muted"
+      )}
     >
-      <Switch
-        id={id}
-        checked={enabled}
-        onCheckedChange={(checked) => onToggle(item.key, checked)}
-      />
-    </SettingsRow>
+      <CardHeader className="p-3">
+        <CardTitle className="text-center text-sm">{label}</CardTitle>
+      </CardHeader>
+    </Card>
   )
 }

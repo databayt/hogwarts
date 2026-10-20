@@ -20,6 +20,7 @@ import {
 import { useCurrentRole } from "@/components/auth/use-current-role"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { SchoolContext } from "@/components/school-dashboard/context/school-context"
 import type { School } from "@/components/school-marketing/types"
 import { platformNav } from "@/components/template/platform-sidebar/config"
 import type { Role } from "@/components/template/platform-sidebar/config"
@@ -44,6 +45,10 @@ export default function PlatformSidebar({
     ((clientRole ?? serverRole) as unknown as Role | undefined) ?? undefined
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
+  // The provider's copy carries the modules config's optimistic changes, so
+  // the sidebar follows a click there without waiting for the save.
+  const liveSchool = React.useContext(SchoolContext)?.school ?? school
+  const enabled = parseEnabledModules(liveSchool?.enabledModules)
 
   // Use school name if available, otherwise use a default
   const schoolName = school?.name || "Your School"
@@ -77,7 +82,6 @@ export default function PlatformSidebar({
                 // Module visibility: alwaysVisible items always show;
                 // if school has enabledModules configured, only show listed ones
                 if (item.alwaysVisible) return true
-                const enabled = parseEnabledModules(school?.enabledModules)
                 if (!enabled) return true // null = all visible
                 return enabled.includes(item.key)
               })
