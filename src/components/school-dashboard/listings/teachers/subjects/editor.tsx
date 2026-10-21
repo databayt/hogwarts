@@ -13,9 +13,10 @@
  * teacher for Math in every grade. (Catalog `concept` is too coarse for this:
  * "language" holds Arabic and French, "faith" Islamic and Christian studies.) The filter shows the teacher's specialties (default)
  * or all subjects, across all grades or one. Tick a card (every free section
- * of that grade comes with it), adjust single sections. A section someone
- * else teaches is dashed and stays unticked unless clicked, which hands it
- * over. Saving writes the specialties and the timetable: the teacher's
+ * of that grade comes with it), adjust single sections. Each card names who
+ * teaches it now. A section someone else teaches is dashed and stays unticked
+ * unless clicked; when every section is someone else's, the card offers to
+ * take the subject over. Saving writes the specialties and the timetable: the teacher's
  * periods fill in, moving others inside the section when needed
  * (timetable/assignments).
  */
@@ -29,7 +30,7 @@ import {
   useState,
   useTransition,
 } from "react"
-import { Check, Star } from "lucide-react"
+import { ArrowLeftRight, Check, Star } from "lucide-react"
 
 import { gradeLabel } from "@/lib/grade"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
@@ -269,21 +270,53 @@ export const TeacherSubjectsEditor = forwardRef<
     })
   }
 
-  const toggleSubject = (keys: string[], sub: Subject) => {
-    const anyOn = keys.some((k) => selected.has(k))
-    if (!anyOn) addFamily(sub)
+  /** Teachers (other than this one) who hold any of these sections. */
+  const holdersOf = (keys: string[]) => [
+    ...new Set(
+      keys
+        .map((k) => data?.holders[k])
+        .filter((h) => h && h.teacherId !== teacherId)
+        .map((h) => h!.name)
+    ),
+  ]
+
+  const toggleSubject = async (keys: string[], sub: Subject) => {
+    if (keys.some((k) => selected.has(k))) {
+      setSelected((prev) => {
+        const next = new Set(prev)
+        keys.forEach((k) => next.delete(k))
+        return next
+      })
+      return
+    }
+    // Free sections (and ones already this teacher's) come with the subject.
+    const free = keys.filter((k) => {
+      const holder = data?.holders[k]
+      return !holder || holder.teacherId === teacherId
+    })
+    let take = free
+    // Every section is someone else's: offer to take the subject over.
+    if (free.length === 0) {
+      const names = holdersOf(keys)
+      const go = await confirmDeleteDialog(undefined, {
+        title: fill(t?.takeOverTitle ?? "Take {subject} over?", {
+          subject: sub.name,
+        }),
+        description: fill(
+          t?.takeOverBody ??
+            "{name} teaches it now. Saving moves the subject and its periods to this teacher.",
+          { name: names.join("، ") }
+        ),
+        confirmText: t?.takeOver ?? "Take it over",
+        cancelText: t?.cancel ?? "Cancel",
+      })
+      if (!go) return
+      take = keys
+    }
+    addFamily(sub)
     setSelected((prev) => {
       const next = new Set(prev)
-      if (anyOn) {
-        keys.forEach((k) => next.delete(k))
-      } else {
-        // Free sections (and ones already this teacher's) come with the
-        // subject; a section someone else teaches needs its own click.
-        for (const k of keys) {
-          const holder = data?.holders[k]
-          if (!holder || holder.teacherId === teacherId) next.add(k)
-        }
-      }
+      take.forEach((k) => next.add(k))
       return next
     })
   }
@@ -543,6 +576,10 @@ export const TeacherSubjectsEditor = forwardRef<
             const fam = familyOf(sub)
             const special = families.has(fam)
             const locked = teachingFamilies.has(fam)
+            // Holders among the sections ticked (being taken over), else all.
+            const holders = holdersOf(
+              on > 0 ? keys.filter((k) => selected.has(k)) : keys
+            )
             return (
               <div
                 key={`${grade.gradeId}:${sub.subjectId}`}
@@ -556,7 +593,7 @@ export const TeacherSubjectsEditor = forwardRef<
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => toggleSubject(keys, sub)}
+                  onClick={() => void toggleSubject(keys, sub)}
                   className="block w-full text-start"
                 >
                   <div className="bg-muted relative aspect-[3/2] overflow-hidden">
@@ -587,6 +624,26 @@ export const TeacherSubjectsEditor = forwardRef<
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
+                    {/* Who teaches it now, or whom it's being taken from */}
+                    {holders.length > 0 && (
+                      <p
+                        title={holders.join("، ")}
+                        className={cn(
+                          "flex items-center gap-1 truncate text-[11px]",
+                          on > 0 ? "text-primary" : "text-muted-foreground"
+                        )}
+                      >
+                        <ArrowLeftRight className="size-3 shrink-0" />
+                        <span className="truncate">
+                          {fill(
+                            on > 0
+                              ? (t?.takingFrom ?? "From {name}")
+                              : (t?.takenBy ?? "{name}"),
+                            { name: holders.join("، ") }
+                          )}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </button>
 

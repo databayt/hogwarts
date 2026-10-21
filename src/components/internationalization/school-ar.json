@@ -3764,7 +3764,11 @@
         "noSpecialty": "لا تخصص بعد. افتح كل المواد وميّز بالنجمة ما يستطيع تدريسه.",
         "showAll": "عرض كل المواد",
         "counter": "{subjects} مواد · {sections} شُعب · {load}/{cap} حصة",
-        "freeSections": "{count} متاحة"
+        "freeSections": "{count} متاحة",
+        "takeOverTitle": "نقل {subject} إلى هذا المعلم؟",
+        "takeOverBody": "يدرّسها الآن {name}. عند الحفظ تنتقل المادة وحصصها إلى هذا المعلم.",
+        "takeOver": "انقلها",
+        "takingFrom": "من {name}"
       },
       "subjectsNotAssigned": "لا مواد بعد",
       "sectionsCount": "{count} شُعب"

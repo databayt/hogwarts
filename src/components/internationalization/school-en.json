@@ -3756,7 +3756,11 @@
         "noSpecialty": "No specialty yet. Open All subjects and star what this teacher can teach.",
         "showAll": "Show all subjects",
         "counter": "{subjects} subjects · {sections} sections · {load}/{cap} periods",
-        "freeSections": "{count} free"
+        "freeSections": "{count} free",
+        "takeOverTitle": "Take {subject} over?",
+        "takeOverBody": "{name} teaches it now. Saving moves the subject and its periods to this teacher.",
+        "takeOver": "Take it over",
+        "takingFrom": "From {name}"
       },
       "subjectsNotAssigned": "No subjects yet",
       "sectionsCount": "{count} sections"
