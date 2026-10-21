@@ -346,18 +346,33 @@ async function main(): Promise<void> {
   const { all } = twentyClient()
   const live = (await all("companies")) as unknown as Company[]
 
-  // Resume: never re-visit a page this ledger already records.
-  const done = new Set<string>()
+  // Resume: never re-visit a page this ledger already records -- except, with
+  // --retry-empty, a page whose last read found nothing at all two weeks ago or
+  // more. 339 of 707 reads came back empty (the About panel had not rendered,
+  // or showed only "Contact info / Messenger"), and resume skipped them forever.
+  // The loader keeps the latest line per page, so a retry simply supersedes.
+  const retryEmpty = process.argv.includes("--retry-empty")
+  const RETRY_AFTER_MS = 14 * 86_400_000
+  const isEmpty = (r: AboutResult) =>
+    r.ok && !r.phones.length && !r.emails.length && !r.website && !r.address
+  const last = new Map<string, AboutResult>()
   if (existsSync(LEDGER)) {
     for (const line of readFileSync(LEDGER, "utf8")
       .split("\n")
       .filter(Boolean)) {
       try {
-        done.add((JSON.parse(line) as AboutResult).url)
+        const r = JSON.parse(line) as AboutResult
+        last.set(r.url, r)
       } catch {
         /* skip */
       }
     }
+  }
+  const done = new Set<string>()
+  for (const [url, r] of last) {
+    const stale = Date.now() - Date.parse(r.capturedAt) > RETRY_AFTER_MS
+    if (retryEmpty && isEmpty(r) && stale) continue
+    done.add(url)
   }
 
   const queue = live

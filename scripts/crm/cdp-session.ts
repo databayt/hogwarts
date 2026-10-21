@@ -53,7 +53,7 @@ export function requireScrapePort(): {
     )
     console.error("     export FB_SCRAPE_DELAY_MS=8000")
     console.error(
-      "     bash ~/.claude/bin/chrome-debug.sh 9333   # then log in as that account\n"
+      "     bash ~/.claude/bin/chrome-scrape.sh   # its own profile, never the vault; then log in as that account\n"
     )
     process.exit(1)
   }
