@@ -30,7 +30,18 @@ export interface StreamResult {
   partial: boolean
   provider: ChatProvider
   fallbackReason: string | null
+  /** The guide the answer named (a model's tag), when it named one. */
+  topicSlugs?: string[]
 }
+
+/**
+ * What an answer source yields: text, or — mid-answer — the cards for the
+ * guide a model's tag named, or the guides it offers to choose between.
+ */
+export type SourceItem =
+  | string
+  | { resources: ChatResource[]; topicSlugs: string[] }
+  | { choices: Array<{ slug: string; label: string }> }
 
 /**
  * The response body for one answer, as server-sent events (see `sse.ts`).
@@ -54,14 +65,17 @@ export function chatEventStream(opts: {
     assistantMessageId: string
   } | null
   resources: ChatResource[]
-  source: AsyncIterable<string> | Iterable<string>
-  provider: ChatProvider
+  source: AsyncIterable<SourceItem> | Iterable<SourceItem>
+  /** Who answered — read at the end, so a source can change it (a fallback). */
+  provider: ChatProvider | (() => ChatProvider)
   dropAsk?: boolean
   /** Localized "the answer was cut off". */
   cutOffText: string
   onFinish?: (result: StreamResult) => void | Promise<void>
 }): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
+  const providerOf = () =>
+    typeof opts.provider === "function" ? opts.provider() : opts.provider
   let ping: ReturnType<typeof setInterval> | undefined
   let closed = false
 
@@ -130,9 +144,20 @@ export function chatEventStream(opts: {
       }
 
       let failed = false
+      let topicSlugs: string[] | undefined
       try {
         for await (const chunk of opts.source) {
           if (closed) break
+          if (typeof chunk !== "string") {
+            if ("resources" in chunk) {
+              topicSlugs = chunk.topicSlugs
+              if (chunk.resources.length)
+                emit({ event: "resources", data: { resources: chunk.resources } })
+            } else {
+              emit({ event: "choices", data: { options: chunk.choices } })
+            }
+            continue
+          }
           if (!opts.dropAsk) {
             push(chunk)
             continue
@@ -165,15 +190,17 @@ export function chatEventStream(opts: {
         result = {
           text,
           partial: true,
-          provider: opts.provider,
+          provider: providerOf(),
           fallbackReason: aborted ? "aborted" : "error",
+          topicSlugs,
         }
       } else if (text) {
         result = {
           text,
           partial: false,
-          provider: opts.provider,
+          provider: providerOf(),
           fallbackReason: null,
+          topicSlugs,
         }
       } else {
         // A reply that was nothing but the ask keeps it — cutting it all
@@ -183,7 +210,7 @@ export function chatEventStream(opts: {
         result = {
           text,
           partial: false,
-          provider: dropped.length ? opts.provider : "code",
+          provider: dropped.length ? providerOf() : "code",
           fallbackReason: dropped.length ? null : failed ? "error" : "empty",
         }
       }

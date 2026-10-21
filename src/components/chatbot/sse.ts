@@ -30,6 +30,10 @@ export type ChatEvent =
       }
     }
   | { event: "resources"; data: { resources: ChatResource[] } }
+  | {
+      event: "choices"
+      data: { options: Array<{ slug: string; label: string }> }
+    }
   | { event: "delta"; data: { t: string } }
   | {
       event: "done"

@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import "server-only"
 
+import { createHash } from "node:crypto"
 import { cache } from "react"
 import { unstable_cache } from "next/cache"
 import { after } from "next/server"
@@ -19,6 +20,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
 
 import { captureFromChat } from "./capture"
+import { claudeEnabled } from "./claude/client"
+import { contextBlock, helpCenter, modeBlock } from "./claude/prompt"
 import { profileFor } from "./identity"
 import { CHAT_HISTORY_TURNS, CONTACT_EMAIL } from "./constant"
 import {
@@ -325,6 +328,26 @@ async function resolveSystemPrompt(
 }
 
 /**
+ * Block 2 of the Claude prompt: the mode's rules and data, without the
+ * per-question guide matches (block 1 holds every guide). The sales prompt
+ * with today's pricing; a school's fenced public data; the desk has its own
+ * rules in `claude/prompt-text.ts`.
+ */
+async function claudeModeText(
+  mode: SystemPromptType,
+  chatbot: ChatbotDictionary,
+  locale: string,
+  subdomain?: string
+): Promise<string> {
+  if (mode === "schoolSupport") return ""
+  if (mode === "schoolSite" && subdomain) {
+    const school = await fetchSchoolData(subdomain)
+    if (school) return buildSchoolSitePrompt(school, locale, chatbot)
+  }
+  return buildSaasMarketingPrompt(locale, chatbot, (await getExchangeRates()).rates)
+}
+
+/**
  * What the route does with one visitor message:
  * - `error` — refused before the model (sign-in, rate limit), worded for people
  * - `reply` — answered in code (the help index, or a failure's fallback)
@@ -337,6 +360,7 @@ async function resolveSystemPrompt(
  */
 export interface PlanTurn {
   schoolId: string
+  profileId: string
   threadId: string
   userMessageId: string
   assistantMessageId: string
@@ -360,6 +384,10 @@ export type ChatPlan =
       dropAsk: boolean
       turn: PlanTurn | null
       topicSlugs: string[]
+      /** Set when the Claude lane is on: its cached blocks and who asks. */
+      claude: { system: [string, string, string]; userKey: string } | null
+      /** The cards for the guide a model's tag names. */
+      cardsFor: (slug: string) => ChatResource[]
     }
 
 export interface ChatRequest {
@@ -461,6 +489,7 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       if (profile && started) {
         turn = {
           schoolId: profile.schoolId,
+          profileId: profile.id,
           threadId: started.threadId,
           userMessageId: started.userMessageId,
           assistantMessageId: started.assistantMessageId,
@@ -493,8 +522,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       })
     }
 
-    if (!process.env.GROQ_API_KEY) {
-      console.error("Chatbot: GROQ_API_KEY is not set")
+    if (!process.env.GROQ_API_KEY && !claudeEnabled()) {
+      console.error("Chatbot: neither GROQ_API_KEY nor the Claude lane is set")
       return { kind: "error", status: 503, error: chatbot.replyNotConfigured }
     }
 
@@ -568,13 +597,45 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       .map((r) =>
         r.kind === "video" ? `${chatbot.resourceVideo}: ${r.title}` : r.title
       )
+    const subdomain = tenant.kind === "school" ? tenant.subdomain : undefined
     const systemPrompt = await resolveSystemPrompt(promptType, chatbot, {
-      subdomain: tenant.kind === "school" ? tenant.subdomain : undefined,
+      subdomain,
       locale,
       matched,
       attached,
       member,
     })
+
+    const labels = { video: chatbot.resourceVideo, guide: chatbot.resourceGuide }
+    const cardsFor = (slug: string) => {
+      const topic = SUPPORT_TOPICS.find((t) => t.slug === slug)
+      return topic ? resourcesFor(topic, locale, labels, undefined, origin) : []
+    }
+    const claude = claudeEnabled()
+      ? {
+          system: [
+            helpCenter(locale),
+            modeBlock(
+              promptType,
+              locale,
+              await claudeModeText(promptType, chatbot, locale, subdomain)
+            ),
+            contextBlock({
+              now: new Date(),
+              lang: locale,
+              role: member ? (chatbot[member.roleKey] ?? chatbot.roleStaff) : undefined,
+              school: member?.schoolName ?? undefined,
+              guess: matched[0]?.slug,
+              extra: helps && !desk ? askState(messages, locale, support) : "",
+            }),
+          ] as [string, string, string],
+          // Opaque and stable per person: the profile id, hashed.
+          userKey: createHash("sha256")
+            .update(`chatbot:${turn?.profileId ?? clientIpFrom(h)}`)
+            .digest("hex")
+            .slice(0, 32),
+        }
+      : null
 
     return {
       kind: "model",
@@ -588,6 +649,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       dropAsk: helps && !desk && dropsAsk(messages, support),
       turn,
       topicSlugs,
+      claude,
+      cardsFor,
     }
   } catch (error) {
     // A failed read must not leave the visitor with a raw error: the

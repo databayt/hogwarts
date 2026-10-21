@@ -16,8 +16,23 @@ import {
   fakeAnswer,
   fakeProviderEnabled,
 } from "@/components/chatbot/fake-provider"
+import { CLAUDE_MODEL } from "@/components/chatbot/claude/client"
+import { costUsd, estimateOutputTokens, type ClaudeUsage } from "@/components/chatbot/claude/pricing"
+import {
+  claudeAnswer,
+  ClaudeFallback,
+  type ClaudeRun,
+} from "@/components/chatbot/claude/request"
+import { claudeAvailable, noteClaudeFailure } from "@/components/chatbot/provider"
 import { CHAT_MODEL, prepareChat, type PlanTurn } from "@/components/chatbot/server"
-import { chatEventStream, type StreamResult } from "@/components/chatbot/stream"
+import { reserve, settle } from "@/components/chatbot/spend"
+import type { ChatProvider } from "@/components/chatbot/sse"
+import {
+  chatEventStream,
+  type SourceItem,
+  type StreamResult,
+} from "@/components/chatbot/stream"
+import { SUPPORT_TOPICS } from "@/components/chatbot/support"
 import { finishTurn } from "@/components/chatbot/threads"
 
 export const runtime = "nodejs"
@@ -71,7 +86,17 @@ export async function POST(request: Request): Promise<Response> {
 
   const { resources, fallback, cutOff } = plan.meta
   const started = Date.now()
-  const finish = saveAnswer(plan.turn, plan.topicSlugs, started)
+  // What the answer turned out to be — filled in as the ladder runs, read
+  // when the stream ends.
+  const report: AnswerReport = {
+    provider: plan.kind === "reply" ? "code" : "groq",
+    model: plan.kind === "reply" ? null : CHAT_MODEL,
+    fallbackReason: null,
+    usage: null,
+    costUsd: null,
+    firstTokenMs: null,
+  }
+  const finish = saveAnswer(plan.turn, plan.topicSlugs, started, report)
 
   if (plan.kind === "reply") {
     return new Response(
@@ -92,7 +117,9 @@ export async function POST(request: Request): Promise<Response> {
     request.signal,
     AbortSignal.timeout(MODEL_TIMEOUT_MS),
   ])
-  const { system, messages, dropAsk } = plan
+  const { system, messages, dropAsk, topicSlugs, claude, cardsFor, turn } =
+    plan
+  const locale = parsed.data.locale
 
   async function* groqText() {
     const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
@@ -120,29 +147,135 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  /**
+   * The provider ladder: Claude (when on, keyed, within budget, breaker
+   * closed) → Groq (only while nothing has been sent) → the guide's own
+   * steps (the stream's fallback, no model at all).
+   */
+  const tryClaude =
+    Boolean(claude) &&
+    !fakeProviderEnabled() &&
+    claudeAvailable() &&
+    (await reserve(CLAUDE_ESTIMATE_USD))
+
+  async function* answer(): AsyncGenerator<SourceItem> {
+    if (tryClaude && claude) {
+      report.provider = "anthropic"
+      report.model = CLAUDE_MODEL
+      let run: ClaudeRun | null = null
+      try {
+        for await (const item of claudeAnswer({
+          system: claude.system,
+          messages: messages.map((m) => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: String(m.content),
+          })),
+          userKey: claude.userKey,
+          signal,
+          onDone: (r) => {
+            run = r
+          },
+        })) {
+          if (item.type === "text") yield item.text
+          else if (item.type === "guide")
+            yield { resources: cardsFor(item.slug), topicSlugs: [item.slug] }
+          else
+            yield {
+              choices: item.slugs.map((slug) => ({
+                slug,
+                label: guideTitle(slug, locale),
+              })),
+            }
+        }
+        return
+      } catch (error) {
+        if (!(error instanceof ClaudeFallback)) throw error
+        noteClaudeFailure(error.breaker)
+        console.error("[chatbot] claude fell back:", error.reason)
+        report.provider = "groq"
+        report.model = CHAT_MODEL
+        report.fallbackReason = error.reason
+      } finally {
+        const done = run as ClaudeRun | null
+        const usage = done && {
+          ...done,
+          output: done.output || estimateOutputTokens(done.chars),
+        }
+        const cost = usage ? costUsd(usage) : 0
+        if (usage && report.provider === "anthropic") {
+          report.usage = usage
+          report.costUsd = cost
+          report.firstTokenMs = usage.firstTokenMs
+        }
+        await settle(
+          CLAUDE_ESTIMATE_USD,
+          usage
+            ? {
+                costUsd: cost,
+                model: CLAUDE_MODEL,
+                inputTokens: usage.input + usage.read + usage.write,
+                outputTokens: usage.output,
+                jobType: "chatbot",
+                jobId: turn?.assistantMessageId,
+              }
+            : null
+        )
+      }
+    }
+    // Groq answers from the keyword matcher's guides, so their cards go first.
+    if (resources.length) yield { resources, topicSlugs }
+    if (!process.env.GROQ_API_KEY) return
+    yield* groqText()
+  }
+
   const question = String(messages.at(-1)?.content ?? "")
   return new Response(
     chatEventStream({
       fallback,
       ids: plan.turn,
-      resources,
+      // With Claude, the model's tag picks the cards; otherwise the
+      // matcher's go out before the first word.
+      resources: tryClaude || fakeProviderEnabled() ? [] : resources,
       source: fakeProviderEnabled()
-        ? fakeAnswer(question, parsed.data.locale, signal)
-        : groqText(),
-      provider: "groq",
-      dropAsk,
+        ? fakeAnswer(question, locale, signal)
+        : tryClaude
+          ? answer()
+          : groqOnly(),
+      provider: () => report.provider,
+      dropAsk: dropAsk && !tryClaude,
       cutOffText: cutOff,
       onFinish: finish,
     }),
     { headers: HEADERS }
   )
+
+  async function* groqOnly(): AsyncGenerator<SourceItem> {
+    if (!process.env.GROQ_API_KEY) return
+    yield* groqText()
+  }
 }
+
+/** What reserving one Claude answer holds against the cap until it settles. */
+const CLAUDE_ESTIMATE_USD = 0.003
+
+interface AnswerReport {
+  provider: ChatProvider
+  model: string | null
+  fallbackReason: string | null
+  usage: ClaudeUsage | null
+  costUsd: number | null
+  firstTokenMs: number | null
+}
+
+const guideTitle = (slug: string, locale: "ar" | "en") =>
+  SUPPORT_TOPICS.find((t) => t.slug === slug)?.title[locale] ?? slug
 
 /** Write the answer into its saved turn once the stream ends — even cut short. */
 function saveAnswer(
   turn: PlanTurn | null,
   topicSlugs: string[],
-  started: number
+  started: number,
+  report: AnswerReport
 ): ((result: StreamResult) => Promise<void>) | undefined {
   if (!turn) return undefined
   return (result) =>
@@ -153,8 +286,12 @@ function saveAnswer(
       text: result.text,
       partial: result.partial,
       provider: result.provider,
-      fallbackReason: result.fallbackReason,
-      topicSlugs,
+      fallbackReason: result.fallbackReason ?? report.fallbackReason,
+      topicSlugs: result.topicSlugs ?? topicSlugs,
       latencyMs: Date.now() - started,
+      model: report.model,
+      usage: report.usage,
+      costUsd: report.costUsd,
+      firstTokenMs: report.firstTokenMs,
     })
 }

@@ -90,6 +90,39 @@ When the model can't answer (an outage, the Groq free tier's daily token cap)
 and a guide matched, the answer is that guide's own steps (`replyFromGuide`)
 instead of an apology; Groq gets no retries, so that takes a second, not 18.
 
+### The Claude lane (2026-10-21, ships dark)
+
+Claude Haiku 5.5 on the Max plan's included API credits, decided in kun
+`D-20261021-included-api-credits-for-hogwarts-chatbot`. Off until switched on.
+
+- **Ladder** (`app/api/chatbot/route.ts`): Claude (on, keyed, within budget,
+  breaker closed) → Groq (only while nothing has been sent) → the matched
+  guide's own steps. A safety refusal goes to the guide steps, never Groq.
+- **Prompt** (`claude/prompt.ts`): block 1 = every guide, the same bytes for
+  every bot and school (one cache entry per language); block 2 = the mode's
+  rules and data + the answer protocol (`claude/prompt-text.ts`); block 3 =
+  date, role, school, the matcher's guess — never cached. Thinking off,
+  effort low (eval-gated), no temperature (Haiku 5.5 rejects it).
+- **Answer-first tag**: the first line is `[[guide:slug]]` or
+  `[[choose:a,b]]`; `claude/guide-tag.ts` reads it off the stream, the cards
+  go out the moment it lands, the visitor never sees it.
+- **Spend** (`spend.ts`): AIUsageLog platform rows (`jobType: chatbot`),
+  read at most once a minute, reserve-then-settle per answer, **fails
+  closed**. App caps $18/month and $2/day under the Console workspace's $20
+  limit. A 402 / "credit balance" caps it until next month.
+- **Breaker** (`provider.ts`): 3 failures a minute → 5 min off; bad key or
+  model → 30 min off. Revoking the key in the Console is the kill switch.
+- **Key**: `CHATBOT_ANTHROPIC_API_KEY` only (`claude/client.ts` never reads the
+  plain `ANTHROPIC_API_KEY` — five dormant callers do; a test guards it).
+- **Env**: `CHATBOT_ANTHROPIC_API_KEY` (secret — `cf/env-split.mjs` matches
+  `_KEY$`), `CHATBOT_CLAUDE_ENABLED=1`, `CHATBOT_CLAUDE_MODEL`,
+  `CHATBOT_CLAUDE_CAP_USD=18`, `CHATBOT_CLAUDE_DAILY_USD=2` (config).
+- **Switching on**: store the key → `scripts/chatbot/claude-smoke.ts` (run 2
+  must show `cache_read` ≈ block 1, creation ≈ 0) → `scripts/chatbot/eval.ts`
+  (≥ 90 % guide accuracy, 100 % language; try `--effort medium` too) → set
+  `CHATBOT_CLAUDE_ENABLED=1` in the prod env file → push secrets → redeploy.
+  Both scripts run with `npx tsx -r dotenv/config -r ./scripts/_server-only-shim.cjs`.
+
 ## Structure
 
 ```
@@ -113,7 +146,10 @@ chatbot/
 ├── use-stick-to-bottom.ts # Follow the answer only while the reader is at the bottom
 ├── use-visual-viewport.ts # Keep the phone panel above the keyboard (iOS)
 ├── sse.ts                 # The wire format, shared by route and hook
-├── stream.ts              # server-only — chatEventStream, ASK_RE
+├── stream.ts              # server-only — chatEventStream (text, cards, choices), ASK_RE
+├── claude/                # server-only — the Claude lane: client, prompt blocks, request, pricing, guide tag
+├── spend.ts               # server-only — the $18/$2 ledger on AIUsageLog, reserve/settle, fails closed
+├── provider.ts            # server-only — the breaker in front of Claude
 ├── server.ts              # server-only — prepareChat, cached school read
 ├── fake-provider.ts       # CHATBOT_FAKE_PROVIDER=1 scripted answers for e2e (never prod)
 ├── capture.ts             # Funnel capture — newest message → one Prospect, never regressed

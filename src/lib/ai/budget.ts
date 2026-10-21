@@ -164,6 +164,26 @@ export async function getMonthlySpend(schoolId: string): Promise<number> {
 }
 
 /**
+ * A platform lane's spend since `since` — the chatbot's Claude cap reads
+ * this. Platform rows only (the "platform" sentinel tenant), so a school's
+ * own AI budget never counts the chatbot, and the chatbot never counts it.
+ */
+export async function laneSpendSince(
+  jobTypes: string[],
+  since: Date
+): Promise<number> {
+  const result = await db.aIUsageLog.aggregate({
+    where: {
+      schoolId: "platform",
+      jobType: { in: jobTypes },
+      createdAt: { gte: since },
+    },
+    _sum: { costUsd: true },
+  })
+  return result._sum.costUsd ?? 0
+}
+
+/**
  * Get monthly usage breakdown by job type
  */
 export async function getMonthlyUsageBreakdown(schoolId: string) {

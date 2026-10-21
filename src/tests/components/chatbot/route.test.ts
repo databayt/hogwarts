@@ -13,6 +13,25 @@ vi.mock("@/components/chatbot/server", () => ({
   prepareChat: vi.fn(),
 }))
 vi.mock("@/components/chatbot/threads", () => ({ finishTurn: vi.fn() }))
+vi.mock("@/components/chatbot/spend", () => ({
+  reserve: vi.fn(async () => true),
+  settle: vi.fn(async () => {}),
+}))
+vi.mock("@/components/chatbot/provider", () => ({
+  claudeAvailable: vi.fn(() => true),
+  noteClaudeFailure: vi.fn(),
+}))
+vi.mock("@/components/chatbot/claude/request", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/chatbot/claude/request")>()),
+  claudeAnswer: vi.fn(),
+}))
+vi.mock("ai", () => ({
+  streamText: vi.fn(() => ({
+    fullStream: (async function* () {
+      yield { type: "text-delta", text: "From Groq." }
+    })(),
+  })),
+}))
 
 const post = (body: unknown) =>
   POST(
@@ -85,5 +104,84 @@ describe("POST /api/chatbot", () => {
         provider: "code",
       })
     )
+  })
+
+  describe("the provider ladder", () => {
+    const card = { kind: "guide" as const, title: "Attendance", href: "/ar/docs/support/attendance" }
+    const modelPlan = () => ({
+      kind: "model" as const,
+      meta: {
+        resources: [{ kind: "guide" as const, title: "Keyword guide", href: "/x" }],
+        fallback: "F",
+        cutOff: "C",
+      },
+      system: "groq system",
+      messages: [{ role: "user" as const, content: "attendance?" }],
+      dropAsk: false,
+      turn: {
+        schoolId: "s1",
+        profileId: "p1",
+        threadId: "t1",
+        userMessageId: "u1",
+        assistantMessageId: "a1",
+      },
+      topicSlugs: ["keyword-guide"],
+      claude: { system: ["a", "b", "c"] as [string, string, string], userKey: "k" },
+      cardsFor: vi.fn(() => [card]),
+    })
+
+    async function events(res: Response) {
+      const out = []
+      for await (const e of readEvents(res.body!)) out.push(e)
+      return out
+    }
+
+    it("lets Claude's tag pick the cards, and saves its usage", async () => {
+      process.env.GROQ_API_KEY = "g"
+      const { claudeAnswer } = await import("@/components/chatbot/claude/request")
+      vi.mocked(claudeAnswer).mockImplementation(async function* (opts) {
+        yield { type: "guide", slug: "attendance" }
+        yield { type: "text", text: "1. Open **Attendance**" }
+        opts.onDone({
+          input: 2000, read: 14000, write: 0, write1h: 0, output: 120,
+          stopReason: "end_turn", firstTokenMs: 400, chars: 22,
+        })
+      })
+      vi.mocked(prepareChat).mockResolvedValue(modelPlan() as never)
+      const evs = await events(await post({ message: "attendance?" }))
+      const kinds = evs.map((e) => e.event)
+      expect(kinds.indexOf("resources")).toBeLessThan(kinds.indexOf("delta"))
+      expect(evs.find((e) => e.event === "resources")).toMatchObject({
+        data: { resources: [card] },
+      })
+      expect(evs.at(-1)).toMatchObject({ data: { provider: "anthropic" } })
+      expect(finishTurn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "anthropic",
+          topicSlugs: ["attendance"],
+          model: "claude-haiku-5-5",
+          usage: expect.objectContaining({ read: 14000 }),
+        })
+      )
+    })
+
+    it("falls to Groq with the matcher's cards when Claude can't answer", async () => {
+      process.env.GROQ_API_KEY = "g"
+      const { claudeAnswer, ClaudeFallback } = await import(
+        "@/components/chatbot/claude/request"
+      )
+      vi.mocked(claudeAnswer).mockImplementation(async function* () {
+        throw new ClaudeFallback("rate_limited", "count")
+      })
+      vi.mocked(prepareChat).mockResolvedValue(modelPlan() as never)
+      const evs = await events(await post({ message: "attendance?" }))
+      expect(evs.find((e) => e.event === "resources")).toMatchObject({
+        data: { resources: [{ title: "Keyword guide" }] },
+      })
+      expect(evs.at(-1)).toMatchObject({ data: { provider: "groq" } })
+      expect(finishTurn).toHaveBeenCalledWith(
+        expect.objectContaining({ provider: "groq", fallbackReason: "rate_limited" })
+      )
+    })
   })
 })

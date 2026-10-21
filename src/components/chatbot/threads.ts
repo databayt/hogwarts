@@ -161,8 +161,17 @@ export async function finishTurn(opts: {
   fallbackReason: string | null
   topicSlugs: string[]
   latencyMs: number
+  model?: string | null
+  usage?: {
+    input: number
+    read: number
+    write: number
+    output: number
+  } | null
+  costUsd?: number | null
+  firstTokenMs?: number | null
 }) {
-  const { schoolId, threadId } = opts
+  const { schoolId, threadId, usage } = opts
   await db.chatbotMessage.updateMany({
     where: { id: opts.assistantMessageId, threadId, schoolId },
     data: {
@@ -172,6 +181,13 @@ export async function finishTurn(opts: {
       fallbackReason: opts.fallbackReason,
       topicSlugs: opts.topicSlugs,
       latencyMs: opts.latencyMs,
+      model: opts.model ?? null,
+      inputTokens: usage?.input ?? null,
+      cacheReadTokens: usage?.read ?? null,
+      cacheWriteTokens: usage?.write ?? null,
+      outputTokens: usage?.output ?? null,
+      costUsd: opts.costUsd ?? null,
+      firstTokenMs: opts.firstTokenMs ?? null,
     },
   })
   if (opts.topicSlugs[0])

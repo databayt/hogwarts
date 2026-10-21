@@ -5,6 +5,19 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot — issues
 
+## Done 2026-10-21 — the Claude lane, dark (phase 3)
+
+- Claude Haiku 5.5 behind `CHATBOT_CLAUDE_ENABLED`, its own key, a ledger
+  that fails closed, a breaker, and the ladder Claude → Groq → guide steps.
+- Whole help center in a cached block shared by every bot and school; the
+  answer names its guide on the first line and the cards follow it.
+- Usage and cost saved on every answer (`chatbot_messages`) and in
+  AIUsageLog (platform rows) — the cap reads the latter.
+- `scripts/chatbot/eval.ts` (40 questions, ar/en, dialects, off-topic) and
+  `scripts/chatbot/claude-smoke.ts` (cache proof) — need the key to run.
+- Decision recorded in kun (D-20261021-included-api-credits-for-hogwarts-chatbot);
+  funnel doctrine amended.
+
 ## Done 2026-10-21 — memory and the chats sheet (phase 2)
 
 - Conversations are saved (profiles, threads, messages, notes tables) and come
@@ -75,8 +88,9 @@ Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 3–6
   chats sheet shows "Couldn't load your chats".
 - **Groq's free tier is spent by midday:** on 2026-10-21 `gpt-oss-20b` hit its
   200K tokens/day (TPD) cap on the key prod shares with mkan. Members get the
-  guide steps meanwhile; the fix is phase 3 (Claude Haiku 5.5 on the included
-  credits, $20/month cap) — waits on the /decide record and a dedicated key.
+  guide steps meanwhile. The Claude lane is built (phase 3); it waits on
+  Abdout's key (`cf-hogwarts-CHATBOT_ANTHROPIC_API_KEY`), then the smoke run
+  and the eval, then `CHATBOT_CLAUDE_ENABLED=1`.
 - Learned notes and recall (phase 4); page-aware answers, feedback, next steps
   (phase 5).
 - Prompt templates still ship in the client dictionary chunk (phase 3 moves
