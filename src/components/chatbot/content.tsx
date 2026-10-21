@@ -2,13 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { forwardRef, useEffect, useImperativeHandle } from "react"
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+} from "react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { ChatButton } from "./chat-button"
-import { ChatWindow } from "./chat-window"
 import { DEFAULT_CONFIG } from "./constant"
+import { Panel } from "./panel"
 import type {
   ChatbotDictionary,
   ChatbotProps,
@@ -51,7 +56,16 @@ export const ChatbotContent = forwardRef<
     }
     const fullDictionary = dictionary
 
-    const { state, toggleChat, openChat, closeChat, sendMessage } = useChatbot({
+    const {
+      state,
+      setOpen,
+      toggleChat,
+      openChat,
+      sendMessage,
+      stop,
+      retry,
+      newChat,
+    } = useChatbot({
       promptType,
       subdomain,
       locale,
@@ -80,12 +94,13 @@ export const ChatbotContent = forwardRef<
       return () => window.removeEventListener("open-chatbot", handleOpenChatbot)
     }, [openChat])
 
-    const handleSendMessage = async (message: string) => {
-      await sendMessage(message)
-      if (onMessageSend) {
-        onMessageSend(message)
-      }
-    }
+    const handleSendMessage = useCallback(
+      (message: string) => {
+        sendMessage(message)
+        onMessageSend?.(message)
+      },
+      [sendMessage, onMessageSend]
+    )
 
     // For school mode, pick the locale-appropriate name for the avatar alt
     const schoolDisplayName =
@@ -107,14 +122,15 @@ export const ChatbotContent = forwardRef<
           schoolName={schoolDisplayName ?? undefined}
         />
 
-        <ChatWindow
-          isOpen={state.isOpen}
-          onClose={closeChat}
+        <Panel
+          open={state.isOpen}
+          onOpenChange={setOpen}
           messages={state.messages}
-          onSendMessage={handleSendMessage}
-          isLoading={state.isLoading}
-          error={state.error}
-          placeholder={chatbotConfig.placeholder}
+          status={state.status}
+          onSend={handleSendMessage}
+          onStop={stop}
+          onRetry={retry}
+          onNewChat={newChat}
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
           promptType={promptType}

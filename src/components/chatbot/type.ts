@@ -14,6 +14,10 @@ export interface ChatMessage {
   resources?: ChatResource[]
   /** A failure shown as a bubble — never sent back to the model as history. */
   kind?: "error"
+  /** The answer stopped early (Stop, a dropped connection, a provider fault). */
+  partial?: boolean
+  /** What to say under a partial answer — localized, from the server. */
+  notice?: string
 }
 
 /**
@@ -43,13 +47,20 @@ export interface ChatResource {
 export interface ChatMeta {
   resources: ChatResource[]
   fallback: string
+  /** Localized "the answer was cut off", for a stream that breaks. */
+  cutOff: string
 }
+
+/**
+ * `waiting` — sent, no word back yet (the typing dots); `streaming` — the
+ * answer is arriving; `error` — the last request failed before any answer.
+ */
+export type ChatStatus = "idle" | "waiting" | "streaming" | "error"
 
 export interface ChatbotState {
   isOpen: boolean
   messages: ChatMessage[]
-  isLoading: boolean
-  error?: string
+  status: ChatStatus
 }
 
 export interface ChatbotTheme {
@@ -272,6 +283,8 @@ export interface SchoolChatbotDisplay extends SchoolChatbotContext {
 export interface CtaChip {
   label: string
   href: string
+  /** Leaves this site (the main-domain help center, mail): a new tab. */
+  external?: boolean
 }
 
 export interface ChatbotProps {
@@ -302,24 +315,20 @@ export interface ChatButtonProps {
   schoolName?: string
 }
 
-export interface ChatWindowProps {
-  isOpen: boolean
-  onClose: () => void
+export interface PanelProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   messages: ChatMessage[]
-  onSendMessage: (message: string) => void
-  isLoading: boolean
-  error?: string
-  placeholder?: string
-  locale?: "en" | "ar"
+  status: ChatStatus
+  onSend: (message: string) => void
+  onStop: () => void
+  onRetry: () => void
+  onNewChat: () => void
+  locale: "en" | "ar"
   dictionary: ChatbotDictionary
-  theme?: ChatbotTheme
-  title?: string
-  subtitle?: string
-  promptType?: PromptType
+  promptType: PromptType
   schoolContext?: SchoolChatbotDisplay | null
   supportRole?: SupportRole
-  enableTypingIndicator?: boolean
-  enableTimestamps?: boolean
 }
 
 export interface ChatbotHookConfig {

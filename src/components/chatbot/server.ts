@@ -38,6 +38,7 @@ import {
   writtenFor,
   type SupportTopic,
 } from "./support"
+import { ASK_RE } from "./stream"
 import { resourcesFor } from "./support-media"
 import type {
   ChatbotDictionary,
@@ -334,7 +335,7 @@ export type ChatPlan =
       meta: ChatMeta
       system: string
       messages: ModelMessage[]
-      /** Cut lines that repeat the WhatsApp/email ask (see `dropsAsk`). */
+      /** Cut lines that repeat the contact ask (see `dropsAsk`). */
       dropAsk: boolean
     }
 
@@ -461,6 +462,7 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
     const meta: ChatMeta = {
       resources,
       fallback: fallbackReply(chatbot, promptType, support),
+      cutOff: chatbot.answerCutOff,
     }
 
     // "What can you help with?" has one right answer — the guide list. A
@@ -504,17 +506,14 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
     // capture above already ran, so the fallback turns it into the ask.
     console.error("Chatbot prepare failed:", error)
     const fallback = fallbackReply(chatbot, promptType, support)
-    return { kind: "reply", meta: { resources, fallback }, text: fallback }
+    return {
+      kind: "reply",
+      meta: { resources, fallback, cutOff: chatbot.answerCutOff },
+      text: fallback,
+    }
   }
 }
 
-/**
- * The contact ask itself — "share your WhatsApp number", «أرسل رقم واتسابك»
- * — read by the possessive. Not every line that names WhatsApp: "turn on
- * WhatsApp notifications" is a step of a guide, and cutting it broke answers.
- */
-const ASK_RE =
-  /\byour\s+(?:whatsapp|phone|mobile|e-?mail|number|contact)\b|رقمك|واتسابك|جوالك|هاتفك|بريدك|إيميلك|ايميلك/i
 const textOf = (m: { content: unknown }) =>
   typeof m.content === "string" ? m.content : ""
 
@@ -618,77 +617,4 @@ function helpIndexReply(
     ...titles,
     chatbot.replyHelpIndexOutro,
   ].join("\n")
-}
-
-/**
- * The bubble renders text as-is, so markdown shows up as stray symbols.
- * The prompt forbids it; a 20B model still slips — strip what it slips.
- * Runs per line, because the reply streams line by line.
- */
-function plainLine(line: string): string {
-  return line
-    .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/__(.+?)__/g, "$1")
-    .replace(/^#{1,6}\s+/, "")
-    .replace(/[ \t]+$/, "")
-}
-
-/**
- * The response body: one JSON line of `ChatMeta` (cards + fallback, known
- * before the model starts), then the reply text. Text is released a whole
- * line at a time so the markdown strip and the repeat-ask cut still apply —
- * a how-to list appears step by step.
- *
- * A reasoning model can spend its whole cap thinking and return "" — an
- * empty bubble reads as a dead product, so an empty or failed stream sends
- * the fallback instead. Groq's free tier caps tokens per minute; during an
- * outreach wave that turns a raw provider error into the ask.
- */
-export function replyStream(
-  meta: ChatMeta,
-  source: AsyncIterable<string> | Iterable<string>,
-  dropAsk = false
-): ReadableStream<Uint8Array> {
-  const encoder = new TextEncoder()
-  return new ReadableStream({
-    async start(controller) {
-      const send = (text: string) => controller.enqueue(encoder.encode(text))
-      send(JSON.stringify(meta) + "\n")
-
-      let buffer = ""
-      let sent = false
-      const dropped: string[] = []
-      const flush = (line: string, newline: boolean) => {
-        if (dropAsk && ASK_RE.test(line)) {
-          dropped.push(line)
-          return
-        }
-        const out = plainLine(line)
-        // Leading blank lines would open an empty bubble.
-        if (!sent && !out.trim()) return
-        send(newline ? out + "\n" : out)
-        sent = true
-      }
-
-      try {
-        for await (const chunk of source) {
-          buffer += chunk
-          let nl = buffer.indexOf("\n")
-          while (nl !== -1) {
-            flush(buffer.slice(0, nl), true)
-            buffer = buffer.slice(nl + 1)
-            nl = buffer.indexOf("\n")
-          }
-        }
-        if (buffer) flush(buffer, false)
-      } catch (error) {
-        console.error("Chatbot stream failed:", error)
-      }
-
-      // A reply that was nothing but the ask keeps it — cutting it all
-      // would leave nothing to read.
-      if (!sent) send(dropped.length ? dropped.join("\n") : meta.fallback)
-      controller.close()
-    },
-  })
 }

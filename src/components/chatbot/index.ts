@@ -5,7 +5,7 @@
 export { Chatbot } from "./chatbot"
 export { ChatbotContent } from "./content"
 export { ChatButton } from "./chat-button"
-export { ChatWindow } from "./chat-window"
+export { Panel } from "./panel"
 
 // Hook
 export { useChatbot } from "./use-chatbot"
@@ -20,7 +20,8 @@ export type {
   ChatbotConfig,
   ChatbotProps,
   ChatButtonProps,
-  ChatWindowProps,
+  ChatStatus,
+  PanelProps,
   ChatbotHookConfig,
 } from "./type"
 

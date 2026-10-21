@@ -30,35 +30,59 @@ assistant's reply crosses the wire. `chatbot.tsx` strips the prompt keys
 (`*Prompt*`, `schoolHeader*`, `schoolPhrase*`, `role*`, `reply*`) from the
 dictionary before it becomes a client prop.
 
-### Request flow (2026-10-19)
+### Request flow (2026-10-21)
 
-1. `use-chatbot.ts` POSTs the last 10 turns to `/api/chatbot` (`app/api/chatbot/route.ts`).
-2. `prepareChat()` (`server.ts`, server-only) does sign-in check (desk), rate
-   limit, capture, topic match, cards and the system prompt — and returns a
-   plan: `error` (4xx JSON, localized), `reply` (answered in code) or `model`.
-3. The route `streamText`s the model; `replyStream()` writes one JSON line of
-   `ChatMeta` (cards + localized fallback) then the reply **a line at a time**,
-   so the markdown strip and the repeat-ask cut still apply. An empty or failed
-   stream sends the fallback — never an empty bubble.
-4. The hook shows the bubble on the first line and grows it as lines arrive.
+1. `use-chatbot.ts` POSTs the last 10 messages to `/api/chatbot`
+   (`app/api/chatbot/route.ts`). Error bubbles never go back as history.
+2. `prepareChat()` (`server.ts`, server-only) resolves the tenant from the
+   **Host** (never the body — `/api/*` gets no `x-subdomain`), checks that the
+   mode fits the host, runs the desk's membership guard, the rate limits
+   (Cloudflare's `cf-connecting-ip`, plus a per-school ceiling on public
+   sites), topic matching, cards and the system prompt. It returns a plan:
+   `error` (4xx JSON, localized), `reply` (answered in code) or `model`.
+   SaaS capture is scheduled with `after()` — never on the reply path.
+3. The route streams **server-sent events** (`sse.ts`, built by
+   `chatEventStream` in `stream.ts`): `: open`, `meta` (the localized
+   fallback), `resources` (cards, before the first word), `delta` pieces
+   (coalesced at 40 chars / 25 ms), `: ping` every 10 s, then `done`
+   (provider, partial). A stream that breaks after some text ends with
+   `error: cut_off`; an empty or failed one sends the fallback. Headers carry
+   `no-transform` so Next's gzip never turns the stream into a burst. Only the
+   sales bot, once it has asked for a contact, streams a line at a time — so a
+   line repeating the ask can be cut whole.
+4. The hook paints deltas once per animation frame. Stop aborts the fetch;
+   what arrived stays as a partial answer with Retry. The client renders a
+   safe markdown subset (`markdown-lite.tsx`), so the guides' **bold** button
+   names survive.
 
 ## Structure
 
 ```
 chatbot/
-├── chatbot.tsx          # Server entry — loads dictionary + school context, renders content
-├── content.tsx          # Client shell — wires button + window + useChatbot hook
-├── chat-button.tsx      # Floating FAB (robot, or school logo on tenant sites)
-├── chat-window.tsx      # The panel: messages, quick-asks, CTA chips, input pill, mic
-├── use-chatbot.ts       # Client state hook — streams from /api/chatbot
-├── server.ts            # server-only — prepareChat, replyStream, cached school read
-├── capture.ts           # Funnel capture — deterministic identifier extraction → Prospect upsert
-├── prompts.ts           # buildSaasMarketingPrompt / buildSchoolSitePrompt (data → prompt)
-├── constant.ts          # Positions, sizes, CONTACT_EMAIL, history window, pricing-nudge config
-├── pricing-nudge.tsx    # One-shot proactive open on /pricing (30s, cooldown-gated)
-├── icons.tsx            # Inline SVGs (Send, Voice, quick-ask category icons…)
-├── type.ts              # ChatbotDictionary + props/context types
-└── utils.ts             # mergeConfig
+├── chatbot.tsx            # Server entry — loads dictionary + school context, renders content
+├── content.tsx            # Client shell — wires button + panel + useChatbot hook
+├── chat-button.tsx        # Floating FAB (the robot)
+├── panel.tsx              # The dialog: modal full-screen on phones, persistent panel on desktop
+├── header.tsx             # Title · new chat · close
+├── message-list.tsx       # role="log" list, welcome + quick asks when empty, ↓ latest
+├── message.tsx            # One message: markdown, cards, chips, cut-off notice + Retry
+├── markdown-lite.tsx      # Bold, lists, paragraphs, allow-listed links — never HTML
+├── composer.tsx           # Autosizing textarea; Send ↔ Stop; character counter
+├── typing-dots.tsx        # Until the first word arrives
+├── starters.ts            # Quick asks, CTA chips, titles — per mode, from the dictionary
+├── use-chatbot.ts         # Client state: status machine, AbortController, rAF painting
+├── use-stick-to-bottom.ts # Follow the answer only while the reader is at the bottom
+├── use-visual-viewport.ts # Keep the phone panel above the keyboard (iOS)
+├── sse.ts                 # The wire format, shared by route and hook
+├── stream.ts              # server-only — chatEventStream, ASK_RE
+├── server.ts              # server-only — prepareChat, cached school read
+├── fake-provider.ts       # CHATBOT_FAKE_PROVIDER=1 scripted answers for e2e (never prod)
+├── capture.ts             # Funnel capture — newest message → one Prospect, never regressed
+├── prompts.ts             # Prompt builders; `clean()` fences school text as data
+├── constant.ts            # Positions, sizes, CONTACT_EMAIL, history window, pricing-nudge config
+├── pricing-nudge.tsx      # One-shot proactive open on /pricing (30s, cooldown-gated)
+├── icons.tsx              # Inline SVGs (Send, quick-ask category icons…)
+├── type.ts                # ChatbotDictionary + props/context types
 ```
 
 ## Knowledge base
