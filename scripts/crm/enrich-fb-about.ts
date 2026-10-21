@@ -350,6 +350,8 @@ async function main(): Promise<void> {
   // --retry-empty, a page whose last read found nothing at all two weeks ago or
   // more. 339 of 707 reads came back empty (the About panel had not rendered,
   // or showed only "Contact info / Messenger"), and resume skipped them forever.
+  // Measured 2026-10-21: 0 of 20 retried pages had gained anything -- the empties
+  // are real, so this is a manual flag, not part of the scheduled run.
   // The loader keeps the latest line per page, so a retry simply supersedes.
   const retryEmpty = process.argv.includes("--retry-empty")
   const RETRY_AFTER_MS = 14 * 86_400_000

@@ -185,7 +185,7 @@ export async function createCdpSession(
   if (!ver || !ver.ok) {
     throw new Error(
       `no Chrome listening on ${port}. Launch the dedicated scrape profile first:\n` +
-        `  FB_SCRAPE_PROFILE="$HOME/.claude/chrome-fbscrape-profile" bash ~/.claude/bin/chrome-debug.sh ${port}`
+        `  FB_SCRAPE_PORT=${port} FB_SCRAPE_PROFILE="$HOME/.claude/chrome-fbscrape-profile" bash ~/.claude/bin/chrome-scrape.sh`
     )
   }
   const res = await fetch(
