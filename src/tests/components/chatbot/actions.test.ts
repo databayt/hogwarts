@@ -9,6 +9,7 @@ import {
   deleteChat,
   listChats,
   loadChat,
+  rateMessage,
   renameChat,
 } from "@/components/chatbot/actions"
 import { profileFor } from "@/components/chatbot/identity"
@@ -41,6 +42,7 @@ vi.mock("@/components/internationalization/dictionaries", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     chatbotThread: { updateMany: vi.fn(), deleteMany: vi.fn() },
+    chatbotMessage: { findFirst: vi.fn(), updateMany: vi.fn() },
   },
 }))
 
@@ -162,5 +164,32 @@ describe("loadChat", () => {
     expect(
       await loadChat({ mode: "schoolSite", threadId: "x", locale: "ar" })
     ).toBeNull()
+  })
+})
+
+describe("rateMessage", () => {
+  const m = vi.mocked(db.chatbotMessage)
+  it("rates only an answer in this profile's own chat", async () => {
+    m.findFirst.mockResolvedValue(null as never)
+    expect(await rateMessage({ messageId: "x", value: 1 })).toBe(false)
+    expect(m.findFirst.mock.calls[0]![0].where).toMatchObject({
+      id: "x",
+      schoolId: "s1",
+      role: "ASSISTANT",
+      thread: { profileId: "p1" },
+    })
+    expect(m.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("helpful resolves the chat; not helpful leaves its status alone", async () => {
+    m.findFirst.mockResolvedValue({ id: "a1", threadId: "t1" } as never)
+    await rateMessage({ messageId: "a1", value: 1 })
+    expect(t.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "RESOLVED" } })
+    )
+    t.updateMany.mockClear()
+    await rateMessage({ messageId: "a1", value: -1 })
+    expect(t.updateMany).not.toHaveBeenCalled()
+    expect(await rateMessage({ messageId: "a1", value: 5 })).toBe(false)
   })
 })

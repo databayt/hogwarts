@@ -30,6 +30,7 @@ import fm from "front-matter"
 const ROOT = new URL("..", import.meta.url).pathname
 const DIR = (lang) => join(ROOT, "content", `docs-${lang}`, "support")
 const OUT = join(ROOT, "src/components/chatbot/support-index.json")
+const ROUTES_OUT = join(ROOT, "src/components/chatbot/support-routes.json")
 const MANIFEST = JSON.parse(
   readFileSync(join(ROOT, "src/components/docs/media-manifest.json"), "utf8")
 )
@@ -141,6 +142,12 @@ for (const slug of order) {
         `${slug}: flow "${flow}" has no English media (falls back to Arabic)`
       )
   }
+  const routes = en.attributes.routes ?? []
+  if (JSON.stringify(routes) !== JSON.stringify(ar.attributes.routes ?? []))
+    fail(`${slug}: en and ar routes differ`)
+  for (const r of routes)
+    if (!/^\/[a-z0-9/-]+$/.test(r) || /^\/(ar|en)(\/|$)/.test(r))
+      fail(`${slug}: route "${r}" must be a dashboard path without the locale`)
   for (const id of en.attributes.media ?? []) {
     if (!MANIFEST[id])
       fail(`${slug}: media id "${id}" is not in media-manifest.json`)
@@ -167,6 +174,7 @@ for (const slug of order) {
     ],
     guide: en.attributes.guide ?? `/docs/support/${slug}`,
     ...(en.attributes.sales ? { sales: true } : {}),
+    ...(routes.length ? { routes } : {}),
   }
   topics.push(topic)
 }
@@ -181,9 +189,20 @@ if (errors.length) {
 }
 
 const json = JSON.stringify(topics, null, 2) + "\n"
+// The page → guide map the chat panel reads in the browser: a few hundred
+// bytes, where the full index (every answer) stays on the server.
+const routesJson =
+  JSON.stringify(
+    topics
+      .filter((t) => t.routes)
+      .map((t) => ({ slug: t.slug, routes: t.routes, roles: t.roles, title: t.title })),
+    null,
+    2
+  ) + "\n"
 if (process.argv.includes("--check")) {
   const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : ""
-  if (current !== json) {
+  const currentRoutes = existsSync(ROUTES_OUT) ? readFileSync(ROUTES_OUT, "utf8") : ""
+  if (current !== json || currentRoutes !== routesJson) {
     console.error(
       "✗ support-index.json is out of date — run: node scripts/build-support-index.mjs"
     )
@@ -192,6 +211,7 @@ if (process.argv.includes("--check")) {
   console.log(`✓ support index up to date (${topics.length} guides)`)
 } else {
   writeFileSync(OUT, json)
+  writeFileSync(ROUTES_OUT, routesJson)
   console.log(
     `✓ support index: ${topics.length} guides → ${OUT.replace(ROOT, "")}`
   )

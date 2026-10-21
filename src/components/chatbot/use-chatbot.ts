@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { loadChat } from "./actions"
+import { loadChat, markEscalated, rateMessage } from "./actions"
 import type { SystemPromptType } from "./prompts"
 import { readEvents } from "./sse"
 import type { ChatMessage, ChatResource, ChatStatus } from "./type"
@@ -176,6 +176,7 @@ export function useChatbot({
             message: question,
             threadId: threadRef.current ?? undefined,
             retryOf,
+            pathname: window.location.pathname,
             promptType,
             subdomain,
             locale,
@@ -313,6 +314,20 @@ export function useChatbot({
     void run(all[lastUser]!.content, failed?.serverId)
   }, [run])
 
+  /** Their verdict on an answer — shown at once, saved behind. */
+  const rate = useCallback((messageId: string, value: 1 | -1) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.serverId === messageId ? { ...m, feedback: value } : m))
+    )
+    void rateMessage({ messageId, value }).catch(() => {})
+  }, [])
+
+  /** They took a next step out of the chat. */
+  const escalate = useCallback(() => {
+    const id = threadRef.current
+    if (id) void markEscalated({ threadId: id }).catch(() => {})
+  }, [])
+
   const newChat = useCallback(() => {
     controller.current?.abort()
     messagesRef.current = []
@@ -332,5 +347,7 @@ export function useChatbot({
     retry,
     newChat,
     openThread,
+    rate,
+    escalate,
   }
 }

@@ -48,6 +48,12 @@ const bodySchema = z
     message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
     threadId: z.string().min(1).max(64).optional(),
     retryOf: z.string().min(1).max(64).optional(),
+    /** The page they asked from — the panel stays put across pages. */
+    pathname: z
+      .string()
+      .max(200)
+      .regex(/^\/[^\s?#]*$/)
+      .optional(),
     promptType: z
       .enum(["saasMarketing", "schoolSite", "schoolSupport"])
       .default("saasMarketing"),

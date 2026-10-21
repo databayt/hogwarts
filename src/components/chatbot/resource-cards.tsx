@@ -14,6 +14,8 @@ interface ResourceCardsProps {
   dictionary: ChatbotDictionary
   /** Closes the chat when the visitor follows an in-site link. */
   onNavigate: () => void
+  /** Keep the panel open when they open the page an answer is about. */
+  keepOpenOnPage?: boolean
   /** Page language — picks the caption track and alt text. */
   lang?: "ar" | "en"
 }
@@ -35,11 +37,16 @@ export function ResourceCards({
   resources,
   dictionary,
   onNavigate,
+  keepOpenOnPage = false,
   lang = "ar",
 }: ResourceCardsProps) {
   const video = resources.find((r) => r.kind === "video")
   const images = resources.filter((r) => r.kind === "image")
   const guide = resources.find((r) => r.kind === "guide")
+  const page = resources.find((r) => r.kind === "page")
+  // The desk's help center is on the main domain: opening it in this tab
+  // would leave the school site, so it opens beside it.
+  const away = Boolean(guide && /^https?:\/\//.test(guide.href))
   const [playing, setPlaying] = useState(false)
   const [open, setOpen] = useState<number | null>(null)
   const shown = open === null ? undefined : images[open]
@@ -137,10 +144,39 @@ export function ResourceCards({
         </div>
       )}
 
+      {page && (
+        <Link
+          href={page.href}
+          // On a wide screen the panel stays open beside the page, so the
+          // steps are there while they follow them.
+          onClick={keepOpenOnPage ? undefined : onNavigate}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 me-1.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="rtl:-scale-x-100"
+          >
+            <path d="M7 17 17 7" />
+            <path d="M7 7h10v10" />
+          </svg>
+          <span>{page.title}</span>
+        </Link>
+      )}
+
       {guide && (
         <Link
           href={guide.href}
-          onClick={onNavigate}
+          {...(away
+            ? { target: "_blank", rel: "noopener noreferrer" }
+            : { onClick: onNavigate })}
           className="border-primary/30 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
         >
           <svg

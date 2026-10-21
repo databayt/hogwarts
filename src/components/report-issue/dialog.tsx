@@ -165,6 +165,20 @@ export function ReportIssueDialog({
   const [sentBody, setSentBody] = React.useState("")
   const cooldownActive = useCooldown(cooldownUntil)
 
+  // The chatbot's "Report a problem" opens this with the member's own
+  // question to edit — never the chat: reports land in a public repo.
+  // (hogwarts only: this dialog diverged from kun's on purpose.)
+  React.useEffect(() => {
+    const onOpen = (event: Event) => {
+      const text = (event as CustomEvent<{ description?: string }>).detail
+        ?.description
+      if (typeof text === "string") setDescription(text.slice(0, 2000))
+      setOpen(true)
+    }
+    window.addEventListener("open-report-issue", onOpen)
+    return () => window.removeEventListener("open-report-issue", onOpen)
+  }, [])
+
   const trimmed = description.trim()
   const charCount = trimmed.length
   const tokenCount = React.useMemo(

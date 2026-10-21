@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ArrowDown } from "lucide-react"
 
+import { Feedback, type NextStep } from "./feedback"
 import { MessageRow } from "./message"
 import type { QuickAsk } from "./starters"
 import type {
@@ -11,6 +12,7 @@ import type {
   ChatMessage,
   ChatStatus,
   CtaChip,
+  PromptType,
 } from "./type"
 import { useStickToBottom } from "./use-stick-to-bottom"
 
@@ -32,6 +34,10 @@ export function MessageList({
   onAsk,
   onRetry,
   onNavigate,
+  keepOpenOnPage,
+  promptType,
+  onRate,
+  onStep,
 }: {
   messages: ChatMessage[]
   status: ChatStatus
@@ -43,6 +49,10 @@ export function MessageList({
   onAsk: (question: string) => void
   onRetry: () => void
   onNavigate: () => void
+  keepOpenOnPage: boolean
+  promptType: PromptType
+  onRate: (messageId: string, value: 1 | -1) => void
+  onStep: (step: NextStep) => void
 }) {
   const busy = status === "waiting" || status === "streaming"
   const last = messages.at(-1)
@@ -94,7 +104,7 @@ export function MessageList({
           <div className="space-y-4">
             {messages.map((m, i) => {
               const latest = i === messages.length - 1
-              return (
+              const row = (
                 <MessageRow
                   key={m.id}
                   message={m}
@@ -112,7 +122,28 @@ export function MessageList({
                       : undefined
                   }
                   onNavigate={onNavigate}
+                  keepOpenOnPage={keepOpenOnPage}
                 />
+              )
+              const rateable =
+                latest &&
+                !busy &&
+                m.role === "assistant" &&
+                m.kind !== "error" &&
+                m.content.trim()
+              return rateable ? (
+                <div key={m.id} className="space-y-2">
+                  {row}
+                  <Feedback
+                    message={m}
+                    dictionary={dictionary}
+                    promptType={promptType}
+                    onRate={onRate}
+                    onStep={onStep}
+                  />
+                </div>
+              ) : (
+                row
               )
             })}
           </div>

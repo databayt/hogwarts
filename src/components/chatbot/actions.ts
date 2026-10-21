@@ -106,6 +106,7 @@ export async function loadChat(input: {
           : undefined,
         partial: m.partial || stuck || undefined,
         notice: m.partial || stuck ? chatbot.answerCutOff : undefined,
+        feedback: m.feedback === 1 || m.feedback === -1 ? m.feedback : undefined,
       }
     }),
   }
@@ -169,4 +170,64 @@ export async function deleteAllChats(input: { mode: string }): Promise<number> {
 export async function forgetDevice(): Promise<boolean> {
   const { tenant } = await viewer()
   return forgetVisitor(tenant)
+}
+
+/**
+ * "Helpful" / "Not helpful" on an answer — theirs only. Helpful closes the
+ * conversation as resolved; both feed the review of unanswered questions
+ * (scripts/chatbot/review-feedback.ts).
+ */
+export async function rateMessage(input: {
+  messageId: string
+  value: number
+}): Promise<boolean> {
+  const parsed = z
+    .object({ messageId: id, value: z.union([z.literal(1), z.literal(-1)]) })
+    .safeParse(input)
+  if (!parsed.success) return false
+  const { profile } = await viewer()
+  if (!profile) return false
+  const message = await db.chatbotMessage.findFirst({
+    where: {
+      id: parsed.data.messageId,
+      schoolId: profile.schoolId,
+      role: "ASSISTANT",
+      thread: { profileId: profile.id },
+    },
+    select: { id: true, threadId: true },
+  })
+  if (!message) return false
+  await db.chatbotMessage.updateMany({
+    where: { id: message.id, schoolId: profile.schoolId },
+    data: { feedback: parsed.data.value },
+  })
+  if (parsed.data.value === 1)
+    await db.chatbotThread.updateMany({
+      where: {
+        id: message.threadId,
+        profileId: profile.id,
+        schoolId: profile.schoolId,
+      },
+      data: { status: "RESOLVED" },
+    })
+  return true
+}
+
+/** They took a next step out of the chat (a report, the school, our team). */
+export async function markEscalated(input: {
+  threadId: string
+}): Promise<boolean> {
+  const parsed = z.object({ threadId: id }).safeParse(input)
+  if (!parsed.success) return false
+  const { profile } = await viewer()
+  if (!profile) return false
+  const { count } = await db.chatbotThread.updateMany({
+    where: {
+      id: parsed.data.threadId,
+      profileId: profile.id,
+      schoolId: profile.schoolId,
+    },
+    data: { status: "ESCALATED", escalatedAt: new Date() },
+  })
+  return count > 0
 }

@@ -40,6 +40,8 @@ export interface SupportTopic {
   sales?: boolean
   /** The audiences the guide serves — also its docs sidebar groups. */
   roles?: SupportRole[]
+  /** The dashboard pages it is about, without the locale (`/attendance`). */
+  routes?: string[]
 }
 
 export const SUPPORT_TOPICS = supportIndex as SupportTopic[]

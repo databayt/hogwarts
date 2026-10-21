@@ -65,6 +65,8 @@ export function contextBlock(ctx: {
   school?: string
   /** The keyword matcher's best guide — a hint, not a rule. */
   guess?: string
+  /** The guide about the page they are on — "how do I do this here?". */
+  page?: string
   /** The sales bot's contact-ask state, worded by `askState`. */
   extra?: string
 }): string {
@@ -83,6 +85,7 @@ export function contextBlock(ctx: {
     ctx.role && `role: ${escape(ctx.role)}`,
     ctx.school && `school: ${escape(ctx.school)}`,
     ctx.guess && `likely guide (a hint): ${ctx.guess}`,
+    ctx.page && `they are on the page of the guide: ${ctx.page}`,
   ].filter(Boolean)
   return `<context>\n${lines.join("\n")}\n</context>${ctx.extra ?? ""}`
 }

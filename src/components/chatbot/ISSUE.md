@@ -5,6 +5,15 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot — issues
 
+## Done 2026-10-21 — fewer taps (phase 5)
+
+- Page-aware first quick ask and answers (`routes:` on 15 guides).
+- "Open <page>" card on the desk; help-center links open in a new tab.
+- 👍/👎 → resolved / one-tap next steps; Report prefilled with the question
+  only (verified in the browser: dialog opened, thread ESCALATED, -1 saved).
+- `review-feedback.ts`. Claude's `[[choose:…]]` emits a `choices` event —
+  the chips UI for it is still owed.
+
 ## Done 2026-10-21 — the Claude lane, dark (phase 3)
 
 - Claude Haiku 5.5 behind `CHATBOT_CLAUDE_ENABLED`, its own key, a ledger
@@ -91,8 +100,8 @@ Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 3–6
   guide steps meanwhile. The Claude lane is built (phase 3); it waits on
   Abdout's key (`cf-hogwarts-CHATBOT_ANTHROPIC_API_KEY`), then the smoke run
   and the eval, then `CHATBOT_CLAUDE_ENABLED=1`.
-- Learned notes and recall (phase 4); page-aware answers, feedback, next steps
-  (phase 5).
+- Learned notes and recall (phase 4) — needs the Claude lane on.
+- Choice chips for Claude's `[[choose:a,b]]` (the `choices` event is sent, not drawn).
 - Prompt templates still ship in the client dictionary chunk (phase 3 moves
   them server-side).
 - Verify streaming end to end on prod: `curl -N` must show `delta` events

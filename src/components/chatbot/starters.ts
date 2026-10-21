@@ -12,6 +12,8 @@ import { mainOriginFromLocation } from "@/lib/root-domain"
 
 import { CONTACT_EMAIL } from "./constant"
 import { InfoIcon, PriceIcon, ServicesIcon, TimeIcon } from "./icons"
+import { pageGuide } from "./page-guide"
+import routes from "./support-routes.json"
 import type {
   ChatbotDictionary,
   CtaChip,
@@ -30,8 +32,24 @@ export function quickAsks(
   promptType: PromptType,
   dictionary: ChatbotDictionary,
   supportRole: SupportRole = "admin",
-  schoolContext?: SchoolChatbotDisplay | null
+  schoolContext?: SchoolChatbotDisplay | null,
+  where: { pathname?: string | null; locale?: string } = {}
 ): QuickAsk[] {
+  // On the desk, the page they're on leads: its guide is the likeliest
+  // question, one tap away.
+  if (promptType === "schoolSupport") {
+    const page = pageGuide(routes, where.pathname ?? undefined, supportRole)
+    if (page) {
+      const title = page.title[where.locale === "en" ? "en" : "ar"]
+      const lead: QuickAsk = {
+        label: title,
+        question: dictionary.pageQuestion.replace("{title}", title),
+        icon: InfoIcon,
+      }
+      const rest = quickAsks(promptType, dictionary, supportRole, schoolContext)
+      return [lead, ...rest.filter((a) => a.label !== title)].slice(0, 4)
+    }
+  }
   const ask = (key: string, icon: typeof InfoIcon): QuickAsk => ({
     label: dictionary[key] ?? "",
     question: dictionary[`${key}Question`] ?? "",

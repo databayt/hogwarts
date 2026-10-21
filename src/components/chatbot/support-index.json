@@ -160,7 +160,10 @@
       "student login",
       "can't add student"
     ],
-    "guide": "/docs/support/add-student"
+    "guide": "/docs/support/add-student",
+    "routes": [
+      "/students"
+    ]
   },
   {
     "slug": "add-teacher",
@@ -203,7 +206,10 @@
       "register teacher",
       "teacher login"
     ],
-    "guide": "/docs/support/add-teacher"
+    "guide": "/docs/support/add-teacher",
+    "routes": [
+      "/teachers"
+    ]
   },
   {
     "slug": "bulk-student",
@@ -256,7 +262,10 @@
       "import failed",
       "csv error"
     ],
-    "guide": "/docs/support/bulk-student"
+    "guide": "/docs/support/bulk-student",
+    "routes": [
+      "/students"
+    ]
   },
   {
     "slug": "bulk-teacher",
@@ -297,7 +306,10 @@
       "all teachers",
       "import teachers"
     ],
-    "guide": "/docs/support/bulk-teacher"
+    "guide": "/docs/support/bulk-teacher",
+    "routes": [
+      "/teachers"
+    ]
   },
   {
     "slug": "pricing",
@@ -439,7 +451,11 @@
       "overdue",
       "receipt"
     ],
-    "guide": "/docs/support/fees"
+    "guide": "/docs/support/fees",
+    "routes": [
+      "/finance/fees",
+      "/my-fees"
+    ]
   },
   {
     "slug": "academics",
@@ -486,7 +502,11 @@
       "academic structure",
       "curriculum"
     ],
-    "guide": "/docs/support/academics"
+    "guide": "/docs/support/academics",
+    "routes": [
+      "/classrooms",
+      "/subjects"
+    ]
   },
   {
     "slug": "timetable",
@@ -540,7 +560,10 @@
       "live class",
       "join class"
     ],
-    "guide": "/docs/support/timetable"
+    "guide": "/docs/support/timetable",
+    "routes": [
+      "/timetable"
+    ]
   },
   {
     "slug": "live-classes",
@@ -611,7 +634,10 @@
       "my live class",
       "watch my child's class"
     ],
-    "guide": "/docs/support/live-classes"
+    "guide": "/docs/support/live-classes",
+    "routes": [
+      "/live"
+    ]
   },
   {
     "slug": "teach-live",
@@ -672,7 +698,10 @@
       "start my live class",
       "end my live class"
     ],
-    "guide": "/docs/support/teach-live"
+    "guide": "/docs/support/teach-live",
+    "routes": [
+      "/live"
+    ]
   },
   {
     "slug": "holidays",
@@ -776,7 +805,10 @@
       "exam timer",
       "time ran out"
     ],
-    "guide": "/docs/support/exams"
+    "guide": "/docs/support/exams",
+    "routes": [
+      "/exams"
+    ]
   },
   {
     "slug": "quick-checks",
@@ -871,7 +903,11 @@
       "my assignments",
       "set homework"
     ],
-    "guide": "/docs/support/homework"
+    "guide": "/docs/support/homework",
+    "routes": [
+      "/assignments",
+      "/my-assignments"
+    ]
   },
   {
     "slug": "grades",
@@ -925,7 +961,10 @@
       "certificate",
       "rank"
     ],
-    "guide": "/docs/support/grades"
+    "guide": "/docs/support/grades",
+    "routes": [
+      "/grades"
+    ]
   },
   {
     "slug": "attendance",
@@ -982,7 +1021,10 @@
       "online attendance",
       "auto attendance"
     ],
-    "guide": "/docs/support/attendance"
+    "guide": "/docs/support/attendance",
+    "routes": [
+      "/attendance"
+    ]
   },
   {
     "slug": "parents",
@@ -1033,7 +1075,10 @@
       "child live class",
       "online class"
     ],
-    "guide": "/docs/support/parents"
+    "guide": "/docs/support/parents",
+    "routes": [
+      "/parents"
+    ]
   },
   {
     "slug": "login",
@@ -1227,7 +1272,10 @@
       "bell",
       "email notifications"
     ],
-    "guide": "/docs/support/notifications"
+    "guide": "/docs/support/notifications",
+    "routes": [
+      "/notifications"
+    ]
   },
   {
     "slug": "security",

@@ -123,6 +123,27 @@ Claude Haiku 5.5 on the Max plan's included API credits, decided in kun
   `CHATBOT_CLAUDE_ENABLED=1` in the prod env file → push secrets → redeploy.
   Both scripts run with `npx tsx -r dotenv/config -r ./scripts/_server-only-shim.cjs`.
 
+### Fewer taps (2026-10-21)
+
+- **Page-aware**: guides carry `routes:` frontmatter (no locale). The index
+  builder validates them and writes `support-routes.json` (3 KB, client-safe).
+  On a page with a guide, that guide is the first quick ask; the message
+  carries `pathname`, so "how do I do this here?" lands on the page's guide
+  (`page-guide.ts`; on `/live` a teacher gets teach-live, a student
+  live-classes).
+- **Open page**: a desk answer about a page the member may open (and isn't on)
+  gets an "Open …" card; on desktop the panel stays open beside the page.
+  The help-center guide link opens in a new tab when it leaves the school's
+  subdomain.
+- **Feedback** (`feedback.tsx`): 👍/👎 under the latest answer (`rateMessage`,
+  own answers only; 👍 marks the thread RESOLVED). 👎 offers next steps:
+  rephrase · Report a problem (desk — closes the chat and opens the report
+  dialog prefilled with the member's own question only; reports land in the
+  PUBLIC repo) · email support · contact the school · talk to our team.
+  Each marks the thread ESCALATED.
+- **Review**: `scripts/chatbot/review-feedback.ts` lists 👎 and no-guide
+  answers with their questions, grouped — how the guides grow.
+
 ## Structure
 
 ```
@@ -130,6 +151,8 @@ chatbot/
 ├── chatbot.tsx            # Server entry — loads dictionary + school context, renders content
 ├── content.tsx            # Client shell — wires button + panel + useChatbot hook
 ├── actions.ts             # "use server" — the chats sheet's list/load/rename/delete/forget
+├── feedback.tsx           # 👍/👎 and the next steps after 👎
+├── page-guide.ts          # page → guide, shared by server and panel
 ├── chats-menu.tsx         # The menu button + the chats sheet it opens (portals into the panel)
 ├── identity.ts            # server-only — member or hashed-cookie visitor profile, per tenant
 ├── threads.ts             # server-only — startTurn / finishTurn / listThreads / readThread

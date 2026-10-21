@@ -21,6 +21,11 @@ import en from "@/components/internationalization/en.json"
 
 const dict = en.chatbot as unknown as ChatbotDictionary
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/en/dashboard",
+  useRouter: () => ({ push: vi.fn() }),
+}))
+
 vi.mock("@/components/chatbot/actions", () => ({
   listChats: vi.fn(async () => ({
     threads: [
@@ -49,6 +54,8 @@ vi.mock("@/components/chatbot/actions", () => ({
     ],
   })),
   renameChat: vi.fn(async () => true),
+  rateMessage: vi.fn(async () => true),
+  markEscalated: vi.fn(async () => true),
   deleteChat: vi.fn(async () => true),
   deleteAllChats: vi.fn(async () => 0),
   forgetDevice: vi.fn(async () => true),
@@ -76,6 +83,8 @@ function Harness() {
         onNewChat={chat.newChat}
         threadId={chat.state.threadId}
         onOpenThread={chat.openThread}
+        onRate={chat.rate}
+        onEscalate={chat.escalate}
         locale="en"
         dictionary={dict}
         promptType="schoolSupport"
@@ -123,6 +132,8 @@ beforeAll(() => {
 })
 
 beforeEach(() => {
+  // A saved thread id from one test must not be restored into the next.
+  sessionStorage.clear()
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) =>
     setTimeout(() => cb(0), 0)
   )
@@ -239,5 +250,27 @@ describe("chat panel", () => {
       expect(screen.getByText("Fees for grade 5?")).toBeInTheDocument()
     )
     expect(screen.getByText("Fees").tagName).toBe("STRONG")
+  })
+
+  it("turns 'not helpful' into one-tap next steps; a report carries only the question", async () => {
+    const savedMeta = encodeEvent({
+      event: "meta",
+      data: { fallback: "F", threadId: "t9", userMessageId: "u9", assistantMessageId: "a9" },
+    })
+    vi.stubGlobal("fetch", answer([savedMeta, delta("Try this."), done()]))
+    const opened = vi.fn()
+    window.addEventListener("open-report-issue", (e) =>
+      opened((e as CustomEvent).detail)
+    )
+    await openPanel()
+    fireEvent.click(screen.getByText(dict.supportAddStudent))
+    await screen.findByText("Try this.")
+    fireEvent.click(screen.getByRole("button", { name: dict.notHelpful }))
+    fireEvent.click(await screen.findByText(dict.reportProblem))
+    await waitFor(() =>
+      expect(opened).toHaveBeenCalledWith({
+        description: dict.supportAddStudentQuestion,
+      })
+    )
   })
 })

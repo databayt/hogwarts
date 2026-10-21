@@ -10,15 +10,23 @@ import {
   useState,
   useSyncExternalStore,
 } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
 import { ChatsMenu } from "./chats-menu"
+import type { NextStep } from "./feedback"
 import { Composer, type ComposerHandle } from "./composer"
 import { ChatHeader } from "./header"
 import { MessageList } from "./message-list"
-import { ctaChips, panelTitle, quickAsks, welcomeText } from "./starters"
+import {
+  ctaChips,
+  mailHref,
+  panelTitle,
+  quickAsks,
+  welcomeText,
+} from "./starters"
 import type { PanelProps } from "./type"
 import { useVisualViewport } from "./use-visual-viewport"
 
@@ -62,6 +70,8 @@ export const Panel = memo(function Panel({
   onNewChat,
   threadId,
   onOpenThread,
+  onRate,
+  onEscalate,
   locale,
   dictionary,
   promptType,
@@ -76,9 +86,15 @@ export const Panel = memo(function Panel({
   const dir = locale === "ar" ? "rtl" : "ltr"
   const busy = status === "waiting" || status === "streaming"
 
+  const pathname = usePathname()
+  const router = useRouter()
   const asks = useMemo(
-    () => quickAsks(promptType, dictionary, supportRole, schoolContext),
-    [promptType, dictionary, supportRole, schoolContext]
+    () =>
+      quickAsks(promptType, dictionary, supportRole, schoolContext, {
+        pathname,
+        locale,
+      }),
+    [promptType, dictionary, supportRole, schoolContext, pathname, locale]
   )
   const chips = useMemo(
     () => ctaChips(promptType, dictionary, locale, schoolContext),
@@ -88,6 +104,39 @@ export const Panel = memo(function Panel({
   const welcome = welcomeText(promptType, dictionary, locale, schoolContext)
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange])
+
+  /** The next step after "not helpful" — every route out is one tap. */
+  const step = useCallback(
+    (next: NextStep) => {
+      if (next === "rephrase") {
+        composer.current?.focus()
+        return
+      }
+      onEscalate()
+      if (next === "team") {
+        onSend(dictionary.talkToTeamQuestion)
+      } else if (next === "email") {
+        window.location.href = mailHref(dictionary)
+      } else if (next === "school") {
+        close()
+        router.push(`/${locale}/inquiry`)
+      } else {
+        // The report dialog sits under the panel: close it first. Only the
+        // member's own question goes in — reports land in a public repo.
+        const question =
+          [...messages].reverse().find((m) => m.role === "user")?.content ?? ""
+        close()
+        requestAnimationFrame(() =>
+          window.dispatchEvent(
+            new CustomEvent("open-report-issue", {
+              detail: { description: question },
+            })
+          )
+        )
+      }
+    },
+    [onEscalate, onSend, dictionary, close, locale, messages, router]
+  )
   const newChat = useCallback(() => {
     onNewChat()
     composer.current?.focus()
@@ -165,6 +214,10 @@ export const Panel = memo(function Panel({
           onAsk={onSend}
           onRetry={onRetry}
           onNavigate={close}
+          keepOpenOnPage={!phone}
+          promptType={promptType}
+          onRate={onRate}
+          onStep={step}
         />
         <div className="shrink-0 px-3 pt-1 pb-3">
           <Composer

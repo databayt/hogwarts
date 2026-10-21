@@ -20,6 +20,8 @@ export interface ChatMessage {
   partial?: boolean
   /** What to say under a partial answer — localized, from the server. */
   notice?: string
+  /** Their verdict on this answer: 1 helpful, -1 not. */
+  feedback?: 1 | -1
 }
 
 /**
@@ -27,7 +29,8 @@ export interface ChatMessage {
  * the support registry + media-manifest.json, never from LLM output.
  */
 export interface ChatResource {
-  kind: "guide" | "video" | "image"
+  /** `page`: the dashboard page the guide is about, opened in place. */
+  kind: "guide" | "video" | "image" | "page"
   title: string
   /** Guide path (`/${locale}/docs/support/...`) or the full CDN image. */
   href: string
@@ -340,6 +343,10 @@ export interface PanelProps {
   /** The saved conversation on screen, and how to switch to another. */
   threadId: string | null
   onOpenThread: (threadId: string) => Promise<boolean>
+  /** Helpful / not helpful on a saved answer. */
+  onRate: (messageId: string, value: 1 | -1) => void
+  /** They took a next step out of the chat. */
+  onEscalate: () => void
   locale: "en" | "ar"
   dictionary: ChatbotDictionary
   promptType: PromptType

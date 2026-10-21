@@ -254,6 +254,7 @@ export async function readThread(
           content: true,
           topicSlugs: true,
           partial: true,
+          feedback: true,
           createdAt: true,
         },
       },

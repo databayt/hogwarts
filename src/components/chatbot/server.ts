@@ -15,6 +15,7 @@ import { extractIdentifiers } from "@/lib/funnel/identifiers"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { mainOriginForHost } from "@/lib/root-domain"
 import { tenantForHost, type HostTenant } from "@/lib/tenant-host"
+import { isRouteAllowedForRole, type Role } from "@/routes"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
@@ -43,6 +44,7 @@ import {
   type SupportTopic,
 } from "./support"
 import { ASK_RE } from "./stream"
+import { appPath, pageGuide } from "./page-guide"
 import { resourcesFor } from "./support-media"
 import { startTurn } from "./threads"
 import type {
@@ -396,6 +398,8 @@ export interface ChatRequest {
   threadId?: string
   /** Ask the thread's latest question again, replacing this answer. */
   retryOf?: string
+  /** The page they are on (`/ar/attendance`). */
+  pathname?: string
   promptType: SystemPromptType
   subdomain?: string
   locale: string
@@ -538,14 +542,49 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
     // The desk carries a third guide: a signed-in user's question is almost
     // always a how-to, and a near miss costs more than the extra tokens. A
     // member never needs the sales guides (pricing, getting started).
-    const matched = helpIndex
+    // The guide about the page they asked from: on the desk, a question that
+    // names no guide of its own ("how do I do this here?") is about this page.
+    const onPage = desk
+      ? pageGuide(SUPPORT_TOPICS, req.pathname, member?.role)
+      : undefined
+    const keyworded = helpIndex
       ? []
       : matchTopics(texts, desk ? 3 : 2, member?.role, { excludeSales: desk })
+    const matched = !helpIndex && !keyworded.length && onPage ? [onPage] : keyworded
     support = desk || helpIndex || isSupportQuestion(matched)
 
     // The help center lives on the main domain; a school subdomain (the
     // dashboard desk) has no /docs route, so its links carry the origin.
     const origin = desk ? mainOriginForHost(h.get("host")) : ""
+    // A desk answer about a page offers to open it — the member's own role
+    // must be allowed there, and they mustn't be on it already.
+    const userRole = session?.user?.role as Role | undefined
+    const here = req.pathname ? appPath(req.pathname) : ""
+    const pageCard = (topic: SupportTopic): ChatResource[] => {
+      if (!desk || !userRole) return []
+      const route = topic.routes?.find(
+        (r) => here !== r && isRouteAllowedForRole(r, userRole)
+      )
+      if (!route || topic.routes?.some((r) => here === r || here.startsWith(`${r}/`)))
+        return []
+      return [
+        {
+          kind: "page",
+          title: chatbot.openPage.replace("{title}", topic.title[locale]),
+          href: `/${locale}${route}`,
+        },
+      ]
+    }
+    const cardsOf = (topic: SupportTopic): ChatResource[] => [
+      ...resourcesFor(
+        topic,
+        locale,
+        { video: chatbot.resourceVideo, guide: chatbot.resourceGuide },
+        undefined,
+        origin
+      ),
+      ...pageCard(topic),
+    ]
     resources = helpIndex
       ? [
           {
@@ -554,17 +593,7 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
             href: `${origin}/${locale}/docs/support`,
           },
         ]
-      : matched
-          .slice(0, 1)
-          .flatMap((topic) =>
-            resourcesFor(
-              topic,
-              locale,
-              { video: chatbot.resourceVideo, guide: chatbot.resourceGuide },
-              undefined,
-              origin
-            )
-          )
+      : matched.slice(0, 1).flatMap(cardsOf)
     // When the model can't answer (an outage, the free tier's daily token
     // cap), a matched guide still can: its own steps ARE the answer the model
     // would have given. Only with no guide does the visitor get the apology.
@@ -606,10 +635,9 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       member,
     })
 
-    const labels = { video: chatbot.resourceVideo, guide: chatbot.resourceGuide }
     const cardsFor = (slug: string) => {
       const topic = SUPPORT_TOPICS.find((t) => t.slug === slug)
-      return topic ? resourcesFor(topic, locale, labels, undefined, origin) : []
+      return topic ? cardsOf(topic) : []
     }
     const claude = claudeEnabled()
       ? {
@@ -625,7 +653,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
               lang: locale,
               role: member ? (chatbot[member.roleKey] ?? chatbot.roleStaff) : undefined,
               school: member?.schoolName ?? undefined,
-              guess: matched[0]?.slug,
+              guess: keyworded[0]?.slug,
+              page: onPage?.slug,
               extra: helps && !desk ? askState(messages, locale, support) : "",
             }),
           ] as [string, string, string],

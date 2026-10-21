@@ -40,6 +40,9 @@ const schema = frontmatterSchema.extend({
   sales: z.boolean().optional(),
   guide: z.string().optional(),
   answer: z.string().optional(),
+  // The dashboard pages this guide is about (no locale): the chatbot leads
+  // with this guide on these pages and offers to open them.
+  routes: z.array(z.string()).optional(),
 })
 
 export const docs = defineDocs({

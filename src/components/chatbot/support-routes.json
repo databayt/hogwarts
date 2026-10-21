@@ -1,0 +1,216 @@
+[
+  {
+    "slug": "add-student",
+    "routes": [
+      "/students"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إضافة طالب",
+      "en": "Add a student"
+    }
+  },
+  {
+    "slug": "add-teacher",
+    "routes": [
+      "/teachers"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إضافة معلم",
+      "en": "Add a teacher"
+    }
+  },
+  {
+    "slug": "bulk-student",
+    "routes": [
+      "/students"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إدخال الطلاب جماعيًا",
+      "en": "Bulk-import students"
+    }
+  },
+  {
+    "slug": "bulk-teacher",
+    "routes": [
+      "/teachers"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "إدخال المعلمين جماعيًا",
+      "en": "Bulk-import teachers"
+    }
+  },
+  {
+    "slug": "fees",
+    "routes": [
+      "/finance/fees",
+      "/my-fees"
+    ],
+    "roles": [
+      "admin",
+      "parent"
+    ],
+    "title": {
+      "ar": "الرسوم والفواتير",
+      "en": "Fees and invoices"
+    }
+  },
+  {
+    "slug": "academics",
+    "routes": [
+      "/classrooms",
+      "/subjects"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "الإعداد الأكاديمي",
+      "en": "Academic setup"
+    }
+  },
+  {
+    "slug": "timetable",
+    "routes": [
+      "/timetable"
+    ],
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الجدول الدراسي",
+      "en": "Timetable"
+    }
+  },
+  {
+    "slug": "live-classes",
+    "routes": [
+      "/live"
+    ],
+    "roles": [
+      "student",
+      "parent",
+      "teacher"
+    ],
+    "title": {
+      "ar": "الانضمام إلى حصة مباشرة",
+      "en": "Join a live class"
+    }
+  },
+  {
+    "slug": "teach-live",
+    "routes": [
+      "/live"
+    ],
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "تقديم حصة مباشرة",
+      "en": "Teach a live class"
+    }
+  },
+  {
+    "slug": "exams",
+    "routes": [
+      "/exams"
+    ],
+    "roles": [
+      "admin",
+      "teacher"
+    ],
+    "title": {
+      "ar": "الاختبارات",
+      "en": "Exams"
+    }
+  },
+  {
+    "slug": "homework",
+    "routes": [
+      "/assignments",
+      "/my-assignments"
+    ],
+    "roles": [
+      "student",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الواجبات",
+      "en": "Homework"
+    }
+  },
+  {
+    "slug": "grades",
+    "routes": [
+      "/grades"
+    ],
+    "roles": [
+      "admin",
+      "teacher",
+      "parent"
+    ],
+    "title": {
+      "ar": "الدرجات وبطاقات التقارير",
+      "en": "Grades and report cards"
+    }
+  },
+  {
+    "slug": "attendance",
+    "routes": [
+      "/attendance"
+    ],
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "الحضور والغياب",
+      "en": "Attendance"
+    }
+  },
+  {
+    "slug": "parents",
+    "routes": [
+      "/parents"
+    ],
+    "roles": [
+      "parent",
+      "admin"
+    ],
+    "title": {
+      "ar": "أولياء الأمور",
+      "en": "Parents"
+    }
+  },
+  {
+    "slug": "notifications",
+    "routes": [
+      "/notifications"
+    ],
+    "roles": [
+      "student",
+      "parent",
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "الإشعارات",
+      "en": "Notifications"
+    }
+  }
+]

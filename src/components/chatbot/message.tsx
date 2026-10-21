@@ -31,6 +31,7 @@ export const MessageRow = memo(function MessageRow({
   chips,
   onRetry,
   onNavigate,
+  keepOpenOnPage,
 }: {
   message: ChatMessage
   dictionary: ChatbotDictionary
@@ -42,6 +43,7 @@ export const MessageRow = memo(function MessageRow({
   /** Only on the latest answer, when it failed or broke off. */
   onRetry?: () => void
   onNavigate: () => void
+  keepOpenOnPage?: boolean
 }) {
   if (message.role === "user") {
     return (
@@ -100,6 +102,7 @@ export const MessageRow = memo(function MessageRow({
           resources={message.resources}
           dictionary={dictionary}
           onNavigate={onNavigate}
+          keepOpenOnPage={keepOpenOnPage}
           lang={locale}
         />
       ) : null}
