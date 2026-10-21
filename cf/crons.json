@@ -27,6 +27,7 @@
     "0 2 * * *": [
       "/api/cron/cleanup-notifications",
       "/api/cron/purge-empty-drafts",
+      "/api/cron/chatbot-retention",
       "/api/cron/expire-live-recordings"
     ],
     "0 8 * * *": [

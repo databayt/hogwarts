@@ -2,11 +2,19 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo, useCallback, useMemo, useRef, useSyncExternalStore } from "react"
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+import { ChatsMenu } from "./chats-menu"
 import { Composer, type ComposerHandle } from "./composer"
 import { ChatHeader } from "./header"
 import { MessageList } from "./message-list"
@@ -52,6 +60,8 @@ export const Panel = memo(function Panel({
   onStop,
   onRetry,
   onNewChat,
+  threadId,
+  onOpenThread,
   locale,
   dictionary,
   promptType,
@@ -59,6 +69,8 @@ export const Panel = memo(function Panel({
   supportRole,
 }: PanelProps) {
   const phone = usePhone()
+  // The chats sheet portals into the panel itself, so it needs the element.
+  const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null)
   const frame = useVisualViewport(open && phone)
   const composer = useRef<ComposerHandle>(null)
   const dir = locale === "ar" ? "rtl" : "ltr"
@@ -84,6 +96,7 @@ export const Panel = memo(function Panel({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} modal={phone}>
       <DialogPrimitive.Content
+        ref={setPanelEl}
         data-chatbot-panel
         dir={dir}
         onInteractOutside={(e) => {
@@ -119,6 +132,19 @@ export const Panel = memo(function Panel({
       >
         <ChatHeader
           title={title}
+          start={
+            <ChatsMenu
+              container={panelEl}
+              dir={dir}
+              locale={locale}
+              mode={promptType}
+              dictionary={dictionary}
+              currentThreadId={threadId}
+              onSelect={(id) => void onOpenThread(id)}
+              onNewChat={newChat}
+              onCurrentGone={onNewChat}
+            />
+          }
           showNewChat={messages.length > 0}
           onNewChat={newChat}
           onClose={close}

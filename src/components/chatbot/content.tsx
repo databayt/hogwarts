@@ -65,6 +65,7 @@ export const ChatbotContent = forwardRef<
       stop,
       retry,
       newChat,
+      openThread,
     } = useChatbot({
       promptType,
       subdomain,
@@ -131,6 +132,8 @@ export const ChatbotContent = forwardRef<
           onStop={stop}
           onRetry={retry}
           onNewChat={newChat}
+          threadId={state.threadId}
+          onOpenThread={openThread}
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
           promptType={promptType}

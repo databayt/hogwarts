@@ -21,6 +21,39 @@ import en from "@/components/internationalization/en.json"
 
 const dict = en.chatbot as unknown as ChatbotDictionary
 
+vi.mock("@/components/chatbot/actions", () => ({
+  listChats: vi.fn(async () => ({
+    threads: [
+      {
+        id: "t1",
+        title: "Fees for grade 5",
+        status: "OPEN",
+        lastMessageAt: new Date().toISOString(),
+      },
+      {
+        id: "t2",
+        title: "Add a teacher",
+        status: "RESOLVED",
+        lastMessageAt: new Date(Date.now() - 9 * 864e5).toISOString(),
+      },
+    ],
+    nextCursor: null,
+    visitor: false,
+  })),
+  loadChat: vi.fn(async () => ({
+    id: "t1",
+    title: "Fees for grade 5",
+    messages: [
+      { id: "m1", role: "user", content: "Fees for grade 5?" },
+      { id: "m2", serverId: "m2", role: "assistant", content: "Open **Fees**." },
+    ],
+  })),
+  renameChat: vi.fn(async () => true),
+  deleteChat: vi.fn(async () => true),
+  deleteAllChats: vi.fn(async () => 0),
+  forgetDevice: vi.fn(async () => true),
+}))
+
 function Harness() {
   const chat = useChatbot({
     promptType: "schoolSupport",
@@ -41,6 +74,8 @@ function Harness() {
         onStop={chat.stop}
         onRetry={chat.retry}
         onNewChat={chat.newChat}
+        threadId={chat.state.threadId}
+        onOpenThread={chat.openThread}
         locale="en"
         dictionary={dict}
         promptType="schoolSupport"
@@ -189,5 +224,20 @@ describe("chat panel", () => {
     fireEvent.click(screen.getByRole("button", { name: dict.newChat }))
     expect(screen.queryByText("An answer")).toBeNull()
     expect(screen.getByText(dict.welcomeSupport)).toBeInTheDocument()
+  })
+
+  it("opens the chats sheet inside the panel and switches to a saved chat", async () => {
+    const dialog = await openPanel()
+    fireEvent.click(screen.getByRole("button", { name: dict.menuChats }))
+    const sheet = await screen.findByRole("dialog", { name: dict.menuChats })
+    expect(dialog.contains(sheet)).toBe(true)
+    expect(await screen.findByText("Fees for grade 5")).toBeInTheDocument()
+    expect(screen.getByText(dict.groupToday)).toBeInTheDocument()
+    expect(screen.getByText(dict.groupOlder)).toBeInTheDocument()
+    fireEvent.click(screen.getByText("Fees for grade 5"))
+    await waitFor(() =>
+      expect(screen.getByText("Fees for grade 5?")).toBeInTheDocument()
+    )
+    expect(screen.getByText("Fees").tagName).toBe("STRONG")
   })
 })

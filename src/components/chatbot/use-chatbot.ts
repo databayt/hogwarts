@@ -4,13 +4,20 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { CHAT_HISTORY_TURNS } from "./constant"
+import { loadChat } from "./actions"
 import type { SystemPromptType } from "./prompts"
 import { readEvents } from "./sse"
 import type { ChatMessage, ChatResource, ChatStatus } from "./type"
 
 /** A failure the server already worded for the visitor. */
-class ChatError extends Error {}
+class ChatError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message)
+  }
+}
 
 interface UseChatbotOptions {
   promptType?: SystemPromptType
@@ -25,11 +32,34 @@ const newId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
+/** The open conversation, per tab and per bot — survives a reload. */
+const storageKey = (promptType: string) => `bq-chat:${promptType}`
+
+function readStored(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeStored(key: string, value: string | null) {
+  try {
+    if (value) sessionStorage.setItem(key, value)
+    else sessionStorage.removeItem(key)
+  } catch {
+    /* private mode: the chat just won't come back after a reload */
+  }
+}
+
 /**
- * The chat's client state. One request at a time, cancellable: Stop aborts
- * the fetch, the server sees the disconnect and stops the model, and what
- * already arrived stays as a partial answer. Streamed pieces are painted
- * once per animation frame, not once per piece.
+ * The chat's client state. The conversation lives on the server: this sends
+ * one question and the thread it belongs to, and keeps the thread's id for
+ * the tab, so a reload (or a page change that remounts the bot) brings the
+ * chat back. One request at a time, cancellable: Stop aborts the fetch, the
+ * server sees the disconnect and stops the model, and what already arrived
+ * stays — on screen and in the thread — as a partial answer. Streamed pieces
+ * are painted once per animation frame, not once per piece.
  */
 export function useChatbot({
   promptType = "saasMarketing",
@@ -40,28 +70,75 @@ export function useChatbot({
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [status, setStatus] = useState<ChatStatus>("idle")
+  const [threadId, setThreadIdState] = useState<string | null>(null)
   const messagesRef = useRef<ChatMessage[]>([])
+  const threadRef = useRef<string | null>(null)
   const controller = useRef<AbortController | null>(null)
+  const restored = useRef(false)
+  const key = storageKey(promptType)
 
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
 
+  const setThread = useCallback(
+    (id: string | null) => {
+      threadRef.current = id
+      setThreadIdState(id)
+      writeStored(key, id)
+    },
+    [key]
+  )
+
   // Leaving the page (or the layout that mounts the bot) ends the request.
   useEffect(() => () => controller.current?.abort(), [])
+
+  /** Show a saved conversation. False when it is gone (deleted, purged). */
+  const openThread = useCallback(
+    async (id: string): Promise<boolean> => {
+      controller.current?.abort()
+      const thread = await loadChat({
+        mode: promptType,
+        threadId: id,
+        locale,
+      }).catch(() => null)
+      if (!thread) return false
+      messagesRef.current = thread.messages
+      setMessages(thread.messages)
+      setThread(thread.id)
+      setStatus("idle")
+      return true
+    },
+    [promptType, locale, setThread]
+  )
+
+  // The first open in this tab brings back the chat it was in.
+  useEffect(() => {
+    if (!isOpen || restored.current) return
+    restored.current = true
+    const stored = readStored(key)
+    if (stored && !messagesRef.current.length)
+      void openThread(stored).then((ok) => {
+        if (!ok) writeStored(key, null)
+      })
+  }, [isOpen, key, openThread])
 
   const toggleChat = useCallback(() => setIsOpen((prev) => !prev), [])
   const openChat = useCallback(() => setIsOpen(true), [])
   const closeChat = useCallback(() => setIsOpen(false), [])
 
-  /** Ask the server about `history` (which ends with the user's message). */
+  /**
+   * Ask `question` in the open thread. With `retryOf`, the server replaces
+   * that saved answer instead of saving the question twice.
+   */
   const run = useCallback(
-    async (history: ChatMessage[]) => {
+    async (question: string, retryOf?: string, again = false) => {
       controller.current?.abort()
       const abort = new AbortController()
       controller.current = abort
 
       const id = newId()
+      let serverId: string | undefined
       let content = ""
       let resources: ChatResource[] | undefined
       let partial = false
@@ -71,6 +148,7 @@ export function useChatbot({
         frame = 0
         const next: ChatMessage = {
           id,
+          serverId,
           role: "assistant",
           content,
           resources,
@@ -91,23 +169,13 @@ export function useChatbot({
       setStatus("waiting")
       paint() // the empty answer bubble — the typing dots live in it
       try {
-        // Only the window the server reads; older turns stay on screen. A
-        // failure bubble is ours, not the assistant's — it never goes back.
-        const sent = history
-          .filter(
-            (m) =>
-              (m.role === "user" || m.role === "assistant") &&
-              m.kind !== "error" &&
-              m.content.trim()
-          )
-          .slice(-CHAT_HISTORY_TURNS)
-          .map((m) => ({ role: m.role, content: m.content }))
-
         const res = await fetch("/api/chatbot", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            messages: sent,
+            message: question,
+            threadId: threadRef.current ?? undefined,
+            retryOf,
             promptType,
             subdomain,
             locale,
@@ -120,11 +188,27 @@ export function useChatbot({
           const body = (await res.json().catch(() => ({}))) as {
             error?: string
           }
-          throw new ChatError(body.error || errorText)
+          throw new ChatError(body.error || errorText, res.status)
         }
 
         for await (const event of readEvents(res.body)) {
-          if (event.event === "resources") {
+          if (event.event === "meta") {
+            if (event.data.threadId) setThread(event.data.threadId)
+            serverId = event.data.assistantMessageId
+            const userId = event.data.userMessageId
+            if (userId)
+              setMessages((prev) => {
+                // The question just asked is the last one without a saved id.
+                const at = prev.findLastIndex(
+                  (m) => m.role === "user" && !m.serverId
+                )
+                return at === -1
+                  ? prev
+                  : prev.map((m, i) =>
+                      i === at ? { ...m, serverId: userId } : m
+                    )
+              })
+          } else if (event.event === "resources") {
             resources = event.data.resources
             schedule()
           } else if (event.event === "delta") {
@@ -149,7 +233,9 @@ export function useChatbot({
           if (content) {
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === id ? { ...m, content, resources, partial: true } : m
+                m.id === id
+                  ? { ...m, serverId, content, resources, partial: true }
+                  : m
               )
             )
           } else {
@@ -157,6 +243,14 @@ export function useChatbot({
           }
           if (controller.current === abort) setStatus("idle")
           return
+        }
+        if (err instanceof ChatError && err.status === 404 && !again) {
+          // The saved chat is gone (deleted elsewhere, purged): this
+          // question starts a new one.
+          setMessages((prev) => prev.filter((m) => m.id !== id))
+          setThread(null)
+          if (controller.current === abort) controller.current = null
+          return run(question, undefined, true)
         }
         if (!(err instanceof ChatError)) console.error("Chat error:", err)
         if (content) {
@@ -170,7 +264,9 @@ export function useChatbot({
           const bubble = err instanceof ChatError ? err.message : errorText
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === id ? { ...m, kind: "error", content: bubble } : m
+              m.id === id
+                ? { ...m, serverId, kind: "error", content: bubble }
+                : m
             )
           )
         }
@@ -179,7 +275,7 @@ export function useChatbot({
         if (controller.current === abort) controller.current = null
       }
     },
-    [promptType, subdomain, locale, errorText]
+    [promptType, subdomain, locale, errorText, setThread]
   )
 
   const sendMessage = useCallback(
@@ -194,7 +290,7 @@ export function useChatbot({
       const history = [...messagesRef.current, user]
       messagesRef.current = history
       setMessages(history)
-      void run(history)
+      void run(content)
     },
     [run]
   )
@@ -205,28 +301,28 @@ export function useChatbot({
   const retry = useCallback(() => {
     if (controller.current) return
     const all = messagesRef.current
-    let lastUser = -1
-    for (let i = all.length - 1; i >= 0; i--)
-      if (all[i]!.role === "user") {
-        lastUser = i
-        break
-      }
+    const lastUser = all.findLastIndex((m) => m.role === "user")
     if (lastUser === -1) return
+    // The saved answer to replace, if the server got as far as saving one.
+    const failed = all
+      .slice(lastUser + 1)
+      .findLast((m) => m.role === "assistant")
     const history = all.slice(0, lastUser + 1)
     messagesRef.current = history
     setMessages(history)
-    void run(history)
+    void run(all[lastUser]!.content, failed?.serverId)
   }, [run])
 
   const newChat = useCallback(() => {
     controller.current?.abort()
     messagesRef.current = []
     setMessages([])
+    setThread(null)
     setStatus("idle")
-  }, [])
+  }, [setThread])
 
   return {
-    state: { isOpen, messages, status },
+    state: { isOpen, messages, status, threadId },
     setOpen: setIsOpen,
     toggleChat,
     openChat,
@@ -235,5 +331,6 @@ export function useChatbot({
     stop,
     retry,
     newChat,
+    openThread,
   }
 }

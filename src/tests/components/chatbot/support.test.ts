@@ -392,3 +392,17 @@ describe("matchTopics — term-only floor and the desk", () => {
     expect(desk("كيف ادفع الرسوم", "parent")[0]).toBe("fees")
   })
 })
+
+describe("matchTopics — a new question is about itself", () => {
+  it("doesn't let the previous question outvote the new one", () => {
+    expect(
+      matchTopics(["كيف أسجل الحضور؟", "كيف أضيف طالب جديد؟"], 3, "admin", {
+        excludeSales: true,
+      })[0]?.slug
+    ).toBe("attendance")
+    expect(
+      matchTopics(["how do I mark attendance", "how do I add a student"])[0]
+        ?.slug
+    ).toBe("attendance")
+  })
+})

@@ -7,6 +7,8 @@ import type { SchoolChatbotContext } from "./prompts"
 
 export interface ChatMessage {
   id: string
+  /** The saved row's id, once the server has it (what Retry names). */
+  serverId?: string
   role: "user" | "assistant" | "system"
   content: string
   timestamp?: Date
@@ -61,6 +63,8 @@ export interface ChatbotState {
   isOpen: boolean
   messages: ChatMessage[]
   status: ChatStatus
+  /** The saved conversation on screen; null for a new one. */
+  threadId: string | null
 }
 
 export interface ChatbotTheme {
@@ -280,6 +284,15 @@ export interface SchoolChatbotDisplay extends SchoolChatbotContext {
  * One CTA chip rendered below the most recent assistant message.
  * Computed client-side from `promptType` + school context — never from LLM output.
  */
+/** One row of the chats sheet. */
+export interface ChatSummary {
+  id: string
+  title: string
+  status: "OPEN" | "RESOLVED" | "ESCALATED"
+  /** ISO time of the newest message. */
+  lastMessageAt: string
+}
+
 export interface CtaChip {
   label: string
   href: string
@@ -324,6 +337,9 @@ export interface PanelProps {
   onStop: () => void
   onRetry: () => void
   onNewChat: () => void
+  /** The saved conversation on screen, and how to switch to another. */
+  threadId: string | null
+  onOpenThread: (threadId: string) => Promise<boolean>
   locale: "en" | "ar"
   dictionary: ChatbotDictionary
   promptType: PromptType

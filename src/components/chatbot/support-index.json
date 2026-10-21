@@ -1293,8 +1293,8 @@
       "en": "The chat assistant: what to ask, the videos and screenshots it attaches"
     },
     "answer": {
-      "ar": "1. اضغط زر المساعد الدائري في أسفل أي صفحة.\n2. اختر أحد الأسئلة المقترحة أو اكتب سؤالك بالعربية أو الإنجليزية.\n3. تظهر الإجابة أثناء كتابتها، خطوةً بعد خطوة.\n4. تحت إجابة «كيف أفعل…» تجد الدليل المطابق وفيديو الشرح ولقطات الشاشة، وتفتحها داخل المحادثة نفسها.\n5. اسأل سؤال متابعة مثل «وبعد ذلك؟»، فيبقى المساعد على الموضوع نفسه.\n\n- داخل لوحة مدرستك يعرف المساعد دورك، فيحصل المعلم وولي الأمر كلٌّ على الدليل المكتوب له.\n- اسأل «كيف تساعدني؟» لترى كل الأدلة التي يشرحها لك.\n- يمكنك إرسال بضع رسائل في الدقيقة؛ وإن ظهرت «رسائل كثيرة» فانتظر قليلًا.\n\nحل المشكلات:\n\n- **لا يظهر فيديو أو لقطات تحت الإجابة** — ليس لكل دليل فيديو بعد؛ استخدم رابط الدليل.\n- **«سجّل الدخول لتسأل مساعد الدعم»** — داخل لوحة المدرسة يجيب المساعد الأعضاء المسجّلين فقط؛ سجّل الدخول مجددًا.\n- **الإجابة لا تناسب مشكلتك** — استخدم **الإبلاغ عن مشكلة** أسفل الصفحة، أو تواصل مع الدعم.",
-      "en": "1. Click the round assistant button at the bottom corner of any page.\n2. Pick one of the suggested questions, or type your own, in Arabic or English.\n3. The answer appears as it is written, a step at a time.\n4. Under a how-to answer you get the matching guide, its tutorial video and screenshots. Open them right inside the chat.\n5. Ask a follow-up such as \"and after that?\". The assistant keeps the topic you were on.\n\n- Inside your school's dashboard, the assistant knows your role, so a teacher and a parent get the guide written for them.\n- Ask \"what can you help with?\" to see every guide it can walk you through.\n- You can send a few messages a minute. If you see \"too many messages\", wait a moment.\n\nTroubleshooting:\n\n- **No video or screenshots under the answer.** Not every guide has a video yet. Use the guide link instead.\n- **\"Sign in to ask the support assistant.\"** Inside a school dashboard, the assistant answers signed-in members only. Sign in again.\n- **The answer doesn't fit your problem.** Use **Report an issue** at the bottom of the page, or contact support."
+      "ar": "1. اضغط زر المساعد الدائري في أسفل أي صفحة.\n2. اختر أحد الأسئلة المقترحة أو اكتب سؤالك بالعربية أو الإنجليزية.\n3. تظهر الإجابة أثناء كتابتها، واضغط زر **إيقاف** المربع لتقطعها.\n4. تحت إجابة «كيف أفعل…» تجد الدليل المطابق وفيديو الشرح ولقطات الشاشة، وتفتحها داخل المحادثة نفسها.\n5. اسأل سؤال متابعة مثل «وبعد ذلك؟»، فيبقى المساعد على الموضوع نفسه.\n6. اضغط زر **القائمة** أعلى المحادثة لترى محادثاتك السابقة، فتفتح إحداها أو تعيد تسميتها أو تحذفها، وزر القلم يبدأ محادثة جديدة.\n\n- داخل لوحة مدرستك يعرف المساعد دورك، فيحصل المعلم وولي الأمر كلٌّ على الدليل المكتوب له.\n- اسأل «كيف تساعدني؟» لترى كل الأدلة التي يشرحها لك.\n- يمكنك إرسال بضع رسائل في الدقيقة؛ وإن ظهرت «رسائل كثيرة» فانتظر قليلًا.\n- تُحفظ محادثاتك لتعود إليها: إن كنت مسجّل الدخول فهي محفوظة مع حسابك في هذه المدرسة حتى تحذفها، وفي الصفحات العامة دون تسجيل دخول تُحفظ على هذا الجهاز وتُحذف تلقائيًا بعد 90 يومًا من آخر رسالة.\n- محادثاتك خاصة بك، فلا يراها بقية أعضاء مدرستك. احذف محادثة واحدة أو كلها من القائمة، وفي الصفحات العامة يحذفها زر **انسَ هذا الجهاز** فورًا.\n- لكتابة الإجابة يُرسَل سؤالك إلى خدمة ذكاء اصطناعي، فلا تكتب كلمات المرور أو الأرقام السرية أو رموز الدخول في المحادثة.\n\nحل المشكلات:\n\n- **لا يظهر فيديو أو لقطات تحت الإجابة** — ليس لكل دليل فيديو بعد؛ استخدم رابط الدليل.\n- **«سجّل الدخول لتسأل مساعد الدعم»** — داخل لوحة المدرسة يجيب المساعد الأعضاء المسجّلين فقط؛ سجّل الدخول مجددًا.\n- **الإجابة لا تناسب مشكلتك** — استخدم **الإبلاغ عن مشكلة** أسفل الصفحة، أو تواصل مع الدعم.\n- **محادثاتك السابقة لا تظهر** — تُحفظ المحادثات لكل مدرسة ولكل مساعد على حدة، وإن لم تكن مسجّل الدخول فهي للمتصفح الذي استخدمته؛ متصفح آخر أو حذف ملفات تعريف الارتباط يبدأ من جديد.",
+      "en": "1. Click the round assistant button at the bottom corner of any page.\n2. Pick one of the suggested questions, or type your own, in Arabic or English.\n3. The answer appears as it is written. Press the square **Stop** button to cut it short.\n4. Under a how-to answer you get the matching guide, its tutorial video and screenshots. Open them right inside the chat.\n5. Ask a follow-up such as \"and after that?\". The assistant keeps the topic you were on.\n6. Press the **menu** button at the top of the chat to see your earlier chats, open one, rename it or delete it. The pen button starts a new chat.\n\n- Inside your school's dashboard, the assistant knows your role, so a teacher and a parent get the guide written for them.\n- Ask \"what can you help with?\" to see every guide it can walk you through.\n- You can send a few messages a minute. If you see \"too many messages\", wait a moment.\n- Your chats are saved so you can come back to them. Signed in, they are kept with your account at this school until you delete them. On a public page without signing in, they are kept on this device and deleted automatically 90 days after your last message.\n- Your chats are yours: other members of your school can't see them. Delete one chat, or all of them, from the menu. On a public page, **Forget this device** deletes them right away.\n- To write an answer, your question is sent to an AI service. Don't type passwords, PINs or login codes into the chat.\n\nTroubleshooting:\n\n- **No video or screenshots under the answer.** Not every guide has a video yet. Use the guide link instead.\n- **\"Sign in to ask the support assistant.\"** Inside a school dashboard, the assistant answers signed-in members only. Sign in again.\n- **The answer doesn't fit your problem.** Use **Report an issue** at the bottom of the page, or contact support.\n- **Your earlier chats are missing.** Chats are kept per school and per bot. Signed out, they belong to the browser you used; a different browser or a cleared cookie starts fresh."
     },
     "keywords": [
       "مساعد",
@@ -1306,6 +1306,10 @@
       "نافذه المحادثه",
       "زر المساعد",
       "مساعد الدعم",
+      "محادثاتي",
+      "سجل المحادثات",
+      "المحادثات السابقه",
+      "حذف المحادثات",
       "assistant",
       "chatbot",
       "chat bot",
@@ -1313,7 +1317,11 @@
       "help assistant",
       "ai assistant",
       "chat window",
-      "chat button"
+      "chat button",
+      "my chats",
+      "chat history",
+      "saved chats",
+      "delete my chats"
     ],
     "guide": "/docs/support/assistant"
   },

@@ -48,12 +48,19 @@ function SheetContent({
   className,
   children,
   side = "right",
+  container,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
+  /**
+   * Portal target (default `document.body`). Deliberate deviation from
+   * shadcn: a sheet opened from inside a fixed panel (the chatbot's chats
+   * sheet) portals into it, so it stacks above the panel and stays inside it.
+   */
+  container?: HTMLElement | null
 }) {
   return (
-    <SheetPortal>
+    <SheetPortal container={container}>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"

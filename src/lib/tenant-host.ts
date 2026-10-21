@@ -8,7 +8,7 @@ import {
   getSubdomainFromHost,
   isMainDomainHost,
 } from "@/lib/root-domain"
-import { PLATFORM_SCHOOL_ID } from "@/lib/sales/promote"
+import { PLATFORM_SCHOOL_ID } from "@/lib/platform-tenant"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 
 export type HostTenant =

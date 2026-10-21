@@ -46,6 +46,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/chatbot-retention",
+      "schedule": "0 2 * * *"
+    },
+    {
       "path": "/api/cron/event-reminders",
       "schedule": "0 8 * * *"
     },

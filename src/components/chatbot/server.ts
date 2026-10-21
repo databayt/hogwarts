@@ -19,6 +19,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getExchangeRates } from "@/components/saas-marketing/pricing/exchange-rates"
 
 import { captureFromChat } from "./capture"
+import { profileFor } from "./identity"
 import { CHAT_HISTORY_TURNS, CONTACT_EMAIL } from "./constant"
 import {
   buildSaasMarketingPrompt,
@@ -40,6 +41,7 @@ import {
 } from "./support"
 import { ASK_RE } from "./stream"
 import { resourcesFor } from "./support-media"
+import { startTurn } from "./threads"
 import type {
   ChatbotDictionary,
   ChatMeta,
@@ -255,12 +257,13 @@ const ROLE_KEYS: Record<string, string> = {
  * school the Host names, or a DEVELOPER. A signed-in user of another school,
  * or of none, gets `forbidden` — the desk is that school's, not the world's.
  */
+type SessionUser = { id?: string; role?: string; schoolId?: string | null }
+
 async function supportMember(
   locale: string,
-  tenant: HostTenant
+  tenant: HostTenant,
+  user: SessionUser | undefined
 ): Promise<SupportMember | "signed-out" | "forbidden"> {
-  const session = await auth()
-  const user = session?.user
   if (!user?.id) return "signed-out"
   if (tenant.kind !== "school") return "forbidden"
   if (user.role !== "DEVELOPER" && user.schoolId !== tenant.schoolId)
@@ -327,9 +330,27 @@ async function resolveSystemPrompt(
  * - `reply` — answered in code (the help index, or a failure's fallback)
  * - `model` — stream the model's answer with these settings
  */
+/**
+ * The saved conversation this answer belongs to. Null only when the
+ * database failed before the turn was written — the visitor still gets an
+ * answer, it just isn't kept.
+ */
+export interface PlanTurn {
+  schoolId: string
+  threadId: string
+  userMessageId: string
+  assistantMessageId: string
+}
+
 export type ChatPlan =
   | { kind: "error"; status: number; error: string }
-  | { kind: "reply"; meta: ChatMeta; text: string }
+  | {
+      kind: "reply"
+      meta: ChatMeta
+      text: string
+      turn: PlanTurn | null
+      topicSlugs: string[]
+    }
   | {
       kind: "model"
       meta: ChatMeta
@@ -337,10 +358,16 @@ export type ChatPlan =
       messages: ModelMessage[]
       /** Cut lines that repeat the contact ask (see `dropsAsk`). */
       dropAsk: boolean
+      turn: PlanTurn | null
+      topicSlugs: string[]
     }
 
 export interface ChatRequest {
-  messages: ModelMessage[]
+  /** The new question. The history is the thread's, read from the database. */
+  message: string
+  threadId?: string
+  /** Ask the thread's latest question again, replacing this answer. */
+  retryOf?: string
   promptType: SystemPromptType
   subdomain?: string
   locale: string
@@ -350,15 +377,14 @@ export interface ChatRequest {
 export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
   const { promptType, headers: h } = req
   const locale = req.locale === "ar" ? "ar" : "en"
-  // The server keeps its own window: a client may send any length.
-  const messages = req.messages.slice(-CHAT_HISTORY_TURNS)
   const dictionary = await getDictionary(locale as Locale)
   const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
 
   // Hoisted so the catch below can still answer a support question with its
-  // guide cards instead of the sales fallback.
+  // guide cards instead of the sales fallback, and keep the answer it gives.
   let support = promptType === "schoolSupport"
   let resources: ChatResource[] = []
+  let turn: PlanTurn | null = null
   try {
     // The tenant is the Host's, never the body's: the sales bot answers on
     // the main domain only, a school's bots on that school's host only.
@@ -375,7 +401,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
 
     // The dashboard desk answers signed-in members of this school only.
     const desk = promptType === "schoolSupport"
-    const seat = desk ? await supportMember(locale, tenant) : null
+    const session = await auth()
+    const seat = desk ? await supportMember(locale, tenant, session?.user) : null
     if (seat === "signed-out") {
       return { kind: "error", status: 401, error: chatbot.replySignIn }
     }
@@ -392,7 +419,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
     // windows (burst and sustained), plus one ceiling per public school site
     // that no rotation of visitor keys gets past.
     const ua = (h.get("user-agent") ?? "").slice(0, 50)
-    const rlKey = member ? `user:${member.id}` : `${clientIpFrom(h)}:${ua}`
+    const userId = session?.user?.id
+    const rlKey = userId ? `user:${userId}` : `${clientIpFrom(h)}:${ua}`
     const [burst, sustained, site] = await Promise.all([
       checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT, "chatbot"),
       checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT_HOURLY, "chatbot-h"),
@@ -408,12 +436,61 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       return { kind: "error", status: 429, error: chatbot.replyRateLimit }
     }
 
+    // Who is asking, and the conversation this question joins. The question
+    // and an empty answer are saved before the model runs; the history the
+    // model sees is the thread's, never the client's. Saving never stands
+    // between a question and its answer: if the conversation can't be saved
+    // (the database is down, the tables aren't migrated yet), the visitor
+    // still gets an answer — to this question alone.
+    let history: ModelMessage[] = [{ role: "user", content: req.message }]
+    try {
+      const profile = await profileFor({ tenant, userId, write: true })
+      const started = profile
+        ? await startTurn({
+            profile,
+            mode: promptType,
+            lang: locale,
+            threadId: req.threadId,
+            message: req.message,
+            retryOf: req.retryOf,
+          })
+        : null
+      if (started === "not_found") {
+        return { kind: "error", status: 404, error: chatbot.replyChatNotFound }
+      }
+      if (profile && started) {
+        turn = {
+          schoolId: profile.schoolId,
+          threadId: started.threadId,
+          userMessageId: started.userMessageId,
+          assistantMessageId: started.assistantMessageId,
+        }
+        history = started.history
+      }
+    } catch (error) {
+      console.error("[chatbot] could not save the conversation", error)
+    }
+    // The model's window: a free-tier model reads the latest few messages.
+    const messages = history.slice(-CHAT_HISTORY_TURNS)
+
     // Capture never sits on the reply path: it runs once the response is
     // done, whether the model answered or failed, and reads only the newest
-    // message. SaaS mode only — schoolSite visitors are the school's
-    // parents, not our pipeline.
+    // message. A lead it finds is linked to the conversation. SaaS mode only
+    // — schoolSite visitors are the school's parents, not our pipeline.
     if (promptType === "saasMarketing") {
-      after(() => captureFromChat({ messages, locale }))
+      const saved = turn
+      after(async () => {
+        const prospectId = await captureFromChat({ messages, locale })
+        if (prospectId && saved)
+          await db.chatbotThread
+            .updateMany({
+              where: { id: saved.threadId, schoolId: saved.schoolId },
+              data: { prospectId },
+            })
+            .catch((error) =>
+              console.error("[chatbot] lead link failed", error)
+            )
+      })
     }
 
     if (!process.env.GROQ_API_KEY) {
@@ -459,11 +536,18 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
               origin
             )
           )
+    // When the model can't answer (an outage, the free tier's daily token
+    // cap), a matched guide still can: its own steps ARE the answer the model
+    // would have given. Only with no guide does the visitor get the apology.
+    const guide = support ? matched[0] : undefined
     const meta: ChatMeta = {
       resources,
-      fallback: fallbackReply(chatbot, promptType, support),
+      fallback: guide
+        ? `${chatbot.replyFromGuide.replace("{guide}", guide.title[locale])}\n\n${guide.answer[locale]}`
+        : fallbackReply(chatbot, promptType, support),
       cutOff: chatbot.answerCutOff,
     }
+    const topicSlugs = matched.slice(0, 1).map((t) => t.slug)
 
     // "What can you help with?" has one right answer — the guide list. A
     // 20B model asked for it still invents steps, so it is answered here.
@@ -472,6 +556,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
         kind: "reply",
         meta,
         text: helpIndexReply(chatbot, locale, member?.role),
+        turn,
+        topicSlugs: [],
       }
     }
 
@@ -500,6 +586,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       // The desk never asks for contact details, so it never cuts a line: a
       // guide step about WhatsApp notifications is an answer, not an ask.
       dropAsk: helps && !desk && dropsAsk(messages, support),
+      turn,
+      topicSlugs,
     }
   } catch (error) {
     // A failed read must not leave the visitor with a raw error: the
@@ -510,6 +598,8 @@ export async function prepareChat(req: ChatRequest): Promise<ChatPlan> {
       kind: "reply",
       meta: { resources, fallback, cutOff: chatbot.answerCutOff },
       text: fallback,
+      turn,
+      topicSlugs: [],
     }
   }
 }

@@ -55,12 +55,51 @@ dictionary before it becomes a client prop.
    safe markdown subset (`markdown-lite.tsx`), so the guides' **bold** button
    names survive.
 
+### Memory and the chats sheet (2026-10-21)
+
+Every conversation is saved, so a reload — or a page change that remounts the
+bot — brings it back, and the **menu** button in the header opens a sheet of
+past chats (`chats-menu.tsx`).
+
+- **Who:** `identity.ts` — a signed-in member is one `ChatbotProfile` per
+  school (`userId`); an anonymous browser is the sha256 of its host-only
+  `bq_chat` cookie (`keyHash`; the raw key is never stored). Reads never mint
+  a profile or a cookie; the first message does. The tenant is the Host's.
+- **What:** `prisma/models/chatbot.prisma` — `ChatbotProfile`, `ChatbotThread`
+  (title = the first question, cleaned), `ChatbotMessage` (cards rebuilt from
+  `topicSlugs` at read time), `ChatbotNote` (learned notes, phase 4). Migration
+  `20261021150000_chatbot_memory` (additive, idempotent, out-of-band).
+- **How:** the route now takes ONE question — `{ message, threadId?, retryOf? }`,
+  strict, so a client can't send a history. `threads.ts#startTurn` saves the
+  question and an empty answer before the model runs and returns the thread's
+  history; the stream's `onFinish` saves the words (partial too). Retry names
+  the saved answer it replaces. Saving is best-effort: if the database can't
+  save, the visitor still gets an answer, to that question alone.
+- **The sheet:** `actions.ts` server actions (list, load, rename, delete,
+  delete all, forget this device), each scoped to the caller's own profile.
+  Search, Today / Yesterday / 7 days / Older groups, inline rename and
+  delete-confirm (no portaled menus — they'd land under the panel). The sheet
+  portals INTO the panel (`SheetContent container`), so it stacks above it.
+- **Retention:** `/api/cron/chatbot-retention` (02:00, beside
+  purge-empty-drafts) deletes visitor profiles idle 90 days, with everything
+  under them. Members' chats stay until they delete them. The assistant guide
+  (`content/docs-*/support/assistant.mdx`, "Your chats and privacy") says so,
+  and the bot reads it.
+
+When the model can't answer (an outage, the Groq free tier's daily token cap)
+and a guide matched, the answer is that guide's own steps (`replyFromGuide`)
+instead of an apology; Groq gets no retries, so that takes a second, not 18.
+
 ## Structure
 
 ```
 chatbot/
 ├── chatbot.tsx            # Server entry — loads dictionary + school context, renders content
 ├── content.tsx            # Client shell — wires button + panel + useChatbot hook
+├── actions.ts             # "use server" — the chats sheet's list/load/rename/delete/forget
+├── chats-menu.tsx         # The menu button + the chats sheet it opens (portals into the panel)
+├── identity.ts            # server-only — member or hashed-cookie visitor profile, per tenant
+├── threads.ts             # server-only — startTurn / finishTurn / listThreads / readThread
 ├── chat-button.tsx        # Floating FAB (the robot)
 ├── panel.tsx              # The dialog: modal full-screen on phones, persistent panel on desktop
 ├── header.tsx             # Title · new chat · close
@@ -223,5 +262,5 @@ files) — this block adds **zero** new violations.
   neither falls through to the general prompt — add the phrase to the topic.
 - `how do I set up the timetable` lands on get-started first (its `set up`
   keyword is two parts vs timetable's one) — a keyword-weight issue, pre-2026-10-19.
-- Conversation is not persisted across reloads (`enablePersistence` is wired in
-  config but the SaaS/school mounts don't use it).
+- Conversations persist since 2026-10-21 (see "Memory and the chats sheet");
+  `enablePersistence` in the old config is dead and goes in the cleanup pass.

@@ -47,6 +47,12 @@ export interface StreamResult {
  */
 export function chatEventStream(opts: {
   fallback: string
+  /** The saved conversation's ids, for the `meta` event. */
+  ids?: {
+    threadId: string
+    userMessageId: string
+    assistantMessageId: string
+  } | null
   resources: ChatResource[]
   source: AsyncIterable<string> | Iterable<string>
   provider: ChatProvider
@@ -72,7 +78,18 @@ export function chatEventStream(opts: {
       const emit = (e: ChatEvent) => write(encodeEvent(e))
 
       write(SSE_OPEN)
-      emit({ event: "meta", data: { fallback: opts.fallback } })
+      const ids = opts.ids
+      emit({
+        event: "meta",
+        data: {
+          fallback: opts.fallback,
+          ...(ids && {
+            threadId: ids.threadId,
+            userMessageId: ids.userMessageId,
+            assistantMessageId: ids.assistantMessageId,
+          }),
+        },
+      })
       if (opts.resources.length)
         emit({ event: "resources", data: { resources: opts.resources } })
       ping = setInterval(() => write(SSE_PING), PING_MS)

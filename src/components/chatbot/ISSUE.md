@@ -5,6 +5,23 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot — issues
 
+## Done 2026-10-21 — memory and the chats sheet (phase 2)
+
+- Conversations are saved (profiles, threads, messages, notes tables) and come
+  back after a reload; the history the model reads is the thread's, from the
+  database — the route rejects a client-sent history.
+- Menu button → chats sheet inside the panel: search, day groups, open,
+  rename, delete, delete all, forget this device (visitors).
+- Visitors are a hashed host-only cookie; 90-day purge cron at 02:00.
+- Saving never blocks an answer; a stale or foreign thread id starts a new chat.
+- Model down + guide matched → the guide's own steps; Groq gets no retries.
+- A new question owns its topic: earlier messages only fill in for a bare
+  follow-up (attendance after add-student used to get add-student's cards).
+- Assistant guide: the menu, Stop, and "Your chats and privacy" (ar + en).
+- Browser pass on localhost: SaaS en (answer, reload restore, sheet, second
+  chat, delete) and the desk ar at 1280 and 390 px.
+- Tests: 175 (identity, threads, actions, route, retention, sheet in panel).
+
 ## Done 2026-10-21 — P0 hardening + the new panel
 
 - Real questions reach the guides: the help index fires only for its chip or a
@@ -50,19 +67,22 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 ## Open
 
-Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 2–6).
+Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 3–6).
 
-- Conversations are not persisted across reloads (phase 2: threads, the chats
-  sheet, the anonymous visitor cookie, 90-day purge).
-- Claude Haiku 5.5 on the included API credits, $20/month cap, Groq fallback
-  (phase 3) — waits on the /decide record and a dedicated key.
+- **Prod DDL owed before the phase-2 deploy:** apply
+  `prisma/migrations/20261021150000_chatbot_memory/migration.sql` out-of-band
+  (Neon branch first). Until then prod answers but saves nothing, and the
+  chats sheet shows "Couldn't load your chats".
+- **Groq's free tier is spent by midday:** on 2026-10-21 `gpt-oss-20b` hit its
+  200K tokens/day (TPD) cap on the key prod shares with mkan. Members get the
+  guide steps meanwhile; the fix is phase 3 (Claude Haiku 5.5 on the included
+  credits, $20/month cap) — waits on the /decide record and a dedicated key.
 - Learned notes and recall (phase 4); page-aware answers, feedback, next steps
   (phase 5).
 - Prompt templates still ship in the client dictionary chunk (phase 3 moves
   them server-side).
 - Verify streaming end to end on prod: `curl -N` must show `delta` events
   spread over time with no `content-encoding`.
-- Browser pass of the new panel owed (port 3000 was held by another session
-  on 2026-10-21; jsdom + axe tests cover it meanwhile).
 - `src/lib/rate-limit.ts` `getRateLimitKey` and `report-issue.ts` still key on
   the head of X-Forwarded-For (outside the chatbot; same fix as here).
+- Dev only: the Next.js dev badge sits over the RTL floating button.

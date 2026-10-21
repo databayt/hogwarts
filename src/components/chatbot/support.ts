@@ -197,10 +197,16 @@ export function matchTopics(
   role?: SupportRole,
   options: { excludeSales?: boolean } = {}
 ): SupportTopic[] {
-  const normalized = texts.map(normalize)
   const pool = options.excludeSales
     ? INDEX.filter(({ topic }) => !topic.sales)
     : INDEX
+  // Earlier messages only fill in for a follow-up that names no topic of its
+  // own ("and after that?"). A new question that does — attendance after an
+  // add-student chat — is about itself: the earlier question's many keyword
+  // hits used to outvote it.
+  const latest = normalize(texts[0] ?? "")
+  const ownTopic = pool.some(({ phrases }) => score(latest, phrases) > 0)
+  const normalized = ownTopic ? [latest] : texts.map(normalize)
   const scored = pool.map(({ topic, phrases, terms: topicTerms }) => {
     let hits = 0
     let termHits = 0

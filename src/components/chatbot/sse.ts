@@ -19,7 +19,16 @@ import type { ChatResource } from "./type"
 export type ChatProvider = "anthropic" | "groq" | "code"
 
 export type ChatEvent =
-  | { event: "meta"; data: { fallback: string } }
+  | {
+      event: "meta"
+      data: {
+        fallback: string
+        /** The saved conversation — absent only if saving failed. */
+        threadId?: string
+        userMessageId?: string
+        assistantMessageId?: string
+      }
+    }
   | { event: "resources"; data: { resources: ChatResource[] } }
   | { event: "delta"; data: { t: string } }
   | {

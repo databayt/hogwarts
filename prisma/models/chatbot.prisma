@@ -1,0 +1,138 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+// The chatbot's memory: who is asking, their conversations, and the short
+// facts they chose to let it keep. Block docs: src/components/chatbot/README.md.
+
+/// The three bots, by the same strings as the client's `promptType`.
+enum ChatbotMode {
+  saasMarketing
+  schoolSite
+  schoolSupport
+}
+
+enum ChatbotThreadStatus {
+  OPEN
+  RESOLVED
+  ESCALATED
+}
+
+enum ChatbotRole {
+  USER
+  ASSISTANT
+}
+
+/// One identity per tenant: a signed-in member (`userId`) or an anonymous
+/// browser (`keyHash` = sha256 of the `bq_chat` cookie — the raw key is never
+/// stored, so a database leak is not a session hijack). Exactly one is set
+/// (a SQL CHECK in the migration). Visitor profiles idle 90 days are purged
+/// with everything under them (`/api/cron/chatbot-retention`).
+model ChatbotProfile {
+  id            String   @id @default(cuid())
+  /// The host's tenant: a school, or the "platform" sentinel on the main domain.
+  schoolId      String
+  userId        String?
+  keyHash       String?  @unique
+  /// The member's switch: off means nothing is learned and nothing recalled.
+  memoryEnabled Boolean  @default(true)
+  lastSeenAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user    User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threads ChatbotThread[]
+  notes   ChatbotNote[]
+
+  @@unique([userId, schoolId])
+  @@index([schoolId, lastSeenAt])
+  @@index([lastSeenAt])
+  @@map("chatbot_profiles")
+}
+
+/// One conversation. Its title is the first question, cleaned — written in
+/// code, never by a model.
+model ChatbotThread {
+  id            String              @id @default(cuid())
+  schoolId      String
+  profileId     String
+  mode          ChatbotMode
+  lang          String              @db.VarChar(2)
+  title         String              @db.VarChar(120)
+  status        ChatbotThreadStatus @default(OPEN)
+  /// The guide the last answer was about.
+  topicSlug     String?             @db.VarChar(64)
+  /// The sales lead this conversation produced (SaaS capture) — no FK: a
+  /// Prospect is platform data with its own lifecycle.
+  prospectId    String?
+  messageCount  Int                 @default(0)
+  lastMessageAt DateTime            @default(now())
+  escalatedAt   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  profile  ChatbotProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  school   School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  messages ChatbotMessage[]
+  notes    ChatbotNote[]
+
+  @@index([profileId, mode, lastMessageAt(sort: Desc)])
+  @@index([schoolId, lastMessageAt])
+  @@map("chatbot_threads")
+}
+
+/// One message. Cards are rebuilt from `topicSlugs` when the thread is read
+/// (the media manifest moves on; a stored card would go stale). The usage
+/// columns are telemetry; the spend cap reads AIUsageLog, which a deleted
+/// chat can't erase.
+model ChatbotMessage {
+  id               String      @id @default(cuid())
+  schoolId         String
+  threadId         String
+  role             ChatbotRole
+  content          String      @default("") @db.Text
+  topicSlugs       String[]    @default([])
+  /// anthropic | groq | code
+  provider         String?     @db.VarChar(16)
+  model            String?     @db.VarChar(64)
+  inputTokens      Int?
+  outputTokens     Int?
+  cacheReadTokens  Int?
+  cacheWriteTokens Int?
+  costUsd          Float?
+  latencyMs        Int?
+  firstTokenMs     Int?
+  stopReason       String?     @db.VarChar(24)
+  fallbackReason   String?     @db.VarChar(32)
+  /// The answer stopped early (Stop, a dropped connection, a provider fault).
+  partial          Boolean     @default(false)
+  /// 1 helpful, -1 not.
+  feedback         Int?        @db.SmallInt
+  createdAt        DateTime    @default(now())
+
+  thread ChatbotThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@index([schoolId, createdAt])
+  @@map("chatbot_messages")
+}
+
+/// A short fact the person told the assistant ("teaches grade 5"), shown in
+/// "What I remember" and removable there. Deleting the chat it came from
+/// deletes it too.
+model ChatbotNote {
+  id        String   @id @default(cuid())
+  schoolId  String
+  profileId String
+  threadId  String?
+  text      String   @db.VarChar(140)
+  /// role | teaching | school | child_grade | language | goal
+  kind      String   @db.VarChar(16)
+  createdAt DateTime @default(now())
+
+  profile ChatbotProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  thread  ChatbotThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@map("chatbot_notes")
+}

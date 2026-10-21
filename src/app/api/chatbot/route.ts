@@ -16,28 +16,30 @@ import {
   fakeAnswer,
   fakeProviderEnabled,
 } from "@/components/chatbot/fake-provider"
-import { CHAT_MODEL, prepareChat } from "@/components/chatbot/server"
-import { chatEventStream } from "@/components/chatbot/stream"
+import { CHAT_MODEL, prepareChat, type PlanTurn } from "@/components/chatbot/server"
+import { chatEventStream, type StreamResult } from "@/components/chatbot/stream"
+import { finishTurn } from "@/components/chatbot/threads"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-const bodySchema = z.object({
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().max(MAX_MESSAGE_LENGTH * 4),
-      })
-    )
-    .min(1)
-    .max(50),
-  promptType: z
-    .enum(["saasMarketing", "schoolSite", "schoolSupport"])
-    .default("saasMarketing"),
-  subdomain: z.string().max(63).optional(),
-  locale: z.enum(["en", "ar"]).default("en"),
-})
+/**
+ * One question, and which saved conversation it joins. Strict: a client
+ * can no longer send a history — the model reads the thread's, from the
+ * database, so nobody can put words in the assistant's mouth.
+ */
+const bodySchema = z
+  .object({
+    message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+    threadId: z.string().min(1).max(64).optional(),
+    retryOf: z.string().min(1).max(64).optional(),
+    promptType: z
+      .enum(["saasMarketing", "schoolSite", "schoolSupport"])
+      .default("saasMarketing"),
+    subdomain: z.string().max(63).optional(),
+    locale: z.enum(["en", "ar"]).default("en"),
+  })
+  .strict()
 
 const HEADERS = {
   "content-type": "text/event-stream; charset=utf-8",
@@ -68,15 +70,19 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const { resources, fallback, cutOff } = plan.meta
+  const started = Date.now()
+  const finish = saveAnswer(plan.turn, plan.topicSlugs, started)
 
   if (plan.kind === "reply") {
     return new Response(
       chatEventStream({
         fallback,
+        ids: plan.turn,
         resources,
         source: [plan.text],
         provider: "code",
         cutOffText: cutOff,
+        onFinish: finish,
       }),
       { headers: HEADERS }
     )
@@ -102,9 +108,10 @@ export async function POST(request: Request): Promise<Response> {
       // numbered list room to finish.
       maxOutputTokens: 600,
       providerOptions: { groq: { reasoningEffort: "low" } },
-      // One retry, not the SDK's two: the free tier's 429s don't clear in
-      // seconds, and every retry is time the visitor watches nothing.
-      maxRetries: 1,
+      // No retries: the free tier's 429s are per-minute or per-day caps that
+      // don't clear in seconds (a retried daily cap held a visitor 18 s for
+      // nothing). Failing fast hands over to the guide's own steps.
+      maxRetries: 0,
       abortSignal: signal,
     })
     for await (const part of result.fullStream) {
@@ -117,6 +124,7 @@ export async function POST(request: Request): Promise<Response> {
   return new Response(
     chatEventStream({
       fallback,
+      ids: plan.turn,
       resources,
       source: fakeProviderEnabled()
         ? fakeAnswer(question, parsed.data.locale, signal)
@@ -124,7 +132,29 @@ export async function POST(request: Request): Promise<Response> {
       provider: "groq",
       dropAsk,
       cutOffText: cutOff,
+      onFinish: finish,
     }),
     { headers: HEADERS }
   )
+}
+
+/** Write the answer into its saved turn once the stream ends — even cut short. */
+function saveAnswer(
+  turn: PlanTurn | null,
+  topicSlugs: string[],
+  started: number
+): ((result: StreamResult) => Promise<void>) | undefined {
+  if (!turn) return undefined
+  return (result) =>
+    finishTurn({
+      schoolId: turn.schoolId,
+      threadId: turn.threadId,
+      assistantMessageId: turn.assistantMessageId,
+      text: result.text,
+      partial: result.partial,
+      provider: result.provider,
+      fallbackReason: result.fallbackReason,
+      topicSlugs,
+      latencyMs: Date.now() - started,
+    })
 }

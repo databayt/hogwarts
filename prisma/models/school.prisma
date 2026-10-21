@@ -451,6 +451,8 @@ model School {
   aiEnabledDomains       Json? // Array of enabled domains: ["admission", "exams", "finance"]
   documentProcessingJobs DocumentProcessingJob[]
   aiUsageLogs            AIUsageLog[]
+  chatbotProfiles        ChatbotProfile[]
+  chatbotThreads         ChatbotThread[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

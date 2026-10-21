@@ -28,6 +28,10 @@ import { traceQuery, TRACE_QUERIES } from "@/lib/perf-trace"
 
 // Models that require schoolId for tenant isolation (all business models)
 const TENANT_SCOPED_MODELS = new Set([
+  "ChatbotProfile",
+  "ChatbotThread",
+  "ChatbotMessage",
+  "ChatbotNote",
   "Student",
   "Guardian",
   "GuardianType",

@@ -28,9 +28,10 @@
 import { LeadPriority, LeadSource, LeadStatus, LeadType } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { ensurePlatformSchool, PLATFORM_SCHOOL_ID } from "@/lib/platform-tenant"
 
 /** The tenant that owns platform-level leads. Never a real school. */
-export const PLATFORM_SCHOOL_ID = "platform"
+export { PLATFORM_SCHOOL_ID }
 /** The actor recorded on activity written by automation rather than a person. */
 export const SYSTEM_USER_ID = "system-funnel"
 
@@ -46,19 +47,7 @@ export type PromoteResult =
  * can never collide with a real school's domain.
  */
 async function ensureSentinels(): Promise<void> {
-  await db.school.upsert({
-    where: { id: PLATFORM_SCHOOL_ID },
-    update: {},
-    create: {
-      id: PLATFORM_SCHOOL_ID,
-      name: "Databayt Platform",
-      domain: PLATFORM_SCHOOL_ID,
-      isActive: false,
-      planType: "free",
-      maxStudents: 0,
-      maxTeachers: 0,
-    },
-  })
+  await ensurePlatformSchool()
   await db.user.upsert({
     where: { id: SYSTEM_USER_ID },
     update: {},

@@ -32,6 +32,22 @@ vi.mock("@/components/saas-marketing/pricing/exchange-rates", () => ({
   getExchangeRates: vi.fn(async () => ({ rates: {} })),
 }))
 vi.mock("@/components/chatbot/capture", () => ({ captureFromChat: vi.fn() }))
+vi.mock("@/components/chatbot/identity", () => ({
+  profileFor: vi.fn(async () => ({
+    id: "p1",
+    schoolId: "s1",
+    memoryEnabled: true,
+    visitor: false,
+  })),
+}))
+vi.mock("@/components/chatbot/threads", () => ({
+  startTurn: vi.fn(async (opts: { message?: string }) => ({
+    threadId: "t1",
+    userMessageId: "u1",
+    assistantMessageId: "a1",
+    history: [{ role: "user", content: opts.message ?? "" }],
+  })),
+}))
 
 const SCHOOL = { kind: "school", schoolId: "s1", subdomain: "kingfahd" }
 const PLATFORM = { kind: "platform", schoolId: "platform" }
@@ -43,7 +59,7 @@ const ask = (
   subdomain?: string
 ) =>
   prepareChat({
-    messages: [{ role: "user", content: text }],
+    message: text,
     promptType,
     subdomain,
     locale: "en",
@@ -124,6 +140,7 @@ describe("mode follows the Host", () => {
 
 describe("rate limit key", () => {
   it("is Cloudflare's client IP, not the forwarded header the caller wrote", async () => {
+    session(null)
     vi.mocked(tenantForHost).mockResolvedValue(PLATFORM as never)
     await ask("saasMarketing", "what are the plans?", {
       "cf-connecting-ip": "203.0.113.7",
@@ -147,5 +164,28 @@ describe("help index", () => {
     vi.mocked(tenantForHost).mockResolvedValue(PLATFORM as never)
     const plan = await ask("saasMarketing", "Can you help me add a student?")
     expect(plan.kind).toBe("model")
+  })
+})
+
+describe("the saved conversation", () => {
+  it("answers inside the thread it saved, never a client history", async () => {
+    session({ id: "u1", role: "ADMIN", schoolId: "s1" })
+    const plan = await ask("schoolSupport", "how do I add a student?")
+    expect(plan).toMatchObject({
+      kind: "model",
+      turn: { threadId: "t1", assistantMessageId: "a1", schoolId: "s1" },
+      messages: [{ role: "user", content: "how do I add a student?" }],
+    })
+  })
+
+  it("tells the client a chat that isn't theirs is gone", async () => {
+    const { startTurn } = await import("@/components/chatbot/threads")
+    vi.mocked(startTurn).mockResolvedValueOnce("not_found")
+    session({ id: "u1", role: "ADMIN", schoolId: "s1" })
+    expect(await ask("schoolSupport")).toMatchObject({
+      kind: "error",
+      status: 404,
+      error: en.chatbot.replyChatNotFound,
+    })
   })
 })
