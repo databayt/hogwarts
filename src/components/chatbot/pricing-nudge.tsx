@@ -72,9 +72,12 @@ export function PricingChatbotNudge() {
     // If the user closes within 5 s of auto-open, treat it as a dismissal
     // and never re-trigger in this browser. Detected via `mousedown` on
     // anything outside the chat window — `chat-window.tsx` already closes
-    // on outside-click, so we just listen for the same signal.
-    const handleQuickDismiss = () => {
+    // on outside-click, so we just listen for the same signal. A click
+    // INSIDE the panel (a quick-ask, the input) is engagement, not a "no".
+    const handleQuickDismiss = (event: MouseEvent) => {
       if (!opened) return
+      const target = event.target as Element | null
+      if (target?.closest?.("[data-chatbot-panel]")) return
       if (Date.now() - openedAt < 5_000) {
         try {
           window.localStorage.setItem(PRICING_NUDGE_STORAGE_KEY, "dismissed")

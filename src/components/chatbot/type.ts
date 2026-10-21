@@ -12,6 +12,8 @@ export interface ChatMessage {
   timestamp?: Date
   /** Guide, tutorial video and screenshots attached to a support answer. */
   resources?: ChatResource[]
+  /** A failure shown as a bubble — never sent back to the model as history. */
+  kind?: "error"
 }
 
 /**
@@ -149,9 +151,7 @@ export interface ChatbotDictionary {
   schoolHeaderFeesBasic: string
   schoolHeaderScholarships: string
   schoolHeaderEvents: string
-  schoolHeaderAnnouncements: string
   schoolHeaderContact: string
-  schoolHeaderCapacity: string
 
   // School prompt body phrases
   schoolPhraseAbout: string
@@ -162,6 +162,7 @@ export interface ChatbotDictionary {
   schoolPhraseOpenUntil: string
   schoolPhraseSeatsAvailable: string
   schoolPhraseApplicationFee: string
+  schoolPhraseRegistrationFee: string
   schoolPhraseApplyOnline: string
   schoolPhraseNextAdmission: string
   schoolPhraseAdmissionOpens: string
@@ -179,8 +180,6 @@ export interface ChatbotDictionary {
   schoolPhraseEmail: string
   schoolPhraseWebsite: string
   schoolPhraseAddress: string
-  schoolPhraseStudents: string
-  schoolPhraseTeachers: string
   schoolPhraseAt: string
 
   // Quick-ask labels (existing)

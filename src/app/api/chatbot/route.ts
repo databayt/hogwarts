@@ -40,10 +40,19 @@ const bodySchema = z.object({
 
 const HEADERS = {
   "content-type": "text/plain; charset=utf-8",
-  "cache-control": "no-store",
+  // `no-transform` keeps Next's own gzip off this response: compression
+  // holds bytes back to fill a block, which turns a stream into a burst.
+  "cache-control": "no-store, no-transform",
   // Tell any proxy in front of the container not to buffer the stream.
   "x-accel-buffering": "no",
 }
+
+/**
+ * The model call's own deadline. `maxDuration` means nothing on the
+ * standalone container, so without one a hung provider held the visitor's
+ * input disabled until they reloaded.
+ */
+const MODEL_TIMEOUT_MS = 25_000
 
 export async function POST(request: Request): Promise<Response> {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null))
@@ -76,7 +85,13 @@ export async function POST(request: Request): Promise<Response> {
     // numbered list room to finish.
     maxOutputTokens: 600,
     providerOptions: { groq: { reasoningEffort: "low" } },
-    abortSignal: request.signal,
+    // One retry, not the SDK's two: the free tier's 429s don't clear in
+    // seconds, and every retry is time the visitor watches nothing.
+    maxRetries: 1,
+    abortSignal: AbortSignal.any([
+      request.signal,
+      AbortSignal.timeout(MODEL_TIMEOUT_MS),
+    ]),
   })
 
   async function* text() {

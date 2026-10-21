@@ -27,7 +27,6 @@ export const ChatWindow = memo(function ChatWindow({
   messages,
   onSendMessage,
   isLoading,
-  error,
   locale,
   dictionary,
   promptType = "saasMarketing",
@@ -342,6 +341,7 @@ export const ChatWindow = memo(function ChatWindow({
   return (
     <div
       ref={chatWindowRef}
+      data-chatbot-panel
       className={cn(
         // Mobile: Full screen overlay, Desktop: Bottom right position
         isMobile
@@ -525,12 +525,6 @@ export const ChatWindow = memo(function ChatWindow({
         </div>
       </ScrollArea>
 
-      {error && (
-        <div className="bg-destructive/10 text-destructive px-4 py-2 text-sm">
-          {error}
-        </div>
-      )}
-
       <div
         className={cn(
           "bg-background",
@@ -622,9 +616,26 @@ export const ChatWindow = memo(function ChatWindow({
 // in a new tab so the conversation stays. Text only: no HTML is ever parsed.
 const URL_RE = /(https?:\/\/[^\s<>()]+[^\s<>().,،؛:!?])/g
 
+/**
+ * Only our own hosts become links. School data and visitors' words reach the
+ * model, so a URL it repeats could be anyone's — shown as text, not a link.
+ */
+const LINK_ROOTS = ["balqalam.com", "databayt.org"]
+
+function linkable(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url)
+    if (protocol !== "https:" && protocol !== "http:") return false
+    if (hostname === window.location.hostname) return true
+    return LINK_ROOTS.some((r) => hostname === r || hostname.endsWith(`.${r}`))
+  } catch {
+    return false
+  }
+}
+
 function Linkified({ text }: { text: string }) {
   return text.split(URL_RE).map((part, i) =>
-    i % 2 ? (
+    i % 2 && linkable(part) ? (
       <a
         key={i}
         href={part}

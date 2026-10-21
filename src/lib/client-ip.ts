@@ -16,7 +16,11 @@ import { headers } from "next/headers"
  * its last, proxy-appended entry is used.
  */
 export async function getClientIp(): Promise<string> {
-  const h = await headers()
+  return clientIpFrom(await headers())
+}
+
+/** The same rule for a route handler, which already holds its request's headers. */
+export function clientIpFrom(h: Pick<Headers, "get">): string {
   return (
     h.get("cf-connecting-ip")?.trim() ||
     h.get("x-forwarded-for")?.split(",").at(-1)?.trim() ||

@@ -37,89 +37,137 @@ export {
 } from "@/lib/funnel/identifiers"
 
 /**
- * Upsert the Prospect for identifiers a visitor typed into the chat.
+ * A chat reply is a reply: a cold row moves to `replied`. A row already
+ * past that (replied, promoted, dead) keeps its status — a promoted lead who
+ * chats again is still promoted.
+ */
+const COLD = new Set(["new", "enriched", "queued", "contacted"])
+
+/** Room for many chat notes without letting one lead's row grow forever. */
+const NOTES_MAX = 8000
+
+/** Append a dated chat note; past the cap, keep the oldest and newest text. */
+function appendNote(prev: string | null, note: string): string {
+  const next = prev ? `${prev}\n${note}` : note
+  if (next.length <= NOTES_MAX) return next
+  return `${next.slice(0, 2000)}\n…\n${next.slice(-(NOTES_MAX - 2004))}`
+}
+
+/**
+ * Upsert the Prospect for identifiers a visitor typed into the chat. Returns
+ * the prospect's id, or null when nothing was captured.
  * Never throws — the reply must go out whether or not capture lands.
+ *
+ * Reads the NEWEST user message only. Every message is captured as it is
+ * sent, so earlier turns were already seen — and the history a client sends
+ * is the client's word, not the visitor's.
+ *
+ * One lead, one row, fill-empty-never-replace-populated: the row is found by
+ * either identifier (its inbound key or its email/phone column — a scraped
+ * school that chats is the same lead), the oldest match wins, empty contact
+ * fields are filled, the conversation is appended to `notes`, and nothing a
+ * human or the funnel set is overwritten.
  */
 export async function captureFromChat(args: {
   messages: Array<{ role: string; content: unknown }>
   locale: string
-}): Promise<void> {
+}): Promise<string | null> {
   try {
     const userTurns = args.messages
       .filter((m) => m.role === "user" && typeof m.content === "string")
       .map((m) => m.content as string)
-    if (!userTurns.length) return
+    const latest = userTurns.at(-1)
+    if (!latest) return null
 
-    // Scan every user turn — the phone often arrives turns after the question.
-    let email: string | null = null
-    let phone: string | null = null
-    for (const t of userTurns) {
-      const found = extractIdentifiers(t)
-      email ||= found.email
-      phone ||= found.phone
-    }
-    if (!email && !phone) return
+    const { email, phone } = extractIdentifiers(latest)
+    if (!email && !phone) return null
 
-    const key = email ? `inbound:${email}` : `inbound:wa:${phone}`
+    const keys = [
+      ...(email ? [`inbound:${email}`] : []),
+      ...(phone ? [`inbound:wa:${phone}`] : []),
+    ]
     // The last few turns are the context a human needs to reply well.
     const tail = userTurns.slice(-4).join(" · ").slice(0, 600)
+    const note = `chatbot (${args.locale}, ${new Date().toISOString().slice(0, 10)}): ${tail}`
+    const find = () =>
+      db.prospect.findFirst({
+        where: {
+          OR: [
+            { gmapsPlaceId: { in: keys } },
+            ...(email ? [{ email }] : []),
+            ...(phone ? [{ phone }] : []),
+          ],
+        },
+        orderBy: { scrapedAt: "asc" },
+        select: { id: true, email: true, phone: true, status: true, notes: true },
+      })
 
-    // Create-only alert dedup: every later message in the same conversation
-    // re-runs this scan and re-upserts the same row, so without this check the
-    // founder gets one email per chat turn from the same lead — and stops
-    // reading them. Notify exactly once, when the row is genuinely new.
-    const existing = await db.prospect.findUnique({
-      where: { gmapsPlaceId: key },
-      select: { id: true },
-    })
+    const touch = async (row: NonNullable<Awaited<ReturnType<typeof find>>>) => {
+      await db.prospect.update({
+        where: { id: row.id },
+        data: {
+          ...(email && !row.email ? { email } : {}),
+          ...(phone && !row.phone ? { phone } : {}),
+          ...(COLD.has(row.status) ? { status: "replied" } : {}),
+          lastTouchAt: new Date(),
+          notes: appendNote(row.notes, note),
+        },
+      })
+      return row.id
+    }
 
-    await db.prospect.upsert({
-      where: { gmapsPlaceId: key },
-      create: {
-        gmapsPlaceId: key,
-        name: email ?? phone!,
-        email,
-        phone,
-        country: "unknown",
-        source: "chatbot",
-        status: "replied", // self-identified — straight to the reply-SLA bucket
-        tags: ["chatbot", `locale:${args.locale}`],
-        notes: `chatbot (${args.locale}): ${tail}`,
-        lastTouchAt: new Date(),
-      },
-      update: {
-        // add what this conversation gave us (same discipline as the inbound forms)
-        ...(email ? { email } : {}),
-        ...(phone ? { phone } : {}),
-        status: "replied",
-        lastTouchAt: new Date(),
-        notes: `chatbot (${args.locale}): ${tail}`,
-      },
-    })
+    const existing = await find()
+    if (existing) return await touch(existing)
+
+    let created: { id: string }
+    try {
+      created = await db.prospect.create({
+        data: {
+          gmapsPlaceId: keys[0]!,
+          name: email ?? phone!,
+          email,
+          phone,
+          country: "unknown",
+          source: "chatbot",
+          status: "replied", // self-identified — straight to the reply-SLA bucket
+          tags: ["chatbot", `locale:${args.locale}`],
+          notes: note,
+          lastTouchAt: new Date(),
+        },
+        select: { id: true },
+      })
+    } catch (err) {
+      // Two messages raced to create the same lead: the other one won, so
+      // this one is an update — and the alert was the winner's to send.
+      if ((err as { code?: string }).code !== "P2002") throw err
+      const winner = await find()
+      return winner ? await touch(winner) : null
+    }
 
     // A captured lead nobody hears about is a lead silently lost — the reply
-    // SLA starts now, not when someone happens to open the CRM. Isolated in
-    // its own try/catch: a mail failure must not fail the capture.
-    if (!existing) {
-      try {
-        await sendEmail({
-          to: SALES_INBOX,
-          subject: `🔥 chatbot lead: ${email ?? phone}`,
-          template: "sales-notify",
-          data: {
-            source: "chatbot",
-            locale: args.locale,
-            email: email ?? "—",
-            phone: phone ?? "—",
-            context: tail,
-          },
-        })
-      } catch (err) {
-        console.error("[chatbot] capture alert failed", err)
-      }
+    // SLA starts now, not when someone happens to open the CRM. Notify
+    // exactly once, when the row is genuinely new. Isolated in its own
+    // try/catch: a mail failure must not fail the capture.
+    try {
+      await sendEmail({
+        to: SALES_INBOX,
+        subject: `🔥 chatbot lead: ${email ?? phone}`,
+        template: "sales-notify",
+        data: {
+          source: "chatbot",
+          locale: args.locale,
+          email: email ?? "—",
+          phone: phone ?? "—",
+          context: tail,
+        },
+      })
+    } catch (err) {
+      console.error("[chatbot] capture alert failed", err)
     }
+    return created.id
   } catch (err) {
     // Capture must never block a reply. Log and move on.
     console.error("[chatbot] capture failed", err)
+    return null
   }
 }

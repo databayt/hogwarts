@@ -343,3 +343,52 @@ describe("dashboard support desk", () => {
     expect(top(question)).toBe(slug)
   })
 })
+
+// 2026-10-21: real questions the help index swallowed, and guides attached
+// by one common word.
+describe("help index — only the question itself", () => {
+  it.each([
+    "Can you help me add a student?",
+    "هل تساعدني في إضافة طالب؟",
+    "What can you do for a school of 300 students?",
+    "can you help me reset my password",
+  ])("lets %s reach the guides", (q) => {
+    expect(isHelpIndexQuestion(q)).toBe(false)
+  })
+
+  it.each([
+    "What can you help me with in using Balqalam?",
+    "كيف تساعدني في استخدام بالقلم؟",
+    "what can you do?",
+    "هل تساعدني؟",
+    "ايش تقدر تسوي",
+  ])("still answers %s with the guide list", (q) => {
+    expect(isHelpIndexQuestion(q)).toBe(true)
+  })
+
+  it("matches the chip's exact text whatever words it holds", () => {
+    expect(isHelpIndexQuestion("Show me around", ["Show me around"])).toBe(true)
+  })
+})
+
+describe("matchTopics — term-only floor and the desk", () => {
+  const desk = (q: string, role: "admin" | "teacher" | "parent" = "admin") =>
+    matchTopics([q], 3, role, { excludeSales: true }).map((t) => t.slug)
+
+  it("attaches nothing for one common word", () => {
+    expect(matchTopics(["change the school logo"])).toEqual([])
+    expect(matchTopics(["the page is blank"])).toEqual([])
+  })
+
+  it("never offers sales guides on the desk", () => {
+    expect(desk("how do I set up the timetable")).not.toContain("get-started")
+    expect(desk("كيف أحذف طالب")).not.toContain("pricing")
+    expect(desk("how much does it cost")).toEqual([])
+  })
+
+  it("still finds the guide a member asked for", () => {
+    expect(desk("how do I set up the timetable")[0]).toBe("timetable")
+    expect(desk("forgot my password", "teacher")[0]).toBe("login")
+    expect(desk("كيف ادفع الرسوم", "parent")[0]).toBe("fees")
+  })
+})

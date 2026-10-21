@@ -59,9 +59,14 @@ export function useChatbot({
       setMessages((prev) => [...prev, userMessage])
 
       try {
-        // Only the window the server reads; older turns stay on screen.
+        // Only the window the server reads; older turns stay on screen. A
+        // failure bubble is ours, not the assistant's — it never goes back.
         const history = [...messages, userMessage]
-          .filter((msg) => msg.role === "user" || msg.role === "assistant")
+          .filter(
+            (msg) =>
+              (msg.role === "user" || msg.role === "assistant") &&
+              msg.kind !== "error"
+          )
           .slice(-CHAT_HISTORY_TURNS)
           .map((msg) => ({ role: msg.role, content: msg.content }))
 
@@ -135,6 +140,7 @@ export function useChatbot({
           ...prev,
           {
             role: "assistant",
+            kind: "error",
             content: bubble,
             id: Date.now().toString() + "_error",
             timestamp: new Date(),

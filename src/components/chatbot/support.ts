@@ -69,6 +69,10 @@ const STOP_WORDS = new Set(
     "the and for with you your yours this that these those there then " +
     "after before about from into have has had are was were will not " +
     "please help want need get make know tell show some any all " +
+    // Screen words every guide uses: "the page is blank" isn't the
+    // security guide because its summary says "the security page".
+    "page pages screen button click link open " +
+    "صفحه الصفحه شاشه الشاشه زر اضغط رابط افتح " +
     "كيف ماذا متي اين هل لماذا ممكن اريد ابي ابغي عايز اعرف عندي لدي " +
     "هذا هذه ذلك تلك التي الذي الذين على الي الى عن من في مع بعد قبل " +
     "انا انت نحن هو هي كل اي او ثم لكن يمكن يمكنني استطيع ساعدني لو"
@@ -127,24 +131,42 @@ const IDF = (() => {
   return new Map([...df].map(([t, d]) => [t, Math.log(n / d)]))
 })()
 
-/** Term score of one text against one guide (IDF-weighted overlap). */
-function termScore(text: string, topicTerms: Set<string>): number {
-  let total = 0
+/**
+ * Term score of one text against one guide (IDF-weighted overlap), with the
+ * number of distinct shared words and the rarest one's weight — what the
+ * term-only floor reads.
+ */
+function termScore(
+  text: string,
+  topicTerms: Set<string>
+): { score: number; count: number; rarest: number } {
+  let score = 0
+  let count = 0
+  let rarest = 0
   for (const t of new Set(terms(text)))
-    if (topicTerms.has(t)) total += IDF.get(t) ?? 0
-  return total
+    if (topicTerms.has(t)) {
+      const idf = IDF.get(t) ?? 0
+      score += idf
+      count += 1
+      rarest = Math.max(rarest, idf)
+    }
+  return { score, count, rarest }
 }
 
 /**
  * Keywords stay the main signal; terms are the fallback. With a keyword
  * hit, terms only break ties — capped below the role boost (0.5) so a
- * teacher still gets the teacher's guide. Without one, a guide needs
- * MIN_TERM_SCORE to count, and scores under one keyword part (1) so it
- * never outranks a real keyword match.
+ * teacher still gets the teacher's guide. Without one, a guide counts only
+ * when the question shares two of its words, or one word that at most two
+ * guides use: a single common word ("school", "change") attached unrelated
+ * guides — "change the school logo" landed on get-started. A term-only
+ * score stays under one keyword part (1), so it never outranks a real
+ * keyword match.
  */
 const TERM_TIEBREAK = 0.4
 const MIN_TERM_SCORE = 1
 const TERM_ONLY_CAP = 0.9
+const RARE_TERM_IDF = Math.log(INDEX.length / 2)
 
 /** Score of one text: each matched phrase counts its number of parts. */
 function score(text: string, phrases: string[][]): number {
@@ -172,21 +194,29 @@ function score(text: string, phrases: string[][]): number {
 export function matchTopics(
   texts: string[],
   n = 2,
-  role?: SupportRole
+  role?: SupportRole,
+  options: { excludeSales?: boolean } = {}
 ): SupportTopic[] {
   const normalized = texts.map(normalize)
-  const scored = INDEX.map(({ topic, phrases, terms: topicTerms }) => {
+  const pool = options.excludeSales
+    ? INDEX.filter(({ topic }) => !topic.sales)
+    : INDEX
+  const scored = pool.map(({ topic, phrases, terms: topicTerms }) => {
     let hits = 0
     let termHits = 0
+    let strong = false
     normalized.forEach((text, i) => {
       const weight = 1 / (i + 1) ** 2
       hits += score(text, phrases) * weight
-      termHits += termScore(text, topicTerms) * weight
+      const t = termScore(text, topicTerms)
+      termHits += t.score * weight
+      // The floor reads the latest message only: an earlier one is context.
+      if (i === 0) strong = t.count >= 2 || t.rarest >= RARE_TERM_IDF
     })
     const total =
       hits > 0
         ? hits + Math.min(termHits * 0.1, TERM_TIEBREAK)
-        : termHits >= MIN_TERM_SCORE
+        : strong && termHits >= MIN_TERM_SCORE
           ? Math.min(termHits * 0.3, TERM_ONLY_CAP)
           : 0
     // A signed-in teacher asking about "grades" means entering marks, not
@@ -218,12 +248,34 @@ const HELP_INDEX = [
 ].map(normalize)
 
 /**
+ * Words that don't turn "what can you help with?" into a real question:
+ * the product's name, "using", "do". Normalised and stemmed like `terms`
+ * («بالقلم» → «قلم»).
+ */
+const HELP_FILLER = new Set(
+  (
+    "balqalam using use app platform system assistant bot " +
+    "قلم استخدام منصه نظام تطبيق مساعد تسوي تعمل تفعل"
+  ).split(" ")
+)
+
+/**
  * "What can you help me with?" — the Support chip's own question. No single
  * guide answers it: the bot lists the guides and attaches the help center.
+ *
+ * Only the question itself counts: the chip's exact text, or a help phrase
+ * with nothing else in it. "Can you help me add a student?" carries a real
+ * question after the phrase and goes to the guides like any other.
  */
-export function isHelpIndexQuestion(text: string): boolean {
+export function isHelpIndexQuestion(
+  text: string,
+  chipQuestions: string[] = []
+): boolean {
   const t = normalize(text)
-  return HELP_INDEX.some((k) => t.includes(k))
+  if (chipQuestions.some((q) => normalize(q) === t)) return true
+  const phrase = HELP_INDEX.find((k) => t.includes(k))
+  if (!phrase) return false
+  return terms(t.replace(phrase, " ")).every((w) => HELP_FILLER.has(w))
 }
 
 /** A how-to question about using the product — not a pre-sale one. */

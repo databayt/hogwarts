@@ -82,6 +82,9 @@ export const RATE_LIMITS = {
   // Public chatbot — every message is a paid Groq call, so burst + sustained
   CHATBOT: { windowMs: 60 * 1000, maxRequests: 12 }, // 12 messages per minute
   CHATBOT_HOURLY: { windowMs: 60 * 60 * 1000, maxRequests: 120 }, // 120 per hour
+  // One public school site, all its visitors together — a ceiling no
+  // rotation of visitor keys gets past.
+  CHATBOT_TENANT: { windowMs: 60 * 60 * 1000, maxRequests: 300 }, // 300 per hour
 
   // Public endpoints - moderate limits
   PUBLIC: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 requests per minute
