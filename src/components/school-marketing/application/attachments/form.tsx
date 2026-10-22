@@ -7,20 +7,16 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useState,
 } from "react"
-import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckCircle, Loader2, X } from "lucide-react"
-import { useDropzone } from "react-dropzone"
-import { useForm, useFormContext } from "react-hook-form"
+import { useForm } from "react-hook-form"
 
 import { asset } from "@/lib/asset-url"
-import { normalizeUploadUrl } from "@/lib/upload-url"
-import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
-import { PdfThumbnail } from "@/components/file/pdf-thumbnail"
-import { useUpload } from "@/components/file/upload/use-upload"
+import {
+  DocumentCard,
+  STUDENT_DOCUMENT_SLOTS,
+} from "@/components/form/atoms/document-card"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 
 import { useApplySession } from "../application-context"
@@ -30,218 +26,6 @@ import { saveAttachmentsStep } from "./actions"
 import { extractForAutoFill, type AutoFillResult } from "./extract-action"
 import type { AttachmentsFormProps, AttachmentsFormRef } from "./types"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
-
-const DOCUMENT_SLOT_KEYS = [
-  {
-    key: "degreeUrl" as const,
-    dictKey: "degree",
-    icon: asset("/icons/degree.png"),
-  },
-  {
-    key: "transcriptUrl" as const,
-    dictKey: "transcript",
-    icon: asset("/icons/transcript.png"),
-  },
-  { key: "idUrl" as const, dictKey: "id", icon: asset("/icons/id.png") },
-  {
-    key: "resumeUrl" as const,
-    dictKey: "resume",
-    icon: asset("/icons/resume.png"),
-  },
-  {
-    key: "otherUrl" as const,
-    dictKey: "other",
-    icon: asset("/icons/files.png"),
-  },
-]
-
-function DocumentCard({
-  name,
-  label,
-  icon,
-  disabled,
-  uploadedLabel,
-  onUploaded,
-  tooLargeLabel = "File too large (10MB max)",
-  invalidTypeLabel = "Unsupported file type",
-  invalidFileLabel = "Invalid file",
-  removeLabel = "Remove attachment",
-  pdfLabel = "PDF",
-}: {
-  name: string
-  label: string
-  icon: string
-  disabled?: boolean
-  uploadedLabel?: string
-  onUploaded?: (fileUrl: string) => void
-  tooLargeLabel?: string
-  invalidTypeLabel?: string
-  invalidFileLabel?: string
-  removeLabel?: string
-  pdfLabel?: string
-}) {
-  const form = useFormContext()
-  const currentValue = form.watch(name)
-  const hasFile =
-    !!currentValue &&
-    ((typeof currentValue === "object" && currentValue?.url) ||
-      (typeof currentValue === "string" && currentValue.length > 0))
-
-  const [rejectionError, setRejectionError] = useState<string | null>(null)
-
-  const {
-    isUploading,
-    error: uploadError,
-    upload,
-    reset: resetUpload,
-    getAcceptedTypes,
-  } = useUpload({
-    category: "document",
-    folder: "apply-documents",
-    maxSize: 10 * 1024 * 1024,
-    maxFiles: 1,
-    onSuccess: (result) => {
-      setRejectionError(null)
-      form.setValue(name, result)
-      // Trigger silent AI extraction for auto-fill
-      const url =
-        typeof result === "string" ? result : (result as { url?: string })?.url
-      if (url && onUploaded) onUploaded(url)
-    },
-  })
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: async (files) => {
-      if (files.length > 0) {
-        setRejectionError(null)
-        await upload(files[0])
-      }
-    },
-    onDropRejected: (rejections) => {
-      const code = rejections[0]?.errors[0]?.code
-      if (code === "file-too-large") {
-        setRejectionError(tooLargeLabel)
-      } else if (code === "file-invalid-type") {
-        setRejectionError(invalidTypeLabel)
-      } else {
-        setRejectionError(invalidFileLabel)
-      }
-    },
-    accept: getAcceptedTypes(),
-    maxSize: 10 * 1024 * 1024,
-    maxFiles: 1,
-    disabled: disabled || isUploading,
-    multiple: false,
-  })
-
-  const handleClear = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      form.setValue(name, "", { shouldDirty: true, shouldTouch: true })
-      resetUpload()
-      setRejectionError(null)
-    },
-    [form, name, resetUpload]
-  )
-
-  const errorMsg = rejectionError || uploadError
-
-  const uploaded = !!hasFile
-  const fileUrl = normalizeUploadUrl(
-    typeof currentValue === "string"
-      ? currentValue
-      : (currentValue as { url?: string })?.url || ""
-  )
-  const mimeType =
-    typeof currentValue === "object"
-      ? (currentValue as { mimeType?: string })?.mimeType || ""
-      : ""
-  const isImage =
-    /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileUrl) ||
-    mimeType.startsWith("image/")
-
-  return (
-    <div
-      {...getRootProps()}
-      className={cn(
-        "relative flex h-32 cursor-pointer flex-col items-center overflow-hidden rounded-lg border transition-colors",
-        errorMsg && "border-destructive",
-        isDragActive && "border-primary bg-primary/10",
-        disabled && "cursor-not-allowed opacity-50",
-        !uploaded && "justify-center gap-2 p-4"
-      )}
-    >
-      <input {...getInputProps()} />
-      {isUploading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        </div>
-      ) : uploaded && fileUrl ? (
-        <>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute end-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-            aria-label={removeLabel}
-          >
-            <X className="h-3 w-3" />
-          </button>
-          <p
-            className="absolute inset-x-0 bottom-0 z-10 truncate px-2 pt-4 pb-1.5 text-center text-sm font-medium text-black dark:text-white"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
-              backdropFilter: "blur(8px) saturate(110%)",
-              WebkitBackdropFilter: "blur(8px) saturate(110%)",
-              maskImage:
-                "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
-              WebkitMaskImage:
-                "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
-            }}
-          >
-            {label}
-          </p>
-          {isImage ? (
-            <img
-              src={fileUrl}
-              alt={label}
-              className="relative z-0 h-full w-full object-cover"
-            />
-          ) : /\.pdf$/i.test(fileUrl) || mimeType === "application/pdf" ? (
-            <PdfThumbnail
-              url={fileUrl}
-              label={label}
-              className="relative z-0"
-              fallback={
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                  <p className="text-muted-foreground text-xs">{pdfLabel}</p>
-                </div>
-              }
-            />
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-1">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <p className="text-muted-foreground text-xs">
-                {uploadedLabel || "Uploaded"}
-              </p>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <Image src={icon} alt={label} width={32} height={32} />
-          {errorMsg ? (
-            <p className="text-destructive text-xs">{errorMsg}</p>
-          ) : (
-            <p className="text-sm font-medium">{label}</p>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
 
 export const AttachmentsForm = forwardRef<
   AttachmentsFormRef,
@@ -360,10 +144,11 @@ export const AttachmentsForm = forwardRef<
         </div>
 
         {/* Document slots */}
-        {DOCUMENT_SLOT_KEYS.map(({ key, dictKey, icon }) => (
+        {STUDENT_DOCUMENT_SLOTS.map(({ key, dictKey, icon }) => (
           <DocumentCard
             key={key}
             name={key}
+            folder="apply-documents"
             label={dict[dictKey] || dictKey}
             icon={icon}
             uploadedLabel={dict.uploaded}

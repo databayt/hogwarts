@@ -98,33 +98,41 @@ export default function AttachmentsContent({
     }
   }, [documentsMissing, enableNext, disableNext, setCustomNavigation, onNext])
 
+  // Same shape as the admin /students wizard step: FormLayout takes exactly
+  // two children — heading column, form column — and renders ONLY those two.
+  // The notices used to sit between them as extra children, which pushed the
+  // upload grid out as a third child: on any school with requireDocuments the
+  // applicant saw the "upload a document" hint and no way to upload one.
   return (
     <FormLayout>
-      <FormHeading
-        title={stepDict.title || ATTACHMENTS_STEP_CONFIG.label(isRTL)}
-        description={
-          stepDict.description || ATTACHMENTS_STEP_CONFIG.description(isRTL)
-        }
-      />
-      {/* Informational, not destructive: on arrival the applicant has simply
-          not uploaded yet — that is the expected state, not an error. Held back
-          until the draft has loaded so a returning applicant whose uploads are
-          still in flight doesn't see a false "missing documents" flash. */}
-      {documentsMissing && sessionReady && (
-        <Alert>
-          <AlertDescription>
-            {stepDict.requiredHint ||
-              (isRTL
-                ? "هذه المدرسة تشترط رفع مستند واحد على الأقل للمتابعة"
-                : "This school requires at least one uploaded document to continue")}
-          </AlertDescription>
-        </Alert>
-      )}
-      {saveError && (
-        <Alert variant="destructive">
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
+      <div className="space-y-6">
+        <FormHeading
+          title={stepDict.title || ATTACHMENTS_STEP_CONFIG.label(isRTL)}
+          description={
+            stepDict.description || ATTACHMENTS_STEP_CONFIG.description(isRTL)
+          }
+        />
+        {/* Informational, not destructive: on arrival the applicant has simply
+            not uploaded yet — that is the expected state, not an error. Held
+            back until the draft has loaded so a returning applicant whose
+            uploads are still in flight doesn't see a false "missing documents"
+            flash. */}
+        {documentsMissing && sessionReady && (
+          <Alert>
+            <AlertDescription>
+              {stepDict.requiredHint ||
+                (isRTL
+                  ? "هذه المدرسة تشترط رفع مستند واحد على الأقل للمتابعة"
+                  : "This school requires at least one uploaded document to continue")}
+            </AlertDescription>
+          </Alert>
+        )}
+        {saveError && (
+          <Alert variant="destructive">
+            <AlertDescription>{saveError}</AlertDescription>
+          </Alert>
+        )}
+      </div>
       <AttachmentsForm
         ref={attachmentsFormRef}
         initialData={initialData as Record<string, string>}

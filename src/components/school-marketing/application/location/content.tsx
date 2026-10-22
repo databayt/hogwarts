@@ -123,16 +123,20 @@ export default function LocationContent({ dictionary }: Props) {
           stepDict.description || LOCATION_STEP_CONFIG.description(isRTL)
         )}
       />
-      {saveError && (
-        <Alert variant="destructive">
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
-      <LocationForm
-        ref={locationFormRef}
-        initialData={initialData as LocationStepData}
-        dictionary={dictionary}
-      />
+      {/* One wrapper: FormLayout renders only its first two children, so a
+          bare Alert here pushed the form out the moment a save failed. */}
+      <div className="space-y-6">
+        {saveError && (
+          <Alert variant="destructive">
+            <AlertDescription>{saveError}</AlertDescription>
+          </Alert>
+        )}
+        <LocationForm
+          ref={locationFormRef}
+          initialData={initialData as LocationStepData}
+          dictionary={dictionary}
+        />
+      </div>
     </FormLayout>
   )
 }
