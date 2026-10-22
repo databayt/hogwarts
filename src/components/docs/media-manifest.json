@@ -3008,5 +3008,193 @@
         "default": true
       }
     ]
+  },
+  "admin-login/dashboard-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "لوحة تحكم الإدارة بعد الدخول",
+      "en": "The admin dashboard after signing in"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/admin/dashboard.avif?v=384bcc59",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/admin/dashboard@2x.avif?v=108163f4"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/login/admin/dashboard.webp?v=0312e870",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/login/admin/dashboard@2x.webp?v=782ee969"
+    }
+  },
+  "admin-login/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الدخول كمدير المدرسة",
+      "en": "Signing in as the school admin"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/login/admin/video.poster.webp?v=a1265af9",
+    "width": 1920,
+    "height": 1080,
+    "duration": 26.9,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/admin/video.av1.mp4?v=52b77b8e",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/admin/video.mp4?v=6a66bc7a",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/admin/video.vtt?v=e42cb18a",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "teacher-credentials/list-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة المعلمين وزر الإجراءات في كل صف",
+      "en": "The teachers list, an actions menu on every row"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/list.avif?v=d9c487f4",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/list@2x.avif?v=76ad1701"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/list.webp?v=052f8c0c",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/list@2x.webp?v=8e52ff77"
+    }
+  },
+  "teacher-credentials/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إنشاء بيانات دخول المعلم",
+      "en": "Generating a teacher's login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/video.poster.webp?v=aebf216b",
+    "width": 1920,
+    "height": 1080,
+    "duration": 35.37,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/video.av1.mp4?v=3ad5268f",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/video.mp4?v=462d63ec",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/teachers/credentials/video.vtt?v=be0c1754",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "teacher-timetables/week-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الجدول مع اختيار القاعة والمعلم",
+      "en": "The timetable page with its room and teacher pickers"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/week.avif?v=180e56ff",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/week@2x.avif?v=cd1dc08f"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/week.webp?v=d2291e4e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/week@2x.webp?v=b00b312a"
+    }
+  },
+  "teacher-timetables/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "جدول كل معلم",
+      "en": "Each teacher's timetable"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/video.poster.webp?v=c0281ab4",
+    "width": 1920,
+    "height": 1080,
+    "duration": 36.13,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/video.av1.mp4?v=034631b4",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/video.mp4?v=92747cf0",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/teacher/video.vtt?v=e0a2a294",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "teacher-profile/profile-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "الملف الشخصي للمعلم وأزرار التعديل",
+      "en": "The teacher's profile with its edit buttons"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/profile/edit/profile.avif?v=fb96776a",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/profile/edit/profile@2x.avif?v=01b92b53"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/profile/edit/profile.webp?v=c263f111",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/profile/edit/profile@2x.webp?v=31e04f1e"
+    }
+  },
+  "teacher-profile/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "المعلم يعدّل بياناته",
+      "en": "A teacher updates their details"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/profile/edit/video.poster.webp?v=eb802587",
+    "width": 1920,
+    "height": 1080,
+    "duration": 33,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/profile/edit/video.av1.mp4?v=e435b97f",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/profile/edit/video.mp4?v=5396cfbc",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/profile/edit/video.vtt?v=b1e01b7a",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
   }
 }
