@@ -33,7 +33,8 @@ import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-toke
  * - "saas": User logged in from SaaS marketing (ed.databayt.org)
  *   → Stay on SaaS marketing after login (unless callbackUrl specified)
  * - "school": User logged in from School marketing (demo.databayt.org)
- *   → Stay on school marketing after login (unless callbackUrl specified)
+ *   → Its staff land on /dashboard, students and guardians on their fees,
+ *     anyone else stays on school marketing (unless callbackUrl specified)
  *
  * The ONLY path to /onboarding is via explicit callbackUrl (from "Get Started" button)
  */
@@ -346,10 +347,22 @@ export const login = async (
           role,
           finalRedirectUrl,
         })
+      } else if (
+        existingUser.schoolId &&
+        existingUser.schoolId === loginSchoolId
+      ) {
+        // Staff of THIS school (ADMIN, ACCOUNTANT, STAFF, TEACHER) go straight
+        // to the dashboard. Landing them on marketing was the same friction
+        // as above, seen again at alabidae: teachers logged in, saw the
+        // public home page and asked how to reach "the platform".
+        finalRedirectUrl = `${baseUrl}/${redirectLocale}/dashboard`
+        console.log("[LOGIN-ACTION] 🏫 School staff to dashboard:", {
+          subdomain,
+          role,
+          finalRedirectUrl,
+        })
       } else {
-        // Other school roles (ADMIN, ACCOUNTANT, STAFF, TEACHER) stay on
-        // school marketing — they typically have richer dashboards to
-        // navigate to and aren't payment-focused.
+        // Not a member of this school: stay on its marketing page.
         finalRedirectUrl = `${baseUrl}/${redirectLocale}`
         console.log("[LOGIN-ACTION] 🏠 Staying on school marketing:", {
           subdomain,

@@ -344,6 +344,23 @@ describe("dashboard support desk", () => {
   })
 })
 
+// 2026-10-22: what alabidae's teachers asked in their WhatsApp group in the
+// first evening on the platform, as a signed-in teacher.
+describe("matchTopics — a teacher's first evening", () => {
+  it.each([
+    ["بدخل التطبيق بجيني المستخدم غير موجود", "login"],
+    ["الرابط ما فتح معاي", "login"],
+    ["تم رفض الوصول", "login"],
+    ["ممكن أغير الايميل", "login"],
+    ["انا مش عارفه ادخل جدول حصصي", "timetable"],
+    ["جاتني بداية الصفحة من هنا", "teacher-start"],
+    ["ادوس على ابدأ من الصفر ولا", "teacher-start"],
+    ["ظهر لي بس العلوم", "teacher-start"],
+  ])("%s → %s", (q, slug) => {
+    expect(matchTopics([q], 2, "teacher")[0]?.slug).toBe(slug)
+  })
+})
+
 // 2026-10-21: real questions the help index swallowed, and guides attached
 // by one common word.
 describe("help index — only the question itself", () => {
