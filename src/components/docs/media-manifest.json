@@ -3196,5 +3196,287 @@
         "default": true
       }
     ]
+  },
+  "live-attendance/session-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة حصة منتهية وقسم الحضور",
+      "en": "An ended class and its attendance"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/attendance/session.avif?v=4e8b46fa",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/attendance/session@2x.avif?v=e072ea8e"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/attendance/session.webp?v=12ae13a4",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/attendance/session@2x.webp?v=e61ce437"
+    }
+  },
+  "live-attendance/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الحضور في الحصة المباشرة",
+      "en": "Attendance from a live class"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/live/attendance/video.poster.webp?v=f9b42c51",
+    "width": 1920,
+    "height": 1080,
+    "duration": 33.43,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/attendance/video.av1.mp4?v=e4f320f3",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/attendance/video.mp4?v=6b7bb0e5",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/attendance/video.vtt?v=da7531fd",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "student-credentials/list-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "قائمة الطلاب وزر الإجراءات في كل صف",
+      "en": "The students list, an actions menu on every row"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/credentials/list.avif?v=fe5964af",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/credentials/list@2x.avif?v=341f39c0"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/students/credentials/list.webp?v=04812beb",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/students/credentials/list@2x.webp?v=8528ba6d"
+    }
+  },
+  "student-credentials/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "إنشاء بيانات دخول الطالب",
+      "en": "Generating a student's login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/students/credentials/video.poster.webp?v=2e1523f0",
+    "width": 1920,
+    "height": 1080,
+    "duration": 36.17,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/credentials/video.av1.mp4?v=ac300a0a",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/credentials/video.mp4?v=64b8017d",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/students/credentials/video.vtt?v=a160e2bb",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "timetable-edit/week-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة الجدول وخاناتها",
+      "en": "The timetable page and its cells"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/week.avif?v=180e56ff",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/week@2x.avif?v=cd1dc08f"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/week.webp?v=d2291e4e",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/week@2x.webp?v=b00b312a"
+    }
+  },
+  "timetable-edit/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "تعديل الجدول الدراسي",
+      "en": "Editing the timetable"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/video.poster.webp?v=2afc1768",
+    "width": 1920,
+    "height": 1080,
+    "duration": 31.13,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/video.av1.mp4?v=4ad08fdb",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/video.mp4?v=7249ab36",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/edit/video.vtt?v=46d0c8ad",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "live-student/live-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة «مباشر» للطالب والحصة الجارية في الأعلى",
+      "en": "The student's live page, the running class on top"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/student/live.avif?v=9ea1a0f1",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/student/live@2x.avif?v=de7f4d00"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/student/live.webp?v=e9ea0568",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/student/live@2x.webp?v=5ee9f1bf"
+    }
+  },
+  "live-student/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الطالب ينضم للحصة المباشرة",
+      "en": "A student joins a live class"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/live/student/video.poster.webp?v=d1e7a42f",
+    "width": 1920,
+    "height": 1080,
+    "duration": 34.5,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/student/video.av1.mp4?v=1567fad7",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/student/video.mp4?v=d258088a",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/student/video.vtt?v=d4131ed8",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "live-settings/settings-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "إعدادات الحصص المباشرة",
+      "en": "The live-class settings"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/settings/settings.avif?v=6bfdba0d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/settings/settings@2x.avif?v=ba66e359"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/settings/settings.webp?v=9cb051ac",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/settings/settings@2x.webp?v=e3abe148"
+    }
+  },
+  "live-settings/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "استخدم الحصص المباشرة بفعالية",
+      "en": "Getting the most from live classes"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/live/settings/video.poster.webp?v=0934a53c",
+    "width": 1920,
+    "height": 1080,
+    "duration": 33.17,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/settings/video.av1.mp4?v=16295d54",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/settings/video.mp4?v=10fee0a6",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/settings/video.vtt?v=5bac1775",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "live-teacher/live-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": "صفحة «مباشر» للمعلم وحصته الجارية",
+      "en": "The teacher's live page and their running class"
+    },
+    "order": 1,
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.avif?v=cf8bc206",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.avif?v=ec836603"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.webp?v=8bd94e18",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.webp?v=70601665"
+    }
+  },
+  "live-teacher/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "المعلم يبدأ الحصة المباشرة",
+      "en": "A teacher starts a live class"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.poster.webp?v=cc2a2ebf",
+    "width": 1920,
+    "height": 1080,
+    "duration": 34.9,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.av1.mp4?v=624ddd40",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.mp4?v=3b085609",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.vtt?v=104e407e",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
   }
 }
