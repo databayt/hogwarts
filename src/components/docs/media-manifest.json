@@ -2921,5 +2921,92 @@
       "1600": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates.webp?v=0f7b87b6",
       "2400": "https://cdn.databayt.org/hogwarts/en/grades/templates/grade-templates@2x.webp?v=55a253b7"
     }
+  },
+  "teacher-start/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "أول دخول للمعلم",
+      "en": "A teacher's first login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/login/teacher/video.poster.webp?v=0cb83239",
+    "width": 1920,
+    "height": 1080,
+    "duration": 57.93,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/video.av1.mp4?v=f28e2e2f",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/video.mp4?v=91367492",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/video.vtt?v=bec2ddb1",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "teacher-start/login-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "أول دخول للمعلم",
+      "en": "A teacher's first login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/login/teacher/login.poster.webp?v=cc40f780",
+    "width": 1920,
+    "height": 1080,
+    "duration": 15.83,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/login.av1.mp4?v=f7416cdd",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/login.mp4?v=afaef1db",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/login.vtt?v=49aaa04e",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
+  },
+  "teacher-start/platform-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "أول دخول للمعلم",
+      "en": "A teacher's first login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/login/teacher/platform.poster.webp?v=92c4bca9",
+    "width": 1920,
+    "height": 1080,
+    "duration": 34.83,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/platform.av1.mp4?v=f03ec93b",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/platform.mp4?v=f68146d0",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/login/teacher/platform.vtt?v=9a6e1949",
+        "srclang": "ar",
+        "label": "العربية",
+        "default": true
+      }
+    ]
   }
 }

@@ -1088,6 +1088,9 @@
   {
     "slug": "login",
     "flow": "login",
+    "media": [
+      "teacher-start/login-ar"
+    ],
     "roles": [
       "admin",
       "teacher",
@@ -1167,6 +1170,7 @@
   },
   {
     "slug": "teacher-start",
+    "flow": "teacher-start",
     "roles": [
       "teacher"
     ],
