@@ -92,7 +92,8 @@ build() {
       echo "    performance gate: ok"
     else
       echo "    PERFORMANCE REGRESSION — see $BUILD_DIR/performance/reports/latest/REPORT.md"
-      [[ "${PERF_GATE:-warn}" == "strict" ]] && { echo "ABORT: PERF_GATE=strict"; exit 1; }
+      # an `if`, not `[[ ]] &&`: as the build's last command a false test made warn mode exit 1
+      if [[ "${PERF_GATE:-warn}" == "strict" ]]; then echo "ABORT: PERF_GATE=strict"; exit 1; fi
     fi
   fi
 }
