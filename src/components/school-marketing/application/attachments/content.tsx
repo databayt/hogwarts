@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { CircleAlert } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormHeading, FormLayout } from "@/components/form"
@@ -105,7 +106,7 @@ export default function AttachmentsContent({
   // applicant saw the "upload a document" hint and no way to upload one.
   return (
     <FormLayout>
-      <div className="space-y-6">
+      <div className="space-y-3 sm:space-y-4">
         <FormHeading
           title={stepDict.title || ATTACHMENTS_STEP_CONFIG.label(isRTL)}
           description={
@@ -113,19 +114,18 @@ export default function AttachmentsContent({
           }
         />
         {/* Informational, not destructive: on arrival the applicant has simply
-            not uploaded yet — that is the expected state, not an error. Held
-            back until the draft has loaded so a returning applicant whose
-            uploads are still in flight doesn't see a false "missing documents"
-            flash. */}
+            not uploaded yet — that is the expected state, not an error. So a
+            quiet row under the description, not an outlined Alert. Held back
+            until the draft has loaded so a returning applicant whose uploads
+            are still in flight doesn't see a false "missing documents" flash. */}
         {documentsMissing && sessionReady && (
-          <Alert>
-            <AlertDescription>
-              {stepDict.requiredHint ||
-                (isRTL
-                  ? "هذه المدرسة تشترط رفع مستند واحد على الأقل للمتابعة"
-                  : "This school requires at least one uploaded document to continue")}
-            </AlertDescription>
-          </Alert>
+          <p className="text-muted-foreground flex items-center gap-2 text-sm">
+            <CircleAlert className="size-4 shrink-0" aria-hidden />
+            {stepDict.requiredHint ||
+              (isRTL
+                ? "هذه المدرسة تشترط رفع مستند واحد على الأقل للمتابعة"
+                : "This school requires at least one uploaded document to continue")}
+          </p>
         )}
         {saveError && (
           <Alert variant="destructive">
