@@ -19,6 +19,24 @@ import { Container, getContainer } from "@cloudflare/containers"
 
 import crons from "./crons.json"
 
+// Neon scales compute to zero after 5 idle minutes, and a */15 + */30 sweep
+// never gives it those minutes — on 2026-10-23 the free 100 CU-hours ran out
+// and every school went dark. Overnight (20:00–02:00 UTC = 22:00–04:00
+// Khartoum/Kigali) the frequent groups run on the hour only, so the database
+// wakes once an hour instead of every 15 minutes. The jobs are queue sweeps
+// and the next run picks up whatever waited.
+const QUIET_CRONS = new Set(["*/15 * * * *", "*/30 * * * *"])
+const QUIET_FROM_UTC = 20
+const QUIET_UNTIL_UTC = 2
+
+function isQuietTick(cron, scheduledTime) {
+  if (!QUIET_CRONS.has(cron)) return false
+  const at = new Date(scheduledTime)
+  const hour = at.getUTCHours()
+  const quiet = hour >= QUIET_FROM_UTC || hour < QUIET_UNTIL_UTC
+  return quiet && at.getUTCMinutes() !== 0
+}
+
 export class HogwartsContainer extends Container {
   defaultPort = 3000
   // A cold boot of this app is tens of seconds; keep the instance warm.
@@ -108,9 +126,25 @@ function freezable(response) {
 // (role cookie, Cloudflare's country/colo) is no finer than that.
 // Without the RUM binding (local, or a deploy that dropped it) this is a no-op.
 const RUM_PATH = "/api/rum"
-const RUM_METRICS = new Set(["TTFB", "FCP", "LCP", "INP", "CLS", "FID", "NAV", "SRV"])
+const RUM_METRICS = new Set([
+  "TTFB",
+  "FCP",
+  "LCP",
+  "INP",
+  "CLS",
+  "FID",
+  "NAV",
+  "SRV",
+])
 const RUM_ROLES = new Set([
-  "DEVELOPER", "ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF", "USER",
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "ACCOUNTANT",
+  "STAFF",
+  "USER",
 ])
 const clip = (v, n = 64) => (typeof v === "string" ? v.slice(0, n) : "")
 
@@ -120,7 +154,10 @@ function tenantOf(hostname) {
 }
 
 async function collectRum(request, env) {
-  const accepted = new Response(null, { status: 204, headers: { "cache-control": "no-store" } })
+  const accepted = new Response(null, {
+    status: 204,
+    headers: { "cache-control": "no-store" },
+  })
   if (!env.RUM) return accepted
   try {
     const raw = await request.text()
@@ -128,10 +165,19 @@ async function collectRum(request, env) {
     const body = JSON.parse(raw)
     if (!body || !Array.isArray(body.samples)) return accepted
     const url = new URL(request.url)
-    const role = /(?:^|;\s*)authjs\.role=([A-Z]+)/.exec(request.headers.get("cookie") || "")?.[1]
+    const role = /(?:^|;\s*)authjs\.role=([A-Z]+)/.exec(
+      request.headers.get("cookie") || ""
+    )?.[1]
     const cf = request.cf || {}
     for (const s of body.samples.slice(0, 12)) {
-      if (!s || !RUM_METRICS.has(s.n) || !Number.isFinite(s.v) || s.v < 0 || s.v > 600000) continue
+      if (
+        !s ||
+        !RUM_METRICS.has(s.n) ||
+        !Number.isFinite(s.v) ||
+        s.v < 0 ||
+        s.v > 600000
+      )
+        continue
       env.RUM.writeDataPoint({
         indexes: [tenantOf(url.hostname)],
         blobs: [
@@ -159,7 +205,8 @@ async function collectRum(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
-    if (request.method === "POST" && url.pathname === RUM_PATH) return collectRum(request, env)
+    if (request.method === "POST" && url.pathname === RUM_PATH)
+      return collectRum(request, env)
     const cacheable =
       request.method === "GET" &&
       EDGE_CACHEABLE.some((re) => re.test(url.pathname))
@@ -184,6 +231,10 @@ export default {
     const paths = crons.schedules[controller.cron] ?? []
     if (paths.length === 0) {
       console.log("cron: no routes for", controller.cron)
+      return
+    }
+    if (isQuietTick(controller.cron, controller.scheduledTime)) {
+      console.log("cron: quiet hours, skipped", controller.cron)
       return
     }
     const container = getContainer(env.HOGWARTS, "main")

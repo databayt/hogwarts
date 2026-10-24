@@ -1,5 +1,5 @@
 {
-  "_note": "Generated from vercel.crons.full.json. Every job runs here: the 3 conference jobs moved on 2026-10-17 and the 4 admission/finance jobs (fee-due, fee-overdue, process-email-notifications, process-document-jobs) on 2026-10-19 \u2014 both GitHub bridges pinged ed.databayt.org, which 301s, and curl -f counts a 301 as success, so neither had run since the cutover. Keyed by cron expression (UTC) \u2192 cron route paths.",
+  "_note": "Generated from vercel.crons.full.json. Every job runs here: the 3 conference jobs moved on 2026-10-17 and the 4 admission/finance jobs (fee-due, fee-overdue, process-email-notifications, process-document-jobs) on 2026-10-19 — both GitHub bridges pinged ed.databayt.org, which 301s, and curl -f counts a 301 as success, so neither had run since the cutover. Keyed by cron expression (UTC) → cron route paths. funnel-apply moved from :17 to :00 on 2026-10-24 so it no longer wakes Neon on its own; the 17 trigger stays registered with no routes (removing a trigger needs the array edited, and re-adding one takes ~19h). Overnight quiet hours for the */15 and */30 groups live in cf/worker.js.",
   "schedules": {
     "*/15 * * * *": [
       "/api/cron/publish-announcements",
@@ -11,7 +11,8 @@
       "/api/cron/process-email-notifications"
     ],
     "0 * * * *": [
-      "/api/cron/expire-announcements"
+      "/api/cron/expire-announcements",
+      "/api/cron/funnel-apply"
     ],
     "*/30 * * * *": [
       "/api/cron/process-report-card-pdfs",
@@ -60,9 +61,7 @@
     "30 3 * * *": [
       "/api/cron/translation-sweep"
     ],
-    "17 * * * *": [
-      "/api/cron/funnel-apply"
-    ],
+    "17 * * * *": [],
     "0 9 * * *": [
       "/api/cron/fee-overdue"
     ]
