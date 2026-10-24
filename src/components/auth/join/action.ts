@@ -28,17 +28,28 @@ export const register = async (
 
   const existingUser = await getUserByEmail(email)
 
-  if (existingUser) {
+  // A retry of an unfinished sign-up (the code email failed, or the tab was
+  // closed before the code) resends the code instead of dead-ending on
+  // "already in use". Same password only — never a takeover of the address.
+  const isUnfinishedSignup =
+    !!existingUser &&
+    !existingUser.emailVerified &&
+    !!existingUser.password &&
+    (await bcrypt.compare(password, existingUser.password))
+
+  if (existingUser && !isUnfinishedSignup) {
     return { error: "Email already in use!" }
   }
 
-  await db.user.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-    },
-  })
+  if (!existingUser) {
+    await db.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    })
+  }
 
   const verificationToken = await generateVerificationToken(email)
   const emailSent = await sendVerificationEmail(

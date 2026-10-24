@@ -91,8 +91,17 @@ export default function ApplicationSuccessModal({
         <CelebrationAnimation className="mb-4" />
 
         {/* Success Message */}
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground">
           {dict.submitted || "Application submitted"}
+        </p>
+
+        {/* The family's reference when they call the school — only the
+            clipboard carried it before, so most never saw it */}
+        <p className="text-muted-foreground mt-2 mb-6 text-sm">
+          {dict.applicationNo || "Application No"}:{" "}
+          <span dir="ltr" className="text-foreground font-medium">
+            {applicationNumber}
+          </span>
         </p>
 
         {/* Copy details */}

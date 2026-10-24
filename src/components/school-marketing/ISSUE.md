@@ -64,6 +64,9 @@ last_audited: 2026-08-03
 - [x] Enrollment closed fallback
 - [x] Continue application flow
 - [x] Application status banner
+- [x] **Self-application verified end to end (2026-10-24)** — sign-up → code → wizard → submit → admin select → offer accepted → enrollment confirmed. Fixed: verified applicants landing on /dashboard "access denied", sign-up bouncing to /login, the unverified-retry dead end; application number now shown in the success modal
+- [ ] Join/register errors are hardcoded English ("Email already in use!", "Failed to send verification email…") on the Arabic page
+- [ ] Expired-but-OPEN campaigns silently close admissions (kingfahd, alwafi, london, demo on 2026-10-24) — admins get no warning
 - [x] AdmissionCTA + AdmissionDates rendered on /admissions
 - [x] New-lead notifications to ADMIN+STAFF on inquiry/tour booking
 - [x] **`/admissions` restyled to the zenda surface language (2026-08-05)** —

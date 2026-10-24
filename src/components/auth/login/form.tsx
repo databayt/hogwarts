@@ -14,7 +14,6 @@ import {
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
@@ -155,24 +154,23 @@ export const LoginForm = ({
   const autoLogin = useCallback(
     async (email: string, pwd: string) => {
       try {
-        const result = await signIn("credentials", {
-          identifier: email,
-          password: pwd,
-          redirect: false,
-        })
-        if (result?.ok) {
-          // Re-run login action to get proper redirect URL
-          const loginOptions: LoginOptions = {
-            callbackUrl,
-            context: effectiveContext,
-            subdomain,
-            locale: lang,
-          }
-          const loginResult = await login(
-            { identifier: email, password: pwd },
-            loginOptions
-          )
-          if (loginResult?.redirectUrl && !tenant) {
+        // The login action signs in server-side AND returns the redirect.
+        // Never signIn() on the client first: once the session cookie exists
+        // the proxy 307s any POST to /login, the action's reply is lost, and
+        // a freshly verified applicant landed on /dashboard ("access denied")
+        // instead of their callbackUrl (/application).
+        const loginOptions: LoginOptions = {
+          callbackUrl,
+          context: effectiveContext,
+          subdomain,
+          locale: lang,
+        }
+        const loginResult = await login(
+          { identifier: email, password: pwd },
+          loginOptions
+        )
+        if (loginResult?.success) {
+          if (loginResult.redirectUrl && !tenant) {
             window.location.href = loginResult.redirectUrl
           } else if (!tenant) {
             window.location.href = callbackUrl || `/${lang}`

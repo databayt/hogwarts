@@ -14,13 +14,12 @@ import {
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
+import { getSubdomainFromHost } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Form,
@@ -35,11 +34,13 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { FormError } from "../error/form-error"
 import { FormSuccess } from "../form-success"
+import { login } from "../login/action"
 import { Social } from "../social"
 import { createRegisterSchema } from "../validation"
 import {
@@ -92,17 +93,26 @@ export const RegisterForm = (props: Props) => {
     },
   })
 
-  // Auto-login helper — single client-side signIn, then direct redirect
+  // Auto-login helper — the login action signs in, then a hard redirect
   const autoLogin = useCallback(
     async (email: string, pwd: string) => {
       try {
-        const result = await signIn("credentials", {
-          email,
-          password: pwd,
-          redirect: false,
-        })
-        if (result?.ok) {
-          window.location.href = callbackUrl || `/${lang}`
+        // Same server action the login form uses: it signs in with the
+        // `identifier` field the credentials provider validates (the old
+        // client signIn sent `email`, failed silently, and dropped every new
+        // applicant back on /login) and picks the tenant-aware redirect.
+        const subdomain = getSubdomainFromHost(window.location.host)
+        const result = await login(
+          { identifier: email, password: pwd },
+          {
+            callbackUrl,
+            context: subdomain ? "school" : "saas",
+            subdomain,
+            locale: lang,
+          }
+        )
+        if (result?.success) {
+          window.location.href = result.redirectUrl || callbackUrl || `/${lang}`
         } else {
           router.push(
             callbackUrl
