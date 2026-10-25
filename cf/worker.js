@@ -15,7 +15,8 @@
 // every tenant shares one copy, and only when the origin itself says
 // `public` with a real max-age (so the service worker, icons served
 // `max-age=0` and anything carrying a session are never frozen).
-import { Container, getContainer } from "@cloudflare/containers"
+import { WorkerEntrypoint } from "cloudflare:workers"
+import { Container, getContainer, switchPort } from "@cloudflare/containers"
 
 import crons from "./crons.json"
 
@@ -200,6 +201,22 @@ async function collectRum(request, env) {
     // A malformed beacon is dropped; measuring never fails a request.
   }
   return accepted
+}
+
+// ---- Shared WhatsApp bridge for other databayt Workers ------------------------
+// The Evolution process in this container (cf/entry.cjs, 127.0.0.1:8080) also
+// carries Space's linked phone, so Space needs no container of its own
+// (2026-10-25: a second always-on container cost ~$8/mo). A named entrypoint
+// is reachable only through a service binding — `space` binds it as WHATSAPP
+// with "entrypoint": "WhatsappBridge" — never from the public internet, and
+// Evolution still checks its API key on every call. Each caller keeps to its
+// own instance name; schools use school_<id>.
+export class WhatsappBridge extends WorkerEntrypoint {
+  fetch(request) {
+    return getContainer(this.env.HOGWARTS, "main").fetch(
+      switchPort(request, 8080)
+    )
+  }
 }
 
 export default {
