@@ -26,8 +26,8 @@ FROM node:22-bookworm-slim
 # the amd64 emulation on the Mac.)
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 # Next's heap cap leaves room for the bridge (768 MiB, set in cf/entry.cjs)
-# inside the 4 GiB standard-1 instance.
-ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NODE_OPTIONS=--max-old-space-size=2048 NEXT_TELEMETRY_DISABLED=1
+# inside the 3 GiB custom instance.
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NODE_OPTIONS=--max-old-space-size=1792 NEXT_TELEMETRY_DISABLED=1
 COPY --from=evolution /evolution /evolution
 WORKDIR /app
 COPY .next/standalone ./

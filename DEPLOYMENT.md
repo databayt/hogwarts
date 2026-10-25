@@ -192,13 +192,13 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 | | |
 | --- | --- |
 | Worker | `hogwarts` (`cf/worker.js`) — forwards every request to one container, Host header intact. Since 2026-09-13 it also serves `/_next/static`, `/_next/image`, `/fonts` and the PWA icons from Cloudflare's cache (below) |
-| Container | `HogwartsContainer`, `standard-1` (½ vCPU, 4 GiB), `max_instances: 1`, `sleepAfter: 24h` |
+| Container | `HogwartsContainer`, custom 1 vCPU / 3 GiB / 6 GB disk (was `standard-1`, ½ vCPU / 4 GiB, until 2026-10-25), `max_instances: 1`, `sleepAfter: 24h` |
 | Image | `Dockerfile`: `node:22-bookworm-slim` + prebuilt Next standalone, COPY-only, linux/amd64 |
 | Code | pinned with `CF_SOURCE=bb675c5af` (what balqalam.com ran on Vercel) for a like-for-like cutover |
 | Database | the same prod Neon (`ep-little-credit`, pooled) that Vercel uses — both hosts serve one DB |
 | Env | prod values verbatim: 110 config vars baked as `env.json`, 25 secrets on the Worker → container env |
 | Crons | none in the Worker; the GitHub Actions jobs keep running and reach the container after cutover |
-| Cost | Workers Paid $5/mo + one always-on standard-1 ≈ $33/mo (container CPU bills on active use, not allocated vCPU — Cowork's correction 2026-09-07) |
+| Cost | Workers Paid $5/mo + one always-on 3 GiB container ≈ $20/mo memory + ≈ $1 disk + CPU on active use only. Memory and disk bill on what is provisioned, so the custom size costs less than standard-1 and doubles the CPU ceiling |
 
 ### Commands
 

@@ -15,8 +15,11 @@
       "class_name": "HogwartsContainer",
       "image": "./Dockerfile",
       "max_instances": 1,
-      // ½ vCPU, 4 GiB. `basic` (1 GiB) is too small for a next start of this size.
-      "instance_type": "standard-1"
+      // 1 vCPU, 3 GiB (custom; the smallest custom size). Cheaper than
+      // standard-1 (½ vCPU, 4 GiB) — memory is billed provisioned, CPU only
+      // when used — and twice the CPU. Next + the bridge measured ~0.5–1 GiB
+      // RSS on 10-25. The image unpacks to ~3.1 GB.
+      "instance_type": { "vcpu": 1, "memory_mib": 3072, "disk_mb": 6000 }
     }
   ],
   "durable_objects": {
