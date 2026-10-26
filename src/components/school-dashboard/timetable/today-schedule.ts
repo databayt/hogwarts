@@ -162,7 +162,13 @@ export async function loadTodaySchedule(input: {
       },
       classroom: { select: { roomName: true } },
       period: {
-        select: { id: true, name: true, startTime: true, endTime: true },
+        select: {
+          id: true,
+          name: true,
+          startTime: true,
+          endTime: true,
+          untimed: true,
+        },
       },
     },
     orderBy: { period: { startTime: "asc" } },
@@ -181,6 +187,7 @@ export async function loadTodaySchedule(input: {
   const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
+    untimed: slot.period.untimed,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
     subject: slot.subject?.name || "",
@@ -206,10 +213,10 @@ export async function loadTodaySchedule(input: {
       Boolean
     )
   )
+  // No grade in play (a teacher free all day) → school-wide periods only:
+  // every grade's bell at once would list «12:00» once per bell.
   const { rows: dayPeriods, rowOf } = mergePeriodRows(
-    periods.filter(
-      (p) => !p.gradeId || dayGrades.size === 0 || dayGrades.has(p.gradeId)
-    )
+    periods.filter((p) => !p.gradeId || dayGrades.has(p.gradeId))
   )
   const fullSchedule = dayPeriods.map((period) => {
     const existing = schedule.find(
@@ -221,6 +228,7 @@ export async function loadTodaySchedule(input: {
     return {
       periodId: period.id,
       periodName: period.name,
+      untimed: period.untimed,
       startTime: period.startTime,
       endTime: period.endTime,
       subject: isBreak ? period.name : "",

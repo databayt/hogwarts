@@ -260,6 +260,9 @@ export default function TeacherView({
 
     for (const item of todaySchedule) {
       if (item.isBreak) continue
+      // An untimed period has no clock to be «now» against.
+      if (item.untimed) continue
+      if (!item.subject && !item.teacher) continue
 
       const startTime = new Date(item.startTime)
       const endTime = new Date(item.endTime)
@@ -515,12 +518,18 @@ export default function TeacherView({
                 <CardContent className="py-3">
                   <div className="flex items-center gap-4">
                     <div className="w-20 text-center">
-                      <p className="font-mono font-semibold">
-                        {formatTime(item.startTime)}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {formatTime(item.endTime)}
-                      </p>
+                      {item.untimed ? (
+                        <p className="font-semibold">{item.periodName}</p>
+                      ) : (
+                        <>
+                          <p className="font-mono font-semibold">
+                            {formatTime(item.startTime)}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatTime(item.endTime)}
+                          </p>
+                        </>
+                      )}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">
