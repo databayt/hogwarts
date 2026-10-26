@@ -82,7 +82,7 @@ export async function getClassrooms(
       where,
       skip: (page - 1) * perPage,
       take: perPage,
-      orderBy: { roomName: "asc" },
+      orderBy: [{ grade: { gradeNumber: "asc" } }, { roomName: "asc" }],
       select: {
         id: true,
         roomName: true,

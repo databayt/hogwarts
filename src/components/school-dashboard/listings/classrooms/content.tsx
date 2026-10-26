@@ -50,7 +50,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
     ] = await Promise.all([
       db.classroom.findMany({
         where: { schoolId },
-        orderBy: { roomName: "asc" },
+        orderBy: [{ grade: { gradeNumber: "asc" } }, { roomName: "asc" }],
         take: 20,
         select: {
           id: true,

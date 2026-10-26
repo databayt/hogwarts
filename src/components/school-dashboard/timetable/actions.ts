@@ -1607,9 +1607,12 @@ export async function getRoomsForSelection() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
+  // Grade order (KG → G12), not alphabetical: rooms named after their grade
+  // («الأول ابتدائي», «الأول ثانوي») would otherwise interleave the stages.
+  // Rooms with no grade sort last.
   const rows = await db.classroom.findMany({
     where: { schoolId },
-    orderBy: { roomName: "asc" },
+    orderBy: [{ grade: { gradeNumber: "asc" } }, { roomName: "asc" }],
     select: { id: true, roomName: true, capacity: true },
   })
 
