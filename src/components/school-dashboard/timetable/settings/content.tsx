@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -58,6 +59,7 @@ import {
   copyPeriodsToYear,
   createPeriod,
   deletePeriod,
+  getGradesForSelection,
   getPeriodsForTerm,
   getScheduleConfig,
   getSchoolYearsForSelection,
@@ -98,7 +100,13 @@ type PeriodData = {
   startTime: Date
   endTime: Date
   isBreak: boolean
+  /** The grade whose bell this is; null = the whole school. */
+  gradeId: string | null
+  untimed: boolean
 }
+
+/** Select sentinel for "the whole school" (Radix forbids an empty value). */
+const ALL_GRADES = "__all__"
 
 type SchoolYear = { id: string; name: string; isCurrent: boolean }
 
@@ -169,7 +177,18 @@ export default function TimetableSettingsContent({
     name: "",
     startTime: "",
     endTime: "",
+    gradeId: null as string | null,
+    untimed: false,
   })
+  // Grades ring their own bells: which grade a period belongs to, and which
+  // grade's bell the list is showing (ALL_GRADES = every period).
+  const [grades, setGrades] = useState<Array<{ id: string; name: string }>>([])
+  const [gradeFilter, setGradeFilter] = useState<string>(ALL_GRADES)
+  const visiblePeriods =
+    gradeFilter === ALL_GRADES
+      ? periods
+      : periods.filter((p) => !p.gradeId || p.gradeId === gradeFilter)
+  const gradeName = (id: string | null) => grades.find((g) => g.id === id)?.name
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false)
   const [copyTargetYearId, setCopyTargetYearId] = useState<string>("")
   const [isApplyingStructure, setIsApplyingStructure] = useState(false)
@@ -178,6 +197,11 @@ export default function TimetableSettingsContent({
   useEffect(() => {
     loadTerms()
     loadSchoolYears()
+    getGradesForSelection()
+      .then(({ grades }) => setGrades(grades))
+      .catch(() => {
+        // Grades are optional here — without them every period is school-wide
+      })
   }, [])
 
   // Load config when term changes
@@ -306,6 +330,8 @@ export default function TimetableSettingsContent({
         name: newPeriod.name,
         startTime: newPeriod.startTime,
         endTime: newPeriod.endTime,
+        gradeId: newPeriod.gradeId,
+        untimed: newPeriod.untimed,
       })
 
       toast({
@@ -315,7 +341,13 @@ export default function TimetableSettingsContent({
           newPeriod.name
         ),
       })
-      setNewPeriod({ name: "", startTime: "", endTime: "" })
+      setNewPeriod({
+        name: "",
+        startTime: "",
+        endTime: "",
+        gradeId: newPeriod.gradeId,
+        untimed: false,
+      })
       setIsAddingPeriod(false)
       loadConfig()
     } catch (err) {
@@ -337,6 +369,8 @@ export default function TimetableSettingsContent({
         name: editingPeriod.name,
         startTime: formatTime(editingPeriod.startTime),
         endTime: formatTime(editingPeriod.endTime),
+        gradeId: editingPeriod.gradeId,
+        untimed: editingPeriod.untimed,
       })
 
       toast({ title: d?.settings?.editPeriod || "Period Updated" })
@@ -805,6 +839,15 @@ export default function TimetableSettingsContent({
                             }
                           />
                         </div>
+                        <PeriodBellFields
+                          grades={grades}
+                          gradeId={newPeriod.gradeId}
+                          untimed={newPeriod.untimed}
+                          labels={s}
+                          onChange={(next) =>
+                            setNewPeriod({ ...newPeriod, ...next })
+                          }
+                        />
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>
@@ -867,6 +910,23 @@ export default function TimetableSettingsContent({
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {grades.length > 0 && (
+                    <Select value={gradeFilter} onValueChange={setGradeFilter}>
+                      <SelectTrigger className="w-56">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_GRADES}>
+                          {s?.allGrades ?? "All grades"}
+                        </SelectItem>
+                        {grades.map((g) => (
+                          <SelectItem key={g.id} value={g.id}>
+                            {g.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   {/* Timeline visualization — decorative; the same period data
                       is listed textually below, so hide the positioned bars
                       from assistive tech to avoid a meaningless reading. */}
@@ -875,7 +935,7 @@ export default function TimetableSettingsContent({
                     dir="ltr"
                     className="bg-muted/50 relative h-16 overflow-hidden rounded-lg"
                   >
-                    {periods.map((period) => {
+                    {visiblePeriods.map((period) => {
                       const start = new Date(period.startTime)
                       const end = new Date(period.endTime)
                       const totalMinutes = 16 * 60 // 6AM to 10PM = 16 hours
@@ -941,7 +1001,7 @@ export default function TimetableSettingsContent({
 
                   {/* Period List */}
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {periods.map((period) => (
+                    {visiblePeriods.map((period) => (
                       <div
                         key={period.id}
                         className={cn(
@@ -956,6 +1016,11 @@ export default function TimetableSettingsContent({
                             {periodLabel(period.name)}
                           </span>
                           <div className="flex items-center gap-1">
+                            {period.gradeId && (
+                              <Badge variant="outline" className="text-xs">
+                                {gradeName(period.gradeId)}
+                              </Badge>
+                            )}
                             {period.isBreak &&
                               periodLabel(period.name) !== d?.break && (
                                 <Badge variant="secondary" className="text-xs">
@@ -983,8 +1048,9 @@ export default function TimetableSettingsContent({
                           </div>
                         </div>
                         <p className="text-muted-foreground text-sm">
-                          {formatTime(period.startTime)} -{" "}
-                          {formatTime(period.endTime)}
+                          {period.untimed
+                            ? (s?.noTime ?? "No time")
+                            : `${formatTime(period.startTime)} - ${formatTime(period.endTime)}`}
                         </p>
                       </div>
                     ))}
@@ -1018,6 +1084,15 @@ export default function TimetableSettingsContent({
                   }
                 />
               </div>
+              <PeriodBellFields
+                grades={grades}
+                gradeId={editingPeriod.gradeId}
+                untimed={editingPeriod.untimed}
+                labels={s}
+                onChange={(next) =>
+                  setEditingPeriod({ ...editingPeriod, ...next })
+                }
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{d?.settings?.startTime || "Start Time"}</Label>
@@ -1089,5 +1164,60 @@ export default function TimetableSettingsContent({
         </div>
       )}
     </div>
+  )
+}
+
+/** Which grade's bell a period rings on, and whether it has a clock time. */
+function PeriodBellFields({
+  grades,
+  gradeId,
+  untimed,
+  labels,
+  onChange,
+}: {
+  grades: Array<{ id: string; name: string }>
+  gradeId: string | null
+  untimed: boolean
+  labels: Record<string, string> | undefined
+  onChange: (next: { gradeId?: string | null; untimed?: boolean }) => void
+}) {
+  return (
+    <>
+      {grades.length > 0 && (
+        <div className="space-y-2">
+          <Label>{labels?.periodGrade ?? "Grade"}</Label>
+          <Select
+            value={gradeId ?? ALL_GRADES}
+            onValueChange={(v) =>
+              onChange({ gradeId: v === ALL_GRADES ? null : v })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_GRADES}>
+                {labels?.allGrades ?? "All grades"}
+              </SelectItem>
+              {grades.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-4">
+        <Label htmlFor="period-untimed">
+          {labels?.periodUntimed ?? "No clock time (numbered period only)"}
+        </Label>
+        <Switch
+          id="period-untimed"
+          checked={untimed}
+          onCheckedChange={(checked) => onChange({ untimed: checked })}
+        />
+      </div>
+    </>
   )
 }

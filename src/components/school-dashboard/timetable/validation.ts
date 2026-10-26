@@ -102,7 +102,13 @@ export const upsertTimetableSlotSchema = z.object({
   subjectId: cuidSchema,
   // Teacher is optional: auto-generated and manually-created slots may be
   // teacher-less; the teacher is attached later and renders once assigned.
-  teacherId: cuidSchema.optional(),
+  // undefined = leave the teacher as it is; null = no teacher (clears one on
+  // edit). The dialog's empty picker sends "" — read it as null, not a CUID
+  // failure (that rejected every teacher-less save as «خطأ في التحقق»).
+  teacherId: z.preprocess(
+    (v) => (v === "" ? null : v),
+    cuidSchema.nullable().optional()
+  ),
   classroomId: cuidSchema,
   weekOffset: weekOffsetSchema,
 })
@@ -174,6 +180,9 @@ export const createPeriodSchema = z.object({
   name: z.string().min(1).max(50),
   startTime: timeOfDaySchema,
   endTime: timeOfDaySchema,
+  // The grade whose bell this is; null/absent = the whole school.
+  gradeId: cuidSchema.nullable().optional(),
+  untimed: z.boolean().optional(),
 })
 
 export const addTeacherUnavailableBlockSchema = z.object({

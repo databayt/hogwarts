@@ -403,6 +403,11 @@ describe("Timetable Actions", () => {
       vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
+      // The period is on the school-wide bell
+      vi.mocked(db.period.findFirst).mockResolvedValue({
+        id: CPERIOD1,
+        gradeId: null,
+      } as any)
       // Teacher is qualified for the subject
       vi.mocked(db.teacherSubjectExpertise.findFirst).mockResolvedValue({
         id: "exp-1",

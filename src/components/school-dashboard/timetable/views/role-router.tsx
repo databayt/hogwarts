@@ -79,6 +79,7 @@ interface PersonalizedData {
     startTime: Date
     endTime: Date
     isBreak: boolean
+    untimed?: boolean
   }>
   lunchAfterPeriod: number | null
   /** True when this is a display-only fallback grid (no real Term exists yet). */

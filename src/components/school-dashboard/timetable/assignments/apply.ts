@@ -151,44 +151,62 @@ export async function loadPlanState(
   const startOfToday = new Date(now)
   startOfToday.setHours(0, 0, 0, 0)
 
-  const [rows, periods, weekConfig, workload, constraints] = await Promise.all([
-    tx.timetable.findMany({
-      where: { schoolId, termId, weekOffset: 0 },
-      select: {
-        id: true,
-        dayOfWeek: true,
-        periodId: true,
-        sectionId: true,
-        subjectId: true,
-        teacherId: true,
-        classroomId: true,
-      },
-    }),
-    tx.period.findMany({
-      where: { schoolId, yearId, isBreak: false },
-      orderBy: { startTime: "asc" },
-      select: { id: true },
-    }),
-    tx.schoolWeekConfig.findFirst({
-      where: { schoolId, OR: [{ termId }, { termId: null }] },
-      orderBy: { termId: "desc" },
-      select: { workingDays: true },
-    }),
-    tx.workloadConfig.findUnique({
-      where: { schoolId },
-      select: { maxPeriodsPerWeek: true },
-    }),
-    tx.teacherConstraint.findMany({
-      where: { schoolId, OR: [{ termId }, { termId: null }] },
-      select: {
-        teacherId: true,
-        termId: true,
-        maxPeriodsPerDay: true,
-        maxPeriodsPerWeek: true,
-        unavailableBlocks: { select: { dayOfWeek: true, periodId: true } },
-      },
-    }),
-  ])
+  const [rows, periods, weekConfig, workload, constraints, sections] =
+    await Promise.all([
+      tx.timetable.findMany({
+        where: { schoolId, termId, weekOffset: 0 },
+        select: {
+          id: true,
+          dayOfWeek: true,
+          periodId: true,
+          sectionId: true,
+          subjectId: true,
+          teacherId: true,
+          classroomId: true,
+        },
+      }),
+      tx.period.findMany({
+        where: { schoolId, yearId, isBreak: false },
+        orderBy: { startTime: "asc" },
+        select: { id: true, gradeId: true },
+      }),
+      tx.schoolWeekConfig.findFirst({
+        where: { schoolId, OR: [{ termId }, { termId: null }] },
+        orderBy: { termId: "desc" },
+        select: { workingDays: true },
+      }),
+      tx.workloadConfig.findUnique({
+        where: { schoolId },
+        select: { maxPeriodsPerWeek: true },
+      }),
+      tx.teacherConstraint.findMany({
+        where: { schoolId, OR: [{ termId }, { termId: null }] },
+        select: {
+          teacherId: true,
+          termId: true,
+          maxPeriodsPerDay: true,
+          maxPeriodsPerWeek: true,
+          unavailableBlocks: { select: { dayOfWeek: true, periodId: true } },
+        },
+      }),
+      tx.section.findMany({
+        where: { schoolId },
+        select: { id: true, gradeId: true },
+      }),
+    ])
+
+  // Per-grade bells: a section only moves within its grade's periods (+ the
+  // school-wide ones). Schools with one bell need no map at all.
+  const sectionPeriods = periods.some((p) => p.gradeId)
+    ? new Map(
+        sections.map((sec) => [
+          sec.id,
+          periods
+            .filter((p) => !p.gradeId || p.gradeId === sec.gradeId)
+            .map((p) => p.id),
+        ])
+      )
+    : undefined
 
   const ids = rows.map((r) => r.id)
   const [liveOrUpcoming, substitutions] =
@@ -253,6 +271,7 @@ export async function loadPlanState(
         ? weekConfig.workingDays
         : DEFAULT_WORKING_DAYS,
     periodOrder: periods.map((p) => p.id),
+    sectionPeriods,
     rules,
     defaultRules,
   }

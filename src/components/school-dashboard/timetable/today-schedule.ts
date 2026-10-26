@@ -23,6 +23,7 @@ import {
 import { findSchoolClosure } from "@/components/school-dashboard/live/school-calendar"
 
 import { attachLiveClasses } from "./live-class-join"
+import { mergePeriodRows } from "./periods"
 
 export interface TodayScheduleTerm {
   id: string
@@ -67,6 +68,8 @@ export async function loadTodaySchedule(input: {
         startTime: true,
         endTime: true,
         isBreak: true,
+        untimed: true,
+        gradeId: true,
       },
     }),
     role === "TEACHER"
@@ -78,7 +81,11 @@ export async function loadTodaySchedule(input: {
     role === "STUDENT"
       ? db.student.findFirst({
           where: { userId, schoolId },
-          select: { id: true, sectionId: true },
+          select: {
+            id: true,
+            sectionId: true,
+            section: { select: { gradeId: true } },
+          },
         })
       : Promise.resolve(null),
   ])
@@ -148,7 +155,7 @@ export async function loadTodaySchedule(input: {
   const slots = await db.timetable.findMany({
     where,
     include: {
-      section: { select: { name: true } },
+      section: { select: { name: true, gradeId: true } },
       subject: { select: { name: true } },
       teacher: {
         select: { firstName: true, middleName: true, lastName: true },
@@ -192,9 +199,22 @@ export async function loadTodaySchedule(input: {
     isBreak: false,
   }))
 
-  // Fill in empty periods
-  const fullSchedule = periods.map((period) => {
-    const existing = schedule.find((s) => s.periodId === period.id)
+  // Fill in empty periods — of the bells that ring for this day's grades only
+  // (grades ring different bells), one card per time.
+  const dayGrades = new Set(
+    [...slots.map((s) => s.section?.gradeId), student?.section?.gradeId].filter(
+      Boolean
+    )
+  )
+  const { rows: dayPeriods, rowOf } = mergePeriodRows(
+    periods.filter(
+      (p) => !p.gradeId || dayGrades.size === 0 || dayGrades.has(p.gradeId)
+    )
+  )
+  const fullSchedule = dayPeriods.map((period) => {
+    const existing = schedule.find(
+      (s) => (rowOf.get(s.periodId) ?? s.periodId) === period.id
+    )
     if (existing) return existing
 
     const isBreak = period.isBreak

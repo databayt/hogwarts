@@ -67,6 +67,7 @@ interface Props {
     startTime: Date
     endTime: Date
     isBreak: boolean
+    untimed?: boolean
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
@@ -90,7 +91,7 @@ export default function TeacherView({
   termId,
   termInfo,
   workingDays,
-  periods,
+  periods: schoolPeriods,
   lunchAfterPeriod,
   isLoading,
   teacherId,
@@ -111,6 +112,12 @@ export default function TeacherView({
 
   // Weekly data
   const [slots, setSlots] = useState<any[]>([])
+  // The grid's own bell, from the fetch: grades ring different bells, so the
+  // school-wide list from the router is only the fallback until it lands.
+  const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
+    null
+  )
+  const periods = gridPeriods ?? schoolPeriods
   const [teacherInfo, setTeacherInfo] = useState<any>(null)
   const [workload, setWorkload] = useState<{
     daysPerWeek: number
@@ -174,6 +181,9 @@ export default function TeacherView({
       ])
 
       setSlots(weeklyResult.slots)
+      setGridPeriods(
+        weeklyResult.periods.length > 0 ? weeklyResult.periods : null
+      )
       setTeacherInfo(weeklyResult.teacherInfo)
       setWorkload(weeklyResult.workload)
       setLiveIndicators(weeklyResult.liveIndicators ?? {})

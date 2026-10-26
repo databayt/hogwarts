@@ -67,6 +67,7 @@ interface Props {
     startTime: Date
     endTime: Date
     isBreak: boolean
+    untimed?: boolean
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
@@ -103,7 +104,7 @@ export default function AdminView({
   termId,
   editable: editableProp = true,
   workingDays,
-  periods,
+  periods: schoolPeriods,
   lunchAfterPeriod,
   isLoading,
 }: Props) {
@@ -127,6 +128,12 @@ export default function AdminView({
 
   // Timetable data
   const [slots, setSlots] = useState<any[]>([])
+  // The grid's own bell, from the fetch: grades ring different bells, so the
+  // school-wide list from the router is only the fallback until it lands.
+  const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
+    null
+  )
+  const periods = gridPeriods ?? schoolPeriods
   // Periods in the open room that nobody teaches yet.
   const unassignedCount = useMemo(
     () => slots.filter((s) => !s.teacherId && !s.teacher).length,
@@ -249,6 +256,7 @@ export default function AdminView({
           roomId: selectedClassroom,
         })
         setEntityInfo(result.roomInfo)
+        setGridPeriods(result.periods)
         setSlots(result?.slots || [])
         setLiveIndicators(result?.liveIndicators ?? {})
       } else if (viewMode === "teacher" && selectedId) {
@@ -257,6 +265,7 @@ export default function AdminView({
           teacherId: selectedId,
         })
         setEntityInfo(result.teacherInfo)
+        setGridPeriods(result.periods)
         setSlots(result?.slots || [])
         setLiveIndicators(result?.liveIndicators ?? {})
       }
@@ -318,7 +327,9 @@ export default function AdminView({
         periodId: data.periodId!,
         sectionId: data.sectionId!,
         subjectId: data.subjectId!,
-        teacherId: assignAll ? undefined : data.teacherId!,
+        // Empty picker = no teacher (null clears one on edit); `undefined`
+        // would leave a removed teacher on the slot.
+        teacherId: assignAll ? undefined : data.teacherId || null,
         classroomId: data.classroomId!,
         weekOffset: data.weekOffset ?? 0,
       })

@@ -51,6 +51,11 @@ export interface PlanState {
   workingDays: readonly number[]
   /** Teaching periods in day order. */
   periodOrder: readonly string[]
+  /**
+   * A section's own teaching periods in day order, when grades ring different
+   * bells (Period.gradeId). A section missing here moves over `periodOrder`.
+   */
+  sectionPeriods?: ReadonlyMap<string, readonly string[]>
   rules: ReadonlyMap<string, TeacherRules>
   defaultRules: TeacherRules
 }
@@ -326,7 +331,8 @@ export function planAssignment(
     // Move candidates: an empty period of the same section.
     const taken = occ.sectionAt.get(section)
     for (const day of state.workingDays) {
-      for (const periodId of state.periodOrder) {
+      for (const periodId of state.sectionPeriods?.get(section) ??
+        state.periodOrder) {
         if (taken?.has(pos(day, periodId))) continue
         occ.remove(c)
         const ok =

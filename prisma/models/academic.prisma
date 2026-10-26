@@ -53,6 +53,7 @@ model AcademicGrade {
   yearLevel         YearLevel?         @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
   streams           AcademicStream[]
   subjectSelections SubjectSelection[]
+  periods           Period[]
 
   schoolExams       SchoolExam[]
   schoolAssignments SchoolAssignment[]

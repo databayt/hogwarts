@@ -106,6 +106,12 @@ import {
 } from "./generate/teacher-plan"
 import { attachLiveClasses, resolveTodayLive } from "./live-class-join"
 import {
+  mergePeriodRows,
+  PERIOD_GRID_SELECT,
+  periodScope,
+  periodScopeForGrades,
+} from "./periods"
+import {
   getPermissionContext,
   logTimetableAction,
   requireAdminAccess,
@@ -966,6 +972,46 @@ export async function getSubjectsForSection(input: { gradeId: string }) {
   }
 }
 
+/**
+ * The period a section's slot should sit on. A school-wide period, or one of
+ * the section's own grade, is used as-is; another grade's period is swapped
+ * for this grade's period at the same clock span (same name when untimed).
+ */
+async function resolveSectionPeriod(
+  schoolId: string,
+  periodId: string,
+  gradeId: string
+): Promise<string> {
+  const period = await db.period.findFirst({
+    where: { id: periodId, schoolId },
+    select: {
+      id: true,
+      yearId: true,
+      gradeId: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      untimed: true,
+    },
+  })
+  if (!period) throw new Error("PERIOD_NOT_FOUND")
+  if (!period.gradeId || period.gradeId === gradeId) return period.id
+
+  const own = await db.period.findFirst({
+    where: {
+      schoolId,
+      yearId: period.yearId,
+      gradeId,
+      ...(period.untimed
+        ? { name: period.name }
+        : { startTime: period.startTime, endTime: period.endTime }),
+    },
+    select: { id: true },
+  })
+  if (!own) throw new Error("PERIOD_NOT_IN_GRADE")
+  return own.id
+}
+
 export async function upsertTimetableSlot(input: unknown) {
   // Validate input — section-first schema (sectionId + subjectId required)
   const validatedInput = upsertTimetableSlotSchema.parse(input)
@@ -982,6 +1028,15 @@ export async function upsertTimetableSlot(input: unknown) {
     select: { id: true, name: true, gradeId: true },
   })
   if (!section) throw new Error("SECTION_NOT_FOUND")
+
+  // 1b. Grades ring their own bells. A merged teacher/room grid row carries
+  //     one grade's period id; re-point it at this section's own period that
+  //     rings at the same time.
+  validatedInput.periodId = await resolveSectionPeriod(
+    schoolId,
+    validatedInput.periodId,
+    section.gradeId
+  )
 
   // 2. Soft-validate that the subject is in SubjectSelection for this grade.
   //    Decision: non-blocking warning (admins may legitimately schedule subjects
@@ -1039,7 +1094,7 @@ export async function upsertTimetableSlot(input: unknown) {
   await validateSlotConstraints({
     schoolId,
     termId: validatedInput.termId,
-    teacherId: validatedInput.teacherId,
+    teacherId: validatedInput.teacherId ?? undefined,
     classroomId: validatedInput.classroomId,
     sectionId: validatedInput.sectionId,
     dayOfWeek: validatedInput.dayOfWeek,
@@ -1567,6 +1622,31 @@ export async function getRoomsForSelection() {
   }
 }
 
+/** A period as every grid reads it; `order` is its row position. */
+function toGridPeriod(
+  p: {
+    id: string
+    name: string
+    startTime: Date
+    endTime: Date
+    isBreak: boolean
+    untimed: boolean
+    gradeId: string | null
+  },
+  idx: number
+) {
+  return {
+    id: p.id,
+    name: p.name,
+    order: idx + 1,
+    startTime: p.startTime,
+    endTime: p.endTime,
+    isBreak: p.isBreak,
+    untimed: p.untimed,
+    gradeId: p.gradeId,
+  }
+}
+
 /**
  * Internal helper: get timetable for a section (guardian view)
  */
@@ -1589,16 +1669,19 @@ async function getTimetableBySection(input: {
   })
   if (!term) throw new Error("INVALID_TERM")
 
+  // The section's own bell (its grade's periods + the school-wide ones).
+  const section = await db.section.findFirst({
+    where: { id: input.sectionId, schoolId },
+    select: { gradeId: true },
+  })
   const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
+    where: {
+      schoolId,
+      yearId: term.yearId,
+      ...periodScope(section?.gradeId),
     },
+    orderBy: { startTime: "asc" },
+    select: PERIOD_GRID_SELECT,
   })
 
   const [slots] = await Promise.all([
@@ -1630,12 +1713,7 @@ async function getTimetableBySection(input: {
 
   return {
     workingDays: config.workingDays,
-    periods: periods.map((p) => ({
-      id: p.id,
-      name: p.name,
-      startTime: p.startTime,
-      endTime: p.endTime,
-    })),
+    periods: periods.map(toGridPeriod),
     slots: slots.map((s) => ({
       id: s.id,
       dayOfWeek: s.dayOfWeek,
@@ -1716,16 +1794,20 @@ export async function getTimetableByStudentGrade(input: {
     select: { name: true },
   })
 
+  const studentSection = student.sectionId
+    ? await db.section.findFirst({
+        where: { id: student.sectionId, schoolId },
+        select: { gradeId: true },
+      })
+    : null
   const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
+    where: {
+      schoolId,
+      yearId: term.yearId,
+      ...periodScope(studentSection?.gradeId),
     },
+    orderBy: { startTime: "asc" },
+    select: PERIOD_GRID_SELECT,
   })
 
   const studentSectionId = student.sectionId
@@ -1779,14 +1861,7 @@ export async function getTimetableByStudentGrade(input: {
     schoolName: school?.name || "",
     subjectCount: distinctSubjects.size,
     workingDays: config.workingDays,
-    periods: periods.map((p, idx) => ({
-      id: p.id,
-      name: p.name,
-      order: idx + 1,
-      startTime: p.startTime,
-      endTime: p.endTime,
-      isBreak: p.isBreak,
-    })),
+    periods: periods.map(toGridPeriod),
     slots: slots.map((s) => ({
       id: s.id,
       dayOfWeek: s.dayOfWeek,
@@ -1837,18 +1912,6 @@ export async function getTimetableByTeacher(input: {
   })
   if (!term) throw new Error("INVALID_TERM")
 
-  const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
-    },
-  })
-
   const [slots, teacherInfo] = await Promise.all([
     db.timetable.findMany({
       where: {
@@ -1859,7 +1922,7 @@ export async function getTimetableByTeacher(input: {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true, gradeId: true } },
         classroom: { select: { id: true, roomName: true } },
         period: {
           select: { id: true, name: true, startTime: true, endTime: true },
@@ -1877,6 +1940,21 @@ export async function getTimetableByTeacher(input: {
       },
     }),
   ])
+
+  // A teacher crosses grades, and grades ring different bells: the rows are
+  // the bells of the grades this teacher actually teaches (+ school-wide),
+  // with periods that ring at the same time collapsed into one row.
+  const { rows: periods, rowOf } = mergePeriodRows(
+    await db.period.findMany({
+      where: {
+        schoolId,
+        yearId: term.yearId,
+        ...periodScopeForGrades(slots.map((s) => s.section?.gradeId)),
+      },
+      orderBy: { startTime: "asc" },
+      select: PERIOD_GRID_SELECT,
+    })
+  )
 
   // Calculate workload
   const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
@@ -1908,18 +1986,13 @@ export async function getTimetableByTeacher(input: {
         }
       : null,
     workingDays: config.workingDays,
-    periods: periods.map((p) => ({
-      id: p.id,
-      name: p.name,
-      startTime: p.startTime,
-      endTime: p.endTime,
-    })),
+    periods: periods.map(toGridPeriod),
     slots: slots.map((s) => {
       const subject = rawSubject(s)
       return {
         id: s.id,
         dayOfWeek: s.dayOfWeek,
-        periodId: s.periodId,
+        periodId: rowOf.get(s.periodId) ?? s.periodId,
         periodName: s.period.name,
         className: s.section?.name || "",
         sectionId: s.sectionId,
@@ -1972,18 +2045,6 @@ export async function getTimetableByRoom(input: {
   })
   if (!term) throw new Error("INVALID_TERM")
 
-  const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
-    },
-  })
-
   const [slots] = await Promise.all([
     db.timetable.findMany({
       where: {
@@ -1994,7 +2055,7 @@ export async function getTimetableByRoom(input: {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true, gradeId: true } },
         teacher: {
           select: {
             id: true,
@@ -2014,6 +2075,27 @@ export async function getTimetableByRoom(input: {
     where: { id: input.roomId, schoolId },
     select: { id: true, roomName: true, capacity: true },
   })
+
+  // The room's bell: the grades of the sections homed in it or taught in it
+  // (+ school-wide); a room shared across grades collapses same-time periods.
+  const homedSections = await db.section.findMany({
+    where: { schoolId, classroomId: input.roomId },
+    select: { gradeId: true },
+  })
+  const { rows: periods, rowOf } = mergePeriodRows(
+    await db.period.findMany({
+      where: {
+        schoolId,
+        yearId: term.yearId,
+        ...periodScopeForGrades([
+          ...homedSections.map((sec) => sec.gradeId),
+          ...slots.map((s) => s.section?.gradeId),
+        ]),
+      },
+      orderBy: { startTime: "asc" },
+      select: PERIOD_GRID_SELECT,
+    })
+  )
 
   // Calculate utilization
   const totalPossibleSlots =
@@ -2042,19 +2124,14 @@ export async function getTimetableByRoom(input: {
         }
       : null,
     workingDays: config.workingDays,
-    periods: periods.map((p) => ({
-      id: p.id,
-      name: p.name,
-      startTime: p.startTime,
-      endTime: p.endTime,
-    })),
+    periods: periods.map(toGridPeriod),
     slots: slots.map((s) => {
       const subject = rawSubject(s)
       const rawTeacher = s.teacher ? displayName(s.teacher, nameDisplay) : ""
       return {
         id: s.id,
         dayOfWeek: s.dayOfWeek,
-        periodId: s.periodId,
+        periodId: rowOf.get(s.periodId) ?? s.periodId,
         periodName: s.period.name,
         className: s.section?.name || "",
         sectionId: s.sectionId,
@@ -2398,24 +2475,11 @@ export async function getPeriodsForTerm(input: { termId: string }) {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
-    },
+    select: PERIOD_GRID_SELECT,
   })
 
   return {
-    periods: periods.map((p, idx) => ({
-      id: p.id,
-      name: p.name,
-      order: idx + 1,
-      startTime: p.startTime,
-      endTime: p.endTime,
-      isBreak: p.isBreak,
-    })),
+    periods: periods.map(toGridPeriod),
   }
 }
 
@@ -2762,13 +2826,7 @@ export async function getPersonalizedTimetable(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: {
-      id: true,
-      name: true,
-      startTime: true,
-      endTime: true,
-      isBreak: true,
-    },
+    select: PERIOD_GRID_SELECT,
   })
 
   return {
@@ -2782,14 +2840,7 @@ export async function getPersonalizedTimetable(input: {
       label: `${term.schoolYear.yearName} - ${t.termLabel} ${term.termNumber}`,
     },
     workingDays: config.workingDays,
-    periods: periods.map((p, idx) => ({
-      id: p.id,
-      name: p.name,
-      order: idx + 1,
-      startTime: p.startTime,
-      endTime: p.endTime,
-      isBreak: p.isBreak,
-    })),
+    periods: periods.map(toGridPeriod),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
 }
@@ -3752,11 +3803,21 @@ export async function applyGeneratedTimetable(rawInput: {
 /**
  * Create a new period for a school year
  */
+async function assertSchoolGrade(schoolId: string, gradeId: string) {
+  const grade = await db.academicGrade.findFirst({
+    where: { id: gradeId, schoolId },
+    select: { id: true },
+  })
+  if (!grade) throw new Error("GRADE_NOT_FOUND")
+}
+
 export async function createPeriod(rawInput: {
   yearId: string
   name: string
   startTime: string // HH:MM format
   endTime: string // HH:MM format
+  gradeId?: string | null
+  untimed?: boolean
 }): Promise<{ id: string }> {
   await requireAdminAccess()
   // Zod enforces yearId CUID, name length, and HH:MM time format (throws
@@ -3777,9 +3838,18 @@ export async function createPeriod(rawInput: {
     throw new Error("INVALID_TIME_RANGE")
   }
 
-  // Check for overlapping periods
+  const gradeId = input.gradeId ?? null
+  if (gradeId) await assertSchoolGrade(schoolId, gradeId)
+
+  // Check for overlapping periods — only within one bell (an untimed period
+  // has no clock span to overlap)
   const existingPeriods = await db.period.findMany({
-    where: { schoolId, yearId: input.yearId },
+    where: {
+      schoolId,
+      yearId: input.yearId,
+      untimed: false,
+      ...periodScope(gradeId), // the periods sharing a grid with this one
+    },
     select: {
       id: true,
       name: true,
@@ -3789,7 +3859,7 @@ export async function createPeriod(rawInput: {
     },
   })
 
-  for (const existing of existingPeriods) {
+  for (const existing of input.untimed ? [] : existingPeriods) {
     const existStart = new Date(existing.startTime)
     const existEnd = new Date(existing.endTime)
 
@@ -3810,6 +3880,8 @@ export async function createPeriod(rawInput: {
       name: input.name,
       startTime,
       endTime,
+      gradeId,
+      untimed: input.untimed ?? false,
     },
   })
 
@@ -3835,6 +3907,9 @@ export async function updatePeriod(input: {
   name?: string
   startTime?: string // HH:MM format
   endTime?: string // HH:MM format
+  /** Move the period to a grade's bell; null = the whole school. */
+  gradeId?: string | null
+  untimed?: boolean
 }): Promise<{ success: boolean }> {
   await requireAdminAccess()
 
@@ -3844,11 +3919,32 @@ export async function updatePeriod(input: {
   // Get existing period
   const existing = await db.period.findFirst({
     where: { id: input.periodId, schoolId },
-    select: { id: true, yearId: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      yearId: true,
+      startTime: true,
+      endTime: true,
+      gradeId: true,
+      untimed: true,
+    },
   })
   if (!existing) throw new Error("PERIOD_NOT_FOUND")
 
-  const updateData: { name?: string; startTime?: Date; endTime?: Date } = {}
+  const updateData: {
+    name?: string
+    startTime?: Date
+    endTime?: Date
+    gradeId?: string | null
+    untimed?: boolean
+  } = {}
+
+  if (input.gradeId !== undefined) {
+    if (input.gradeId) await assertSchoolGrade(schoolId, input.gradeId)
+    updateData.gradeId = input.gradeId
+  }
+  if (input.untimed !== undefined) updateData.untimed = input.untimed
+  const gradeId = input.gradeId !== undefined ? input.gradeId : existing.gradeId
+  const untimed = input.untimed ?? existing.untimed
 
   if (input.name) {
     updateData.name = input.name
@@ -3880,9 +3976,15 @@ export async function updatePeriod(input: {
     throw new Error("INVALID_TIME_RANGE")
   }
 
-  // Check for overlapping periods (excluding this one)
+  // Check for overlapping periods (excluding this one) within its bell
   const otherPeriods = await db.period.findMany({
-    where: { schoolId, yearId: existing.yearId, NOT: { id: input.periodId } },
+    where: {
+      schoolId,
+      yearId: existing.yearId,
+      NOT: { id: input.periodId },
+      untimed: false,
+      ...periodScope(gradeId), // the periods sharing a grid with this one
+    },
     select: {
       id: true,
       name: true,
@@ -3892,7 +3994,7 @@ export async function updatePeriod(input: {
     },
   })
 
-  for (const other of otherPeriods) {
+  for (const other of untimed ? [] : otherPeriods) {
     const existStart = new Date(other.startTime)
     const existEnd = new Date(other.endTime)
 
@@ -4047,6 +4149,22 @@ export async function copyPeriodsToYear(input: {
 /**
  * Get school years for period management
  */
+/** The school's grades, for choosing which grade a period's bell belongs to. */
+export async function getGradesForSelection(): Promise<{
+  grades: Array<{ id: string; name: string }>
+}> {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const grades = await db.academicGrade.findMany({
+    where: { schoolId },
+    orderBy: { gradeNumber: "asc" },
+    select: { id: true, name: true },
+  })
+  return { grades }
+}
+
 export async function getSchoolYearsForSelection(): Promise<{
   years: Array<{ id: string; name: string; isCurrent: boolean }>
 }> {

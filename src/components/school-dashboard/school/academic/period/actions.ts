@@ -62,9 +62,15 @@ export async function createPeriod(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Check for duplicate period name in same year
+    // Check for duplicate period name in same year (school-wide bell — this
+    // editor never sets a grade; per-grade bells live in timetable settings)
     const existing = await db.period.findFirst({
-      where: { schoolId, yearId: parsed.yearId, name: parsed.name },
+      where: {
+        schoolId,
+        yearId: parsed.yearId,
+        gradeId: null,
+        name: parsed.name,
+      },
       select: { id: true },
     })
 
@@ -122,18 +128,24 @@ export async function updatePeriod(
     // Verify period exists
     const existing = await db.period.findFirst({
       where: { id, schoolId },
-      select: { id: true, yearId: true },
+      select: { id: true, yearId: true, gradeId: true },
     })
 
     if (!existing) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Check for duplicate name (exclude current)
+    // Check for duplicate name within the period's bell (exclude current)
     if (rest.name) {
       const yearId = rest.yearId || existing.yearId
       const duplicate = await db.period.findFirst({
-        where: { schoolId, yearId, name: rest.name, NOT: { id } },
+        where: {
+          schoolId,
+          yearId,
+          gradeId: existing.gradeId,
+          name: rest.name,
+          NOT: { id },
+        },
         select: { id: true },
       })
 

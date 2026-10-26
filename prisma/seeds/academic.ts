@@ -295,28 +295,32 @@ export async function seedPeriods(
     const startTime = parseTime(periodData.startTime)
     const endTime = parseTime(periodData.endTime)
 
-    const period = await prisma.period.upsert({
+    // School-wide periods (gradeId null): Prisma can't address a compound
+    // unique holding a null, so find-then-write instead of upsert.
+    const existing = await prisma.period.findFirst({
       where: {
-        schoolId_yearId_name: {
-          schoolId,
-          yearId: schoolYearId,
-          name: periodData.name,
-        },
-      },
-      update: {
-        startTime,
-        endTime,
-        isBreak: periodData.isBreak,
-      },
-      create: {
         schoolId,
         yearId: schoolYearId,
+        gradeId: null,
         name: periodData.name,
-        startTime,
-        endTime,
-        isBreak: periodData.isBreak,
       },
+      select: { id: true },
     })
+    const period = existing
+      ? await prisma.period.update({
+          where: { id: existing.id },
+          data: { startTime, endTime, isBreak: periodData.isBreak },
+        })
+      : await prisma.period.create({
+          data: {
+            schoolId,
+            yearId: schoolYearId,
+            name: periodData.name,
+            startTime,
+            endTime,
+            isBreak: periodData.isBreak,
+          },
+        })
 
     periods.push({
       id: period.id,

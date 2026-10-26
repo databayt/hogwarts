@@ -39,6 +39,8 @@ interface Period {
   startTime: Date | string
   endTime: Date | string
   isBreak: boolean
+  /** The school's sheet gives this period no clock time — show the name only. */
+  untimed?: boolean
 }
 
 interface SimpleGridProps {
@@ -223,6 +225,7 @@ export default function SimpleGrid({
     const nowMin = now.getHours() * 60 + now.getMinutes()
     let next: { id: string; startMin: number } | null = null
     for (const p of teachingPeriods) {
+      if (p.untimed) continue
       const st = new Date(p.startTime)
       const en = new Date(p.endTime)
       const startMin = st.getUTCHours() * 60 + st.getUTCMinutes()
@@ -397,11 +400,13 @@ export default function SimpleGrid({
                     {/* Period names are stored as the full "Period 1"; strip the
                         redundant prefix so the dictionary label isn't doubled
                         ("Period Period 1" → "Period 1" / "الحصة 1"). */}
-                    {period.name.replace(/^period\s+/i, "")}
+                    {period.name.replace(/^(period|الحصة)\s+/i, "")}
                   </span>
-                  <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    ({formatTime(period.startTime)})
-                  </span>
+                  {!period.untimed && (
+                    <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      ({formatTime(period.startTime)})
+                    </span>
+                  )}
                 </div>
 
                 {/* Day Cells */}

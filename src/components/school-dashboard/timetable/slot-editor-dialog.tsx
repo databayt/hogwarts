@@ -59,6 +59,9 @@ import type { SectionForTimetable } from "./validation"
 // Schema factory: the messages reach the user through <FormMessage />, so they
 // have to come from the dictionary rather than literals (the `*Required` keys
 // already existed in both locales — they were simply never wired).
+/** The picker's "no teacher" item (Radix Select forbids an empty value). */
+const NO_TEACHER = "__none__"
+
 const createSlotSchema = (t?: Record<string, string>) =>
   z.object({
     dayOfWeek: z.number().min(0).max(6),
@@ -423,7 +426,12 @@ export function SlotEditorDialog({
                   </Select>
                   <FormDescription>
                     {selectedSubject &&
-                      `${selectedSubject.hoursPerWeek} ${t?.hoursRequired ?? "hours/week required"}`}
+                      (
+                        t?.hoursRequired ?? "{count} hours/week required"
+                      ).replace(
+                        "{count}",
+                        String(selectedSubject.hoursPerWeek)
+                      )}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -442,7 +450,12 @@ export function SlotEditorDialog({
                       ({t?.optional ?? "optional"})
                     </span>
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(v) =>
+                      field.onChange(v === NO_TEACHER ? "" : v)
+                    }
+                    value={field.value || undefined}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
@@ -451,6 +464,9 @@ export function SlotEditorDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value={NO_TEACHER}>
+                        {t?.noTeacher ?? "No teacher"}
+                      </SelectItem>
                       {(
                         [
                           ["specialists", teacherGroups.specialists],

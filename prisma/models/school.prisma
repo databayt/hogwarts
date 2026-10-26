@@ -587,16 +587,29 @@ model Period {
   /// into the break. Mirrors StructurePeriod.type !== "class" in
   /// timetable/structures.ts, which is where new periods get their value.
   isBreak   Boolean  @default(false)
+  /// Per-grade bell. null = the period belongs to the whole school (every
+  /// school before 2026-10-26). A grade sees its own periods plus the
+  /// school-wide ones, so schools whose stages run different bells (alabidae:
+  /// G1–3 hourly from 12:00, G10 from 12:10, G11–12 from 15:00) stop sharing
+  /// one merged bell that fits nobody.
+  gradeId   String?
+  /// The school's sheet numbers this period but gives no clock time. startTime
+  /// still orders it; the grid shows the name only.
+  untimed   Boolean  @default(false)
 
-  school         School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolYear     SchoolYear  @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  school         School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolYear     SchoolYear     @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  grade          AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: Cascade)
 
   timetables     Timetable[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([schoolId, yearId, name]) // Unique period name per school year
+  // Unique period name per school year per grade. The SQL index is NULLS NOT
+  // DISTINCT, so school-wide names (gradeId null) stay unique as before.
+  @@unique([schoolId, yearId, gradeId, name])
+  @@index([schoolId, gradeId])
   @@map("periods")
 }
 

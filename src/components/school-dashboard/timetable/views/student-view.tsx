@@ -40,6 +40,7 @@ interface Props {
     startTime: Date
     endTime: Date
     isBreak: boolean
+    untimed?: boolean
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
@@ -53,7 +54,7 @@ export default function StudentView({
   lang,
   termId,
   workingDays,
-  periods,
+  periods: schoolPeriods,
   isLoading,
 }: Props) {
   const d = dictionary?.timetable as Record<string, any> | undefined
@@ -100,6 +101,12 @@ export default function StudentView({
   }, [])
   // Weekly data
   const [slots, setSlots] = useState<any[]>([])
+  // The grid's own bell, from the fetch: grades ring different bells, so the
+  // school-wide list from the router is only the fallback until it lands.
+  const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
+    null
+  )
+  const periods = gridPeriods ?? schoolPeriods
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
   >({})
@@ -138,6 +145,9 @@ export default function StudentView({
       ])
 
       setSlots(weeklyResult.slots)
+      setGridPeriods(
+        weeklyResult.periods.length > 0 ? weeklyResult.periods : null
+      )
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setLiveJoin(weeklyResult.liveJoin ?? {})
       setClosure(todayResult.closure ?? null)

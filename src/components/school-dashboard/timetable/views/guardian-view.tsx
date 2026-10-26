@@ -59,6 +59,7 @@ interface Props {
     startTime: Date
     endTime: Date
     isBreak: boolean
+    untimed?: boolean
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
@@ -82,7 +83,7 @@ export default function GuardianView({
   termId,
   termInfo,
   workingDays,
-  periods,
+  periods: schoolPeriods,
   lunchAfterPeriod,
   isLoading,
   defaultTab = "today",
@@ -106,6 +107,12 @@ export default function GuardianView({
 
   // Selected child's timetable
   const [slots, setSlots] = useState<any[]>([])
+  // The grid's own bell, from the fetch: grades ring different bells, so the
+  // school-wide list from the router is only the fallback until it lands.
+  const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
+    null
+  )
+  const periods = gridPeriods ?? schoolPeriods
   const [studentInfo, setStudentInfo] = useState<any>(null)
   const [classInfo, setClassInfo] = useState<any>(null)
   const [liveIndicators, setLiveIndicators] = useState<
@@ -182,6 +189,7 @@ export default function GuardianView({
         getChildTodaySchedule({ childId: selectedChild }),
       ])
       setSlots(result.slots)
+      setGridPeriods(result.periods.length > 0 ? result.periods : null)
       setStudentInfo(result.studentInfo)
       setClassInfo((result as { classInfo?: any }).classInfo || null)
       // The early-return branch (no classes/section) omits `liveIndicators` —
