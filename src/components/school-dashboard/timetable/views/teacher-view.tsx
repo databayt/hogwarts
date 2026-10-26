@@ -205,16 +205,22 @@ export default function TeacherView({
 
   // Derive filter options from slots
   const filterOptions = useMemo(() => {
-    const classrooms = new Set<string>()
+    // class name → grade number, so the filter runs KG → G12 rather than
+    // alphabetically («الأول ابتدائي», «الأول ثانوي», «الأول متوسط»…)
+    const classrooms = new Map<string, number>()
     const subjects = new Set<string>()
 
     for (const slot of slots) {
-      if (slot.className) classrooms.add(slot.className)
+      if (slot.className && !classrooms.has(slot.className))
+        classrooms.set(slot.className, slot.gradeNumber ?? Infinity)
       if (slot.subject) subjects.add(slot.subject)
     }
 
     return {
-      classrooms: Array.from(classrooms).sort(),
+      classrooms: Array.from(classrooms.keys()).sort(
+        (a, b) =>
+          classrooms.get(a)! - classrooms.get(b)! || a.localeCompare(b, "ar")
+      ),
       subjects: Array.from(subjects).sort(),
     }
   }, [slots])

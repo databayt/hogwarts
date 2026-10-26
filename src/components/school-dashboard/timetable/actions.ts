@@ -922,7 +922,8 @@ export async function getSectionsForTimetable(input?: { termId?: string }) {
 
   const sections = await db.section.findMany({
     where: { schoolId },
-    orderBy: [{ grade: { name: "asc" } }, { name: "asc" }],
+    // Grade order (KG → G12): sorting by grade *name* interleaved the stages.
+    orderBy: [{ grade: { gradeNumber: "asc" } }, { name: "asc" }],
     select: {
       id: true,
       name: true,
@@ -1925,7 +1926,14 @@ export async function getTimetableByTeacher(input: {
       },
       include: {
         subject: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true, gradeId: true } },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            gradeId: true,
+            grade: { select: { gradeNumber: true } },
+          },
+        },
         classroom: { select: { id: true, roomName: true } },
         period: {
           select: { id: true, name: true, startTime: true, endTime: true },
@@ -1998,6 +2006,7 @@ export async function getTimetableByTeacher(input: {
         periodId: rowOf.get(s.periodId) ?? s.periodId,
         periodName: s.period.name,
         className: s.section?.name || "",
+        gradeNumber: s.section?.grade?.gradeNumber ?? null,
         sectionId: s.sectionId,
         room: s.classroom?.roomName || "",
         roomId: s.classroomId,
@@ -2228,6 +2237,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   // Room utilization analysis
   const rooms = await db.classroom.findMany({
     where: { schoolId },
+    orderBy: [{ grade: { gradeNumber: "asc" } }, { roomName: "asc" }],
     select: { id: true, roomName: true, capacity: true },
   })
 
