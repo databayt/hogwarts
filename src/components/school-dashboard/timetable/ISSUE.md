@@ -15,9 +15,27 @@ last_audited: 2026-10-04
 
 **Status:** PRODUCTION-READY
 **Completion:** 95%
-**Last Updated:** 2026-10-04
+**Last Updated:** 2026-10-26
 
 ---
+
+## 2026-10-26 — per-grade bells (e869f767f)
+
+- [x] **A period can ring for one grade.** `Period.gradeId` (null = school-wide,
+      every school before this) + `Period.untimed` (the sheet numbers the period
+      but gives no time). Class grids read `periodScope(gradeId)`; teacher and
+      room grids merge same-time rows across grades (`periods.ts`
+      `mergePeriodRows`). Settings: grade picker + «بدون توقيت». Unique key is
+      `(schoolId, yearId, gradeId, name)` NULLS NOT DISTINCT (migration
+      `20261026120000_period_grade_bell`, applied out-of-band). Prompted by
+      alabidae: G1–3 hourly from 12:00, G10 from 12:10, G11–12 from 15:00.
+- [x] **Slot dialog:** empty teacher no longer fails validation; `{count}`
+      substituted; «بدون معلم» clears a teacher.
+- [ ] **Generator + analytics still treat all periods as one bell**
+      (`generate/inputs.ts`) — grade-aware generation is a planner rewrite.
+- [ ] **Teacher conflict check compares period ids**, so the same teacher at the
+      same clock time on two grades' bells is not flagged (alabidae has 7 such
+      clashes straight from the school's sheets).
 
 ## 2026-10-04 — reads without classes; scope leaks closed (LOCAL, not pushed)
 

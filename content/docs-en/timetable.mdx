@@ -183,6 +183,10 @@ Each structure card shows name, description, period count, time range, working d
 | `src/components/onboarding/schedule/actions.ts`             | `getSchoolScheduleData()`, `saveScheduleChoice()` |
 | `src/components/onboarding/schedule/{config,validation}.ts` | Constants + Zod schema                            |
 
+## Per-grade bells
+
+A `Period` rings for the whole school when `gradeId` is null, or for one grade when it is set. A class grid shows its grade's periods plus the school-wide ones; a teacher's or room's grid merges periods that ring at the same time into one row. `untimed` marks a period the school numbers without a clock time («الحصة 1») — the grid shows the name only. Admins set both in timetable settings (grade picker, «بدون توقيت»). The generator still plans against all periods as one bell.
+
 ## Applying a structure
 
 `applyTimetableStructure()` turns a named structure into `Period` rows and a `SchoolWeekConfig`.
