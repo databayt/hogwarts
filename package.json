@@ -148,7 +148,7 @@
     "@react-pdf/renderer": "^4.3.1",
     "@schematichq/schematic-components": "^2.0.0",
     "@schematichq/schematic-typescript-node": "^1.2.4",
-    "@sentry/nextjs": "^10.29.0",
+    "@sentry/nextjs": "^10.75.2",
     "@stripe/react-stripe-js": "^5.4.1",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tabler/icons-react": "^3.34.1",
