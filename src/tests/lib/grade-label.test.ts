@@ -44,6 +44,8 @@ describe("SD preset", () => {
   it("names kindergarten روضة أولى / ثانية", () => {
     expect(gradeLabel("kg1", sd)).toBe("روضة أولى")
     expect(gradeLabel(0, sd)).toBe("روضة ثانية")
+    expect(gradeLabel(0, { ...sd, singleKg: true })).toBe("روضة")
+    expect(gradeLabel(0, { lang: "en", country: "SD", singleKg: true })).toBe("KG")
     expect(gradeLabel("kg1", { lang: "en", country: "SD" })).toBe("KG 1")
   })
 

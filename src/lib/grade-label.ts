@@ -11,11 +11,13 @@ import { gradeLabel } from "@/lib/grade"
 export function getGradeLabel(
   gradeNumber: number,
   lang: string,
-  country?: string | null
+  country?: string | null,
+  singleKg?: boolean
 ): string {
   return gradeLabel(gradeNumber, {
     lang,
     country,
+    singleKg,
     form: lang === "ar" ? "short" : "long",
   })
 }

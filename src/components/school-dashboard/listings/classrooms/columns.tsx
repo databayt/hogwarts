@@ -38,7 +38,9 @@ export function getClassroomColumns(
   },
   dictionary?: Record<string, string>,
   /** School country for grade naming (`@/lib/grade`). */
-  gradeCountry?: string | null
+  gradeCountry?: string | null,
+  /** One KG grade → plain «روضة» (`getSchoolSingleKg`). */
+  singleKg?: boolean
 ): ColumnDef<ClassroomRow>[] {
   const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
@@ -91,6 +93,7 @@ export function getClassroomColumns(
             {gradeLabel(row.original.gradeNumber, {
               lang,
               country: gradeCountry,
+              singleKg,
             })}
           </span>
         ) : (

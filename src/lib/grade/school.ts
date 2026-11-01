@@ -29,3 +29,16 @@ export const getSchoolGradeCountry = cache(
     return resolveSchoolCountry(school)
   }
 )
+
+/**
+ * True when the school has exactly one KG grade (KG1 = -1, KG2 = 0). Such a
+ * school calls it plain «روضة» — "روضة ثانية" would invent a level it lacks.
+ */
+export const getSchoolSingleKg = cache(
+  async (schoolId: string): Promise<boolean> => {
+    const kgGrades = await db.academicGrade.count({
+      where: { schoolId, gradeNumber: { in: [-1, 0] } },
+    })
+    return kgGrades === 1
+  }
+)

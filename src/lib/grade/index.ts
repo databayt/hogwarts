@@ -46,6 +46,8 @@ export interface GradeLabelOptions {
   /** long (default): "الأول متوسط" / "Grade 7"; short: "G7", AR unchanged
    *  for staged presets, bare ordinal ("السابع") for the default preset. */
   form?: GradeForm
+  /** The school runs a single KG year: say «روضة» / "KG" with no level. */
+  singleKg?: boolean
 }
 
 const langOf = (lang?: string | null): GradeLang =>
@@ -90,6 +92,8 @@ export function gradeLabel(
   if (n === null) return String(grade)
 
   const key = toGradeKey(n)
+  if (options.singleKg && (key === "kg1" || key === "kg2"))
+    return lang === "ar" ? "روضة" : "KG"
   if (key === "pre" || key === "kg1" || key === "kg2")
     return preset.kg[key][lang]
   if (!key) return lang === "ar" ? `الصف ${n}` : `Grade ${n}`

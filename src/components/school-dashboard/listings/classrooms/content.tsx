@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
-import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { getSchoolGradeCountry, getSchoolSingleKg } from "@/lib/grade/school"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
@@ -38,6 +38,9 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
   const gradeCountryPromise = schoolId
     ? getSchoolGradeCountry(schoolId).catch(() => null)
     : Promise.resolve(null)
+  const singleKgPromise = schoolId
+    ? getSchoolSingleKg(schoolId).catch(() => false)
+    : Promise.resolve(false)
 
   if (schoolId) {
     const [
@@ -114,6 +117,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
   }
 
   const gradeCountry = await gradeCountryPromise
+  const singleKg = await singleKgPromise
 
   const avgCapacity = total > 0 ? Math.round(totalCapacity / total) : 0
   const avgUtilization =
@@ -168,6 +172,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
         types={types}
         grades={grades}
         gradeCountry={gradeCountry}
+        singleKg={singleKg}
       />
     </div>
   )

@@ -92,7 +92,7 @@ import { db } from "@/lib/db"
 import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
-import { getSchoolGradeCountry } from "@/lib/grade/school"
+import { getSchoolGradeCountry, getSchoolSingleKg } from "@/lib/grade/school"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
 import { shortNameParts } from "@/lib/name-utils"
 import { getModelOrThrow } from "@/lib/prisma-guards"
@@ -1162,11 +1162,12 @@ export async function getStudents(
       if (/^[A-Z]\d/.test(room)) roomCodes.push(room)
       else roomNames.push(room)
     }
-    const [nameTranslations, classroomTranslations, gradeCountry] =
+    const [nameTranslations, classroomTranslations, gradeCountry, singleKg] =
       await Promise.all([
         getNames(rows as Array<any>, nameOf, displayLang, schoolId),
         getLabels(roomNames, displayLang, schoolId),
         getSchoolGradeCountry(schoolId),
+        getSchoolSingleKg(schoolId),
       ])
     for (const code of roomCodes) {
       classroomTranslations.set(code, transliterateRoomCode(code, displayLang))
@@ -1179,7 +1180,8 @@ export async function getStudents(
           ? getGradeLabel(
               s.academicGrade.gradeNumber,
               displayLang,
-              gradeCountry
+              gradeCountry,
+              singleKg
             )
           : null
 

@@ -41,6 +41,8 @@ interface ClassroomsTableProps {
   grades: { id: string; name: string }[]
   /** School country for grade naming (`@/lib/grade`). */
   gradeCountry?: string | null
+  /** One KG grade → plain «روضة». */
+  singleKg?: boolean
 }
 
 function ClassroomsTableInner({
@@ -53,6 +55,7 @@ function ClassroomsTableInner({
   types,
   grades,
   gradeCountry,
+  singleKg,
 }: ClassroomsTableProps) {
   const { openModal, modal } = useModal()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
@@ -128,9 +131,19 @@ function ClassroomsTableInner({
         subdomain,
         { onEdit: handleEdit, onDelete: handleDelete, permissions },
         d,
-        gradeCountry
+        gradeCountry,
+        singleKg
       ),
-    [lang, subdomain, handleEdit, handleDelete, d, permissions, gradeCountry]
+    [
+      lang,
+      subdomain,
+      handleEdit,
+      handleDelete,
+      d,
+      permissions,
+      gradeCountry,
+      singleKg,
+    ]
   )
 
   const { table } = useDataTable<ClassroomRow>({
