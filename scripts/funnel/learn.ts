@@ -16,7 +16,7 @@
  * this repo is public.
  */
 import { spawnSync } from "node:child_process"
-import { mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 import {
@@ -170,8 +170,10 @@ Propose AT MOST 2 new variants, only for lanes with ${MIN_SAMPLE}+ sends (${read
 4. One ask per message, and a small one. No sales theatre.
 5. Then append a "## Proposals" section to ${out}: each new id, what it changes, why (cite the numbers), and "adopt with: pnpm crm:funnel-variant activate <id>".
 If the numbers do not support a change, write nothing to the registry and say so in the Proposals section.`
+    // kun's ledger wrapper when installed: tokens + cost per run in ~/.claude/logs/runs.jsonl
+    const wrapper = `${process.env.HOME}/.claude/bin/kun-claude.sh`
     const res = spawnSync(
-      "claude",
+      existsSync(wrapper) ? wrapper : "claude",
       [
         "-p",
         prompt,
