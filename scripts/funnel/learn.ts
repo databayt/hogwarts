@@ -184,7 +184,12 @@ If the numbers do not support a change, write nothing to the registry and say so
         "--max-turns",
         "30",
       ],
-      { encoding: "utf8", timeout: 20 * 60_000 }
+      {
+        encoding: "utf8",
+        timeout: 20 * 60_000,
+        // names the run in kun's ledger (and selects its lean mode: no MCP, no skill listing)
+        env: { ...process.env, KUN_JOB: process.env.KUN_JOB ?? "funnel:learn" },
+      }
     )
     console.log(
       res.status === 0
