@@ -14,6 +14,10 @@ env:
   DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
   AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-ci' }}
   AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
+  # Required by src/env.mjs (z.string().min(1)). env.mjs has no skipValidation option, so
+  # SKIP_ENV_VALIDATION below is NOT honoured — without this the dev server answers every
+  # request with "Invalid environment variables" and all four shards fail before a test runs.
+  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
   SKIP_ENV_VALIDATION: true
 
 jobs:
