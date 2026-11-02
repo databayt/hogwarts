@@ -273,7 +273,7 @@
     "web-push": "^3.6.7",
     "ws": "^8.18.3",
     "xlsx": "^0.18.5",
-    "zod": "^4.0.14"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
