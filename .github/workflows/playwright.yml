@@ -18,6 +18,10 @@ env:
   # SKIP_ENV_VALIDATION below is NOT honoured — without this the dev server answers every
   # request with "Invalid environment variables" and all four shards fail before a test runs.
   NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
+  # Five modules build \`new Resend(key)\` at import time and throw without a key, so every
+  # page that imports one crashed in CI (248× "Missing API key"). A placeholder, never the
+  # real secret: e2e must not send real email — a send fails 401 instead.
+  RESEND_API_KEY: re_ci_placeholder_never_sends
   SKIP_ENV_VALIDATION: true
 
 jobs:
