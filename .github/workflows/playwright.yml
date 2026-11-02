@@ -57,7 +57,13 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: pnpm exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        # Chrome-only in CI (Abdout, 2026-11-02, hogwarts#460): the job installs Chromium alone,
+        # so firefox / webkit / mobile-safari only produced launch errors. They stay in
+        # playwright.config.ts for local runs; production-* projects never run here.
+        run: >-
+          pnpm exec playwright test
+          --project=setup --project=smoke --project=chromium --project=mobile-chrome --project=lifecycle
+          --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-ci' }}
