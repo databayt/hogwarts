@@ -5,6 +5,30 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot — issues
 
+## Done 2026-11-03 — the key, the smoke run and the eval
+
+- Key `hogwarts` in its own Console workspace `hogwarts-chatbot` with a
+  $20 monthly spend limit, the backstop above the app's $18 cap. It is
+  stored in the Keychain as `cf-hogwarts-CHATBOT_ANTHROPIC_API_KEY` and as
+  the Worker secret.
+- `claude-smoke.ts`: run 1 wrote 25,436 tokens to the cache ($0.0033); run 2
+  read them ($0.00043, first token after 1.1 s).
+- `eval.ts` first scored 80 % guide accuracy, under both the 90 % gate and
+  the matcher's 85 %. The answers were right, but 7 of the 8 misses had no
+  tag: rule 2's "answer first" let a yes/no, a price or a one-line reply
+  open with the answer and skip rule 1's `[[guide:…]]` line. `f00fe2855`
+  makes the tag the first line of every reply. Two runs since: **95 %
+  guide, 100 % language, PASS** (about $0.015 a run). The two misses left
+  are a reasonable exams/grades call and one Arabic sales question about
+  security.
+- The prod tables from phase 2 exist (`chatbot_threads`,
+  `chatbot_messages`, `chatbot_notes`, `chatbot_profiles`; checked
+  2026-11-03), so that DDL is no longer owed.
+- The deploy that switches the lane on was killed partway through
+  `next build` by Claude Code's low-memory reaper, with 8 sessions open and
+  a food build running alongside. Prod is unchanged. To finish, see
+  "Switch the Claude lane on" under Open.
+
 ## Done 2026-10-21 — fewer taps (phase 5)
 
 - Page-aware first quick ask and answers (`routes:` on 15 guides).
@@ -91,15 +115,19 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 3–6).
 
-- **Prod DDL owed before the phase-2 deploy:** apply
-  `prisma/migrations/20261021150000_chatbot_memory/migration.sql` out-of-band
-  (Neon branch first). Until then prod answers but saves nothing, and the
-  chats sheet shows "Couldn't load your chats".
-- **Groq's free tier is spent by midday:** on 2026-10-21 `gpt-oss-20b` hit its
-  200K tokens/day (TPD) cap on the key prod shares with mkan. Members get the
-  guide steps meanwhile. The Claude lane is built (phase 3); it waits on
-  Abdout's key (`cf-hogwarts-CHATBOT_ANTHROPIC_API_KEY`), then the smoke run
-  and the eval, then `CHATBOT_CLAUDE_ENABLED=1`.
+- **Switch the Claude lane on (one build away, 2026-11-03):** the key, the
+  smoke run and the eval are done (see the 2026-11-03 entry below), and the
+  Worker already holds `CHATBOT_ANTHROPIC_API_KEY`. What's left is the baked
+  flag: store it (`security add-generic-password -a "$USER" -s
+cf-hogwarts-CHATBOT_CLAUDE_ENABLED -w 1 -U`), append
+  `scripts/cf-keychain-env.sh` to the prod env, build from a sha at or after
+  `f00fe2855`, smoke, deploy. Verify that `curl -N` on `/api/chatbot` shows
+  `"provider":"anthropic"` and `delta` events spread over time, plus a new
+  `ai_usage_logs` platform row. The flag is deliberately NOT in the
+  Keychain until that deploy, so no unrelated deploy switches Claude on
+  without that check. Until then Groq's free tier answers and runs out by
+  midday (200K tokens/day on the key shared with mkan), then the guide's
+  own steps take over.
 - Learned notes and recall (phase 4) — needs the Claude lane on.
 - Choice chips for Claude's `[[choose:a,b]]` (the `choices` event is sent, not drawn).
 - Prompt templates still ship in the client dictionary chunk (phase 3 moves
