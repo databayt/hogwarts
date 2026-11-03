@@ -5,7 +5,7 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 # Chatbot — issues
 
-## Done 2026-11-03 — the key, the smoke run and the eval
+## Done 2026-11-03 — the Claude lane is on (key, smoke, eval, deploy)
 
 - Key `hogwarts` in its own Console workspace `hogwarts-chatbot` with a
   $20 monthly spend limit, the backstop above the app's $18 cap. It is
@@ -24,10 +24,30 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 - The prod tables from phase 2 exist (`chatbot_threads`,
   `chatbot_messages`, `chatbot_notes`, `chatbot_profiles`; checked
   2026-11-03), so that DDL is no longer owed.
-- The deploy that switches the lane on was killed partway through
-  `next build` by Claude Code's low-memory reaper, with 8 sessions open and
-  a food build running alongside. Prod is unchanged. To finish, see
-  "Switch the Claude lane on" under Open.
+- **The Claude lane is ON in prod**: Worker `f7a980f8` (source `f00fe2855`,
+  the 11-01 app plus this fix), new container live at 10:01 CAT. The flag
+  `CHATBOT_CLAUDE_ENABLED=1` is baked from the Keychain item
+  `cf-hogwarts-CHATBOT_CLAUDE_ENABLED`, so later builds keep it. A first
+  attempt was killed partway through `next build` by Claude Code's
+  low-memory reaper (8 sessions open, a food build alongside). The rerun
+  used `NEXT_BUILD_CPUS=1`: 29 min of build, then smoke, then deploy on the
+  first push.
+- Verified on prod:
+  - `/api/chatbot` returns `done.provider: "anthropic"` with no fallback.
+    The `delta` events are spread over the reply (14 to 25 per answer) and
+    there is no `content-encoding`. That closes "verify streaming end to
+    end".
+  - SaaS bot: "Is our data safe?" in English gets the security guide card.
+    Arabic pricing for 300 students gets 4,800 SAR a year. "Add a teacher"
+    in English gets the video, 3 screenshots and the guide.
+  - Desk on kingfahd, after the admin login lands on Overview: Arabic "how
+    do I add a teacher" gets 6 steps with bold button names, the video,
+    the screenshots and the Open page / Open guide buttons.
+  - `ai_usage_logs` holds 4 platform `chatbot` rows, $0.007 in total, and
+    the $18 cap reads them.
+- Latency: a warm answer starts in about 1.9 s. The first answer in a
+  language after the 5-minute cache has lapsed starts in 6–7 s, because it
+  rewrites the 25K-token help center.
 
 ## Done 2026-10-21 — fewer taps (phase 5)
 
@@ -115,25 +135,15 @@ Licensed under SSPL-1.0 -- see LICENSE for details
 
 Plan: `~/.claude/plans/read-hogwarts-chatbot-idempotent-micali.md` (phases 3–6).
 
-- **Switch the Claude lane on (one build away, 2026-11-03):** the key, the
-  smoke run and the eval are done (see the 2026-11-03 entry below), and the
-  Worker already holds `CHATBOT_ANTHROPIC_API_KEY`. What's left is the baked
-  flag: store it (`security add-generic-password -a "$USER" -s
-cf-hogwarts-CHATBOT_CLAUDE_ENABLED -w 1 -U`), append
-  `scripts/cf-keychain-env.sh` to the prod env, build from a sha at or after
-  `f00fe2855`, smoke, deploy. Verify that `curl -N` on `/api/chatbot` shows
-  `"provider":"anthropic"` and `delta` events spread over time, plus a new
-  `ai_usage_logs` platform row. The flag is deliberately NOT in the
-  Keychain until that deploy, so no unrelated deploy switches Claude on
-  without that check. Until then Groq's free tier answers and runs out by
-  midday (200K tokens/day on the key shared with mkan), then the guide's
-  own steps take over.
-- Learned notes and recall (phase 4) — needs the Claude lane on.
+- Cold first answers: with sparse traffic the 5-minute cache often lapses,
+  so a visitor waits 6–7 s and the answer pays a $0.0033 cache write. A
+  1-hour cache TTL (write at 2× input instead of 1.25×) would cut that.
+  Measure the read/(read+write) ratio from `chatbot_messages` after a week
+  first (the decision's bar is 0.6).
+- Learned notes and recall (phase 4): unblocked now that the Claude lane is on.
 - Choice chips for Claude's `[[choose:a,b]]` (the `choices` event is sent, not drawn).
 - Prompt templates still ship in the client dictionary chunk (phase 3 moves
   them server-side).
-- Verify streaming end to end on prod: `curl -N` must show `delta` events
-  spread over time with no `content-encoding`.
 - `src/lib/rate-limit.ts` `getRateLimitKey` and `report-issue.ts` still key on
   the head of X-Forwarded-For (outside the chatbot; same fix as here).
 - Dev only: the Next.js dev badge sits over the RTL floating button.
