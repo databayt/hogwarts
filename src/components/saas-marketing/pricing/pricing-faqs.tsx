@@ -9,7 +9,7 @@ const defaultFaqs = [
   {
     question: "How is the price calculated?",
     answer:
-      "Every student weighs the same: 24 SAR a year. Your first 100 students are free, so a school of 300 pays for 200 students — 4,800 SAR a year.",
+      "Every student weighs the same: 24 SAR (about $6.40) a year, from the first student. A school of 300 pays 7,200 SAR a year.",
   },
   {
     question: 'What counts as a "student"?',
@@ -19,12 +19,12 @@ const defaultFaqs = [
   {
     question: "Is there a free trial?",
     answer:
-      "Yes. Every school gets a full three-month free trial, and the first 100 students stay free forever after it.",
+      "Yes. Every new school gets its first month free — no fees, no commitment.",
   },
   {
     question: "How do I pay?",
     answer:
-      "One annual price: half at signing, the rest in four quarterly instalments of 12.5%. Prices exclude VAT.",
+      "One annual price: half when the free month ends, the rest in four quarterly instalments of 12.5%. Schools in Sudan pay the US-dollar price in Sudanese pounds, at the bank rate on the day, by bank transfer. Prices exclude VAT.",
   },
 ]
 

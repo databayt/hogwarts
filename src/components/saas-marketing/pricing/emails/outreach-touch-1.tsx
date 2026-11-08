@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Touch 1 cold-open: MENA-10 pilot offer with rating personalization.
+ * Touch 1 cold-open: the free-month offer with rating personalization.
  * Day 1 of the 5-touch cadence.
  */
 
@@ -68,8 +68,8 @@ export default function OutreachTouch1({
             وواتساب، أم نظام مدمج؟
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            نشغّل اليوم مدرسة الملك فهد بالسودان مجاناً لمدة ٦ أشهر ضمن برنامج
-            &quot;MENA-10&quot;. متبقي ٣ مقاعد. لو يهمك، أحجز لك عرض ١٥ دقيقة:
+            مدرسة في الخرطوم تدير اليوم مدرستها أونلاين كلها على «بالقلم»، وكل
+            مدرسة جديدة تبدأ بشهر مجاني. لو يهمك، أحجز لك عرض ١٥ دقيقة:
           </Text>
         </>
       ) : (
@@ -83,8 +83,9 @@ export default function OutreachTouch1({
             Excel/WhatsApp, or an integrated system?
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            We&apos;re running King Fahad Schools (Sudan) free for 6 months in
-            our MENA-10 cohort. 3 seats left. If it&apos;s worth a 15-min demo:
+            A school in Khartoum already runs its whole online school on
+            Balqalam, and every new school starts with a free month. If it&apos;s
+            worth a 15-min demo:
           </Text>
         </>
       )}

@@ -13,7 +13,6 @@ import EnterpriseSection from "./enterprise-section"
 import { getExchangeRates } from "./exchange-rates"
 import PricingFAQs from "./pricing-faqs"
 import PricingHeader from "./pricing-header"
-import { SecurePayment } from "./secure-payment"
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -37,7 +36,6 @@ export default async function PricingContent(props: Props) {
         </div>
       </CurrencyProvider>
       <ComparePlans dictionary={dictionary} />
-      <SecurePayment dictionary={dictionary} />
       <PricingFAQs dictionary={dictionary} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>

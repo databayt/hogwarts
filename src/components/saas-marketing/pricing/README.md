@@ -4,9 +4,9 @@
 
 Pricing and billing integration connecting the public pricing page to Stripe Checkout and Customer Portal. Handles the end-to-end flow: visitor discovers plans, selects a tier, authenticates, completes checkout, and manages their subscription. Webhooks persist subscription state to the database at both user and school levels.
 
-### Pricing model (2026-10-10)
+### Pricing model (2026-11-08)
 
-From the pricing rationale (6,000 SAR a year for 250 students), as one weight per student: **24 SAR per student per year, the first 100 students free on every plan** — annual price = (students − 100) × 24 SAR, so it moves by exactly 24 SAR per student with no bands. Paid **50% at signing, then 12.5% at months 3, 6, 9, 12**; prices before VAT (15% KSA); plus a 3-month free trial. Enterprise (1,000+) = same rate + dedicated contract.
+From the pricing rationale (6,000 SAR a year for 250 students), as one weight per student: **24 SAR (= $6.40) per student per year, from the first student** — annual price = students × 24 SAR, so it moves by exactly 24 SAR per student with no bands. Every new school gets **one free month** first (`TRIAL_MONTHS`). Paid **50% when the free month ends, then 12.5% at months 3, 6, 9, 12**; prices before tax. Schools in Sudan pay the USD price in SDG at the bank rate on the day, by bank transfer. Enterprise (1,000+) = same rate + dedicated contract. The "first 100 free" allowance (2026-10-10) ended on 2026-11-08 (kun decision D-20261108-pricing-one-month-trial) because it made the first real schools free forever.
 
 - `rates.ts` — the single source for every number (`quote`, `formatMoney`); the cards, the calculator and the chatbot all read it.
 - `exchange-rates.ts` — live SAR → USD/SDG/EGP from open.er-api.com, cached a day, pinned `FALLBACK_RATES` when it fails.

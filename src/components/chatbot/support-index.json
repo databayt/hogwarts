@@ -16,8 +16,8 @@
       "en": "Signing a school up, setting it up, its own web address"
     },
     "answer": {
-      "ar": "1. اضغط **ابدأ الآن** على balqalam.com، ثم سجّل الدخول أو أنشئ حسابًا إن لم يكن لديك واحد.\n2. **المعلومات الأساسية**: اسم المدرسة ووصف قصير وموقعها.\n3. **الإعداد**: السعة، والهوية والشعار. ويمكنك هنا استيراد طلابك من ملف CSV أو Excel إن رغبت، أو لاحقًا من الإدخال الجماعي.\n4. **العمل**: الظهور، والسعر، والشروط، وعنوان مدرستك، مثل `yourschool.balqalam.com`.\n5. وافق على الشروط، فتُفعَّل المدرسة وتصبح صفوفها وأقسامها وفصولها الدراسية وأدوارها الافتراضية جاهزة.\n6. ثم افتح مدرستك على عنوانها وسجّل الدخول. أضف طلابك ومعلميك بالإدخال الجماعي من Excel أو واحدًا واحدًا، وراجع الإعداد الأكاديمي، وألقِ نظرة على الجدول الدراسي الذي تملؤه «بالقلم» لك، واضبط الرسوم، ثم وزّع بيانات الدخول.\n\n- يستغرق الإعداد عادةً بين 10 و30 دقيقة.\n- تحصل كل مدرسة على **تجربة مجانية كاملة لثلاثة أشهر**، بلا رسوم وبلا التزام، ويبقى أول 100 طالب مجانًا إلى الأبد بعدها.\n- يمكنك تغيير الاسم والشعار ومعظم البيانات لاحقًا من **المدرسة ← الإعدادات**.\n- تدرّس عن بُعد؟ اضبط **طريقة التدريس** على **مباشر** أو **كلاهما**، واتبع تشغيل المدرسة عن بُعد.\n\nحل المشكلات:\n\n- **العنوان محجوز** — اختر عنوانًا آخر، مثلًا أضف اسم مدينتك: `yourschool-khartoum`.\n- **توقف الإعداد في منتصفه** — اضغط **ابدأ الآن** من جديد وسجّل الدخول بالحساب نفسه، فتقدّمك محفوظ.\n- **عنوان المدرسة لا يفتح** — تأكد من كتابة العنوان، ثم أعد المحاولة بعد دقائق.",
-      "en": "1. On balqalam.com, click **Get Started**. Sign in, or create an account if you don't have one.\n2. **Basic information**: your school's name, a short description and its location.\n3. **Setup**: capacity, branding and logo. If you like, import your students from a CSV or Excel file now, or later from bulk import.\n4. **Business**: visibility, price, terms, and your school's web address, for example `yourschool.balqalam.com`.\n5. Accept the terms. The school is activated, with its default grades, departments, terms and roles ready to use.\n6. Then open your school at its address and sign in. Add your people by bulk import from Excel or one by one, check the academic setup, look over the timetable Balqalam fills for you, set up fees, and hand out logins.\n\n- Setup usually takes 10–30 minutes.\n- Every school gets a full **three-month free trial**, with no fees and no commitment. After it, the first 100 students stay free forever.\n- You can change the name, logo and most details later in **School → Configuration**.\n- Running classes online? Set **Teaching mode** to **Live** or **Both** and follow Run your school online.\n\nTroubleshooting:\n\n- **The web address is taken** — pick another one, for example add your city: `yourschool-khartoum`.\n- **The setup stopped halfway** — click **Get Started** again and sign in with the same account. Your progress is kept.\n- **The school address doesn't open** — check the spelling of the address, then try again after a few minutes."
+      "ar": "1. اضغط **ابدأ الآن** على balqalam.com، ثم سجّل الدخول أو أنشئ حسابًا إن لم يكن لديك واحد.\n2. **المعلومات الأساسية**: اسم المدرسة ووصف قصير وموقعها.\n3. **الإعداد**: السعة، والهوية والشعار. ويمكنك هنا استيراد طلابك من ملف CSV أو Excel إن رغبت، أو لاحقًا من الإدخال الجماعي.\n4. **العمل**: الظهور، والسعر، والشروط، وعنوان مدرستك، مثل `yourschool.balqalam.com`.\n5. وافق على الشروط، فتُفعَّل المدرسة وتصبح صفوفها وأقسامها وفصولها الدراسية وأدوارها الافتراضية جاهزة.\n6. ثم افتح مدرستك على عنوانها وسجّل الدخول. أضف طلابك ومعلميك بالإدخال الجماعي من Excel أو واحدًا واحدًا، وراجع الإعداد الأكاديمي، وألقِ نظرة على الجدول الدراسي الذي تملؤه «بالقلم» لك، واضبط الرسوم، ثم وزّع بيانات الدخول.\n\n- يستغرق الإعداد عادةً بين 10 و30 دقيقة.\n- تحصل كل مدرسة جديدة على **شهرها الأول مجانًا**، بلا رسوم وبلا التزام. بعده كل طالب بـ24 ريالًا في السنة — انظر الأسعار والدفع.\n- يمكنك تغيير الاسم والشعار ومعظم البيانات لاحقًا من **المدرسة ← الإعدادات**.\n- تدرّس عن بُعد؟ اضبط **طريقة التدريس** على **مباشر** أو **كلاهما**، واتبع تشغيل المدرسة عن بُعد.\n\nحل المشكلات:\n\n- **العنوان محجوز** — اختر عنوانًا آخر، مثلًا أضف اسم مدينتك: `yourschool-khartoum`.\n- **توقف الإعداد في منتصفه** — اضغط **ابدأ الآن** من جديد وسجّل الدخول بالحساب نفسه، فتقدّمك محفوظ.\n- **عنوان المدرسة لا يفتح** — تأكد من كتابة العنوان، ثم أعد المحاولة بعد دقائق.",
+      "en": "1. On balqalam.com, click **Get Started**. Sign in, or create an account if you don't have one.\n2. **Basic information**: your school's name, a short description and its location.\n3. **Setup**: capacity, branding and logo. If you like, import your students from a CSV or Excel file now, or later from bulk import.\n4. **Business**: visibility, price, terms, and your school's web address, for example `yourschool.balqalam.com`.\n5. Accept the terms. The school is activated, with its default grades, departments, terms and roles ready to use.\n6. Then open your school at its address and sign in. Add your people by bulk import from Excel or one by one, check the academic setup, look over the timetable Balqalam fills for you, set up fees, and hand out logins.\n\n- Setup usually takes 10–30 minutes.\n- Every new school gets its **first month free**, with no fees and no commitment. After it, every student is 24 SAR a year — see Pricing and payment.\n- You can change the name, logo and most details later in **School → Configuration**.\n- Running classes online? Set **Teaching mode** to **Live** or **Both** and follow Run your school online.\n\nTroubleshooting:\n\n- **The web address is taken** — pick another one, for example add your city: `yourschool-khartoum`.\n- **The setup stopped halfway** — click **Get Started** again and sign in with the same account. Your progress is kept.\n- **The school address doesn't open** — check the spelling of the address, then try again after a few minutes."
     },
     "keywords": [
       "ابدا",
@@ -321,8 +321,8 @@
       "en": "Pricing and payment"
     },
     "summary": {
-      "ar": "السعر لكل طالب، الحاسبة، وخطة الدفع",
-      "en": "The per-student price, the calculator, the payment plan"
+      "ar": "السعر لكل طالب، الشهر المجاني، الحاسبة، وخطة الدفع",
+      "en": "The per-student price, the free month, the calculator, the payment plan"
     },
     "answer": {
       "ar": "استخدم قسم «الأسعار المباشرة» أعلاه، ووجّه الزائر إلى حاسبة الأسعار المرفقة ليرى سعر مدرسته بعملته.",
@@ -334,12 +334,16 @@
       "تكلف",
       "بكم",
       "عرض سعر",
+      "تجربة",
+      "شهر مجاني",
       "price",
       "pricing",
       "cost",
       "how much",
       "quote",
-      "plan"
+      "plan",
+      "trial",
+      "free month"
     ],
     "guide": "/pricing",
     "sales": true

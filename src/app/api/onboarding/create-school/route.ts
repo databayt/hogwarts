@@ -94,8 +94,9 @@ export async function POST() {
           maxTeachers: 50,
           isActive: true,
           // "free" — the schema default and the public pricing's first plan
-          // (lib/plan-type). Every new school starts free; its first 100
-          // students never bill.
+          // (lib/plan-type): the free first month (rates.ts TRIAL_MONTHS).
+          // Every student bills after it; trialEndsAt is not set yet, so the
+          // month is tracked by hand in the CRM.
           planType: "free",
           createdByUserId: userId, // Track owner (unique constraint prevents duplicates)
         },

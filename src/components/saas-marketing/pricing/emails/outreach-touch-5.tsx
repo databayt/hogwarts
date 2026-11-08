@@ -38,7 +38,7 @@ export default function OutreachTouch5({
       {isAr ? (
         <>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            لم أردّ سماعكم بشأن MENA-10 — وهذا تماماً مفهوم.
+            لم أسمع منكم بشأن الشهر المجاني — وهذا تماماً مفهوم.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             سأغلق الملف الخاص بـ {school} الآن إن لم أسمع منكم. لو أردتم العودة
@@ -54,7 +54,7 @@ export default function OutreachTouch5({
       ) : (
         <>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            Haven&apos;t heard back on MENA-10 — totally understand, schools are
+            Haven&apos;t heard back about the free month — totally understand, schools are
             busy.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">

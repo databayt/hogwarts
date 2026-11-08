@@ -13,7 +13,7 @@ export default function PricingHeader({ dictionary }: PricingHeaderProps) {
     <div className="flex w-full max-w-4xl flex-col gap-4 text-center">
       <div className="flex justify-center">
         <Badge className="bg-muted text-foreground">
-          {dictionary?.marketing?.pricing?.badge || "ROI Guaranteed"}
+          {dictionary?.marketing?.pricing?.badge || "One price per student"}
         </Badge>
       </div>
       <h1 className="font-heading text-4xl font-extrabold md:text-5xl">

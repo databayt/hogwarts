@@ -2,8 +2,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // SaaS plan data: what each plan includes. What a student costs lives in
-// rates.ts — one rate (24 SAR a year) for every student beyond the free 100,
-// on every plan. The dictionary overlays display text only.
+// rates.ts — one rate (24 SAR a year) for every student, from the first, on
+// every plan. The "free" plan id is the free first month (TRIAL_MONTHS): the
+// whole product, before the first payment. The dictionary overlays display
+// text only.
 
 import { env } from "@/env.mjs"
 import type {
@@ -77,8 +79,8 @@ export const getCtaLabel = (id: PlanId, pricing?: PricingDict): string =>
   isEnterprisePlan(id)
     ? pricing?.enterprise?.talkToSales || "Talk to Sales"
     : isProPlan(id)
-      ? pricing?.constants?.getPro || "Start 3-month free trial"
-      : pricing?.constants?.startTrial || "Get started free"
+      ? pricing?.constants?.getPro || "Start with a free month"
+      : pricing?.constants?.startTrial || "Start your free month"
 
 // Legacy USD unit for the Stripe subscription code (billing-form-button,
 // lib/subscription): one billable student per month at today's SAR peg.
@@ -91,13 +93,13 @@ export const pricingData: SubscriptionPlan[] = [
   {
     // lib/subscription.ts falls back to pricingData[0] — Free stays first.
     id: "free",
-    title: "Free",
-    description: "For small schools getting started",
+    title: "Free month",
+    description: "Try everything for one month",
     benefits: [
-      "Up to 100 students",
-      "Up to 10 teachers",
-      "Attendance, exams, fees, timetable",
-      "Community support",
+      "Everything in Pro for one month",
+      "We set up your school with you",
+      "No payment until the month ends",
+      "Your data stays yours",
     ],
     limitations: [],
     prices: {
@@ -115,9 +117,9 @@ export const pricingData: SubscriptionPlan[] = [
     title: "Pro",
     description: "For growing schools ready to scale",
     benefits: [
-      "Unlimited students & teachers",
+      "Every student, 24 SAR a year",
+      "Unlimited teachers",
       "Custom branding",
-      "Advanced analytics",
       "Parent push notifications",
       "WhatsApp & email support",
     ],
@@ -143,7 +145,6 @@ export const pricingData: SubscriptionPlan[] = [
     benefits: [
       "Multi-campus networks",
       "Dedicated account manager",
-      "99.9% uptime SLA",
       "White-label branding",
       "SSO (SAML/OAuth)",
       "Custom integrations & API",
@@ -191,15 +192,15 @@ export const plansColumns = ["free", "pro", "enterprise"] as const
 export const comparePlans: PlansRow[] = [
   {
     feature: "Students included",
-    free: "Up to 100",
+    free: "All, for one month",
     pro: "Unlimited, billed per student",
     enterprise: "1,000+ (custom)",
     tooltip:
-      "Every school's first 100 students are free. Each student beyond that is 24 SAR a year, on every plan.",
+      "Every new school gets one free month. After it, every student is 24 SAR a year, on every plan.",
   },
   {
     feature: "Teachers",
-    free: "Up to 10",
+    free: "Unlimited",
     pro: "Unlimited",
     enterprise: "Unlimited",
   },
@@ -211,39 +212,32 @@ export const comparePlans: PlansRow[] = [
   },
   {
     feature: "Storage",
-    free: "1 GB",
+    free: "10 GB",
     pro: "10 GB",
     enterprise: "Unlimited",
   },
   {
     feature: "Support",
-    free: "Community",
+    free: "WhatsApp & email",
     pro: "WhatsApp & email",
     enterprise: "Dedicated account manager",
   },
   {
     feature: "Custom branding",
-    free: null,
+    free: true,
     pro: true,
     enterprise: "Yes, white-label",
   },
   {
     feature: "API access",
-    free: null,
+    free: "1,000 req/hr",
     pro: "1,000 req/hr",
     enterprise: "Unlimited",
-    tooltip:
-      "Free has no API access. Pro is rate-limited; Enterprise is unlimited.",
-  },
-  {
-    feature: "Analytics & reporting",
-    free: "Basic",
-    pro: "Advanced",
-    enterprise: "Advanced + custom",
+    tooltip: "Pro and the free month are rate-limited; Ultra is unlimited.",
   },
   {
     feature: "Parent push notifications",
-    free: null,
+    free: true,
     pro: true,
     enterprise: true,
   },
@@ -252,14 +246,7 @@ export const comparePlans: PlansRow[] = [
     free: null,
     pro: null,
     enterprise: true,
-    tooltip: "Single sign-on via SAML or OAuth — Enterprise only.",
-  },
-  {
-    feature: "Uptime SLA",
-    free: null,
-    pro: null,
-    enterprise: "99.9%",
-    tooltip: "Enterprise includes a contractual 99.9% uptime guarantee.",
+    tooltip: "Single sign-on via SAML or OAuth — Ultra only.",
   },
   {
     feature: "Data export, anytime",
@@ -287,6 +274,7 @@ const compareFeatureKeys: Record<string, string> = {
 }
 
 const compareValueKeys: Record<string, string> = {
+  "All, for one month": "allForMonth",
   "Up to 100": "upTo100",
   "Unlimited, billed per student": "unlimitedPerStudent",
   "1,000+ (custom)": "students1000Plus",

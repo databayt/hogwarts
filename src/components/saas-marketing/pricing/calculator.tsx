@@ -21,7 +21,6 @@ import { CurrencyToggle, useCurrency } from "./currency"
 import {
   ENTERPRISE_STUDENTS,
   formatMoney,
-  FREE_STUDENTS,
   INSTALMENT_MONTHS,
   quote,
 } from "./rates"
@@ -80,11 +79,8 @@ export function Calculator({
         <p className="muted">
           {fill(
             t?.subtitle ||
-              "Every student weighs the same — {rate} a year. Your first {free} students are free.",
-            {
-              rate: money(q.ratePerStudentYear),
-              free: String(FREE_STUDENTS),
-            }
+              "Every student weighs the same — {rate} a year. Your first month is free.",
+            { rate: money(q.ratePerStudentYear) }
           )}
         </p>
 
@@ -127,11 +123,7 @@ export function Calculator({
         <div className="mt-8 w-full" aria-live="polite">
           {isFree ? (
             <p className="font-heading text-2xl font-bold">
-              {fill(
-                t?.resultFree ||
-                  "Free — your first {free} students cost nothing",
-                { free: String(FREE_STUDENTS) }
-              )}
+              {t?.resultFree || "Add your students to see the price"}
             </p>
           ) : (
             <div className="flex flex-col gap-6">
@@ -143,15 +135,10 @@ export function Calculator({
                   {money(q.annual)}
                 </p>
                 <p className="muted mt-1 text-sm tabular-nums">
-                  {fill(
-                    t?.breakdown ||
-                      "{billable} students × {rate} — the first {free} free",
-                    {
-                      billable: q.billable.toLocaleString("en-US"),
-                      rate: money(q.ratePerStudentYear),
-                      free: String(FREE_STUDENTS),
-                    }
-                  )}
+                  {fill(t?.breakdown || "{billable} students × {rate}", {
+                    billable: q.billable.toLocaleString("en-US"),
+                    rate: money(q.ratePerStudentYear),
+                  })}
                 </p>
               </div>
 

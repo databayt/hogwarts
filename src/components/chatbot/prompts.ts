@@ -9,8 +9,8 @@ import {
   ENTERPRISE_STUDENTS,
   FALLBACK_RATES,
   formatMoney,
-  FREE_STUDENTS,
   quote,
+  TRIAL_MONTHS,
   type Rates,
 } from "@/components/saas-marketing/pricing/rates"
 
@@ -107,8 +107,8 @@ export function deriveSchoolContext(
 
 /**
  * The pricing block of the SaaS system prompt, from the single source in
- * `pricing/rates.ts`: one rate per student beyond the free 100, converted at
- * today's exchange rates. A 20B model does arithmetic badly, so the formula
+ * `pricing/rates.ts`: one rate per student from the first, after a free first
+ * month, converted at today's exchange rates. A 20B model does arithmetic badly, so the formula
  * comes with worked examples it can quote instead of computing.
  */
 function formatPricing(locale: string, rates: Rates): string {
@@ -118,7 +118,7 @@ function formatPricing(locale: string, rates: Rates): string {
   const converted = (["USD", "SDG", "EGP"] as const)
     .map((c) => formatMoney(quote(0, c, rates).ratePerStudentYear, c, locale))
     .join(isAr ? "، " : ", ")
-  const examples = [150, 250, 300, 500, 1000]
+  const examples = [50, 100, 250, 500, 1000]
     .map((n) => {
       const q = quote(n, "SAR", rates)
       return isAr
@@ -129,18 +129,18 @@ function formatPricing(locale: string, rates: Rates): string {
 
   return isAr
     ? [
-        `- أول ${FREE_STUDENTS} طالب مجانًا إلى الأبد في كل مدرسة (الباقة المجانية: حتى ${FREE_STUDENTS} طالب و10 معلمين)، إضافة إلى تجربة كاملة مجانية لثلاثة أشهر.`,
-        `- كل طالب بعد أول ${FREE_STUDENTS} بـ${sar(rate)} في السنة (≈ ${sar(rate / 12)} شهريًا) — بسعر اليوم: ${converted}.`,
-        `- المعادلة: السعر السنوي = (عدد الطلاب − ${FREE_STUDENTS}) × ${sar(rate)}. أمثلة: ${examples}.`,
-        `- الدفع: 50% عند التوقيع، ثم 12.5% في الأشهر 3 و6 و9 و12. الأسعار قبل ضريبة القيمة المضافة (15% في السعودية). الاستضافة والدعم (واتساب وبريد، الأحد–الخميس) والتحديثات مشمولة.`,
-        `- المؤسسات (أكثر من ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} طالب): السعر نفسه لكل طالب، مع عقد مخصص ومدير حساب واتفاقية مستوى خدمة.`,
+        `- كل مدرسة جديدة تبدأ بشهر مجاني كامل (${TRIAL_MONTHS === 1 ? "شهر واحد" : `${TRIAL_MONTHS} أشهر`}) — بدون رسوم وبدون التزام.`,
+        `- بعده كل طالب بـ${sar(rate)} في السنة من أول طالب (≈ ${sar(rate / 12)} شهريًا) — بسعر اليوم: ${converted}. لا توجد باقة مجانية دائمة.`,
+        `- المعادلة: السعر السنوي = عدد الطلاب × ${sar(rate)}. أمثلة: ${examples}.`,
+        `- الدفع: 50% عند نهاية الشهر المجاني، ثم 12.5% في الأشهر 3 و6 و9 و12. مدارس السودان تدفع السعر بالدولار بالجنيه السوداني بسعر البنك يوم الدفع، بتحويل بنكي. الأسعار قبل الضريبة. الاستضافة والدعم (واتساب وبريد) والتحديثات مشمولة.`,
+        `- المؤسسات (أكثر من ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} طالب): السعر نفسه لكل طالب، مع عقد مخصص ومدير حساب.`,
       ].join("\n")
     : [
-        `- Every school's first ${FREE_STUDENTS} students are free forever (the Free plan: up to ${FREE_STUDENTS} students and 10 teachers), plus a full three-month free trial.`,
-        `- Each student beyond the first ${FREE_STUDENTS} is ${sar(rate)} a year (≈ ${sar(rate / 12)} a month) — at today's rates: ${converted}.`,
-        `- Formula: annual price = (students − ${FREE_STUDENTS}) × ${sar(rate)}. Examples: ${examples}.`,
-        `- Payment: 50% at signing, then 12.5% at months 3, 6, 9 and 12. Prices are before VAT (15% in Saudi Arabia). Hosting, support (WhatsApp and email, Sunday–Thursday) and updates are included.`,
-        `- Enterprise (over ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} students): the same per-student rate, with a dedicated contract, account manager and SLA.`,
+        `- Every new school starts with a free first month (${TRIAL_MONTHS === 1 ? "one month" : `${TRIAL_MONTHS} months`}) — no fees, no commitment.`,
+        `- After it, every student is ${sar(rate)} a year from the first student (≈ ${sar(rate / 12)} a month) — at today's rates: ${converted}. There is no permanent free plan.`,
+        `- Formula: annual price = students × ${sar(rate)}. Examples: ${examples}.`,
+        `- Payment: 50% when the free month ends, then 12.5% at months 3, 6, 9 and 12. Schools in Sudan pay the US-dollar price in Sudanese pounds at the bank rate on the day, by bank transfer. Prices are before tax. Hosting, support (WhatsApp and email) and updates are included.`,
+        `- Enterprise (over ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} students): the same per-student rate, with a dedicated contract and account manager.`,
       ].join("\n")
 }
 

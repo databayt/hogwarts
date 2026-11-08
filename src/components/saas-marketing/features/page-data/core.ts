@@ -455,7 +455,7 @@ export const corePageData: Record<string, FeaturePageData> = {
         type: "checklist",
         heading: "Why schools pick this student system",
         items: [
-          { text: "Free for your first 100 students" },
+          { text: "Your first month free" },
           { text: "Arabic-first, RTL-native interface" },
           { text: "Import from a spreadsheet in minutes" },
           { text: "Export everything to CSV or JSON, anytime" },

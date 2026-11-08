@@ -5,16 +5,23 @@
  * The price, as one number per student. The pricing rationale (2026-10-09)
  * set 6,000 SAR a year for a 250-student school; flat bands made a
  * 100-student school pay 60 SAR a head. Instead every student weighs the
- * same — 6,000 ÷ 250 = 24 SAR a year — and the first 100 are free, so the
- * bill grows in exact proportion to enrolment, one student at a time.
+ * same — 6,000 ÷ 250 = 24 SAR (= $6.40) a year — so the bill grows in exact
+ * proportion to enrolment, one student at a time.
+ *
+ * Since 2026-11-08 every student counts from the first: the "first 100 free"
+ * allowance made the first real schools (48 and 14 students) free forever.
+ * A new school gets TRIAL_MONTHS free instead (kun decision
+ * D-20261108-pricing-one-month-trial).
  *
  * Single source for the pricing cards, the calculator and the chatbot.
  */
 
 /** SAR per billable student per year — 6,000 SAR ÷ 250 students. */
 export const RATE_SAR_PER_STUDENT_YEAR = 24
-/** Students every school gets free, forever. Billing starts at student 101. */
-export const FREE_STUDENTS = 100
+/** No free allowance: billing starts at student 1. Kept so callers read 0. */
+export const FREE_STUDENTS = 0
+/** Every new school's free trial, in months, before the first payment. */
+export const TRIAL_MONTHS = 1
 /** Saudi VAT — prices are quoted before it. */
 export const VAT_RATE = 0.15
 /** Half at signing, then four quarterly instalments (months 3, 6, 9, 12). */

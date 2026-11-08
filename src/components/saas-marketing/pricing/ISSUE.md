@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 **Completion:** 70%
-**Last Updated:** 2026-10-15
+**Last Updated:** 2026-11-08
 
 ---
 
@@ -14,6 +14,8 @@
 - [x] Per-student pricing model (2026-08-05): Free $0 ≤100 students / Pro $1.50/student/mo (min $30) / Enterprise $1.00/student/mo custom — competitor-grounded (category norm $2–$15/student/mo), tiers renamed Free/Pro/Enterprise, stable `id: PlanId` decouples CTA branching from localized titles (fixes silent /ar breakage)
 - [x] Per-student cost calculator (`calculator.tsx`) with slider + yearly toggle
 - [x] Per-student SAR model (2026-10-10): 24 SAR/student/yr beyond a free 100 (rationale: 6,000 SAR ÷ 250), 50% at signing + 4 × 12.5%, live multi-currency (SAR/USD/SDG/EGP) calculator; monthly/yearly toggle + Stripe CTAs removed from the page
+- [x] Pricing reset (2026-11-08, kun D-20261108-pricing-one-month-trial): every student bills from the first (`FREE_STUDENTS = 0`, 24 SAR = $6.40/yr), one free month for every new school (`TRIAL_MONTHS = 1`) replacing the 3-/6-month pilot offers; the Free card is now the free month; "ROI Guaranteed", the 99.9% SLA lines, "Advanced analytics" and the Stripe/Visa/Mada badges came off the page (no checkout is wired — schools pay by bank transfer); chatbot prompt, FAQ, help pages and outreach emails 1/4/5 follow. Sudan: USD price paid in SDG at the bank rate on the day (Bankak).
+- [ ] Trial enforcement: `trialEndsAt` is still never set, so the free month is tracked by hand in the CRM
 - [x] Concise equal cards (2026-10-15): identical header rows, Free / Free-plus / Pro-plus lists, footer pinned at the same spot; header copy restored to "ROI Guaranteed · Simple. Transparent."; Monthly / Yearly toggle back (display only, one rate); third plan shown as Ultra
 - [ ] Re-wire checkout for the annual SAR contract (new Stripe price ids or invoice flow) — the page currently routes to onboarding / sales
 - [x] CTA dead-ends fixed: anonymous cards → `/onboarding` (was nonexistent `/starter/dashboard/billing` → 404), Enterprise + unavailable-Stripe states → `contactHref` mailto (enterprise band's dead `/docs/community/support` link too)

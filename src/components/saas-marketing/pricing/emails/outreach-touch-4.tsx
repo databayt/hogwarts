@@ -15,7 +15,7 @@ export type OutreachTouch4Props = {
   school: string
   city?: string | null
   calLink: string
-  seatsRemaining?: number // MENA-10 seat scarcity
+  seatsRemaining?: number // unused since the MENA-10 cohort ended (2026-11-08)
   senderName: string
   senderEmail: string
 }
@@ -25,7 +25,6 @@ export default function OutreachTouch4({
   school,
   city,
   calLink,
-  seatsRemaining = 3,
   senderName,
   senderEmail,
 }: OutreachTouch4Props) {
@@ -48,9 +47,8 @@ export default function OutreachTouch4({
             مساء الخير — أعود إليكم بسؤال محدد.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            متبقي {seatsRemaining} مقاعد فقط في برنامج MENA-10 المجاني (٦ أشهر،
-            بدون رسوم، نطاق فرعي خاص بـ {school}، دعم أسبوعي). الحجز يُغلق حسب
-            الأولوية.
+            شهركم الأول مجاني: عنوان خاص بـ {school}، نجهّز المدرسة معكم، ودعم
+            أسبوعي. بعده كل طالب بـ24 ريالًا في السنة.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             هل أحجز لكم ١٥ دقيقة هذا الأسبوع؟
@@ -62,8 +60,8 @@ export default function OutreachTouch4({
             Quick one — coming back with a direct ask.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            We have {seatsRemaining} MENA-10 free pilot seats left (6 months,
-            $0, own {school} subdomain, weekly support). First-come basis.
+            Your first month is free: your own {school} address, set up with
+            you, with weekly support. After it, every student is 24 SAR a year.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             Open to a 15-min demo this week?
