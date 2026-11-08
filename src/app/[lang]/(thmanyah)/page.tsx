@@ -23,7 +23,7 @@ import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/Home
  * homepage) and ships its own footer, so the shared marketing layout's
  * SiteHeader / SiteFooter chrome would break the mirror. The way into the rest
  * of the site is HomeHeader instead: a lone hamburger over the hero that drops
- * a nike-style mega-menu, mounted outside the shell for the same reason as the
+ * a nike-style header bar, mounted outside the shell for the same reason as the
  * Chatbot below. Two things that
  * layout contributed are still wanted and are re-mounted below: AccessCheck's
  * `?access=denied` toast, fired when the dashboard bounces someone back here,
