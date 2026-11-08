@@ -30,7 +30,7 @@ export default async function PricingContent(props: Props) {
       <CurrencyProvider rates={rates} updated={updated}>
         <PricingCards lang={lang} />
       </CurrencyProvider>
-      <ComparePlans dictionary={dictionary} lang={lang} />
+      <ComparePlans dictionary={dictionary} />
       <PricingFAQs dictionary={dictionary} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>

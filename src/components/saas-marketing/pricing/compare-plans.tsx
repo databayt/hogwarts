@@ -1,18 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Link from "next/link"
-import { Info } from "lucide-react"
+import { CircleCheck, Info } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { HeaderSection } from "@/components/atom/header-section"
-import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   comparePlans,
@@ -23,134 +19,83 @@ import { PlansRow } from "@/components/saas-marketing/pricing/types"
 
 interface ComparePlansProps {
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
-  lang?: Locale
 }
 
-type Column = (typeof plansColumns)[number]
-
-const PLAN_EMOJI: Record<Column, string> = {
-  free: "🎁",
-  pro: "🚀",
-  enterprise: "🏛️",
-}
-
-// Keyed by the canonical English feature (config.ts), so the emoji survives
-// translation of the label.
-const FEATURE_EMOJI: Record<string, string> = {
-  "Students included": "🎓",
-  Teachers: "👩‍🏫",
-  "Admissions, attendance, exams, fees, timetable, messaging": "🧩",
-  Storage: "💾",
-  Support: "💬",
-  "Custom branding": "🎨",
-  "API access": "🔌",
-  "Parent push notifications": "🔔",
-  "SSO (SAML/OAuth)": "🔐",
-  "Data export, anytime": "📦",
-}
-
-export function ComparePlans({ dictionary, lang = "en" }: ComparePlansProps) {
+export function ComparePlans({ dictionary }: ComparePlansProps) {
   const pricing = dictionary?.marketing?.pricing
-  const header = pricing?.comparePlans?.header
   const plans = getComparePlans(pricing)
 
-  const planName: Record<Column, string> = {
-    free: pricing?.planNames?.free || "Free month",
-    pro: pricing?.planNames?.pro || "Pro",
-    enterprise: pricing?.planNames?.enterprise || "Ultra",
+  // Inline emoji before each plan name and feature; feature emoji are keyed
+  // by the canonical English label in config.ts so they survive translation.
+  const planEmoji: Record<string, string> = {
+    free: "🎁",
+    pro: "🚀",
+    enterprise: "🏛️",
   }
-  const planHint: Record<Column, string> = {
-    free: header?.freeHint || "Try it all, free",
-    pro: header?.proHint || "Every student, 24 SAR/yr",
-    enterprise: header?.enterpriseHint || "1,000+ students",
+  const featureEmoji: Record<string, string> = {
+    "Students included": "🎓",
+    Teachers: "👩‍🏫",
+    "Admissions, attendance, exams, fees, timetable, messaging": "🧩",
+    Storage: "💾",
+    Support: "💬",
+    "Custom branding": "🎨",
+    "API access": "🔌",
+    "Parent push notifications": "🔔",
+    "SSO (SAML/OAuth)": "🔐",
+    "Data export, anytime": "📦",
   }
-  const contactHref =
-    pricing?.enterprise?.contactHref ||
-    "mailto:sales@databayt.org?subject=Enterprise%20plan"
+
+  const planNameMap: Record<string, string> = {
+    free: pricing?.planNames?.free || "free",
+    pro: pricing?.planNames?.pro || "pro",
+    enterprise: pricing?.planNames?.enterprise || "enterprise",
+  }
 
   const renderCell = (value: string | boolean | null) => {
-    if (value === null || value === false)
-      return (
-        <span aria-label="Not included" className="opacity-60">
-          ➖
-        </span>
-      )
-    if (value === true) return <span aria-label="Included">✅</span>
+    if (value === null) return "\u2014"
+    if (typeof value === "boolean")
+      return value ? <CircleCheck className="mx-auto size-5" /> : "\u2014"
     return value
   }
 
   return (
     <div id="compare" className="w-full scroll-mt-24 py-20">
       <HeaderSection
-        title={pricing?.comparePlans?.title || "Compare plans"}
+        title={pricing?.comparePlans?.title || "Compare Plans"}
         subtitle={
           pricing?.comparePlans?.subtitle ||
-          "Every plan runs the full platform — pricing scales with your school."
+          "Find the perfect plan tailored for your business needs!"
         }
       />
 
-      {/* Sticky plan bar — the site header scrolls away, so it pins at the top */}
+      {/* Sticky header row - flush with page header */}
       <div className="bg-background border-border sticky top-0 z-10 mt-10 border-b">
-        <div className="flex w-full items-stretch">
-          <div className="hidden w-40 shrink-0 flex-col justify-center py-4 md:flex md:w-1/4">
-            <p className="text-base font-semibold">
-              👇 {header?.pick || "Pick what fits"}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {header?.note || "Same platform, every plan"}
-            </p>
-          </div>
-          <div className="w-40 shrink-0 md:hidden" />
+        <div className="flex w-full">
+          <div className="w-40 shrink-0 py-5 md:w-1/4"></div>
           {plansColumns.map((col) => (
             <div
               key={col}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-1 px-1 py-3 text-center",
-                col === "pro" && "bg-muted/60 rounded-t-xl"
-              )}
+              className="font-heading flex-1 py-5 text-center tracking-wide text-black capitalize"
             >
-              <span className="text-2xl leading-none" aria-hidden>
-                {PLAN_EMOJI[col]}
-              </span>
-              <span className="text-base font-semibold">{planName[col]}</span>
-              <span className="text-muted-foreground hidden text-xs sm:block">
-                {planHint[col]}
-              </span>
-              <Link
-                href={
-                  col === "enterprise" ? contactHref : `/${lang}/onboarding`
-                }
-                className={cn(
-                  buttonVariants({
-                    variant: col === "enterprise" ? "outline" : "default",
-                    size: "sm",
-                  }),
-                  "mt-1 hidden h-7 px-3 text-xs md:inline-flex"
-                )}
-              >
-                {col === "enterprise"
-                  ? header?.talk || "Talk to us"
-                  : header?.start || "Start free"}
-              </Link>
+              {planEmoji[col]} {planNameMap[col] || col}
             </div>
           ))}
         </div>
       </div>
 
+      {/* Scrollable table body */}
       <div className="overflow-x-auto">
         <table className="w-full table-fixed">
           <tbody>
             {plans.map((row: PlansRow, index: number) => (
-              <tr
-                key={index}
-                className="border-border/60 hover:bg-muted/40 border-b transition-colors"
-              >
-                <td className="bg-background sticky start-0 w-40 md:w-1/4 md:bg-transparent">
+              <tr key={index}>
+                <td
+                  data-tip={row.tooltip ? row.tooltip : ""}
+                  className="bg-background sticky start-0 w-40 md:w-1/4 md:bg-transparent"
+                >
                   <div className="flex items-center justify-between gap-2 py-4">
-                    <span className="flex items-center gap-2 lg:text-base">
-                      <span aria-hidden>
-                        {FEATURE_EMOJI[comparePlans[index]?.feature] || "✨"}
-                      </span>
+                    <span className="lg:text-base">
+                      {featureEmoji[comparePlans[index]?.feature]}{" "}
                       {row.feature}
                     </span>
                     {row.tooltip && (
@@ -168,10 +113,7 @@ export function ComparePlans({ dictionary, lang = "en" }: ComparePlansProps) {
                 {plansColumns.map((col) => (
                   <td
                     key={col}
-                    className={cn(
-                      "text-muted-foreground px-1 py-4 text-center lg:text-base",
-                      col === "pro" && "bg-muted/60"
-                    )}
+                    className="text-muted-foreground py-4 text-center lg:text-base"
                   >
                     {renderCell(row[col])}
                   </td>
