@@ -43,7 +43,7 @@ export function PricingCard({
   const isFree = offer.prices.monthly === 0 && !isEnterprise
   const contactHref =
     pricing?.enterprise?.contactHref ||
-    "mailto:contact@databayt.org?subject=Enterprise%20plan"
+    "mailto:sales@databayt.org?subject=Enterprise%20plan"
 
   // One rate for every paid student (rates.ts) — the cards differ in what
   // comes with it, not in what a student costs. The toggle only changes

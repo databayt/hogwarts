@@ -37,7 +37,7 @@ export default function EnterpriseSection({
         <Link
           href={
             enterprise?.contactHref ||
-            "mailto:contact@databayt.org?subject=Enterprise%20plan"
+            "mailto:sales@databayt.org?subject=Enterprise%20plan"
           }
           className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
         >

@@ -843,7 +843,7 @@
         "title": "تدير أكثر من مدرسة؟",
         "description": "الشبكات متعددة الفروع والعقود الحكومية تحصل على مدير حساب مخصص، وعلامة تجارية بيضاء، وتسجيل دخول موحّد — بالسعر نفسه 24 ريالًا لكل طالب في السنة، لـ1,000+ طالب.",
         "talkToSales": "تحدث مع المبيعات",
-        "contactHref": "mailto:contact@databayt.org?subject=Enterprise%20plan"
+        "contactHref": "mailto:sales@databayt.org?subject=Enterprise%20plan"
       },
       "comparePlans": {
         "title": "قارن الخطط",
@@ -1121,7 +1121,7 @@
           "list": [
             "تصفح وثائقنا",
             "انضم إلى مجتمع Discord",
-            "راسلنا على hello@databayt.org"
+            "راسلنا على sales@databayt.org"
           ],
           "links": [
             {
@@ -1133,8 +1133,8 @@
               "href": "https://discord.gg/uPa4gGG62c"
             },
             {
-              "text": "راسلنا على hello@databayt.org",
-              "href": "mailto:hello@databayt.org"
+              "text": "راسلنا على sales@databayt.org",
+              "href": "mailto:sales@databayt.org"
             }
           ]
         }

@@ -58,7 +58,7 @@ export function Calculator({
   const isEnterprise = count > ENTERPRISE_STUDENTS
   const contactHref =
     pricing?.enterprise?.contactHref ||
-    "mailto:contact@databayt.org?subject=Enterprise%20plan"
+    "mailto:sales@databayt.org?subject=Enterprise%20plan"
 
   const ratesDate = updated
     ? new Date(updated).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", {

@@ -843,7 +843,7 @@
         "title": "Running more than one school?",
         "description": "Multi-campus networks and government contracts get a dedicated account manager, white-label branding and SSO — at the same 24 SAR per student a year, for 1,000+ students.",
         "talkToSales": "Talk to Sales",
-        "contactHref": "mailto:contact@databayt.org?subject=Enterprise%20plan"
+        "contactHref": "mailto:sales@databayt.org?subject=Enterprise%20plan"
       },
       "comparePlans": {
         "title": "Compare plans",
@@ -1115,7 +1115,7 @@
           "list": [
             "Browse our documentation",
             "Join our Discord community",
-            "Email us at hello@databayt.org"
+            "Email us at sales@databayt.org"
           ],
           "links": [
             {
@@ -1127,8 +1127,8 @@
               "href": "https://discord.gg/uPa4gGG62c"
             },
             {
-              "text": "Email us at hello@databayt.org",
-              "href": "mailto:hello@databayt.org"
+              "text": "Email us at sales@databayt.org",
+              "href": "mailto:sales@databayt.org"
             }
           ]
         }

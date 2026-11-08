@@ -100,8 +100,11 @@ export const PRICING_NUDGE_STORAGE_KEY = "hogwarts.chatbot.pricingNudge"
 export const PRICING_NUDGE_DELAY_MS = 30_000
 export const PRICING_NUDGE_COOLDOWN_DAYS = 30
 
-/** Where support and sales questions the bot can't answer go. */
-export const CONTACT_EMAIL = "contact@databayt.org"
+/** Where support questions the bot can't answer go (dashboard desk, guides). */
+export const CONTACT_EMAIL = "hi@databayt.org"
+
+/** Where the marketing assistant sends prospects: pricing, quotes, demos. */
+export const SALES_EMAIL = "sales@databayt.org"
 
 /** Turns sent per request — the server keeps the same window. */
 export const CHAT_HISTORY_TURNS = 10

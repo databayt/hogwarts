@@ -14,7 +14,7 @@ import {
   type Rates,
 } from "@/components/saas-marketing/pricing/rates"
 
-import { CONTACT_EMAIL } from "./constant"
+import { CONTACT_EMAIL, SALES_EMAIL } from "./constant"
 import { formatSupport, type SupportTopic } from "./support"
 import type { ChatbotDictionary } from "./type"
 
@@ -170,7 +170,7 @@ export function buildSaasMarketingPrompt(
     .replace("{pricing}", formatPricing(locale, rates))
     .replace("{features}", formatFeatures())
     .replace("{support}", formatSupport(locale, matched, { attached }))
-    .replaceAll("{contactEmail}", CONTACT_EMAIL)
+    .replaceAll("{contactEmail}", SALES_EMAIL)
 }
 
 /**

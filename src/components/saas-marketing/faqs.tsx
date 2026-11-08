@@ -54,7 +54,7 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
       list: ["Documentation", "Talk to us"],
       links: [
         { text: "Documentation", href: "/docs" },
-        { text: "Talk to us", href: "mailto:hello@databayt.org" },
+        { text: "Talk to us", href: "mailto:sales@databayt.org" },
       ],
     },
   ]

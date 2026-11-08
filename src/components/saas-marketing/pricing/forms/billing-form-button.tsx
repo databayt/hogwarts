@@ -59,7 +59,7 @@ export function BillingFormButton({
       <Link
         href={
           pricing?.enterprise?.contactHref ||
-          "mailto:contact@databayt.org?subject=Upgrade"
+          "mailto:sales@databayt.org?subject=Upgrade"
         }
         className={cn(buttonVariants({ variant: "default" }))}
       >

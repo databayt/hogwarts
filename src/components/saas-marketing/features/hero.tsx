@@ -50,7 +50,7 @@ export default function Hero({ dictionary, params }: HeroProps) {
           primaryLabel={ui.browseFeatures}
           primaryHref={`/${params.lang}/features`}
           secondaryLabel={ui.requestFeature}
-          secondaryHref={`/${params.lang}/contact`}
+          secondaryHref="mailto:hi@databayt.org?subject=Feature%20request"
         />
       }
     />

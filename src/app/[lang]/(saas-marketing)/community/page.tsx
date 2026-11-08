@@ -127,7 +127,7 @@ export default async function CommunityHubPage({
             primaryLabel={browseLabel}
             primaryHref="#subjects"
             secondaryLabel={requestLabel}
-            secondaryHref={`/${lang}/contact`}
+            secondaryHref="mailto:hi@databayt.org?subject=Resource%20request"
           />
         }
       />

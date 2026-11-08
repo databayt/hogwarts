@@ -575,7 +575,7 @@ Impact:
 
 We expect to restore service within [ETA].
 
-For assistance, contact support@databayt.org
+For assistance, contact hi@databayt.org
 
 Best regards,
 Engineering Team

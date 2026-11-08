@@ -24,7 +24,7 @@ import { captureFromChat } from "./capture"
 import { claudeEnabled } from "./claude/client"
 import { contextBlock, helpCenter, modeBlock } from "./claude/prompt"
 import { profileFor } from "./identity"
-import { CHAT_HISTORY_TURNS, CONTACT_EMAIL } from "./constant"
+import { CHAT_HISTORY_TURNS, CONTACT_EMAIL, SALES_EMAIL } from "./constant"
 import {
   buildSaasMarketingPrompt,
   buildSchoolSitePrompt,
@@ -766,7 +766,10 @@ function fallbackReply(
         : type === "saasMarketing"
           ? chatbot.replyFallbackSaas
           : chatbot.replyFallbackSchool
-  return text.replaceAll("{contactEmail}", CONTACT_EMAIL)
+  return text.replaceAll(
+    "{contactEmail}",
+    type === "saasMarketing" && !support ? SALES_EMAIL : CONTACT_EMAIL
+  )
 }
 
 /**

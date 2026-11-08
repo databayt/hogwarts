@@ -659,8 +659,7 @@ export async function requestSubdomainChange(
     // Lazy import to keep this action tree-shakable for callers that
     // don't touch email infra.
     const { sendEmail } = await import("@/lib/email")
-    const supportInbox =
-      process.env.PLATFORM_SUPPORT_EMAIL || "support@databayt.org"
+    const supportInbox = process.env.PLATFORM_SUPPORT_EMAIL || "hi@databayt.org"
 
     await sendEmail({
       to: supportInbox,
