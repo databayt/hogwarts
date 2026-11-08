@@ -24,7 +24,7 @@ interface CurrencyState {
 }
 
 const CurrencyContext = createContext<CurrencyState>({
-  currency: "SAR",
+  currency: "USD",
   setCurrency: () => {},
   rates: FALLBACK_RATES,
   updated: null,
@@ -32,12 +32,30 @@ const CurrencyContext = createContext<CurrencyState>({
 
 const STORAGE_KEY = "pricing-currency"
 
-// The choice lives in localStorage (per browser), read through
-// useSyncExternalStore so the server render and hydration both see SAR and
-// the saved currency applies right after. `memory` keeps the toggle working
-// when storage is blocked (private mode).
+// The page is prerendered once a day, so the server can't see the visitor's
+// country. The browser picks the currency from its time zone instead —
+// Sudan → SDG, Saudi Arabia → SAR, Egypt → EGP, anywhere else → USD. A
+// currency the visitor chose (localStorage) wins over the guess. Read through
+// useSyncExternalStore: server render and hydration see USD, the local
+// currency applies right after. `memory` keeps a choice working when storage
+// is blocked (private mode).
+const TIME_ZONE_CURRENCY: Record<string, Currency> = {
+  "Africa/Khartoum": "SDG",
+  "Asia/Riyadh": "SAR",
+  "Africa/Cairo": "EGP",
+}
+
+function detectCurrency(): Currency {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return TIME_ZONE_CURRENCY[zone] ?? "USD"
+  } catch {
+    return "USD"
+  }
+}
+
 const listeners = new Set<() => void>()
-let memory: Currency = "SAR"
+let memory: Currency | null = null
 
 function subscribe(listener: () => void) {
   listeners.add(listener)
@@ -53,7 +71,7 @@ function readCurrency(): Currency {
     const saved = localStorage.getItem(STORAGE_KEY) as Currency | null
     if (saved && CURRENCIES.includes(saved)) return saved
   } catch {}
-  return memory
+  return (memory ??= detectCurrency())
 }
 
 function writeCurrency(next: Currency) {
@@ -66,7 +84,8 @@ function writeCurrency(next: Currency) {
 
 /**
  * One currency for the whole pricing page — the cards and the calculator
- * switch together. Remembered per browser; SAR until the visitor picks.
+ * switch together. Remembered per browser; the time-zone guess until the
+ * visitor picks.
  */
 export function CurrencyProvider({
   rates,
@@ -80,7 +99,7 @@ export function CurrencyProvider({
   const currency = useSyncExternalStore(
     subscribe,
     readCurrency,
-    () => "SAR" as Currency
+    () => "USD" as Currency
   )
 
   return (
