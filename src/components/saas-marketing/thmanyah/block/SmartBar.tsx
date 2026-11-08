@@ -3,17 +3,39 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
 
 /**
- * The homepage header's "smart" frame (ported from ~/farm's SiteHeader
- * overlay mode). While the hero fills the screen the bar sits transparent on
- * the green with the light theme's ink pinned (`data-over`); past the hero it
- * steps out of the way as the reader scrolls down (`data-away`) and comes back,
- * solid in the page's own theme, the moment they scroll up. A focused control
- * inside keeps it on screen, so keyboard users never tab into a hidden bar.
+ * The homepage header's frame: a hamburger that unfolds the bar in place, and
+ * the "smart" scroll behaviour ported from ~/farm's SiteHeader overlay mode.
+ *
+ * Toggle: closed, only the hamburger shows; open, the page links and the
+ * action icons (`children`) appear in the same bar — on a phone the links take
+ * a second row that scrolls sideways. Escape closes it; so does following a
+ * link. The icon morphs between two lines and an X.
+ *
+ * Scroll: while the hero fills the screen the bar is transparent on the green
+ * with the light theme's ink pinned (`data-over`); past the hero it steps out
+ * of the way as the reader scrolls down (`data-away`) and comes back, solid in
+ * the page's own theme, the moment they scroll up. A focused control inside
+ * keeps it on screen, and an open bar is never hidden.
  */
-export function SmartBar({ children }: { children: React.ReactNode }) {
+export function SmartBar({
+  dir,
+  links,
+  labels,
+  children,
+}: {
+  dir: "rtl" | "ltr"
+  links: { label: string; href: string }[]
+  labels: { open: string; close: string; nav: string }
+  children: React.ReactNode
+}) {
   const ref = React.useRef<HTMLDivElement>(null)
+  const [open, setOpen] = React.useState(false)
+  const id = React.useId()
 
   React.useEffect(() => {
     const bar = ref.current
@@ -40,13 +62,86 @@ export function SmartBar({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  React.useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open])
+
+  const linkList = links.map((link) => (
+    <Link
+      key={link.href}
+      href={link.href}
+      onClick={() => setOpen(false)}
+      className="text-muted-foreground hover:text-foreground text-sm whitespace-nowrap transition-colors"
+    >
+      {link.label}
+    </Link>
+  ))
+
   return (
     <div
       ref={ref}
       data-over=""
-      className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-focus-within:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20 data-[over]:[&_img]:!filter-none"
+      data-open={open ? "" : undefined}
+      className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-focus-within:not-data-[open]:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
     >
-      {children}
+      <header
+        data-slot="site-header"
+        dir={dir}
+        className="marketing-container text-foreground"
+      >
+        <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-6">
+          <button
+            type="button"
+            aria-label={open ? labels.close : labels.open}
+            aria-expanded={open}
+            aria-controls={id}
+            onClick={() => setOpen((v) => !v)}
+            className="hover:bg-accent -ms-2 inline-grid size-10 shrink-0 place-items-center rounded-full transition-colors"
+          >
+            <span aria-hidden className="relative block h-3.5 w-4">
+              <span
+                className={cn(
+                  "absolute inset-x-0 top-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
+                  open && "translate-y-1 rotate-45"
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute inset-x-0 bottom-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
+                  open && "-translate-y-1 -rotate-45"
+                )}
+              />
+            </span>
+          </button>
+
+          {open && (
+            <>
+              <nav
+                id={id}
+                aria-label={labels.nav}
+                className="hidden items-center gap-6 md:flex xl:gap-8"
+              >
+                {linkList}
+              </nav>
+              <div className="ms-auto flex items-center gap-0.5">
+                {children}
+              </div>
+            </>
+          )}
+        </div>
+
+        {open && (
+          <nav
+            aria-label={labels.nav}
+            className="-mx-2 flex h-10 items-center gap-6 overflow-x-auto px-2 md:hidden"
+          >
+            {linkList}
+          </nav>
+        )}
+      </header>
     </div>
   )
 }
