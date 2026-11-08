@@ -45,12 +45,23 @@ swapped for Exams (yellow notes tile) on 2026-09-15.
 Only the Smart Stack's Today page is ported — the Android widget's three-page
 pager would fight a page that already scrolls vertically.
 
-### Phone next-action banner (below `md`)
+### Next-action banner (every width)
 
 `next-action.tsx` (server) + `next-action-rank.ts` (pure ranking) +
 `next-action-client.tsx` (rotation). Under the home block, a banner states the
 single most important thing the signed-in role has to do and flips to the next
 after a ten-second hold, looping.
+
+**Live classes (2026-11-08):** the class items carry their join WINDOW
+(`upcoming-queries.ts` → `liveFields`). The client re-ranks every 30 s against
+its own clock: "next class" becomes "live — join" at the opening instant
+(through the slot's join link, no reload), leaves when the window closes, and a
+live item is PINNED (no rotation, no Acknowledge). Guardians get
+`childLiveClass` where the school lets guardians watch. Teacher reads use the
+shared `teacherDaySlotFilter`, so a substitute's banner names the class they
+cover. The phone Today grid has its own client-only Now/Next strip
+(`today-join-strip.tsx`); the desktop Today rows show Join, and Start for the
+teacher (`today-live-action.tsx`).
 
 - It is the THIRD copy of the green hero object, alongside
   `school-dashboard/live/landing/status-hero.tsx` and `components/library/hero.tsx`.

@@ -479,37 +479,46 @@ left to be discovered from an empty register.
 
 ## How a student joins
 
-Five surfaces reach a live class, and they differ in how tightly they gate on time:
+**One link per class** (2026-11-08): every surface that offers a way into a class links to the
+slot's join link, `/{lang}/live/join/{timetableId}`. The page behind it decides on the server, at
+the moment of the tap, which room is today's — and writes it when the section is online but the
+day's sweep has not run yet — then redirects into the room (or, for an external school, out to the
+section's standing meeting link). A teacher's Start and a student's Join are the same link; the
+room decides who hosts.
 
-| Surface                                                 | Gate                                                                                        |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Timetable **Today** rows (student · teacher · guardian) | in progress, or starting within 10 min (`isRowLiveJoinable`)                                |
-| Timetable **Current/Next** card                         | the current class, or the next within 10 min (`isLiveJoinable`)                             |
-| `/live` landing "now" strip                             | live now + upcoming, section-scoped                                                         |
-| `/live/dashboard` table                                 | any `live` or `scheduled` row the viewer can see                                            |
-| **Parent portal** → child → Timetable                   | a "Today" strip above the weekly table                                                      |
-| Notification                                            | `started` links straight to the room; the rest to the session detail                        |
-| **Mobile**                                              | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/live/:id/join` |
+| Surface                                       | What it shows                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Timetable cell (student · guardian · teacher) | a **Join** pill on today's online class inside its window; tapping the cell joins too       |
+| Timetable cell (admin)                        | **Observe** on a class that is live now                                                     |
+| Dashboard **Today** rows (desktop)            | Join, and **Start** for the teacher, the moment the class is online                         |
+| Dashboard phone strip                         | the class on now, one tap                                                                   |
+| Dashboard banner                              | "**Maths** is live — join", pinned, flips at the bell without a reload                      |
+| `/live` landing strip                         | live now + still to come today, own sections + school-wide sessions                         |
+| Notifications                                 | "starting soon" and "started" open the join link (push keeps the session route)             |
+| **Mobile**                                    | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/live/:id/join` |
 
-The timetable **weekly grid cell is itself the way in** (2026-10-19). Clicking today's cell while its
-class is running, or within 10 minutes of starting, opens the class: the room's pre-join card for a
-LiveKit session, the meeting URL for an external one. A teacher clicking their own period inside
-that window, with no room yet, starts the class and walks into it — but only when the school's
-**teaching mode** is not *in person*. Any other cell opens the slot's detail dialog, as before.
+**The window** (`join-window.ts`, one rule everywhere): a student's link opens at the school's
+reminder lead before the bell (default 10 minutes); the class's teacher can open it from 15 minutes
+before (or the lead, if longer); it closes 10 minutes after the bell. Too early, the page says when
+the class starts and opens the room by itself at the opening instant. The windows reach the page as
+instants computed in the school's zone, so a pill shows at the right moment on a phone set to any
+clock — a pupil of an online school abroad included. A host's join is what starts
+the class, so the server refuses a start more than 15 minutes early (`LIVE_CLASS_TOO_EARLY`) — a
+stale tab can no longer announce a 16:00 class at 09:00.
+
+**Who** (checked before anything about the class is read): students of the slot's section, the
+slot's teacher or a confirmed substitute (host), other teachers and admins (co-host), guardians of
+the section only where the school lets guardians watch. Staff and accountants join school-wide
+sessions only — and an external session's meeting URL is never handed to a reader who may see the
+session but not enter it.
 
 **Teaching mode** is its own section of the school configuration
-(`/school/configuration/teaching-mode`): *In person* · *Live* · *Both*, writing
-`School.conferenceDeliveryMode` through `updateDeliveryMode`. *In person* removes the timetable's
-Start affordance and the server refuses `createLiveClassFromTimetable`; joining a room that already
-exists is never blocked, because online is additive.
-
-A LiveKit session opens the in-app room at `/live/[id]/room`; an external session opens its
-vendor URL directly. The room route redirects external sessions after the enrollment-gated read, so
-either provider works from every surface above.
-
-**Only the `started` notification deep-links to the room.** `startingSoon` fires 5–20 minutes before
-the class, and a non-HOST joining a still-`scheduled` session is refused — an early room link would
-land a student on an error rather than a waiting room.
+(`/school/configuration/teaching-mode`): _In person_ · _Live_ · _Both_, writing
+`School.conferenceDeliveryMode` through `updateDeliveryMode`. _Live_ and _Both_ switch the school to
+in-app (LiveKit) rooms; a school coming online starts with recording **off** and attendance sync
+**on**, and the save reports how many of today's classes are now online. _In person_ removes the
+timetable's Start affordance; joining a room that already exists is never blocked, because online
+is additive.
 
 ## Attendance from the room
 

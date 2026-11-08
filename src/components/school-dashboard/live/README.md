@@ -27,11 +27,18 @@ conference/
 │                                                              Basics opens with the timetable-slot picker — the physical class
 ├── online-policy.ts                                           "is this online, over which back-end, delivered how" (single resolver)
 ├── day-window.ts                                              school-calendar day math (pure: window · weekday · slot instants · day↔instant)
+├── join-window.ts                                             when a class can be joined / started (pure instants; server gate + buttons)
+├── join-link.ts                                               `liveJoinHref` — the one join URL every surface links to
+├── room-entry.ts                                              `mayEnterRoom` — seeing a session vs entering it (external URL gate)
+├── join-auto-open.tsx                                         the join page's "too early" state reloads itself at the opening instant
 ├── school-calendar.ts                                         "is the school running today" — ScheduleException holiday gate (write side only)
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · liveRevalidatePath
+│   ├── join-slot.ts      `resolveSlotJoin` — where `/live/join/{slot}` sends a reader right now
+│   ├── usage-guard.ts    daily LiveKit minutes check → platform email from 80% of the tier
 │   ├── slot-session.ts   day-qualified slot lookup + the cron's direct writer
-│   ├── materialize-day.ts  turns online-school POLICY into one day's sessions (both modes)
+│   ├── materialize-day.ts  turns online-school POLICY into one day's sessions (both modes);
+│   │                       `materializeSlotForDay` narrows it to one slot (the join link's safety net)
 │   ├── open-room.ts      the LOOSE mode — one standing room per section per school day
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
 │   ├── join-core.ts      shared eligibility + token mint (plain module — action AND refresh route)
@@ -284,9 +291,14 @@ that does not serve this app for any school on `balqalam.com`.
 Production-readiness pass 2026-08-12: school-timezone schedule storage, GET
 token-refresh route, list-layer status-transition guard, attendance-sync
 provider guard, recording delete/egress race closed, perPage clamp. The
-visibility/resources DDL is **verified applied in prod**; the only remaining
-gates for the LiveKit path are the six infra gates in `RUNBOOK.md` (no
-`LIVEKIT_*` env vars exist in the prod Vercel project yet).
+visibility/resources DDL is **verified applied in prod**. Production runs on
+Cloudflare with the `LIVEKIT_*` room + recording variables set (real classes
+verified on LiveKit Cloud 2026-10-19); the plan is Ship (2026-11-08) — set the
+`LIVEKIT_TIER_*` variables to its numbers so the meter and the minutes guard
+compare against the right budget.
+
+**Joining (2026-11-08):** every surface links to the slot's join link,
+`/{lang}/live/join/{timetableId}` (`actions/join-slot.ts`) — see ISSUE.md.
 
 See `ISSUE.md` for the open backlog and `RUNBOOK.md` for the 6-gate LiveKit provisioning sequence.
 

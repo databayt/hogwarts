@@ -1082,6 +1082,22 @@ Rejoin). Everything inside the call is `room/`:
 
 ## Danger Zones
 
+- **Every Join is the join link (2026-11-08).** `/{lang}/live/join/{timetableId}` →
+  `actions/join-slot.ts` `resolveSlotJoin`. Build hrefs with `liveJoinHref` (`join-link.ts`), never
+  a hand-written `/live/{id}/room` for a timetable class. Three rules that keep it safe:
+  - It can WRITE (today's row, via `materializeSlotForDay` — the sweep's own guards and DECIDED-status
+    idempotency). Link to it with a plain `<a>` or `prefetch={false}`; a prefetch must never run it.
+  - It authorizes BEFORE reading the day: an outsider learns nothing and can never make a row.
+  - Tier order is slot row → UNANCHORED ad-hoc row (section+subject) → open room → standing link
+    (external schools only) → write. Not `attachLiveClasses`: its "earliest (section, subject) today"
+    tier would hand an afternoon slot the morning's room.
+- **One window rule** — `join-window.ts`. Students open at the school's reminder lead, the host at
+  max(lead, 15 min), close 10 min after the bell. `hostMayStart` guards BOTH start doors (join-core's
+  host auto-start and `startLiveClass`); a host join starts the class and notifies the roster.
+- **Seeing ≠ entering** — `room-entry.ts` `mayEnterRoom`. `canAccessSession` lets staff read every
+  section and a guardian read their child's regardless of the observe switch; any path that hands out
+  a way IN (the external redirect, the detail page's join href) must also pass `mayEnterRoom`.
+
 - **Schedule instants combine in the SCHOOL timezone**: the wizard sends
   `startDate` (browser-midnight Date) + `"HH:mm"`; `list-actions.ts` combines
   them with the precise helpers in `src/lib/timezone.ts`

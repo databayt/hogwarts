@@ -11,6 +11,13 @@ docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-10-04
 ---
 
+## 2026-11-08 — Join from the timetable (hogwarts#469)
+
+- Every Join goes through the slot's join link (`live/actions/join-slot.ts`); a cell tap and a visible **Join** pill (student, guardian, teacher) open it, admin gets **Observe** on live cells.
+- `resolveTodayLive` now returns `onlineToday` — today's slots whose section is online by policy — so a cell is joinable before the sweep writes its row.
+- `teacherDaySlotFilter` extracted from `today-schedule.ts` and shared with the dashboard and banner (substitutes everywhere).
+- `joinWindows` (also from `resolveTodayLive`): today's join windows as instants in the school's zone. The pills and the cell tap compare them with `Date.now()` (`views/use-now-ms.ts`), so a student whose phone is on another clock (an online school's pupil abroad) sees Join on the right class. `isRowLiveJoinable` remains only for the Today lists.
+
 # Timetable -- Production Readiness Tracker
 
 **Status:** PRODUCTION-READY

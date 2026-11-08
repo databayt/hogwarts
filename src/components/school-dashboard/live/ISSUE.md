@@ -4,7 +4,56 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
-## Related blocks for a fully online school — reviewed 2026-10-19 (LOCAL, not pushed)
+## One-click join, production pass — 2026-11-08
+
+Prompted by hogwarts#469 («ما قادر ادخل الحصه», an alabidae student on `/timetable` at 360px). Prod
+read that day: alabidae — an online-only school — was set to `physical` with provider `external`, no
+standing links, no fallback, so nothing was ever online; four teachers opened ad-hoc LiveKit rooms,
+fourteen "started" notices went out, **no student joined** (none could find a room). Decision
+(Abdout): **LiveKit Ship for every school** — the free tier (5,000 participant-min/month) is one
+school day at alabidae's volume (~62.5k participant-min/week).
+
+Shipped:
+- **The join link** `/{lang}/live/join/{timetableId}` (`actions/join-slot.ts`, page under
+  `(live-room)/live/join`). One stable URL per slot, resolved at tap time: today's slot row → an
+  unanchored ad-hoc row for section+subject → the open room → (external school) the standing link →
+  a row written NOW via `materializeSlotForDay` (the sweep's own guards, idempotent). Role-gated
+  before anything is read; outside the window it says so ("starts at…", reopens itself at the bell).
+- **One window rule** (`join-window.ts`): students from start − the school's reminder lead, host
+  from start − max(lead, 15 min), closes 10 min after the bell. `hostMayStart` is enforced in
+  `join-core` and `startLiveClass` (new `LIVE_CLASS_TOO_EARLY`) — a host join STARTS the class, so
+  a stale tab can no longer announce a 16:00 class at 09:00.
+- **Every surface links to it**: timetable cell tap + a visible Join pill (student, guardian,
+  teacher; Observe for admin on live cells), dashboard Today rows (Join, and Start for the teacher),
+  a phone Now/Next strip, the banner (window-based, re-ranked every 30 s, live item pinned, guardian
+  `childLiveClass`), "starting soon"/"started" notices (web/email; push `deep_link` unchanged).
+- **`onlineToday`** + **`joinWindows`** from `resolveTodayLive` — a section online by policy is
+  joinable before its row exists, and the pills compare server instants with `Date.now()`, right on
+  any device clock. The /live strip also shows real rows in a school still set to in-person.
+- **Teaching mode**: online AND hybrid switch to LiveKit when configured; a school coming online
+  starts with recording OFF (cost + consent) and attendance sync ON; the save reports how many of
+  today's classes are online.
+- **Fixes**: external meeting URL no longer handed to staff / non-observing guardians
+  (`room-entry.ts`); `teacherDaySlotFilter` shared so substitutes get dashboard + banner joins;
+  student banner query gained its term filter; lesson strip formats in school tz and only today;
+  landing scope includes school-wide sessions and keeps a not-yet-started class until it ends;
+  `teacher-reminders` cron reminds each slot once, after it ends, on the school's day, and skips
+  online classes the room records (alabidae got 357 reminders on 2026-11-08); daily LiveKit minutes
+  guard emails the platform from 80% of the tier (`actions/usage-guard.ts`, `OPS_ALERT_EMAIL`).
+- `/live` landing shows the tab strip (Overview first).
+
+Still open:
+- Ops, in order: upgrade the LiveKit Cloud project to Ship (Abdout, billing) → set
+  `LIVEKIT_TIER_WEBRTC_MINUTES` / `_CONCURRENT` / `_RECORDING_MINUTES` on the Worker → deploy →
+  flip alabidae to Online in `/school/configuration/teaching-mode` (restore branch first).
+- (Fixed the same night) The Join pills no longer read the device's wall clock: the timetable,
+  the dashboard rows and the phone strip get each of today's windows as INSTANTS from the server
+  (school zone) and compare with `Date.now()` (`timetable/views/use-now-ms.ts`). Verified locally
+  with the browser on Gulf time (+4) and the school on Khartoum time — the pill showed on the right
+  class, the tap wrote the room once, a second tap reused it.
+- External joins via the standing link (no row) leave no presence record.
+
+## Related blocks for a fully online school — reviewed 2026-10-19
 
 Three read-only reviews (learning · communication · setup/ops), each finding checked in code before a
 fix. Fixed, by commit: exams `d230577d8` · attendance `0762547f7` · live setup `046c176fd` · alert
@@ -28,7 +77,7 @@ mention it; placement notices say nothing about live classes and skip guardians;
 day window is UTC. Browser verification of today's UI changes is owed (port 3000 was held by
 another project's dev server all session).
 
-## Production gap list + first fixes — 2026-10-19 (LOCAL, not pushed)
+## Production gap list + first fixes — 2026-10-19
 
 Full ranked list: `~/.claude/plans/now-tell-me-what-refactored-bubble.md`. **Still open, not code:**
 P0 capacity (LiveKit free tier = 100 concurrent; Ship/Scale/self-host, Abdout's call) · P0 the app is
