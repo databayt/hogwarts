@@ -3,14 +3,15 @@
 //
 // The LiveKit minutes guard — a once-a-day look at the month's meter.
 //
-// Live classes run on a paid LiveKit Cloud plan (D-2026-11-08: Ship, for
-// every school). Its included minutes are a budget, and overage bills on its
-// own: nothing stops a class when the plan's minutes run out, so the only
-// thing that can notice a fully-online school burning through them is a
-// meter someone reads. This reads it (`getPlatformLiveUsage`, the same
-// accounting as the DEVELOPER observability page) and emails the platform
-// once a day while usage is at or past 80% of the configured tier, saying
-// which schools are spending it. Below 80% it says nothing.
+// Live classes run on LiveKit Cloud's FREE Build plan until LiveKit is
+// self-hosted (D-20261109-livekit-free-tier-bridge). Its 5,000 participant-
+// minutes a month are a HARD cap shared by every school: once they are used,
+// new connections fail — every school's classes, until the monthly reset. The
+// only thing that can see that coming is a meter someone reads. This reads it
+// (`getPlatformLiveUsage`, the same accounting as the DEVELOPER observability
+// page) and emails the platform once a day while usage is at or past 80% of
+// the configured tier, saying which schools are spending it. Below 80% it
+// says nothing. On a paid or self-hosted tier, set `LIVEKIT_TIER_*` to match.
 //
 // Stateless on purpose: it runs on the first reminders-cron tick after 06:00
 // UTC, so "once a day" needs no marker row — and a day it fails to run costs

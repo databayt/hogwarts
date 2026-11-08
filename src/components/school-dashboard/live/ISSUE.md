@@ -10,8 +10,11 @@ Prompted by hogwarts#469 («ما قادر ادخل الحصه», an alabidae stu
 read that day: alabidae — an online-only school — was set to `physical` with provider `external`, no
 standing links, no fallback, so nothing was ever online; four teachers opened ad-hoc LiveKit rooms,
 fourteen "started" notices went out, **no student joined** (none could find a room). Decision
-(Abdout): **LiveKit Ship for every school** — the free tier (5,000 participant-min/month) is one
-school day at alabidae's volume (~62.5k participant-min/week).
+(Abdout, 2026-11-09): **LiveKit for every school, on the FREE Build plan until LiveKit is
+self-hosted on a cheaper server** (D-20261109-livekit-free-tier-bridge; Ship was considered and
+dropped). The free tier is a HARD cap — 5,000 participant-min/month shared by all schools, then new
+connections fail until the reset — and alabidae alone is ~62.5k participant-min/week at full
+attendance, so a fully online alabidae will reach it within a school day or two.
 
 Shipped:
 - **The join link** `/{lang}/live/join/{timetableId}` (`actions/join-slot.ts`, page under
@@ -43,9 +46,13 @@ Shipped:
 - `/live` landing shows the tab strip (Overview first).
 
 Still open:
-- Ops, in order: upgrade the LiveKit Cloud project to Ship (Abdout, billing) → set
-  `LIVEKIT_TIER_WEBRTC_MINUTES` / `_CONCURRENT` / `_RECORDING_MINUTES` on the Worker → deploy →
-  flip alabidae to Online in `/school/configuration/teaching-mode` (restore branch first).
+- Ops, in order (hogwarts#470): deploy → flip alabidae to Online in
+  `/school/configuration/teaching-mode` (restore branch first). `LIVEKIT_TIER_*` defaults already
+  equal the free plan (5,000 / 100 / 1,000), so no env change until the plan changes.
+- **Self-host LiveKit** (Abdout's next step): `livekit-server` on a small VPS with TLS + its
+  built-in TURN on 443 (the Aldar design in RUNBOOK.md); the app switches with the four
+  `LIVEKIT_HOST` / `LIVEKIT_WS_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` env vars and the
+  webhook pointed at `https://balqalam.com/api/webhooks/livekit`. Then raise `LIVEKIT_TIER_*`.
 - (Fixed the same night) The Join pills no longer read the device's wall clock: the timetable,
   the dashboard rows and the phone strip get each of today's windows as INSTANTS from the server
   (school zone) and compare with `Date.now()` (`timetable/views/use-now-ms.ts`). Verified locally

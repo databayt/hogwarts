@@ -293,9 +293,10 @@ token-refresh route, list-layer status-transition guard, attendance-sync
 provider guard, recording delete/egress race closed, perPage clamp. The
 visibility/resources DDL is **verified applied in prod**. Production runs on
 Cloudflare with the `LIVEKIT_*` room + recording variables set (real classes
-verified on LiveKit Cloud 2026-10-19); the plan is Ship (2026-11-08) — set the
-`LIVEKIT_TIER_*` variables to its numbers so the meter and the minutes guard
-compare against the right budget.
+verified on LiveKit Cloud 2026-10-19). It runs on the FREE Build plan — a hard
+5,000 participant-minute monthly cap, shared by every school — until LiveKit is
+self-hosted (2026-11-09); the `LIVEKIT_TIER_*` defaults are that plan's numbers,
+so change them only with the plan.
 
 **Joining (2026-11-08):** every surface links to the slot's join link,
 `/{lang}/live/join/{timetableId}` (`actions/join-slot.ts`) — see ISSUE.md.
