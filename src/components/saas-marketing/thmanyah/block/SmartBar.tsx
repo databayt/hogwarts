@@ -88,7 +88,7 @@ export function SmartBar({
       key={link.href}
       href={link.href}
       onClick={() => setOpen(false)}
-      className="text-muted-foreground hover:text-foreground text-sm whitespace-nowrap transition-colors"
+      className="text-muted-foreground hover:text-foreground text-base whitespace-nowrap transition-colors md:text-[17px]"
     >
       {link.label}
     </Link>
@@ -104,28 +104,28 @@ export function SmartBar({
       <header
         data-slot="site-header"
         dir={dir}
-        className="marketing-container text-foreground"
+        className="text-foreground px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
       >
-        <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-6">
+        <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-2 **:data-[slot=separator]:!h-5 md:gap-8">
           <button
             type="button"
             aria-label={open ? labels.close : labels.open}
             aria-expanded={open}
             aria-controls={id}
             onClick={() => setOpen((v) => !v)}
-            className="hover:bg-accent -ms-2 inline-grid size-10 shrink-0 place-items-center rounded-full transition-colors"
+            className="-ms-3 inline-grid size-11 shrink-0 place-items-center"
           >
-            <span aria-hidden className="relative block h-3.5 w-4">
+            <span aria-hidden className="relative block h-4 w-5">
               <span
                 className={cn(
                   "absolute inset-x-0 top-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
-                  open && "translate-y-1 rotate-45"
+                  open && "translate-y-[5px] rotate-45"
                 )}
               />
               <span
                 className={cn(
                   "absolute inset-x-0 bottom-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
-                  open && "-translate-y-1 -rotate-45"
+                  open && "-translate-y-[5px] -rotate-45"
                 )}
               />
             </span>
@@ -140,7 +140,7 @@ export function SmartBar({
               >
                 {linkList}
               </nav>
-              <div className="ms-auto flex items-center gap-0.5">
+              <div className="ms-auto -me-2 flex items-center gap-1 [&_button]:!size-10 [&_svg]:!size-5 [&>a]:!size-10">
                 {children}
               </div>
             </>
@@ -150,7 +150,7 @@ export function SmartBar({
         {open && (
           <nav
             aria-label={labels.nav}
-            className="-mx-2 flex h-10 items-center gap-6 overflow-x-auto px-2 md:hidden"
+            className="-mx-2 flex h-11 items-center gap-6 overflow-x-auto px-2 md:hidden"
           >
             {linkList}
           </nav>

@@ -5080,3 +5080,18 @@ body:has(.thmanyah-shell) {
   right: 0;
   left: auto;
 }
+
+/* Tighter headline. The h1 line box went from the reference's 1.4em to
+   1.12em (HeroBlock H1_STYLE), and the rows lose their 10px gap, so the two
+   lines sit close as one block. The highlight bar's top/bottom insets were
+   pixel values tuned to the 1.4em box at each breakpoint; restated in em
+   (the mark inherits `.hero-words`' font-size) they keep the same bar on the
+   tighter box at every width. (0,2,0) outranks every base `.hero-mark` /
+   `.hero-words` band; the LTR mirror above sets only left/right.          */
+.thmanyah-shell .hero-words {
+  row-gap: 0;
+}
+.thmanyah-shell .hero-mark {
+  top: 0.17em;
+  bottom: 0.15em;
+}

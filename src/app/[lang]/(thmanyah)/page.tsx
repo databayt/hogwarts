@@ -108,7 +108,11 @@ export default async function Home({
         </Suspense>
         <HomeTemplate lang={locale} screens={homeScreens(locale)} />
       </div>
-      <Chatbot lang={locale} promptType="saasMarketing" />
+      {/* The homepage's chat button is a size up (its FAB is fixed, so the
+          wrapper costs no layout); every other page keeps the shared size. */}
+      <div className="[&_[data-chat-button]]:!size-16 md:[&_[data-chat-button]]:!size-20">
+        <Chatbot lang={locale} promptType="saasMarketing" />
+      </div>
     </MarketingDictionaryProvider>
   )
 }

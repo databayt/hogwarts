@@ -28,7 +28,9 @@ import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy
 const H1_STYLE: React.CSSProperties = {
   fontFamily: '"thmanyah serif display", serif',
   fontWeight: 900,
-  lineHeight: "1.4em",
+  /* 1.4em in the reference; tightened so the two headline lines read as
+     one block. `.hero-mark` insets are in em to follow it. */
+  lineHeight: "1.12em",
   fontFeatureSettings: '"ss01" on',
   color: "#000",
   textAlign: "start",
@@ -174,10 +176,10 @@ export function HeroBlock() {
             fallbackHref={demoFallbackHref(lang)}
             lang={lang}
             path="/dashboard"
-            className="inline-flex h-10 flex-row items-center justify-center gap-[10px] rounded-[20px] bg-black px-4 no-underline"
+            className="inline-flex h-12 flex-row items-center justify-center gap-3 rounded-full bg-black px-6 no-underline md:h-14 md:px-7"
           >
             <p
-              className="text-[16px] leading-[24px] text-white"
+              className="text-[18px] leading-[24px] text-white md:text-[20px]"
               style={{
                 fontFamily: '"thmanyah sans", sans-serif',
                 fontWeight: 400,
@@ -188,7 +190,7 @@ export function HeroBlock() {
               {copy.hero.cta}
             </p>
             <motion.span
-              className="block h-5 w-5 shrink-0 will-change-transform"
+              className="block h-6 w-6 shrink-0 will-change-transform"
               animate={{ y: [0, -4, 0] }}
               transition={{
                 duration: 1.2,

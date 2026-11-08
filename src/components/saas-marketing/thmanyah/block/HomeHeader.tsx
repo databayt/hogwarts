@@ -20,8 +20,8 @@ import { SmartBar } from "./SmartBar"
  * hidden while scrolling down past it, back solid on the first scroll up).
  *
  * It sits OUTSIDE `.thmanyah-shell` — the clone's scoped reset restyles every
- * `button` — inside the same `.marketing-container` the shared layout gives
- * its header, so it lines up with every other page.
+ * `button` — on the hero's own gutters (20/40/60/80px, content capped at
+ * 1320px), so the hamburger sits on the same edge as the headline.
  */
 export function HomeHeader({
   dictionary,
