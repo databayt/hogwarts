@@ -6,12 +6,11 @@ import * as React from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import type { MenuColumn } from "@/components/saas-marketing/thmanyah/lib/menu"
 
 /**
  * The homepage's header: nothing but a short two-line hamburger, fixed at the
- * start edge over the hero, that opens the site menu full screen — the farm
- * site's homepage header (~/farm/src/components/home/header.tsx), ported.
+ * start edge over the hero (ported from ~/farm/src/components/home/header.tsx).
  *
  * Why not the shared SiteHeader: a white bar on top of a full-screen green
  * hero cuts it, and pushes the hero's CTA out of the first viewport. This one
@@ -19,9 +18,12 @@ import { cn } from "@/lib/utils"
  * mostly scrolled away the button gets a white disc, so it stays legible over
  * the black bands below.
  *
- * The panel is a native popover: Escape, click-outside and the top layer come
- * with it, no dialog library. It must sit OUTSIDE `.thmanyah-shell` — the
- * clone's scoped reset restyles every `button`.
+ * The menu drops down like nike.com's mega-menu (~/nike/src/components/site/
+ * header/mega-menu.tsx): a full-width white panel from the top edge, the pages
+ * in the first column, then one column per /features group with its modules,
+ * and the page below dimmed. It is a native popover: Escape, click-outside and
+ * the top layer come with it, no dialog library. The header must sit OUTSIDE
+ * `.thmanyah-shell` — the clone's scoped reset restyles every `button`.
  */
 
 const LABELS = {
@@ -29,6 +31,7 @@ const LABELS = {
     open: "افتح القائمة",
     close: "أغلق القائمة",
     brand: "بالقلم",
+    platform: "المنصة",
     pages: [
       ["المميزات", "/features"],
       ["المجتمع", "/community"],
@@ -43,6 +46,7 @@ const LABELS = {
     open: "Open menu",
     close: "Close menu",
     brand: "balqalam",
+    platform: "Platform",
     pages: [
       ["Features", "/features"],
       ["Community", "/community"],
@@ -55,7 +59,18 @@ const LABELS = {
   },
 } as const
 
-export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
+const TITLE =
+  "mb-3 block text-[15px] font-medium text-black transition-colors hover:text-neutral-600"
+const LINK =
+  "block text-[15px] leading-none text-neutral-500 transition-colors hover:text-black"
+
+export function HomeHeader({
+  lang,
+  columns,
+}: {
+  lang: "ar" | "en"
+  columns: MenuColumn[]
+}) {
   const t = LABELS[lang]
   const other = lang === "ar" ? "en" : "ar"
   const id = React.useId()
@@ -84,9 +99,6 @@ export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
     }
   }, [])
 
-  const row =
-    "flex items-center py-2 transition-opacity hover:opacity-60 focus-visible:opacity-60"
-
   return (
     <header
       ref={ref}
@@ -112,9 +124,9 @@ export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
         id={id}
         popover="auto"
         dir={lang === "ar" ? "rtl" : "ltr"}
-        className="bg-background text-foreground pointer-events-auto fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto border-0 p-0 opacity-0 transition-[opacity,overlay,display] transition-discrete duration-300 ease-out open:opacity-100 motion-reduce:transition-none starting:open:opacity-0"
+        className="pointer-events-auto fixed inset-x-0 top-0 bottom-auto m-0 max-h-dvh w-full max-w-none -translate-y-2 overflow-y-auto border-0 bg-white p-0 text-black opacity-0 shadow-[0_16px_24px_-12px_rgba(0,0,0,0.12)] transition-[opacity,translate,overlay,display] transition-discrete duration-200 ease-out backdrop:bg-black/30 open:translate-y-0 open:opacity-100 motion-reduce:transition-none starting:open:-translate-y-2 starting:open:opacity-0"
       >
-        <div className="flex h-14 items-center justify-between border-b px-4 md:px-10">
+        <div className="flex h-14 items-center justify-between px-4 md:px-10">
           <Link
             href={`/${lang}`}
             onClick={close}
@@ -127,29 +139,65 @@ export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
             popoverTarget={id}
             popoverTargetAction="hide"
             aria-label={t.close}
-            className="-me-2 inline-grid size-11 place-items-center rounded-full"
+            className="-me-2 inline-grid size-11 place-items-center rounded-full transition-colors hover:bg-neutral-100"
           >
             <X className="size-5" aria-hidden />
           </button>
         </div>
-        <nav className="mx-auto flex max-w-5xl flex-col px-4 py-8 text-2xl font-medium tracking-tight md:grid md:grid-cols-2 md:gap-x-16 md:px-10 md:py-16 md:text-4xl">
-          {t.pages.map(([label, href]) => (
-            <Link
-              key={href}
-              href={`/${lang}${href}`}
-              prefetch={false}
-              onClick={close}
-              className={row}
-            >
-              {label}
-            </Link>
+
+        <nav className="mx-auto grid max-w-[1200px] grid-cols-2 gap-x-8 gap-y-8 px-6 pt-4 pb-9 sm:grid-cols-4 lg:grid-cols-7 lg:gap-x-10">
+          <div className="min-w-0">
+            <span className={TITLE}>{t.platform}</span>
+            <ul className="space-y-2.5">
+              {t.pages.map(([label, href]) => (
+                <li key={href}>
+                  <Link
+                    href={`/${lang}${href}`}
+                    prefetch={false}
+                    onClick={close}
+                    className={LINK}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {columns.map((column) => (
+            <div key={column.title} className="min-w-0">
+              <Link
+                href={column.href}
+                prefetch={false}
+                onClick={close}
+                className={TITLE}
+              >
+                {column.title}
+              </Link>
+              <ul className="space-y-2.5">
+                {column.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      prefetch={false}
+                      onClick={close}
+                      className={LINK}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-6 text-base md:col-span-2 md:text-lg">
+        </nav>
+
+        <div className="border-t border-neutral-200">
+          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-center gap-x-6 gap-y-3 px-6 py-5 text-[15px]">
             <Link
               href={`/${lang}/onboarding`}
               prefetch={false}
               onClick={close}
-              className="bg-foreground text-background rounded-full px-5 py-2.5 font-medium transition-opacity hover:opacity-80"
+              className="rounded-full bg-black px-5 py-2.5 font-medium text-white transition-opacity hover:opacity-80"
             >
               {t.start}
             </Link>
@@ -157,7 +205,7 @@ export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
               href={`/${lang}/login`}
               prefetch={false}
               onClick={close}
-              className={cn(row, "text-muted-foreground")}
+              className="font-medium text-neutral-500 transition-colors hover:text-black"
             >
               {t.login}
             </Link>
@@ -165,12 +213,12 @@ export function HomeHeader({ lang }: { lang: "ar" | "en" }) {
               href={`/${other}`}
               hrefLang={other}
               lang={other}
-              className={cn(row, "text-muted-foreground")}
+              className="font-medium text-neutral-500 transition-colors hover:text-black"
             >
               {t.other}
             </a>
           </div>
-        </nav>
+        </div>
       </div>
     </header>
   )
