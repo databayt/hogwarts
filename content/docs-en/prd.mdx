@@ -1,9 +1,9 @@
 ---
 title: PRD
-description: Balqalam product requirements — scope, architecture, role model, NFRs, constraints, contribution paths.
+description: Hogwarts product requirements — scope, architecture, role model, NFRs, constraints, contribution paths.
 ---
 
-Balqalam is an open-source, multi-tenant K-12 school platform.
+Hogwarts is an open-source, multi-tenant K-12 school platform.
 
 | Attribute      | Value                                                                |
 | -------------- | -------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ Resolution flow:
 
 ### Single-language storage
 
-Balqalam does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `Translation`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getText()` (`@/components/translation/display`) is the canonical accessor.
+Hogwarts does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `Translation`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getText()` (`@/components/translation/display`) is the canonical accessor.
 
 ## Roles
 
@@ -130,7 +130,7 @@ A school can: accept applicants → register students → manage classes / secti
 
 These rules apply to every contribution. Enforced by hooks, agents, and review gates.
 
-- **License — SSPL-1.0.** Self-host free. Reselling Balqalam as a hosted service requires a commercial license.
+- **License — SSPL-1.0.** Self-host free. Reselling Hogwarts as a hosted service requires a commercial license.
 - **Multi-tenant safety.** Every Prisma query includes `schoolId` (or the model is global and explicitly opts out). Isolation tests in `tests/multi-tenant/`.
 - **Single-language storage.** Never bilingual columns; one `lang` field per row.
 - **Logical CSS only.** `ms-*` / `me-*` / `ps-*` / `pe-*` — never `ml-*` / `mr-*` / `pl-*` / `pr-*`.
