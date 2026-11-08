@@ -75,7 +75,8 @@ src/components/saas-marketing/
 │   ├── template/HomeTemplate.tsx   # Section list: Hero · The Answer · Trials · الصفـات · Try · Modern · FAQ · Footer
 │   ├── block/                      # 11 section blocks (hero, story, stats, calligraphy, features, families,
 │   │                               #   tester, modern showcase, faq, download CTA, footer bar)
-│   ├── atom/LottiePlayer.tsx       # lottie-web mount (viewport-triggered, xMidYMid slice)
+│   ├── atom/StretchWord.tsx        # «مرن يمتد حسب مدرستك.» as live type; kashida grows on entry, measured to fit
+│   ├── atom/KineticTile.tsx        # The wireframe strip's 5 tiles as kinetic type (was thmanyah's font-demo Lotties)
 │   ├── micro/FontDownloadService.ts# jszip bundle of the 15 woff2 faces + README/LICENSE
 │   ├── ui/button.tsx               # The clone's own button (NOT hogwarts' — kept local so neither clobbers the other)
 │   └── lib/{fonts,hooks}.ts        # Family/weight data, reveal springs, the 599.98px phone query

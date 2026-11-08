@@ -5147,3 +5147,103 @@ body:has(.thmanyah-shell) {
     max-width: 1320px;
   }
 }
+
+/* ── «مرن» as live type (atom/StretchWord) ────────────────────────────────
+   Two display lines in the 1320x412 slot, hugging the reading edge like the
+   Kashida drawing did. Arabic lines never wrap — their kashida is measured
+   against this box and stops before it overflows; English may wrap.        */
+.marn-words {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  color: #000;
+}
+.marn-line {
+  font-family: "thmanyah serif display", serif;
+  font-weight: 900;
+  font-size: clamp(48px, 10.6vw, 160px);
+  line-height: 1.25em;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.thmanyah-shell[dir="ltr"] .marn-line {
+  font-size: clamp(40px, 7.6vw, 116px);
+  line-height: 1.12em;
+  white-space: normal;
+  overflow: visible;
+}
+
+/* ── The strip's kinetic tiles (atom/KineticTile) ──────────────────────────
+   Each fills its `.wire-tile--N` box; type is sized in container units of
+   that box (cqh), so a tile reads the same at every width.                 */
+.kt-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  container-type: size;
+}
+.kt-word {
+  margin: 0;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
+}
+.kt-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2cqh;
+}
+.kt-caption {
+  margin: 0;
+  opacity: 0.6;
+}
+.kt-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 6cqh 4cqw;
+}
+.kt-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.kt-circle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76cqh;
+  height: 76cqh;
+  border: 1.2cqh solid #afe4b6;
+  border-radius: 50%;
+}
+.kt-circle-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #afe4b6;
+}
+.kt-circle-word {
+  position: relative;
+}
+/* Tile 4 never rendered at its CSS ratio on desktop: the reference's Lottie
+   (1519x757) was taller than `aspect-ratio: 2.575` and pushed the box open to
+   ~2:1. The kinetic tile keeps that drawn height, so the strip's two columns
+   end where they always did. The phone band's own ratio already matched.  */
+@media (min-width: 600px) {
+  .wire-tile--4 .kt-tile {
+    height: auto;
+    aspect-ratio: 1519 / 757;
+  }
+}

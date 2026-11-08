@@ -109,6 +109,22 @@ export interface ThmanyahCopy {
     headline: string
     lede: string
   }
+  /** «مرن» and the tile strip under it (FeaturesBlock). */
+  traits: {
+    /** Two display lines. In Arabic each "ـ" marks a kashida point that
+     *  StretchWord grows on entry; English stretches by tracking instead. */
+    marn: [string, string]
+    /** Tile 1 — the same word in both scripts, one beat each. */
+    words: string[]
+    /** Tile 2 — the glyph grid's pool (12 shown, cells swap from the pool). */
+    glyphs: string[]
+    /** Tile 3 — one record set in the three faces, one role per face. */
+    faces: { word: string; roles: [string, string, string] }
+    /** Tile 4 — the school's own rules, flipping. */
+    rules: string[]
+    /** Tile 5 — the offline outbox: offline · syncing · synced. */
+    sync: [string, string, string]
+  }
   faq: {
     /** Two title lines; the second's `mark` gets the ss01 span. */
     titleLine1: string
@@ -135,6 +151,39 @@ const AR: ThmanyahCopy = {
     words: ["نظام", "واحد", "يُدير", "أعمـال", "المدرسـة"],
     highlight: "والتعليـم معًا",
     cta: "جرّب المنصة الآن",
+  },
+  traits: {
+    marn: ["مرن يمـتد", "حسـب مدرسـتك."],
+    words: ["الحضور", "Attendance", "الدرجات", "Grades", "الرسوم", "Fees"],
+    glyphs: [
+      "٩٦٪",
+      "A+",
+      "١٨",
+      "✓",
+      "ج.س",
+      "٧:٤٥",
+      "B",
+      "٢٠",
+      "½",
+      "#",
+      "٣",
+      "%",
+      "١٢",
+      "$",
+      "C",
+      "٤",
+      "×",
+      "١٠٠",
+      "→",
+      "٥",
+      "+",
+      "٨",
+      "?",
+      "٢",
+    ],
+    faces: { word: "١٨ من ٢٠", roles: ["المدير", "المعلّم", "وليّ الأمر"] },
+    rules: ["هجري", "ميلادي", "أ – هـ", "من ١٠٠", "فصل", "ترم"],
+    sync: ["دون اتصال", "يُزامن", "تمّ"],
   },
   answer: {
     a: [
@@ -387,6 +436,39 @@ const EN: ThmanyahCopy = {
     eyebrow: "A modern system",
     headline: "It strikes a calm balance for your school",
     lede: "Understood at first glance — clarity and speed together, with a quiet touch that brings what matters forward.",
+  },
+  traits: {
+    marn: ["Flexible, it stretches", "to fit your school."],
+    words: ["Attendance", "الحضور", "Grades", "الدرجات", "Fees", "الرسوم"],
+    glyphs: [
+      "96%",
+      "A+",
+      "18",
+      "✓",
+      "SDG",
+      "7:45",
+      "B",
+      "20",
+      "½",
+      "#",
+      "3",
+      "%",
+      "12",
+      "$",
+      "C",
+      "4",
+      "×",
+      "100",
+      "→",
+      "5",
+      "+",
+      "8",
+      "?",
+      "2",
+    ],
+    faces: { word: "18 of 20", roles: ["Admin", "Teacher", "Parent"] },
+    rules: ["Hijri", "Gregorian", "A – F", "out of 100", "Term", "Semester"],
+    sync: ["Offline", "Syncing", "Synced"],
   },
   faq: {
     titleLine1: "Questions you",
