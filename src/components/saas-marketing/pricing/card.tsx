@@ -21,7 +21,7 @@ import type { SubscriptionPlan } from "@/components/saas-marketing/pricing/types
 
 import { getCtaLabel, getIncludesHeading, isEnterprisePlan } from "./config"
 import { useCurrency } from "./currency"
-import { ENTERPRISE_STUDENTS, formatMoney, quote } from "./rates"
+import { formatMoney, quote } from "./rates"
 
 interface PricingCardProps {
   offer: SubscriptionPlan
@@ -55,15 +55,6 @@ export function PricingCard({
     ? constants?.perStudentPerYear || "/ student / year"
     : constants?.perStudentPerMonth || "/ student / month"
 
-  // Every card carries the same four header rows; the note is the 4th.
-  const note = isFree
-    ? constants?.freeNote || "Your first month, on us"
-    : isEnterprise
-      ? (constants?.enterpriseNote || "For {students}+ students").replace(
-          "{students}",
-          ENTERPRISE_STUDENTS.toLocaleString("en-US")
-        )
-      : constants?.proNote || "Every student, from the first"
 
   const includesHeading = getIncludesHeading(offer.id, pricing)
 
@@ -75,8 +66,6 @@ export function PricingCard({
           <span className="text-2xl tabular-nums">{priceDisplay}</span>
           <span className="muted ms-1">{priceSuffix}</span>
         </CardTitle>
-        <p className="text-muted-foreground line-clamp-1 text-base">{offer.description}</p>
-        <p className="text-muted-foreground line-clamp-1 text-sm">{note}</p>
       </CardHeader>
 
       <div className="w-full px-6 py-1">
