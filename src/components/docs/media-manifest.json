@@ -3478,5 +3478,39 @@
         "default": true
       }
     ]
+  },
+  "page/features-ar": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": " — features",
+      "en": " — features"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/features/page.avif?v=4dfbf2fd",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/features/page@2x.avif?v=1e69a729"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/ar/features/page.webp?v=d8db49b6",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/features/page@2x.webp?v=9b8b457e"
+    }
+  },
+  "page/features-en": {
+    "kind": "image",
+    "width": 2400,
+    "height": 1361,
+    "alt": {
+      "ar": " — features",
+      "en": " — features"
+    },
+    "avif": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/features/page.avif?v=d1e8b12a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/features/page@2x.avif?v=55da79db"
+    },
+    "webp": {
+      "1600": "https://cdn.databayt.org/hogwarts/en/features/page.webp?v=7a1fd50a",
+      "2400": "https://cdn.databayt.org/hogwarts/en/features/page@2x.webp?v=e62a8bb7"
+    }
   }
 }

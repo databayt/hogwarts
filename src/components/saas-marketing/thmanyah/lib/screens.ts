@@ -30,7 +30,7 @@ export interface HomeScreen {
 export interface HomeScreens {
   /** "The Answer", row A — the whole school day on one dashboard. */
   answerA: HomeScreen
-  /** "The Answer", row B — one base under the numbers (the fees overview). */
+  /** "The Answer", row B — every module on one base (the /features page). */
   answerB: HomeScreen
   /** "Trials" — the same platform on a phone. */
   phone: HomeScreen
@@ -39,21 +39,21 @@ export interface HomeScreens {
 const ALT: Record<keyof HomeScreens, Record<MediaLang, string>> = {
   answerA: {
     ar: "لوحة تحكم مدير المدرسة في بالقلم",
-    en: "The school admin dashboard in Bilqalm",
+    en: "The school admin dashboard in Bilqalam",
   },
   answerB: {
-    ar: "صفحة الرسوم في بالقلم: المستحقات والمدفوعات في مكان واحد",
-    en: "The fees page in Bilqalm: what is due and what is paid, in one place",
+    ar: "صفحة المميزات في بالقلم: كل وحدات المدرسة في منصة واحدة",
+    en: "The Bilqalam features page: every school module in one platform",
   },
   phone: {
     ar: "بالقلم على الجوال: لوحة المدرسة كاملة",
-    en: "Bilqalm on a phone: the full school dashboard",
+    en: "Bilqalam on a phone: the full school dashboard",
   },
 }
 
 const SHOT: Record<keyof HomeScreens, string> = {
   answerA: "switch-language/dashboard",
-  answerB: "set-fees/overview",
+  answerB: "page/features",
   phone: "install-app/iphone-16/dashboard",
 }
 
