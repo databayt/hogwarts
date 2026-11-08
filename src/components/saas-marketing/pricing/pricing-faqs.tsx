@@ -68,6 +68,9 @@ export default function PricingFAQs({
       }}
       className={cn(
         "px-0!",
+        // Lift the 348px text cap so each column fills its share and the
+        // text sits on the same edges as the cards above.
+        "[&_.faq-head]:max-w-none! [&_.faq-item]:max-w-none!",
         // .thmanyah-shell[dir=ltr] left-aligns these on the home page; the
         // pricing page has no shell, so English sets it here.
         lang === "en" && "[&_.faq-q]:text-left! [&_.faq-title]:text-left!"
