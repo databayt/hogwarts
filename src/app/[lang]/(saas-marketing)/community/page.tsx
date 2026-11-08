@@ -95,9 +95,9 @@ export default async function CommunityHubPage({
   const hasFilters = activeCurriculum !== "US" || activeGrade !== 1
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 pb-16 lg:px-0">
+    <div className="pb-16">
       <PageHeader
-        className="border-border/50 dark:border-border border-b"
+        className="border-border/50 dark:border-border border-b [&>div]:px-0"
         announcement={
           <Link
             href="#subjects"
@@ -120,8 +120,8 @@ export default async function CommunityHubPage({
         }
         heading={heading}
         description={description}
-        headingClassName="max-w-2xl text-balance text-4xl font-semibold tracking-tight lg:leading-[1.1] xl:text-5xl xl:tracking-tight"
-        descriptionClassName="max-w-2xl text-balance text-base font-light leading-7 sm:text-lg"
+        headingClassName="home-hero-title text-balance"
+        descriptionClassName="home-hero-sub max-w-3xl text-balance"
         actions={
           <TwoButtons
             primaryLabel={browseLabel}

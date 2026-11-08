@@ -70,7 +70,7 @@ export default function Content({ dictionary, params }: ContentProps) {
   })
 
   return (
-    <div className="px-responsive lg:px-0">
+    <div>
       <Hero dictionary={dictionary} params={params} />
       <FeatureTabs
         items={items}

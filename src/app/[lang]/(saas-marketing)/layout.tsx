@@ -46,7 +46,7 @@ export default async function MarketingLayout({
       {/* The header is the homepage's bar (HomeHeader) in its open state,
           with no hamburger, no border, and not sticky — it scrolls away with
           the page, so the docs' sticky sidebars offset from 0, not a header. */}
-      <div className="marketing-container flex min-h-screen flex-col [--header-height:0px]">
+      <div className="marketing-container home-geometry flex min-h-screen flex-col [--header-height:0px]">
         <Suspense fallback={null}>
           <AccessCheck />
         </Suspense>

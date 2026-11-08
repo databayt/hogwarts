@@ -5120,3 +5120,30 @@ body:has(.thmanyah-shell) {
   top: 0.23em;
   bottom: 0.21em;
 }
+
+/* The hero lines up with "The Answer" below it (2026-11-08). The reference's
+   hero keeps 20/40/60/80px gutters and caps its text at 1320px, while the
+   Answer rows run full width with their copy 5% from the edge below 1200px
+   and 60px from 1200px up — so on any screen wider than 1440px, and on
+   tablets, the headline sat on a different line from the section after it.
+   The hero now takes the Answer's edge: 5% → 60px, uncapped until 2637px,
+   where the Answer row caps at 1440px (= 1320px of copy) and so does this.
+   HomeHeader's bar (SmartBar) carries the same gutters. */
+.thmanyah-shell .hero-section {
+  padding-inline: 5%;
+}
+.thmanyah-shell .hero-text,
+.thmanyah-shell .hero-cta {
+  max-width: none;
+}
+@media (min-width: 1200px) {
+  .thmanyah-shell .hero-section {
+    padding-inline: 60px;
+  }
+}
+@media (min-width: 2637px) {
+  .thmanyah-shell .hero-text,
+  .thmanyah-shell .hero-cta {
+    max-width: 1320px;
+  }
+}

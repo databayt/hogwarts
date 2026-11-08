@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { PageHeader } from "@/components/atom/page-header"
 import { TwoButtons } from "@/components/atom/two-buttons"
 import type { Locale } from "@/components/internationalization/config"
@@ -43,8 +43,11 @@ export default function Hero({ dictionary, params }: HeroProps) {
           <ArrowLeft className="ms-1 hidden h-4 w-4 rtl:block" />
         </Link>
       }
+      className="[&>div]:px-0"
       heading={t.title}
       description={t.subtitle}
+      headingClassName="home-hero-title"
+      descriptionClassName="home-hero-sub"
       actions={
         <TwoButtons
           primaryLabel={ui.browseFeatures}

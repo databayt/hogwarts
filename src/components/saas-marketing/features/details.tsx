@@ -87,10 +87,8 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
           className="size-14 shrink-0 md:size-20"
         />
         <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-semibold tracking-tight">
-            {localized.title}
-          </h1>
-          <p className="text-foreground max-w-lg text-base leading-7 font-light text-pretty sm:text-lg">
+          <h1 className="home-hero-title">{localized.title}</h1>
+          <p className="home-hero-sub text-foreground max-w-2xl text-pretty">
             {heroDescription}
           </p>
 

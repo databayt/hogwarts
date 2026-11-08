@@ -36,7 +36,19 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
     bar's open state only: no hamburger, no border, not fixed or sticky (it
     scrolls away with the page, on the page's own gutters), no scroll
     behaviour. The layout sets `--header-height: 0` so the docs' sticky
-    sidebars don't reserve room for a header that isn't there. Dropped with
+    sidebars don't reserve room for a header that isn't there.
+    **One content edge across the whole marketing site:** the homepage hero
+    and header used to keep thmanyah's 20/40/60/80px gutters with a 1320px
+    cap, so above 1440px (and on tablets) they sat off the line of "The
+    Answer" below. They now share that section's edge — 5% below 1200px, 60px
+    from 1200px, capped at 1320px of content only from 2637px (override at
+    the end of `thmanyah-clone.css`; SmartBar's gutters). The inner pages'
+    layout uses the same edge via `.marketing-container.home-geometry`
+    (`src/styles/container.css`), and their heroes (features, a feature,
+    community, pricing) wear the homepage headline scale via
+    `.home-hero-title` / `.home-hero-sub` there (unlayered, so they beat the
+    Tailwind sizes on shared atoms like PageHeader). Docs articles and the
+    catalog detail hero keep their own sizes. Dropped with
     SiteHeader: the "Start free" pill and the phone MobileNav's docs sections.
   - _"The Answer" and "Trials" show OUR product, not the reference's images
     (2026-11-08)._ Abdout: keep the homepage as it is and refine only the

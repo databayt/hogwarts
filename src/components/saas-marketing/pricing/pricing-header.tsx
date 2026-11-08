@@ -16,10 +16,10 @@ export default function PricingHeader({ dictionary }: PricingHeaderProps) {
           {dictionary?.marketing?.pricing?.badge || "One price per student"}
         </Badge>
       </div>
-      <h1 className="font-heading text-4xl font-extrabold md:text-5xl">
+      <h1 className="home-hero-title">
         {dictionary?.marketing?.pricing?.title || "Simple. Transparent."}
       </h1>
-      <p className="muted mx-auto max-w-[85%]">
+      <p className="home-hero-sub text-muted-foreground mx-auto max-w-[85%]">
         {dictionary?.marketing?.pricing?.subtitle ||
           "Open source at the core — we charge for crafting it and keeping it reliable."}
       </p>

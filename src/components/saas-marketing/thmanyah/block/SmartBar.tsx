@@ -119,13 +119,13 @@ export function SmartBar({
         className={cn(
           "text-foreground",
           !page &&
-            "px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
+            "px-[5%] min-[1200px]:px-[60px]"
         )}
       >
         <div
           className={cn(
             "flex h-16 w-full items-center",
-            !page && "mx-auto max-w-[1320px]",
+            !page && "mx-auto min-[2637px]:max-w-[1320px]",
             "gap-2 **:data-[slot=separator]:!h-5 md:gap-8"
           )}
         >

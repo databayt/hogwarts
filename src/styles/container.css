@@ -106,6 +106,32 @@
     max-width: var(--marketing-max);
   }
 
+  /* The SaaS homepage's geometry on every other SaaS marketing page
+   * (features, community, pricing, docs): the homepage's content edge — 5%
+   * of the viewport below 1200px, 60px from 1200px up, no width cap until
+   * 2637px, where content caps at 1320px (the homepage's sections and its
+   * hero/header all share this edge). The gutter is split as usual between
+   * the body's --container-px and this container's --marketing-px, so
+   * .bleed-page / .px-page keep working. --page-px is redeclared here
+   * because a custom property computes where it is declared: the :root
+   * value would still carry :root's --marketing-px. */
+  .marketing-container.home-geometry {
+    --home-px: 5vw;
+    --marketing-px: calc(var(--home-px) - var(--container-px));
+    --marketing-max: none;
+    --page-px: var(--home-px);
+  }
+  @media (min-width: 1200px) {
+    .marketing-container.home-geometry {
+      --home-px: 60px;
+    }
+  }
+  @media (min-width: 2637px) {
+    .marketing-container.home-geometry {
+      --marketing-max: calc(1320px + 2 * var(--marketing-px));
+    }
+  }
+
   /* Full-width saas-marketing variant (no max-width) */
   .marketing-container-fluid {
     @apply w-full;
@@ -251,5 +277,46 @@
 
   .mb-section {
     @apply mb-8 sm:mb-12 lg:mb-16;
+  }
+}
+
+/* ===== HOMEPAGE HERO TYPE ON INNER MARKETING PAGES =====
+ * The SaaS homepage hero's headline + subtitle scale, for the hero of every
+ * other SaaS marketing page (features, a feature, community, pricing). Values
+ * are the hero's own (thmanyah-clone.css .hero-words / .hero-title, H1_STYLE
+ * in HeroBlock): display serif 900 at 48 / 80 / 92px from 0 / 600 / 1200px,
+ * leading 1.12 (1.25 in Arabic); subtitle in thmanyah sans 400 at 20 / 24px.
+ * Deliberately OUTSIDE @layer: the call sites still carry Tailwind size and
+ * weight utilities (shared atoms such as PageHeader), and unlayered rules win
+ * over layered ones regardless of specificity. */
+.home-hero-title {
+  font-family: "thmanyah serif display", serif;
+  font-weight: 900;
+  font-feature-settings: "ss01" on;
+  font-size: 48px;
+  line-height: 1.12;
+  letter-spacing: normal;
+}
+[dir="rtl"] .home-hero-title,
+.home-hero-title:where([dir="rtl"] *) {
+  line-height: 1.25;
+}
+.home-hero-sub {
+  font-family: "thmanyah sans", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.5;
+}
+@media (min-width: 600px) {
+  .home-hero-title {
+    font-size: 80px;
+  }
+  .home-hero-sub {
+    font-size: 24px;
+  }
+}
+@media (min-width: 1200px) {
+  .home-hero-title {
+    font-size: 92px;
   }
 }

@@ -39,7 +39,7 @@ export default async function CommunitySubjectLayout({
   const imageUrl = getCatalogImageUrl(subject.thumbnail, "sm")
 
   return (
-    <div className="container mx-auto mt-3 max-w-6xl space-y-5 px-4 pb-16 lg:px-0">
+    <div className="mt-3 space-y-5 pb-16">
       <CatalogHero
         subject={{
           name: subject.name,
