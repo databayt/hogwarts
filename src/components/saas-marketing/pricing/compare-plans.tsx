@@ -25,26 +25,6 @@ export function ComparePlans({ dictionary }: ComparePlansProps) {
   const pricing = dictionary?.marketing?.pricing
   const plans = getComparePlans(pricing)
 
-  // Inline emoji before each plan name and feature; feature emoji are keyed
-  // by the canonical English label in config.ts so they survive translation.
-  const planEmoji: Record<string, string> = {
-    free: "🎁",
-    pro: "🚀",
-    enterprise: "🏛️",
-  }
-  const featureEmoji: Record<string, string> = {
-    "Students included": "🎓",
-    Teachers: "👩‍🏫",
-    "Admissions, attendance, exams, fees, timetable, messaging": "🧩",
-    Storage: "💾",
-    Support: "💬",
-    "Custom branding": "🎨",
-    "API access": "🔌",
-    "Parent push notifications": "🔔",
-    "SSO (SAML/OAuth)": "🔐",
-    "Data export, anytime": "📦",
-  }
-
   const planNameMap: Record<string, string> = {
     free: pricing?.planNames?.free || "free",
     pro: pricing?.planNames?.pro || "pro",
@@ -77,7 +57,7 @@ export function ComparePlans({ dictionary }: ComparePlansProps) {
               key={col}
               className="font-heading flex-1 py-5 text-center tracking-wide text-black capitalize"
             >
-              {planEmoji[col]} {planNameMap[col] || col}
+              {planNameMap[col] || col}
             </div>
           ))}
         </div>
@@ -94,10 +74,7 @@ export function ComparePlans({ dictionary }: ComparePlansProps) {
                   className="bg-background sticky start-0 w-40 md:w-1/4 md:bg-transparent"
                 >
                   <div className="flex items-center justify-between gap-2 py-4">
-                    <span className="lg:text-base">
-                      {featureEmoji[comparePlans[index]?.feature]}{" "}
-                      {row.feature}
-                    </span>
+                    <span className="lg:text-base">{row.feature}</span>
                     {row.tooltip && (
                       <Popover>
                         <PopoverTrigger className="hover:bg-muted rounded p-1">
