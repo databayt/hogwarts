@@ -22,20 +22,31 @@ import { cn } from "@/lib/utils"
  * the page's own theme, the moment they scroll up. A control with keyboard
  * focus keeps it on screen (mouse focus does not, or a clicked hamburger would
  * pin it).
+ *
+ * `variant="page"` is the same bar on every other marketing page (features,
+ * community, pricing, docs): there is no green hero under it, so it is solid
+ * from the first frame, it starts OPEN (the links are the page's way around),
+ * and it stays open until the reader folds it with the hamburger — no
+ * auto-fold on scroll or outside press. It still steps away on scroll down
+ * and returns on scroll up. Being fixed, it renders an in-flow spacer of its
+ * own height so the page starts below it.
  */
 export function SmartBar({
   dir,
   links,
   labels,
+  variant = "hero",
   children,
 }: {
   dir: "rtl" | "ltr"
   links: { label: string; href: string }[]
   labels: { open: string; close: string; nav: string }
+  variant?: "hero" | "page"
   children: React.ReactNode
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
-  const [open, setOpen] = React.useState(false)
+  const page = variant === "page"
+  const [open, setOpen] = React.useState(page)
   const id = React.useId()
 
   React.useEffect(() => {
@@ -45,8 +56,12 @@ export function SmartBar({
     let frame = 0
     const update = () => {
       const y = window.scrollY
-      const onHero = y < window.innerHeight - bar.offsetHeight
-      bar.toggleAttribute("data-over", onHero)
+      // On the homepage "on the hero" is the first viewport; on a page with
+      // no hero it is only the top of the page, and the bar is never clear.
+      const onHero = page
+        ? y < bar.offsetHeight
+        : y < window.innerHeight - bar.offsetHeight
+      if (!page) bar.toggleAttribute("data-over", onHero)
       if (Math.abs(y - last) < 4) return
       bar.toggleAttribute("data-away", !onHero && y > last)
       last = y
@@ -61,10 +76,12 @@ export function SmartBar({
       window.removeEventListener("scroll", onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [page])
 
   React.useEffect(() => {
-    if (!open) return
+    // On inner pages open is the resting state, so nothing folds it but the
+    // hamburger itself.
+    if (!open || page) return
     // An open bar folds back up as soon as the reader moves on: Escape, a
     // press anywhere outside it, or scrolling ~40px away from where it opened.
     const from = window.scrollY
@@ -81,7 +98,7 @@ export function SmartBar({
       window.removeEventListener("pointerdown", onPointer)
       window.removeEventListener("scroll", onScroll)
     }
-  }, [open])
+  }, [open, page])
 
   const linkList = links.map((link) => (
     <Link
@@ -95,67 +112,72 @@ export function SmartBar({
   ))
 
   return (
-    <div
-      ref={ref}
-      data-over=""
-      data-open={open ? "" : undefined}
-      className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-has-focus-visible:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
-    >
-      <header
-        data-slot="site-header"
-        dir={dir}
-        className="text-foreground px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
+    <>
+      <div
+        ref={ref}
+        data-over={page ? undefined : ""}
+        data-open={open ? "" : undefined}
+        className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-has-focus-visible:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
       >
-        <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-2 **:data-[slot=separator]:!h-5 md:gap-8">
-          <button
-            type="button"
-            aria-label={open ? labels.close : labels.open}
-            aria-expanded={open}
-            aria-controls={id}
-            onClick={() => setOpen((v) => !v)}
-            className="-ms-3 inline-grid size-11 shrink-0 place-items-center"
-          >
-            <span aria-hidden className="relative block h-4 w-5">
-              <span
-                className={cn(
-                  "absolute inset-x-0 top-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
-                  open && "translate-y-[5px] rotate-45"
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute inset-x-0 bottom-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
-                  open && "-translate-y-[5px] -rotate-45"
-                )}
-              />
-            </span>
-          </button>
+        <header
+          data-slot="site-header"
+          dir={dir}
+          className="text-foreground px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
+        >
+          <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-2 **:data-[slot=separator]:!h-5 md:gap-8">
+            <button
+              type="button"
+              aria-label={open ? labels.close : labels.open}
+              aria-expanded={open}
+              aria-controls={id}
+              onClick={() => setOpen((v) => !v)}
+              className="-ms-3 inline-grid size-11 shrink-0 place-items-center"
+            >
+              <span aria-hidden className="relative block h-4 w-5">
+                <span
+                  className={cn(
+                    "absolute inset-x-0 top-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
+                    open && "translate-y-[5px] rotate-45"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute inset-x-0 bottom-0.5 h-0.5 rounded-full bg-current transition-transform duration-200",
+                    open && "-translate-y-[5px] -rotate-45"
+                  )}
+                />
+              </span>
+            </button>
+
+            {open && (
+              <>
+                <nav
+                  id={id}
+                  aria-label={labels.nav}
+                  className="hidden items-center gap-6 md:flex xl:gap-8"
+                >
+                  {linkList}
+                </nav>
+                <div className="ms-auto -me-2 flex items-center gap-1 [&_button]:!size-10 [&_svg]:!size-5 [&>a]:!size-10">
+                  {children}
+                </div>
+              </>
+            )}
+          </div>
 
           {open && (
-            <>
-              <nav
-                id={id}
-                aria-label={labels.nav}
-                className="hidden items-center gap-6 md:flex xl:gap-8"
-              >
-                {linkList}
-              </nav>
-              <div className="ms-auto -me-2 flex items-center gap-1 [&_button]:!size-10 [&_svg]:!size-5 [&>a]:!size-10">
-                {children}
-              </div>
-            </>
+            <nav
+              aria-label={labels.nav}
+              className="-mx-2 flex h-11 items-center gap-6 overflow-x-auto px-2 md:hidden"
+            >
+              {linkList}
+            </nav>
           )}
-        </div>
-
-        {open && (
-          <nav
-            aria-label={labels.nav}
-            className="-mx-2 flex h-11 items-center gap-6 overflow-x-auto px-2 md:hidden"
-          >
-            {linkList}
-          </nav>
-        )}
-      </header>
-    </div>
+        </header>
+      </div>
+      {page && (
+        <div aria-hidden className={cn("h-16", open && "max-md:h-[6.75rem]")} />
+      )}
+    </>
   )
 }

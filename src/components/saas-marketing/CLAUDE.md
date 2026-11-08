@@ -30,6 +30,14 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
   `(saas-marketing)/page.tsx` (deleted). Read this before touching anything on
   the homepage — most of the block's older homepage notes below now describe
   **unwired** components.
+  - _Every marketing page wears the homepage header (2026-11-08)._ The
+    `(saas-marketing)` layout (features, community, pricing, docs) no longer
+    mounts `SiteHeader`; it mounts `HomeHeader variant="page"` — the same
+    hamburger bar as the hero, but solid and OPEN on load, folded only by the
+    hamburger (no auto-fold on scroll/outside press). It still hides on scroll
+    down. Fixed, so `SmartBar` renders its own in-flow spacer; the layout sets
+    `--header-height` to 4rem for the docs' sticky sidebars. Dropped with
+    SiteHeader: the "Start free" pill and the phone MobileNav's docs sections.
   - _"The Answer" and "Trials" show OUR product, not the reference's images
     (2026-11-08)._ Abdout: keep the homepage as it is and refine only the
     second and third sections with our own images, the way ~/space swapped

@@ -26,9 +26,12 @@ import { SmartBar } from "./SmartBar"
 export function HomeHeader({
   dictionary,
   locale,
+  variant = "hero",
 }: {
   dictionary: Dictionary
   locale: "ar" | "en"
+  /** "hero" on the homepage; "page" (solid, starts open) everywhere else. */
+  variant?: "hero" | "page"
 }) {
   const nav = dictionary.navigation
   const ar = locale === "ar"
@@ -43,6 +46,7 @@ export function HomeHeader({
   return (
     <SmartBar
       dir={ar ? "rtl" : "ltr"}
+      variant={variant}
       links={links}
       labels={{
         open: ar ? "افتح القائمة" : "Open menu",

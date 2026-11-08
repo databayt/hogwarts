@@ -11,8 +11,8 @@ import {
 } from "@/components/internationalization/dictionaries"
 import { MarketingDictionaryProvider } from "@/components/internationalization/marketing-dictionary-provider"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
+import { HomeHeader } from "@/components/saas-marketing/thmanyah/block/HomeHeader"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
-import { SiteHeader } from "@/components/template/marketing-header/site-header"
 
 interface MarketingLayoutProps {
   children: React.ReactNode
@@ -43,11 +43,18 @@ export default async function MarketingLayout({
           screen from the first frame at every breakpoint. The 0→100% loader
           held the whole tree — header included — at visibility:hidden until
           hydration, which was the largest LCP cost on these pages. */}
-      <div className="marketing-container flex min-h-screen flex-col">
+      {/* The header is the homepage's hamburger bar (HomeHeader), drawn solid
+          and starting OPEN here since these pages have no hero under it. It
+          is h-16, so the docs' sticky offsets read a 4rem header height. */}
+      <div className="marketing-container flex min-h-screen flex-col [--header-height:calc(var(--spacing)*16)]">
         <Suspense fallback={null}>
           <AccessCheck />
         </Suspense>
-        <SiteHeader dictionary={dictionary} locale={lang} />
+        <HomeHeader
+          dictionary={dictionary}
+          locale={lang === "en" ? "en" : "ar"}
+          variant="page"
+        />
         <main className="flex-1">{children}</main>
         <SiteFooter dictionary={dictionary} locale={lang} />
         <Chatbot lang={lang as Locale} promptType="saasMarketing" />
