@@ -1,13 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { cn } from "@/lib/utils"
+import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { FaqBlock } from "@/components/saas-marketing/thmanyah/block/FaqBlock"
 
 // English fallbacks mirroring marketing.pricing.faqs.questions — the
 // dictionary version is what renders in production.
@@ -36,45 +33,45 @@ const defaultFaqs = [
 
 interface PricingFAQsProps {
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
+  lang?: Locale
 }
 
-// Same layout as the home page FAQ (saas-marketing/faqs.tsx): full-width
-// 1fr/2fr grid so its edges line up with the sections above, accordion
-// answers, first item open.
-export default function PricingFAQs({ dictionary }: PricingFAQsProps) {
+// The home page FAQ block (thmanyah FaqBlock) with the pricing questions:
+// three columns, the title heads the first. Horizontal padding comes off so
+// its edges sit on the same gutter as the cards and compare table above.
+export default function PricingFAQs({
+  dictionary,
+  lang = "en",
+}: PricingFAQsProps) {
   const pricing = dictionary?.marketing?.pricing
   const faqs = pricing?.faqs?.questions || defaultFaqs
-  const title = pricing?.faqs?.title || "Frequently Asked Questions"
-  const titleBreak = dictionary?.marketing?.faqs?.titleBreak || title
+  const words = (pricing?.faqs?.title || "Frequently Asked Questions").split(
+    " "
+  )
+  const mark = words.pop() ?? ""
+
+  const perColumn = Math.ceil(faqs.length / 3)
+  const columns = [0, 1, 2].map((c) =>
+    faqs
+      .slice(c * perColumn, (c + 1) * perColumn)
+      .map((f) => ({ q: f.question, a: [f.answer] }))
+  )
 
   return (
-    <section className="w-full py-16 md:py-32">
-      <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
-        <div className="text-center lg:text-start">
-          <h1 className="font-heading mb-4 text-4xl font-extrabold whitespace-pre-line md:text-5xl">
-            <span className="md:hidden">{title}</span>
-            <span className="hidden md:inline">{titleBreak}</span>
-          </h1>
-          <p className="muted">
-            {pricing?.faqs?.subtitle ||
-              "Your guide to per-student pricing with Balqalam."}
-          </p>
-        </div>
-        <div className="sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
-          <Accordion type="single" collapsible defaultValue="item-0">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-start">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-start">
-                  <p className="muted">{faq.answer}</p>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </div>
-    </section>
+    <FaqBlock
+      lang={lang}
+      faq={{
+        titleLine1: words.join(" "),
+        titleLine2Lead: "",
+        titleLine2Mark: mark,
+        columns,
+      }}
+      className={cn(
+        "px-0!",
+        // .thmanyah-shell[dir=ltr] left-aligns these on the home page; the
+        // pricing page has no shell, so English sets it here.
+        lang === "en" && "[&_.faq-q]:text-left! [&_.faq-title]:text-left!"
+      )}
+    />
   )
 }

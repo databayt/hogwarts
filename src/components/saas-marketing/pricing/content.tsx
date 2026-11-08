@@ -31,7 +31,7 @@ export default async function PricingContent(props: Props) {
         <PricingCards lang={lang} />
       </CurrencyProvider>
       <ComparePlans dictionary={dictionary} />
-      <PricingFAQs dictionary={dictionary} />
+      <PricingFAQs dictionary={dictionary} lang={lang} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>
   )

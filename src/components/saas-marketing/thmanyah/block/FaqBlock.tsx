@@ -3,10 +3,12 @@
 import React from "react"
 import { motion } from "framer-motion"
 
+import { cn } from "@/lib/utils"
 import {
   useThmanyahLocale,
   type AnswerPart,
   type FaqItem,
+  type ThmanyahCopy,
 } from "@/components/saas-marketing/thmanyah/lib/copy"
 import {
   FRAMER_SPRING,
@@ -81,12 +83,23 @@ function Qa({ item, lang }: { item: FaqItem; lang: string }) {
   )
 }
 
-export function FaqBlock() {
-  const { lang, copy } = useThmanyahLocale()
-  const { titleLine1, titleLine2Lead, titleLine2Mark, columns } = copy.faq
+interface FaqBlockProps {
+  /** Other pages (e.g. /pricing) pass their own title + columns; the home
+      page renders the mirrored copy from `lib/copy.ts`. */
+  faq?: ThmanyahCopy["faq"]
+  /** Locale when rendered outside HomeTemplate's ThmanyahLocaleProvider. */
+  lang?: string
+  className?: string
+}
+
+export function FaqBlock({ faq, lang: langProp, className }: FaqBlockProps) {
+  const { lang: ctxLang, copy } = useThmanyahLocale()
+  const lang = langProp ?? ctxLang
+  const { titleLine1, titleLine2Lead, titleLine2Mark, columns } =
+    faq ?? copy.faq
 
   return (
-    <div id="faq" className="faq" data-framer-name="FAQ">
+    <div id="faq" className={cn("faq", className)} data-framer-name="FAQ">
       <motion.div className="faq-grid" {...reveal(60, 0.5)}>
         {columns.map((column, col) => (
           /* column 1 (.framer-10zo1qp) · 2 (.framer-ebbquz) · 3 (.framer-wrzzgg) */
