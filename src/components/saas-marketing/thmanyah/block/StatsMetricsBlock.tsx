@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { motion, useInView, useReducedMotion } from "framer-motion"
+import { BookOpen, ChevronLeft, ChevronRight, Copy, Share } from "lucide-react"
 
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
@@ -89,29 +90,85 @@ const CYCLE_MS = 4000
 const SCREEN_BOX: React.CSSProperties = { mixBlendMode: "normal" }
 
 function PhoneScreen({ screen }: { screen: HomeScreen }) {
+  /* An iPhone 16e drawn around the still: its 71.5 x 146.7 mm body, a thin
+     black bezel inside a graphite aluminium edge, and the notch the 16e keeps where newer models have the
+     Dynamic Island. The still is the page area under Safari's bars, so the
+     screen restores what the camera cut: the 9:41 status bar above it and
+     Safari's address pill, toolbar and home indicator below it. Everything inside is
+     sized in container units, so the phone scales as one object from the
+     190px phone variant to the 300px desktop one. */
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <picture className="contents">
-        <source
-          type="image/avif"
-          srcSet={screen.avif}
-          sizes="(max-width: 1199px) 190px, 300px"
-        />
-        <source
-          type="image/webp"
-          srcSet={screen.webp}
-          sizes="(max-width: 1199px) 190px, 300px"
-        />
-        <img
-          src={screen.src}
-          alt={screen.alt}
-          width={screen.width}
-          height={screen.height}
-          loading="lazy"
-          decoding="async"
-          className="h-[84%] w-auto max-w-full rounded-[28px] object-contain shadow-[0_0_90px_-20px_rgb(255_255_255/0.22)] ring-1 ring-white/15"
-        />
-      </picture>
+      <div
+        className="relative aspect-[715/1467] h-[84%] rounded-[15%/7.3%] bg-gradient-to-b from-[#5b5b60] via-[#3a3a3e] to-[#5b5b60] p-[1.1%] shadow-[0_0_90px_-20px_rgb(255_255_255/0.22)]"
+        dir="ltr"
+      >
+        <div className="h-full w-full rounded-[14%/6.9%] bg-black p-[3%]">
+          <div className="[container-type:inline-size] relative flex h-full w-full flex-col overflow-hidden rounded-[11%/5.2%] bg-white">
+            <div
+              aria-hidden
+              className="absolute start-1/2 top-0 z-10 h-[8.6cqw] w-[41cqw] -translate-x-1/2 rounded-b-[5cqw] bg-black"
+            />
+            <div
+              aria-hidden
+              className="flex h-[12cqw] shrink-0 items-center justify-between px-[8cqw] pt-[1.5cqw] text-[4cqw] font-semibold text-black"
+            >
+              <span>9:41</span>
+              <span className="flex items-center gap-[1.2cqw]">
+                <span className="flex items-end gap-[0.5cqw]">
+                  {[1.4, 2, 2.6, 3.2].map((h) => (
+                    <span
+                      key={h}
+                      className="w-[0.8cqw] rounded-[0.3cqw] bg-black"
+                      style={{ height: `${h}cqw` }}
+                    />
+                  ))}
+                </span>
+                <span className="relative h-[3cqw] w-[6cqw] rounded-[0.9cqw] border-[0.35cqw] border-black/40 p-[0.35cqw]">
+                  <span className="block h-full w-[80%] rounded-[0.4cqw] bg-black" />
+                </span>
+              </span>
+            </div>
+            <picture className="contents">
+              <source
+                type="image/avif"
+                srcSet={screen.avif}
+                sizes="(max-width: 1199px) 175px, 275px"
+              />
+              <source
+                type="image/webp"
+                srcSet={screen.webp}
+                sizes="(max-width: 1199px) 175px, 275px"
+              />
+              <img
+                src={screen.src}
+                alt={screen.alt}
+                width={screen.width}
+                height={screen.height}
+                loading="lazy"
+                decoding="async"
+                className="block h-auto w-full shrink-0"
+              />
+            </picture>
+            <div
+              aria-hidden
+              className="flex min-h-0 flex-1 flex-col items-center justify-between bg-[#f2f2f7] px-[5cqw] pt-[3cqw] pb-[2cqw] text-[#007aff]"
+            >
+              <span className="flex h-[11cqw] w-full shrink-0 items-center justify-center rounded-full bg-white text-[3.8cqw] text-black shadow-[0_1px_3px_rgb(0_0_0/0.12)]">
+                balqalam.com
+              </span>
+              <span className="flex w-full items-center justify-between px-[3cqw]">
+                <ChevronLeft className="size-[6.5cqw]" />
+                <ChevronRight className="size-[6.5cqw] opacity-40" />
+                <Share className="size-[5.5cqw]" />
+                <BookOpen className="size-[5.5cqw]" />
+                <Copy className="size-[5.5cqw]" />
+              </span>
+              <span className="h-[1.3cqw] w-[36cqw] shrink-0 rounded-full bg-black" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

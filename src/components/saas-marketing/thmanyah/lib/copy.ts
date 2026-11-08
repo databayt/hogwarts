@@ -315,11 +315,15 @@ const EN: ThmanyahCopy = {
       "Everything a school needs to run its day, follow its performance and make its decisions, in one platform.",
   },
   trials: {
-    eyebrow: "How it was built",
-    headline: "An Arabic-first system, without precedent",
+    /* Not a rendering of the Arabic. "Arabic-first, without precedent" is
+       the Arabic page's claim to an Arabic reader; to an English reader it
+       says the product was not made for them. The English band sells what the
+       phone beside it shows: the whole school, on the device in a pocket. */
+    eyebrow: "In every pocket",
+    headline: "The whole school, in your pocket",
     ledes: [
-      "Laid out right-to-left from the very first line.",
       "Phone screen to desk screen, the same complete interface.",
+      "Installs from the browser in a tap, no app store needed.",
       "Works offline, and syncs the moment the network is back.",
     ],
     stats: [

@@ -10,6 +10,7 @@ import {
   type Locale,
 } from "@/components/internationalization/config"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
+import { HomeHeader } from "@/components/saas-marketing/thmanyah/block/HomeHeader"
 import { homeScreens } from "@/components/saas-marketing/thmanyah/lib/screens"
 import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/HomeTemplate"
 
@@ -19,7 +20,10 @@ import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/Home
  * It lives in its own route group rather than under `(saas-marketing)` on
  * purpose: the reference renders no site header (its nav does not exist on the
  * homepage) and ships its own footer, so the shared marketing layout's
- * SiteHeader / SiteFooter chrome would break the mirror. Two things that
+ * SiteHeader / SiteFooter chrome would break the mirror. The way into the rest
+ * of the site is HomeHeader instead: a lone hamburger over the hero that opens
+ * the menu full screen, mounted outside the shell for the same reason as the
+ * Chatbot below. Two things that
  * layout contributed are still wanted and are re-mounted below: AccessCheck's
  * `?access=denied` toast, fired when the dashboard bounces someone back here,
  * and the Chatbot — mounted with the same props the shared layout used
@@ -90,6 +94,7 @@ export default async function Home({
 
   return (
     <>
+      <HomeHeader lang={locale} />
       <div className="thmanyah-shell" dir={dir} lang={locale}>
         <Suspense fallback={null}>
           <AccessCheck />
