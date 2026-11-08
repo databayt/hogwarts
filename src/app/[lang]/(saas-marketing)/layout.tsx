@@ -43,10 +43,10 @@ export default async function MarketingLayout({
           screen from the first frame at every breakpoint. The 0→100% loader
           held the whole tree — header included — at visibility:hidden until
           hydration, which was the largest LCP cost on these pages. */}
-      {/* The header is the homepage's hamburger bar (HomeHeader), drawn solid
-          and starting OPEN here since these pages have no hero under it. It
-          is h-16, so the docs' sticky offsets read a 4rem header height. */}
-      <div className="marketing-container flex min-h-screen flex-col [--header-height:calc(var(--spacing)*16)]">
+      {/* The header is the homepage's bar (HomeHeader) in its open state,
+          with no hamburger, no border, and not sticky — it scrolls away with
+          the page, so the docs' sticky sidebars offset from 0, not a header. */}
+      <div className="marketing-container flex min-h-screen flex-col [--header-height:0px]">
         <Suspense fallback={null}>
           <AccessCheck />
         </Suspense>

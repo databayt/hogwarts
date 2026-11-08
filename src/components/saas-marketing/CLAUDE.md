@@ -32,11 +32,11 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
   **unwired** components.
   - _Every marketing page wears the homepage header (2026-11-08)._ The
     `(saas-marketing)` layout (features, community, pricing, docs) no longer
-    mounts `SiteHeader`; it mounts `HomeHeader variant="page"` — the same
-    hamburger bar as the hero, but solid and OPEN on load, folded only by the
-    hamburger (no auto-fold on scroll/outside press). It still hides on scroll
-    down. Fixed, so `SmartBar` renders its own in-flow spacer; the layout sets
-    `--header-height` to 4rem for the docs' sticky sidebars. Dropped with
+    mounts `SiteHeader`; it mounts `HomeHeader variant="page"` — the hero
+    bar's open state only: no hamburger, no border, not fixed or sticky (it
+    scrolls away with the page, on the page's own gutters), no scroll
+    behaviour. The layout sets `--header-height: 0` so the docs' sticky
+    sidebars don't reserve room for a header that isn't there. Dropped with
     SiteHeader: the "Start free" pill and the phone MobileNav's docs sections.
   - _"The Answer" and "Trials" show OUR product, not the reference's images
     (2026-11-08)._ Abdout: keep the homepage as it is and refine only the

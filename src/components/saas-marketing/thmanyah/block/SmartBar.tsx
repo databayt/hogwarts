@@ -24,12 +24,9 @@ import { cn } from "@/lib/utils"
  * pin it).
  *
  * `variant="page"` is the same bar on every other marketing page (features,
- * community, pricing, docs): there is no green hero under it, so it is solid
- * from the first frame, it starts OPEN (the links are the page's way around),
- * and it stays open until the reader folds it with the hamburger — no
- * auto-fold on scroll or outside press. It still steps away on scroll down
- * and returns on scroll up. Being fixed, it renders an in-flow spacer of its
- * own height so the page starts below it.
+ * community, pricing, docs), reduced to its open state: no hamburger, no
+ * border, and not fixed or sticky — it sits in the page flow at the top and
+ * scrolls away with it, on the page's own gutters. No scroll behaviour.
  */
 export function SmartBar({
   dir,
@@ -51,17 +48,13 @@ export function SmartBar({
 
   React.useEffect(() => {
     const bar = ref.current
-    if (!bar) return
+    if (!bar || page) return
     let last = window.scrollY
     let frame = 0
     const update = () => {
       const y = window.scrollY
-      // On the homepage "on the hero" is the first viewport; on a page with
-      // no hero it is only the top of the page, and the bar is never clear.
-      const onHero = page
-        ? y < bar.offsetHeight
-        : y < window.innerHeight - bar.offsetHeight
-      if (!page) bar.toggleAttribute("data-over", onHero)
+      const onHero = y < window.innerHeight - bar.offsetHeight
+      bar.toggleAttribute("data-over", onHero)
       if (Math.abs(y - last) < 4) return
       bar.toggleAttribute("data-away", !onHero && y > last)
       last = y
@@ -79,8 +72,6 @@ export function SmartBar({
   }, [page])
 
   React.useEffect(() => {
-    // On inner pages open is the resting state, so nothing folds it but the
-    // hamburger itself.
     if (!open || page) return
     // An open bar folds back up as soon as the reader moves on: Escape, a
     // press anywhere outside it, or scrolling ~40px away from where it opened.
@@ -104,7 +95,7 @@ export function SmartBar({
     <Link
       key={link.href}
       href={link.href}
-      onClick={() => setOpen(false)}
+      onClick={page ? undefined : () => setOpen(false)}
       className="text-muted-foreground hover:text-foreground text-base whitespace-nowrap transition-colors md:text-[17px]"
     >
       {link.label}
@@ -112,19 +103,33 @@ export function SmartBar({
   ))
 
   return (
-    <>
-      <div
-        ref={ref}
-        data-over={page ? undefined : ""}
-        data-open={open ? "" : undefined}
-        className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-has-focus-visible:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
+    <div
+      ref={ref}
+      data-over={page ? undefined : ""}
+      data-open={open ? "" : undefined}
+      className={
+        page
+          ? "relative z-10"
+          : "bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-has-focus-visible:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
+      }
+    >
+      <header
+        data-slot="site-header"
+        dir={dir}
+        className={cn(
+          "text-foreground",
+          !page &&
+            "px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
+        )}
       >
-        <header
-          data-slot="site-header"
-          dir={dir}
-          className="text-foreground px-5 min-[600px]:px-10 min-[1200px]:px-[60px] min-[2637px]:px-20"
+        <div
+          className={cn(
+            "flex h-16 w-full items-center",
+            !page && "mx-auto max-w-[1320px]",
+            "gap-2 **:data-[slot=separator]:!h-5 md:gap-8"
+          )}
         >
-          <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-2 **:data-[slot=separator]:!h-5 md:gap-8">
+          {!page && (
             <button
               type="button"
               aria-label={open ? labels.close : labels.open}
@@ -148,36 +153,33 @@ export function SmartBar({
                 />
               </span>
             </button>
-
-            {open && (
-              <>
-                <nav
-                  id={id}
-                  aria-label={labels.nav}
-                  className="hidden items-center gap-6 md:flex xl:gap-8"
-                >
-                  {linkList}
-                </nav>
-                <div className="ms-auto -me-2 flex items-center gap-1 [&_button]:!size-10 [&_svg]:!size-5 [&>a]:!size-10">
-                  {children}
-                </div>
-              </>
-            )}
-          </div>
+          )}
 
           {open && (
-            <nav
-              aria-label={labels.nav}
-              className="-mx-2 flex h-11 items-center gap-6 overflow-x-auto px-2 md:hidden"
-            >
-              {linkList}
-            </nav>
+            <>
+              <nav
+                id={id}
+                aria-label={labels.nav}
+                className="hidden items-center gap-6 md:flex xl:gap-8"
+              >
+                {linkList}
+              </nav>
+              <div className="ms-auto -me-2 flex items-center gap-1 [&_button]:!size-10 [&_svg]:!size-5 [&>a]:!size-10">
+                {children}
+              </div>
+            </>
           )}
-        </header>
-      </div>
-      {page && (
-        <div aria-hidden className={cn("h-16", open && "max-md:h-[6.75rem]")} />
-      )}
-    </>
+        </div>
+
+        {open && (
+          <nav
+            aria-label={labels.nav}
+            className="-mx-2 flex h-11 items-center gap-6 overflow-x-auto px-2 md:hidden"
+          >
+            {linkList}
+          </nav>
+        )}
+      </header>
+    </div>
   )
 }
