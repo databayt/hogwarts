@@ -5,7 +5,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronDown } from "lucide-react"
+import { Minus, Plus } from "lucide-react"
 
 import type { docsSource } from "@/lib/source"
 import {
@@ -190,13 +190,15 @@ export function DocsSidebar({
                     asChild
                     className="text-muted-foreground hover:text-foreground font-medium"
                   >
-                    <CollapsibleTrigger className="w-full justify-between">
+                    <CollapsibleTrigger className="w-full justify-start gap-2">
+                      <Plus className="group-data-[state=open]/collapsible:hidden" />
+                      <Minus className="group-data-[state=closed]/collapsible:hidden" />
                       {group.label}
-                      <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
                     </CollapsibleTrigger>
                   </SidebarGroupLabel>
                   <CollapsibleContent>
-                    <SidebarGroupContent>
+                    {/* The vertical line drops from the +/− icon's center. */}
+                    <SidebarGroupContent className="border-sidebar-border ms-4 w-auto border-s ps-1">
                       {menu(group.items)}
                     </SidebarGroupContent>
                   </CollapsibleContent>
