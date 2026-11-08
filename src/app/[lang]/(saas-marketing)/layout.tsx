@@ -10,7 +10,6 @@ import {
   type Dictionary,
 } from "@/components/internationalization/dictionaries"
 import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
-import { LoadingWrapper } from "@/components/marketing/loading"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
 import { SiteHeader } from "@/components/template/marketing-header/site-header"
@@ -37,24 +36,20 @@ export default async function MarketingLayout({
   // docs page (see internationalization/CLAUDE.md).
   return (
     <LocaleDictionaryProvider lang={lang}>
-      <LoadingWrapper>
-        {/* `has-[[data-immersive]]` — a page that wraps its hero in
-            `ImmersiveHero` unpins the header below `lg`, the lumos lesson's
-            phone pattern: the page opens on the hero's top edge and the bar
-            is one short scroll up. Desktop keeps the sticky bar. `relative`,
-            never `static`: the header's `bleed-bg::before` is absolute, and a
-            static header hands it to the page container — a full-page sheet
-            of background over the hero. */}
-        <div className="marketing-container flex min-h-screen flex-col max-lg:has-[[data-immersive]]:[&_[data-slot=site-header]]:relative">
-          <Suspense fallback={null}>
-            <AccessCheck />
-          </Suspense>
-          <SiteHeader dictionary={dictionary} locale={lang} />
-          <main className="flex-1">{children}</main>
-          <SiteFooter dictionary={dictionary} locale={lang} />
-          <Chatbot lang={lang as Locale} promptType="saasMarketing" />
-        </div>
-      </LoadingWrapper>
+      {/* No full-screen loader and no phone "immersive" unpinning: the page
+          paints straight from the server HTML, and the sticky header is on
+          screen from the first frame at every breakpoint. The 0→100% loader
+          held the whole tree — header included — at visibility:hidden until
+          hydration, which was the largest LCP cost on these pages. */}
+      <div className="marketing-container flex min-h-screen flex-col">
+        <Suspense fallback={null}>
+          <AccessCheck />
+        </Suspense>
+        <SiteHeader dictionary={dictionary} locale={lang} />
+        <main className="flex-1">{children}</main>
+        <SiteFooter dictionary={dictionary} locale={lang} />
+        <Chatbot lang={lang as Locale} promptType="saasMarketing" />
+      </div>
     </LocaleDictionaryProvider>
   )
 }

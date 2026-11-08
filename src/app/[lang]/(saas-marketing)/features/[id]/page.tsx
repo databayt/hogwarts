@@ -13,6 +13,13 @@ interface Props {
   params: Promise<{ lang: Locale; id: string }>
 }
 
+// Every shown feature is prerendered per locale at build time (the locale
+// comes from the root layout's generateStaticParams): the detail pages are
+// pure content, so a visitor gets static HTML instead of a server render.
+export function generateStaticParams() {
+  return SHOWN_FEATURES.map((feature) => ({ id: feature.id }))
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, id } = await params
   const feature = SHOWN_FEATURES.find((f) => f.id === id)

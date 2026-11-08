@@ -3,6 +3,8 @@
 
 import "server-only"
 
+import { unstable_cache } from "next/cache"
+
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
@@ -713,3 +715,30 @@ function bookWhere(filters: CommunityFilters) {
   }
   return where
 }
+
+// ============================================================================
+// Cached reads for the /community hub
+// ============================================================================
+
+/**
+ * The hub renders per request (it reads searchParams), but its two queries
+ * only change when the catalog is published, so they are served from the
+ * Next data cache for an hour instead of hitting Neon on every visit. The
+ * filters are part of the cache key (unstable_cache keys on the arguments).
+ * Call `revalidateTag(COMMUNITY_CACHE_TAG)` after a catalog publish to show
+ * new subjects at once.
+ */
+export const COMMUNITY_CACHE_TAG = "community"
+const COMMUNITY_REVALIDATE_SECONDS = 3600
+
+export const getCachedCommunityFilterOptions = unstable_cache(
+  getCommunityFilterOptions,
+  ["community-filter-options"],
+  { revalidate: COMMUNITY_REVALIDATE_SECONDS, tags: [COMMUNITY_CACHE_TAG] }
+)
+
+export const getCachedCommunitySubjects = unstable_cache(
+  getCommunitySubjects,
+  ["community-subjects"],
+  { revalidate: COMMUNITY_REVALIDATE_SECONDS, tags: [COMMUNITY_CACHE_TAG] }
+)

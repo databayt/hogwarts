@@ -6,7 +6,6 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { ComparePlans } from "@/components/saas-marketing/pricing/compare-plans"
 import { PricingCards } from "@/components/saas-marketing/pricing/pricing-cards"
 
-import { ImmersiveHero } from "../immersive-hero"
 import { Calculator } from "./calculator"
 import { CurrencyProvider } from "./currency"
 import EnterpriseSection from "./enterprise-section"
@@ -26,9 +25,9 @@ export default async function PricingContent(props: Props) {
 
   return (
     <div className="flex w-full flex-col items-center py-14">
-      <ImmersiveHero className="-mt-8 flex w-full justify-center pt-8">
+      <div className="flex w-full justify-center">
         <PricingHeader dictionary={dictionary} />
-      </ImmersiveHero>
+      </div>
       <CurrencyProvider rates={rates} updated={updated}>
         <PricingCards lang={lang} />
         <div id="calculator" className="w-full scroll-mt-24">

@@ -1,6 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { UserButton } from "@/components/auth/user-button"
 import { DOCS_LINKS, helpSection } from "@/components/docs/docs-config"
@@ -20,6 +24,12 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
   const isRTL = locale === "ar"
+  const startHref = `/${locale}/onboarding`
+  const startFree =
+    dictionary?.navigation?.startFree || (isRTL ? "ابدأ مجانًا" : "Start free")
+  const startFreeMonth =
+    dictionary?.navigation?.startFreeMonth ||
+    (isRTL ? "ابدأ شهرك المجاني" : "Start your free month")
 
   // Transform nav items for MobileNav
   const navItems = marketingConfig.mainNav.map((item) => ({
@@ -57,8 +67,6 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
     : undefined
 
   return (
-    // `data-slot` so the marketing layout can unpin the bar on a phone when
-    // the page opens on its hero (`data-immersive`, see `ImmersiveHero`).
     <header
       data-slot="site-header"
       className="bleed-bg bg-background sticky top-0 z-50 w-full"
@@ -76,6 +84,17 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
           locale={locale}
           showMarketingActions
         />
+        {/* The one action every marketing page asks for. On a phone it sits
+            in the bar itself, not inside the menu, so it is never a tap away. */}
+        <Link
+          href={startHref}
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "ms-auto h-8 rounded-full px-3.5 lg:hidden"
+          )}
+        >
+          {startFree}
+        </Link>
         {/* Right: Actions - all hidden on mobile, shown in menu */}
         <nav className="hidden flex-1 items-center justify-end gap-0.5 lg:flex">
           <SearchMenu />
@@ -83,6 +102,15 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
           <LangSwitcher />
           <ModeSwitcher />
           <UserButton variant="marketing" />
+          <Link
+            href={startHref}
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "ms-2 h-8 rounded-full px-4"
+            )}
+          >
+            {startFreeMonth}
+          </Link>
         </nav>
       </div>
     </header>

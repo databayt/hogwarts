@@ -5,14 +5,21 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { ImmersiveHero } from "../immersive-hero"
-import { IMPACT_METRICS } from "./constants"
-import FeatureTabs from "./feature-tabs"
+import {
+  FEATURE_GROUPS,
+  GROUP_OF,
+  IMPACT_METRICS,
+  SHOWN_FEATURES,
+} from "./constants"
+import { getCategoryIcon } from "./feature-icons"
+import { COLOR_ICONS, FEATURE_IMAGES, SMALLER_ICONS } from "./feature-images"
+import FeatureTabs, { type FeatureTabItem } from "./feature-tabs"
 import Hero from "./hero"
-import { featuresUi, METRIC_AR } from "./i18n"
+import { featuresUi, GROUP_LABEL_AR, localizeFeature, METRIC_AR } from "./i18n"
 
 interface ContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -24,12 +31,53 @@ export default function Content({ dictionary, params }: ContentProps) {
   const isAr = params.lang === "ar"
   const ui = featuresUi(params.lang)
 
+  // Localize and render every card here, on the server: the client shell gets
+  // plain strings and finished icons, so the catalog stays out of its bundle.
+  const tabs = [
+    { id: "all", label: isAr ? (GROUP_LABEL_AR.all ?? "الكل") : "All" },
+    ...FEATURE_GROUPS.map((g) => ({
+      id: g.id,
+      label: isAr ? (GROUP_LABEL_AR[g.id] ?? g.label) : g.label,
+    })),
+  ]
+  const items: FeatureTabItem[] = SHOWN_FEATURES.map((feature) => {
+    const { title, description } = localizeFeature(feature, params.lang)
+    const imageSrc = FEATURE_IMAGES[feature.id]
+    const dim = SMALLER_ICONS.has(feature.id) ? 28 : 32
+    const Icon = getCategoryIcon(feature.category)
+    return {
+      id: feature.id,
+      title,
+      description,
+      group: GROUP_OF[feature.id],
+      href: `/${params.lang}/features/${feature.id}`,
+      icon: imageSrc ? (
+        <BlurImage
+          src={imageSrc}
+          alt={title}
+          width={dim}
+          height={dim}
+          plain
+          className={cn(
+            !COLOR_ICONS.has(feature.id) &&
+              "dark:brightness-90 dark:contrast-125 dark:invert"
+          )}
+        />
+      ) : (
+        <Icon />
+      ),
+    }
+  })
+
   return (
     <div className="px-responsive lg:px-0">
-      <ImmersiveHero>
-        <Hero dictionary={dictionary} params={params} />
-      </ImmersiveHero>
-      <FeatureTabs lang={params.lang} />
+      <Hero dictionary={dictionary} params={params} />
+      <FeatureTabs
+        items={items}
+        tabs={tabs}
+        seeMoreLabel={ui.seeMore}
+        dir={isAr ? "rtl" : "ltr"}
+      />
 
       {/* Impact metrics */}
       <section className="py-16 md:py-24">
