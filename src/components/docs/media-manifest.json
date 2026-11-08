@@ -2540,10 +2540,10 @@
     },
     "order": 1,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.avif?v=6681da19"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.avif?v=7532c919"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.webp?v=eb0696e3"
+      "1179": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-16/dashboard.webp?v=19ce2225"
     }
   },
   "install-app/iphone-16/dashboard-en": {
@@ -2556,10 +2556,10 @@
     },
     "order": 1,
     "avif": {
-      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.avif?v=3f210f34"
+      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.avif?v=4e3e0e20"
     },
     "webp": {
-      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.webp?v=41523a2f"
+      "1179": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-16/dashboard.webp?v=e3e0a74e"
     }
   },
   "setup-academics/classrooms-en": {
@@ -3511,6 +3511,38 @@
     "webp": {
       "1600": "https://cdn.databayt.org/hogwarts/en/features/page.webp?v=7a1fd50a",
       "2400": "https://cdn.databayt.org/hogwarts/en/features/page@2x.webp?v=e62a8bb7"
+    }
+  },
+  "install-app/iphone-14-pwa/dashboard-ar": {
+    "kind": "image",
+    "width": 1170,
+    "height": 2391,
+    "alt": {
+      "ar": "المدرسة على الجوال",
+      "en": "The school on a phone"
+    },
+    "order": 1,
+    "avif": {
+      "1170": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-14-pwa/dashboard.avif?v=300b640e"
+    },
+    "webp": {
+      "1170": "https://cdn.databayt.org/hogwarts/ar/dashboard/install/iphone-14-pwa/dashboard.webp?v=edd86789"
+    }
+  },
+  "install-app/iphone-14-pwa/dashboard-en": {
+    "kind": "image",
+    "width": 1170,
+    "height": 2391,
+    "alt": {
+      "ar": "المدرسة على الجوال",
+      "en": "The school on a phone"
+    },
+    "order": 1,
+    "avif": {
+      "1170": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-14-pwa/dashboard.avif?v=8a226fc3"
+    },
+    "webp": {
+      "1170": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-14-pwa/dashboard.webp?v=be48e48d"
     }
   }
 }

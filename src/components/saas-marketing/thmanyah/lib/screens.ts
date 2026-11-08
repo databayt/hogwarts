@@ -54,7 +54,7 @@ const ALT: Record<keyof HomeScreens, Record<MediaLang, string>> = {
 const SHOT: Record<keyof HomeScreens, string> = {
   answerA: "switch-language/dashboard",
   answerB: "page/features",
-  phone: "install-app/iphone-16/dashboard",
+  phone: "install-app/iphone-14-pwa/dashboard",
 }
 
 /** "<url> 1600w, <url> 2400w", narrowest first. */

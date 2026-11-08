@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { motion, useInView, useReducedMotion } from "framer-motion"
-import { BookOpen, ChevronLeft, ChevronRight, Copy, Share } from "lucide-react"
 
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
@@ -92,9 +91,10 @@ const SCREEN_BOX: React.CSSProperties = { mixBlendMode: "normal" }
 function PhoneScreen({ screen }: { screen: HomeScreen }) {
   /* An iPhone 16e drawn around the still: its 71.5 x 146.7 mm body, a thin
      black bezel inside a graphite aluminium edge, and the notch the 16e keeps where newer models have the
-     Dynamic Island. The still is the page area under Safari's bars, so the
-     screen restores what the camera cut: the 9:41 status bar above it and
-     Safari's address pill, toolbar and home indicator below it. Everything inside is
+     Dynamic Island. The still is the school opened as the installed PWA from
+     the home screen (shot --standalone at the 16e's 390x797 page area), so
+     there are no Safari bars: the screen adds only what the camera cut — the
+     9:41 status bar above it and the home indicator over it. Everything inside is
      sized in container units, so the phone scales as one object from the
      190px phone variant to the 300px desktop one. */
   return (
@@ -147,25 +147,15 @@ function PhoneScreen({ screen }: { screen: HomeScreen }) {
                 height={screen.height}
                 loading="lazy"
                 decoding="async"
-                className="block h-auto w-full shrink-0"
+                className="block min-h-0 w-full flex-1 object-cover object-top"
               />
             </picture>
-            <div
+            {/* Standalone, so no Safari bars: only the home indicator,
+                floating over the app's own page. */}
+            <span
               aria-hidden
-              className="flex min-h-0 flex-1 flex-col items-center justify-between bg-[#f2f2f7] px-[5cqw] pt-[3cqw] pb-[2cqw] text-[#007aff]"
-            >
-              <span className="flex h-[11cqw] w-full shrink-0 items-center justify-center rounded-full bg-white text-[3.8cqw] text-black shadow-[0_1px_3px_rgb(0_0_0/0.12)]">
-                balqalam.com
-              </span>
-              <span className="flex w-full items-center justify-between px-[3cqw]">
-                <ChevronLeft className="size-[6.5cqw]" />
-                <ChevronRight className="size-[6.5cqw] opacity-40" />
-                <Share className="size-[5.5cqw]" />
-                <BookOpen className="size-[5.5cqw]" />
-                <Copy className="size-[5.5cqw]" />
-              </span>
-              <span className="h-[1.3cqw] w-[36cqw] shrink-0 rounded-full bg-black" />
-            </div>
+              className="absolute start-1/2 bottom-[2cqw] h-[1.3cqw] w-[36cqw] -translate-x-1/2 rounded-full bg-black"
+            />
           </div>
         </div>
       </div>
