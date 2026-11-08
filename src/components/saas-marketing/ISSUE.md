@@ -48,6 +48,10 @@ None
 
 ### P1 -- High
 
+- **2026-11-08: two sections now show our product.** "The Answer" and
+  "Trials" carry real demo-school screens (dashboard, fees, phone) instead of
+  thmanyah's photographs and its ح animation — see CLAUDE.md. The rest of the
+  page is unchanged and still the reference's.
 - **The homepage no longer sells the product.** It is a 1:1 clone of
   font.thmanyah.com — an Arabic type-specimen page — reproduced verbatim at the
   user's explicit request ("copy the exact homepage 100%, no tuning or

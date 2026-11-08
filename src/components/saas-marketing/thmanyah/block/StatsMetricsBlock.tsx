@@ -3,10 +3,10 @@
 import React, { useEffect, useRef, useState } from "react"
 import { motion, useInView, useReducedMotion } from "framer-motion"
 
-import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
+import type { HomeScreen } from "@/components/saas-marketing/thmanyah/lib/screens"
 
 /**
  * Trials — 1:1 mirror of font.thmanyah.com's "Trials" section
@@ -79,12 +79,47 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 /** How long each lede is held before the next one takes its place. */
 const CYCLE_MS = 4000
 
-const JAMLIA_SRC = "/lottie/lottie-hero-ha.json"
+/* Where the reference draws its own letter (the JAMLIA Lottie), ours shows
+   the platform on a phone — the real phone still from the demo school, in the
+   page's language (lib/screens.ts). The JAMLIA boxes keep their geometry; the
+   reference's `mix-blend-mode: color` on the row box is reset inline, because
+   on a black band it would turn a photograph black (the stylesheet is
+   unlayered, so a utility class cannot win). The screen stays inside the
+   middle 84% of the box, clear of the Fade W band's top and bottom 8%. */
+const SCREEN_BOX: React.CSSProperties = { mixBlendMode: "normal" }
+
+function PhoneScreen({ screen }: { screen: HomeScreen }) {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <picture className="contents">
+        <source
+          type="image/avif"
+          srcSet={screen.avif}
+          sizes="(max-width: 1199px) 190px, 300px"
+        />
+        <source
+          type="image/webp"
+          srcSet={screen.webp}
+          sizes="(max-width: 1199px) 190px, 300px"
+        />
+        <img
+          src={screen.src}
+          alt={screen.alt}
+          width={screen.width}
+          height={screen.height}
+          loading="lazy"
+          decoding="async"
+          className="h-[84%] w-auto max-w-full rounded-[28px] object-contain shadow-[0_0_90px_-20px_rgb(255_255_255/0.22)] ring-1 ring-white/15"
+        />
+      </picture>
+    </div>
+  )
+}
 
 const HIDDEN = { opacity: 0.001, y: 60, transformPerspective: 1200 }
 const SHOWN = { opacity: 1, y: 0, transformPerspective: 1200 }
 
-export function StatsMetricsBlock() {
+export function StatsMetricsBlock({ screen }: { screen: HomeScreen }) {
   const { copy } = useThmanyahLocale()
   const { stats: STATS, ledes: LEDES } = copy.trials
   const phone = usePhone()
@@ -169,9 +204,10 @@ export function StatsMetricsBlock() {
                 className="trials-jamlia trials-jamlia--mob"
                 data-framer-name="JAMLIA"
                 aria-hidden={!phone}
+                style={SCREEN_BOX}
               >
                 <div className="trials-jamlia-inner">
-                  {phone && <LottiePlayer src={JAMLIA_SRC} />}
+                  {phone && <PhoneScreen screen={screen} />}
                 </div>
               </div>
             </div>
@@ -215,9 +251,10 @@ export function StatsMetricsBlock() {
             className="trials-jamlia trials-jamlia--row"
             data-framer-name="JAMLIA"
             aria-hidden={phone}
+            style={SCREEN_BOX}
           >
             <div className="trials-jamlia-inner">
-              {!phone && <LottiePlayer src={JAMLIA_SRC} />}
+              {!phone && <PhoneScreen screen={screen} />}
             </div>
           </div>
         </div>

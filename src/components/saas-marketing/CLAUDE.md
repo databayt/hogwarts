@@ -30,6 +30,22 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
   `(saas-marketing)/page.tsx` (deleted). Read this before touching anything on
   the homepage — most of the block's older homepage notes below now describe
   **unwired** components.
+  - _"The Answer" and "Trials" show OUR product, not the reference's images
+    (2026-11-08)._ Abdout: keep the homepage as it is and refine only the
+    second and third sections with our own images, the way ~/space swapped
+    in its own photos. The two "The Answer" slots (were `ha-compare-1/2`,
+    thmanyah's photographs of its font sketches) now show real demo-school
+    screens — the admin dashboard (row A) and the fees overview (row B) —
+    set in a paper slot and bleeding off its outer edge; the "Trials" band's
+    JAMLIA box (was thmanyah's ح Lottie, `public/lottie/lottie-hero-ha.json`,
+    deleted) shows the phone dashboard. Sources are the help guides' CDN
+    stills in the page's language, resolved server-side by
+    `thmanyah/lib/screens.ts` and passed page → `HomeTemplate` → block, so
+    no manifest ships to the client. To change a picture, change its
+    manifest id in `SHOT` there (re-shoot with the `shoot` lane first if
+    the screen is stale). The row padding is now logical
+    (`padding-inline-start/-end`), so `/en` mirrors `/ar` instead of
+    pressing the copy against the viewport edge.
   - _Homepage imagery is served from the CDN, NOT from `public/` (2026-08-31)._
     **The re-authoring workflow changed — read this before regenerating a
     tile.** Sources now live in `assets/marketing/home/`, which is NOT served;

@@ -679,13 +679,19 @@ body:has(.thmanyah-shell) {
   max-height: 824px;
   overflow: clip;
 }
+/* The 60px sits on the TEXT side of each row: the reference's physical
+   right (row A) / left (row B), written as logical inline-start / -end so
+   the English page mirrors it — in RTL they compute to exactly the
+   reference's values, in LTR the copy no longer touches the viewport edge. */
 .answer-row--a {
   place-content: center;
-  padding: 0 60px 0 0;
+  padding: 0;
+  padding-inline-start: 60px;
 }
 .answer-row--b {
   place-content: center flex-start;
-  padding: 0 0 0 60px;
+  padding: 0;
+  padding-inline-end: 60px;
 }
 .answer-text {
   position: relative;

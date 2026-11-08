@@ -19,6 +19,7 @@ import {
   ThmanyahLocaleProvider,
 } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
+import type { HomeScreens } from "@/components/saas-marketing/thmanyah/lib/screens"
 
 /**
  * Page skeleton — a 1:1 mirror of font.thmanyah.com's top-level section
@@ -37,7 +38,15 @@ import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * shell's `dir` can never disagree — one value, resolved once, in the same
  * place the section list lives.
  */
-export function HomeTemplate({ lang }: { lang: string }) {
+export function HomeTemplate({
+  lang,
+  screens,
+}: {
+  lang: string
+  /** Our product screens for The Answer and Trials — resolved by the page
+   * on the server (lib/screens.ts), so no manifest ships to the client. */
+  screens: HomeScreens
+}) {
   const locale = thmanyahLocaleFor(lang)
 
   return (
@@ -48,10 +57,10 @@ export function HomeTemplate({ lang }: { lang: string }) {
           <HeroBlock />
 
           {/* The Answer (.framer-1ogfghp) */}
-          <StoryNarrativeBlock />
+          <StoryNarrativeBlock screens={screens} />
 
           {/* Trials (.framer-1ns1rxg) */}
-          <StatsMetricsBlock />
+          <StatsMetricsBlock screen={screens.phone} />
 
           {/* الصفـات (.framer-1yhopfz): اصيل · مرن · New design - wireframe */}
           <section

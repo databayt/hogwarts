@@ -3,10 +3,14 @@
 import React, { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 
+import { cn } from "@/lib/utils"
 import { WordmarkWriting } from "@/components/saas-marketing/thmanyah/atom/WordmarkWriting"
-import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
+import type {
+  HomeScreen,
+  HomeScreens,
+} from "@/components/saas-marketing/thmanyah/lib/screens"
 
 /**
  * 1:1 mirror of the reference "The Answer" section (.framer-1ogfghp, id="2").
@@ -31,7 +35,56 @@ const TEXT_STYLE: React.CSSProperties = {
 
 const APPEAR = reveal(60, 0.5)
 
-export function StoryNarrativeBlock() {
+/**
+ * Our product in the reference's photo slots. The reference fills them with
+ * photographs of its own work; ours are real screens of the platform (the
+ * help guides' stills, in the page's language — lib/screens.ts). The slot is
+ * paper; the screen sits in it like a window and runs off the slot's outer
+ * edge, the way the photographs bled. Row A's outer edge is the inline end,
+ * row B's the inline start, in either direction.
+ */
+function AnswerScreen({
+  screen,
+  bleed,
+}: {
+  screen: HomeScreen
+  bleed: "end" | "start"
+}) {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#f3f2ee]">
+      <picture>
+        <source
+          type="image/avif"
+          srcSet={screen.avif}
+          sizes="(max-width: 1199px) 112vw, 58vw"
+        />
+        <source
+          type="image/webp"
+          srcSet={screen.webp}
+          sizes="(max-width: 1199px) 112vw, 58vw"
+        />
+        <img
+          src={screen.src}
+          alt={screen.alt}
+          width={screen.width}
+          height={screen.height}
+          loading="lazy"
+          decoding="async"
+          className={cn(
+            "absolute top-[11%] h-auto w-[112%] max-w-none rounded-[14px] border border-black/10 shadow-[0_30px_70px_-30px_rgb(0_0_0/0.35)]",
+            bleed === "end" ? "start-[7%]" : "end-[7%]"
+          )}
+        />
+      </picture>
+    </div>
+  )
+}
+
+export function StoryNarrativeBlock({
+  screens,
+}: {
+  screens: Pick<HomeScreens, "answerA" | "answerB">
+}) {
   const { copy } = useThmanyahLocale()
   const eightRef = useRef<HTMLDivElement>(null)
   /* not `once` — the write loops, so it should stop while off screen */
@@ -59,24 +112,7 @@ export function StoryNarrativeBlock() {
             className="answer-media answer-media--a"
             data-framer-name="Arabic Letter"
           >
-            <picture>
-              <source
-                srcSet={CDN_IMAGES["ha-compare-1"].avif}
-                type="image/avif"
-                sizes="(max-width: 1199px) 100vw, 50vw"
-              />
-              <source
-                srcSet={CDN_IMAGES["ha-compare-1"].webp}
-                type="image/webp"
-                sizes="(max-width: 1199px) 100vw, 50vw"
-              />
-              <img
-                src={CDN_IMAGES["ha-compare-1"].webp}
-                alt=""
-                fetchPriority="high"
-                className="absolute inset-0 h-full w-full object-cover object-center"
-              />
-            </picture>
+            <AnswerScreen screen={screens.answerA} bleed="end" />
           </div>
         </div>
 
@@ -102,24 +138,7 @@ export function StoryNarrativeBlock() {
             className="answer-media answer-media--b"
             data-framer-name="Content represnent us"
           >
-            <picture>
-              <source
-                srcSet={CDN_IMAGES["ha-compare-2"].avif}
-                type="image/avif"
-                sizes="(max-width: 1199px) 100vw, 50vw"
-              />
-              <source
-                srcSet={CDN_IMAGES["ha-compare-2"].webp}
-                type="image/webp"
-                sizes="(max-width: 1199px) 100vw, 50vw"
-              />
-              <img
-                src={CDN_IMAGES["ha-compare-2"].webp}
-                alt=""
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover object-center"
-              />
-            </picture>
+            <AnswerScreen screen={screens.answerB} bleed="start" />
           </div>
 
           {/* Text (.framer-17jeuwe) */}

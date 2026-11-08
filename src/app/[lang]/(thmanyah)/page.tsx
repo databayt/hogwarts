@@ -10,6 +10,7 @@ import {
   type Locale,
 } from "@/components/internationalization/config"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
+import { homeScreens } from "@/components/saas-marketing/thmanyah/lib/screens"
 import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/HomeTemplate"
 
 /**
@@ -93,7 +94,7 @@ export default async function Home({
         <Suspense fallback={null}>
           <AccessCheck />
         </Suspense>
-        <HomeTemplate lang={locale} />
+        <HomeTemplate lang={locale} screens={homeScreens(locale)} />
       </div>
       <Chatbot lang={locale} promptType="saasMarketing" />
     </>
