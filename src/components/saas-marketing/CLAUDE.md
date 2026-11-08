@@ -49,7 +49,7 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
     `.home-hero-title` / `.home-hero-sub` there (unlayered, so they beat the
     Tailwind sizes on shared atoms like PageHeader). Docs articles and the
     catalog detail hero keep their own sizes — but the docs read a size up
-    (2026-11-08): article body 18px, title 48px, description 20px, MDX
+    (2026-11-08): article body 18px, title 40px (48px read too big), description 20px, MDX
     h2/h3/h4 30/24/20px via `.docs-article` in `container.css` (scoped to
     the article column; shared mdx-components untouched), sidebar + TOC
     links 15px. Dropped with
