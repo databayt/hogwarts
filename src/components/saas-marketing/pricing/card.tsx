@@ -21,7 +21,7 @@ import type { SubscriptionPlan } from "@/components/saas-marketing/pricing/types
 
 import { getCtaLabel, getIncludesHeading, isEnterprisePlan } from "./config"
 import { useCurrency } from "./currency"
-import { formatMoney, quote } from "./rates"
+import { formatAmount, quote, SIGNS } from "./rates"
 
 interface PricingCardProps {
   offer: SubscriptionPlan
@@ -50,11 +50,21 @@ export function PricingCard({
   // whether that rate reads per month or per year.
   const { ratePerStudentYear } = quote(0, currency, rates)
   const rate = isYearly ? ratePerStudentYear : ratePerStudentYear / 12
-  const priceDisplay = formatMoney(isFree ? 0 : rate, currency, lang)
+  const amount = formatAmount(isFree ? 0 : rate)
+  const sign = SIGNS[currency]
+  const signText = sign[lang === "ar" ? "ar" : "en"]
+  const signLeads = !/[\u0600-\u06FF]/.test(signText)
+  const signEl = (
+    <span
+      className={sign.riyal ? "font-[thmanyah_sans]" : undefined}
+      aria-label={currency}
+    >
+      {signText}
+    </span>
+  )
   const priceSuffix = isYearly
     ? constants?.perStudentPerYear || "/ student / year"
     : constants?.perStudentPerMonth || "/ student / month"
-
 
   const includesHeading = getIncludesHeading(offer.id, pricing)
 
@@ -63,7 +73,18 @@ export function PricingCard({
       <CardHeader className="w-full gap-1 pb-2">
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight whitespace-nowrap">
-          <span className="text-2xl tabular-nums">{priceDisplay}</span>
+          <span className="text-2xl tabular-nums">
+            {signLeads ? (
+              <bdi dir="ltr">
+                {signEl}
+                {amount}
+              </bdi>
+            ) : (
+              <>
+                {amount} {signEl}
+              </>
+            )}
+          </span>
           <span className="muted ms-1">{priceSuffix}</span>
         </CardTitle>
       </CardHeader>
@@ -73,12 +94,16 @@ export function PricingCard({
       </div>
 
       <CardContent className="w-full flex-1 pt-3">
-        <p className="text-muted-foreground mb-2 text-base">{includesHeading}</p>
+        <p className="text-muted-foreground mb-2 text-base">
+          {includesHeading}
+        </p>
         <ul>
           {offer.benefits.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
               <Check className="text-primary mt-2 size-3.5 shrink-0" />
-              <span className="text-muted-foreground text-base leading-7">{feature}</span>
+              <span className="text-muted-foreground text-base leading-7">
+                {feature}
+              </span>
             </li>
           ))}
         </ul>

@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { FALLBACK_RATES, type Rates } from "./rates"
+import { FALLBACK_RATES, withParallelRates, type Rates } from "./rates"
 
 export interface LiveRates {
   rates: Rates
@@ -11,7 +11,8 @@ export interface LiveRates {
 
 /**
  * Today's SAR exchange rates for the pricing page and the chatbot — the
- * free open.er-api.com feed (no key), cached for a day. A slow or failed
+ * free open.er-api.com feed (no key), cached for a day, with the pinned
+ * parallel-market rates (rates.ts PARALLEL_PER_USD) laid over it. A slow or failed
  * feed never blocks the page: it falls back to the pinned rates.
  */
 export async function getExchangeRates(): Promise<LiveRates> {
@@ -31,13 +32,13 @@ export async function getExchangeRates(): Promise<LiveRates> {
       throw new Error("incomplete rates")
     }
     return {
-      rates: { SAR: 1, USD: r.USD, SDG: r.SDG, EGP: r.EGP },
+      rates: withParallelRates({ SAR: 1, USD: r.USD, SDG: r.SDG, EGP: r.EGP }),
       updated: data.time_last_update_unix
         ? new Date(data.time_last_update_unix * 1000).toISOString()
         : null,
     }
   } catch (error) {
     console.error("Exchange rates unavailable, using fallback:", error)
-    return { rates: FALLBACK_RATES, updated: null }
+    return { rates: withParallelRates(FALLBACK_RATES), updated: null }
   }
 }

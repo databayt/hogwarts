@@ -38,8 +38,34 @@ export type Currency = (typeof CURRENCIES)[number]
 export type Rates = Record<Currency, number>
 
 /**
+ * Parallel-market rates, in units per 1 USD, for currencies whose official
+ * rate is far from what money actually changes hands at. Where a currency is
+ * listed here, the page prices in it instead of the feed's official rate —
+ * schools there pay the USD price at the market rate. Pinned by hand: there
+ * is no free feed for these, so update the number and the date together.
+ *
+ * SDG 10,214 — Sudan parallel market, 2026-11-08 (khaligyoun.com daily
+ * report; Nov 5 buy 10,293 / sell 10,348). Bank of Khartoum's official rate
+ * the same week was ~4,850, the open.er-api feed ~510.
+ */
+export const PARALLEL_PER_USD: Partial<Record<Currency, number>> = {
+  SDG: 10214,
+}
+export const PARALLEL_UPDATED = "2026-11-08"
+
+/** Swap in the parallel-market rate wherever one is pinned. */
+export function withParallelRates(rates: Rates): Rates {
+  const out = { ...rates }
+  for (const [c, perUsd] of Object.entries(PARALLEL_PER_USD)) {
+    if (perUsd) out[c as Currency] = rates.USD * perUsd
+  }
+  return out
+}
+
+/**
  * Fallback when the live feed is down — open.er-api.com on 2026-10-10.
- * SAR→USD is the 3.75 peg; SDG is the official rate, not the parallel market.
+ * SAR→USD is the 3.75 peg. SDG here is the official rate; withParallelRates
+ * replaces it with the parallel-market rate before anything is priced.
  */
 export const FALLBACK_RATES: Rates = {
   SAR: 1,
@@ -102,6 +128,23 @@ export function formatAmount(amount: number): string {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })
+}
+
+/**
+ * The sign each currency is shown with on the pricing cards. Latin signs lead
+ * the amount ($0.53, E£28.75); Arabic ones follow it (2 ⃁, 5,447 ج.س).
+ * SAR is "ر.س" set in Thmanyah, whose ligature draws it as the Saudi riyal
+ * sign on every device — the U+20C1 code point itself still lacks font
+ * support on many phones.
+ */
+export const SIGNS: Record<
+  Currency,
+  { ar: string; en: string; riyal?: boolean }
+> = {
+  USD: { ar: "$", en: "$" },
+  SAR: { ar: "ر.س", en: "ر.س", riyal: true },
+  SDG: { ar: "ج.س", en: "ج.س" },
+  EGP: { ar: "ج.م", en: "E£" },
 }
 
 const SYMBOLS: Record<Currency, { ar: string; en: string }> = {
