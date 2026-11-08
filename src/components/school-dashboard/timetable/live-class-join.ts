@@ -10,7 +10,9 @@ import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   schoolDayWindow,
+  slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
+import { joinWindow } from "@/components/school-dashboard/live/join-window"
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 
 /**
@@ -304,7 +306,12 @@ type TodaySlot = {
   dayOfWeek: number
   sectionId?: string | null
   subjectId?: string | null
+  /** When present, today's slots get a join window (see `joinWindows`). */
+  period?: { startTime: Date; endTime: Date } | null
 }
+
+/** A class's join window as instants — the same moment on every device. */
+export type JoinWindowMs = { fromMs: number; untilMs: number }
 
 /**
  * Everything the weekly grid needs about today's live classes, in ONE pass:
@@ -335,6 +342,24 @@ export async function resolveTodayLive(
   liveIndicators: Record<string, "live" | "scheduled">
   liveJoin: Record<string, LiveClassJoinInfo>
   liveEnabled: boolean
+  /**
+   * TODAY's slot ids whose section is online by policy right now — whether or
+   * not the sweep has written its row yet. With `/live/join/{slot}` a class
+   * that is online needs no row to be joinable (the link writes it), so this
+   * is what lets a cell offer Join the moment the policy says so instead of
+   * waiting for the next cron tick. Empty for a guardian the school does not
+   * let watch, for the same reason `liveJoin` is.
+   */
+  onlineToday: string[]
+  /**
+   * TODAY's slots' join windows as INSTANTS (epoch ms), computed here in the
+   * school's zone. A view compares them with `Date.now()`, which is the same
+   * number on a phone in Khartoum, Riyadh or London — unlike the block's old
+   * convention (the device's wall clock against UTC-stored period times),
+   * which put the Join pill on the wrong hour for any reader whose device is
+   * not on the school's clock: a student of an online school abroad.
+   */
+  joinWindows: Record<string, JoinWindowMs>
 }> {
   const school = await db.school.findUnique({
     where: { id: schoolId },
@@ -342,21 +367,87 @@ export async function resolveTodayLive(
       timezone: true,
       conferenceDeliveryMode: true,
       conferenceGuardiansObserve: true,
+      conferenceReminderLeadMinutes: true,
     },
   })
   const tz = school?.timezone || DEFAULT_SCHOOL_TZ
   const joinable = !opts.forGuardian || !!school?.conferenceGuardiansObserve
-  const [liveIndicators, liveJoin] = await Promise.all([
+  const liveEnabled =
+    (school?.conferenceDeliveryMode ?? "physical") !== "physical"
+  const [liveIndicators, liveJoin, onlineToday] = await Promise.all([
     getLiveClassIndicators(schoolId, tz),
     joinable
       ? resolveTodayJoinTargets(schoolId, termId, slots, tz)
       : Promise.resolve({} as Record<string, LiveClassJoinInfo>),
+    joinable && liveEnabled
+      ? resolveOnlineTodaySlots(schoolId, slots, tz)
+      : Promise.resolve([] as string[]),
   ])
   return {
     liveIndicators,
     liveJoin,
-    liveEnabled: (school?.conferenceDeliveryMode ?? "physical") !== "physical",
+    liveEnabled,
+    onlineToday,
+    joinWindows: todayJoinWindows(
+      slots,
+      tz,
+      school?.conferenceReminderLeadMinutes ?? null
+    ),
   }
+}
+
+/**
+ * The join window of each of TODAY's slots (school zone) that carries its
+ * period — the students' window (the school's lead before the bell, the grace
+ * after). The class's own teacher may start a little earlier; the join link
+ * decides that on the tap, so a pill that appears at the students' time is
+ * never wrong, only conservative.
+ */
+function todayJoinWindows(
+  slots: TodaySlot[],
+  timezone: string,
+  leadMinutes: number | null
+): Record<string, JoinWindowMs> {
+  const now = new Date()
+  const today = schoolDayOfWeek(timezone, now)
+  const out: Record<string, JoinWindowMs> = {}
+  for (const s of slots) {
+    if (s.dayOfWeek !== today || !s.period) continue
+    const at = slotInstantsOn(timezone, now, s.period)
+    if (!at) continue
+    const w = joinWindow({
+      startMs: at.scheduledStart.getTime(),
+      endMs: at.scheduledEnd.getTime(),
+      leadMinutes,
+      isHost: false,
+    })
+    out[s.id] = { fromMs: w.opensAtMs, untilMs: w.closesAtMs }
+  }
+  return out
+}
+
+/**
+ * Today's slots whose section the policy engine says is online now. One policy
+ * read for all of the day's sections (`resolveOnlinePolicies` batches); breaks
+ * and section-less slots are never online classes.
+ */
+async function resolveOnlineTodaySlots(
+  schoolId: string,
+  slots: TodaySlot[],
+  timezone: string
+): Promise<string[]> {
+  const now = new Date()
+  const today = schoolDayOfWeek(timezone, now)
+  const todays = slots.filter((s) => s.dayOfWeek === today && s.sectionId)
+  if (todays.length === 0) return []
+  const policies = await resolveOnlinePolicies(
+    schoolId,
+    todays.map((s) => s.sectionId as string),
+    now
+  )
+  return todays
+    .filter((s) => policies.get(s.sectionId as string)?.online)
+    .map((s) => s.id)
 }
 
 /**

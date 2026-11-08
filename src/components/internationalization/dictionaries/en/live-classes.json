@@ -298,6 +298,7 @@
     "notFound": "Live class not found.",
     "invalidState": "The class is not in the right state.",
     "notStarted": "Your teacher hasn't started the class yet. You'll join automatically when it begins.",
+    "tooEarly": "It's too early to start this class. You can open it 15 minutes before it begins.",
     "loadFailed": "Couldn't load the classes. Refresh the page to try again.",
     "recordingsLoadFailed": "Couldn't load the recordings. Refresh the page to try again.",
     "roomFull": "Room is full.",
@@ -580,5 +581,20 @@
     "saved": "Homework set",
     "failed": "Couldn't set the homework",
     "noAudience": "This class has no section, so there is no one to set homework for."
+  },
+  "joinLink": {
+    "early": "Your class starts at {start}.",
+    "earlyHint": "The room opens at {opens}. Keep this page open — it takes you in by itself.",
+    "over": "Today's class has ended.",
+    "overHint": "If the teacher recorded it, you'll find it under Live classes.",
+    "cancelled": "Today's class was cancelled.",
+    "notToday": "This class isn't on today's timetable.",
+    "notOnline": "This class is taught in person today.",
+    "unavailable": "This class has no online room yet.",
+    "unavailableHint": "Ask the school to finish setting up online classes.",
+    "forbidden": "This class isn't one of yours.",
+    "notFound": "We couldn't find this class.",
+    "toTimetable": "Back to timetable",
+    "toLive": "Live classes"
   }
 }

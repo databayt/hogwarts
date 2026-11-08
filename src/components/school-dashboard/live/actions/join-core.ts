@@ -31,6 +31,7 @@ import {
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
+import { hostMayStart } from "../join-window"
 import { concurrentCapError } from "./helpers"
 import { transitionToLive } from "./went-live"
 
@@ -194,6 +195,7 @@ export async function performLiveClassJoin(
         visibility: true,
         maxParticipants: true,
         status: true,
+        scheduledStart: true,
         lang: true,
         recordingEnabled: true,
         studentsJoinMuted: true,
@@ -270,6 +272,15 @@ export async function performLiveClassJoin(
     }
     if (!allowAutoStart) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
+    // The opening edge, enforced HERE rather than only by the buttons that
+    // hide Join until close to the bell: a host's join is what STARTS the
+    // class — the SFU room, the `live` flip, the "your class has started"
+    // notification to every student — so a teacher opening a 16:00 class at
+    // 09:00 (a stale tab, a crafted request, a mis-tapped row) would announce
+    // it hours early and bill an empty room's minutes. See ../join-window.ts.
+    if (!hostMayStart(liveClass.scheduledStart)) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_TOO_EARLY)
     }
     // Joining as HOST auto-starts the room, so it must respect the same
     // per-school concurrent-room cap that startLiveClass enforces.

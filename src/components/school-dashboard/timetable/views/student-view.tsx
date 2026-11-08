@@ -13,6 +13,7 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByStudentGrade, getTodaySchedule } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
+import { JoinLinkButton } from "./join-link-button"
 import {
   ClosureNotice,
   type LiveClassJoinInfo,
@@ -20,6 +21,7 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import { inJoinWindow, useNowMs } from "./use-now-ms"
 import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
@@ -113,6 +115,15 @@ export default function StudentView({
   const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
     {}
   )
+  // Today's slots that are online by policy, row or no row yet.
+  const [onlineToday, setOnlineToday] = useState<ReadonlySet<string>>(
+    () => new Set()
+  )
+  // Today's join windows as instants, from the server (school zone).
+  const [joinWindows, setJoinWindows] = useState<
+    Record<string, { fromMs: number; untilMs: number }>
+  >({})
+  const nowMs = useNowMs()
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
@@ -120,8 +131,25 @@ export default function StudentView({
   const { open: openSlot } = useSlotOpen({
     lang,
     liveJoin,
+    onlineToday,
+    joinWindows,
     onInspect: setInspectedSlotId,
   })
+  // A JOIN the reader can SEE. The cell tap above already joins, but nothing
+  // said so: on 2026-11-08 an alabidae student on a 360px phone reported «ما
+  // قادر ادخل الحصه» from this exact grid (hogwarts#469). Today's class inside
+  // its window — a room, a standing link, or an online section whose room the
+  // link will open — now carries a labelled pill.
+  const joinLabel = dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
+  const renderJoin = (slot: { id: string }) => {
+    if (!liveJoin[slot.id] && !onlineToday.has(slot.id)) return null
+    // The window only exists for TODAY's slots (school zone), so this is
+    // also the "is it today" check — on any device clock.
+    if (!inJoinWindow(nowMs, joinWindows[slot.id])) return null
+    return (
+      <JoinLinkButton timetableId={slot.id} lang={lang} label={joinLabel} />
+    )
+  }
 
   // Today's schedule is fetched for its CLOSURE only — the day list and the
   // current/next card it used to feed are both gone, but a declared holiday
@@ -150,6 +178,8 @@ export default function StudentView({
       )
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setLiveJoin(weeklyResult.liveJoin ?? {})
+      setOnlineToday(new Set(weeklyResult.onlineToday ?? []))
+      setJoinWindows(weeklyResult.joinWindows ?? {})
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -284,6 +314,7 @@ export default function StudentView({
             highlightToday={viewRange === "week"}
             liveIndicators={liveIndicators}
             onSlotInspect={openSlot}
+            renderSlotAction={renderJoin}
             dictionary={{
               period: d?.period,
               break: d?.break,

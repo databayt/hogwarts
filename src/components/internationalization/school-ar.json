@@ -592,12 +592,14 @@
       },
       "nextAction": {
         "cta": "افتح",
+        "join": "انضم",
         "acknowledge": "اطّلعت",
         "kinds": {
           "assignmentOverdue": "**تسليم {mark}** تأخّر عن موعده",
           "assignmentDue": "**تسليم {mark}** ما زال ينتظرك",
           "nextClass": "**حصة {mark}** هي القادمة",
           "liveClass": "**حصة {mark}** مباشرة الآن — انضم إليها",
+          "childLiveClass": "**حصة {mark}** مباشرة الآن — شاهدها",
           "pendingGrading": "**{mark} تسليم** ينتظر تصحيحك اليوم",
           "attendanceDue": "**{mark} فصل** ينتظر تسجيل حضوره اليوم",
           "childOverdue": "**واجب {mark}** تأخّر عن موعده",
@@ -5575,6 +5577,7 @@
       "start": "بدء البث المباشر",
       "starting": "جارٍ البدء…",
       "startError": "تعذّر بدء البث المباشر",
+      "observe": "مشاهدة",
       "view": "عرض",
       "delete": "حذف",
       "openMenu": "فتح القائمة",
@@ -5705,6 +5708,7 @@
         "resourceUrlInvalid": "أدخل رابط مرجع صحيحًا"
       },
       "tabs": {
+        "overview": "نظرة عامة",
         "sessions": "الجلسات",
         "schedule": "الجدولة",
         "settings": "الإعدادات",

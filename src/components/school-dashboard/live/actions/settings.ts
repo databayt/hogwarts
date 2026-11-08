@@ -11,27 +11,32 @@ import { after } from "next/server"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfInstant,
+  schoolDayOfWeek,
   schoolDayToInstant,
 } from "@/components/school-dashboard/live/day-window"
 import {
   isLiveKitConfigured,
   isRecordingConfigured,
 } from "@/components/school-dashboard/live/livekit/client"
-import { isOnlineWindowActive } from "@/components/school-dashboard/live/online-policy"
+import {
+  isOnlineWindowActive,
+  resolveOnlinePolicies,
+} from "@/components/school-dashboard/live/online-policy"
 import {
   deliveryModeSchema,
   liveClassSettingsSchema,
 } from "@/components/school-dashboard/live/validation"
 
+import { computeLiveLinkCoverage } from "../link-coverage"
 import {
   liveListRevalidatePaths,
   liveRevalidatePath,
   requireContext,
 } from "./helpers"
-import { computeLiveLinkCoverage } from "../link-coverage"
 import { materializeSchoolDay } from "./materialize-day"
 
 const SETTINGS_SELECT = {
@@ -211,6 +216,43 @@ export async function updateDeliveryMode(input: unknown) {
   if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   const mode = parsed.data.mode
 
+  // The mode it is switching FROM: a school coming online for the first time
+  // starts with recording off (below).
+  const before = await db.school.findUnique({
+    where: { id: ctx.schoolId },
+    select: { conferenceDeliveryMode: true },
+  })
+  const comingOnline =
+    mode !== "physical" &&
+    (before?.conferenceDeliveryMode ?? "physical") === "physical"
+
+  // In-app rooms for every online class, online OR hybrid (D-2026-11-08:
+  // LiveKit for everyone). With the `external` default every slot needs a
+  // pasted link and is skipped `no_link` without one — "Live" produced no
+  // classes. A school that later chooses external on the live-class settings
+  // page keeps that choice until it switches the teaching mode again.
+  const liveDefaults = {
+    ...(isLiveKitConfigured()
+      ? { conferenceProviderDefault: "livekit" as const }
+      : {}),
+    // Recording starts OFF for a school coming online: every slot recorded is
+    // egress minutes billed on the LiveKit plan plus S3 storage — at a fully
+    // online school's volume the single largest line — and recording pupils
+    // is a decision the school should take on purpose, on the live-class
+    // settings page, not inherit from a column default.
+    ...(comingOnline
+      ? {
+          conferenceRecordingDefault: false,
+          // And the register follows the room: an online class's attendance
+          // is written from who was actually in it (`attendance-sync`, with
+          // its presence floor), instead of a teacher re-typing it after
+          // every period — the hourly reminder cron leaves those classes
+          // alone for the same reason.
+          conferenceAttendanceSync: true,
+        }
+      : {}),
+  }
+
   const data =
     mode === "physical"
       ? {
@@ -224,15 +266,9 @@ export async function updateDeliveryMode(input: unknown) {
         ? {
             conferenceDeliveryMode: mode,
             conferenceOnlineDefault: true,
-            // An online school has no building to fall back on: with the
-            // `external` default every slot needs a pasted link, and without
-            // one each is skipped `no_link` — "Live" produced no classes. When
-            // in-app rooms exist, use them. (Hybrid keeps the admin's choice.)
-            ...(isLiveKitConfigured()
-              ? { conferenceProviderDefault: "livekit" as const }
-              : {}),
+            ...liveDefaults,
           }
-        : { conferenceDeliveryMode: mode }
+        : { conferenceDeliveryMode: mode, ...liveDefaults }
 
   try {
     await db.school.update({
@@ -266,7 +302,52 @@ export async function updateDeliveryMode(input: unknown) {
   for (const path of liveListRevalidatePaths()) {
     revalidatePath(path, "page")
   }
-  return { success: true as const }
+
+  // What the switch did, in one number the admin can check: how many of
+  // TODAY's classes are now online. Best-effort — a failed count must not
+  // turn a saved setting into an error.
+  let onlineToday: number | null = null
+  if (mode !== "physical") {
+    try {
+      onlineToday = await countOnlineSlotsToday(ctx.schoolId)
+    } catch {
+      onlineToday = null
+    }
+  }
+  return { success: true as const, data: { onlineToday } }
+}
+
+/**
+ * Today's teaching slots (active term, school-calendar day, not a break, with
+ * a section and a teacher — the sweep's own filter) whose section is online.
+ */
+async function countOnlineSlotsToday(schoolId: string): Promise<number> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  const tz = school?.timezone || DEFAULT_SCHOOL_TZ
+  const { term } = await resolveActiveTerm(schoolId)
+  if (!term) return 0
+  const now = new Date()
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: term.id,
+      dayOfWeek: schoolDayOfWeek(tz, now),
+      weekOffset: 0,
+      sectionId: { not: null },
+      teacherId: { not: null },
+      period: { isBreak: false },
+    },
+    select: { sectionId: true },
+  })
+  const sectionIds = slots
+    .map((s) => s.sectionId)
+    .filter((id): id is string => !!id)
+  if (sectionIds.length === 0) return 0
+  const policies = await resolveOnlinePolicies(schoolId, sectionIds, now)
+  return sectionIds.filter((id) => policies.get(id)?.online).length
 }
 
 /**

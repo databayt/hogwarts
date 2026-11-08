@@ -4,12 +4,22 @@
 import Link from "next/link"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  DEFAULT_SCHOOL_TZ,
+  slotInstantsOn,
+} from "@/components/school-dashboard/live/day-window"
+import { joinWindow } from "@/components/school-dashboard/live/join-window"
+import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { getTodaySchedule } from "@/components/school-dashboard/timetable/actions"
 import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
 import SimpleGrid from "@/components/school-dashboard/timetable/views/simple-grid"
 
 import { SectionHeading } from "./section-heading"
+import { TodayJoinStrip, type TodayJoinRow } from "./today-join-strip"
 
 /**
  * The day's classes on the phone dashboard, directly under the next-action
@@ -79,6 +89,25 @@ export async function TodayTimetable({
         </Link>
       </div>
 
+      {/* The way into the class that is on now — see today-join-strip. */}
+      {day.isToday && day.joinRows.length > 0 ? (
+        <TodayJoinStrip
+          rows={day.joinRows}
+          lang={locale as Locale}
+          isTeacher={role === "TEACHER"}
+          labels={{
+            join:
+              dictionary?.liveClasses?.join ??
+              (locale === "ar" ? "انضمام" : "Join"),
+            start:
+              dictionary?.liveClasses?.start ??
+              (locale === "ar" ? "بدء البث المباشر" : "Start live class"),
+            liveNow:
+              d?.liveNow ?? (locale === "ar" ? "مباشر الآن" : "Live now"),
+          }}
+        />
+      ) : null}
+
       <SimpleGrid
         slots={day.slots}
         workingDays={[day.dayOfWeek]}
@@ -97,8 +126,9 @@ export async function TodayTimetable({
         // and is never server-rendered. This card IS server-rendered, and in
         // production the server's local zone is UTC while the reader's is
         // Khartoum, so the two would light different cells and the lamp's label
-        // would be a hydration mismatch on every school day. Joining a live
-        // class stays on /timetable and /live, where the time gate lives.
+        // would be a hydration mismatch on every school day. Joining from
+        // here is the client-only strip above, which decides "now" after it
+        // mounts.
         dictionary={{
           period: d?.period,
           break: d?.break,
@@ -115,6 +145,9 @@ export async function TodayTimetable({
 interface DaySchedule {
   dayOfWeek: number
   isToday: boolean
+  /** Today's classes that are online (a room, or the policy) — the strip's
+   *  candidates. Empty on a fallen-forward day: nothing there is joinable. */
+  joinRows: TodayJoinRow[]
   periods: Array<{
     id: string
     name: string
@@ -156,9 +189,65 @@ async function resolveDay(role: string): Promise<DaySchedule | null> {
   // callable.
   const rows = [...result.schedule]
 
+  // Which of today's classes are online: a room already exists, or the
+  // section's policy says so (the join link writes the room on the tap).
+  let joinRows: TodayJoinRow[] = []
+  if (isToday) {
+    const { schoolId } = await getTenantContext()
+    const sectionIds = rows
+      .map((row) => row.sectionId)
+      .filter((id): id is string => !!id)
+    const [policies, school] = await Promise.all([
+      schoolId && sectionIds.length > 0
+        ? resolveOnlinePolicies(schoolId, sectionIds)
+        : Promise.resolve(new Map()),
+      schoolId
+        ? db.school.findUnique({
+            where: { id: schoolId },
+            select: { timezone: true, conferenceReminderLeadMinutes: true },
+          })
+        : Promise.resolve(null),
+    ])
+    const tz = school?.timezone || DEFAULT_SCHOOL_TZ
+    const now = new Date()
+    joinRows = rows
+      .filter(
+        (row) =>
+          row.timetableId &&
+          !row.isBreak &&
+          (row.liveClass ||
+            (row.sectionId && policies.get(row.sectionId)?.online))
+      )
+      .flatMap((row) => {
+        // The join window as INSTANTS, in the school's zone — the strip
+        // compares it with `Date.now()`, right on any device clock.
+        const at = slotInstantsOn(tz, now, {
+          startTime: new Date(row.startTime),
+          endTime: new Date(row.endTime),
+        })
+        if (!at) return []
+        const w = joinWindow({
+          startMs: at.scheduledStart.getTime(),
+          endMs: at.scheduledEnd.getTime(),
+          leadMinutes: school?.conferenceReminderLeadMinutes ?? null,
+          isHost: false,
+        })
+        return [
+          {
+            timetableId: row.timetableId as string,
+            subject: row.subject,
+            fromMs: w.opensAtMs,
+            untilMs: w.closesAtMs,
+            live: row.liveClass?.status === "live",
+          },
+        ]
+      })
+  }
+
   return {
     dayOfWeek: result.dayOfWeek,
     isToday,
+    joinRows,
     periods: rows.map((row, i) => ({
       id: row.periodId,
       name: row.periodName,

@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   ClosureNotice,
@@ -23,6 +23,19 @@ function startAtDelta(minutesFromNow: number): Date {
 }
 
 describe("isLiveJoinable", () => {
+  // Pinned to local midday. `isLiveJoinable` compares minutes-of-the-day, so
+  // a run at 23:45 put "20 minutes from now" at 00:05 — numerically BEFORE
+  // now — and the custom-window case failed every night after 23:40.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    const noon = new Date()
+    noon.setHours(12, 0, 0, 0)
+    vi.setSystemTime(noon)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("current class is always joinable", () => {
     expect(isLiveJoinable("current", startAtDelta(999))).toBe(true)
     expect(isLiveJoinable("current", startAtDelta(-999))).toBe(true)

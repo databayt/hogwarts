@@ -35,6 +35,7 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
+import { JoinLinkButton } from "./join-link-button"
 import {
   ClosureNotice,
   isLiveJoinable,
@@ -47,6 +48,7 @@ import {
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
 import { StartLiveClassButton } from "./start-live-class-button"
+import { inJoinWindow, useNowMs } from "./use-now-ms"
 import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
@@ -136,6 +138,15 @@ export default function TeacherView({
   // Whether the school teaches live at all (its teaching mode). An in-person
   // school offers no Start — Join to an existing room is never gated.
   const [liveEnabled, setLiveEnabled] = useState(false)
+  // Today's slots that are online by policy, row or no row yet.
+  const [onlineToday, setOnlineToday] = useState<ReadonlySet<string>>(
+    () => new Set()
+  )
+  // Today's join windows as instants, from the server (school zone).
+  const [joinWindows, setJoinWindows] = useState<
+    Record<string, { fromMs: number; untilMs: number }>
+  >({})
+  const nowMs = useNowMs()
   const startErrorLabel =
     dictionary?.liveClasses?.startError ??
     (isRTL ? "تعذّر بدء البث المباشر" : "Couldn't start the live class")
@@ -144,6 +155,8 @@ export default function TeacherView({
   const { open: openSlot } = useSlotOpen({
     lang,
     liveJoin,
+    onlineToday,
+    joinWindows,
     onInspect: setInspectedSlotId,
     canStart: liveEnabled,
     startErrorLabel,
@@ -189,6 +202,8 @@ export default function TeacherView({
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setLiveJoin(weeklyResult.liveJoin ?? {})
       setLiveEnabled(weeklyResult.liveEnabled ?? false)
+      setOnlineToday(new Set(weeklyResult.onlineToday ?? []))
+      setJoinWindows(weeklyResult.joinWindows ?? {})
       setTodaySchedule(todayResult.schedule)
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
@@ -621,15 +636,30 @@ export default function TeacherView({
               onSlotInspect={openSlot}
               // The cell itself joins or starts (see useSlotOpen); this keeps a
               // visible Start label on the teacher's period that has no room yet.
-              renderSlotAction={(slot, period) => {
-                if (!liveEnabled || slot.dayOfWeek !== new Date().getDay())
+              renderSlotAction={(slot) => {
+                // A room exists (or the section is online and the link will
+                // open one): say Join, through the slot's join link — the
+                // room makes the teacher its host. Gated on the SERVER's
+                // window (instants; only today's slots have one), right on
+                // any device clock — so it comes before the device-clock
+                // checks below, which only the Start fallback still uses.
+                if (liveJoin[slot.id] || onlineToday.has(slot.id)) {
+                  if (!inJoinWindow(nowMs, joinWindows[slot.id])) return null
+                  return (
+                    <JoinLinkButton
+                      timetableId={slot.id}
+                      lang={lang}
+                      label={
+                        dictionary?.liveClasses?.join ??
+                        (isRTL ? "انضمام" : "Join")
+                      }
+                    />
+                  )
+                }
+                // An in-person section of a school that teaches live: the
+                // teacher can still open an online arm for this period.
+                if (!liveEnabled || !inJoinWindow(nowMs, joinWindows[slot.id]))
                   return null
-                if (!isRowLiveJoinable(period.startTime, period.endTime))
-                  return null
-                if (liveJoin[slot.id]) return null
-                // Nothing materialized inside the window — the teacher is the
-                // one who can bring it online, which matters more since
-                // materialization moved to a GitHub Actions bridge.
                 return (
                   <StartLiveClassButton
                     timetableId={slot.id}

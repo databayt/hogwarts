@@ -16,6 +16,7 @@ import {
 
 const dict: LiveNavDictionary = {
   tabs: {
+    overview: "Overview",
     sessions: "Sessions",
     schedule: "Schedule",
     settings: "Settings",
@@ -28,13 +29,18 @@ describe("conference tab strip (list-permissions.getTabsForRole)", () => {
     expect(getTabsForRole(null, "en", dict)).toEqual([])
   })
 
-  it("shows STUDENT Sessions and the network test — nothing they'd be redirected out of", () => {
+  it("shows STUDENT Overview, Sessions and the network test — nothing they'd be redirected out of", () => {
     const tabs = getTabsForRole("STUDENT", "en", dict)
-    expect(tabs.map((t) => t.name)).toEqual(["Sessions", "Network test"])
+    expect(tabs.map((t) => t.name)).toEqual([
+      "Overview",
+      "Sessions",
+      "Network test",
+    ])
   })
 
   it("shows GUARDIAN the same tabs as STUDENT", () => {
     expect(getTabsForRole("GUARDIAN", "en", dict).map((t) => t.name)).toEqual([
+      "Overview",
       "Sessions",
       "Network test",
     ])
@@ -42,12 +48,18 @@ describe("conference tab strip (list-permissions.getTabsForRole)", () => {
 
   it("adds Schedule for TEACHER but keeps the admin surfaces hidden", () => {
     const names = getTabsForRole("TEACHER", "en", dict).map((t) => t.name)
-    expect(names).toEqual(["Sessions", "Schedule", "Network test"])
+    expect(names).toEqual(["Overview", "Sessions", "Schedule", "Network test"])
   })
 
   it("gives ADMIN every surface", () => {
     const names = getTabsForRole("ADMIN", "en", dict).map((t) => t.name)
-    expect(names).toEqual(["Sessions", "Schedule", "Settings", "Network test"])
+    expect(names).toEqual([
+      "Overview",
+      "Sessions",
+      "Schedule",
+      "Settings",
+      "Network test",
+    ])
   })
 
   it("gives DEVELOPER the same surfaces as ADMIN", () => {
@@ -56,19 +68,33 @@ describe("conference tab strip (list-permissions.getTabsForRole)", () => {
     )
   })
 
+  it("leads with Overview on the landing, exact so it does not stay lit on every /live page", () => {
+    const [overview] = getTabsForRole("STUDENT", "ar", dict)
+    expect(overview.href).toBe("/ar/live")
+    expect(overview.exact).toBe(true)
+  })
+
   it("points Sessions at /live/dashboard, never at the landing page", () => {
-    const [sessions] = getTabsForRole("ADMIN", "ar", dict)
+    const sessions = getTabsForRole("ADMIN", "ar", dict)[1]
     expect(sessions.href).toBe("/ar/live/dashboard")
   })
 
   it("builds every href under the requested locale", () => {
     for (const tab of getTabsForRole("ADMIN", "ar", dict)) {
-      expect(tab.href.startsWith("/ar/live/")).toBe(true)
+      expect(tab.href === "/ar/live" || tab.href.startsWith("/ar/live/")).toBe(
+        true
+      )
     }
   })
 
   it("falls back to English labels when the dictionary slice is missing", () => {
     const names = getTabsForRole("ADMIN", "en").map((t) => t.name)
-    expect(names).toEqual(["Sessions", "Schedule", "Settings", "Network test"])
+    expect(names).toEqual([
+      "Overview",
+      "Sessions",
+      "Schedule",
+      "Settings",
+      "Network test",
+    ])
   })
 })

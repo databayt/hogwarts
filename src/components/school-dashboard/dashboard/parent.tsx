@@ -150,6 +150,15 @@ export async function ParentDashboard({
 
     return (
       <div className="space-y-8">
+        {/* A child's class that is online today comes before everything
+            else on the page — it is the one item that is over in minutes.
+            It sat below the charts, the invoices, the metrics row and the
+            attendance card, which on a phone is four screens down. */}
+        <ParentLiveToday
+          childrenList={data.children.map((c) => ({ id: c.id, name: c.name }))}
+          lang={locale === "en" ? "en" : "ar"}
+        />
+
         {/* ============ SHARED SECTIONS (the student dashboard's order) ======
             The page opens on the home block in `content.tsx` at every width —
             calendar widget, four tiles and the next-action card. The Quick Look
@@ -242,13 +251,6 @@ export async function ParentDashboard({
             </div>
           </CardContent>
         </Card>
-
-        {/* A child's class that is online today comes before everything
-            else on the page — it is the one item that is over in minutes. */}
-        <ParentLiveToday
-          childrenList={data.children.map((c) => ({ id: c.id, name: c.name }))}
-          lang={locale === "en" ? "en" : "ar"}
-        />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">

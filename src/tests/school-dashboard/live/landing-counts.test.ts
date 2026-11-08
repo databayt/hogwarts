@@ -49,16 +49,20 @@ describe("getLiveLandingCounts", () => {
     }
   })
 
-  it("narrows to the viewer's sections when they are scoped", async () => {
+  it("narrows to the viewer's sections when they are scoped — plus school-wide sessions", async () => {
+    // A scoped reader sees their own sections' classes AND every session
+    // addressed to the whole school (the assembly, the town hall), which the
+    // section filter used to drop before visibility was asked.
     await getLiveLandingCounts(SCHOOL, { now: NOW, sectionIds: ["s-1", "s-2"] })
     expect(callArgs(0).where).toMatchObject({
-      sectionId: { in: ["s-1", "s-2"] },
+      OR: [{ sectionId: { in: ["s-1", "s-2"] } }, { visibility: "school" }],
     })
   })
 
-  it("leaves sectionId unset for a school-wide viewer", async () => {
+  it("leaves the section filter unset for a school-wide viewer", async () => {
     await getLiveLandingCounts(SCHOOL, { now: NOW })
     expect(callArgs(0).where).not.toHaveProperty("sectionId")
+    expect(callArgs(0).where).not.toHaveProperty("OR")
   })
 
   it("narrows to one teacher's own classes when a teacherId is given", async () => {

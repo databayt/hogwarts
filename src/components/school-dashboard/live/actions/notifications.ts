@@ -130,6 +130,8 @@ interface ResolvedSession {
   teacherFullName: string
   scheduledStart: Date
   routePath: string
+  /** The slot's join link, when the class is anchored to a timetable slot. */
+  joinPath: string | null
 }
 
 async function loadSession(
@@ -151,6 +153,7 @@ async function loadSession(
       sectionId: true,
       visibility: true,
       scheduledStart: true,
+      timetableId: true,
       teacher: {
         select: {
           firstName: true,
@@ -171,6 +174,12 @@ async function loadSession(
     await schoolNameDisplay(schoolId)
   )
   const routePath = `/live/${session.id}`
+  // The join link resolves today's room at tap time and holds an early
+  // arrival on a page that opens itself at the bell — the right target for a
+  // "starting soon" or "started" notice on a timetable class.
+  const joinPath = session.timetableId
+    ? `/live/join/${session.timetableId}`
+    : null
 
   const userIds = new Set<string>()
   if (session.teacher.userId) userIds.add(session.teacher.userId)
@@ -218,6 +227,7 @@ async function loadSession(
       teacherFullName,
       scheduledStart: session.scheduledStart,
       routePath,
+      joinPath,
     },
     lang,
     userIds: Array.from(userIds),
@@ -285,6 +295,13 @@ async function dispatch(
     // detail page is their correct destination too.
     const url =
       kind === "started" ? `${session.routePath}/room` : session.routePath
+    // The web bell and the email open the slot's join link for the two
+    // notices that mean "go in now" (see `joinPath`). The push `deep_link`
+    // keeps the session route: the native apps route on it.
+    const webUrl =
+      (kind === "started" || kind === "startingSoon") && session.joinPath
+        ? session.joinPath
+        : url
 
     // Route through the shared notification hub so live-class notifications get
     // per-user channel-preference filtering, the email channel, `expiresAt`,
@@ -310,7 +327,7 @@ async function dispatch(
         kind,
         sessionId,
         sectionId: session.sectionId,
-        url,
+        url: webUrl,
         // The push worker reads `deep_link`, not `url` (push-fcm.ts) — without
         // it a push notification arrives and taps nowhere. A RELATIVE route is
         // what a mobile client wants anyway: it routes in-app rather than

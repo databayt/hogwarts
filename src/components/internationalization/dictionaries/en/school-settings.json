@@ -222,6 +222,8 @@
     "hybridHint": "In person and live together. Choose which grades and sections go live, or open a temporary online window.",
     "footer": "Live classes are added to the class, never instead of it — the classroom stays on the timetable either way.",
     "moreSettings": "Live-class settings",
+    "todayRooms": "{n} of today's classes are online — their rooms open from the timetable.",
+    "todayNone": "None of today's classes are online yet.",
     "updateError": "Couldn't save. Try again."
   },
   "holidays": {

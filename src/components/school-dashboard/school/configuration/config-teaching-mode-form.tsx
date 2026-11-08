@@ -6,6 +6,8 @@ import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
 
 import { resolveActionError } from "@/lib/resolve-action-error"
+import { typographyVariants } from "@/lib/typography"
+import { cn } from "@/lib/utils"
 import { ErrorToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
@@ -40,6 +42,9 @@ export function ConfigTeachingModeForm({
   const [value, setValue] = useState<SchoolDeliveryMode>(initialMode)
   const savedRef = useRef<SchoolDeliveryMode>(initialMode)
   const [savedAt, setSavedAt] = useState<number | null>(null)
+  // How many of today's classes the save left online — the one number that
+  // says whether "Live" actually did something (null until a save reports it).
+  const [onlineToday, setOnlineToday] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleChange(choice: SchoolDeliveryMode) {
@@ -50,6 +55,11 @@ export function ConfigTeachingModeForm({
       if (result.success) {
         savedRef.current = choice
         setSavedAt(Date.now())
+        setOnlineToday(
+          "data" in result && result.data
+            ? (result.data.onlineToday ?? null)
+            : null
+        )
       } else {
         setValue(savedRef.current)
         ErrorToast(
@@ -96,6 +106,16 @@ export function ConfigTeachingModeForm({
         </SettingsRow>
       </SettingsGroup>
       <SaveStatus pending={isPending} savedAt={savedAt} className="px-4" />
+      {!isPending && value !== "physical" && onlineToday !== null ? (
+        <p className={cn(typographyVariants.hint, "px-4")} role="status">
+          {onlineToday > 0
+            ? (
+                t.todayRooms ??
+                "{n} of today's classes are online — their rooms open from the timetable."
+              ).replace("{n}", String(onlineToday))
+            : (t.todayNone ?? "None of today's classes are online yet.")}
+        </p>
+      ) : null}
     </div>
   )
 }

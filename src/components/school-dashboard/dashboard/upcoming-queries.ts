@@ -19,13 +19,17 @@ import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
+import { joinWindow } from "@/components/school-dashboard/live/join-window"
+import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
+import { teacherDaySlotFilter } from "@/components/school-dashboard/timetable/today-schedule"
 
 import type { EmergencyAlert } from "./actions"
 
@@ -57,8 +61,6 @@ export async function loadUpcomingData(
 }
 
 /** Minutes before a period's start that its live room counts as "now". */
-const LIVE_JOIN_LEAD_MS = 10 * 60_000
-
 type TodaySlot = {
   id: string
   termId: string
@@ -67,19 +69,38 @@ type TodaySlot = {
   period: { startTime: Date; endTime: Date } | null
 }
 
+/** What the banner knows about the class happening now or next. */
+type NextSlot<T> = {
+  slot: T
+  /** Today's room, when one exists already (kept for the mobile payload). */
+  live: { sessionId: string } | null
+  /** The class can be joined through its join link today — a room exists,
+   *  or the section is online by policy and the link will open one. */
+  joinable: boolean
+  /** The join window, as instants: when Join opens and when it closes. The
+   *  client re-ranks against its own clock, so "next class" turns into "live —
+   *  join" at the opening instant without a reload. */
+  window: { fromMs: number; untilMs: number } | null
+}
+
 /**
- * The class happening now or next, by the SCHOOL's clock — and its live room
- * when it has one. `nextClass` used to be the day's FIRST slot (no time
- * filter, and the server's `getDay()`), so at 11:00 the card still said
- * period 1. `live` is set only when a real session exists today and the
- * period is running or within ten minutes of starting.
+ * The class happening now or next, by the SCHOOL's clock — and whether it can
+ * be joined. `nextClass` used to be the day's FIRST slot (no time filter, and
+ * the server's `getDay()`), so at 11:00 the card still said period 1. The live
+ * half used to need a real session row AND the server clock inside ten minutes
+ * of the start; a school on a standing link, or a class whose row the sweep
+ * had not written yet, never got a banner Join, and a banner rendered at 07:40
+ * still said "next class" at 08:05. Now it reports the policy too, and the
+ * WINDOW, and the client decides when it is open.
  */
 async function currentOrNextSlot<T extends TodaySlot>(
   schoolId: string,
-  tz: string,
+  school: SchoolClock,
   now: Date,
-  slots: T[]
-): Promise<{ slot: T; live: { sessionId: string } | null } | null> {
+  slots: T[],
+  isHost: boolean
+): Promise<NextSlot<T> | null> {
+  const tz = school.timezone
   const timed = slots
     .map((slot) => ({
       slot,
@@ -92,9 +113,8 @@ async function currentOrNextSlot<T extends TodaySlot>(
   const pick = timed[0]
   if (!pick) return null
 
-  let live: { sessionId: string } | null = null
-  if (pick.at!.scheduledStart.getTime() - LIVE_JOIN_LEAD_MS <= now.getTime()) {
-    const [attached] = await attachLiveClasses(
+  const [attached, policies] = await Promise.all([
+    attachLiveClasses(
       schoolId,
       pick.slot.termId,
       now,
@@ -106,20 +126,60 @@ async function currentOrNextSlot<T extends TodaySlot>(
         },
       ],
       tz
-    )
-    if (attached?.liveClass?.sessionId) {
-      live = { sessionId: attached.liveClass.sessionId }
-    }
+    ),
+    pick.slot.sectionId
+      ? resolveOnlinePolicies(schoolId, [pick.slot.sectionId], now)
+      : Promise.resolve(new Map()),
+  ])
+  const room = attached[0]?.liveClass ?? null
+  const online = pick.slot.sectionId
+    ? Boolean(policies.get(pick.slot.sectionId)?.online)
+    : false
+  const w = joinWindow({
+    startMs: pick.at!.scheduledStart.getTime(),
+    endMs: pick.at!.scheduledEnd.getTime(),
+    leadMinutes: school.leadMinutes,
+    isHost,
+  })
+  return {
+    slot: pick.slot,
+    live: room?.sessionId ? { sessionId: room.sessionId } : null,
+    joinable: Boolean(room) || online,
+    window: { fromMs: w.opensAtMs, untilMs: w.closesAtMs },
   }
-  return { slot: pick.slot, live }
 }
 
-async function schoolTimezone(schoolId: string): Promise<string> {
+type SchoolClock = {
+  timezone: string
+  leadMinutes: number | null
+  guardiansObserve: boolean
+}
+
+async function schoolClock(schoolId: string): Promise<SchoolClock> {
   const school = await db.school.findUnique({
     where: { id: schoolId },
-    select: { timezone: true },
+    select: {
+      timezone: true,
+      conferenceReminderLeadMinutes: true,
+      conferenceGuardiansObserve: true,
+    },
   })
-  return school?.timezone || DEFAULT_SCHOOL_TZ
+  return {
+    timezone: school?.timezone || DEFAULT_SCHOOL_TZ,
+    leadMinutes: school?.conferenceReminderLeadMinutes ?? null,
+    guardiansObserve: school?.conferenceGuardiansObserve ?? true,
+  }
+}
+
+/** The banner's live fields for a next-class payload. */
+function liveFields(next: NextSlot<TodaySlot> | null) {
+  return {
+    // Kept: the mobile dashboard reads it.
+    liveSessionId: next?.live?.sessionId ?? null,
+    slotId: next?.joinable ? next.slot.id : null,
+    liveFromMs: next?.joinable ? (next.window?.fromMs ?? null) : null,
+    liveUntilMs: next?.joinable ? (next.window?.untilMs ?? null) : null,
+  }
 }
 
 async function getStudentUpcomingData(userId: string, schoolId: string) {
@@ -155,9 +215,14 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
       })
     : []
 
-  // The class happening now or next, by the school's clock.
+  // The class happening now or next, by the school's clock — in the ACTIVE
+  // term (without the filter a finished term's slot could still be "next").
   const now = new Date()
-  const tz = await schoolTimezone(schoolId)
+  const [clock, { term }] = await Promise.all([
+    schoolClock(schoolId),
+    resolveActiveTerm(schoolId),
+  ])
+  const tz = clock.timezone
   const todaySlots = !student.sectionId
     ? []
     : await db.timetable.findMany({
@@ -165,6 +230,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
           schoolId,
           dayOfWeek: schoolDayOfWeek(tz, now),
           weekOffset: 0,
+          ...(term ? { termId: term.id } : {}),
           sectionId: student.sectionId,
           period: { isBreak: false },
         },
@@ -175,7 +241,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
         },
         orderBy: { period: { startTime: "asc" } },
       })
-  const next = await currentOrNextSlot(schoolId, tz, now, todaySlots)
+  const next = await currentOrNextSlot(schoolId, clock, now, todaySlots, false)
   const nextClass = next?.slot ?? null
 
   return {
@@ -200,7 +266,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
               })
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
-          liveSessionId: next?.live?.sessionId ?? null,
+          ...liveFields(next),
         }
       : undefined,
   }
@@ -219,8 +285,16 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
   const now = new Date()
-  const tz = await schoolTimezone(schoolId)
+  const [clock, { term }] = await Promise.all([
+    schoolClock(schoolId),
+    resolveActiveTerm(schoolId),
+  ])
+  const tz = clock.timezone
   const dayOfWeek = schoolDayOfWeek(tz, now)
+  // Their own slots minus the covered ones, plus the ones they are covering —
+  // so a substitute's banner says "your class is live" for the class they are
+  // actually teaching today (the timetable's Today list uses the same filter).
+  const dayOr = await teacherDaySlotFilter(schoolId, teacher.id, tz, now)
 
   // Get today's classes
   const todaysClasses = await db.timetable.findMany({
@@ -228,7 +302,8 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
       schoolId,
       dayOfWeek,
       weekOffset: 0,
-      teacherId: teacher.id,
+      ...(term ? { termId: term.id } : {}),
+      OR: dayOr,
       period: { isBreak: false },
     },
     include: {
@@ -278,7 +353,13 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   ])
   const attendanceDue = todaySectionIds.length - markedSections.length
 
-  const next = await currentOrNextSlot(schoolId, tz, now, todaysClasses)
+  const next = await currentOrNextSlot(
+    schoolId,
+    clock,
+    now,
+    todaysClasses,
+    true
+  )
   const nextClass = next?.slot ?? null
 
   return {
@@ -293,7 +374,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
           students: nextClass.section?._count.students ?? 0,
-          liveSessionId: next?.live?.sessionId ?? null,
+          ...liveFields(next),
         }
       : undefined,
     pendingGrading,
@@ -314,6 +395,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
           firstName: true,
           middleName: true,
           lastName: true,
+          sectionId: true,
         },
       },
     },
@@ -321,6 +403,13 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
 
   if (studentGuardians.length === 0) return null
   const nameDisplay = await schoolNameDisplay(schoolId)
+  // For the child's live class: the school clock, whether guardians may watch,
+  // and the active term — read once for every child.
+  const now = new Date()
+  const [clock, { term }] = await Promise.all([
+    schoolClock(schoolId),
+    resolveActiveTerm(schoolId),
+  ])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -340,42 +429,73 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
       const scope = scopes.get(sg.student.id)
       const audience = scope ? studentAudienceWhere(scope) : { id: { in: [] } }
 
-      const [pendingAssignments, overdueAssignments] = await Promise.all([
-        db.schoolAssignment.count({
-          where: {
-            schoolId,
-            ...audience,
-            status: "PUBLISHED",
-            dueDate: { gte: today },
-            submissions: {
-              none: {
-                studentId: sg.student.id,
-                status: { in: ["SUBMITTED", "GRADED"] },
+      // The child's class now or next, only where the school lets guardians
+      // watch — join-core refuses them otherwise, so a banner Join would be a
+      // button that can only fail.
+      const childNextPromise =
+        clock.guardiansObserve && sg.student.sectionId
+          ? db.timetable
+              .findMany({
+                where: {
+                  schoolId,
+                  dayOfWeek: schoolDayOfWeek(clock.timezone, now),
+                  weekOffset: 0,
+                  ...(term ? { termId: term.id } : {}),
+                  sectionId: sg.student.sectionId,
+                  period: { isBreak: false },
+                },
+                include: {
+                  subject: { select: { name: true } },
+                  period: { select: { startTime: true, endTime: true } },
+                },
+              })
+              .then((slots) =>
+                currentOrNextSlot(schoolId, clock, now, slots, false)
+              )
+          : Promise.resolve(null)
+
+      const [pendingAssignments, overdueAssignments, childNext] =
+        await Promise.all([
+          db.schoolAssignment.count({
+            where: {
+              schoolId,
+              ...audience,
+              status: "PUBLISHED",
+              dueDate: { gte: today },
+              submissions: {
+                none: {
+                  studentId: sg.student.id,
+                  status: { in: ["SUBMITTED", "GRADED"] },
+                },
               },
             },
-          },
-        }),
-        db.schoolAssignment.count({
-          where: {
-            schoolId,
-            ...audience,
-            status: "PUBLISHED",
-            dueDate: { lt: today },
-            submissions: {
-              none: {
-                studentId: sg.student.id,
-                status: { in: ["SUBMITTED", "GRADED"] },
+          }),
+          db.schoolAssignment.count({
+            where: {
+              schoolId,
+              ...audience,
+              status: "PUBLISHED",
+              dueDate: { lt: today },
+              submissions: {
+                none: {
+                  studentId: sg.student.id,
+                  status: { in: ["SUBMITTED", "GRADED"] },
+                },
               },
             },
-          },
-        }),
-      ])
+          }),
+          childNextPromise,
+        ])
 
       return {
         id: sg.student.id,
         name: displayName(sg.student, nameDisplay),
         pendingAssignments,
         overdueAssignments,
+        nextClass:
+          childNext?.joinable && childNext.slot.subject?.name
+            ? { subject: childNext.slot.subject.name, ...liveFields(childNext) }
+            : undefined,
       }
     })
   )

@@ -25,6 +25,7 @@ import {
   findRoomShelfSessions,
 } from "@/components/school-dashboard/live/queries"
 import { RoomClient } from "@/components/school-dashboard/live/room"
+import { mayEnterRoom } from "@/components/school-dashboard/live/room-entry"
 import { JOIN_ERROR_CODES } from "@/components/school-dashboard/live/room/join-errors"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import { RoomPageHeader } from "@/components/school-dashboard/live/room/page-header"
@@ -62,16 +63,34 @@ export default async function Page({ params }: Props) {
 
   // External-link sessions have no SFU room — an eligible viewer landing here
   // is handed to the vendor meeting instead of an SFU error. getLiveClass is
-  // enrollment-gated, so the URL never leaves the server for outsiders.
+  // enrollment-gated, so the URL never leaves the server for outsiders; and
+  // `mayEnterRoom` narrows SEEING to ENTERING (staff read every section, a
+  // guardian reads their child's — neither may walk into a class the school
+  // has not opened to them). Everyone else lands on the detail page.
   const detail = await getLiveClass(id)
   if (
     "success" in detail &&
     detail.success &&
     detail.data.provider === "external"
   ) {
+    const role = session.user.role
+    const guardiansObserve =
+      role === "GUARDIAN"
+        ? ((
+            await db.school.findUnique({
+              where: { id: detail.data.schoolId },
+              select: { conferenceGuardiansObserve: true },
+            })
+          )?.conferenceGuardiansObserve ?? true)
+        : true
     if (
       detail.data.meetingUrl &&
-      (detail.data.status === "live" || detail.data.status === "scheduled")
+      (detail.data.status === "live" || detail.data.status === "scheduled") &&
+      mayEnterRoom({
+        role,
+        visibility: detail.data.visibility,
+        guardiansObserve,
+      })
     ) {
       redirect(detail.data.meetingUrl)
     }

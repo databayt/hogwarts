@@ -46,6 +46,7 @@ import type {
 } from "../types"
 import type { SectionForTimetable } from "../validation"
 import { TimetableGridSkeleton } from "./grid-skeleton"
+import { JoinLinkButton } from "./join-link-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -143,6 +144,19 @@ export default function AdminView({
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
   >({})
+  // An admin can look in on a class that is live right now — the room seats
+  // them as co-host. Only on LIVE cells: a scheduled-but-unstarted room has
+  // nothing to observe, and the editor stays the cell's own click.
+  const renderObserve = (slot: { id: string }) =>
+    liveIndicators[slot.id] === "live" ? (
+      <JoinLinkButton
+        timetableId={slot.id}
+        lang={lang}
+        label={
+          dictionary?.liveClasses?.observe ?? (isRTL ? "مشاهدة" : "Observe")
+        }
+      />
+    ) : null
 
   // Slot editor
   const [slotEditorOpen, setSlotEditorOpen] = useState(false)
@@ -493,6 +507,7 @@ export default function AdminView({
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
               liveIndicators={liveIndicators}
+              renderSlotAction={renderObserve}
               showNeedsTeacher
               dictionary={{
                 period: d?.period,
@@ -549,6 +564,7 @@ export default function AdminView({
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
               liveIndicators={liveIndicators}
+              renderSlotAction={renderObserve}
               dictionary={{
                 period: d?.period,
                 break: d?.break,

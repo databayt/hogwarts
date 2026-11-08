@@ -21,6 +21,7 @@ const WRITE_ROLES: readonly Role[] = ["TEACHER"] as const
 /** Shape of the slice of the conference dictionary the tab labels read. */
 export interface LiveNavDictionary {
   tabs?: {
+    overview?: string
     sessions?: string
     schedule?: string
     settings?: string
@@ -29,14 +30,17 @@ export interface LiveNavDictionary {
 }
 
 /**
- * The tab strip over the conference app surfaces.
+ * The tab strip over the conference surfaces, the landing included.
  *
- * The landing page (`/live`) is deliberately NOT a tab: it is reached
- * from the sidebar and owns its own hero, exactly as `/lumos` does. What's
- * left is one flat row over the surfaces that manage sessions.
+ * `/live` is the first tab, Overview — the same shape as `/school`, whose
+ * strip sits above its hero. It used to be left off on purpose (the landing
+ * "owns its own hero", like `/lumos`), which read as a page whose navigation
+ * had gone missing: from the landing there was no way to the sessions, the
+ * schedule or the network test except back through the sidebar. `exact`, so
+ * Overview does not stay lit on every `/live/...` page.
  *
- * Tabs narrow with the role — a student sees Sessions and the network test,
- * so no strip of links they'd be redirected out of.
+ * Tabs narrow with the role — a student sees Overview, Sessions and the
+ * network test, so no strip of links they'd be redirected out of.
  */
 export function getTabsForRole(
   role: Role | null | undefined,
@@ -50,6 +54,11 @@ export function getTabsForRole(
   const canSchedule = isAdmin || role === "TEACHER"
 
   return [
+    {
+      name: t?.overview ?? "Overview",
+      href: `/${lang}/live`,
+      exact: true,
+    },
     {
       name: t?.sessions ?? "Sessions",
       href: `/${lang}/live/dashboard`,

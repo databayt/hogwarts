@@ -28,6 +28,7 @@ import {
   getGuardianChildren,
 } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
+import { JoinLinkButton } from "./join-link-button"
 import {
   ClosureNotice,
   isLiveJoinable,
@@ -39,6 +40,7 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import { inJoinWindow, useNowMs } from "./use-now-ms"
 import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
@@ -124,12 +126,40 @@ export default function GuardianView({
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
+  // Today's slots that are online by policy — empty unless the school lets
+  // guardians watch (the server applies that switch before sending it).
+  const [onlineToday, setOnlineToday] = useState<ReadonlySet<string>>(
+    () => new Set()
+  )
+  // Today's join windows as instants, from the server (school zone).
+  const [joinWindows, setJoinWindows] = useState<
+    Record<string, { fromMs: number; untilMs: number }>
+  >({})
+  const nowMs = useNowMs()
   // A click on today's live cell IS the join; any other cell opens the dialog.
   const { open: openSlot } = useSlotOpen({
     lang,
     liveJoin,
+    onlineToday,
+    joinWindows,
     onInspect: setInspectedSlotId,
   })
+  // The same labelled Join the student grid shows (see student-view).
+  const renderJoin = (slot: { id: string }) => {
+    if (!liveJoin[slot.id] && !onlineToday.has(slot.id)) return null
+    // The window only exists for TODAY's slots (school zone), so this is
+    // also the "is it today" check — on any device clock.
+    if (!inJoinWindow(nowMs, joinWindows[slot.id])) return null
+    return (
+      <JoinLinkButton
+        timetableId={slot.id}
+        lang={lang}
+        label={
+          dictionary?.liveClasses?.join ?? (lang === "ar" ? "انضمام" : "Join")
+        }
+      />
+    )
+  }
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -197,6 +227,8 @@ export default function GuardianView({
       setLiveIndicators("liveIndicators" in result ? result.liveIndicators : {})
       // Same early-return branch omits `liveJoin`; narrow the same way.
       setLiveJoin("liveJoin" in result ? result.liveJoin : {})
+      setOnlineToday(new Set("onlineToday" in result ? result.onlineToday : []))
+      setJoinWindows("joinWindows" in result ? result.joinWindows : {})
       setTodaySchedule(today.schedule)
       setCanJoin("canJoin" in today ? Boolean(today.canJoin) : false)
       setClosure(today.closure ?? null)
@@ -555,6 +587,7 @@ export default function GuardianView({
               editable={false}
               liveIndicators={liveIndicators}
               onSlotInspect={openSlot}
+              renderSlotAction={renderJoin}
               dictionary={{
                 period: d?.period,
                 break: d?.break,

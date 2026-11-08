@@ -3,16 +3,19 @@
 
 import "server-only"
 
-import type { LiveClassAction } from "./authorization"
+import { db } from "@/lib/db"
+
 import { describeAttendanceSync } from "./actions/attendance-sync"
 import type { RequireContextResult } from "./actions/helpers"
 import { readLiveClass } from "./actions/read-live-class"
+import type { LiveClassAction } from "./authorization"
 import { isRecordingConfigured } from "./livekit/client"
 import {
   getAttendanceSyncEnabled,
   getLessonReferenceContent,
   type LessonReferenceContent,
 } from "./queries"
+import { mayEnterRoom } from "./room-entry"
 
 export interface LiveDetailViewer {
   userId: string | null | undefined
@@ -36,8 +39,26 @@ export async function loadLiveClassDetail(
   if (!("success" in result) || !result.success) return null
   const session = result.data
 
-
-  const canJoin = session.status === "live" || session.status === "scheduled"
+  // Open, AND this reader may enter it — see `room-entry.ts`. For an external
+  // session the join href IS the meeting URL, so a reader who may see the
+  // session but not enter it (staff on a section class, a guardian where the
+  // school does not let guardians watch) must not be handed it.
+  const guardiansObserve =
+    viewer.role === "GUARDIAN" && viewer.schoolId
+      ? ((
+          await db.school.findUnique({
+            where: { id: viewer.schoolId },
+            select: { conferenceGuardiansObserve: true },
+          })
+        )?.conferenceGuardiansObserve ?? true)
+      : true
+  const canJoin =
+    (session.status === "live" || session.status === "scheduled") &&
+    mayEnterRoom({
+      role: viewer.role,
+      visibility: session.visibility,
+      guardiansObserve,
+    })
   const latestRecording = session.recordings?.[0] ?? null
   const recordingState: "none" | "processing" | "ready" | "failed" =
     !latestRecording
@@ -130,4 +151,6 @@ export async function loadLiveClassDetail(
   }
 }
 
-export type LiveClassDetail = NonNullable<Awaited<ReturnType<typeof loadLiveClassDetail>>>
+export type LiveClassDetail = NonNullable<
+  Awaited<ReturnType<typeof loadLiveClassDetail>>
+>

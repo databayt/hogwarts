@@ -46,6 +46,17 @@ vi.mock("@/components/school-dashboard/listings/announcements/queries", () => ({
     .fn()
     .mockResolvedValue({ published: true, OR: [{ scope: "school" }] }),
 }))
+// The teacher's day filter (own slots ± confirmed substitutions) and the
+// per-section online policy are their own modules' concern — stubbed to the
+// no-substitution, nothing-online answer so these specs stay about the cards.
+vi.mock("@/components/school-dashboard/timetable/today-schedule", () => ({
+  teacherDaySlotFilter: vi.fn(async (_s: string, teacherId: string) => [
+    { teacherId },
+  ]),
+}))
+vi.mock("@/components/school-dashboard/live/online-policy", () => ({
+  resolveOnlinePolicies: vi.fn().mockResolvedValue(new Map()),
+}))
 vi.mock("@/components/school-dashboard/timetable/live-class-join", () => ({
   attachLiveClasses: vi.fn(
     async (_s: string, _t: string, _n: Date, slots: unknown[]) =>

@@ -170,6 +170,68 @@ interface NextActionCardProps {
   className?: string
 }
 
+/** The card shows at most this many — the ranking's own cap. */
+const MAX_VISIBLE = 4
+
+const isLiveKind = (kind: string | undefined) =>
+  kind === "liveClass" || kind === "childLiveClass"
+
+/**
+ * Re-rank the class items against the reader's clock. `nowMs === null` (the
+ * server render, and the first client render) keeps the ranking exactly as
+ * sent. Otherwise:
+ *   - a live item whose window has closed leaves the card;
+ *   - a `nextClass` whose window is open becomes `liveClass`, opening its
+ *     join link;
+ *   - a carried child item (past the cap, window not yet open) shows only
+ *     inside its window;
+ *   - live items move to the front, everything else keeps its order.
+ */
+function retime(
+  actions: NextAction[],
+  nowMs: number | null
+): Array<{ action: NextAction; at: number }> {
+  const out: Array<{ action: NextAction; at: number }> = []
+  actions.forEach((a, at) => {
+    if (a.pending) {
+      // Only the reader's clock can reveal it — never the first render.
+      if (
+        nowMs !== null &&
+        a.live &&
+        nowMs >= a.live.fromMs &&
+        nowMs <= a.live.untilMs
+      ) {
+        out.push({
+          action: { ...a, pending: false, href: a.live.joinHref },
+          at,
+        })
+      }
+      return
+    }
+    if (nowMs === null || !a.live) {
+      out.push({ action: a, at })
+      return
+    }
+    const open = nowMs >= a.live.fromMs && nowMs <= a.live.untilMs
+    if (a.kind === "nextClass") {
+      out.push({
+        action: open ? { ...a, kind: "liveClass", href: a.live.joinHref } : a,
+        at,
+      })
+      return
+    }
+    if (isLiveKind(a.kind)) {
+      if (open) out.push({ action: { ...a, href: a.live.joinHref }, at })
+      return
+    }
+    out.push({ action: a, at })
+  })
+  return [
+    ...out.filter((x) => isLiveKind(x.action.kind)),
+    ...out.filter((x) => !isLiveKind(x.action.kind)),
+  ]
+}
+
 export function NextActionCard({
   actions,
   locale,
@@ -177,7 +239,12 @@ export function NextActionCard({
 }: NextActionCardProps) {
   const { dictionary } = useDictionary()
   const dict = dictionary?.school?.dashboard?.nextAction as
-    | { cta?: string; acknowledge?: string; kinds?: Record<string, string> }
+    | {
+        cta?: string
+        join?: string
+        acknowledge?: string
+        kinds?: Record<string, string>
+      }
     | undefined
 
   const [index, setIndex] = useState(0)
@@ -194,11 +261,41 @@ export function NextActionCard({
    */
   const [dismissed, setDismissed] = useState<number[]>([])
 
-  const live = useMemo(
-    () => actions.filter((_, i) => !dismissed.includes(i)),
-    [actions, dismissed]
+  /**
+   * The reader's clock, for the class items' join windows. `null` until the
+   * card has mounted, so the server render and the first client render rank
+   * the same list (no hydration mismatch); then every 30 seconds — the cadence
+   * the Today rows use — so "next class" becomes "live, join" at the opening
+   * instant and leaves when the window closes, without a reload.
+   */
+  const [nowMs, setNowMs] = useState<number | null>(null)
+  useEffect(() => {
+    // The first read is deferred a tick rather than set inside the effect
+    // body: the same value either way, without a synchronous re-render.
+    const first = setTimeout(() => setNowMs(Date.now()), 0)
+    const id = setInterval(() => setNowMs(Date.now()), 30_000)
+    return () => {
+      clearTimeout(first)
+      clearInterval(id)
+    }
+  }, [])
+
+  // Each entry keeps its RANK position (`at`), which is what a dismissal
+  // records — the retimed list reorders, the ranking does not.
+  const ranked = useMemo(
+    () =>
+      retime(actions, nowMs)
+        .filter((x) => !dismissed.includes(x.at))
+        .slice(0, MAX_VISIBLE),
+    [actions, nowMs, dismissed]
   )
-  const action = live[index % Math.max(1, live.length)]
+  // A class that is live is PINNED: no rotating past it, no Acknowledge. It is
+  // the one item on the card that is over within the hour, and a rotation that
+  // hides the Join for ten seconds out of every forty is how a student misses
+  // the start of their class.
+  const pinned = isLiveKind(ranked[0]?.action.kind)
+  const live = ranked.map((x) => x.action)
+  const action = pinned ? live[0] : live[index % Math.max(1, live.length)]
   // Keyed on the two STRINGS, not on the objects they came out of: `pieces`
   // feeds an effect that sets state, so an identity that changed every render
   // would restart the scramble on its own output and never settle.
@@ -225,7 +322,7 @@ export function NextActionCard({
    * same clock — it simply cuts instead of evaporating.
    */
   useEffect(() => {
-    if (live.length < 2) return
+    if (pinned || live.length < 2) return
     if (typeof window === "undefined") return
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -265,7 +362,7 @@ export function NextActionCard({
       if (advanceTimer) clearTimeout(advanceTimer)
       if (onVisible) document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [live.length, index, revealMs])
+  }, [pinned, live.length, index, revealMs])
 
   if (!action) return null
 
@@ -300,7 +397,7 @@ export function NextActionCard({
             on a timer. `text-balance` is what splits those two lines to near
             equal width instead of leaving a long line over a short one. */}
         <SortingHeadline
-          key={index}
+          key={pinned ? `pin-${action.kind}-${action.mark}` : index}
           pieces={pieces}
           leaving={leaving}
           locale={locale}
@@ -313,21 +410,31 @@ export function NextActionCard({
             "Acknowledge" is a LOCAL dismissal — see `dismissed` above. It is
             a button, not a link, because it goes nowhere. */}
         <div className="relative mt-7 flex flex-wrap items-center gap-2">
-          <Link className={pill("default")} href={`/${locale}${action.href}`}>
-            {dict?.cta || "Open"}
-          </Link>
-          <button
-            type="button"
-            className={pill("ghost")}
-            onClick={() => {
-              const at = actions.indexOf(action)
-              if (at >= 0) setDismissed((d) => [...d, at])
-              setIndex(0)
-              setLeaving(false)
-            }}
+          {/* The join link must not be prefetched: the page behind it may
+              write today's room. Everything else keeps the default. */}
+          <Link
+            className={pill("default")}
+            href={`/${locale}${action.href}`}
+            prefetch={isLiveKind(action.kind) ? false : undefined}
           >
-            {dict?.acknowledge || "Acknowledge"}
-          </button>
+            {isLiveKind(action.kind)
+              ? dict?.join || dict?.cta || "Join"
+              : dict?.cta || "Open"}
+          </Link>
+          {pinned ? null : (
+            <button
+              type="button"
+              className={pill("ghost")}
+              onClick={() => {
+                const at = ranked.find((x) => x.action === action)?.at ?? -1
+                if (at >= 0) setDismissed((d) => [...d, at])
+                setIndex(0)
+                setLeaving(false)
+              }}
+            >
+              {dict?.acknowledge || "Acknowledge"}
+            </button>
+          )}
         </div>
       </div>
     </section>

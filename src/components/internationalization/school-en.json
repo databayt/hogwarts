@@ -592,12 +592,14 @@
       },
       "nextAction": {
         "cta": "Open",
+        "join": "Join",
         "acknowledge": "Acknowledge",
         "kinds": {
           "assignmentOverdue": "**{mark}** is past its due date",
           "assignmentDue": "**{mark}** is still waiting on you",
           "nextClass": "**{mark}** is your next class",
           "liveClass": "**{mark}** is live — join the class",
+          "childLiveClass": "**{mark}'s class** is live — watch now",
           "pendingGrading": "**{mark} submissions** need your marking",
           "attendanceDue": "**{mark} classes** still need their attendance today",
           "childOverdue": "**{mark}'s homework** is overdue",
@@ -5559,6 +5561,7 @@
       "start": "Start live class",
       "starting": "Starting…",
       "startError": "Couldn't start the live class",
+      "observe": "Observe",
       "view": "View",
       "delete": "Delete",
       "openMenu": "Open menu",
@@ -5689,6 +5692,7 @@
         "resourceUrlInvalid": "Enter a valid link URL"
       },
       "tabs": {
+        "overview": "Overview",
         "sessions": "Sessions",
         "schedule": "Schedule",
         "settings": "Settings",

@@ -26,6 +26,7 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
+import { hostMayStart } from "../join-window"
 import { syncLiveAttendance } from "./attendance-sync"
 import {
   canAccessSession,
@@ -359,6 +360,7 @@ export async function startLiveClass(input: IdOnly) {
         roomName: true,
         maxParticipants: true,
         recordingEnabled: true,
+        scheduledStart: true,
         teacher: { select: { userId: true } },
       },
     })
@@ -380,6 +382,10 @@ export async function startLiveClass(input: IdOnly) {
     }
     if (session.status !== "scheduled") {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
+    // Same opening edge as the host join in join-core — one rule, two doors.
+    if (!hostMayStart(session.scheduledStart)) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_TOO_EARLY)
     }
 
     // Enforce the per-school concurrent-room cap before provisioning.

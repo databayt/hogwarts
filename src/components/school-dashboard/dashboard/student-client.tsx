@@ -168,6 +168,9 @@ function TodaySection({
                 action={
                   <TodayLiveAction
                     liveClass={entry.liveClass}
+                    online={entry.online}
+                    timetableId={entry.id}
+                    joinWindow={entry.join}
                     startTime={entry.startTime}
                     endTime={entry.endTime}
                     lang={locale as Locale}

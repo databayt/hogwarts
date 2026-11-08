@@ -34,6 +34,11 @@ export function resolveLiveClassError(
         errs?.notStarted ??
         "Your teacher hasn't started the class yet. You'll join automatically when it begins."
       )
+    case "LIVE_CLASS_TOO_EARLY":
+      return (
+        errs?.tooEarly ??
+        "It's too early to start this class. You can open it 15 minutes before it begins."
+      )
     case "LIVE_CLASS_ROOM_FULL":
       return errs?.roomFull ?? "Room is full."
     case "LIVE_CLASS_MAX_DURATION_EXCEEDED":

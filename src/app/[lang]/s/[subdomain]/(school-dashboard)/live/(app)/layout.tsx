@@ -15,9 +15,10 @@ interface Props {
  * network test. A route group, so it adds the heading + tab strip without
  * adding a URL segment: these stay at `/live/<name>`.
  *
- * The landing page (`/live`) and a single session (`/live/[id]`)
- * sit outside this group on purpose — the landing owns its own hero, and the
- * session detail page is a leaf reached from a row, not a tab.
+ * The landing page (`/live`) and a single session (`/live/[id]`) sit
+ * outside this group. The landing renders the same strip itself, above its
+ * hero (Overview is its tab); the session detail page is a leaf reached from
+ * a row, not a tab.
  */
 export default async function ConferenceAppLayout({ children, params }: Props) {
   const { lang } = await params

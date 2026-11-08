@@ -9,6 +9,8 @@ import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcomi
 
 vi.mock("@/lib/db", () => ({
   db: {
+    school: { findUnique: vi.fn().mockResolvedValue(null) },
+    timetable: { findMany: vi.fn().mockResolvedValue([]) },
     studentGuardian: { findMany: vi.fn() },
     schoolAssignment: { count: vi.fn() },
     announcement: { findMany: vi.fn(), count: vi.fn() },
@@ -16,6 +18,10 @@ vi.mock("@/lib/db", () => ({
     attendance: { count: vi.fn() },
     userInvoice: { count: vi.fn(), aggregate: vi.fn() },
   },
+}))
+
+vi.mock("@/lib/term-resolver", () => ({
+  resolveActiveTerm: vi.fn().mockResolvedValue({ term: { id: "term-1" } }),
 }))
 
 vi.mock("@/lib/teaching-scope", () => ({

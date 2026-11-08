@@ -21,6 +21,7 @@ import {
   resolveLandingViewer,
 } from "@/components/school-dashboard/live/landing/viewer"
 import { getLiveKitReadiness } from "@/components/school-dashboard/live/livekit/client"
+import { LiveSectionNav } from "@/components/school-dashboard/live/nav"
 
 export async function generateMetadata({
   params,
@@ -115,18 +116,26 @@ export default async function Page({ params }: Props) {
     }
   }
 
+  // The tab strip sits over the landing exactly as it sits over /school's
+  // overview: heading, tabs, then the hero. Without it the landing was the one
+  // live page with no way to the sessions, schedule or network test.
   return (
-    <LiveLandingContent
-      dictionary={d}
-      settings={settings}
-      lang={lang}
-      viewer={viewer}
-      policy={policy}
-      readiness={readiness}
-      live={live}
-      upcoming={upcoming}
-      catchUp={catchUp}
-      recordings={recordings}
-    />
+    <div className="space-y-6">
+      <LiveSectionNav lang={lang} />
+      <div>
+        <LiveLandingContent
+          dictionary={d}
+          settings={settings}
+          lang={lang}
+          viewer={viewer}
+          policy={policy}
+          readiness={readiness}
+          live={live}
+          upcoming={upcoming}
+          catchUp={catchUp}
+          recordings={recordings}
+        />
+      </div>
+    </div>
   )
 }

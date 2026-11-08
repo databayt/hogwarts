@@ -127,6 +127,69 @@ export async function materializeSchoolDay(
 }
 
 /**
+ * The same sweep, narrowed to ONE timetable slot (and, in `open`/`both` mode,
+ * that slot's section) — the join link's safety net.
+ *
+ * The sweep stays the primary writer: rows must exist before anyone clicks so
+ * the reminder and the "scheduled today" dot can fire (see the header). But a
+ * tick can lag (the cron runs hourly overnight, `cf/worker.js`), a slot can be
+ * added to today's timetable after the sweep ran, and the first tick after a
+ * policy flip can still be minutes away. A student who taps Join in that gap
+ * must not meet a dead button for a class the policy says is online. Every
+ * guard is the sweep's own — closure, active term, mode, per-section policy,
+ * the DECIDED-status idempotency in `materializeSlotSession` — so the on-demand
+ * row is exactly the row the next tick would have written, and a second tap
+ * (or the tick itself) is a no-op.
+ */
+export async function materializeSlotForDay(
+  schoolId: string,
+  slot: { id: string; sectionId: string | null },
+  date: Date = new Date()
+): Promise<MaterializeDayResult> {
+  const school = await loadSchool(schoolId)
+  if (!school) return { ...EMPTY, reasons: {} }
+
+  const timeZone = school.timezone || DEFAULT_SCHOOL_TZ
+  if (await isSchoolClosedOn(schoolId, timeZone, date)) {
+    return { ...EMPTY, reasons: { holiday: 1 } }
+  }
+
+  const { term } = await resolveActiveTerm(schoolId)
+  if (!term) return { ...EMPTY, reasons: {} }
+
+  const result: MaterializeDayResult = {
+    created: 0,
+    skipped: 0,
+    truncated: 0,
+    reasons: {},
+  }
+  const mode = school.conferenceOnlineMode
+  if (deliversTimetable(mode)) {
+    await materializeSlots(
+      schoolId,
+      timeZone,
+      date,
+      term.id,
+      school,
+      result,
+      slot.id
+    )
+  }
+  if (deliversOpenRoom(mode) && slot.sectionId) {
+    await materializeOpenRooms(
+      schoolId,
+      timeZone,
+      date,
+      term.id,
+      school,
+      result,
+      slot.sectionId
+    )
+  }
+  return result
+}
+
+/**
  * The School columns the sweep needs: everything the policy resolver reads,
  * plus the recording default, the storage language, and the standing fallback
  * link. Derived from the query so the two can never drift.
@@ -151,7 +214,9 @@ async function materializeSlots(
   date: Date,
   termId: string,
   school: LoadedSchool,
-  result: MaterializeDayResult
+  result: MaterializeDayResult,
+  /** Narrow the sweep to one slot — the join link's on-demand path. */
+  onlySlotId?: string
 ): Promise<void> {
   // Mirror `getTodaySchedule`'s slot filter exactly (weekOffset 0 + dayOfWeek),
   // so the sweep can never disagree with what the timetable actually shows.
@@ -165,6 +230,7 @@ async function materializeSlots(
       termId,
       dayOfWeek,
       weekOffset: 0,
+      ...(onlySlotId ? { id: onlySlotId } : {}),
       // An online class needs a roster to invite and a host to run it.
       sectionId: { not: null },
       teacherId: { not: null },
@@ -358,7 +424,9 @@ async function materializeOpenRooms(
   date: Date,
   termId: string,
   school: LoadedSchool,
-  result: MaterializeDayResult
+  result: MaterializeDayResult,
+  /** Narrow the sweep to one section — the join link's on-demand path. */
+  onlySectionId?: string
 ): Promise<void> {
   const term = await db.term.findFirst({
     where: { id: termId, schoolId },
@@ -367,7 +435,7 @@ async function materializeOpenRooms(
 
   const [sections, periods] = await Promise.all([
     db.section.findMany({
-      where: { schoolId },
+      where: { schoolId, ...(onlySectionId ? { id: onlySectionId } : {}) },
       select: {
         id: true,
         name: true,

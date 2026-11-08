@@ -73,8 +73,15 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { teacherExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
 import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
-import { schoolDayOfWeek } from "@/components/school-dashboard/live/day-window"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+  slotInstantsOn,
+} from "@/components/school-dashboard/live/day-window"
+import { joinWindow } from "@/components/school-dashboard/live/join-window"
+import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
+import { teacherDaySlotFilter } from "@/components/school-dashboard/timetable/today-schedule"
 import { getText } from "@/components/translation/display"
 import type { Lang } from "@/components/translation/types"
 
@@ -614,7 +621,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     }),
     db.school.findUnique({
       where: { id: schoolId },
-      select: { timezone: true },
+      select: { timezone: true, conferenceReminderLeadMinutes: true },
     }),
     resolveActiveTerm(schoolId),
   ])
@@ -670,6 +677,15 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     teacherSchoolRow?.timezone ?? "UTC",
     teacherNow
   )
+  // Their own slots minus the ones covered by someone else, plus the ones they
+  // are covering — the timetable's Today list uses the same filter, so a
+  // substitute sees (and can start) the class here too.
+  const teacherDayOr = await teacherDaySlotFilter(
+    schoolId,
+    teacher.id,
+    teacherSchoolRow?.timezone ?? "UTC",
+    teacherNow
+  )
 
   const [
     todaysClasses,
@@ -687,7 +703,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
           dayOfWeek: dayOfWeek,
           weekOffset: 0,
           ...(teacherTerm ? { termId: teacherTerm.id } : {}),
-          teacherId: teacher.id,
+          OR: teacherDayOr,
         },
         include: {
           section: {
@@ -800,6 +816,11 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   ])
 
   const totalStudents = assignedStudents
+  const teacherOnline = await onlineSectionIds(
+    schoolId,
+    todaysClasses.map((slot) => slot.sectionId),
+    teacherNow
+  )
 
   // Attendance still to take today: the sections on today's timetable with
   // no mark yet (a daily or a period mark both count).
@@ -856,6 +877,13 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
         entry.period?.startTime?.toISOString() || new Date().toISOString(),
       endTime: entry.period?.endTime?.toISOString() || new Date().toISOString(),
       liveClass: entry.liveClass,
+      online: !!entry.sectionId && teacherOnline.has(entry.sectionId),
+      join: entryJoinWindow(
+        entry.period,
+        teacherSchoolRow?.timezone,
+        teacherSchoolRow?.conferenceReminderLeadMinutes,
+        teacherNow
+      ),
     })),
     pendingGrading: pendingGradingCount,
     attendanceDue: attendanceDueCount,
@@ -917,7 +945,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const [schoolRow, { term: activeTerm }, [scope]] = await Promise.all([
     db.school.findUnique({
       where: { id: schoolId },
-      select: { timezone: true },
+      select: { timezone: true, conferenceReminderLeadMinutes: true },
     }),
     resolveActiveTerm(schoolId),
     getStudentScopes(schoolId, [student.id]),
@@ -1023,6 +1051,11 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const attendancePercentage =
     totalDays > 0 ? (presentDays / totalDays) * 100 : 0
   const nameDisplay = await schoolNameDisplay(schoolId)
+  const studentOnline = await onlineSectionIds(
+    schoolId,
+    [student.sectionId],
+    now
+  )
 
   return {
     todaysTimetable: todaysTimetable.map((entry) => {
@@ -1040,6 +1073,13 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         endTime:
           entry.period?.endTime?.toISOString() || new Date().toISOString(),
         liveClass: entry.liveClass,
+        online: !!entry.sectionId && studentOnline.has(entry.sectionId),
+        join: entryJoinWindow(
+          entry.period,
+          schoolRow?.timezone,
+          schoolRow?.conferenceReminderLeadMinutes,
+          now
+        ),
       }
     }),
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
@@ -3799,4 +3839,44 @@ export async function getStaffDashboardData() {
     weeklyTaskCompletion,
     announcementCount,
   }
+}
+
+/**
+ * The sections, of these, that the policy engine says are online right now —
+ * one batched policy read. A class in one of them is joinable through its
+ * join link even before the sweep writes its room, so the Today card can show
+ * Join (or Start) the moment the school says the class is online.
+ */
+async function onlineSectionIds(
+  schoolId: string,
+  sectionIds: Array<string | null | undefined>,
+  now: Date
+): Promise<Set<string>> {
+  const ids = [...new Set(sectionIds.filter((id): id is string => !!id))]
+  if (ids.length === 0) return new Set()
+  const policies = await resolveOnlinePolicies(schoolId, ids, now)
+  return new Set(ids.filter((id) => policies.get(id)?.online))
+}
+
+/**
+ * Today's join window for one Today row, as instants (school zone) — what the
+ * row's Join compares with `Date.now()`, so it shows at the right moment on a
+ * device on any clock (a student of an online school abroad).
+ */
+function entryJoinWindow(
+  period: { startTime: Date; endTime: Date } | null | undefined,
+  timezone: string | null | undefined,
+  leadMinutes: number | null | undefined,
+  now: Date
+): { fromMs: number; untilMs: number } | null {
+  if (!period) return null
+  const at = slotInstantsOn(timezone || DEFAULT_SCHOOL_TZ, now, period)
+  if (!at) return null
+  const w = joinWindow({
+    startMs: at.scheduledStart.getTime(),
+    endMs: at.scheduledEnd.getTime(),
+    leadMinutes: leadMinutes ?? null,
+    isHost: false,
+  })
+  return { fromMs: w.opensAtMs, untilMs: w.closesAtMs }
 }

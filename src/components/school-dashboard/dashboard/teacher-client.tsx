@@ -179,11 +179,20 @@ function TodaySection({
                 action={
                   <TodayLiveAction
                     liveClass={cls.liveClass}
+                    online={cls.online}
+                    timetableId={cls.id}
+                    joinWindow={cls.join}
                     startTime={cls.startTime}
                     endTime={cls.endTime}
                     lang={locale as Locale}
                     joinLabel={
                       liveClasses?.join ?? (locale === "ar" ? "انضمام" : "Join")
+                    }
+                    startLabel={
+                      liveClasses?.start ??
+                      (locale === "ar"
+                        ? "بدء البث المباشر"
+                        : "Start live class")
                     }
                     onlineLabel={
                       liveClasses?.online ??

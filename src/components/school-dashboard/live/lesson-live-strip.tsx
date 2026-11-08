@@ -4,9 +4,11 @@ import Link from "next/link"
 import { auth } from "@/auth"
 import { Radio } from "lucide-react"
 
+import { db } from "@/lib/db"
 import { buttonVariants } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 
+import { DEFAULT_SCHOOL_TZ } from "./day-window"
 import { getLiveSessionsForLesson, resolveViewerSectionScope } from "./queries"
 
 /**
@@ -31,8 +33,16 @@ export async function LessonLiveStrip({
 }) {
   if (!schoolId) return null
   let sessions: Awaited<ReturnType<typeof getLiveSessionsForLesson>> = []
+  let timeZone = DEFAULT_SCHOOL_TZ
   try {
     const session = await auth()
+    timeZone =
+      (
+        await db.school.findUnique({
+          where: { id: schoolId },
+          select: { timezone: true },
+        })
+      )?.timezone || DEFAULT_SCHOOL_TZ
     const scope = await resolveViewerSectionScope(
       schoolId,
       session?.user?.id,
@@ -43,6 +53,7 @@ export async function LessonLiveStrip({
     if (scope === "none") return null
     sessions = await getLiveSessionsForLesson(schoolId, catalogLessonId, {
       sectionIds: scope === "all" ? undefined : scope.sectionIds,
+      timeZone,
     })
   } catch {
     // Decoration only — a failed read must never take the lesson down.
@@ -50,9 +61,13 @@ export async function LessonLiveStrip({
   }
   if (sessions.length === 0) return null
 
+  // In the SCHOOL's zone: a bare server-side format prints the runtime's,
+  // which is UTC on the container — 13:00 for a 15:00 Khartoum class (the
+  // same bug `detail.tsx` was fixed for on 2026-10-19).
   const fmt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   })
 
   return (

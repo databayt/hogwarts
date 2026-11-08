@@ -304,6 +304,11 @@ export interface TeacherDashboardData {
     startTime: string
     endTime: string
     liveClass: TodayLiveClass | null
+    /** The section is online by policy today — joinable through the slot's
+     *  join link even before its room exists. Optional for older payloads. */
+    online?: boolean
+    /** Today's join window as instants (school zone). */
+    join?: { fromMs: number; untilMs: number } | null
   }[]
   pendingGrading: number
   attendanceDue: number
@@ -337,6 +342,10 @@ export interface StudentDashboardData {
     startTime: string
     endTime: string
     liveClass: TodayLiveClass | null
+    /** See `TeacherDashboardData.todaysClasses[].online`. */
+    online?: boolean
+    /** See `TeacherDashboardData.todaysClasses[].join`. */
+    join?: { fromMs: number; untilMs: number } | null
   }[]
   upcomingAssignments: {
     id: string

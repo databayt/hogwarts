@@ -19,6 +19,7 @@ export type NextActionKind =
   | "assignmentDue"
   | "nextClass"
   | "liveClass"
+  | "childLiveClass"
   | "pendingGrading"
   | "attendanceDue"
   | "childOverdue"
@@ -41,6 +42,20 @@ export interface NextAction {
   mark: string
   /** Locale-less path; the client prefixes `/${locale}`. */
   href: string
+  /**
+   * The class's join window, on a class item (`liveClass` or `nextClass`).
+   * The client re-ranks against its own clock every half minute: a
+   * `nextClass` becomes `liveClass` (opening `href` of the join link) when
+   * the window opens, and a `liveClass` leaves once it closes — so a banner
+   * rendered before the bell flips without a reload.
+   */
+  live?: { fromMs: number; untilMs: number; joinHref: string }
+  /**
+   * Carried for the client only: hidden until its `live` window opens by the
+   * reader's clock. The server render (and the first client render) never
+   * shows it.
+   */
+  pending?: boolean
 }
 
 /** How many the card will cycle through. More than four is a list, not a card. */
@@ -114,17 +129,22 @@ const given = (v: unknown): string => tokenizeName(str(v))[0] ?? ""
  */
 export function rankNextActions(
   role: string | undefined,
-  data: unknown
+  data: unknown,
+  /** The clock the live window is checked against (tests pin it). */
+  nowMs: number = Date.now()
 ): NextAction[] {
   if (!data || typeof data !== "object") return []
   const d = data as Unknown
   const actions: NextAction[] = []
+  // A child's class whose window has not opened yet: carried at the END, past
+  // the cap, so the client can promote it at the bell (see `live` above).
+  const pendingChildLive: NextAction[] = []
 
   switch ((role || "").toUpperCase()) {
     case "STUDENT": {
       // A class that is live (or about to be) outranks everything: it is the
       // one thing on the dashboard that is over in minutes. It opens the room.
-      const live = liveAction(d.nextClass)
+      const live = liveAction(d.nextClass, nowMs)
       if (live) actions.push(live)
 
       const assignments = Array.isArray(d.assignments)
@@ -157,13 +177,14 @@ export function rankNextActions(
           kind: "nextClass",
           mark: str(nextClass.subject),
           href: "/timetable",
+          live: joinWindowOf(nextClass),
         })
       }
       break
     }
 
     case "TEACHER": {
-      const live = liveAction(d.nextClass)
+      const live = liveAction(d.nextClass, nowMs)
       if (live) actions.push(live)
       if (num(d.pendingGrading) > 0) {
         actions.push({
@@ -185,6 +206,7 @@ export function rankNextActions(
           kind: "nextClass",
           mark: str(nextClass.subject),
           href: "/timetable",
+          live: joinWindowOf(nextClass),
         })
       }
       break
@@ -194,6 +216,26 @@ export function rankNextActions(
       const children = Array.isArray(d.children)
         ? (d.children as Unknown[])
         : []
+      // A child's class that is live right now comes first — it is the one
+      // thing here that is over within the hour. Only present when the school
+      // lets guardians watch (the loader checks the switch). A class not open
+      // yet rides along with its window, so the card can promote it at the
+      // bell; it is otherwise not worth a line of its own to a parent.
+      for (const c of children) {
+        const nc = c.nextClass as Unknown | undefined
+        const live = liveAction(nc, nowMs, "childLiveClass", given(c.name))
+        if (live) {
+          actions.push(live)
+        } else if (nc && joinWindowOf(nc)) {
+          pendingChildLive.push({
+            kind: "childLiveClass",
+            mark: given(c.name),
+            href: "/parent",
+            live: joinWindowOf(nc),
+            pending: true,
+          })
+        }
+      }
       for (const c of children.filter((c) => num(c.overdueAssignments) > 0)) {
         actions.push({
           kind: "childOverdue",
@@ -281,13 +323,47 @@ export function rankNextActions(
     }
   }
 
-  return actions.filter((a) => a.mark).slice(0, MAX_ACTIONS)
+  return [
+    ...actions.filter((a) => a.mark).slice(0, MAX_ACTIONS),
+    ...pendingChildLive.filter((a) => a.mark),
+  ]
 }
 
-/** The live room of the current/next class, when the data says it has one. */
-function liveAction(raw: unknown): NextAction | null {
+/**
+ * The join window a class payload carries (`upcoming-queries.ts` →
+ * `liveFields`), or undefined when the class cannot be joined today.
+ */
+function joinWindowOf(c: Unknown | undefined): NextAction["live"] | undefined {
+  if (!c) return undefined
+  const slotId = typeof c.slotId === "string" ? c.slotId : ""
+  const fromMs = typeof c.liveFromMs === "number" ? c.liveFromMs : NaN
+  const untilMs = typeof c.liveUntilMs === "number" ? c.liveUntilMs : NaN
+  if (!slotId || !Number.isFinite(fromMs) || !Number.isFinite(untilMs)) {
+    return undefined
+  }
+  return { fromMs, untilMs, joinHref: `/live/join/${slotId}` }
+}
+
+/**
+ * The live item for a class, when it is joinable NOW: through its join link
+ * inside the window (which writes the room if the sweep has not), or — for an
+ * older payload without a window — straight to an existing room.
+ */
+function liveAction(
+  raw: unknown,
+  nowMs: number,
+  kind: "liveClass" | "childLiveClass" = "liveClass",
+  markOverride?: string
+): NextAction | null {
   const c = raw as Unknown | undefined
-  const id = c ? str(c.liveSessionId) : ""
-  if (!c || !id || !str(c.subject)) return null
-  return { kind: "liveClass", mark: str(c.subject), href: `/live/${id}/room` }
+  if (!c || !str(c.subject)) return null
+  const mark = markOverride || str(c.subject)
+  const live = joinWindowOf(c)
+  if (live) {
+    if (nowMs < live.fromMs || nowMs > live.untilMs) return null
+    return { kind, mark, href: live.joinHref, live }
+  }
+  const id = str(c.liveSessionId)
+  if (!id) return null
+  return { kind, mark, href: `/live/${id}/room` }
 }

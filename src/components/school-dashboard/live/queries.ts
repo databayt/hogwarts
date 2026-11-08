@@ -817,7 +817,11 @@ export async function getAttendanceSyncEnabled(
  * the session's user through `db.teacher`, the way the schedule form does.
  *
  * It is the only extra axis: students and guardians are already answered by
- * section scope.
+ * section scope — plus every SCHOOL-WIDE session (`visibility: school`: the
+ * assembly, the parents' town hall), which is addressed to every member and
+ * so belongs on every member's strip. A section-scoped reader used to miss
+ * those entirely: the section filter excluded them before visibility was
+ * ever asked.
  */
 function landingScope(
   schoolId: string,
@@ -826,7 +830,14 @@ function landingScope(
   return {
     schoolId,
     deletedAt: null,
-    ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
+    ...(opts.sectionIds
+      ? {
+          OR: [
+            { sectionId: { in: opts.sectionIds } },
+            { visibility: "school" as const },
+          ],
+        }
+      : {}),
     ...(opts.teacherId ? { teacherId: opts.teacherId } : {}),
   }
 }
@@ -906,7 +917,11 @@ export async function getLiveLandingSessions(
       where: {
         ...scope,
         status: "scheduled",
-        scheduledStart: { gte: opts.now },
+        // Not yet OVER, rather than not yet started: at 16:05 a 16:00 class
+        // the teacher has not opened is exactly the one a student is looking
+        // for, and `scheduledStart >= now` had already dropped it from the
+        // strip (it was not live either, so it was nowhere).
+        scheduledEnd: { gte: opts.now },
       },
       orderBy: { scheduledStart: "asc" },
       take,
@@ -1117,6 +1132,8 @@ export async function getLiveSessionsForLesson(
     sectionIds?: string[]
     now?: Date
     take?: number
+    /** The school's zone — bounds "today" for the scheduled rows. */
+    timeZone?: string | null
   } = {}
 ): Promise<
   Array<{
@@ -1131,6 +1148,13 @@ export async function getLiveSessionsForLesson(
 > {
   const now = opts.now ?? new Date()
   const take = opts.take ?? 3
+  // TODAY in the school's zone. The comment always said "today's remaining
+  // sessions", but the filter had no upper bound, so a class scheduled for
+  // next week read as "upcoming" on the lesson page.
+  const { end: dayEnd } = schoolDayWindow(
+    opts.timeZone || DEFAULT_SCHOOL_TZ,
+    now
+  )
   const rows = await db.conference.findMany({
     where: {
       schoolId,
@@ -1140,8 +1164,12 @@ export async function getLiveSessionsForLesson(
       ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
       OR: [
         { status: "live" },
-        // Today's remaining sessions: scheduled and not yet over.
-        { status: "scheduled", scheduledEnd: { gte: now } },
+        // Today's remaining sessions: scheduled, not yet over, and today.
+        {
+          status: "scheduled",
+          scheduledEnd: { gte: now },
+          scheduledStart: { lt: dayEnd },
+        },
       ],
     },
     select: {

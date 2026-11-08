@@ -57,16 +57,34 @@ export function LiveLandingContent({
   catchUp,
   recordings,
 }: Props) {
+  // A class that exists is a class someone must be able to reach. A teacher
+  // can open a room in a school still set to in-person (an ad-hoc class, a
+  // trial run before the switch) — on 2026-11-08 four alabidae teachers did,
+  // fourteen "class started" notifications went out, and not one student found
+  // the room, because this strip and the timetable's Join both waited for the
+  // school-wide switch. The strip is gated on the ROWS as well as the policy;
+  // the rows are already scoped to the reader's own sections by the loader.
+  const hasClasses = live.length > 0 || upcoming.length > 0
+
+  // The hero follows suit for a reader who cannot change the policy: telling
+  // a student "your school teaches in person" above their own live class is
+  // the page contradicting itself. An admin keeps the offline hero — its one
+  // action, turning the school online, is still the thing for them to do.
+  const heroPolicy =
+    hasClasses && !policy.isOnline && !viewer.canConfigure
+      ? { ...policy, isOnline: true }
+      : policy
+
   return (
     <>
       <LiveStatusHero
         dictionary={dictionary}
         lang={lang}
         viewer={viewer}
-        policy={policy}
+        policy={heroPolicy}
       />
 
-      {policy.isOnline ? (
+      {policy.isOnline || hasClasses ? (
         <LiveNowStrip
           dictionary={dictionary}
           lang={lang}

@@ -107,39 +107,12 @@ export async function loadTodaySchedule(input: {
 
   if (role === "TEACHER") {
     if (teacher) {
-      // A CONFIRMED substitution moves the slot to the substitute's day: they
-      // see it, the absent teacher does not. Before this the covering teacher
-      // had no card at all, and so no Start button for the online arm.
-      const { start, end } = schoolDayWindow(schoolTz, targetDate)
-      const subs = await db.substitutionRecord.findMany({
-        where: {
-          schoolId,
-          status: "CONFIRMED",
-          slotDate: { gte: start, lt: end },
-          OR: [
-            { substituteTeacherId: teacher.id },
-            { originalTeacherId: teacher.id },
-          ],
-        },
-        select: {
-          originalSlotId: true,
-          substituteTeacherId: true,
-          originalTeacherId: true,
-        },
-      })
-      const covering = subs
-        .filter((r) => r.substituteTeacherId === teacher.id)
-        .map((r) => r.originalSlotId)
-      const away = subs
-        .filter((r) => r.originalTeacherId === teacher.id)
-        .map((r) => r.originalSlotId)
-      where.OR = [
-        {
-          teacherId: teacher.id,
-          ...(away.length ? { id: { notIn: away } } : {}),
-        },
-        ...(covering.length ? [{ id: { in: covering } }] : []),
-      ]
+      where.OR = await teacherDaySlotFilter(
+        schoolId,
+        teacher.id,
+        schoolTz,
+        targetDate
+      )
     } else {
       // No teacher record → no day (never the whole school's)
       where.OR = [{ id: { in: [] } }]
@@ -301,4 +274,53 @@ export async function substitutesForSlots(
   })
   for (const r of rows) out.set(r.originalSlotId, r.substituteTeacher)
   return out
+}
+
+/**
+ * The `Timetable` OR-filter for a teacher's own day: their slots, minus the
+ * ones a CONFIRMED substitution hands to someone else, plus the ones they are
+ * covering. A substitution moves the slot to the substitute's day — they see
+ * it, the absent teacher does not. Before this the covering teacher had no
+ * card at all, and so no Start button for the online arm.
+ *
+ * Shared by every "teacher's today" read — the timetable's Today list, the
+ * dashboard's Today card and the banner's next class — so a covering teacher
+ * cannot be missing from one of them while present on another.
+ */
+export async function teacherDaySlotFilter(
+  schoolId: string,
+  teacherId: string,
+  schoolTz: string,
+  targetDate: Date
+): Promise<Array<Record<string, unknown>>> {
+  const { start, end } = schoolDayWindow(schoolTz, targetDate)
+  const subs = await db.substitutionRecord.findMany({
+    where: {
+      schoolId,
+      status: "CONFIRMED",
+      slotDate: { gte: start, lt: end },
+      OR: [
+        { substituteTeacherId: teacherId },
+        { originalTeacherId: teacherId },
+      ],
+    },
+    select: {
+      originalSlotId: true,
+      substituteTeacherId: true,
+      originalTeacherId: true,
+    },
+  })
+  const covering = subs
+    .filter((r) => r.substituteTeacherId === teacherId)
+    .map((r) => r.originalSlotId)
+  const away = subs
+    .filter((r) => r.originalTeacherId === teacherId)
+    .map((r) => r.originalSlotId)
+  return [
+    {
+      teacherId,
+      ...(away.length ? { id: { notIn: away } } : {}),
+    },
+    ...(covering.length ? [{ id: { in: covering } }] : []),
+  ]
 }

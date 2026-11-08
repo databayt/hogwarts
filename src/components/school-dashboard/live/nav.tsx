@@ -12,11 +12,12 @@ import { PageHeadingSetter } from "@/components/school-dashboard/context/page-he
 import { getTabsForRole } from "./list-permissions"
 
 /**
- * Section heading + tab strip for the conference app surfaces.
+ * Section heading + tab strip for the live surfaces.
  *
- * Rendered from the `(app)` route-group layout rather than from
- * `conference/layout.tsx`, so `/live` itself keeps its own hero without
- * dashboard chrome stacked on top of it — the same split lumos uses.
+ * Rendered by the `(app)` route-group layout for the managed pages and by
+ * the `/live` landing page itself, above its hero — the same arrangement as
+ * `/school`, whose strip sits over its overview. The landing used to go
+ * without it, which read as a page whose navigation had been removed.
  */
 export async function LiveSectionNav({ lang }: { lang: string }) {
   const [dictionary, session] = await Promise.all([
