@@ -5081,17 +5081,42 @@ body:has(.thmanyah-shell) {
   left: auto;
 }
 
-/* Tighter headline. The h1 line box went from the reference's 1.4em to
-   1.12em (HeroBlock H1_STYLE), and the rows lose their 10px gap, so the two
-   lines sit close as one block. The highlight bar's top/bottom insets were
-   pixel values tuned to the 1.4em box at each breakpoint; restated in em
-   (the mark inherits `.hero-words`' font-size) they keep the same bar on the
-   tighter box at every width. (0,2,0) outranks every base `.hero-mark` /
-   `.hero-words` band; the LTR mirror above sets only left/right.          */
+/* One leading for every display headline, taken from the hero. The
+   reference sets its serif-display lines at 1.2-1.5em; ours run tighter so a
+   wrapped headline reads as one block — 1.12em in English, 1.25em in Arabic,
+   whose tall ascenders and deep descenders need a little more air. No
+   breakpoint band sets these line-heights (they change only font-size), and
+   (0,2,0)+ outranks every base rule, so one rule per direction covers every
+   width. Smaller serif-display text (the FAQ questions) keeps its own.
+
+   The hero rows also lose their 10px gap, and the highlight bar's top/bottom
+   insets — pixels tuned to the old 1.4em box at each breakpoint — are
+   restated in em (the mark inherits `.hero-words`' font-size), so the bar
+   keeps its shape on the tighter box at every width.                       */
+.thmanyah-shell .hero-words h1,
+.thmanyah-shell .aseel-headline,
+.thmanyah-shell .trials-headline,
+.thmanyah-shell .modern-headline,
+.thmanyah-shell .faq-title,
+.thmanyah-shell .footer-cta-line {
+  line-height: 1.12em;
+}
+.thmanyah-shell[dir="rtl"] .hero-words h1,
+.thmanyah-shell[dir="rtl"] .aseel-headline,
+.thmanyah-shell[dir="rtl"] .trials-headline,
+.thmanyah-shell[dir="rtl"] .modern-headline,
+.thmanyah-shell[dir="rtl"] .faq-title,
+.thmanyah-shell[dir="rtl"] .footer-cta-line {
+  line-height: 1.25em;
+}
 .thmanyah-shell .hero-words {
   row-gap: 0;
 }
 .thmanyah-shell .hero-mark {
   top: 0.17em;
   bottom: 0.15em;
+}
+.thmanyah-shell[dir="rtl"] .hero-mark {
+  top: 0.23em;
+  bottom: 0.21em;
 }

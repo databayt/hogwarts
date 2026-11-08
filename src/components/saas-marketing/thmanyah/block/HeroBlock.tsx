@@ -28,9 +28,10 @@ import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy
 const H1_STYLE: React.CSSProperties = {
   fontFamily: '"thmanyah serif display", serif',
   fontWeight: 900,
-  /* 1.4em in the reference; tightened so the two headline lines read as
-     one block. `.hero-mark` insets are in em to follow it. */
-  lineHeight: "1.12em",
+  /* 1.4em in the reference; tightened so the headline lines read as one
+     block — 1.12em in English, 1.25em in Arabic (set in thmanyah-clone.css
+     per `dir`, where every other display headline takes the same leading),
+     because Arabic's tall ascenders and deep descenders need the air. */
   fontFeatureSettings: '"ss01" on',
   color: "#000",
   textAlign: "start",
