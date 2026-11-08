@@ -15,6 +15,10 @@ import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
+import {
+  runLiveMinutesGuard,
+  type MinutesGuardResult,
+} from "@/components/school-dashboard/live/actions/usage-guard"
 
 /** Upper bound of `School.conferenceReminderLeadMinutes` (mirrors the settings schema). */
 const MAX_REMINDER_LEAD_MINUTES = 60
@@ -143,9 +147,22 @@ export async function GET(req: Request) {
     })
   }
 
+  // Once a day (its own tick check): the month's LiveKit minutes against the
+  // plan, emailed to the platform from 80%. Last, and best-effort — a meter
+  // read must never cost a reminder.
+  let minutesGuard: MinutesGuardResult = { ran: false }
+  try {
+    minutesGuard = await runLiveMinutesGuard()
+  } catch (err) {
+    console.error("[live-class] minutes guard failed", {
+      err: err instanceof Error ? err.message : String(err),
+    })
+  }
+
   return NextResponse.json({
     ok: true,
     dispatched: due.length,
     materialized,
+    minutesGuard,
   })
 }
