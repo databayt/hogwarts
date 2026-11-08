@@ -13,14 +13,15 @@ import { cn } from "@/lib/utils"
  *
  * Toggle: closed, only the hamburger shows; open, the page links and the
  * action icons (`children`) appear in the same bar — on a phone the links take
- * a second row that scrolls sideways. Escape closes it; so does following a
- * link. The icon morphs between two lines and an X.
+ * a second row that scrolls sideways. It folds back up when the reader moves
+ * on — Escape, a press outside, a link, or scrolling away. The icon morphs between two lines and an X.
  *
  * Scroll: while the hero fills the screen the bar is transparent on the green
  * with the light theme's ink pinned (`data-over`); past the hero it steps out
  * of the way as the reader scrolls down (`data-away`) and comes back, solid in
- * the page's own theme, the moment they scroll up. A focused control inside
- * keeps it on screen, and an open bar is never hidden.
+ * the page's own theme, the moment they scroll up. A control with keyboard
+ * focus keeps it on screen (mouse focus does not, or a clicked hamburger would
+ * pin it).
  */
 export function SmartBar({
   dir,
@@ -64,9 +65,22 @@ export function SmartBar({
 
   React.useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    // An open bar folds back up as soon as the reader moves on: Escape, a
+    // press anywhere outside it, or scrolling ~40px away from where it opened.
+    const from = window.scrollY
+    const shut = () => setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && shut()
+    const onPointer = (e: PointerEvent) =>
+      !ref.current?.contains(e.target as Node) && shut()
+    const onScroll = () => Math.abs(window.scrollY - from) > 40 && shut()
     window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
+    window.addEventListener("pointerdown", onPointer)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      window.removeEventListener("pointerdown", onPointer)
+      window.removeEventListener("scroll", onScroll)
+    }
   }, [open])
 
   const linkList = links.map((link) => (
@@ -85,7 +99,7 @@ export function SmartBar({
       ref={ref}
       data-over=""
       data-open={open ? "" : undefined}
-      className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-focus-within:not-data-[open]:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
+      className="bg-background fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,border-color] duration-300 data-[away]:not-has-focus-visible:-translate-y-full data-[over]:border-transparent data-[over]:bg-transparent data-[over]:[--accent-foreground:oklch(0.145_0_0)] data-[over]:[--accent:oklch(0_0_0/0.08)] data-[over]:[--foreground:oklch(0.145_0_0)] data-[over]:[--muted-foreground:oklch(0.145_0_0/0.72)] data-[over]:**:data-[slot=separator]:!bg-black/20"
     >
       <header
         data-slot="site-header"
