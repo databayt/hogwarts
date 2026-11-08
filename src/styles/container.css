@@ -320,3 +320,25 @@
     font-size: 92px;
   }
 }
+
+/* ===== DOCS ARTICLE TYPE (2026-11-08) =====
+ * The docs article reads a size up: body 18px (set on the page wrapper) and
+ * the MDX headings scaled with it. Scoped to the article column so the shared
+ * mdx-components (also rendered by other pages) keep their own sizes, and
+ * unlayered so it beats their Tailwind text-* utilities. Headings are
+ * matched by mdx-components' `scroll-m-28` so card titles (also h3) inside
+ * an article keep their own size. The sidebar and TOC links read 15px. */
+.docs-article h2.scroll-m-28 {
+  font-size: 1.875rem; /* 30px, was 20px */
+  line-height: 1.25;
+}
+.docs-article h3.scroll-m-28 {
+  font-size: 1.5rem; /* 24px, was 18px */
+  line-height: 1.3;
+}
+.docs-article h4.scroll-m-28 {
+  font-size: 1.25rem; /* 20px, was 16px */
+}
+.docs-article table {
+  font-size: 1rem; /* 16px, was 14px */
+}

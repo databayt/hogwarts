@@ -159,7 +159,7 @@ export function DocsSidebar({
           <SidebarMenuButton
             asChild
             isActive={isActive(item.url)}
-            className="data-[active=true]:border-accent data-[active=true]:bg-accent relative h-[30px] border border-transparent text-[0.8rem] font-medium"
+            className="data-[active=true]:border-accent data-[active=true]:bg-accent relative h-9 border border-transparent text-[15px] font-medium"
           >
             <Link href={`${prefix}${item.url}`}>{item.name}</Link>
           </SidebarMenuButton>
@@ -188,7 +188,7 @@ export function DocsSidebar({
                 <SidebarGroup className="p-0">
                   <SidebarGroupLabel
                     asChild
-                    className="text-muted-foreground hover:text-foreground font-medium"
+                    className="text-muted-foreground hover:text-foreground h-9 text-[15px] font-medium"
                   >
                     <CollapsibleTrigger className="w-full justify-start gap-2">
                       <Plus className="group-data-[state=open]/collapsible:hidden" />
