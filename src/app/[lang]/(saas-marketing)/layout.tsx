@@ -9,7 +9,7 @@ import {
   getPlatformCoreDictionary,
   type Dictionary,
 } from "@/components/internationalization/dictionaries"
-import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
+import { MarketingDictionaryProvider } from "@/components/internationalization/marketing-dictionary-provider"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
 import { SiteHeader } from "@/components/template/marketing-header/site-header"
@@ -33,9 +33,11 @@ export default async function MarketingLayout({
 
   // Client components read the dictionary from a static per-locale chunk,
   // not a prop: as a prop it was ~0.5 MB of JSON inside every marketing and
-  // docs page (see internationalization/CLAUDE.md).
+  // docs page (see internationalization/CLAUDE.md). The marketing chunk holds
+  // only the general file (~40 KB gzipped) — the full merged dictionary was
+  // ~280-310 KB gzipped, the heaviest thing a first visit downloaded.
   return (
-    <LocaleDictionaryProvider lang={lang}>
+    <MarketingDictionaryProvider lang={lang}>
       {/* No full-screen loader and no phone "immersive" unpinning: the page
           paints straight from the server HTML, and the sticky header is on
           screen from the first frame at every breakpoint. The 0→100% loader
@@ -50,6 +52,6 @@ export default async function MarketingLayout({
         <SiteFooter dictionary={dictionary} locale={lang} />
         <Chatbot lang={lang as Locale} promptType="saasMarketing" />
       </div>
-    </LocaleDictionaryProvider>
+    </MarketingDictionaryProvider>
   )
 }
