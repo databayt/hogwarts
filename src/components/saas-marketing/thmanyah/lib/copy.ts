@@ -291,7 +291,7 @@ const AR: ThmanyahCopy = {
 
 const EN: ThmanyahCopy = {
   hero: {
-    eyebrow: "The balqalam platform",
+    eyebrow: "Bilqalm platform",
     /* Four items plus the marked pair, which wraps to TWO lines at 92px in
        the 840px box exactly as the Arabic does — 750 / 719 against Arabic's
        762 / 793, mark 488 against 454. A literal rendering of the Arabic
