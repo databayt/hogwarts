@@ -328,7 +328,7 @@ const nextConfig: NextConfig = {
           ["sponsors", "partners"],
           ["traction", "investors"],
           ["universities", "vision"],
-          ["marketing/:page*", "marketing"],
+          ["marketing/:page+", "marketing"], // "+": "*" also matched /docs/marketing itself (a self-redirect loop)
           ["competitors/:page*", "pitch"],
         ] as const
       ).map(([from, to]) => ({
