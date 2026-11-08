@@ -72,11 +72,11 @@ export function PricingCard({
       <CardHeader className="w-full gap-1 pb-2">
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight whitespace-nowrap">
-          <span className="tabular-nums">{priceDisplay}</span>
+          <span className="text-2xl tabular-nums">{priceDisplay}</span>
           <span className="muted ms-1">{priceSuffix}</span>
         </CardTitle>
-        <p className="muted line-clamp-1">{offer.description}</p>
-        <p className="muted line-clamp-1 text-xs">{note}</p>
+        <p className="text-muted-foreground line-clamp-1 text-base">{offer.description}</p>
+        <p className="text-muted-foreground line-clamp-1 text-sm">{note}</p>
       </CardHeader>
 
       <div className="w-full px-6 py-1">
@@ -84,12 +84,12 @@ export function PricingCard({
       </div>
 
       <CardContent className="w-full flex-1 pt-3">
-        <p className="muted mb-2">{includesHeading}</p>
+        <p className="text-muted-foreground mb-2 text-base">{includesHeading}</p>
         <ul>
           {offer.benefits.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
-              <Check className="text-primary mt-1.5 size-3 shrink-0" />
-              <span className="muted leading-6">{feature}</span>
+              <Check className="text-primary mt-2 size-3.5 shrink-0" />
+              <span className="text-muted-foreground text-base leading-7">{feature}</span>
             </li>
           ))}
         </ul>
@@ -109,7 +109,7 @@ export function PricingCard({
           {getCtaLabel(offer.id, pricing)}
         </Link>
         <a href="#calculator" className="ms-3">
-          <small className="muted">
+          <small className="text-muted-foreground text-sm">
             {constants?.moreInfo || "More info"} ↗
           </small>
         </a>
