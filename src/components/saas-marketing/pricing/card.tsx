@@ -108,7 +108,7 @@ export function PricingCard({
         >
           {getCtaLabel(offer.id, pricing)}
         </Link>
-        <a href="#calculator" className="ms-3">
+        <a href="#compare" className="ms-3">
           <small className="text-muted-foreground text-sm">
             {constants?.moreInfo || "More info"} ↗
           </small>

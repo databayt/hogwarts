@@ -6,7 +6,6 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { ComparePlans } from "@/components/saas-marketing/pricing/compare-plans"
 import { PricingCards } from "@/components/saas-marketing/pricing/pricing-cards"
 
-import { Calculator } from "./calculator"
 import { CurrencyProvider } from "./currency"
 import EnterpriseSection from "./enterprise-section"
 import { getExchangeRates } from "./exchange-rates"
@@ -30,11 +29,8 @@ export default async function PricingContent(props: Props) {
       </div>
       <CurrencyProvider rates={rates} updated={updated}>
         <PricingCards lang={lang} />
-        <div id="calculator" className="w-full scroll-mt-24">
-          <Calculator lang={lang} />
-        </div>
       </CurrencyProvider>
-      <ComparePlans dictionary={dictionary} />
+      <ComparePlans dictionary={dictionary} lang={lang} />
       <PricingFAQs dictionary={dictionary} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>

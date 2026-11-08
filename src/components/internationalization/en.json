@@ -848,6 +848,15 @@
       "comparePlans": {
         "title": "Compare plans",
         "subtitle": "Every plan runs the full platform — pricing scales with your school.",
+        "header": {
+          "pick": "Pick what fits",
+          "note": "Same platform, every plan",
+          "freeHint": "Try it all, free",
+          "proHint": "Every student, 24 SAR/yr",
+          "enterpriseHint": "1,000+ students",
+          "start": "Start free",
+          "talk": "Talk to us"
+        },
         "features": {
           "students": "Students included",
           "teachers": "Teachers",
