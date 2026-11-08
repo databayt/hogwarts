@@ -113,5 +113,5 @@ Not suitable: `docs/evidence/profile-parent-ar.png` and `docs/evidence/profile-c
 - src/components/template/platform-sidebar/config.ts
 - src/components/internationalization/dictionaries/{ar,en}/parentPortal.json
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/ (layout.tsx, page.tsx, children/[id]/\*, fees/page.tsx, messages/page.tsx)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/profile-parent-ar.png, docs/evidence/profile-child-via-parent-ar.png (reviewed, excluded)

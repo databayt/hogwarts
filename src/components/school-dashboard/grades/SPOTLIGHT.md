@@ -107,4 +107,4 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/app/api/cron/term-end-report-cards, src/app/api/cron/process-report-card-pdfs
 - src/routes.ts
 - content/docs-en/exams.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

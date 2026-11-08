@@ -98,5 +98,5 @@ At the start of the year someone types the subject list for every grade into a s
 - src/components/template/platform-sidebar/config.ts
 - content/docs-en/catalog.mdx
 - content/docs-en/listings.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - Repo-root screenshots: subject-materials.png, docs/evidence/demo-subjects-ar.png, subjects-mobile-after.png, subjects-local-390.png

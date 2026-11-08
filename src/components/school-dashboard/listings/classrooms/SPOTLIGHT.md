@@ -100,4 +100,4 @@ None yet — capture with /record. Routes to capture (Arabic, admin login on the
 - src/components/template/platform-sidebar/config.ts
 - src/components/internationalization/school-ar.json, school-en.json (classrooms keys)
 - content/docs-en/classrooms.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

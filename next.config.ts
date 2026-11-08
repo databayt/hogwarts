@@ -300,6 +300,42 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // Business docs folded into the 16 team pages (2026-11-08, kun decision
+      // D-20261108-pricing-one-month-trial): each old slug lands on the page
+      // that now holds its facts.
+      ...(
+        [
+          ["accelerators", "fundraising"],
+          ["admission-spotlight", "marketing"],
+          ["business-model", "monetize"],
+          ["case-study", "sales"],
+          ["competitions", "fundraising"],
+          ["competitors", "pitch"],
+          ["data-room", "investors"],
+          ["deck", "pitch"],
+          ["demo", "sales"],
+          ["grants", "fundraising"],
+          ["gtm", "sales"],
+          ["hogwarts", "pitch"],
+          ["incubators", "fundraising"],
+          ["leads", "crm"],
+          ["marketing-brief", "marketing"],
+          ["mvp", "vision"],
+          ["outreach", "sales"],
+          ["pilot", "pricing"],
+          ["proposal", "contract"],
+          ["roadmap", "vision"],
+          ["sponsors", "partners"],
+          ["traction", "investors"],
+          ["universities", "vision"],
+          ["marketing/:page*", "marketing"],
+          ["competitors/:page*", "pitch"],
+        ] as const
+      ).map(([from, to]) => ({
+        source: `/:lang(ar|en)/docs/${from}`,
+        destination: `/:lang/docs/${to}`,
+        permanent: true,
+      })),
       // Every "Help" link (user menu, footers, hamburger menu) points at
       // /help, which never existed. The help center lives in the docs on the
       // marketing domain — absolute, because a school host rewrites /docs

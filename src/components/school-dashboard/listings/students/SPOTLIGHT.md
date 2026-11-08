@@ -135,5 +135,5 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/components/internationalization/school-en.json, school-ar.json (students keys)
 - content/docs-en/students.mdx
 - content/docs-en/listings.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-students-ar.png

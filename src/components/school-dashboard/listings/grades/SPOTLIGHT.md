@@ -99,4 +99,4 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/grades/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/grades/[id]/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/children/[id]/grades/page.tsx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

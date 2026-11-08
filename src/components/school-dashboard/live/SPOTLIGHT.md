@@ -93,5 +93,5 @@ The night the school decides to close its building, the principal and teachers s
 - src/app/[lang]/s/[subdomain]/(live-room)/live/[id]/room
 - src/app/api/cron/ (live-class-reminders, end-stale-live-classes, expire-live-recordings)
 - content/docs-en/live.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - live-mobile-admin-before.png (repo root)

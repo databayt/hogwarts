@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Academics showcase decks. Copy rules (from content/docs-en/competitors.mdx):
+// Academics showcase decks. Copy rules (from content/docs-en/competitors.mdx (folded into pitch.mdx on 2026-11-08 — see git history)):
 // concrete and checkable, sell the hours saved (Arbor's angle), no
 // superlatives. Screenshots are real demo-school captures at 1280x1000.
 

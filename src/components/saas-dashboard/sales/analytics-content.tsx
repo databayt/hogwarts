@@ -17,7 +17,7 @@ import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
 const PLATFORM_SCHOOL_ID = "platform"
 
-// Weekly targets per content/docs-en/sales.mdx — keep as a module-local const
+// Weekly targets (the 2026-10 sales plan; content/docs-en/sales.mdx now asks two conversations a week per seller) — keep as a module-local const
 // so docs and code stay aligned. If the doc changes, update here too.
 const WEEKLY_TARGETS = {
   newWarmProspects: 3,

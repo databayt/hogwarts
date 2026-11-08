@@ -124,4 +124,4 @@ None yet — capture with /record. Routes to capture (Arabic first, on the publi
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/school/configuration/(editor)/layout.tsx
 - src/app/manifest.ts
 - src/components/internationalization/school-ar.json, school-en.json (schoolAdmin)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

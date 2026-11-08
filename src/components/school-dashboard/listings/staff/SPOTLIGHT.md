@@ -85,4 +85,4 @@ The office knows the teachers, but the accountant, the librarian, the guard and 
 - src/components/school-dashboard/dashboard/quick-actions-config.ts
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/staff/ (page, [id])
 - src/components/internationalization/school-en.json, school-ar.json (staffListing section)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

@@ -93,6 +93,6 @@ The librarian keeps a notebook of who took which book. A student asks "is that b
 - src/components/library/admin/books/content.tsx, book-form.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/library/ (all pages, incl. admin/books/new/page.tsx which redirects to contribute)
 - src/components/internationalization/dictionaries/{en,ar}/library.json
-- content/docs-en/library.mdx, content/docs-en/marketing-brief.mdx
+- content/docs-en/library.mdx, content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - library-ar.png
 - src/components/school-dashboard/library/management.tsx — an older, standalone library-management screen; no route or component imports it, so it is not what users see (no separate spotlight)

@@ -97,5 +97,5 @@ Do not post about this yet. If the guide is switched back on, candidate angles:
 - src/components/school-dashboard/dashboard/README.md (entry dated 2026-09-19)
 - src/components/school-dashboard/admission/ISSUE.md (untriaged note on the guide's illustrations)
 - src/components/internationalization/school-en.json and school-ar.json ("welcomeDialog")
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - content/docs-en/pilot.mdx

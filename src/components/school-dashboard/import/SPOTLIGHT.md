@@ -117,4 +117,4 @@ None yet — capture with /record. Routes to capture:
 - src/components/internationalization/school-en.json, school-ar.json (bulk keys)
 - content/docs-en/pilot.mdx
 - content/docs-en/admission.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

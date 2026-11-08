@@ -94,4 +94,4 @@ The five below are parked until the dashboard ships and is verified on real data
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/analytics/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/result/analytics/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/timetable/analytics/page.tsx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

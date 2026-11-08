@@ -15,7 +15,7 @@ Balqalam is an open-source, multi-tenant K-12 school platform.
 | Type           | SaaS B2B multi-tenant web app                                        |
 | Domain         | EdTech — K-12 school management                                      |
 
-For shipped capabilities see [MVP](/docs/mvp). For direction see [Roadmap](/docs/roadmap). For the commercial layer see [Business model](/docs/business-model). The current commercial focus is the [MENA-10 free pilot cohort](/docs/pilot); pipeline operations live in [Leads](/docs/leads).
+For shipped capabilities see [MVP](/docs/vision). For direction see [Roadmap](/docs/vision). For the commercial layer see [Business model](/docs/monetize). The current commercial focus is the [MENA-10 free pilot cohort](/docs/pricing); pipeline operations live in [Leads](/docs/crm).
 
 ## Architecture
 
@@ -44,7 +44,7 @@ For shipped capabilities see [MVP](/docs/mvp). For direction see [Roadmap](/docs
 
 ### Surface area
 
-For canonical counts of models, routes, dashboard pages, and tests, see [MVP](/docs/mvp) and [Architecture](/docs/architecture).
+For canonical counts of models, routes, dashboard pages, and tests, see [MVP](/docs/vision) and [Architecture](/docs/architecture).
 
 ### Tenancy
 
@@ -76,7 +76,7 @@ Eight roles in `prisma/models/auth.prisma:UserRole` (`DEVELOPER`, `ADMIN`, `TEAC
 
 ## Functional scope
 
-The 14-epic shipped state is in [MVP](/docs/mvp). Next + Vision in [Roadmap](/docs/roadmap). Detail docs per epic live alongside in `content/docs-en/`. Block-level CLAUDE.md (`src/components/<feature>/CLAUDE.md`) documents per-feature implementation contracts.
+The 14-epic shipped state is in [MVP](/docs/vision). Next + Vision in [Roadmap](/docs/vision). Detail docs per epic live alongside in `content/docs-en/`. Block-level CLAUDE.md (`src/components/<feature>/CLAUDE.md`) documents per-feature implementation contracts.
 
 A school can: accept applicants → register students → manage classes / sections / subjects / timetable → mark attendance (11 capture modes) → grade exams + generate report cards → collect fees (6 payment gateways) → message parents (in-app + email + WhatsApp) → run an LMS → manage library + transport. All on one platform with `schoolId`-scoped isolation.
 
@@ -150,7 +150,7 @@ These rules apply to every contribution. Enforced by hooks, agents, and review g
 | PRO        | 10 GB, priority support, custom branding, API rate-limited |
 | ENTERPRISE | Unlimited storage and API, white-label, SLA 99.9%, SSO     |
 
-See [Business model](/docs/business-model) for pricing and revenue. See [Sales](/docs/sales) for commercial process.
+See [Business model](/docs/monetize) for pricing and revenue. See [Sales](/docs/sales) for commercial process.
 
 ## API and integrations
 
@@ -226,19 +226,19 @@ Destructive Prisma operations (`db execute`, `db push --accept-data-loss`, `migr
 
 The OSS contribution model — including how time invested converts to recognition or revenue share — lives in [Shared economy](/docs/shared-economy).
 
-> **AGENTS.md** is currently `AGENTS.md.draft` at the repo root; graduating it to `AGENTS.md` is tracked in [Roadmap](/docs/roadmap).
+> **AGENTS.md** is currently `AGENTS.md.draft` at the repo root; graduating it to `AGENTS.md` is tracked in [Roadmap](/docs/vision).
 
 ## See also
 
-- [Pilot](/docs/pilot) — MENA-10 free pilot cohort (current commercial focus)
-- [GTM](/docs/gtm) — three-phase go-to-market
+- [Pilot](/docs/pricing) — MENA-10 free pilot cohort (current commercial focus)
+- [GTM](/docs/sales) — three-phase go-to-market
 - [Sales](/docs/sales) — B2B process
-- [Leads](/docs/leads) — pipeline operations
-- [MVP](/docs/mvp) — 14-epic shipped state with maturity badges
-- [Roadmap](/docs/roadmap) — Next milestones and Vision
+- [Leads](/docs/crm) — pipeline operations
+- [MVP](/docs/vision) — 14-epic shipped state with maturity badges
+- [Roadmap](/docs/vision) — Next milestones and Vision
 - [Architecture](/docs/architecture) — system design and patterns
 - [Pattern](/docs/pattern) — code conventions
 - [Translation](/docs/translation) — i18n contract
 - [Shared economy](/docs/shared-economy) — OSS contribution and value-sharing
-- [Business model](/docs/business-model) — pricing, tiers, ARR projections
+- [Business model](/docs/monetize) — pricing, tiers, ARR projections
 - [Get started](/docs/get-started) — local setup

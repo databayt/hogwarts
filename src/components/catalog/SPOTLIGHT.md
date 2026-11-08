@@ -94,5 +94,5 @@ Before any timetable, exam or online lesson can be set up, someone has to type i
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/[slug]/page.tsx
 - content/docs-en/catalog.mdx
 - content/docs-en/mvp.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - subject-materials.png, docs/evidence/demo-subjects-ar.png

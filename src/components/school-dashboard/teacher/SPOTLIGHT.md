@@ -84,4 +84,4 @@ For teacher posts, use the angles in:
 - src/components/school-dashboard/dashboard/content.tsx (chooses the teacher view on /dashboard; phone banner and today's timetable)
 - src/components/school-dashboard/dashboard/quick-actions-config.ts
 - src/components/school-dashboard/dashboard/SPOTLIGHT.md
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

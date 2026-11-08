@@ -94,7 +94,7 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/components/school-dashboard/messaging/ISSUE.md
 - src/components/school-dashboard/messaging/CLAUDE.md
 - content/docs-en/messages.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page.tsx
 - src/components/internationalization/dictionaries/en/messaging.json
 - src/components/internationalization/dictionaries/ar/messaging.json

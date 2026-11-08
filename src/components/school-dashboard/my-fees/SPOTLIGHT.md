@@ -100,4 +100,4 @@ Before recording, check the discount line: it currently shows an internal code (
 - src/components/internationalization/school-en.json, school-ar.json (school.myFees)
 - src/components/internationalization/dictionaries/en/finance.json (finance.family)
 - src/lib/payment/providers/stripe.ts
-- content/docs-en/fees.mdx, content/docs-en/finance.mdx, content/docs-en/marketing-brief.mdx
+- content/docs-en/fees.mdx, content/docs-en/finance.mdx, content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

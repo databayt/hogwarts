@@ -1,216 +1,32 @@
 ---
 title: Shared economy
-description: Fair contribution valuation — measurable, transparent, gaming-resistant. Every contributor owns their value.
+description: How the people who build Databayt share what it earns — in plain words.
 ---
 
-**Justice = fair access to resources based on evidence of contribution.** All forms of contribution — code, docs, design, community — are valued and tracked. The same posture extends to [pilot schools](/docs/pilot): MENA-10 cohort members are not customers we ship a finished product to, they are partners whose feedback shapes the platform. Their case studies, issue reports, and roadmap input are first-class contributions.
+**Balqalam's code is open. The people who build it share what it earns.**
 
-## Core principles
+## The idea
 
-| Principle              | Meaning                                       |
-| ---------------------- | --------------------------------------------- |
-| Measurable value       | Every contribution has quantifiable impact    |
-| Equal respect          | Code, docs, and community work valued equally |
-| Gaming resistance      | The system detects and prevents manipulation  |
-| Transparent valuations | All formulas public, all outcomes contestable |
+- Anyone can read the code and improve it.
+- Schools pay for the service, not for the code.
+- People who build it own part of the result, not just a wage.
 
-## Contribution matrix
+## How it works
 
-### Technical (40% weight)
+Your work is recorded under your name: code, issues, sales, content. Sharing then starts in steps:
 
-| Category                     | Points                                              |
-| ---------------------------- | --------------------------------------------------- |
-| Lines of code                | LOC × language weight (TS 1.0, CSS 0.3, Config 0.1) |
-| Complexity multiplier        | Simple 1× → Complex 2.5×                            |
-| New feature                  | 10 × complexity                                     |
-| Bug fix                      | 5 × severity (critical 5×, minor 1×)                |
-| Refactoring                  | 3 × files affected                                  |
-| Test coverage                | 2 × coverage increase %                             |
-| PRD / technical docs         | 50 × scope (feature 1×, module 3×, system 10×)      |
-| Architecture decisions (ADR) | 100                                                 |
-| Performance optimisation     | 20 × % improvement                                  |
-| Code review                  | 5 per substantive comment                           |
-| Mentoring in review          | 10 if reviewer teaches                              |
-| Catch critical bugs          | 50 per security / data-loss bug                     |
+| When                          | What starts                                                        |
+| ----------------------------- | ------------------------------------------------------------------ |
+| From the first revenue        | 5% of revenue is set aside in a community pool                     |
+| From any net profit           | 2.5% of net profit goes to a fund for contributors in need         |
+| At $3,000 revenue a month     | The first contributor agreements: shares for the recorded work     |
+| At $10,000 a month for a year | The community pool becomes a formal endowment (waqf)               |
 
-**Quality multipliers** (max 3.9× combined): tests pass first try (1.2×) · zero review iterations (1.3×) · includes tests (1.5×) · includes docs (1.4×) · zero regressions in 30 days (1.5×).
+## What it means for you today
 
-### Community (30% weight)
+- Do your work where it is recorded: GitHub, the CRM, the group.
+- No one is paid a salary yet; your share grows with what you build and sell.
 
-| Category                | Points                                   |
-| ----------------------- | ---------------------------------------- |
-| First response          | 3 (encourages newcomers)                 |
-| Issue clarification     | 5                                        |
-| Issue resolution        | 10 × unblocked users                     |
-| Tutorial                | 100 × depth (quick 1×, comprehensive 5×) |
-| API docs                | 20 × endpoints                           |
-| Translation             | 50 × language + 0.5 / key                |
-| Video / visual content  | 150 × length (quality-adjusted)          |
-| Onboarding contributors | 50 per successful first PR               |
-| Forum / Discord support | 2 per helpful response (upvote-weighted) |
-| Public talk / article   | 200                                      |
+## What you do
 
-### Strategic (20% weight)
-
-| Category                              | Points                     |
-| ------------------------------------- | -------------------------- |
-| Accepted feature proposal             | 50                         |
-| User research                         | 30 × users interviewed     |
-| Competitive analysis                  | 40                         |
-| Implemented business-model innovation | 100                        |
-| Release coordination                  | 100 per release            |
-| Security audit                        | 200 + 50 per vulnerability |
-
-### Ecosystem (10% weight)
-
-| Category             | Points                     |
-| -------------------- | -------------------------- |
-| Blog post            | 20 × reach (1k views = 1×) |
-| Integration / plugin | 150 × users                |
-| Educational content  | 50 × students reached      |
-| Case study           | 100                        |
-
-## Anti-gaming
-
-| Mechanism            | Rule                                             |
-| -------------------- | ------------------------------------------------ |
-| Sybil prevention     | GitHub account > 6 months, verified email        |
-| Velocity limit       | Max 100 reviewed commits/day                     |
-| Peer validation      | Large contributions need 2+ maintainer reviews   |
-| Commit splitting     | If 10+ commits could be 1, apply 0.5× multiplier |
-| Code-churn tax       | Code deleted within 30 days = retroactive −50%   |
-| Test quality         | Tests that mock everything = 0 points            |
-| Collusion detection  | 80%+ review overlap → human review               |
-| Circular endorsement | A↔B mutual reviews = 0.7× multiplier             |
-
-## Transparency
-
-- **Public ledger** — every contribution generates a permanent hash recorded in git history.
-- **Formula visibility** — `src/contribution-engine/formulas.ts` is the single source of truth.
-- **Monthly reports** — auto-generated Markdown + PDF distributed to all contributors.
-- **Dispute process** — file an issue tagged `valuation-review`; three maintainers vote within 7 days.
-- **Audit trail** — auto-generated breakdown attached to every commit's metadata.
-- **Historical changes** — formula changes tracked in git with rationale.
-- **Maintainer override** — requires 2/3 vote plus public justification.
-
-## Valuation formula
-
-Hourly rate floor: **$45 USD/hour minimum** (COCOMO 2024 standard).
-
-```
-Contribution Value = (Base Points × Quality Multiplier × Impact Factor) / Effort Hours
-
-If Contribution Value < $45/hour → Adjusted Value = $45 × Effort Hours
-```
-
-Effort estimation methods: self-reported (honor system + peer validation), auto-detected via commit timestamps (GitHub API), code via COCOMO II formula. Outliers flagged — e.g. 100 lines claimed as 20 hours → manual review.
-
-### Underpayment prevention
-
-- **Market-rate adjustment** — quarterly review against Upwork / Toptal benchmarks.
-- **Cost-of-living index** — high-COL contributors not penalised.
-- **Skill premium** — senior developers receive a 1.5–2× multiplier.
-- **Minimum-wage alert** — earnings below local equivalent trigger an alert.
-- **Profit redistribution** — if margin > 40% while pay < $30/hr, profit redistributes back to contributors.
-- **Annual satisfaction survey** — anonymous, results published.
-
-## Non-code recognition
-
-| Category            | Points                                           |
-| ------------------- | ------------------------------------------------ |
-| UI / UX mockup      | 100 × screens                                    |
-| Design system       | 500 (one-time) + 50 / component                  |
-| User testing        | 30 × tests                                       |
-| Accessibility audit | 200 + 20 / issue found                           |
-| Moderation          | 5 / hour (capped 4 hr/week — emotionally taxing) |
-| Conflict resolution | 50 per resolved dispute                          |
-| Policy creation     | 100                                              |
-
-### Invisible labor
-
-- **Meeting attendance** — 10 / hour, capped 4 hr/week.
-- **Email / DM support** — 2 per substantive response.
-- **Emotional support** — peer-nominated, 50 bonus / month.
-
-### Skill development
-
-- **1.5×** for first contribution in a new area.
-- **+20%** mentor receives 20% of mentee's points.
-- **2×** for knowledge-transfer guides in complex areas.
-
-## Examples
-
-### Junior dev — first auth bug fix
-
-50 lines TypeScript, critical bug, 4 hours: base 75 × quality 1.8 × impact 5 = **675 points**. Raw value $67.50/hr exceeds floor, but first-contribution bonus (1.5×) lifts payout to **$270**.
-
-### Designer — onboarding flow
-
-5 mockups (500) + 10-user testing (300) + Figma docs (20) = **820 points** over 16 hours. Hourly **$51.25** — above the $45 floor.
-
-### Community manager — monthly cycle
-
-20 hr moderation (100) + 3 onboarded contributors (150) + 1 event (100) + 50 Discord responses (100) = **450 points** over ~25 hours. Floor adjustment lifts payout to **$1,125**.
-
-## Revenue sharing
-
-No traditional salaries. Balqalam is collectively owned by contributors. When projects come in, each contributor takes their share by contribution.
-
-| Lumos          | Source                                   | Earnings                                                      |
-| -------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| Per project    | Custom solutions for clients             | Direct share by project contribution                          |
-| Partnerships   | Outsourced contracts                     | Share by contracts you fulfill                                |
-| Codebase reuse | Reusable components used across projects | Each time your indexed components are reused (highest earner) |
-| SaaS products  | Ready-to-deploy products                 | Ongoing royalties as products scale                           |
-
-### Expected timeline
-
-- **Month 1–3** — learn systems, contribute, earn initial shares.
-- **Month 6–12** — build reusable components, join partnerships.
-- **Year 2+** — major contributor with SaaS involvement, recurring revenue.
-
-## Governance
-
-### Formula evolution
-
-1. Propose change via RFC.
-2. Run simulation on historical data; show impact.
-3. Public discussion period: 30 days.
-4. Vote: weighted by contribution history.
-5. Supermajority required: 67% to change core valuations.
-6. Gradual rollout: 10% test for 1 month first.
-
-### Protection against capture
-
-- **Voting cap** — no contributor exceeds 10% voting power.
-- **Power decay** — founding-team voting power decreases 10% per year.
-- **Emergency brake** — 100+ objections pause a change for review.
-- **Arbitration** — external mediator for major disputes.
-
-### Contestable valuations
-
-1. Contributor files issue: "Commit X undervalued because Y".
-2. Auto-tagged `valuation-review`.
-3. Three maintainers review within 7 days.
-4. Vote: adjust up / down / no change.
-5. Outcome recorded publicly with reasoning.
-
-## Lineage & references
-
-This page is the **measurement layer** — how contribution is valued, anti-gaming controls, governance. The **doctrinal layer** — what we mean by "share economy," the intellectual lineage, and the precise Arabic-rooted vocabulary — lives in the kun strategy folder at [`SHARE-ECONOMY-MODEL.md`](https://github.com/databayt/kun/blob/main/docs/SHARE-ECONOMY-MODEL.md). The **operational spec layer** — CU pool sizing, founder/operating reserves, multi-class CU schema, conversion-to-cash, Mudaraba contract template, Waqf-track activation triggers — is being formalized by Samia (R&D) for Q3 2026 and will live in `databayt/revenue` (not yet created).
-
-The four references that ground the doctrine:
-
-- **Khedr, M.H.** (2019). _رائد الأعمال Inside Out._ Dar Don. ISBN 9789778061598. — MENA-context equity-allocation methodology.
-- **Akbar, J.** (in progress). _قص الحق._ [en.jamelakbar.com](https://en.jamelakbar.com/) · Ummatics colloquium 2024. — Huquq (rights-based access) as alternative to property-based exclusion.
-- **الحركة الوطنية للبناء والتنمية**. _ورقة الاقتصاد التشاركي._ [nmbdsd.org](https://www.nmbdsd.org/). — Production-solidarity (التضامن في الإنتاج) as the operative principle.
-- **Islamic economy primitives** — Mudaraba (مضاربة), Shirkat al-A'mal (شِركة الأعمال), Waqf (وقف), Zakat-aligned Needs Fund (صندوق العون). Reference textbook: Iqbal & Mirakhor, _An Introduction to Islamic Finance_ (Wiley, 2011); standards: [AAOIFI](https://aaoifi.com/).
-
-The CU framework on this page expresses the **shirkat al-a'mal** principle (partnership of labor): contributors are owners by measured contribution, not by membership. Honest divergence from the classical structure: this model **caps contributor downside** — operational losses are absorbed by the operating reserve, not redistributed pro-rata to contributors.
-
-## See also
-
-- [Contributing](/docs/contributing) — commit conventions, your first PR
-- [Business model](/docs/business-model) — pricing, revenue, equity allocation
-- [Code of conduct](/docs/code-of-conduct) — community standards
-- **Doctrine**: [`kun/docs/SHARE-ECONOMY-MODEL.md`](https://github.com/databayt/kun/blob/main/docs/SHARE-ECONOMY-MODEL.md) — full philosophical frame and references
+Keep your work under your own name, so it counts.

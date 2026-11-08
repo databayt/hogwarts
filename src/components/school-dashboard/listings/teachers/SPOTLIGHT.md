@@ -111,5 +111,5 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/components/internationalization/school-en.json, school-ar.json (teachers section)
 - src/routes.ts
 - content/docs-en/teachers.mdx (older: describes a 7-step form; code now uses 6 steps in 2 groups)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-teachers-ar.png

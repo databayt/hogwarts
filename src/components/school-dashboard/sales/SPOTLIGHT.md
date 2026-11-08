@@ -76,5 +76,5 @@ Do not post about this yet.
 - prisma/models/sales.prisma
 - src/components/template/platform-sidebar/config.ts (Sales shown to ADMIN and DEVELOPER)
 - content/docs-en/sales.mdx (the company's own sales plan, not this page)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-finance-ar.png (Sales visible in the side menu)

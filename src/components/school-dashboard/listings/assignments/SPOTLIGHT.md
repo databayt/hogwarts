@@ -93,4 +93,4 @@ Homework is written on the board or sent as a photo to a parents' WhatsApp group
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/children/[id]/assignments/page.tsx
 - src/app/api/cron/assignment-reminders/route.ts
 - src/app/api/mobile/assignments/[id]/submissions/[submissionId]/route.ts
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

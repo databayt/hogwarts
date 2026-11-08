@@ -81,4 +81,4 @@ For parent posts, use the angles in:
 - src/components/school-dashboard/dashboard/content.tsx (chooses the parent view on /dashboard)
 - src/components/school-dashboard/dashboard/actions.ts (parent dashboard data)
 - src/components/school-dashboard/parent-portal/README.md
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

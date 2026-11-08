@@ -110,5 +110,5 @@ None yet — capture with /record. Routes to capture (demo school, Arabic):
 - src/components/internationalization/dictionaries/en/transportation.json (notification wording)
 - cf/crons.json (nightly trip builder, WhatsApp sender)
 - content/docs-en/transportation.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - Production database check (read-only): transport tables present; routes exist for one school only

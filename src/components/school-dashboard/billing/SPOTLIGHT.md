@@ -83,4 +83,4 @@ Route to capture once the screen is translated: `/ar/s/{school}/billing`.
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/billing/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/school/billing/page.tsx
 - src/components/template/platform-sidebar/config.ts
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

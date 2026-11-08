@@ -94,5 +94,5 @@ Lesson videos are scattered across YouTube links in class WhatsApp groups, and n
 - src/components/school-dashboard/live/ISSUE.md
 - content/docs-en/lms.mdx
 - content/docs-en/mvp.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/courses-ar-before.png, lesson-fullscreen.png

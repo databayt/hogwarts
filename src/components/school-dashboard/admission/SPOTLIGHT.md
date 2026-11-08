@@ -116,5 +116,5 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - .github/workflows/admission-crons.yml, cf/crons.json
 - content/docs-en/admission.mdx
 - content/docs-en/admission-spotlight.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-admission-ar.png, docs/evidence/merit-desktop.png, docs/evidence/baseline-admission.jpeg

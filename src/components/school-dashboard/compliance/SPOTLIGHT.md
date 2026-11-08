@@ -98,4 +98,4 @@ None yet — capture with /record. The page only opens for a UAE school (or a pl
 - cf/crons.json
 - src/components/internationalization/dictionaries/{en,ar}/compliance.json
 - content/docs-en/compliance.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

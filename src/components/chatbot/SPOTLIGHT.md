@@ -85,4 +85,4 @@ A parent wants to know when admissions open or what the fees are, so they call t
 - src/components/internationalization/en.json, ar.json (chatbot strings)
 - src/app/[lang]/(saas-marketing)/layout.tsx
 - src/app/[lang]/s/[subdomain]/(school-marketing)/layout.tsx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

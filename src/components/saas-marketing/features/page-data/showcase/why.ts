@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // Shared "Why Balqalam" deck rendered on every feature detail page —
-// the battle-card rows from content/docs-en/competitors.mdx compressed to
+// the battle-card rows from content/docs-en/competitors.mdx (folded into pitch.mdx on 2026-11-08 — see git history) compressed to
 // one-line headlines with a two-line body. Concrete, checkable claims only:
 // no superlatives, sell time and money, name the region. The art is zenda's
 // hand-drawn category line illustrations, not product screenshots.

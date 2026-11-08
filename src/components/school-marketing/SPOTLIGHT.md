@@ -102,5 +102,5 @@ Routes to capture (Arabic, on the demo school):
 - src/components/template/zenda-footer/footer.tsx
 - src/components/internationalization/en.json (marketing.site)
 - prisma/seeds/admission.ts (tour time slots exist only as seed data)
-- content/docs-en/pilot.mdx, content/docs-en/marketing-brief.mdx
+- content/docs-en/pilot.mdx, content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-home-ar.png (checked: shows the retired design)

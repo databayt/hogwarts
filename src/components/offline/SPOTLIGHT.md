@@ -100,7 +100,7 @@ Do not film the install sheet's small description line: it currently says "works
 - src/components/offline/content.tsx
 - src/components/offline/install-card.tsx
 - content/docs-en/offline.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - src/app/manifest.ts
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx
 - src/app/[lang]/s/[subdomain]/offline/page.tsx

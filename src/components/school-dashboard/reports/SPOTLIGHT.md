@@ -109,4 +109,4 @@ None yet — capture with /record. Routes to capture (demo school, Arabic):
 - src/app/api/cron/term-end-report-cards/route.ts
 - cf/crons.json
 - src/components/internationalization/dictionaries/{en,ar}/results.json
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

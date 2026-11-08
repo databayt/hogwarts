@@ -110,5 +110,5 @@ None yet — capture with /record. Routes to capture (demo school, Arabic):
 - src/components/school-dashboard/timetable/content.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/timetable/layout.tsx
 - content/docs-en/timetable.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - src/components/internationalization/school-en.json, school-ar.json (timetable keys)

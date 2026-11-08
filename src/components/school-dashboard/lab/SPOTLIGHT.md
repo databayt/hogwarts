@@ -70,4 +70,4 @@ Do not post about this yet.
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/lab/page.tsx
 - src/components/template/platform-sidebar/content.tsx (the /lab link is commented out)
 - src/routes.ts (no /lab entry)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

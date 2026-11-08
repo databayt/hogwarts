@@ -93,4 +93,4 @@ The secretary types the same notice into five WhatsApp groups, forgets the sixth
 - src/components/school-dashboard/school/content.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/school/communication/
 - content/docs-en/notifications.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

@@ -125,5 +125,5 @@ Capture with /record (sign in on the demo as the accountant):
 - src/app/api/cron/fee-overdue/route.ts, .github/workflows/admission-crons.yml
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/ (route tree, fees/my/page.tsx, fees/assignments/[id]/page.tsx)
 - content/docs-en/finance.mdx, fees.mdx, finance-{accounts,banking,budget,dashboard,expenses,payroll,permissions,receipt,reports,salary,timesheet,wallet}.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/invoice-ar-after-ddl.png, docs/evidence/demo-finance-ar.png, docs/evidence/payroll-runs-admin-ar.png (reviewed)

@@ -93,6 +93,6 @@ The office phones a parent at noon about a morning absence, if someone remembers
 - src/components/school-dashboard/notifications/email-service.ts
 - content/docs-en/notifications.mdx
 - content/docs-en/offline.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/notifications/
 - src/components/internationalization/dictionaries/en/notifications.json

@@ -73,4 +73,4 @@ For question-bank posts, use the angles in the Exams spotlight (AI drafting of q
 - src/components/school-dashboard/exams/qbank/README.md
 - src/components/school-dashboard/exams/qbank/actions/ai-generation.ts
 - src/app/api/cron/ (no question-generation job present)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

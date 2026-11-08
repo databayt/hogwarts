@@ -95,4 +95,4 @@ Note: settings-ar.png in the repo root is not this page — it shows a reading-t
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/settings/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx
 - src/components/internationalization/school-ar.json, school-en.json (settings)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

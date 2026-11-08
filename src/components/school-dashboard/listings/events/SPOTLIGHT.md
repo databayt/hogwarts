@@ -98,5 +98,5 @@ The events of the year live in a printed circular, a notice board and a few What
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/events/page.tsx
 - src/app/api/cron/event-reminders/route.ts, cf/crons.json
 - src/routes.ts
-- content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx
+- content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-events-ar.png, docs/evidence/events-calendar-ar.png

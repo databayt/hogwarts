@@ -110,5 +110,5 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/page.tsx and its sub-route folders
 - content/docs-en/attendance.mdx
 - content/docs-en/compliance.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - Repo-root screenshots: docs/evidence/quick-mobile-ar.png, docs/evidence/quick-mobile-saved.png, docs/evidence/quick-attendance-teacher-mobile.png, docs/evidence/attendance-overview-ar-after.png, docs/evidence/attendance-excuses.png, docs/evidence/attendance-manual-loaded.png

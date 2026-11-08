@@ -103,5 +103,5 @@ Every profile screenshot in the repo uses the demo school, whose accounts carry 
 - src/components/internationalization/school-en.json (school.profile keys)
 - prisma/seeds/profile-extras.ts, prisma/seeds/profile-activity.ts (only callers of the badge engine)
 - content/docs-en/profile.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/profile-student-ar.png, docs/evidence/profile-student-achievements-ar.png, docs/evidence/profile-parent-ar.png, docs/evidence/profile-teacher-ar.png, docs/evidence/profile-admin-ar-bio-fixed.png, docs/evidence/profile-child-via-parent-ar.png

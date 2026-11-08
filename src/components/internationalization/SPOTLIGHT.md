@@ -92,5 +92,5 @@ To capture more (with /record): the same page in Arabic and English at `/ar/s/{s
 - src/components/file/generate/render-report-card-pdf.ts
 - src/app/manifest.ts
 - content/docs-en/internationalization.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/attendance-overview-ar.png, docs/evidence/attendance-overview-en.png, docs/evidence/profile-student-ar.png

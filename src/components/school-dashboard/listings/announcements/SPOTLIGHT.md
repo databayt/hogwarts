@@ -99,5 +99,5 @@ A notice about winter uniform or exam dates is printed, sent home in bags, pinne
 - src/lib/dispatch-notification.ts
 - src/app/api/cron/publish-announcements/route.ts, cf/crons.json
 - src/routes.ts
-- content/docs-en/messages.mdx, content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx
+- content/docs-en/messages.mdx, content/docs-en/notifications.mdx, content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-announcements-ar.png

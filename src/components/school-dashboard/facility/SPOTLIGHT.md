@@ -69,4 +69,4 @@ Do not post about this yet.
 
 - src/components/school-dashboard/facility/content.tsx (the only file; hard-coded example data)
 - grep of src/app for imports of this component — none found; no facility route exists under src/app/[lang]/s/[subdomain]/
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)

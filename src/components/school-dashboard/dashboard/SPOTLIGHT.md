@@ -103,5 +103,5 @@ On the CDN, ready to attach (Arabic; swap `/ar/` for `/en/` in a link for the En
 - src/components/internationalization/school-en.json (dashboard.homeWidget, dashboard.nextAction)
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/dashboard/page.tsx and settings/page.tsx
 - content/docs-en/dashboard.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/demo-dashboard-ar.png, docs/evidence/demo-home-ar.png (the second is the public homepage, not the dashboard — excluded)

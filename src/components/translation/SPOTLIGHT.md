@@ -92,7 +92,7 @@ Check every capture for leftover untranslated lines before posting.
 - src/components/translation/search.ts
 - src/components/translation/actions.ts
 - content/docs-en/translation.mdx
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/announcements/page.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/parent/announcements/page.tsx
 - cf/crons.json (nightly translation job)

@@ -93,5 +93,5 @@ Parent phone numbers live in the admission forms, in a class teacher's phone and
 - src/routes.ts
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/parents/ (page, layout, [id])
 - src/components/internationalization/school-en.json, school-ar.json (parents section)
-- content/docs-en/marketing-brief.mdx
+- content/docs-en/marketing-brief.mdx (folded into marketing.mdx on 2026-11-08 — see git history)
 - docs/evidence/linkparent-fixed.png, docs/evidence/linkparent-menu-open.png, docs/evidence/profile-parent-ar.png
