@@ -4,6 +4,84 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Production on our Hetzner LiveKit — 2026-11-09 (hogwarts#470)
+
+Prod has dialled `wss://live.balqalam.com` (Hetzner cax21, fsn1) since **19:42 CAT**. The fallback is
+`infra/livekit/switch.sh cloud`.
+
+**Two traps, both hit tonight, both fixed:**
+
+- **School pages answered 500 for 4.5 min** (19:29–19:33). `switch.sh` set `LIVEKIT_RECORDING_BUCKET=""`
+  to switch recording off. `src/env.mjs` validates that name `.min(1)`, so every page that loads the env
+  failed, while `/` and `/api/health` stayed 200. Rolled back to Cloud. The script now never sets an empty
+  value, and checks a school page after every restart (`f9315df46`).
+- **The first "successful" switch silently stayed on LiveKit Cloud.** The secrets were pushed, the
+  container restarted and its uptime reset, yet every browser still dialled `hogwarts-jsmb894l.livekit.cloud`.
+  - A secret change alone leaves the Durable Object holding its old env.
+  - An image rollout re-launches the container with the env it was first started with.
+  - What works: an Upload deploy, then `POST /__ops/container/restart` (cron secret, `cf/worker.js`,
+    `b486e4c5f`), then verify the wss host the server puts into `/live/network-test`. `switch.sh` does all
+    of it now (`bec29adcf`).
+
+**Night tests on Hetzner:**
+
+- **Demo room** (demo-clock session, teacher43 host, student@ at 360 px, parent18 observing in Riyadh time):
+  - all three in the room, each sees the others, 0 console errors;
+  - the app accepted our server's signed webhooks (`room_started`, `participant_joined` ×3,
+    `track_published` ×2, then the leaves);
+  - the server log shows every participant on `udp4 host`.
+- **Al-Ibda** `/live/network-test` as its admin: the server hands out `wss://live.balqalam.com` and the test
+  connects over direct UDP in 2.2 s. LiveKit Cloud took 1.3 s from the same Mac in Kigali.
+- **Fallbacks:** TURN answers an unauthenticated Allocate with `401 realm=livekit` on **TLS 443** (Caddy,
+  valid cert for `turn.balqalam.com`) and on **UDP 3478**. ICE-TCP **7881** accepts connections.
+
+**Open:**
+
+- A browser connection forced through the relay is not proven yet: headless Chrome ignores
+  `--force-webrtc-ip-handling-policy`. Use Firefox `media.peerconnection.ice.relay_only`.
+- Our server has no egress. The baked recording bucket stays, so starting a recording errors. That needs
+  egress or a real off switch.
+- **Key rotated** (21:29). The old server key had been printed into a session log.
+  - A no-build Worker upload left the app on the old key, so joins failed with 401 for about 3 min.
+  - Both keys were accepted until the full deploy and restart moved the app to the new one.
+  - Then the old key was removed from the server, Keychain and the Worker.
+
+## Deploy + prod proof + live-class media — 2026-11-09 (hogwarts#471)
+
+**Deployed `d81fd1c52`** (Worker `ae85bd9b`, live after an ops restart at 21:27). It carries combined classes, the
+setup / banner / notification polish (`2fbb9123f`), the notice-timezone fix, and other sessions' sign-in,
+credentials and marketing work.
+
+- **Tests:** 3,195 run; the 14 failures all pre-existed on main (i18n ratchets, report scoring, sales promote,
+  mobile conversations, a students mock). tsc is clean.
+- **Pages:** 29 page checks across four demo roles, the Al-Ibda admin and the public site: all 200, 0 console errors.
+- **Sign-in:** an email in mixed case works on web and mobile; a wrong password is refused (web stays on login,
+  mobile gets 401).
+
+**Combined classes, proven on prod** with a temporary demo class: «قواعد النحو», G12-A plus G12-B, one teacher.
+
+- The sweep wrote ONE room, on the primary slot.
+- «حصة مباشرة تبدأ قريباً» (93), the teacher's "tap to start", and «الحصة المباشرة بدأت الآن» (93) reached both
+  sections.
+- The sibling student (student@, G12-B) joined from the notice, the banner and the timetable pill.
+- Ending wrote attendance per section on its own slot: G12-A 1 PRESENT + 14 ABSENT, G12-B 1 PRESENT + 15 ABSENT.
+- Every temporary row was deleted afterwards.
+
+**Media (Arabic, published, `2c3eca708`):** `live-setup`, `live-join-notice`, `live-join-banner`,
+`live-join-timetable`, plus a refreshed `live-teacher`. Help-center mapping:
+
+- `online-school` → `live-setup`
+- `live-classes` → `live-join-timetable`
+- `teach-live` → `live-teacher`
+
+**Found and open:**
+
+- Features that aren't pre-built, and unknown docs slugs, answer a bare 500 (`e5183ea9b`, static feature pages).
+  Another session is fixing it.
+- The readiness reminder line says «قبل 10 دقيقة»; it needs the Arabic plural form.
+- A combined class's notices name only the primary section («الثالث ثانوي - أ»), even for the sibling's students.
+- The «جارٍ إعادة الاتصال» overlay flashes on the host's first join in headless.
+
 ## Setup polish + the live class leads the dashboard — 2026-11-09
 
 Abdout: "make it more polished and easy to set up, and make it integrate well with notifications,
