@@ -24,8 +24,9 @@ print(json.dumps({
   "LIVEKIT_WS_URL": "wss://live.balqalam.com",
   "LIVEKIT_API_KEY": os.environ["LK_KEY"],
   "LIVEKIT_API_SECRET": os.environ["LK_SECRET"],
-  # No egress service on our server: an empty bucket turns recording off honestly.
-  "LIVEKIT_RECORDING_BUCKET": "",
+  # NOT LIVEKIT_RECORDING_BUCKET="": src/env.mjs validates it .min(1), and an empty value made every
+  # school page 500 for 4.5 min on 2026-11-09. The baked bucket stays; our server has no egress service,
+  # so a recording start fails with an error until egress (or a real off switch) exists.
   # The meter on /live/settings + the 80% guard: our box is bandwidth-bound, not minute-capped.
   "LIVEKIT_TIER_WEBRTC_MINUTES": "2000000",
   "LIVEKIT_TIER_CONCURRENT": "300",
@@ -37,9 +38,12 @@ print(json.dumps({
 import json, os
 print(json.dumps({"LIVEKIT_API_KEY": os.environ["LK_KEY"], "LIVEKIT_API_SECRET": os.environ["LK_SECRET"]}))' > "$OUT"
     pnpm exec wrangler secret bulk "$OUT"
+    # `secret delete` has no --force: it asks y/n, so answer it (a --force made every delete fail silently).
     for n in LIVEKIT_HOST LIVEKIT_WS_URL LIVEKIT_RECORDING_BUCKET LIVEKIT_TIER_WEBRTC_MINUTES LIVEKIT_TIER_CONCURRENT; do
-      pnpm exec wrangler secret delete "$n" --force >/dev/null 2>&1 && echo "    removed override $n" || true
+      echo y | pnpm exec wrangler secret delete "$n" 2>&1 | grep -q "Deleted secret" && echo "    removed override $n" || true
     done
+    left=$(pnpm exec wrangler secret list 2>&1 | grep -oE '"LIVEKIT_(HOST|WS_URL|RECORDING_BUCKET|TIER_[A-Z_]+)"' | tr '\n' ' ')
+    [[ -z "$left" ]] || { echo "    overrides still set: $left — delete them before restarting"; exit 4; }
     ;;
   *) echo "target must be selfhost|cloud"; exit 2 ;;
 esac
@@ -55,7 +59,14 @@ code=$(printf 'Authorization: Bearer %s\n' "$(kc cf-hogwarts-CRON_SECRET)" \
 [[ "$code" == "200" ]] || { echo "    ops route answered $code (is cf/worker.js deployed with it?)"; exit 5; }
 for _ in $(seq 1 30); do
   u=$(curl -s https://balqalam.com/api/health | grep -oE '"uptime":[0-9]+' | cut -d: -f2)
-  [[ -n "$u" && "$u" -lt 120 ]] && { echo "==> container back (uptime ${u}s). Check the host a browser dials: scratchpad wsprobe or the room's server log."; exit 0; }
+  if [[ -n "$u" && "$u" -lt 120 ]]; then
+    echo "==> container back (uptime ${u}s)"
+    # A bad env value fails src/env.mjs and 500s every SCHOOL page while / and /api/health stay 200.
+    s=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 https://demo.balqalam.com/ar/login)
+    [[ "$s" == "200" ]] || { echo "!!! school pages answer $s — roll back NOW: infra/livekit/switch.sh $([[ $TARGET == selfhost ]] && echo cloud || echo selfhost)"; exit 7; }
+    echo "    school pages 200. Check the host a browser dials (scratchpad wsprobe) before calling it done."
+    exit 0
+  fi
   sleep 10
 done
 echo "    the container did not come back within 5 min — check https://balqalam.com/api/health"; exit 6
