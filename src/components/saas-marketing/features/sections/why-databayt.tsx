@@ -60,14 +60,15 @@ export function WhyDatabayt({ lang }: Props) {
   const headingLines = WHY_HEADING.split("\n")
 
   return (
-    // Symmetric logical margins break out of the centered container in both
-    // directions — a physical `ml-…` + `w-screen` only escapes to the left and
-    // gives /ar horizontal overflow.
-    <div className="bg-muted/40 relative mx-[calc(50%-50vw)] overflow-x-clip py-16 md:py-24">
-      <section className="container mx-auto">
-        {/* Section header */}
-        <div className="mx-auto mb-12 flex max-w-full flex-col items-center space-y-4 text-center">
-          <h2 className="font-heading text-3xl leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">
+    // The band stays at the page's content width (so its header and cards sit
+    // on the same edges as every other section) and paints its tint edge to
+    // edge with a 100vmax spread shadow, clipped vertically. Logical-safe in
+    // RTL, and body's overflow-x keeps the spread off the scrollbar.
+    <div className="bg-muted/40 relative py-16 shadow-[0_0_0_100vmax_color-mix(in_oklab,var(--color-muted)_40%,transparent)] [clip-path:inset(0_-100vmax)] md:py-24">
+      <section>
+        {/* Section header — the page's one section title, centred here */}
+        <div className="mb-8 flex flex-col items-center gap-3 text-center md:mb-10">
+          <h2 className="feature-section-title text-balance">
             {headingLines.map((line, i) => (
               <span key={line}>
                 {i > 0 && <br />}

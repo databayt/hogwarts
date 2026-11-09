@@ -214,10 +214,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           />
 
           <div className="relative min-w-0">
-            <h1
-              className="max-w-[16ch] text-3xl leading-[1.35] font-light text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]"
-              style={{ fontFamily: '"thmanyah sans", sans-serif' }}
-            >
+            {/* The SaaS marketing title: display serif 900 (`.home-hero-title`
+                at the inner pages' step, `.hero-title-en`), two lines, the
+                second phrase on the homepage hero's mint mark. */}
+            <h1 className="home-hero-title hero-title-en">
               <MarkedHeadline template={t.hero.title} mark={t.hero.titleMark} />
             </h1>
 
@@ -323,7 +323,8 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   )
 }
 
-/** The headline with its `{mark}` phrase in bold — as on /live. */
+/** The headline with its `{mark}` phrase on its own line, on the homepage
+ *  hero's mint mark (#9FE5B1, HeroBlock's `.hero-mark`). */
 function MarkedHeadline({
   template,
   mark,
@@ -336,8 +337,18 @@ function MarkedHeadline({
   if (after === undefined || !mark) return <>{template}</>
   return (
     <>
-      {before}
-      <strong className="font-bold">{mark}</strong>
+      <span className="block">{before.trim()}</span>
+      {/* The original hero's highlight group: the phrase sits on an absolute
+          bar inset from the line box (top 0.17em / bottom 0.15em, the
+          Arabic line's 0.23em / 0.21em), overhanging 1px at the reading
+          start — a band behind the letters, not a filled box. */}
+      <span className="relative inline-block">
+        <span
+          aria-hidden="true"
+          className="absolute start-[-1px] end-[1px] top-[0.17em] bottom-[0.15em] bg-[#9fe5b1] rtl:top-[0.23em] rtl:bottom-[0.21em]"
+        />
+        <span className="relative">{mark}</span>
+      </span>
       {after}
     </>
   )

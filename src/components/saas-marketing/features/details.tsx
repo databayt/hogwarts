@@ -9,21 +9,18 @@ import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-import {
-  CATEGORIES,
-  FEATURE_DETAILS,
-  FEATURE_GROUPS,
-  FEATURES,
-  GROUP_OF,
-} from "./constants"
-import { GROUP_LABEL_AR, localizeFeature } from "./i18n"
+import { FEATURE_DETAILS, FEATURES } from "./constants"
+import { featureVideo } from "./feature-video"
+import { localizeFeature } from "./i18n"
 import { FEATURE_PAGE_DATA } from "./page-data"
 import { FEATURE_SHOWCASE } from "./page-data/showcase"
 import { BottomCta } from "./sections/bottom-cta"
 import { FeatureShowcase } from "./sections/feature-showcase"
-import { Glyph } from "./sections/glyph"
+import { HeroVideo } from "./sections/hero-video"
+import { InfoCard } from "./sections/info-card"
 import { RelatedFeatures } from "./sections/related-features"
 import { SectionRenderer } from "./sections/section-renderer"
+import { SectionTitle } from "./sections/section-title"
 import { WhyDatabayt } from "./sections/why-databayt"
 
 interface Props {
@@ -54,70 +51,62 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
   }
 
   const localized = localizeFeature(feature, lang)
-  const category = CATEGORIES.find((c) => c.id === feature.category)
   const resolveRelated = (ids?: string[]) =>
     (ids
       ?.map((rid) => FEATURES.find((f) => f.id === rid))
       .filter(Boolean) as typeof FEATURES) ?? []
 
-  const groupId = GROUP_OF[feature.id]
-  const groupLabel = groupId
-    ? isRTL
-      ? (GROUP_LABEL_AR[groupId] ??
-        FEATURE_GROUPS.find((g) => g.id === groupId)?.label)
-      : FEATURE_GROUPS.find((g) => g.id === groupId)?.label
-    : undefined
+  // Body copy in the page's language where the entry has it (`sectionsAr`);
+  // otherwise the English sections, as before.
+  const pageData = FEATURE_PAGE_DATA[id]
+  const localizedSections = isRTL ? pageData?.sectionsAr : pageData?.sections
+  const sections = localizedSections ?? pageData?.sections ?? []
 
-  // The hero copy: the page-data hero carries a fuller paragraph than the grid
-  // card's one-liner, so prefer it in English. Arabic has no page-data copy yet
-  // and falls back to the localized catalog description.
+  // The hero lead: the page-data hero line in the page's language, else the
+  // localized catalog one-liner — never English copy on /ar.
+  const lead = localizedSections?.[0]
   const heroDescription =
-    (!isRTL && FEATURE_PAGE_DATA[id]?.sections[0]?.type === "hero"
-      ? FEATURE_PAGE_DATA[id].sections[0].description
-      : undefined) ?? localized.description
+    (lead?.type === "hero" ? lead.description : undefined) ??
+    localized.description
 
-  // Page heading: large glyph in a row with the title + description, the
-  // category/group pills under them, then the primary calls to action.
+  // The first screen: the feature's loop edge to edge across the whole top
+  // half, from the very top — the transparent page header (layout,
+  // SmartBar variant="page", 64px + a 44px link row below md) sits on top
+  // of it, so the band is pulled up by exactly that height. Then the heading
+  // block under it. The clips keep their action in the centre, so the
+  // cover crop (wide on desktop, near-square on phones) never cuts it.
+  //
+  // The heading block is three things on the content edge: title, one lead
+  // line, the two calls to action. The glyph and the category/group chips
+  // it used to carry were dropped (2026-11-09) — the video already names the
+  // feature visually, and the chips were catalog taxonomy, not buyer copy.
   const hero = (
-    <section className="mb-12">
-      <div className="flex items-start gap-4 md:gap-6">
-        <Glyph
-          title={feature.title}
-          size={80}
-          className="size-14 shrink-0 md:size-20"
-        />
-        <div className="flex flex-col gap-1">
-          <h1 className="home-hero-title">{localized.title}</h1>
-          <p className="home-hero-sub text-foreground max-w-2xl text-pretty">
-            {heroDescription}
-          </p>
+    <section>
+      <HeroVideo
+        video={featureVideo(id, lang)}
+        label={localized.title}
+        className="mx-[calc(50%-50vw)] -mt-[108px] h-[50svh] md:-mt-16"
+        scrim
+      />
 
-          {(category || groupLabel) && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {category && (
-                <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium">
-                  {category.label}
-                </span>
-              )}
-              {groupLabel && (
-                <span className="text-muted-foreground rounded-full border px-3 py-1 text-xs font-medium">
-                  {groupLabel}
-                </span>
-              )}
-            </div>
-          )}
+      <div className="mt-8 md:mt-10">
+        <h1 className={cn("home-hero-title", lang === "en" && "hero-title-en")}>
+          {localized.title}
+        </h1>
+        <p className="home-hero-sub text-foreground mt-2 max-w-2xl text-pretty">
+          {heroDescription}
+        </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={`/${lang}/onboarding`} className={cn(buttonVariants())}>
-              {t.ctaGetStarted}
-            </Link>
-            <Link
-              href={`/${lang}/pricing`}
-              className={cn(buttonVariants({ variant: "ghost" }))}
-            >
-              {t.ctaViewPricing}
-            </Link>
-          </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href={`/${lang}/onboarding`} className={cn(buttonVariants())}>
+            {t.ctaGetStarted}
+          </Link>
+          <Link
+            href={`/${lang}/pricing`}
+            className={cn(buttonVariants({ variant: "ghost" }))}
+          >
+            {t.ctaViewPricing}
+          </Link>
         </div>
       </div>
     </section>
@@ -133,110 +122,95 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
     />
   )
 
-  const pageData = FEATURE_PAGE_DATA[id]
   const showcase = FEATURE_SHOWCASE[id]
   const showcaseBlock = showcase ? <FeatureShowcase data={showcase} /> : null
   const whyBand = <WhyDatabayt lang={lang} />
+
+  // Everything below the hero shares one rhythm: one gap between sections,
+  // one title (SectionTitle), one card style; the page closes on one CTA.
+  const below = "mt-16 flex flex-col gap-16 md:mt-24 md:gap-24"
 
   // ─── Section-based rendering ───
   if (pageData) {
     // The showcase deck slots right after the hero, before supporting
     // sections — mirroring zenda's for-schools page order.
-    const heroCount = pageData.sections[0]?.type === "hero" ? 1 : 0
+    const heroCount = sections[0]?.type === "hero" ? 1 : 0
 
     return (
-      <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
+      <div dir={isRTL ? "rtl" : "ltr"} className="pb-12 md:pb-16">
         {hero}
 
-        {showcaseBlock}
+        <div className={below}>
+          {showcaseBlock}
 
-        {pageData.sections.slice(heroCount).map((section, i) => (
-          <SectionRenderer
-            key={i}
-            section={section}
+          {sections.slice(heroCount).map((section, i) => (
+            <SectionRenderer key={i} section={section} />
+          ))}
+
+          <RelatedFeatures
+            features={resolveRelated(pageData.relatedFeatures)}
             lang={lang}
-            ctaLabel={t.ctaGetStarted}
+            heading={t.relatedFeatures}
           />
-        ))}
 
-        <RelatedFeatures
-          features={resolveRelated(pageData.relatedFeatures)}
-          lang={lang}
-          heading={t.relatedFeatures}
-        />
+          {whyBand}
 
-        {whyBand}
-
-        {bottomCta}
+          {bottomCta}
+        </div>
       </div>
     )
   }
 
-  // ─── Fallback: FEATURE_DETAILS rendering for unmigrated features ───
+  // ─── Fallback: FEATURE_DETAILS rendering for features without page data ───
   const details = FEATURE_DETAILS[id]
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
+    <div dir={isRTL ? "rtl" : "ltr"} className="pb-12 md:pb-16">
       {hero}
 
-      {showcaseBlock}
+      <div className={below}>
+        {showcaseBlock}
 
-      {details && (
-        <>
-          {/* Benefits */}
-          {details.benefits.length > 0 && (
-            <section className="mb-16">
-              <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-                {t.keyBenefits}
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {details.benefits.map((benefit) => (
-                  <li
-                    key={benefit}
-                    className="bg-background flex items-start gap-3 rounded-lg border p-4"
-                  >
-                    <Check
-                      className="text-primary mt-0.5 size-5 shrink-0"
-                      strokeWidth={2.25}
-                    />
-                    <span className="text-sm leading-relaxed">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+        {details && details.benefits.length > 0 && (
+          <section>
+            <SectionTitle title={t.keyBenefits} />
+            <ul className="grid gap-x-12 gap-y-4 sm:grid-cols-2">
+              {details.benefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-3 text-base">
+                  <Check
+                    className="text-primary mt-0.5 size-5 shrink-0"
+                    strokeWidth={2.25}
+                  />
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-          {/* Use Cases */}
-          {details.useCases.length > 0 && (
-            <section className="mb-16">
-              <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-                {t.useCases}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {details.useCases.map((useCase) => (
-                  <div
-                    key={useCase}
-                    className="bg-background rounded-lg border p-6"
-                  >
-                    <Glyph title={useCase} size={32} className="mb-4" />
-                    <p className="text-sm leading-relaxed">{useCase}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+        {details && details.useCases.length > 0 && (
+          <section>
+            <SectionTitle title={t.useCases} />
+            <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+              {details.useCases.map((useCase) => (
+                <InfoCard key={useCase} title={useCase} description="" />
+              ))}
+            </div>
+          </section>
+        )}
 
+        {details && (
           <RelatedFeatures
             features={resolveRelated(details.relatedFeatures)}
             lang={lang}
             heading={t.relatedFeatures}
           />
-        </>
-      )}
+        )}
 
-      {whyBand}
+        {whyBand}
 
-      {bottomCta}
+        {bottomCta}
+      </div>
     </div>
   )
 }

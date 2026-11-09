@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { SectionHeading as SectionHeadingType } from "../types"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   section: SectionHeadingType
@@ -9,15 +10,10 @@ interface Props {
 
 export function SectionHeadingComponent({ section }: Props) {
   return (
-    <div className="mb-8 max-w-2xl">
-      <h2 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">
-        {section.heading}
-      </h2>
-      {section.description && (
-        <p className="text-muted-foreground mt-3 text-pretty">
-          {section.description}
-        </p>
-      )}
-    </div>
+    <SectionTitle
+      title={section.heading}
+      description={section.description}
+      className="mb-0 md:mb-0"
+    />
   )
 }

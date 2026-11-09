@@ -3,6 +3,7 @@
 
 import type { BenefitsGridSection } from "../types"
 import { InfoCard } from "./info-card"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   section: BenefitsGridSection
@@ -10,18 +11,9 @@ interface Props {
 
 export function BenefitsGridSectionComponent({ section }: Props) {
   return (
-    <section className="mb-16">
-      <div className="mb-8 max-w-2xl">
-        <h2 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">
-          {section.heading}
-        </h2>
-        {section.description && (
-          <p className="text-muted-foreground mt-3 text-pretty">
-            {section.description}
-          </p>
-        )}
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section>
+      <SectionTitle title={section.heading} description={section.description} />
+      <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {section.items.map((item) => (
           <InfoCard
             key={item.title}

@@ -11,6 +11,7 @@ import EnterpriseSection from "./enterprise-section"
 import { getExchangeRates } from "./exchange-rates"
 import PricingFAQs from "./pricing-faqs"
 import PricingHeader from "./pricing-header"
+import { SecurePayment } from "./secure-payment"
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -25,12 +26,13 @@ export default async function PricingContent(props: Props) {
   return (
     <div className="flex w-full flex-col items-center py-14">
       <div className="flex w-full justify-center">
-        <PricingHeader dictionary={dictionary} />
+        <PricingHeader dictionary={dictionary} lang={lang} />
       </div>
       <CurrencyProvider rates={rates} updated={updated}>
         <PricingCards lang={lang} />
       </CurrencyProvider>
       <ComparePlans dictionary={dictionary} />
+      <SecurePayment dictionary={dictionary} />
       <PricingFAQs dictionary={dictionary} lang={lang} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>

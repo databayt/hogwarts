@@ -74,11 +74,11 @@ export default function FeatureTabs({
                     setExpanded(false)
                   }}
                   className={cn(
-                    "hover:text-primary flex h-7 shrink-0 items-center justify-center rounded-full px-3 text-center text-sm transition-colors",
+                    "hover:text-primary flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-center text-base transition-colors",
                     active === tab.id ? "bg-muted text-primary" : ""
                   )}
                 >
-                  <h6>{tab.label}</h6>
+                  <span className="font-medium">{tab.label}</span>
                 </button>
               ))}
             </nav>

@@ -21,20 +21,27 @@ import {
   CONTACT_REACH_MIN,
 } from "@/components/saas-marketing/contact/validation"
 import {
+  clusterCount,
+  SortingText,
+} from "@/components/saas-marketing/thmanyah/block/SortingText"
+import {
   CONTACT_CHANNELS,
   useThmanyahLocale,
 } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**
- * The hero's contact panel. The header's "Contact" doesn't navigate on the
- * homepage: HeroBlock fades its headline and CTA out and this fades in on the
- * same green, in the hero's type (sans eyebrow, Serif Display Black title).
+ * The hero's contact panel — the old homepage's "Let's Work Together" section
+ * (`saas-marketing/lets-work-together.tsx`), recalled onto the hero's green in
+ * the hero's type. The header's "Contact" doesn't navigate on the homepage:
+ * HeroBlock smokes its headline out and this sorts in (SortingText).
  *
- *   start column  eyebrow · title · lede, then the channels: the two
- *                 mailboxes, a call link, and WhatsApp / Facebook / X / GitHub
- *   end column    two fields — "your email or phone" and the message — and
- *                 Send, through `submitContact` (honeypot, 3/hour rate limit,
- *                 mail to sales, an inbound Prospect for the funnel)
+ *   top     (hero-text) the title in the hero headline's face, size and
+ *           slot — it sorts in exactly where the headline smoked out — then
+ *           the lede
+ *   bottom  (hero-cta) one row of round icons — WhatsApp, Facebook, X,
+ *           GitHub, mail, call — and the two-field form: Submit through
+ *           `submitContact` (honeypot, 3/hour rate limit, mail to sales, an
+ *           inbound Prospect for the funnel), Live chat opens the chatbot
  *
  * Every number and handle lives in `CONTACT_CHANNELS` (lib/copy.ts).
  */
@@ -43,10 +50,14 @@ const SANS: React.CSSProperties = {
   fontFamily: '"thmanyah sans", sans-serif',
   fontFeatureSettings: '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
 }
-const DISPLAY: React.CSSProperties = {
+/* The hero headline's H1_STYLE: same face, size and leading (the leading
+   comes from `.hero-words h1` in thmanyah-clone.css, per dir). */
+const TITLE: React.CSSProperties = {
   fontFamily: '"thmanyah serif display", serif',
   fontWeight: 900,
   fontFeatureSettings: '"ss01" on',
+  color: "#000",
+  textAlign: "start",
 }
 
 /* The clone's reset sets `input, textarea, button` to 12px sans-serif in
@@ -70,15 +81,31 @@ function XGlyph({ className }: { className?: string }) {
   )
 }
 
-const ENTER = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 16 },
-  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
-}
+/* Everything but the title blurs in after it starts sorting, in reading
+   order — the dashboard's vocabulary (blur + opacity + a small lift) — and
+   leaves the same way, all at once and a touch faster, so the title's
+   letters are the last thing to go. */
+const EASE = [0.22, 1, 0.36, 1] as const
+const rise = (step: number, leaving: boolean) => ({
+  initial: { opacity: 0, y: 14, filter: "blur(8px)" },
+  animate: leaving
+    ? { opacity: 0, y: -6, filter: "blur(6px)" }
+    : { opacity: 1, y: 0, filter: "blur(0px)" },
+  transition: leaving
+    ? { duration: 0.4, ease: [0.4, 0, 1, 1] as const }
+    : { duration: 0.7, ease: EASE, delay: 0.18 + step * 0.08 },
+})
 
-export function ContactPanel({ onClose }: { onClose: () => void }) {
+export function ContactPanel({
+  onClose,
+  leaving = false,
+}: {
+  onClose: () => void
+  /** HeroBlock is swapping back to the headline: smoke out. */
+  leaving?: boolean
+}) {
   const { lang, dir, copy } = useThmanyahLocale()
+  const rtl = dir === "rtl"
   const c = copy.contact
   const reachId = useId()
   const messageId = useId()
@@ -126,8 +153,10 @@ export function ContactPanel({ onClose }: { onClose: () => void }) {
 
   const reachError = form.formState.errors.contact?.message
   const messageError = form.formState.errors.message?.message
+  /* The old section's bordered fields, lifted onto the green: a pale wash so
+     they read as wells in the ground, black ink, a darker rule on focus. */
   const field =
-    "w-full rounded-none border-0 border-b border-black/40 bg-transparent px-0 py-3 text-[17px] text-black placeholder:text-black/55 focus:border-black focus:outline-none md:text-lg"
+    "w-full rounded-2xl border border-black/15 bg-white/35 px-5 py-3.5 text-black placeholder:text-black/55 transition-colors focus:border-black/60 focus:bg-white/55 focus:outline-none"
 
   const socials = [
     {
@@ -156,144 +185,224 @@ export function ContactPanel({ onClose }: { onClose: () => void }) {
     },
   ]
 
+  const titleLines = useMemo(() => {
+    const cut = c.title.lastIndexOf(" ")
+    return cut > 0 ? [c.title.slice(0, cut), c.title.slice(cut + 1)] : [c.title]
+  }, [c.title])
+
+  /* One row of round black buttons: the socials, then mail and call. */
+  const channels = [
+    ...socials.map((s) => ({ ...s, external: true })),
+    {
+      key: "mail",
+      label: c.emailsLabel,
+      href: `mailto:${CONTACT_CHANNELS.email}`,
+      icon: <Mail className="size-5" strokeWidth={1.75} />,
+      external: false,
+    },
+    {
+      key: "call",
+      label: c.call,
+      href: `tel:${CONTACT_CHANNELS.phone}`,
+      icon: <Phone className="size-5" strokeWidth={1.75} />,
+      external: false,
+    },
+  ]
+
+  /* Laid out on the hero's own frame — `hero-text` on top, `hero-cta` at the
+     bottom, spaced by the section's justify-between — so the title sorts in
+     exactly where the headline smoked out. */
   return (
-    <motion.div
-      key="contact"
-      {...ENTER}
-      data-cta="contact"
-      className="grid w-full max-w-[1320px] flex-1 content-center gap-10 pt-16 pb-4 text-black lg:grid-cols-2 lg:items-center lg:gap-20 lg:pt-10"
-      style={SANS}
-    >
-      {/* Start column — who we are to talk to, and every way in */}
-      <div className="flex flex-col items-start gap-6">
-        <div>
-          <p className="text-xl md:text-2xl">{c.eyebrow}</p>
-          <h2
-            className={`mt-3 text-[40px] sm:text-[56px] lg:text-[72px] ${
-              dir === "rtl" ? "leading-[1.25]" : "leading-[1.08]"
-            }`}
-            style={DISPLAY}
-          >
-            {c.title}
-          </h2>
-          <p className="mt-3 max-w-[480px] text-[17px] leading-relaxed text-black/75 md:text-lg">
-            {c.lede}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2 text-[17px] md:text-lg">
-          {CONTACT_CHANNELS.emails.map((m) => (
-            <a
-              key={m}
-              href={`mailto:${m}`}
-              dir="ltr"
-              className="inline-flex items-center gap-2 text-black no-underline hover:underline"
-            >
-              <Mail className="size-[18px]" strokeWidth={1.75} aria-hidden />
-              {m}
-            </a>
-          ))}
-          <a
-            href={`tel:${CONTACT_CHANNELS.phone}`}
-            className="inline-flex items-center gap-2 text-black no-underline hover:underline"
-          >
-            <Phone className="size-[18px]" strokeWidth={1.75} aria-hidden />
-            <span>{c.call}</span>
-            <span dir="ltr" className="text-black/70">
-              {CONTACT_CHANNELS.phone}
-            </span>
-          </a>
-        </div>
-
-        <div className="flex items-center gap-3" aria-label={c.followLabel}>
-          {socials.map((s) => (
-            <a
-              key={s.key}
-              href={s.href}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={s.label}
-              title={s.label}
-              data-cta={`contact-${s.key}`}
-              className="inline-flex size-11 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/80"
-            >
-              {s.icon}
-            </a>
-          ))}
+    <>
+      <div
+        className="hero-text text-black"
+        data-cta="contact"
+        /* Hug the content instead of filling the hero (`.hero-text` grows to
+           push the CTA down), so the icons and form follow the lede. */
+        style={{ ...SANS, flex: "0 0 auto", height: "auto" }}
+      >
+        {/* An empty slot the height of the hero's eyebrow line, so the
+            title lands on the headline's exact baseline. */}
+        {/* Phones: clear the menu bar (the hero centres its text there). */}
+        <div className="h-10 sm:hidden" aria-hidden />
+        <h3 className="hero-title invisible w-full" aria-hidden="true">
+          &nbsp;
+        </h3>
+        {/* Two lines, like the hero's headline: everything but the last
+            word, then the last word ("Let's Work" / "Together", «لنعمل» /
+            «معًا»). Same box, size, leading and row gap as `.hero-words`. */}
+        <div className="hero-words flex w-full flex-row flex-wrap items-center justify-start">
+          {titleLines.map((line, i) => {
+            const last = i === titleLines.length - 1 && i > 0
+            const h1 = (
+              <h1 style={TITLE}>
+                <SortingText
+                  text={line}
+                  rtl={rtl}
+                  scramble
+                  leaving={leaving}
+                  order={titleLines
+                    .slice(0, i)
+                    .reduce((n, l) => n + clusterCount(l), 0)}
+                  total={clusterCount(titleLines.join(""))}
+                />
+              </h1>
+            )
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <div className="h-0 basis-full" aria-hidden />}
+                {last ? (
+                  /* The hero's highlight group: the pale mark behind the last
+                     word, drawn from the reading edge once the word starts
+                     sorting, wiped away on the leave. */
+                  <div className="relative flex flex-row items-center justify-center gap-[10px]">
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: leaving ? 0 : 1 }}
+                      transition={
+                        leaving
+                          ? { duration: 0.5, ease: EASE }
+                          : { duration: 0.7, ease: EASE, delay: 0.25 }
+                      }
+                      className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
+                      aria-hidden
+                    />
+                    <div className="relative flex flex-col">{h1}</div>
+                  </div>
+                ) : (
+                  h1
+                )}
+              </React.Fragment>
+            )
+          })}
         </div>
       </div>
 
-      {/* End column — the two-field form */}
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        noValidate
-        data-cta="contact-form"
-        className="relative flex w-full max-w-[560px] flex-col gap-4 lg:justify-self-end"
+      {/* `.hero-cta` is a column in unlayered CSS; the row lives inside it. */}
+      <div
+        className="hero-cta text-black"
+        /* 24px — the hero-text gap — so the row starts where the lede did. */
+        style={{ ...SANS, marginTop: 24, marginBottom: "auto" }}
       >
-        <div>
-          <label htmlFor={reachId} className="sr-only">
-            {c.reachLabel}
-          </label>
-          <input
-            id={reachId}
-            style={CONTROL}
-            type="text"
-            inputMode="email"
-            autoComplete="email"
-            placeholder={c.reachLabel}
-            aria-invalid={!!reachError}
-            className={field}
-            {...form.register("contact")}
-          />
-          {reachError && (
-            <p className="mt-1 text-sm text-black/80">{reachError}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor={messageId} className="sr-only">
-            {c.messageLabel}
-          </label>
-          <textarea
-            id={messageId}
-            style={CONTROL}
-            rows={4}
-            placeholder={c.messagePlaceholder}
-            aria-invalid={!!messageError}
-            className={`${field} resize-none`}
-            {...form.register("message")}
-          />
-          {messageError && (
-            <p className="mt-1 text-sm text-black/80">{messageError}</p>
-          )}
-        </div>
-        {/* Honeypot — hidden from people, filled by bots. */}
-        <input
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden
-          className="absolute h-0 w-0 opacity-0"
-          {...form.register("website")}
-        />
-        <div className="mt-2 flex items-center gap-6">
-          <button
-            type="submit"
-            style={CONTROL}
-            disabled={isPending}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-black px-8 text-[17px] text-white transition-colors hover:bg-black/85 disabled:opacity-60 md:text-lg"
+        <div className="flex w-full flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          {/* Start column — the description, then the icon row; its top
+              lines up with the form's first field. */}
+          <div className="flex flex-col gap-7 lg:max-w-[560px]">
+            <motion.p
+              {...rise(0, leaving)}
+              className="text-start text-[18px] leading-relaxed text-black/80 md:text-[20px]"
+            >
+              {c.lede}
+            </motion.p>
+            <motion.div
+              {...rise(1, leaving)}
+              className="flex flex-wrap items-center gap-3"
+              aria-label={c.followLabel}
+            >
+              {channels.map((s) => (
+                <a
+                  key={s.key}
+                  href={s.href}
+                  {...(s.external
+                    ? { target: "_blank", rel: "noreferrer" }
+                    : {})}
+                  aria-label={s.label}
+                  title={s.label}
+                  data-cta={`contact-${s.key}`}
+                  className="inline-flex size-11 items-center justify-center rounded-full bg-black text-white transition-transform hover:-translate-y-0.5 hover:bg-black/85"
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* End column — the old two-field form */}
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            noValidate
+            data-cta="contact-form"
+            className="relative flex w-full flex-col gap-4 lg:max-w-[680px]"
           >
-            {isPending ? c.submitting : sent ? `${c.submit} ✓` : c.submit}
-          </button>
-          <button
-            type="button"
-            style={CONTROL}
-            onClick={onClose}
-            className="bg-transparent text-[17px] text-black underline decoration-black/40 underline-offset-4 hover:decoration-black md:text-lg"
-          >
-            {c.back}
-          </button>
+            <motion.div {...rise(1, leaving)}>
+              <label htmlFor={reachId} className="sr-only">
+                {c.reachLabel}
+              </label>
+              <input
+                id={reachId}
+                style={CONTROL}
+                type="text"
+                inputMode="email"
+                autoComplete="email"
+                placeholder={c.reachLabel}
+                aria-invalid={!!reachError}
+                className={field}
+                {...form.register("contact")}
+              />
+              {reachError && (
+                <p className="mt-1.5 text-sm text-black/80">{reachError}</p>
+              )}
+            </motion.div>
+            <motion.div {...rise(2, leaving)}>
+              <label htmlFor={messageId} className="sr-only">
+                {c.messageLabel}
+              </label>
+              <textarea
+                id={messageId}
+                style={CONTROL}
+                rows={4}
+                placeholder={c.messagePlaceholder}
+                aria-invalid={!!messageError}
+                className={`${field} min-h-[120px] resize-none`}
+                {...form.register("message")}
+              />
+              {messageError && (
+                <p className="mt-1.5 text-sm text-black/80">{messageError}</p>
+              )}
+            </motion.div>
+            {/* Honeypot — hidden from people, filled by bots. */}
+            <input
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden
+              className="absolute h-0 w-0 opacity-0"
+              {...form.register("website")}
+            />
+            <motion.div
+              {...rise(3, leaving)}
+              className="mt-1 flex flex-wrap items-center gap-2"
+            >
+              <button
+                type="submit"
+                style={CONTROL}
+                disabled={isPending}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-black px-8 text-white transition-colors hover:bg-black/85 disabled:opacity-60"
+              >
+                {isPending ? c.submitting : sent ? `${c.submit} ✓` : c.submit}
+              </button>
+              <button
+                type="button"
+                style={CONTROL}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("open-chatbot"))
+                }
+                className="inline-flex h-12 items-center justify-center rounded-full px-5 text-black transition-colors hover:bg-black/10"
+              >
+                {c.liveChat}
+              </button>
+              <button
+                type="button"
+                style={CONTROL}
+                onClick={onClose}
+                className="ms-auto bg-transparent text-black/70 underline decoration-black/30 underline-offset-4 hover:text-black hover:decoration-black"
+              >
+                {c.back}
+              </button>
+            </motion.div>
+          </form>
         </div>
-      </form>
-    </motion.div>
+      </div>
+    </>
   )
 }

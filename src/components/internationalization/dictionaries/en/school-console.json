@@ -16,8 +16,8 @@
   },
   "overview": {
     "hero": {
-      "title": "{mark} in one place, from setup to reports",
-      "titleMark": "Your whole school"
+      "title": "Your whole school {mark}",
+      "titleMark": "in one place"
     },
     "glance": {
       "title": "The school at a glance",

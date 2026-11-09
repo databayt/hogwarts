@@ -3544,5 +3544,401 @@
     "webp": {
       "1170": "https://cdn.databayt.org/hogwarts/en/dashboard/install/iphone-14-pwa/dashboard.webp?v=be48e48d"
     }
+  },
+  "feature-student/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الطلاب",
+      "en": "Student"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/student/video.poster.webp?v=6bb6709d",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/student/video.av1.mp4?v=4b30e16b",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/student/video.mp4?v=eff14312",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-student/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "الطلاب",
+      "en": "Student"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/student/video.poster.webp?v=828c600b",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/student/video.av1.mp4?v=1f525133",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/student/video.mp4?v=c1c46ef7",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-admission/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "القبول",
+      "en": "Admission"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/admission/video.poster.webp?v=66c408ac",
+    "width": 2400,
+    "height": 720,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/admission/video.av1.mp4?v=861fffb3",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/admission/video.mp4?v=7d1277f6",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-admission/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "القبول",
+      "en": "Admission"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/admission/video.poster.webp?v=6b7ddac3",
+    "width": 2400,
+    "height": 720,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/admission/video.av1.mp4?v=1aa751ba",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/admission/video.mp4?v=8c3955f5",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-attendance/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الحضور",
+      "en": "Attendance"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/attendance/video.poster.webp?v=6676730f",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/attendance/video.av1.mp4?v=4063ffea",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/attendance/video.mp4?v=cf89fec8",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-attendance/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "الحضور",
+      "en": "Attendance"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/attendance/video.poster.webp?v=e2666205",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/attendance/video.av1.mp4?v=51581f70",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/attendance/video.mp4?v=7e9684c1",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-gradebook/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "سجل الدرجات",
+      "en": "Gradebook"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/gradebook/video.poster.webp?v=65d609a1",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/gradebook/video.av1.mp4?v=03ce00e8",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/gradebook/video.mp4?v=c98a60fd",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-gradebook/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "سجل الدرجات",
+      "en": "Gradebook"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/gradebook/video.poster.webp?v=be3baa4c",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/gradebook/video.av1.mp4?v=f75fe697",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/gradebook/video.mp4?v=f03775ab",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-payment/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "المدفوعات",
+      "en": "Payment"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/payment/video.poster.webp?v=a6eb2009",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/payment/video.av1.mp4?v=07781946",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/payment/video.mp4?v=2f742c7c",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-payment/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "المدفوعات",
+      "en": "Payment"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/payment/video.poster.webp?v=b0dadbe6",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/payment/video.av1.mp4?v=8c4d6ebe",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/payment/video.mp4?v=55e7e7c4",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-announcement/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الإعلانات",
+      "en": "Announcement"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/announcement/video.poster.webp?v=d2f9ba3d",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/announcement/video.av1.mp4?v=ddf6a01d",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/announcement/video.mp4?v=e9fef802",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-announcement/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "الإعلانات",
+      "en": "Announcement"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/announcement/video.poster.webp?v=2dc593ac",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/announcement/video.av1.mp4?v=52036086",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/announcement/video.mp4?v=5cdd2db9",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-parent-login/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "بوابة ولي الأمر",
+      "en": "Parent Login"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/parent-login/video.poster.webp?v=4156ca5b",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/parent-login/video.av1.mp4?v=a277d5ed",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/parent-login/video.mp4?v=19bd0770",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-exam/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "الامتحانات",
+      "en": "Exam"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/exam/video.poster.webp?v=c0620626",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/exam/video.av1.mp4?v=af86f3fe",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/exam/video.mp4?v=4fd2cd8e",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-exam/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "الامتحانات",
+      "en": "Exam"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/exam/video.poster.webp?v=d28c48f2",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/exam/video.av1.mp4?v=33c03fea",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/exam/video.mp4?v=a3352b7f",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-dashboard/video-ar": {
+    "kind": "video",
+    "title": {
+      "ar": "لوحة التحكم",
+      "en": "Dashboard"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/ar/features/dashboard/video.poster.webp?v=726748ba",
+    "width": 1600,
+    "height": 900,
+    "duration": 8,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/dashboard/video.av1.mp4?v=c2f784db",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/ar/features/dashboard/video.mp4?v=0dfcc070",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-dashboard/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "لوحة التحكم",
+      "en": "Dashboard"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/dashboard/video.poster.webp?v=9536ba3d",
+    "width": 1600,
+    "height": 900,
+    "duration": 8,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/dashboard/video.av1.mp4?v=4fada08f",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/dashboard/video.mp4?v=a38fca5e",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
+  },
+  "feature-timetable/video-en": {
+    "kind": "video",
+    "title": {
+      "ar": "الجدول الدراسي",
+      "en": "Timetable"
+    },
+    "poster": "https://cdn.databayt.org/hogwarts/en/features/timetable/video.poster.webp?v=12feeff2",
+    "width": 1600,
+    "height": 900,
+    "duration": 12,
+    "sources": [
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/timetable/video.av1.mp4?v=c4a3fedc",
+        "type": "video/mp4; codecs=\"av01.0.08M.10\""
+      },
+      {
+        "src": "https://cdn.databayt.org/hogwarts/en/features/timetable/video.mp4?v=86e9740d",
+        "type": "video/mp4; codecs=\"avc1.640029\""
+      }
+    ],
+    "tracks": []
   }
 }

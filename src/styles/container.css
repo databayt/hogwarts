@@ -320,6 +320,56 @@
     font-size: 92px;
   }
 }
+/* /features/<id> — every section title below the hero (SectionTitle, the
+ * showcase deck, the why band, the closing CTA): the hero's display serif,
+ * one size, a step under the page title. Unlayered like the rules above so
+ * the call sites' Tailwind type utilities cannot pull it apart again. */
+.feature-section-title {
+  font-family: "thmanyah serif display", serif;
+  font-weight: 900;
+  font-feature-settings: "ss01" on;
+  letter-spacing: normal;
+  font-size: 28px;
+  line-height: 1.15;
+}
+[dir="rtl"] .feature-section-title,
+.feature-section-title:where([dir="rtl"] *) {
+  line-height: 1.3;
+}
+@media (min-width: 600px) {
+  .feature-section-title {
+    font-size: 36px;
+  }
+}
+@media (min-width: 1200px) {
+  .feature-section-title {
+    font-size: 40px;
+  }
+}
+/* Display numerals (stats): the same serif, sized by the call site. */
+.feature-display {
+  font-family: "thmanyah serif display", serif;
+  font-weight: 900;
+  font-feature-settings: "ss01" on;
+  letter-spacing: normal;
+}
+
+/* English hero headings — one size for /en/features, /en/community and
+ * /en/pricing, a step down from the home hero so Latin display type does not
+ * shout; Arabic keeps the full size. */
+.home-hero-title.hero-title-en {
+  font-size: 36px;
+}
+@media (min-width: 600px) {
+  .home-hero-title.hero-title-en {
+    font-size: 48px;
+  }
+}
+@media (min-width: 1200px) {
+  .home-hero-title.hero-title-en {
+    font-size: 56px;
+  }
+}
 
 /* ===== DOCS ARTICLE TYPE (2026-11-08) =====
  * The docs article reads a size up: body 18px (set on the page wrapper) and

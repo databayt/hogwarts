@@ -80,7 +80,7 @@ export default async function CommunityHubPage({
       ? gradeScoped
       : await getCachedCommunitySubjects({ curriculum: activeCurriculum, lang })
 
-  const heading = dictionary?.community?.title ?? "The Room of Requirement"
+  const heading = dictionary?.community?.title ?? "The Chamber of Secrets"
   const description =
     dictionary?.community?.lead ??
     "Every textbook, mock exam, and lesson you need — open to all, no account required."
@@ -120,7 +120,7 @@ export default async function CommunityHubPage({
         }
         heading={heading}
         description={description}
-        headingClassName="home-hero-title text-balance"
+        headingClassName={`home-hero-title text-balance${lang === "en" ? " hero-title-en" : ""}`}
         descriptionClassName="home-hero-sub max-w-3xl text-balance"
         actions={
           <TwoButtons

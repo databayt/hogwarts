@@ -4,28 +4,25 @@
 import { Check } from "lucide-react"
 
 import type { ChecklistSection } from "../types"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   section: ChecklistSection
 }
 
+/** What the module includes — a plain two-column tick list, no chips. */
 export function ChecklistSectionComponent({ section }: Props) {
   return (
-    <section className="mb-16">
-      <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-        {section.heading}
-      </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <section>
+      <SectionTitle title={section.heading} />
+      <ul className="grid gap-x-12 gap-y-4 sm:grid-cols-2">
         {section.items.map((item) => (
-          <li
-            key={item.text}
-            className="bg-background flex items-center gap-3 rounded-lg border p-4"
-          >
+          <li key={item.text} className="flex items-start gap-3 text-base">
             <Check
-              className="text-primary size-5 shrink-0"
+              className="text-primary mt-0.5 size-5 shrink-0"
               strokeWidth={2.25}
             />
-            <span className="text-sm font-medium">{item.text}</span>
+            <span>{item.text}</span>
           </li>
         ))}
       </ul>

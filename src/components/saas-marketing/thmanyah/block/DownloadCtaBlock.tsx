@@ -96,54 +96,8 @@ export function DownloadCtaBlock({ lang }: { lang: string }) {
             onHoverStart={() => setHover(true)}
             onHoverEnd={() => setHover(false)}
           >
-            {/* .framer-zplkui — icon + label, centred */}
+            {/* .framer-zplkui — the label, centred (no icon) */}
             <div className="footer-btn-content">
-              <svg
-                className="footer-btn-icon"
-                role="presentation"
-                viewBox="0 0 24 24"
-                style={
-                  {
-                    ["--1m6trwb" as string]: 0,
-                    ["--21h8s6" as string]: ink,
-                    ["--pgex8v" as string]: 2,
-                  } as React.CSSProperties
-                }
-              >
-                <path
-                  d="M 1.5 0 L 15 0 C 15.828 0 16.5 0.672 16.5 1.5 L 16.5 16.5 L 16.5 16.5 L 0 16.5 L 0 16.5 L 0 1.5 C 0 0.672 0.672 0 1.5 0 Z"
-                  fillOpacity="var(--1m6trwb, 0)"
-                  fill="var(--21h8s6, rgb(0, 0, 0))"
-                  transform="translate(3.75 3)"
-                />
-                <path
-                  d="M 0 10.5 L 0 0"
-                  fill="transparent"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="var(--pgex8v, 1.5)"
-                  stroke="var(--21h8s6, rgb(0, 0, 0))"
-                  transform="translate(12 3)"
-                />
-                <path
-                  d="M 16.5 0 L 16.5 6 L 0 6 L 0 0"
-                  fill="transparent"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="var(--pgex8v, 1.5)"
-                  stroke="var(--21h8s6, rgb(0, 0, 0))"
-                  transform="translate(3.75 13.5)"
-                />
-                <path
-                  d="M 7.5 0 L 3.75 3.75 L 0 0"
-                  fill="transparent"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="var(--pgex8v, 1.5)"
-                  stroke="var(--21h8s6, rgb(0, 0, 0))"
-                  transform="translate(8.25 9.75)"
-                />
-              </svg>
               <div className="footer-btn-label-box">
                 <p className="footer-btn-label" style={{ color: ink }}>
                   {label}

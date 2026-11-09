@@ -36,7 +36,13 @@ export function HomeHeader({
   const nav = dictionary.navigation
   const ar = locale === "ar"
   const links = [
-    { label: ar ? "الرئيسية" : "Home", href: `/${locale}` },
+    // On the homepage, Home closes the contact panel back to the hero
+    // (HeroBlock listens); elsewhere it navigates home.
+    {
+      label: ar ? "الرئيسية" : "Home",
+      href: `/${locale}`,
+      event: "balqalam:home",
+    },
     { label: nav?.features || "Features", href: `/${locale}/features` },
     { label: nav?.community || "Community", href: `/${locale}/community` },
     { label: nav?.pricing || "Pricing", href: `/${locale}/pricing` },

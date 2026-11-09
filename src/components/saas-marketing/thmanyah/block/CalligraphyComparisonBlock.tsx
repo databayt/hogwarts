@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { BlurImage } from "@/components/atom/blur-image"
 import { motion, useScroll, useTransform } from "framer-motion"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**

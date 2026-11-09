@@ -140,7 +140,7 @@ export interface ThmanyahCopy {
   /** The hero's contact panel (ContactPanel) — the header's "Contact"
    *  swaps the hero headline and CTA for it in place. */
   contact: {
-    eyebrow: string
+    /** The old homepage's "Let's Work Together" section, recalled. */
     title: string
     lede: string
     /** Section labels over the channel lists. */
@@ -156,6 +156,8 @@ export interface ThmanyahCopy {
     messagePlaceholder: string
     submit: string
     submitting: string
+    /** Opens the site chatbot (`open-chatbot`). */
+    liveChat: string
     success: string
     back: string
     errors: {
@@ -362,9 +364,8 @@ const AR: ThmanyahCopy = {
     ],
   },
   contact: {
-    eyebrow: "تواصل معنا",
-    title: "لنتحدث عن مدرستك",
-    lede: "اترك لنا وسيلة التواصل التي تفضلها، وسنعود إليك.",
+    title: "لنعمل معًا",
+    lede: "هل أنت مستعد لإدارة مدرستك بنظام واحد أبسط؟ عمليات أسهل، وتعلّم أفضل للجميع.",
     emailsLabel: "البريد",
     followLabel: "تابعنا",
     call: "اتصل بنا",
@@ -380,6 +381,7 @@ const AR: ThmanyahCopy = {
     messagePlaceholder: "حدثنا عن مدرستك وعدد طلابها",
     submit: "أرسل",
     submitting: "جارٍ الإرسال…",
+    liveChat: "محادثة مباشرة",
     success: "شكرًا — وصلت رسالتك وسنعود إليك قريبًا.",
     back: "العودة",
     errors: {
@@ -607,9 +609,8 @@ const EN: ThmanyahCopy = {
     ],
   },
   contact: {
-    eyebrow: "Contact",
-    title: "Let's talk about your school",
-    lede: "Leave the way you'd like us to reach you, and we'll get back to you.",
+    title: "Let's Work Together",
+    lede: "Ready to run your school on one simple system? Smoother operations, better learning for everyone.",
     emailsLabel: "Email",
     followLabel: "Follow us",
     call: "Call us",
@@ -626,6 +627,7 @@ const EN: ThmanyahCopy = {
       "Tell us about your school and how many students it has",
     submit: "Send",
     submitting: "Sending…",
+    liveChat: "Live chat",
     success: "Thanks — your message arrived and we'll get back to you soon.",
     back: "Back",
     errors: {
@@ -642,7 +644,7 @@ const EN: ThmanyahCopy = {
   },
   footer: {
     ctaLine1: "It is easy to start with",
-    ctaLine2: "balqalam",
+    ctaLine2: "Bilqalam",
     ctaLabel: "Get started",
     wordmarkLead: "balqalam by ",
     wordmarkMaker: "Databayt",
@@ -654,7 +656,7 @@ export const CONTACT_CHANNELS = {
   /** International, digits only (wa.me form). */
   whatsapp: "249919071294",
   phone: "+249919071294",
-  emails: ["hi@databayt.org", "sales@databayt.org"],
+  email: "sales@databayt.org",
   /** The balqalam Facebook Page, by id (FACEBOOK_PAGE_ID_BALQALAM). */
   facebook: "https://www.facebook.com/1218016808068580",
   x: "https://x.com/databayt",

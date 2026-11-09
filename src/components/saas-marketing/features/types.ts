@@ -190,6 +190,9 @@ export type FeaturePageSection =
 
 export interface FeaturePageData {
   sections: FeaturePageSection[]
+  /** Arabic body copy. Without it `/ar` renders the English sections (and
+   * the catalog one-liner as the hero lead) until the entry is translated. */
+  sectionsAr?: FeaturePageSection[]
   relatedFeatures?: string[]
 }
 

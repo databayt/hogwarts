@@ -46,7 +46,7 @@ export default function Hero({ dictionary, params }: HeroProps) {
       className="[&>div]:px-0"
       heading={t.title}
       description={t.subtitle}
-      headingClassName="home-hero-title"
+      headingClassName={`home-hero-title${params.lang === "en" ? " hero-title-en" : ""}`}
       descriptionClassName="home-hero-sub"
       actions={
         <TwoButtons

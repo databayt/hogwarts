@@ -4,114 +4,141 @@
 import type { FeaturePageData } from "../types"
 
 export const corePageData: Record<string, FeaturePageData> = {
+  // Rewritten 2026-11-09 in the deck voice (concrete, checkable, hours saved,
+  // no superlatives). Every claim maps to school-dashboard/admission: the
+  // public application wizard (documents, fee estimate), the one review queue
+  // and its status machine (shortlist/interview/waitlist), merit scores,
+  // campaigns with seats, acceptance → student record, and the status emails.
+  // There is no online application-fee payment (that leg was retired) — don't
+  // claim one.
   admission: {
     sections: [
       {
         type: "hero",
-        heading: "Admission Management System",
+        heading: "Admission",
         description:
-          "Admission management software streamlines the admissions process, reducing queues and simplifying enrollment for students and parents through an automated online system.",
-      },
-      {
-        type: "section-heading",
-        heading:
-          "Online Admission Management System Designed To Meet The Requirements Of All Users",
-        description:
-          "Effortlessly bridge the gap between applicants and institutions with a system engineered for inclusivity and ease.",
+          "Families apply from their phone; your team reviews, ranks and enrolls from one queue.",
       },
       {
         type: "role-cards",
-        heading: "Who Benefits?",
+        heading: "Who it's for",
         cards: [
           {
-            title: "Candidate",
+            title: "Families",
             description:
-              "Replace extensive lines with a self-service prospective student portal. Benefit from continuous support throughout the admissions cycle through thoughtfully crafted communication strategies and reminders.",
+              "Apply from a phone in Arabic or English, attach documents once, and see the fee estimate before submitting.",
           },
           {
-            title: "Enrollment Coordinator",
+            title: "Admissions team",
             description:
-              "Establish the highest standards in recruitment practices and significantly enhance your recruitment team's efficiency through paperless admission automation.",
+              "Every application lands in one queue with its documents and guardians — shortlist, interview, waitlist or accept in a click.",
           },
           {
-            title: "Admissions Director",
+            title: "School leaders",
             description:
-              "Enhance operational efficiency by obtaining a comprehensive overview of your applicants, minimizing time-consuming document searches, and improving real-time progress tracking.",
+              "Applications against seats for every intake, at a glance — know where enrollment stands before term starts.",
           },
         ],
       },
       {
         type: "benefits-grid",
-        heading: "Benefits Of Online Admission Management System",
-        description:
-          "Online Admission Management System significantly enhances the efficiency, accessibility, and overall quality of the admission process for both educational institutions and applicants.",
+        heading: "Why schools switch",
         items: [
           {
-            title: "Automated Online Software System",
+            title: "No queues at the gate",
             description:
-              "Streamlines all institute processes and operations with comprehensive integrated solutions.",
+              "Applications and documents arrive online, at any hour, from anywhere.",
           },
           {
-            title: "Eliminate Stressful Submission Procedures",
+            title: "No paper to chase",
             description:
-              "Enables candidates to complete application forms at their own convenience in a comfortable setting.",
+              "Birth certificates, report cards and photos stay attached to the application, not filed in a cabinet.",
           },
           {
-            title: "Geographical Flexibility",
+            title: "Fair merit lists",
             description:
-              "Facilitates remote admission, fee payment, merit list generation, and removes geographical limitations.",
+              "Score every applicant on the same criteria; the ranking updates as the marks go in.",
           },
           {
-            title: "Elimination of Lengthy Lines",
+            title: "Seats under control",
             description:
-              "Candidates are not required to wait in extended queues to seek clarifications, make payments, or verify their names on merit lists.",
+              "Each intake is a campaign with its own dates and seats, and applications are counted as they arrive.",
           },
           {
-            title: "Labor Cost Reduction",
+            title: "Accepted means enrolled",
             description:
-              "Institutions are not compelled to allocate extra security personnel to handle large crowds or monotonous procedures.",
+              "An accepted applicant becomes a student with an enrollment number — nothing is typed twice.",
           },
           {
-            title: "Paperwork Reduction",
+            title: "Families kept informed",
             description:
-              "As the workflow becomes more streamlined and fully automated, the amount of paperwork is significantly reduced.",
+              "Shortlisted, waitlisted or accepted — the family hears by email the moment the status changes.",
+          },
+        ],
+      },
+    ],
+    sectionsAr: [
+      {
+        type: "hero",
+        heading: "القبول",
+        description:
+          "تتقدّم الأسر من هواتفها، ويراجع فريقك الطلبات ويرتّبها ويقبلها من قائمة واحدة.",
+      },
+      {
+        type: "role-cards",
+        heading: "لمن صُمّم",
+        cards: [
+          {
+            title: "الأسر",
+            description:
+              "التقديم من الهاتف بالعربية أو الإنجليزية، وإرفاق المستندات مرة واحدة، ومعرفة تقدير الرسوم قبل الإرسال.",
           },
           {
-            title: "Boost Productivity",
+            title: "فريق القبول",
             description:
-              "As a result of the online admission process, institutes can utilize their resources in other activities.",
+              "كل طلب يصل إلى قائمة واحدة مع مستنداته وبيانات أولياء الأمور — قائمة مختصرة أو مقابلة أو انتظار أو قبول بنقرة.",
           },
           {
-            title: "Adaptive and User-Friendly",
+            title: "إدارة المدرسة",
             description:
-              "The complete process is adaptive, and the software is user-friendly and intuitive for students, teachers, and parents.",
-          },
-          {
-            title: "Real-Time Reports",
-            description:
-              "The system produces real-time, online, and tailor-made reports in the desired formats for all the data.",
+              "الطلبات مقابل المقاعد لكل دفعة قبول في لمحة — اعرف أين يقف التسجيل قبل بدء الفصل.",
           },
         ],
       },
       {
-        type: "cta-banner",
-        heading:
-          "Step into a Hassle-Free Admission Journey -- Your Gateway to Simplified Enrollments!",
-      },
-      {
-        type: "checklist",
-        heading: "Why Use Our Online Admission System?",
+        type: "benefits-grid",
+        heading: "لماذا تنتقل المدارس إليه",
         items: [
-          { text: "Efficiency" },
-          { text: "Accuracy" },
-          { text: "Accessibility" },
-          { text: "Customization" },
-          { text: "Integration" },
-          { text: "Data Security" },
-          { text: "Reporting and Analytics" },
-          { text: "Cost Savings" },
-          { text: "User-Friendly Interface" },
-          { text: "Streamlined Review" },
+          {
+            title: "لا طوابير عند البوابة",
+            description:
+              "تصل الطلبات والمستندات إلكترونيًا، في أي وقت ومن أي مكان.",
+          },
+          {
+            title: "لا أوراق تُلاحَق",
+            description:
+              "شهادات الميلاد والتقارير المدرسية والصور تبقى مرفقة بالطلب، لا في الخزانة.",
+          },
+          {
+            title: "قوائم مفاضلة عادلة",
+            description:
+              "قيّم كل متقدّم بالمعايير نفسها، ويتحدّث الترتيب مع كل درجة تُدخلها.",
+          },
+          {
+            title: "المقاعد تحت السيطرة",
+            description:
+              "كل دفعة قبول حملة لها مواعيدها ومقاعدها، وتُحصى الطلبات لحظة وصولها.",
+          },
+          {
+            title: "القبول يعني التسجيل",
+            description:
+              "يصبح المتقدّم المقبول طالبًا برقم قيد — دون إعادة إدخال أي بيانات.",
+          },
+          {
+            title: "الأسرة على اطلاع",
+            description:
+              "قائمة مختصرة أو انتظار أو قبول — تعلم الأسرة بالبريد فور تغيّر حالة الطلب.",
+          },
         ],
       },
     ],

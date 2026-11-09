@@ -3,33 +3,30 @@
 
 import { cn } from "@/lib/utils"
 
-import { Glyph } from "./glyph"
-
 interface Props {
   title: string
-  description: string
+  description?: string
   className?: string
 }
 
 /**
- * Non-link content card mirroring the `Card` atom used by the features landing
- * grid: bare glyph on top, title + muted description below, subtle border that
- * warms to `primary` on hover. Keeps the detail page coherent with the rest of
- * the marketing site.
+ * One item of a detail-page list (roles, benefits, capabilities, use cases):
+ * a hairline rule, the title, one muted line. No box and no icon — the
+ * bordered cards with a glyph each (until 2026-11-09) repeated generic art on
+ * every item and made the lists read heavy. Static and token-driven, like the
+ * rest of the page; the grid around it sets the columns and the air.
  */
 export function InfoCard({ title, description, className }: Props) {
   return (
-    <div
-      className={cn(
-        "bg-background hover:border-primary h-full rounded-lg border p-6 transition-[border-color]",
-        className
+    <div className={cn("border-t pt-5", className)}>
+      <h3 className="text-lg font-semibold tracking-tight text-balance">
+        {title}
+      </h3>
+      {description && (
+        <p className="text-muted-foreground mt-2 text-base leading-relaxed text-pretty">
+          {description}
+        </p>
       )}
-    >
-      <Glyph title={title} className="mb-5" />
-      <h4 className="font-semibold tracking-tight">{title}</h4>
-      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-        {description}
-      </p>
     </div>
   )
 }

@@ -69,6 +69,12 @@ export function getVideo(id: string): VideoMedia {
   return entry
 }
 
+/** A video that may not be published yet — for pages with a fallback. */
+export function findVideo(id: string): VideoMedia | undefined {
+  const entry = media[id]
+  return entry?.kind === "video" ? entry : undefined
+}
+
 export function getImage(id: string): ImageMedia {
   const entry = media[id]
   if (entry?.kind !== "image") {

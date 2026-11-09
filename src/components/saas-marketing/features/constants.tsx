@@ -818,18 +818,39 @@ export const PLANNED_FEATURE_IDS = new Set<string>([
  */
 export const FEATURE_GROUPS: { id: string; label: string; ids: string[] }[] = [
   {
+    // The school year in order: apply → enrol → schedule → attend → teach → assess → report.
     id: "academics",
     label: "Academics",
     ids: [
-      "student",
-      "admission",
       "application",
-      "attendance",
-      "exam",
-      "gradebook",
+      "admission",
+      "student",
       "timetable",
+      "attendance",
       "classroom",
       "assignment",
+      "exam",
+      "gradebook",
+      "transcript",
+    ],
+  },
+  {
+    // Fees in → bills out → costs → salaries → the books → selling extras.
+    id: "finance",
+    label: "Finance",
+    ids: ["payment", "invoice", "expense", "payroll", "accounting", "sales"],
+  },
+  {
+    // Parents first — the people who choose and pay for the school.
+    id: "communication",
+    label: "Communication",
+    ids: [
+      "parent-login",
+      "announcement",
+      "whatsapp-integration",
+      "discussion",
+      "online-appointment",
+      "automated-marketing",
     ],
   },
   {
@@ -837,46 +858,29 @@ export const FEATURE_GROUPS: { id: string; label: string; ids: string[] }[] = [
     label: "Learning",
     ids: [
       "e-learning",
+      "live-classroom",
       "qbank",
       "library",
-      "live-classroom",
       "google-meet",
       "zoom",
       "microsoft-teams",
     ],
   },
   {
-    id: "finance",
-    label: "Finance",
-    ids: ["payment", "accounting", "invoice", "payroll", "expense", "sales"],
-  },
-  {
-    id: "communication",
-    label: "Communication",
-    ids: [
-      "announcement",
-      "discussion",
-      "online-appointment",
-      "whatsapp-integration",
-      "parent-login",
-      "transcript",
-      "automated-marketing",
-    ],
-  },
-  {
+    // Staff → their time → the app everyone carries → campus services.
     id: "operations",
     label: "Operations",
     ids: [
       "faculty",
+      "leave-request",
+      "timesheet",
+      "mobile-application",
       "transportation",
       "canteen",
       "campus",
-      "placement",
-      "leave-request",
-      "timesheet",
-      "documents",
       "events",
-      "mobile-application",
+      "documents",
+      "placement",
     ],
   },
   {
@@ -886,18 +890,43 @@ export const FEATURE_GROUPS: { id: string; label: string; ids: string[] }[] = [
   },
 ]
 
+/**
+ * The first cards a visitor sees (3 rows × 4) — the modules a school buys
+ * Hogwarts for, in the order of a school's working year: enrol, run the day,
+ * assess, collect fees, reach parents, oversee. Pinned ahead of everything in
+ * every tab; the rest follow `FEATURE_GROUPS` order.
+ */
+export const FEATURED_IDS: string[] = [
+  "admission",
+  "student",
+  "attendance",
+  "timetable",
+  "exam",
+  "gradebook",
+  "payment",
+  "parent-login",
+  "announcement",
+  "whatsapp-integration",
+  "mobile-application",
+  "dashboard",
+]
+
 /** feature id → group id, derived from FEATURE_GROUPS. */
 export const GROUP_OF: Record<string, string> = Object.fromEntries(
   FEATURE_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.id]))
 )
 
-const GROUP_RANK = new Map<string, number>(
-  FEATURE_GROUPS.flatMap((g, gi) => g.ids.map((id, ii) => [id, gi * 1000 + ii]))
-)
+const GROUP_RANK = new Map<string, number>([
+  ...FEATURE_GROUPS.flatMap((g, gi) =>
+    g.ids.map((id, ii) => [id, gi * 1000 + ii] as [string, number])
+  ),
+  // Featured modules outrank every group position.
+  ...FEATURED_IDS.map((id, i) => [id, -1000 + i] as [string, number]),
+])
 
 /**
  * Features advertised on the public /features grid — built + partially-built
- * modules only, ordered by group importance then in-group rank.
+ * modules only: `FEATURED_IDS` first, then group importance and in-group rank.
  */
 export const SHOWN_FEATURES: Feature[] = FEATURES.filter(
   (f) => !PLANNED_FEATURE_IDS.has(f.id)

@@ -3,6 +3,7 @@
 
 import type { RoleCardsSection } from "../types"
 import { InfoCard } from "./info-card"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   section: RoleCardsSection
@@ -15,11 +16,9 @@ export function RoleCardsSectionComponent({ section }: Props) {
       : "sm:grid-cols-2 lg:grid-cols-3"
 
   return (
-    <section className="mb-16">
-      <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-        {section.heading}
-      </h2>
-      <div className={`grid gap-4 ${cols}`}>
+    <section>
+      <SectionTitle title={section.heading} />
+      <div className={`grid gap-x-8 gap-y-10 ${cols}`}>
         {section.cards.map((card) => (
           <InfoCard
             key={card.title}

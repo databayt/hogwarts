@@ -5247,3 +5247,10 @@ body:has(.thmanyah-shell) {
     aspect-ratio: 1519 / 757;
   }
 }
+
+/* ── Contact panel open (HeroBlock `data-contact`) ─────────────────────────
+   The homepage becomes the contact page: every section after the hero is
+   taken out until the panel closes, so there is nothing to scroll into. */
+.page-wrap:has(> .hero-section[data-contact]) > :not(.hero-section) {
+  display: none;
+}

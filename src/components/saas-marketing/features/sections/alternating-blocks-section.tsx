@@ -2,34 +2,26 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { AlternatingBlocksSection } from "../types"
-import { Glyph } from "./glyph"
+import { InfoCard } from "./info-card"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   section: AlternatingBlocksSection
 }
 
+/** Two-column list of longer blocks, in the same ruled style as every other
+ * list on the page (InfoCard). */
 export function AlternatingBlocksSectionComponent({ section }: Props) {
   return (
-    <section className="mb-16">
-      {section.heading && (
-        <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-          {section.heading}
-        </h2>
-      )}
-      <div className="grid gap-4 sm:grid-cols-2">
+    <section>
+      {section.heading && <SectionTitle title={section.heading} />}
+      <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
         {section.blocks.map((block) => (
-          <div
+          <InfoCard
             key={block.heading}
-            className="bg-background flex items-start gap-4 rounded-lg border p-6"
-          >
-            <Glyph title={block.heading} size={40} className="mt-0.5" />
-            <div>
-              <h3 className="font-semibold tracking-tight">{block.heading}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed text-pretty">
-                {block.description}
-              </p>
-            </div>
-          </div>
+            title={block.heading}
+            description={block.description}
+          />
         ))}
       </div>
     </section>

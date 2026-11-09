@@ -5,7 +5,6 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -15,8 +14,7 @@ import {
   IMPACT_METRICS,
   SHOWN_FEATURES,
 } from "./constants"
-import { getCategoryIcon } from "./feature-icons"
-import { COLOR_ICONS, FEATURE_IMAGES, SMALLER_ICONS } from "./feature-images"
+import { FeatureIcon } from "./feature-icon"
 import FeatureTabs, { type FeatureTabItem } from "./feature-tabs"
 import Hero from "./hero"
 import { featuresUi, GROUP_LABEL_AR, localizeFeature, METRIC_AR } from "./i18n"
@@ -42,30 +40,13 @@ export default function Content({ dictionary, params }: ContentProps) {
   ]
   const items: FeatureTabItem[] = SHOWN_FEATURES.map((feature) => {
     const { title, description } = localizeFeature(feature, params.lang)
-    const imageSrc = FEATURE_IMAGES[feature.id]
-    const dim = SMALLER_ICONS.has(feature.id) ? 28 : 32
-    const Icon = getCategoryIcon(feature.category)
     return {
       id: feature.id,
       title,
       description,
       group: GROUP_OF[feature.id],
       href: `/${params.lang}/features/${feature.id}`,
-      icon: imageSrc ? (
-        <BlurImage
-          src={imageSrc}
-          alt={title}
-          width={dim}
-          height={dim}
-          plain
-          className={cn(
-            !COLOR_ICONS.has(feature.id) &&
-              "dark:brightness-90 dark:contrast-125 dark:invert"
-          )}
-        />
-      ) : (
-        <Icon />
-      ),
+      icon: <FeatureIcon feature={feature} alt={title} />,
     }
   })
 

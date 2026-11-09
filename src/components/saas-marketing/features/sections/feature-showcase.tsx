@@ -7,34 +7,25 @@
 // card composes the same artwork live: pastel panel (zenda's exact slide
 // palette), a white browser window with traffic dots, the real product
 // screenshot zoomed to its interesting region, floating UI-echo chips and an
-// optional stat band. The one deliberate divergence from the reference: the
-// band behind the deck is the app's muted token, not zenda cream.
+// optional stat band. Divergences from the reference: the band behind the deck
+// is the app's muted token, not zenda cream; and the deck speaks the feature
+// page's type system (the page font for copy, the hero's display serif for the
+// heading and card titles — see .feature-section-title) and sits on the page's
+// content edges, so it reads as one of the page's sections, not an embed.
 
 "use client"
 
 import { createElement, useEffect, useRef } from "react"
-import { DM_Sans } from "next/font/google"
-import { BlurImage } from "@/components/atom/blur-image"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { getIconComponent } from "../icon-map"
 import type { ShowcaseData } from "../types"
 // The deck renders under `.zenda-clone`; the scope's stylesheet is loaded by
 // the components that use it, not by the root layout.
 import "@/styles/zenda-clone.css"
-
-// zenda sets the whole deck in DM Sans (`--font-heading` → `--font-dm-sans`).
-// Only the tenant school-marketing layout registers that face; this deck also
-// renders on the SaaS /features/[id] tree, where the unresolved var made every
-// element silently inherit Satoshi. Declared here (not imported from
-// template/zenda-fonts) so Poppins doesn't ship with it; weights mirror
-// zenda's app/[lang]/layout.tsx exactly.
-const fontDmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
-})
 
 /** Pill color variants from the zenda scope, cycled by card index. */
 const TAG_VARIANTS = ["", " is-autopay", " is-marketplace", " is-re-enrollment"]
@@ -65,25 +56,38 @@ const DARK_BAND_CSS = `
 .dark .zenda-clone.showcase-band .section_services .services_link.w--current { background-color: oklch(0.985 0 0); }
 `
 
-// zenda's deck is sized for a full marketing page; on a feature detail page it
-// dwarfs the surrounding content. These trim the whole composition ~15% —
-// narrower rail, smaller type, tighter card padding. The panel artwork is
-// container-relative, so shrinking the rail shrinks it in proportion.
+// The deck on a feature page: the page's content width (no inner container
+// or gutters — the band already sits on the page edges), the page's section
+// rhythm (no zenda section padding; header-to-cards gap = SectionTitle's), a
+// start-aligned header, and the shared type: .feature-section-title's serif at
+// its sizes (28 / 36 / 40px at 0 / 600 / 1200px) for the heading, the same
+// serif a step down for card titles. Everything else reads --font-heading,
+// pointed at the page font below.
+const SERIF = `font-family: "thmanyah serif display", serif; font-weight: 900; font-feature-settings: "ss01" on; letter-spacing: normal;`
 const SCALE_CSS = `
-.zenda-clone.showcase-band .container-large { max-width: 68rem; }
-.zenda-clone.showcase-band .section_services .services_heading { font-size: 3rem; }
-.zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { font-size: 2.5rem; }
+.zenda-clone.showcase-band .container-large { max-width: none; }
+.zenda-clone.showcase-band .padding-global-v2 { padding-left: 0; padding-right: 0; }
+.zenda-clone.showcase-band .padding-section-large { padding-top: 0; padding-bottom: 0; }
+.zenda-clone.showcase-band .services_header { text-align: start; align-items: flex-start; }
+.zenda-clone.showcase-band .services_header .max-width-large { margin-inline: 0; }
+.zenda-clone.showcase-band .section_services .services_heading { text-align: start; }
+.zenda-clone.showcase-band .services_wrap > .padding-bottom.padding-xxlarge { padding-bottom: 2.5rem; }
+.zenda-clone.showcase-band .section_services .services_heading { ${SERIF} font-size: 40px; line-height: 1.15; }
+.zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { ${SERIF} font-size: 2rem; line-height: 1.15; }
 .zenda-clone.showcase-band .services_para { font-size: 1.125rem; }
 .zenda-clone.showcase-band .services_tag { font-size: 1rem; padding: 0.4rem 1rem; }
-.zenda-clone.showcase-band .services_sticky-card { padding: 2.25rem; border-radius: 2.25rem; }
+.zenda-clone.showcase-band .services_sticky-card { padding: 2.25rem; border-radius: 1.5rem; }
 .zenda-clone.showcase-band .services_grid { grid-column-gap: 2rem; grid-row-gap: 2rem; }
 .zenda-clone.showcase-band .services_list { grid-column-gap: 3rem; grid-row-gap: 3rem; }
-@media screen and (max-width: 991px) {
-  .zenda-clone.showcase-band .section_services .services_heading { font-size: 2.375rem; }
-  .zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { font-size: 2rem; }
+[dir="rtl"] .zenda-clone.showcase-band .section_services .services_heading,
+[dir="rtl"] .zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { line-height: 1.3; }
+@media screen and (max-width: 1199px) {
+  .zenda-clone.showcase-band .section_services .services_heading { font-size: 36px; }
+  .zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { font-size: 1.75rem; }
 }
-@media screen and (max-width: 767px) {
-  .zenda-clone.showcase-band .section_services .services_heading { font-size: 1.875rem; }
+@media screen and (max-width: 599px) {
+  .zenda-clone.showcase-band .section_services .services_heading { font-size: 28px; }
+  .zenda-clone.showcase-band .services_sub-heading.heading-style-h2 { font-size: 1.5rem; }
   .zenda-clone.showcase-band .services_sticky-card { padding: 1.5rem; }
 }
 `
@@ -157,18 +161,20 @@ export function FeatureShowcase({ data }: Props) {
 
   return (
     // The background sits on this wrapper, OUTSIDE `.zenda-clone`, so
-    // `bg-muted`/`border-border` read the app's real tokens and follow the
-    // theme (DARK_BAND_CSS above explains why they can't inside). Symmetric
-    // negative margins full-bleed out of the centered container in either
-    // direction — `left-50%` + `translateX(-50%)` is physical and put the band
-    // 256px off on /ar, taking the whole page into horizontal overflow.
-    <div className="border-border/40 bg-muted relative mx-[calc(50%-50vw)] my-12 overflow-x-clip border-y py-12 md:py-16">
+    // `bg-muted` reads the app's real token and follows the theme
+    // (DARK_BAND_CSS above explains why it can't inside). The band stays at
+    // the page's content width — its deck on the same edges as every other
+    // section — and paints edge to edge with a 100vmax spread shadow clipped
+    // vertically (direction-safe; body's overflow-x keeps it off the
+    // scrollbar). The cards stack with CSS sticky, which neither affects.
+    <div className="bg-muted relative overflow-x-clip py-16 shadow-[0_0_0_100vmax_var(--color-muted)] [clip-path:inset(0_-100vmax)] md:py-24">
       <div
-        className={`zenda-clone showcase-band ${fontDmSans.variable}`}
+        className="zenda-clone showcase-band"
         style={
           {
-            "--font-heading": "var(--font-dm-sans)",
-            fontFamily: "var(--font-dm-sans), sans-serif",
+            // the page font (Geist in en, Thmanyah Text in ar) for all copy
+            "--font-heading": "var(--font-sans)",
+            fontFamily: "var(--font-sans)",
             // `.zenda-clone` carries a Webflow body reset (`background-color:
             // #fff`) that would paint over the wrapper's bg-muted. It has to be
             // cleared inline: zenda-clone.css is unlayered, so it outranks

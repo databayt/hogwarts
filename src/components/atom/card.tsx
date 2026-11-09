@@ -29,13 +29,13 @@ export default function Card({
       href={href}
       className={`bg-background hover:border-primary relative overflow-hidden rounded-lg border p-2 transition-[border-color] hover:text-current ${className}`}
     >
-      <div className="flex h-[180px] flex-col justify-between rounded-md p-6">
+      <div className="flex h-[200px] flex-col justify-between rounded-md p-6">
         <div className={iconSize}>{icon}</div>
         <div className="space-y-2">
-          <h4 className="font-semibold tracking-tight hover:text-current">
+          <h4 className="text-xl font-semibold tracking-tight hover:text-current">
             {title}
           </h4>
-          <p className="text-muted-foreground hover:text-muted-foreground text-sm">
+          <p className="text-muted-foreground hover:text-muted-foreground text-base">
             {description}
           </p>
         </div>

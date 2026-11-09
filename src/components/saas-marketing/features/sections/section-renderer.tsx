@@ -5,7 +5,6 @@ import type { FeaturePageSection } from "../types"
 import { AlternatingBlocksSectionComponent } from "./alternating-blocks-section"
 import { BenefitsGridSectionComponent } from "./benefits-grid-section"
 import { ChecklistSectionComponent } from "./checklist-section"
-import { CtaBannerSectionComponent } from "./cta-banner-section"
 import { FeatureCardsSectionComponent } from "./feature-cards-section"
 import { HeroSectionComponent } from "./hero-section"
 import { RoleCardsSectionComponent } from "./role-cards-section"
@@ -14,19 +13,11 @@ import { StatsBarSectionComponent } from "./stats-bar-section"
 
 interface Props {
   section: FeaturePageSection
-  lang: string
-  ctaLabel: string
   title?: string
   description?: string
 }
 
-export function SectionRenderer({
-  section,
-  lang,
-  ctaLabel,
-  title,
-  description,
-}: Props) {
+export function SectionRenderer({ section, title, description }: Props) {
   switch (section.type) {
     case "hero":
       return (
@@ -45,13 +36,9 @@ export function SectionRenderer({
     case "feature-cards":
       return <FeatureCardsSectionComponent section={section} />
     case "cta-banner":
-      return (
-        <CtaBannerSectionComponent
-          section={section}
-          lang={lang}
-          ctaLabel={ctaLabel}
-        />
-      )
+      // The page closes on one call to action (BottomCta); a second banner
+      // mid-page repeated it. Kept in the data, not drawn.
+      return null
     case "checklist":
       return <ChecklistSectionComponent section={section} />
     case "alternating-blocks":

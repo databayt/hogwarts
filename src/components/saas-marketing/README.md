@@ -106,9 +106,14 @@ src/components/saas-marketing/
 │   ├── types.ts                    # Feature types
 │   ├── util.ts                     # Feature utilities
 │   ├── feature-icons.tsx           # Category fallback icon set (getCategoryIcon)
+│   ├── feature-icon.tsx            # FeatureIcon — a feature's card icon (own PNG else category icon); /features grid + related cards
+│   ├── feature-video.ts            # featureVideo(id, lang) — the hero loop (manifest feature-<id>/video-<lang>) else the brand story
 │   ├── icon-map.tsx                # Lucide name→component map (getIconComponent) — Glyph's fallback resolver
-│   ├── sections/                   # Reusable section renderers + detail-page UI kit (clean, static, glyph-based)
-│   │   ├── section-renderer.tsx
+│   ├── sections/                   # Reusable section renderers + detail-page UI kit — ONE system below the hero:
+│   │   │                           #   SectionTitle (display serif, one size), one gap (details.tsx `below`), one card style, one closing CTA
+│   │   ├── section-title.tsx       # The one section header (.feature-section-title, styles/container.css)
+│   │   ├── hero-video.tsx          # Chrome-less muted loop under the transparent header (top half of the first screen)
+│   │   ├── section-renderer.tsx    # page-data sections → components; `cta-banner` is kept in data but not drawn
 │   │   ├── hero-section.tsx
 │   │   ├── feature-cards-section.tsx
 │   │   ├── alternating-blocks-section.tsx
@@ -116,12 +121,11 @@ src/components/saas-marketing/
 │   │   ├── checklist-section.tsx
 │   │   ├── role-cards-section.tsx
 │   │   ├── stats-bar-section.tsx
-│   │   ├── cta-banner-section.tsx
 │   │   ├── section-heading.tsx
-│   │   ├── related-features.tsx    # Related-feature cards (reuses the `Card` atom + Glyph)
-│   │   ├── feature-showcase.tsx    # zenda Services deck per feature (GSAP sticky cards; composes pastel panel + browser window + cropped shot + chips; bg-muted band)
+│   │   ├── related-features.tsx    # Related-feature cards — the /features grid's `Card` + FeatureIcon, localized
+│   │   ├── feature-showcase.tsx    # zenda Services deck per feature (GSAP sticky cards; pastel panel + browser window + cropped shot + chips), in the page's type + edges
 │   │   ├── why-databayt.tsx        # apple why-Mac gallery (battle-card deck, paddle nav) on every detail page
-│   │   ├── bottom-cta.tsx          # Clean centered closing CTA (border-top, dual buttons)
+│   │   ├── bottom-cta.tsx          # The page's one closing CTA (centred SectionTitle, dual buttons)
 │   │   ├── info-card.tsx           # Clean content card mirroring the `Card` atom (Glyph + title + desc)
 │   │   ├── glyph.tsx               # 'use client' bare glyph: real /feature PNG (dark:invert) else Lucide
 │   │   ├── card-art.ts             # title→real-PNG keyword map (artForTitle), server-safe

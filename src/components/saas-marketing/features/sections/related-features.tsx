@@ -2,9 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Card from "@/components/atom/card"
+import type { Locale } from "@/components/internationalization/config"
 
+import { FeatureIcon } from "../feature-icon"
+import { localizeFeature } from "../i18n"
 import type { Feature } from "../types"
-import { Glyph } from "./glyph"
+import { SectionTitle } from "./section-title"
 
 interface Props {
   features: Feature[]
@@ -12,25 +15,27 @@ interface Props {
   heading: string
 }
 
+/** The same cards as the /features grid — same icon, same copy, localized. */
 export function RelatedFeatures({ features, lang, heading }: Props) {
   if (features.length === 0) return null
 
   return (
-    <section className="mb-16">
-      <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-        {heading}
-      </h2>
+    <section>
+      <SectionTitle title={heading} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((rf) => (
-          <Card
-            key={rf.id}
-            id={rf.id}
-            title={rf.title}
-            description={rf.description}
-            icon={<Glyph title={rf.title} size={32} />}
-            href={`/${lang}/features/${rf.id}`}
-          />
-        ))}
+        {features.map((rf) => {
+          const { title, description } = localizeFeature(rf, lang as Locale)
+          return (
+            <Card
+              key={rf.id}
+              id={rf.id}
+              title={title}
+              description={description}
+              icon={<FeatureIcon feature={rf} alt={title} />}
+              href={`/${lang}/features/${rf.id}`}
+            />
+          )
+        })}
       </div>
     </section>
   )

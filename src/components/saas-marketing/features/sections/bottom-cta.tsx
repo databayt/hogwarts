@@ -6,6 +6,8 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+import { SectionTitle } from "./section-title"
+
 interface Props {
   lang: string
   title: string
@@ -22,16 +24,9 @@ export function BottomCta({
   viewPricingLabel,
 }: Props) {
   return (
-    <section className="pt-16 text-center">
-      <h2 className="font-heading mx-auto max-w-2xl text-2xl font-bold tracking-tight text-balance md:text-3xl">
-        {title}
-      </h2>
-      {subtitle && (
-        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-pretty">
-          {subtitle}
-        </p>
-      )}
-      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+    <section className="text-center">
+      <SectionTitle title={title} description={subtitle} align="center" />
+      <div className="flex flex-col justify-center gap-3 sm:flex-row">
         <Link
           href={`/${lang}/onboarding`}
           className={cn(buttonVariants({ size: "lg" }))}

@@ -1,11 +1,17 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
 
 import { tenantOriginForHost } from "@/lib/root-domain"
 import { DemoLink } from "@/components/saas-marketing/demo-link"
 import { ContactPanel } from "@/components/saas-marketing/thmanyah/block/ContactPanel"
+import {
+  clusterCount,
+  prefersReducedMotion,
+  SMOKE_MS,
+  SortingText,
+} from "@/components/saas-marketing/thmanyah/block/SortingText"
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**
@@ -95,43 +101,109 @@ const demoFallbackHref = (lang: string) =>
 /* The header's "Contact" (HomeHeader → SmartBar) fires this on the homepage
    instead of navigating; from any other page it arrives as `/{lang}#contact`. */
 const CONTACT_EVENT = "balqalam:contact"
-const EXIT = {
-  opacity: 0,
-  y: -24,
-  transition: { duration: 0.45, ease: [0.4, 0, 1, 1] as const },
-}
+const HOME_EVENT = "balqalam:home"
+
+/* The swap is the dashboard's next-action motion (SortingText): the face that
+   is showing smokes out letter by letter, then the other one sorts itself out
+   of noise. Four states so a click mid-leave cannot cut either motion short:
+     hero → toContact (hero smoking) → contact (panel sorting in)
+     contact → toHero (panel smoking) → hero (headline sorting in) */
+type Mode = "hero" | "toContact" | "contact" | "toHero"
 
 export function HeroBlock() {
   const { lang, rtl, copy } = useThmanyahLocale()
 
-  /* Contact mode: the headline and CTA fade out and ContactPanel fades in on
-     the same green. `#contact` in the URL is the shareable form of it. */
-  const [contact, setContact] = useState(false)
+  const [mode, setMode] = useState<Mode>("hero")
+  /* The first paint keeps the reference's rise-in; only a RETURN from the
+     panel sorts the headline in. */
+  const [returned, setReturned] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const go = useCallback((to: "hero" | "contact") => {
+    setMode((m) => {
+      if (to === "contact" && m !== "hero") return m
+      if (to === "hero" && m !== "contact") return m
+      clearTimeout(timer.current)
+      timer.current = setTimeout(
+        () => {
+          if (to === "hero") setReturned(true)
+          setMode(to)
+        },
+        prefersReducedMotion() ? 0 : SMOKE_MS
+      )
+      return to === "contact" ? "toContact" : "toHero"
+    })
+  }, [])
+
   useEffect(() => {
-    const sync = () => setContact(window.location.hash === "#contact")
+    // Arriving on `/{lang}#contact` opens straight to the panel — deferred a
+    // tick so the first client render matches the server's hero.
+    const arrive = setTimeout(() => {
+      if (window.location.hash === "#contact") setMode("contact")
+    }, 0)
     const open = () => {
-      setContact(true)
+      go("contact")
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
-    sync()
+    const sync = () =>
+      go(window.location.hash === "#contact" ? "contact" : "hero")
+    // Home: back to the headline (a no-op when it's already showing).
+    const home = () => {
+      go("hero")
+      const { pathname, search } = window.location
+      window.history.replaceState(window.history.state, "", pathname + search)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
     window.addEventListener(CONTACT_EVENT, open)
+    window.addEventListener(HOME_EVENT, home)
     window.addEventListener("hashchange", sync)
     return () => {
       window.removeEventListener(CONTACT_EVENT, open)
+      window.removeEventListener(HOME_EVENT, home)
       window.removeEventListener("hashchange", sync)
+      clearTimeout(arrive)
+      clearTimeout(timer.current)
     }
-  }, [])
+  }, [go])
+
   const close = useCallback(() => {
-    setContact(false)
+    go("hero")
     const { pathname, search } = window.location
     window.history.replaceState(window.history.state, "", pathname + search)
-  }, [])
+  }, [go])
+
+  const showPanel = mode === "contact" || mode === "toHero"
   useEffect(() => {
-    if (!contact) return
+    if (!showPanel) return
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close()
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [contact, close])
+  }, [showPanel, close])
+
+  /* Letter offsets so the scramble and the smoke run through the whole
+     headline — eyebrow, words, highlight — as one line. */
+  const runs = [copy.hero.eyebrow, ...copy.hero.words, copy.hero.highlight]
+  const offsets = runs.reduce<number[]>(
+    (acc, r, i) => [
+      ...acc,
+      i === 0 ? 0 : acc[i - 1] + clusterCount(runs[i - 1]),
+    ],
+    []
+  )
+  const total = offsets[offsets.length - 1] + clusterCount(copy.hero.highlight)
+  const leaving = mode === "toContact"
+  const sort = (i: number) => ({
+    text: runs[i],
+    rtl,
+    scramble: returned,
+    leaving,
+    order: offsets[i],
+    total,
+    nowrap: true,
+  })
+  /* On a return the block is already in place — no rise, just the sort. */
+  const appear = returned ? {} : APPEAR
+  const appearSub = returned ? {} : APPEAR_SUB
 
   return (
     <>
@@ -147,67 +219,89 @@ export function HeroBlock() {
       <section
         className="hero-section relative z-0 flex h-screen w-full flex-col items-center justify-between overflow-hidden bg-[#00bc6d]"
         data-framer-name="Hero"
+        /* While the contact panel is up, the rest of the homepage steps
+           aside (thmanyah-clone.css) — contact is the whole page. */
+        data-contact={showPanel ? "" : undefined}
         /* The panel can outgrow the 88vh phone hero; let it, while open. */
-        style={contact ? { height: "auto", minHeight: "100svh" } : undefined}
+        style={showPanel ? { height: "auto", minHeight: "100svh" } : undefined}
       >
-        <AnimatePresence mode="wait" initial={false}>
-          {contact ? (
-            <ContactPanel key="contact" onClose={close} />
-          ) : (
-            /* `contents` keeps text + CTA direct flex items of the section
-               (its justify-between spaces them); AnimatePresence still waits
-               for both children's exits before the panel enters. */
-            <div key="hero" className="contents">
-              {/* Text (.framer-1htsxxd) */}
-              <motion.div
-                {...APPEAR}
-                exit={EXIT}
-                className="hero-text will-change-transform"
-                data-framer-name="Text"
-              >
-                {/* Subtitle (.framer-1y9s2py) */}
-                <motion.div {...APPEAR_SUB} className="w-full">
-                  <h3
-                    className="hero-title w-full text-start text-black"
-                    style={{
-                      fontFamily: '"thmanyah sans", sans-serif',
-                      fontWeight: 400,
-                      fontFeatureSettings:
-                        '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
-                    }}
-                  >
-                    {copy.hero.eyebrow}
-                  </h3>
-                </motion.div>
-
-                {/* Words (.framer-ht94lv): row-wrap, 840px, gap 10px 17px */}
-                <div
-                  className="hero-words flex w-full flex-row flex-wrap items-center justify-start"
-                  data-framer-name="Words"
+        {showPanel ? (
+          <ContactPanel
+            key="contact"
+            onClose={close}
+            leaving={mode === "toHero"}
+          />
+        ) : (
+          /* `contents` keeps text + CTA direct flex items of the section
+             (its justify-between spaces them). */
+          <div key={returned ? "hero-again" : "hero"} className="contents">
+            {/* Text (.framer-1htsxxd) */}
+            <motion.div
+              {...appear}
+              className="hero-text will-change-transform"
+              data-framer-name="Text"
+            >
+              {/* Subtitle (.framer-1y9s2py) */}
+              <motion.div {...appearSub} className="w-full">
+                <h3
+                  className="hero-title w-full text-start text-black"
+                  style={{
+                    fontFamily: '"thmanyah sans", sans-serif',
+                    fontWeight: 400,
+                    fontFeatureSettings:
+                      '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
+                  }}
                 >
-                  {copy.hero.words.map((word, i) => (
-                    <div key={i} className="flex flex-col">
-                      <h1 style={H1_STYLE}>{word}</h1>
-                    </div>
-                  ))}
-
-                  {/* Highlight group (.framer-115xp5q) */}
-                  <div className="relative flex flex-row items-center justify-center gap-[10px]">
-                    {/* Mark (.framer-whameh) — anchored at the reading edge, so
-                  it grows away from the text it marks in either direction. */}
-                    <motion.div
-                      {...APPEAR}
-                      className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
-                      aria-hidden
-                    />
-                    <div className="relative flex flex-col">
-                      <h1 style={H1_STYLE}>{copy.hero.highlight}</h1>
-                    </div>
-                  </div>
-                </div>
+                  <SortingText {...sort(0)} />
+                </h3>
               </motion.div>
 
-              {/* CTA (.framer-3lvoni) — points at the demo school rather than the
+              {/* Words (.framer-ht94lv): row-wrap, 840px, gap 10px 17px */}
+              <div
+                className="hero-words flex w-full flex-row flex-wrap items-center justify-start"
+                data-framer-name="Words"
+              >
+                {copy.hero.words.map((word, i) => (
+                  <div key={i} className="flex flex-col">
+                    <h1 style={H1_STYLE}>
+                      <SortingText {...sort(i + 1)} />
+                    </h1>
+                  </div>
+                ))}
+
+                {/* Highlight group (.framer-115xp5q) */}
+                <div className="relative flex flex-row items-center justify-center gap-[10px]">
+                  {/* Mark (.framer-whameh) — anchored at the reading edge, so
+                      it grows away from the text it marks in either direction.
+                      It wipes away on the leave and draws back on a return. */}
+                  <motion.div
+                    initial={returned ? { scaleX: 0 } : APPEAR.initial}
+                    transition={
+                      leaving
+                        ? { duration: 0.5, ease: EASE }
+                        : returned
+                          ? { duration: 0.7, ease: EASE, delay: 0.25 }
+                          : APPEAR.transition
+                    }
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scaleX: leaving ? 0 : 1,
+                      transformPerspective: 1200,
+                    }}
+                    className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
+                    aria-hidden
+                  />
+                  <div className="relative flex flex-col">
+                    <h1 style={H1_STYLE}>
+                      <SortingText {...sort(runs.length - 1)} />
+                    </h1>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CTA (.framer-3lvoni) — points at the demo school rather than the
             reference's in-page anchor. DemoLink follows the visitor's root
             domain, so on balqalam.com it resolves to demo.balqalam.com, on
             ed.databayt.org to demo.databayt.org, and locally to
@@ -222,7 +316,14 @@ export function HeroBlock() {
             181.3px (Δ +14.4). Measured alternatives, same conditions:
             ادخل إلى المنصة 166.8 (Δ −0.1, but "enter" reads as sign-in) ·
             جرّب المنصة مجانًا 179.6 · استكشف المنصة 173.0 · جرّب المنصة 142.7. */}
-              <motion.div {...APPEAR} exit={EXIT} className="hero-cta">
+            <motion.div {...appear} className="hero-cta">
+              {/* The leave lives on an inner box: the motion wrapper owns
+                  opacity inline and would pin it at 1. */}
+              <div
+                className={`transition-[opacity,filter,translate] duration-500 ease-out motion-reduce:transition-none ${
+                  leaving ? "-translate-y-1.5 opacity-0 blur-[6px]" : ""
+                }`}
+              >
                 <DemoLink
                   fallbackHref={demoFallbackHref(lang)}
                   lang={lang}
@@ -259,10 +360,10 @@ export function HeroBlock() {
                     </svg>
                   </motion.span>
                 </DemoLink>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </section>
     </>
   )
