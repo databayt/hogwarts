@@ -114,8 +114,12 @@ export interface ThmanyahCopy {
     /** Two display lines. In Arabic each "ـ" marks a kashida point that
      *  StretchWord grows on entry; English stretches by tracking instead. */
     marn: [string, string]
-    /** Tile 1 — the same word in both scripts, one beat each. */
+    /** Tile 1 — one beat per word. Arabic pairs each word with its
+     *  English twin; English stays in English. */
     words: string[]
+    /** Video slot, English only — the wordmark cycle as live type (the
+     *  baked video is Arabic). Arabic keeps the video and leaves this out. */
+    wordmarks?: string[]
     /** Tile 2 — the glyph grid's pool (12 shown, cells swap from the pool). */
     glyphs: string[]
     /** Tile 3 — one record set in the three faces, one role per face. */
@@ -132,6 +136,31 @@ export interface ThmanyahCopy {
     titleLine2Mark: string
     /** Three columns, in render order. */
     columns: FaqItem[][]
+  }
+  /** The /contact page (ContactBlock) — one green screen, hero-styled. */
+  contact: {
+    eyebrow: string
+    /** Headline words, then the marked one — the hero's shape. */
+    words: string[]
+    highlight: string
+    lede: string
+    whatsapp: string
+    /** Pre-filled first message the WhatsApp link opens with. */
+    whatsappText: string
+    formTitle: string
+    emailLabel: string
+    messageLabel: string
+    messagePlaceholder: string
+    submit: string
+    submitting: string
+    success: string
+    errors: {
+      VALIDATION_FAILED: string
+      RATE_LIMITED: string
+      SEND_FAILED: string
+    }
+    validation: { required: string; email: string; tooShort: string }
+    demo: string
   }
   footer: {
     ctaLine1: string
@@ -329,6 +358,32 @@ const AR: ThmanyahCopy = {
       ],
     ],
   },
+  contact: {
+    eyebrow: "تواصل معنا",
+    words: ["لنتحدث", "عن"],
+    highlight: "مدرستك",
+    lede: "اكتب لنا على واتساب ونرد عليك مباشرة، أو اترك رسالة وسنعود إليك.",
+    whatsapp: "تحدث معنا على واتساب",
+    whatsappText: "مرحبًا، أريد معرفة المزيد عن منصة بالقلم لمدرستي.",
+    formTitle: "أو اترك رسالة",
+    emailLabel: "البريد الإلكتروني",
+    messageLabel: "رسالتك",
+    messagePlaceholder: "حدثنا عن مدرستك وعدد طلابها",
+    submit: "أرسل",
+    submitting: "جارٍ الإرسال…",
+    success: "شكرًا — وصلت رسالتك وسنعود إليك قريبًا.",
+    errors: {
+      VALIDATION_FAILED: "راجع الحقول وحاول مرة أخرى.",
+      RATE_LIMITED: "طلبات كثيرة، حاول بعد ساعة.",
+      SEND_FAILED: "تعذر إرسال رسالتك، حاول مرة أخرى أو راسلنا على واتساب.",
+    },
+    validation: {
+      required: "هذا الحقل مطلوب",
+      email: "بريد إلكتروني غير صالح",
+      tooShort: "اكتب ١٠ أحرف على الأقل",
+    },
+    demo: "أو جرّب المدرسة التجريبية",
+  },
   footer: {
     ctaLine1: "من السهل أن تبـدأ مع",
     ctaLine2: "منصـة بالقلم",
@@ -439,7 +494,15 @@ const EN: ThmanyahCopy = {
   },
   traits: {
     marn: ["Flexible, it stretches", "to fit your school."],
-    words: ["Attendance", "الحضور", "Grades", "الدرجات", "Fees", "الرسوم"],
+    words: ["Attendance", "Grades", "Fees", "Timetable", "Reports"],
+    wordmarks: [
+      "balqalam",
+      "Admission",
+      "Attendance",
+      "Grades",
+      "Fees",
+      "Virtual",
+    ],
     glyphs: [
       "96%",
       "A+",
@@ -534,6 +597,32 @@ const EN: ThmanyahCopy = {
       ],
     ],
   },
+  contact: {
+    eyebrow: "Contact",
+    words: ["Let's", "talk", "about"],
+    highlight: "your school",
+    lede: "Message us on WhatsApp for a direct reply, or leave a note and we'll get back to you.",
+    whatsapp: "Talk to us on WhatsApp",
+    whatsappText: "Hello, I'd like to learn more about balqalam for my school.",
+    formTitle: "Or leave a message",
+    emailLabel: "Email address",
+    messageLabel: "Your message",
+    messagePlaceholder: "Tell us about your school and how many students it has",
+    submit: "Send",
+    submitting: "Sending…",
+    success: "Thanks — your message arrived and we'll get back to you soon.",
+    errors: {
+      VALIDATION_FAILED: "Please check the fields and try again.",
+      RATE_LIMITED: "Too many requests — please try again in an hour.",
+      SEND_FAILED: "Could not send your message. Try again, or message us on WhatsApp.",
+    },
+    validation: {
+      required: "This field is required",
+      email: "Enter a valid email",
+      tooShort: "Write at least 10 characters",
+    },
+    demo: "or try the demo school",
+  },
   footer: {
     ctaLine1: "It is easy to start with",
     ctaLine2: "balqalam",
@@ -542,6 +631,10 @@ const EN: ThmanyahCopy = {
     wordmarkMaker: "Databayt",
   },
 }
+
+/** The sales WhatsApp line (international, digits only) — the /contact
+ *  page's primary action. */
+export const SALES_WHATSAPP = "249919071294"
 
 export const COPY: Record<ThmanyahLang, ThmanyahCopy> = { ar: AR, en: EN }
 

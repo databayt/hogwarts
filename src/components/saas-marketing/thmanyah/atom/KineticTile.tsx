@@ -95,6 +95,29 @@ export function WordsTile({ words }: { words: string[] }) {
   )
 }
 
+/** Video slot · black — the six-beat wordmark cycle as live type, for the
+ *  English page (the baked wordmark video is Arabic). Same white-on-black
+ *  as the video, sized to its short 3.49:1 slot. */
+export function WordmarksTile({ words }: { words: string[] }) {
+  const { ref, tick } = useTicker(1400)
+  const word = words[tick % words.length]
+  return (
+    <Tile bg="#000" ink="#fff" tileRef={ref}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.p
+          key={word}
+          {...SWAP}
+          dir={dirOf(word)}
+          className="kt-word"
+          style={{ fontFamily: DISPLAY, fontSize: "min(58cqh, 15cqw)" }}
+        >
+          {word}
+        </motion.p>
+      </AnimatePresence>
+    </Tile>
+  )
+}
+
 /** Tile 2 · black — a 4x3 grid of the school's numbers and marks; one cell
  *  at a time swaps in the next glyph from the pool. */
 export function GlyphGridTile({ glyphs }: { glyphs: string[] }) {

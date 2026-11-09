@@ -8,6 +8,7 @@ import {
   GlyphGridTile,
   RulesTile,
   SyncTile,
+  WordmarksTile,
   WordsTile,
 } from "@/components/saas-marketing/thmanyah/atom/KineticTile"
 import { StretchWord } from "@/components/saas-marketing/thmanyah/atom/StretchWord"
@@ -64,7 +65,7 @@ export function FeaturesBlock() {
     )
     io.observe(el)
     return () => io.disconnect()
-  }, [])
+  }, [rtl])
 
   return (
     <>
@@ -110,16 +111,22 @@ export function FeaturesBlock() {
             {/* .framer-14mux3i — second column (left in RTL) */}
             <div className="wire-col wire-col--b">
               <div className="wire-tile wire-tile--video">
-                <video
-                  ref={videoRef}
-                  className="wire-video"
-                  src={CDN_VIDEOS["balqalam-wordmarks-mp4"]}
-                  poster={CDN_POSTERS["balqalam-wordmarks-poster"]}
-                  loop
-                  muted
-                  playsInline
-                  preload="none"
-                />
+                {t.wordmarks ? (
+                  <div className="wire-fill">
+                    <WordmarksTile words={t.wordmarks} />
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    className="wire-video"
+                    src={CDN_VIDEOS["balqalam-wordmarks-mp4"]}
+                    poster={CDN_POSTERS["balqalam-wordmarks-poster"]}
+                    loop
+                    muted
+                    playsInline
+                    preload="none"
+                  />
+                )}
               </div>
               <div className="wire-tile wire-tile--4">
                 <div className="wire-fill">

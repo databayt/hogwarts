@@ -57,6 +57,8 @@ const publicRoutes = [
   "/features",
   "/pricing",
   "/community",
+  // The marketing contact page (WhatsApp + message form).
+  "/contact",
   "/wa-preview",
   // The offline library: served by the service worker when navigation fails,
   // so it must be reachable (and precacheable) without a session. It holds

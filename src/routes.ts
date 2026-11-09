@@ -16,6 +16,8 @@ export const publicRoutes = [
   "/features",
   "/pricing",
   "/community",
+  // The marketing contact page (WhatsApp + message form).
+  "/contact",
   "/docs",
   "/lumos",
   "/lumos/courses",

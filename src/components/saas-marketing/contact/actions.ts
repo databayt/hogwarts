@@ -7,6 +7,8 @@ import { headers } from "next/headers"
 
 import { sendEmail } from "@/lib/email"
 
+import { upsertInboundProspect } from "../inbound"
+
 import { contactServerSchema } from "./validation"
 
 export type ContactErrorCode =
@@ -97,9 +99,23 @@ export async function submitContact(input: unknown): Promise<ContactResult> {
         message: `From: ${parsed.data.email}\nLang: ${parsed.data.lang}\n\n${parsed.data.message}`,
       },
     })
-    return { success: true }
   } catch (err) {
     console.error("[saas-marketing/contact] sendEmail failed:", err)
     return { success: false, errorCode: "SEND_FAILED" }
   }
+
+  // The lead also lands in the funnel as a Prospect, like submitContactForm.
+  // Best-effort: the mail already reached sales, so a DB error must not turn
+  // a delivered message into a failure the visitor retries.
+  try {
+    await upsertInboundProspect({
+      email: parsed.data.email,
+      source: "website_contact",
+      notes: parsed.data.message,
+      tags: ["contact_page", `lang_${parsed.data.lang}`],
+    })
+  } catch (err) {
+    console.error("[saas-marketing/contact] prospect upsert failed:", err)
+  }
+  return { success: true }
 }

@@ -40,6 +40,7 @@ export function HomeHeader({
     { label: nav?.features || "Features", href: `/${locale}/features` },
     { label: nav?.community || "Community", href: `/${locale}/community` },
     { label: nav?.pricing || "Pricing", href: `/${locale}/pricing` },
+    { label: ar ? "تواصل معنا" : "Contact", href: `/${locale}/contact` },
     { label: nav?.documentation || "Documentation", href: `/${locale}/docs` },
   ]
 
