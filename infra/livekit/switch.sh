@@ -45,10 +45,17 @@ print(json.dumps({"LIVEKIT_API_KEY": os.environ["LK_KEY"], "LIVEKIT_API_SECRET":
 esac
 
 $RESTART || { echo "==> secrets pushed; restart the container to apply"; exit 0; }
-# Restart = redeploy the last build with one changed byte, so the image digest moves and
-# Cloudflare swaps the container (a same-digest deploy can leave the old one serving).
-BUILD=${CF_BUILD_DIR:-$HOME/.cache/cf-build/hogwarts}
-echo "==> restarting from the last build ($(head -1 "$HOME/.cache/cf-build/hogwarts-ship.status" 2>/dev/null || echo 'unknown source'))"
-date +%s >> "$BUILD/public/.deploy-stamp"
-CF_BUILD_DIR="$BUILD" scripts/deploy-cloudflare.sh "$HOME/.cache/cf-build/hogwarts-prod.env" deploy
-echo "==> wait for /api/health uptime to reset, then join a test room"
+# Restart = stop the container from its Durable Object; the next request starts a fresh one from
+# the CURRENT secrets (cf/worker.js POST /__ops/container/restart, cron-secret only). A redeploy is
+# NOT enough: an image rollout re-launches the container with the env it was first started with —
+# on 2026-11-09 the uptime reset and every browser still dialled LiveKit Cloud.
+echo "==> restarting the container so it reads the new secrets"
+code=$(printf 'Authorization: Bearer %s\n' "$(kc cf-hogwarts-CRON_SECRET)" \
+  | curl -s -o /dev/null -w '%{http_code}' -X POST -H @- https://balqalam.com/__ops/container/restart)
+[[ "$code" == "200" ]] || { echo "    ops route answered $code (is cf/worker.js deployed with it?)"; exit 5; }
+for _ in $(seq 1 30); do
+  u=$(curl -s https://balqalam.com/api/health | grep -oE '"uptime":[0-9]+' | cut -d: -f2)
+  [[ -n "$u" && "$u" -lt 120 ]] && { echo "==> container back (uptime ${u}s). Check the host a browser dials: scratchpad wsprobe or the room's server log."; exit 0; }
+  sleep 10
+done
+echo "    the container did not come back within 5 min — check https://balqalam.com/api/health"; exit 6

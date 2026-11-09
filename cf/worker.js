@@ -15,8 +15,8 @@
 // every tenant shares one copy, and only when the origin itself says
 // `public` with a real max-age (so the service worker, icons served
 // `max-age=0` and anything carrying a session are never frozen).
-import { WorkerEntrypoint } from "cloudflare:workers"
 import { Container, getContainer, switchPort } from "@cloudflare/containers"
+import { WorkerEntrypoint } from "cloudflare:workers"
 
 import crons from "./crons.json"
 
@@ -219,11 +219,34 @@ export class WhatsappBridge extends WorkerEntrypoint {
   }
 }
 
+// ---- Ops: restart the container with the CURRENT secrets ----------------------
+// `envVars` reach the container only when the Durable Object starts it, and an
+// image rollout re-launches the container with the env it was FIRST started
+// with — so a rotated Worker secret never arrived. On 2026-11-09 the LiveKit
+// switch pushed new secrets, redeployed, the uptime reset, and every browser
+// still dialled LiveKit Cloud. Stopping the container from the (restarted)
+// Durable Object makes the next request start a fresh one from this.envVars.
+// Cron-secret only; anything else is an ordinary 404.
+const OPS_RESTART_PATH = "/__ops/container/restart"
+
+async function restartContainer(request, env) {
+  const auth = request.headers.get("authorization")
+  if (!env.CRON_SECRET || auth !== "Bearer " + env.CRON_SECRET) {
+    return new Response("Not Found", { status: 404 })
+  }
+  await getContainer(env.HOGWARTS, "main").stop()
+  return new Response(
+    "stopped — the next request starts the container with the current secrets\n"
+  )
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (request.method === "POST" && url.pathname === RUM_PATH)
       return collectRum(request, env)
+    if (request.method === "POST" && url.pathname === OPS_RESTART_PATH)
+      return restartContainer(request, env)
     const cacheable =
       request.method === "GET" &&
       EDGE_CACHEABLE.some((re) => re.test(url.pathname))
