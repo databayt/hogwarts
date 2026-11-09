@@ -115,6 +115,17 @@ describe("attachLiveClasses — slot-first matching", () => {
     expect(out.liveClass?.sessionId).toBe("lcs-adhoc")
   })
 
+  it("never hands a slot another slot's room (a double period's third hour)", async () => {
+    // First findMany = today's sessions; the second (open rooms) finds none.
+    vi.mocked(db.conference.findMany)
+      .mockResolvedValueOnce(twoSessions as never)
+      .mockResolvedValue([] as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-period-3" },
+    ])
+    expect(out.liveClass).toBeNull()
+  })
+
   it("prefers a real session over the recurring default link", async () => {
     vi.mocked(db.conference.findMany).mockResolvedValue([
       twoSessions[0],

@@ -114,7 +114,13 @@ export default async function Page({ params }: Props) {
       break
     case "unavailable":
       title = t?.unavailable ?? "This class has no online room yet."
-      hint = t?.unavailableHint ?? null
+      hint =
+        outcome.reason === "holiday"
+          ? (t?.unavailableHoliday ?? "The school is closed today.")
+          : outcome.reason === "no_teacher"
+            ? (t?.unavailableNoTeacher ??
+              "No teacher is assigned to this class yet — ask the school office.")
+            : (t?.unavailableHint ?? null)
       break
     case "forbidden":
       title = t?.forbidden ?? "This class isn't one of yours."

@@ -150,6 +150,43 @@ export default function TeacherView({
   const startErrorLabel =
     dictionary?.liveClasses?.startError ??
     (isRTL ? "تعذّر بدء البث المباشر" : "Couldn't start the live class")
+  // The Today list and the Current/Next card follow the grid's contract: the
+  // SERVER's window (instants, school zone) decides when Join shows, so a
+  // teacher on another clock (abroad) sees it at the class's real time; the
+  // device-clock check is only the fallback for a row without a window. A
+  // class that has a room, or is online by policy, goes in through the slot's
+  // join link; Start stays for an in-person section of a live-enabled school.
+  const joinLabel = dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
+  const todayJoin = (item: any, deviceOpen: boolean) => {
+    if (!item || item.isBreak) return null
+    const id: string | undefined = item.timetableId ?? undefined
+    const w = id ? joinWindows[id] : undefined
+    if (!(w ? inJoinWindow(nowMs, w) : deviceOpen)) return null
+    if (id && (item.liveClass?.sessionId || onlineToday.has(id))) {
+      return <JoinLinkButton timetableId={id} lang={lang} label={joinLabel} />
+    }
+    if (item.liveClass) {
+      return (
+        <LiveJoinButton liveClass={item.liveClass} lang={lang} label={joinLabel} />
+      )
+    }
+    if (!liveEnabled || !id) return null
+    return (
+      <StartLiveClassButton
+        timetableId={id}
+        lang={lang}
+        label={
+          dictionary?.liveClasses?.start ??
+          (isRTL ? "بدء البث المباشر" : "Start live class")
+        }
+        startingLabel={
+          dictionary?.liveClasses?.starting ??
+          (isRTL ? "جارٍ البدء…" : "Starting…")
+        }
+        errorLabel={startErrorLabel}
+      />
+    )
+  }
   // A click on today's live cell IS the join (or, inside the window with no
   // room yet, the start); any other cell opens the dialog.
   const { open: openSlot } = useSlotOpen({
@@ -428,39 +465,13 @@ export default function TeacherView({
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
-              {isLiveJoinable(
-                currentClassInfo.type as "current" | "next",
-                currentClassInfo.item.startTime
-              ) &&
-                (currentClassInfo.item.liveClass ? (
-                  <LiveJoinButton
-                    liveClass={currentClassInfo.item.liveClass}
-                    lang={lang}
-                    label={
-                      dictionary?.liveClasses?.join ??
-                      (isRTL ? "انضمام" : "Join")
-                    }
-                  />
-                ) : liveEnabled ? (
-                  <StartLiveClassButton
-                    timetableId={currentClassInfo.item.timetableId}
-                    lang={lang}
-                    label={
-                      dictionary?.liveClasses?.start ??
-                      (isRTL ? "بدء البث المباشر" : "Start live class")
-                    }
-                    startingLabel={
-                      dictionary?.liveClasses?.starting ??
-                      (isRTL ? "جارٍ البدء…" : "Starting…")
-                    }
-                    errorLabel={
-                      dictionary?.liveClasses?.startError ??
-                      (isRTL
-                        ? "تعذّر بدء البث المباشر"
-                        : "Couldn't start the live class")
-                    }
-                  />
-                ) : null)}
+              {todayJoin(
+                currentClassInfo.item,
+                isLiveJoinable(
+                  currentClassInfo.type as "current" | "next",
+                  currentClassInfo.item.startTime
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -582,37 +593,10 @@ export default function TeacherView({
                         With the crons bridged rather than native, a teacher
                         pressing Start is what brings a class online for a school
                         that has not turned on the online-school policy at all. */}
-                    {!item.isBreak &&
-                      isRowLiveJoinable(item.startTime, item.endTime) &&
-                      (item.liveClass ? (
-                        <LiveJoinButton
-                          liveClass={item.liveClass}
-                          lang={lang}
-                          label={
-                            dictionary?.liveClasses?.join ??
-                            (isRTL ? "انضمام" : "Join")
-                          }
-                        />
-                      ) : liveEnabled && item.timetableId ? (
-                        <StartLiveClassButton
-                          timetableId={item.timetableId}
-                          lang={lang}
-                          label={
-                            dictionary?.liveClasses?.start ??
-                            (isRTL ? "بدء البث المباشر" : "Start live class")
-                          }
-                          startingLabel={
-                            dictionary?.liveClasses?.starting ??
-                            (isRTL ? "جارٍ البدء…" : "Starting…")
-                          }
-                          errorLabel={
-                            dictionary?.liveClasses?.startError ??
-                            (isRTL
-                              ? "تعذّر بدء البث المباشر"
-                              : "Couldn't start the live class")
-                          }
-                        />
-                      ) : null)}
+                    {todayJoin(
+                      item,
+                      isRowLiveJoinable(item.startTime, item.endTime)
+                    )}
                   </div>
                 </CardContent>
               </Card>

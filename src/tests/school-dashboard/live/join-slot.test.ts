@@ -247,4 +247,28 @@ describe("resolveSlotJoin — which room", () => {
       reason: "no_link",
     })
   })
+  it("says over, not unavailable, in the grace after the bell when no room exists", async () => {
+    m(materializeSlotForDay).mockResolvedValue({
+      created: 0,
+      skipped: 1,
+      truncated: 0,
+      reasons: { period_over: 1 },
+    })
+    // 16:55 school time: the period ended at 16:50, the link is open to 17:00.
+    expect(await ask("STUDENT", at("14:55"))).toEqual({ kind: "over" })
+  })
+
+  it("names a slot with no teacher instead of an unknown failure", async () => {
+    m(db.timetable.findFirst).mockResolvedValue({ ...slotRow, teacherId: null })
+    m(materializeSlotForDay).mockResolvedValue({
+      created: 0,
+      skipped: 0,
+      truncated: 0,
+      reasons: {},
+    })
+    expect(await ask("STUDENT", at("13:55"))).toEqual({
+      kind: "unavailable",
+      reason: "no_teacher",
+    })
+  })
 })

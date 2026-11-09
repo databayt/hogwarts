@@ -162,6 +162,25 @@ export default function GuardianView({
   }
 
   // View state
+  // Today list + Current/Next card: the server's window decides (a parent
+  // abroad sees Join at the class's real time), and a class with a room or
+  // online by policy goes in through the slot's join link — the same contract
+  // as the grid's pill. The device clock is only the no-window fallback.
+  const guardianJoin = (item: any, deviceOpen: boolean) => {
+    if (!item || item.isBreak) return null
+    const id: string | undefined = item.timetableId ?? undefined
+    const w = id ? joinWindows[id] : undefined
+    if (!(w ? inJoinWindow(nowMs, w) : deviceOpen)) return null
+    const label =
+      (dictionary as any)?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
+    if (id && (item.liveClass?.sessionId || onlineToday.has(id))) {
+      return <JoinLinkButton timetableId={id} lang={lang} label={label} />
+    }
+    return item.liveClass ? (
+      <LiveJoinButton liveClass={item.liveClass} lang={lang} label={label} />
+    ) : null
+  }
+
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
   // The school lets guardians watch a class (join-core refuses them
   // otherwise). The Online marker shows either way — the child joins.
@@ -472,18 +491,12 @@ export default function GuardianView({
                 </p>
               </div>
               {canJoin &&
-                isLiveJoinable(
-                  currentClassInfo.type as "current" | "next",
-                  currentClassInfo.item.startTime
-                ) && (
-                  <LiveJoinButton
-                    liveClass={currentClassInfo.item.liveClass}
-                    lang={lang}
-                    label={
-                      (dictionary as any)?.liveClasses?.join ??
-                      (isRTL ? "انضمام" : "Join")
-                    }
-                  />
+                guardianJoin(
+                  currentClassInfo.item,
+                  isLiveJoinable(
+                    currentClassInfo.type as "current" | "next",
+                    currentClassInfo.item.startTime
+                  )
                 )}
             </div>
           </CardContent>
@@ -555,16 +568,9 @@ export default function GuardianView({
                     {/* Same as the student view: a guardian sees Join on each
                         of the child's online periods, not only the current one. */}
                     {canJoin &&
-                      !item.isBreak &&
-                      isRowLiveJoinable(item.startTime, item.endTime) && (
-                        <LiveJoinButton
-                          liveClass={item.liveClass}
-                          lang={lang}
-                          label={
-                            (dictionary as any)?.liveClasses?.join ??
-                            (isRTL ? "انضمام" : "Join")
-                          }
-                        />
+                      guardianJoin(
+                        item,
+                        isRowLiveJoinable(item.startTime, item.endTime)
                       )}
                   </div>
                 </CardContent>

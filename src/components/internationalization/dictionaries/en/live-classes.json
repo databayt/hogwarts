@@ -595,6 +595,8 @@
     "forbidden": "This class isn't one of yours.",
     "notFound": "We couldn't find this class.",
     "toTimetable": "Back to timetable",
-    "toLive": "Live classes"
+    "toLive": "Live classes",
+    "unavailableHoliday": "The school is closed today.",
+    "unavailableNoTeacher": "No teacher is assigned to this class yet — ask the school office."
   }
 }

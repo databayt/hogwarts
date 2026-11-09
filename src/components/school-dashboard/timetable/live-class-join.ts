@@ -160,6 +160,11 @@ export async function attachLiveClasses<
   // tutorials) fall back to the section+subject key.
   const byTimetable = new Map<string, (typeof sessions)[number]>()
   const sessionMap = new Map<string, (typeof sessions)[number]>()
+  // What a SLOT may fall back to: rows with no slot anchor only, as
+  // `resolveSlotJoin` does. A row anchored to another slot is that period's
+  // class — letting it in handed period 3 the room of period 2 on a double
+  // period. An entry with no anchor of its own still sees every row.
+  const unanchoredMap = new Map<string, (typeof sessions)[number]>()
   for (const s of sessions) {
     if (s.timetableId && !byTimetable.has(s.timetableId)) {
       byTimetable.set(s.timetableId, s)
@@ -167,6 +172,7 @@ export async function attachLiveClasses<
     if (!s.sectionId || !s.subjectId) continue
     const k = keyOf(s.sectionId, s.subjectId)
     if (!sessionMap.has(k)) sessionMap.set(k, s) // earliest today wins
+    if (!s.timetableId && !unanchoredMap.has(k)) unanchoredMap.set(k, s)
   }
   const defaultMap = new Map<string, (typeof defaults)[number]>()
   for (const d of defaults) defaultMap.set(keyOf(d.sectionId, d.subjectId), d)
@@ -183,9 +189,9 @@ export async function attachLiveClasses<
   return entries.map((e) => {
     if (!e.sectionId || !e.subjectId) return { ...e, liveClass: null }
     const k = keyOf(e.sectionId, e.subjectId)
-    const sess =
-      (e.timetableId ? byTimetable.get(e.timetableId) : undefined) ??
-      sessionMap.get(k)
+    const sess = e.timetableId
+      ? (byTimetable.get(e.timetableId) ?? unanchoredMap.get(k))
+      : sessionMap.get(k)
     if (sess) {
       return {
         ...e,

@@ -240,7 +240,12 @@ export async function resolveSlotJoin(input: {
   if (decided?.status === "ended") return { kind: "over" }
   const reason =
     Object.entries(made.reasons).sort((a, b) => b[1] - a[1])[0]?.[0] ??
-    "unknown"
+    // The sweep skips a slot with no teacher before it counts a reason —
+    // name that case instead of "unknown", so the page can say who to ask.
+    (slot.teacherId ? "unknown" : "no_teacher")
+  // The link stays open for a grace period after the bell, but the sweep will
+  // not write a room for a period that has ended: that is "over", not a fault.
+  if (reason === "period_over") return { kind: "over" }
   return { kind: "unavailable", reason }
 }
 
