@@ -40,7 +40,13 @@ export function HomeHeader({
     { label: nav?.features || "Features", href: `/${locale}/features` },
     { label: nav?.community || "Community", href: `/${locale}/community` },
     { label: nav?.pricing || "Pricing", href: `/${locale}/pricing` },
-    { label: ar ? "تواصل معنا" : "Contact", href: `/${locale}/contact` },
+    // On the homepage this swaps the hero for its contact panel in place
+    // (HeroBlock listens for the event); elsewhere it opens /{lang}#contact.
+    {
+      label: ar ? "تواصل معنا" : "Contact",
+      href: `/${locale}#contact`,
+      event: "balqalam:contact",
+    },
     { label: nav?.documentation || "Documentation", href: `/${locale}/docs` },
   ]
 

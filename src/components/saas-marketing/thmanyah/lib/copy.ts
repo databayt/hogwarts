@@ -137,30 +137,33 @@ export interface ThmanyahCopy {
     /** Three columns, in render order. */
     columns: FaqItem[][]
   }
-  /** The /contact page (ContactBlock) — one green screen, hero-styled. */
+  /** The hero's contact panel (ContactPanel) — the header's "Contact"
+   *  swaps the hero headline and CTA for it in place. */
   contact: {
     eyebrow: string
-    /** Headline words, then the marked one — the hero's shape. */
-    words: string[]
-    highlight: string
+    title: string
     lede: string
-    whatsapp: string
+    /** Section labels over the channel lists. */
+    emailsLabel: string
+    followLabel: string
+    call: string
+    /** Accessible names for the icon links. */
+    social: { whatsapp: string; facebook: string; x: string; github: string }
     /** Pre-filled first message the WhatsApp link opens with. */
     whatsappText: string
-    formTitle: string
-    emailLabel: string
+    reachLabel: string
     messageLabel: string
     messagePlaceholder: string
     submit: string
     submitting: string
     success: string
+    back: string
     errors: {
       VALIDATION_FAILED: string
       RATE_LIMITED: string
       SEND_FAILED: string
     }
-    validation: { required: string; email: string; tooShort: string }
-    demo: string
+    validation: { required: string; reachShort: string; tooShort: string }
   }
   footer: {
     ctaLine1: string
@@ -360,18 +363,25 @@ const AR: ThmanyahCopy = {
   },
   contact: {
     eyebrow: "تواصل معنا",
-    words: ["لنتحدث", "عن"],
-    highlight: "مدرستك",
-    lede: "اكتب لنا على واتساب ونرد عليك مباشرة، أو اترك رسالة وسنعود إليك.",
-    whatsapp: "تحدث معنا على واتساب",
+    title: "لنتحدث عن مدرستك",
+    lede: "اترك لنا وسيلة التواصل التي تفضلها، وسنعود إليك.",
+    emailsLabel: "البريد",
+    followLabel: "تابعنا",
+    call: "اتصل بنا",
+    social: {
+      whatsapp: "واتساب",
+      facebook: "فيسبوك",
+      x: "إكس",
+      github: "GitHub",
+    },
     whatsappText: "مرحبًا، أريد معرفة المزيد عن منصة بالقلم لمدرستي.",
-    formTitle: "أو اترك رسالة",
-    emailLabel: "البريد الإلكتروني",
+    reachLabel: "بريدك أو رقم هاتفك",
     messageLabel: "رسالتك",
     messagePlaceholder: "حدثنا عن مدرستك وعدد طلابها",
     submit: "أرسل",
     submitting: "جارٍ الإرسال…",
     success: "شكرًا — وصلت رسالتك وسنعود إليك قريبًا.",
+    back: "العودة",
     errors: {
       VALIDATION_FAILED: "راجع الحقول وحاول مرة أخرى.",
       RATE_LIMITED: "طلبات كثيرة، حاول بعد ساعة.",
@@ -379,10 +389,9 @@ const AR: ThmanyahCopy = {
     },
     validation: {
       required: "هذا الحقل مطلوب",
-      email: "بريد إلكتروني غير صالح",
+      reachShort: "اكتب بريدًا أو رقم هاتف",
       tooShort: "اكتب ١٠ أحرف على الأقل",
     },
-    demo: "أو جرّب المدرسة التجريبية",
   },
   footer: {
     ctaLine1: "من السهل أن تبـدأ مع",
@@ -599,29 +608,37 @@ const EN: ThmanyahCopy = {
   },
   contact: {
     eyebrow: "Contact",
-    words: ["Let's", "talk", "about"],
-    highlight: "your school",
-    lede: "Message us on WhatsApp for a direct reply, or leave a note and we'll get back to you.",
-    whatsapp: "Talk to us on WhatsApp",
+    title: "Let's talk about your school",
+    lede: "Leave the way you'd like us to reach you, and we'll get back to you.",
+    emailsLabel: "Email",
+    followLabel: "Follow us",
+    call: "Call us",
+    social: {
+      whatsapp: "WhatsApp",
+      facebook: "Facebook",
+      x: "X",
+      github: "GitHub",
+    },
     whatsappText: "Hello, I'd like to learn more about balqalam for my school.",
-    formTitle: "Or leave a message",
-    emailLabel: "Email address",
+    reachLabel: "Your email or phone number",
     messageLabel: "Your message",
-    messagePlaceholder: "Tell us about your school and how many students it has",
+    messagePlaceholder:
+      "Tell us about your school and how many students it has",
     submit: "Send",
     submitting: "Sending…",
     success: "Thanks — your message arrived and we'll get back to you soon.",
+    back: "Back",
     errors: {
       VALIDATION_FAILED: "Please check the fields and try again.",
       RATE_LIMITED: "Too many requests — please try again in an hour.",
-      SEND_FAILED: "Could not send your message. Try again, or message us on WhatsApp.",
+      SEND_FAILED:
+        "Could not send your message. Try again, or message us on WhatsApp.",
     },
     validation: {
       required: "This field is required",
-      email: "Enter a valid email",
+      reachShort: "Enter an email or a phone number",
       tooShort: "Write at least 10 characters",
     },
-    demo: "or try the demo school",
   },
   footer: {
     ctaLine1: "It is easy to start with",
@@ -632,9 +649,17 @@ const EN: ThmanyahCopy = {
   },
 }
 
-/** The sales WhatsApp line (international, digits only) — the /contact
- *  page's primary action. */
-export const SALES_WHATSAPP = "249919071294"
+/** The contact panel's channels — one place for every number and handle. */
+export const CONTACT_CHANNELS = {
+  /** International, digits only (wa.me form). */
+  whatsapp: "249919071294",
+  phone: "+249919071294",
+  emails: ["hi@databayt.org", "sales@databayt.org"],
+  /** The balqalam Facebook Page, by id (FACEBOOK_PAGE_ID_BALQALAM). */
+  facebook: "https://www.facebook.com/1218016808068580",
+  x: "https://x.com/databayt",
+  github: "https://github.com/databayt",
+} as const
 
 export const COPY: Record<ThmanyahLang, ThmanyahCopy> = { ar: AR, en: EN }
 

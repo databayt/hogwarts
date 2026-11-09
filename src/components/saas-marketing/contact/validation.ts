@@ -8,6 +8,7 @@ import type { ValidationHelper } from "@/components/internationalization/helpers
 export const CONTACT_MESSAGE_MIN = 10
 export const CONTACT_MESSAGE_MAX = 2000
 export const CONTACT_EMAIL_MAX = 254
+export const CONTACT_REACH_MIN = 5
 
 /**
  * Localized Zod schema for the marketing contact form ("Let's Work Together").
@@ -39,11 +40,31 @@ export function createContactSchema(v: ValidationHelper) {
 /**
  * Server-side schema (no localization — server only returns errorCodes).
  */
-export const contactServerSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(CONTACT_EMAIL_MAX),
-  message: z.string().trim().min(CONTACT_MESSAGE_MIN).max(CONTACT_MESSAGE_MAX),
-  website: z.string().max(0).optional().default(""),
-  lang: z.enum(["en", "ar"]).default("en"),
-})
+export const contactServerSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email()
+      .max(CONTACT_EMAIL_MAX)
+      .optional(),
+    /** The hero contact panel's free-form "how should we reach you" — an
+     *  email, a phone or WhatsApp number. Either this or `email` is needed. */
+    contact: z
+      .string()
+      .trim()
+      .min(CONTACT_REACH_MIN)
+      .max(CONTACT_EMAIL_MAX)
+      .optional(),
+    message: z
+      .string()
+      .trim()
+      .min(CONTACT_MESSAGE_MIN)
+      .max(CONTACT_MESSAGE_MAX),
+    website: z.string().max(0).optional().default(""),
+    lang: z.enum(["en", "ar"]).default("en"),
+  })
+  .refine((d) => d.email || d.contact, { path: ["contact"] })
 
 export type ContactInput = z.infer<typeof contactServerSchema>

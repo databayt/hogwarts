@@ -14,7 +14,10 @@ import { sendEmail } from "@/lib/email"
 
 const SALES_INBOX = process.env.SALES_NOTIFY_EMAIL ?? "hi@databayt.org"
 
-export async function notifySales(subject: string, data: Record<string, unknown>) {
+export async function notifySales(
+  subject: string,
+  data: Record<string, unknown>
+) {
   try {
     await sendEmail({
       to: SALES_INBOX,
@@ -33,7 +36,8 @@ export async function notifySales(subject: string, data: Record<string, unknown>
  * founder's reply SLA bucket.
  */
 export async function upsertInboundProspect(args: {
-  email: string
+  /** At least one of `email` / `phone` — it keys the inbound row. */
+  email?: string
   name?: string
   phone?: string
   website?: string
@@ -46,14 +50,16 @@ export async function upsertInboundProspect(args: {
   rawPayload?: Record<string, unknown>
 }) {
   const status = args.status ?? "replied"
+  const reach = args.email ?? args.phone
+  if (!reach) throw new Error("upsertInboundProspect: email or phone required")
 
   return db.prospect.upsert({
     where: {
-      gmapsPlaceId: `inbound:${args.email}`, // synthetic unique key for inbound rows
+      gmapsPlaceId: `inbound:${reach}`, // synthetic unique key for inbound rows
     },
     create: {
-      gmapsPlaceId: `inbound:${args.email}`,
-      name: args.name ?? args.email,
+      gmapsPlaceId: `inbound:${reach}`,
+      name: args.name ?? reach,
       email: args.email,
       phone: args.phone,
       website: args.website,

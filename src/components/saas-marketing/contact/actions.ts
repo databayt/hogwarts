@@ -8,7 +8,6 @@ import { headers } from "next/headers"
 import { sendEmail } from "@/lib/email"
 
 import { upsertInboundProspect } from "../inbound"
-
 import { contactServerSchema } from "./validation"
 
 export type ContactErrorCode =
@@ -88,15 +87,23 @@ export async function submitContact(input: unknown): Promise<ContactResult> {
     return { success: false, errorCode: "RATE_LIMITED" }
   }
 
+  // Who to answer: the classic form sends `email`; the hero panel sends a
+  // free-form `contact` that may be an email or a phone/WhatsApp number.
+  const reach = (parsed.data.email ?? parsed.data.contact)!
+  const reachEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reach)
+    ? reach.toLowerCase()
+    : undefined
+  const reachPhone = reachEmail ? undefined : reach
+
   try {
     await sendEmail({
       to: RECIPIENT,
-      subject: `[Lead] ${parsed.data.email}`,
+      subject: `[Lead] ${reach}`,
       template: "contact-form",
       // sendEmail's generateEmailHtml only renders `data.message` — embed
       // the visitor's email + locale inside that one rendered block.
       data: {
-        message: `From: ${parsed.data.email}\nLang: ${parsed.data.lang}\n\n${parsed.data.message}`,
+        message: `From: ${reach}\nLang: ${parsed.data.lang}\n\n${parsed.data.message}`,
       },
     })
   } catch (err) {
@@ -109,10 +116,11 @@ export async function submitContact(input: unknown): Promise<ContactResult> {
   // a delivered message into a failure the visitor retries.
   try {
     await upsertInboundProspect({
-      email: parsed.data.email,
+      email: reachEmail,
+      phone: reachPhone,
       source: "website_contact",
       notes: parsed.data.message,
-      tags: ["contact_page", `lang_${parsed.data.lang}`],
+      tags: ["contact_panel", `lang_${parsed.data.lang}`],
     })
   } catch (err) {
     console.error("[saas-marketing/contact] prospect upsert failed:", err)

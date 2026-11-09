@@ -36,7 +36,10 @@ export function SmartBar({
   children,
 }: {
   dir: "rtl" | "ltr"
-  links: { label: string; href: string }[]
+  /** `event`: on the homepage bar, dispatch this window event instead of
+   *  navigating (HeroBlock's contact panel); `href` still serves every
+   *  other page and a modified click. */
+  links: { label: string; href: string; event?: string }[]
   labels: { open: string; close: string; nav: string }
   variant?: "hero" | "page"
   children: React.ReactNode
@@ -95,7 +98,18 @@ export function SmartBar({
     <Link
       key={link.href}
       href={link.href}
-      onClick={page ? undefined : () => setOpen(false)}
+      onClick={(e) => {
+        if (!page && link.event && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault()
+          window.history.replaceState(
+            window.history.state,
+            "",
+            `${window.location.pathname}${window.location.search}${new URL(link.href, window.location.href).hash}`
+          )
+          window.dispatchEvent(new Event(link.event))
+        }
+        if (!page) setOpen(false)
+      }}
       className="text-muted-foreground hover:text-foreground text-base whitespace-nowrap transition-colors md:text-[17px]"
     >
       {link.label}
@@ -118,8 +132,7 @@ export function SmartBar({
         dir={dir}
         className={cn(
           "text-foreground",
-          !page &&
-            "px-[5%] min-[1200px]:px-[60px]"
+          !page && "px-[5%] min-[1200px]:px-[60px]"
         )}
       >
         <div

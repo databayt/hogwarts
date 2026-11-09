@@ -1,10 +1,11 @@
 "use client"
 
-import React from "react"
-import { motion } from "framer-motion"
+import React, { useCallback, useEffect, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 
 import { tenantOriginForHost } from "@/lib/root-domain"
 import { DemoLink } from "@/components/saas-marketing/demo-link"
+import { ContactPanel } from "@/components/saas-marketing/thmanyah/block/ContactPanel"
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**
@@ -91,8 +92,46 @@ const demoFallbackHref = (lang: string) =>
     process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
   }/${lang}/dashboard`
 
+/* The header's "Contact" (HomeHeader → SmartBar) fires this on the homepage
+   instead of navigating; from any other page it arrives as `/{lang}#contact`. */
+const CONTACT_EVENT = "balqalam:contact"
+const EXIT = {
+  opacity: 0,
+  y: -24,
+  transition: { duration: 0.45, ease: [0.4, 0, 1, 1] as const },
+}
+
 export function HeroBlock() {
   const { lang, rtl, copy } = useThmanyahLocale()
+
+  /* Contact mode: the headline and CTA fade out and ContactPanel fades in on
+     the same green. `#contact` in the URL is the shareable form of it. */
+  const [contact, setContact] = useState(false)
+  useEffect(() => {
+    const sync = () => setContact(window.location.hash === "#contact")
+    const open = () => {
+      setContact(true)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+    sync()
+    window.addEventListener(CONTACT_EVENT, open)
+    window.addEventListener("hashchange", sync)
+    return () => {
+      window.removeEventListener(CONTACT_EVENT, open)
+      window.removeEventListener("hashchange", sync)
+    }
+  }, [])
+  const close = useCallback(() => {
+    setContact(false)
+    const { pathname, search } = window.location
+    window.history.replaceState(window.history.state, "", pathname + search)
+  }, [])
+  useEffect(() => {
+    if (!contact) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close()
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [contact, close])
 
   return (
     <>
@@ -108,56 +147,67 @@ export function HeroBlock() {
       <section
         className="hero-section relative z-0 flex h-screen w-full flex-col items-center justify-between overflow-hidden bg-[#00bc6d]"
         data-framer-name="Hero"
+        /* The panel can outgrow the 88vh phone hero; let it, while open. */
+        style={contact ? { height: "auto", minHeight: "100svh" } : undefined}
       >
-        {/* Text (.framer-1htsxxd) */}
-        <motion.div
-          {...APPEAR}
-          className="hero-text will-change-transform"
-          data-framer-name="Text"
-        >
-          {/* Subtitle (.framer-1y9s2py) */}
-          <motion.div {...APPEAR_SUB} className="w-full">
-            <h3
-              className="hero-title w-full text-start text-black"
-              style={{
-                fontFamily: '"thmanyah sans", sans-serif',
-                fontWeight: 400,
-                fontFeatureSettings:
-                  '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
-              }}
-            >
-              {copy.hero.eyebrow}
-            </h3>
-          </motion.div>
-
-          {/* Words (.framer-ht94lv): row-wrap, 840px, gap 10px 17px */}
-          <div
-            className="hero-words flex w-full flex-row flex-wrap items-center justify-start"
-            data-framer-name="Words"
-          >
-            {copy.hero.words.map((word, i) => (
-              <div key={i} className="flex flex-col">
-                <h1 style={H1_STYLE}>{word}</h1>
-              </div>
-            ))}
-
-            {/* Highlight group (.framer-115xp5q) */}
-            <div className="relative flex flex-row items-center justify-center gap-[10px]">
-              {/* Mark (.framer-whameh) — anchored at the reading edge, so
-                  it grows away from the text it marks in either direction. */}
+        <AnimatePresence mode="wait" initial={false}>
+          {contact ? (
+            <ContactPanel key="contact" onClose={close} />
+          ) : (
+            /* `contents` keeps text + CTA direct flex items of the section
+               (its justify-between spaces them); AnimatePresence still waits
+               for both children's exits before the panel enters. */
+            <div key="hero" className="contents">
+              {/* Text (.framer-1htsxxd) */}
               <motion.div
                 {...APPEAR}
-                className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
-                aria-hidden
-              />
-              <div className="relative flex flex-col">
-                <h1 style={H1_STYLE}>{copy.hero.highlight}</h1>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+                exit={EXIT}
+                className="hero-text will-change-transform"
+                data-framer-name="Text"
+              >
+                {/* Subtitle (.framer-1y9s2py) */}
+                <motion.div {...APPEAR_SUB} className="w-full">
+                  <h3
+                    className="hero-title w-full text-start text-black"
+                    style={{
+                      fontFamily: '"thmanyah sans", sans-serif',
+                      fontWeight: 400,
+                      fontFeatureSettings:
+                        '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
+                    }}
+                  >
+                    {copy.hero.eyebrow}
+                  </h3>
+                </motion.div>
 
-        {/* CTA (.framer-3lvoni) — points at the demo school rather than the
+                {/* Words (.framer-ht94lv): row-wrap, 840px, gap 10px 17px */}
+                <div
+                  className="hero-words flex w-full flex-row flex-wrap items-center justify-start"
+                  data-framer-name="Words"
+                >
+                  {copy.hero.words.map((word, i) => (
+                    <div key={i} className="flex flex-col">
+                      <h1 style={H1_STYLE}>{word}</h1>
+                    </div>
+                  ))}
+
+                  {/* Highlight group (.framer-115xp5q) */}
+                  <div className="relative flex flex-row items-center justify-center gap-[10px]">
+                    {/* Mark (.framer-whameh) — anchored at the reading edge, so
+                  it grows away from the text it marks in either direction. */}
+                    <motion.div
+                      {...APPEAR}
+                      className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
+                      aria-hidden
+                    />
+                    <div className="relative flex flex-col">
+                      <h1 style={H1_STYLE}>{copy.hero.highlight}</h1>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* CTA (.framer-3lvoni) — points at the demo school rather than the
             reference's in-page anchor. DemoLink follows the visitor's root
             domain, so on balqalam.com it resolves to demo.balqalam.com, on
             ed.databayt.org to demo.databayt.org, and locally to
@@ -172,44 +222,47 @@ export function HeroBlock() {
             181.3px (Δ +14.4). Measured alternatives, same conditions:
             ادخل إلى المنصة 166.8 (Δ −0.1, but "enter" reads as sign-in) ·
             جرّب المنصة مجانًا 179.6 · استكشف المنصة 173.0 · جرّب المنصة 142.7. */}
-        <motion.div {...APPEAR} className="hero-cta">
-          <DemoLink
-            fallbackHref={demoFallbackHref(lang)}
-            lang={lang}
-            path="/dashboard"
-            className="inline-flex h-12 flex-row items-center justify-center gap-3 rounded-full bg-black px-6 no-underline md:h-14 md:px-7"
-          >
-            <p
-              className="text-[18px] leading-[24px] text-white md:text-[20px]"
-              style={{
-                fontFamily: '"thmanyah sans", sans-serif',
-                fontWeight: 400,
-                fontFeatureSettings:
-                  '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
-              }}
-            >
-              {copy.hero.cta}
-            </p>
-            <motion.span
-              className="block h-6 w-6 shrink-0 will-change-transform"
-              animate={{ y: [0, -4, 0] }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-                className="block h-full w-full"
-                fill="#fff"
-              >
-                <path d="M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72a8,8,0,0,1,11.32-11.32L120,196.69V40a8,8,0,0,1,16,0V196.69l58.34-58.35a8,8,0,0,1,11.32,11.32Z" />
-              </svg>
-            </motion.span>
-          </DemoLink>
-        </motion.div>
+              <motion.div {...APPEAR} exit={EXIT} className="hero-cta">
+                <DemoLink
+                  fallbackHref={demoFallbackHref(lang)}
+                  lang={lang}
+                  path="/dashboard"
+                  className="inline-flex h-12 flex-row items-center justify-center gap-3 rounded-full bg-black px-6 no-underline md:h-14 md:px-7"
+                >
+                  <p
+                    className="text-[18px] leading-[24px] text-white md:text-[20px]"
+                    style={{
+                      fontFamily: '"thmanyah sans", sans-serif',
+                      fontWeight: 400,
+                      fontFeatureSettings:
+                        '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
+                    }}
+                  >
+                    {copy.hero.cta}
+                  </p>
+                  <motion.span
+                    className="block h-6 w-6 shrink-0 will-change-transform"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 256 256"
+                      className="block h-full w-full"
+                      fill="#fff"
+                    >
+                      <path d="M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72a8,8,0,0,1,11.32-11.32L120,196.69V40a8,8,0,0,1,16,0V196.69l58.34-58.35a8,8,0,0,1,11.32,11.32Z" />
+                    </svg>
+                  </motion.span>
+                </DemoLink>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </section>
     </>
   )
