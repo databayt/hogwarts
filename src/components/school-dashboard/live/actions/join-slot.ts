@@ -20,6 +20,7 @@ import type { UserRole } from "@prisma/client"
 import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
+import { combinedGroupForSlot, groupSectionIds } from "../combined"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
@@ -113,6 +114,16 @@ export async function resolveSlotJoin(input: {
   if (slot.period.isBreak) return { kind: "not_found" }
   const sectionId = slot.sectionId
 
+  // A combined class (one teacher, several sections, the same period) has ONE
+  // room, owned by its primary slot: every member's link leads into it, and a
+  // student of any member section may follow a link to it — the notices for
+  // the class carry the primary's link. `null` for a class taught alone.
+  const group = await combinedGroupForSlot(schoolId, slot.id, now)
+  const readerSections = group ? groupSectionIds(group) : sectionId
+  const roomSlotId = group?.primaryId ?? slot.id
+  const roomSectionId =
+    group?.members.find((m) => m.slotId === roomSlotId)?.sectionId ?? sectionId
+
   // ── Who is asking ─────────────────────────────────────────────────────────
   // Decided BEFORE anything about the day, so an outsider learns nothing about
   // a class (not even that it is on another day) and can never make a row.
@@ -135,13 +146,19 @@ export async function resolveSlotJoin(input: {
     // Any other teacher of the school may still look in (the room decides
     // CO_HOST or refuses); they just never get the host's earlier window.
   } else if (role === "STUDENT") {
-    const ok = await canAccessSession({ userId, role, schoolId }, sectionId)
+    const ok = await canAccessSession(
+      { userId, role, schoolId },
+      readerSections
+    )
     if (!ok) return { kind: "forbidden" }
   } else if (role === "GUARDIAN") {
     // The school switch first: with observing off there is nothing a guardian
     // could do in the room, so the link refuses instead of the room.
     if (!school.conferenceGuardiansObserve) return { kind: "forbidden" }
-    const ok = await canAccessSession({ userId, role, schoolId }, sectionId)
+    const ok = await canAccessSession(
+      { userId, role, schoolId },
+      readerSections
+    )
     if (!ok) return { kind: "forbidden" }
   } else if (role !== "ADMIN" && role !== "DEVELOPER") {
     // STAFF and ACCOUNTANT join only school-wide sessions, and a slot's class
@@ -176,7 +193,7 @@ export async function resolveSlotJoin(input: {
 
   // ── 1–3: a room that already exists ───────────────────────────────────────
   const existing = await findExistingRoom(schoolId, timeZone, now, {
-    slotId: slot.id,
+    slotId: roomSlotId,
     sectionId,
     subjectId: slot.subjectId,
   })
@@ -217,11 +234,11 @@ export async function resolveSlotJoin(input: {
 
   const made = await materializeSlotForDay(
     schoolId,
-    { id: slot.id, sectionId },
+    { id: roomSlotId, sectionId: roomSectionId },
     now
   )
   const fresh = await findExistingRoom(schoolId, timeZone, now, {
-    slotId: slot.id,
+    slotId: roomSlotId,
     sectionId,
     subjectId: slot.subjectId,
   })
@@ -231,7 +248,7 @@ export async function resolveSlotJoin(input: {
   // is the honest answer; otherwise report why the sweep declined.
   const decided = await findSlotSessionForDay(
     schoolId,
-    slot.id,
+    roomSlotId,
     timeZone,
     now,
     ["cancelled", "ended"]

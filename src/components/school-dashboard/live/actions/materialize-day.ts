@@ -27,6 +27,11 @@ import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
 import {
+  combinedGroupForSlot,
+  groupCombinedSlots,
+  type CombinedGroup,
+} from "../combined"
+import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   schoolDayWindow,
@@ -295,8 +300,28 @@ async function materializeSlots(
     links.map((l) => [`${l.sectionId}:${l.subjectId}`, l])
   )
 
+  // A combined class (one teacher, several sections, one period) gets ONE
+  // room, owned by the group's primary slot; the others are skipped below and
+  // their join links lead into it (see ../combined.ts). Only ONLINE sections
+  // combine: an in-person member must not swallow an online sibling's room.
+  // The one-slot path has loaded only that slot, so it asks the database.
+  let combined = new Map<string, CombinedGroup>()
+  if (onlySlotId) {
+    const group = await combinedGroupForSlot(schoolId, onlySlotId, date)
+    if (group) combined.set(onlySlotId, group)
+  } else {
+    combined = groupCombinedSlots(
+      todays.filter((s) => s.sectionId && policies.get(s.sectionId)?.online)
+    )
+  }
+
   for (const slot of todays) {
     if (!slot.sectionId || !slot.teacherId) continue
+    const group = combined.get(slot.id)
+    if (group && group.primaryId !== slot.id) {
+      bump(result, "combined")
+      continue
+    }
     const policy = policies.get(slot.sectionId)
     if (!policy?.online) {
       bump(result, "not_online")

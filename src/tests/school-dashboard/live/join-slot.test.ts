@@ -23,7 +23,7 @@ import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online
 
 vi.mock("@/lib/db", () => ({
   db: {
-    timetable: { findFirst: vi.fn() },
+    timetable: { findFirst: vi.fn(), findMany: vi.fn() },
     school: { findUnique: vi.fn() },
     teacher: { findFirst: vi.fn() },
     conference: { findFirst: vi.fn() },
@@ -76,6 +76,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   rows = []
   m(db.timetable.findFirst).mockResolvedValue(slotRow)
+  // The teacher's other slots at this time: none — the class is taught alone.
+  m(db.timetable.findMany).mockResolvedValue([slotRow])
   m(db.school.findUnique).mockResolvedValue({
     timezone: "Africa/Khartoum",
     conferenceReminderLeadMinutes: 10,
@@ -269,6 +271,69 @@ describe("resolveSlotJoin — which room", () => {
     expect(await ask("STUDENT", at("13:55"))).toEqual({
       kind: "unavailable",
       reason: "no_teacher",
+    })
+  })
+
+  describe("a combined class (one teacher, two sections, one period)", () => {
+    // slot-1 (sec-1) and slot-0 (sec-2) start at 16:00 with the same teacher.
+    // slot-0 has the smaller id, so it owns the class's ONE room.
+    const sibling = { ...slotRow, id: "slot-0", sectionId: "sec-2" }
+    const bothOnline = (sec2 = true) =>
+      new Map([
+        [SECTION, { online: true, provider: "livekit" }],
+        ["sec-2", { online: sec2, provider: "livekit" }],
+      ])
+
+    beforeEach(() => {
+      m(db.timetable.findMany).mockResolvedValue([sibling, slotRow])
+      m(resolveOnlinePolicies).mockResolvedValue(bothOnline())
+    })
+
+    it("leads the sibling's link into the primary slot's room", async () => {
+      rows = []
+      m(findSlotSessionForDay).mockImplementation(
+        async (
+          _s: string,
+          slotId: string,
+          _tz: string,
+          _d: Date,
+          statuses: string[]
+        ) =>
+          slotId === "slot-0" && statuses.includes("scheduled")
+            ? { id: "room-primary", status: "scheduled" }
+            : null
+      )
+      expect(await ask("STUDENT", at("13:55"))).toEqual({
+        kind: "room",
+        sessionId: "room-primary",
+      })
+      // A student of EITHER section may follow the link.
+      expect(m(canAccessSession).mock.calls[0][1]).toEqual(["sec-2", "sec-1"])
+      expect(materializeSlotForDay).not.toHaveBeenCalled()
+    })
+
+    it("writes the PRIMARY slot's room when the sweep has not", async () => {
+      expect(await ask("STUDENT", at("13:55"))).toEqual({
+        kind: "room",
+        sessionId: "room-new",
+      })
+      expect(m(materializeSlotForDay).mock.calls[0][1]).toEqual({
+        id: "slot-0",
+        sectionId: "sec-2",
+      })
+    })
+
+    it("does not combine with a section taught in person that day", async () => {
+      m(resolveOnlinePolicies).mockResolvedValue(bothOnline(false))
+      expect(await ask("STUDENT", at("13:55"))).toEqual({
+        kind: "room",
+        sessionId: "room-new",
+      })
+      expect(m(canAccessSession).mock.calls[0][1]).toBe(SECTION)
+      expect(m(materializeSlotForDay).mock.calls[0][1]).toEqual({
+        id: SLOT,
+        sectionId: SECTION,
+      })
     })
   })
 })

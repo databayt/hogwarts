@@ -31,6 +31,7 @@ import {
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
+import { sessionSectionIds } from "../combined"
 import { hostMayStart } from "../join-window"
 import { concurrentCapError } from "./helpers"
 import { transitionToLive } from "./went-live"
@@ -52,9 +53,14 @@ async function resolveParticipantRole(
   schoolId: string,
   sessionId: string,
   sessionTeacherUserId: string | null,
-  sessionSectionId: string | null,
+  /** The section(s) the class covers — several for a combined class. */
+  sessionSectionIds: string[],
   sessionVisibility: ConferenceVisibility = "section"
 ): Promise<ConferenceParticipantRole | null> {
+  const sessionSectionId =
+    sessionSectionIds.length > 1
+      ? { in: sessionSectionIds }
+      : (sessionSectionIds[0] ?? null)
   if (userRole === "DEVELOPER") return "HOST"
   if (userRole === "ADMIN") return "CO_HOST"
   if (userRole === "TEACHER") {
@@ -71,7 +77,11 @@ async function resolveParticipantRole(
           userId,
           OR: [
             { timetables: { some: { schoolId, sectionId: sessionSectionId } } },
-            { homeroomSections: { some: { id: sessionSectionId } } },
+            {
+              homeroomSections: {
+                some: { id: { in: sessionSectionIds } },
+              },
+            },
           ],
         },
         select: { id: true },
@@ -192,6 +202,7 @@ export async function performLiveClassJoin(
         roomName: true,
         provider: true,
         sectionId: true,
+        timetableId: true,
         visibility: true,
         maxParticipants: true,
         status: true,
@@ -247,7 +258,7 @@ export async function performLiveClassJoin(
     schoolId,
     sessionId,
     liveClass.teacher.userId,
-    liveClass.sectionId,
+    await sessionSectionIds(schoolId, liveClass),
     liveClass.visibility
   )
   // School switch: guardians observe only where the school allows it.
