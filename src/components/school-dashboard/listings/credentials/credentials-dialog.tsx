@@ -188,7 +188,7 @@ export function CredentialsDialog({
   // when credentials load. WhatsApp + SMS need a phone; Email needs an email.
   const channels = useMemo(() => {
     const phone = credentials ? normalizePhone(credentials.phone) : null
-    const email = credentials?.email ?? null
+    const email = credentials?.contactEmail ?? credentials?.email ?? null
 
     let waHref: string | undefined
     let mailHref: string | undefined

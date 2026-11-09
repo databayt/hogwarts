@@ -15,6 +15,7 @@ import { canManageCredentials } from "@/lib/credentials-access"
 import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { ensureLoginEmail, isPlaceholderEmail } from "@/lib/login-email"
 import { displayName } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -130,7 +131,8 @@ async function handleStudent(
       ...data,
       fullName: person ? displayName(person, "full") : undefined,
       phone: contact.phone,
-      email: data.email ?? contact.email,
+      email: data.email,
+      contactEmail: contact.email ?? data.email,
     },
   }
 }
@@ -318,7 +320,7 @@ async function handleMember(
       const username = await allocateLoginCode(tx, schoolId)
       const newUser = await tx.user.create({
         data: {
-          email: entity.email,
+          email: await loginEmailFor(tx, schoolId, entity.email),
           emailVerified: new Date(),
           password: hashed,
           role: ROLE_TO_USER_ROLE[role],
@@ -337,7 +339,8 @@ async function handleMember(
       data: {
         username,
         fullName: displayName(entity, "full"),
-        email: entity.email,
+        email: newUser.email,
+        contactEmail: entity.email,
         password: plain,
         phone: entity.phone,
         isNew: true,
@@ -349,7 +352,7 @@ async function handleMember(
   // Existing User: ensure a username, then mint a fresh shareable password.
   const user = await db.user.findUnique({
     where: { id: entity.userId },
-    select: { email: true, username: true },
+    select: { email: true, username: true, emailVerified: true },
   })
 
   // Regenerating moves an older login (email local-part, first.last) onto
@@ -367,10 +370,21 @@ async function handleMember(
         password: hashed,
         mustChangePassword: true,
         username,
+        // Admin-issued: an email login must work like the code login, now
+        // and after the person picks their own password.
+        ...(user?.email && !user.emailVerified
+          ? { emailVerified: new Date() }
+          : {}),
         tokenVersion: { increment: 1 },
       },
     })
     return username
+  })
+  const loginEmail = await ensureLoginEmail(db, {
+    userId,
+    schoolId,
+    current: user?.email,
+    candidate: entity.email,
   })
   // A reset is also the recovery path — lift any lockout right away.
   await clearLoginFailures(schoolId, [username, user?.username, user?.email])
@@ -381,7 +395,8 @@ async function handleMember(
     data: {
       username,
       fullName: displayName(entity, "full"),
-      email: user?.email ?? entity.email,
+      email: loginEmail,
+      contactEmail: entity.email ?? loginEmail,
       password: plain,
       phone: entity.phone,
       isNew: false,
@@ -415,4 +430,22 @@ function queueDeliver(
       console.error("[credentials] delivery failed:", deliveryErr)
     }
   })
+}
+
+/** A new User's login email: the person record's address, unless it is a
+ *  placeholder or another account in the school already signs in with it. */
+async function loginEmailFor(
+  tx: Pick<typeof db, "user">,
+  schoolId: string,
+  email: string | null | undefined
+): Promise<string | null> {
+  if (!email || isPlaceholderEmail(email)) return null
+  const taken = await tx.user.findFirst({
+    where: {
+      schoolId,
+      email: { equals: email.trim(), mode: "insensitive" },
+    },
+    select: { id: true },
+  })
+  return taken ? null : email.trim().toLowerCase()
 }

@@ -14,8 +14,14 @@ export interface CredentialsPayload {
   username: string
   /** Every name part — credentials, slips and shares show the full name. */
   fullName?: string
-  /** Best email on file (own → guardian fallback for students). Null when none. */
+  /**
+   * The LOGIN email — the address that signs this person in (`User.email`),
+   * shown and copied next to the username. Null when the account has none;
+   * never a contact fallback, so an admin can't hand out a dead login.
+   */
   email: string | null
+  /** Best email to send the credentials to (own → guardian fallback for students). Drives the mailto channel. */
+  contactEmail?: string | null
   /**
    * Plaintext temp password — only present the moment we mint/reset it. Null on
    * read of a pre-existing User (admin must click "Reset Password" to re-issue).

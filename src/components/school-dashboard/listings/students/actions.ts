@@ -94,6 +94,7 @@ import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getSchoolGradeCountry, getSchoolSingleKg } from "@/lib/grade/school"
 import { allocateLoginCode, LOGIN_CODE_RE } from "@/lib/login-code"
+import { ensureLoginEmail, isPlaceholderEmail } from "@/lib/login-email"
 import { shortNameParts } from "@/lib/name-utils"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { schoolNameDisplay } from "@/lib/school-name-format"
@@ -2114,10 +2115,14 @@ export async function getStudentCredentials(input: {
         })
       }
 
-      const resolvedEmail =
-        existingUser?.email && !existingUser.email.endsWith("@school.local")
-          ? existingUser.email
-          : (student.email ?? null)
+      // The login email only — adopt the student's own address when the
+      // User has none (and nobody else in the school signs in with it).
+      const resolvedEmail = await ensureLoginEmail(db, {
+        userId: student.userId,
+        schoolId,
+        current: existingUser?.email,
+        candidate: student.email,
+      })
 
       return {
         success: true,
@@ -2140,9 +2145,19 @@ export async function getStudentCredentials(input: {
     // with email column); otherwise leave User.email null so login isn't
     // gated by unverifiable fake addresses.
     const { plain, hashed } = await mintPlainPassword()
-    const email = student.email ?? null
-
     const { newUser, loginCode } = await db.$transaction(async (tx) => {
+      // The student's own address becomes the login email unless it's a
+      // placeholder or another account in the school already holds it.
+      const own = student.email?.trim().toLowerCase() || null
+      const email =
+        own &&
+        !isPlaceholderEmail(own) &&
+        !(await tx.user.findFirst({
+          where: { schoolId, email: { equals: own, mode: "insensitive" } },
+          select: { id: true },
+        }))
+          ? own
+          : null
       const loginCode = await allocateLoginCode(tx, schoolId)
       const newUser = await tx.user.create({
         data: {
@@ -2192,7 +2207,7 @@ export async function getStudentCredentials(input: {
       success: true,
       data: {
         username: loginCode,
-        email,
+        email: newUser.email,
         password: plain,
         isNew: true,
         isSelfOnboarded,
@@ -2301,13 +2316,22 @@ export async function resetStudentPassword(input: {
 
     const existingUser = await db.user.findUnique({
       where: { id: student.userId },
-      select: { email: true },
+      select: { email: true, emailVerified: true },
     })
-
-    const resolvedEmail =
-      existingUser?.email && !existingUser.email.endsWith("@school.local")
-        ? existingUser.email
-        : (student.email ?? null)
+    // Admin-issued: the email login must work like the code login, now and
+    // after the student picks their own password.
+    if (existingUser?.email && !existingUser.emailVerified) {
+      await db.user.update({
+        where: { id: student.userId },
+        data: { emailVerified: new Date() },
+      })
+    }
+    const resolvedEmail = await ensureLoginEmail(db, {
+      userId: student.userId,
+      schoolId,
+      current: existingUser?.email,
+      candidate: student.email,
+    })
 
     return {
       success: true,

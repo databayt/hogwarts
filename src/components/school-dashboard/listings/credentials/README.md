@@ -18,6 +18,16 @@ a role/grade badge, the username + password, and a row of contact icons.
   - email on file → **Email** (`mailto:` with the credentials prefilled)
   - For students the contact falls back own → **primary guardian** (phone & email).
 - **Copy** — copies `Username / Email / Password / Login URL` as one block.
+- **Email = the login email (2026-11-07)** — the Email line is `User.email`, the
+  address that actually signs the person in, never a contact fallback (a
+  student's guardian email goes to the mailto icon via `contactEmail`, not the
+  Email line). When the User has no email, issuing credentials adopts the
+  person record's own address (`ensureLoginEmail`, `@/lib/login-email`) unless
+  it's a `.local` placeholder or another account in the school holds it. Every
+  issue/reset stamps `emailVerified`, so **email + PIN works exactly like code +
+  PIN** for every role. Lookup is case-insensitive and duplicate-safe
+  (`resolveLoginUser` in `components/auth/user.ts`); `User.email` is stored
+  lowercased by a Prisma extension in `@/lib/db`.
 - **Generate-on-open** — opening mints a fresh password to hand out. The one
   exception is a **self-onboarded student** who set their own password — it
   isn't clobbered (password shows `—`) and a **Reset Password** link appears:
