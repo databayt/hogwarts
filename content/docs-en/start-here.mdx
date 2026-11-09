@@ -1,81 +1,103 @@
 ---
 title: Start here
-description: Your first week on the team — the accounts, the four words, the week, and your first task.
+description: The team's kit — the links that matter, your machine set up with Kun, and a quick health check.
 ---
 
-**Join the group, get your accounts, read five pages, and take one task with «أنا» this week.**
+**Everything you open every day is linked here. Set up your machine once with Kun, then run the health check whenever something feels off.**
 
 <Mermaid
   chart={`flowchart TD
-    A["Join «المدرسة 2.0»"] --> B["Get your accounts:<br/>name@databayt.org · CRM · GitHub"]
-    B --> C["Read five pages:<br/>Team · Vision · Shared economy · CEO · Sprint"]
-    C --> D["Take one task:<br/>write «أنا» and a date"]
-    D --> E{"Stuck?"}
-    E -->|"Yes"| F["Write «عائق:» the same day"]
-    E -->|"No"| G["Done"]
-    F --> G
-    G --> H["Thursday review:<br/>done, not done, what you need"]`}
+    A["Run the Kun line once"] --> B["Health check: the table below"]
+    B --> Q{"All green?"}
+    Q -->|"Yes"| W["Work"]
+    Q -->|"No"| F["Fix it with the row's hint"]
+    F --> Q2{"Fixed?"}
+    Q2 -->|"Yes"| W
+    Q2 -->|"No"| S["«عائق:» to Abdout, the same day"]
+    N["New laptop, or a lost login"] --> A`}
 />
 
 ## Why it pays
 
-A new person who knows where things live sells and builds in their first week, not their first month. Everything you need is on these Team pages. Everything we do is recorded in three places: the group, the CRM, and GitHub. If it is not there, it did not happen, and it does not count toward your share.
+A broken login found on a sales call costs us a school. Found in a two-minute check, it costs nothing. And work only counts where it is recorded — GitHub, the CRM, the group — so your access to all three must work.
 
-## Your accounts
+## The links
 
-| Account          | Where                                   | Ask                |
-| ---------------- | --------------------------------------- | ------------------ |
-| Team group       | WhatsApp «المدرسة 2.0»                  | Abdout             |
-| Email and login  | name@databayt.org                       | Abdout             |
-| CRM              | hogwarts.databayt.org                   | Abdout             |
-| Code and tasks   | github.com/databayt/hogwarts            | Abdout (tech only) |
-| The product      | balqalam.com → "Try the platform"       | Everyone           |
+| What                    | Link                                                         | You use it to                          |
+| ----------------------- | ------------------------------------------------------------ | -------------------------------------- |
+| Main domain             | [balqalam.com](https://balqalam.com)                         | What schools see; the pricing page     |
+| Demo school             | [demo.balqalam.com](https://demo.balqalam.com)               | Every demo, on the school's own phone  |
+| CRM                     | [hogwarts.databayt.org](https://hogwarts.databayt.org)       | Every school, deal and next date       |
+| The product's code      | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) | Issues, tasks, code             |
+| Our GitHub organization | [github.com/databayt](https://github.com/databayt)           | All our products, in one place         |
+| Databayt's website      | [databayt.org](https://www.databayt.org)                     | The company and every product          |
+| Its code                | [github.com/databayt/marketing](https://github.com/databayt/marketing) | Changes to databayt.org      |
+| Kun engine              | [kun.databayt.org](https://kun.databayt.org)                 | Machine setup and the AI system's docs |
+| These docs              | [balqalam.com/docs](https://balqalam.com/en/docs)            | The help center and the Team pages     |
 
-## The four words
+## Set up your machine with Kun
 
-| Word                  | Means                                                |
-| --------------------- | ---------------------------------------------------- |
-| «أنا»                 | I take this task. Add the day you will finish it.    |
-| «عائق:»               | I am stuck, and this is what I need.                 |
-| «اعتراض:»             | I disagree with a page or a rule, and this is why.   |
-| «🧭 مكتب التشغيل»     | A message from the CEO office. Read it the same day. |
+One line in a terminal. It takes about 20 minutes, installs only what is missing, and can be run again any time.
 
-## Your week
+```bash
+curl -fsSL https://kun.databayt.org/install | bash
+```
 
-- **Sunday:** read the plan and answer it with your task.
-- **Tuesday:** one line: done, doing, or stuck.
-- **Thursday:** the review. Bring done, not done, and what you need.
+On Windows (PowerShell):
 
-## Your first week
+```powershell
+powershell -ExecutionPolicy Bypass -Command "iwr https://kun.databayt.org/install.ps1 | iex"
+```
 
-1. Get your accounts, then open the demo on balqalam.com on your phone.
-2. Read [Team](/docs/team) to see who owns what, and who to ask.
-3. Read [Vision](/docs/vision), [Shared economy](/docs/shared-economy), [CEO](/docs/ceo) and [Sprint](/docs/sprint).
-4. Take one task from your department in the sprint. Write «أنا» under it.
-5. Then read the pages for your work: sales reads Sales, CRM and Pricing; marketing reads Marketing; tech reads Support desk.
+You get Claude Code (type `c` to start it), every databayt repo cloned, and the same config as the rest of the team. The full guide: [Kun onboarding](https://kun.databayt.org/en/docs/onboarding).
+
+## Health check
+
+| Check                         | How                                                                                       | Pass                          |
+| ----------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------- |
+| You are in the databayt org   | `gh api user/memberships/orgs/databayt --jq .state`, or find your name at [github.com/orgs/databayt/people](https://github.com/orgs/databayt/people) | `active` |
+| GitHub knows this machine     | `gh auth status` then `ssh -T git@github.com`                                             | "Logged in", "successfully authenticated" |
+| Kun is healthy                | `bash ~/.claude/scripts/health.sh`                                                        | `✅ healthy`                  |
+| Your email works              | Sign in to name@databayt.org                                                              | The inbox opens               |
+| The CRM opens                 | [hogwarts.databayt.org](https://hogwarts.databayt.org) with that email                    | Your deals show               |
+| The demo runs                 | [demo.balqalam.com](https://demo.balqalam.com) on your phone → "Try the platform"         | A school dashboard opens      |
+| You are in the group          | WhatsApp «المدرسة 2.0»                                                                    | You see this week's plan      |
+
+A red row on Kun? `bash ~/kun/.claude/scripts/onboarding-mac.sh --doctor` prints the fix for each one, and changes nothing.
+
+## The four words and the week
+
+| Word              | Means                                              |
+| ----------------- | -------------------------------------------------- |
+| «أنا»             | I take this task, and the day I will finish it     |
+| «عائق:»           | I am stuck, and this is what I need                |
+| «اعتراض:»         | I disagree with a page or a rule, and this is why  |
+| «🧭 مكتب التشغيل» | A message from the CEO office: read it the same day |
+
+**Sunday** the plan · **Tuesday** done, doing or stuck · **Thursday** the review. See [CEO](/docs/ceo).
 
 ## When this happens
 
-- **You don't know who to ask** → the [Team](/docs/team) table. Still unsure? Ask in the group.
-- **You have no task by Tuesday** → take the next open task in your department, or help sales.
-- **An account does not work** → tell Abdout the same day.
-- **You did work nobody can see** → put it in the group, the CRM or GitHub. Then it counts.
+- **A check is red and its hint doesn't fix it** → «عائق:» in the group, with the row and what you saw.
+- **You get a new laptop** → run the Kun line, then the health check.
+- **You lose access to the org, your email or the CRM** → tell Abdout the same day.
+- **A link here is dead** → write «اعتراض: start-here — the link» in the group.
 
 ## What you do
 
-Take your first task this week, and write «أنا» under it.
+Run the health check now, and again on any new machine.
 
 ## Argue with this page
 
-- **The case against:** five pages before the first task is a lot for someone who wants to start now.
-- **What would change it:** a new person who has no task after their first week. Then the first task comes before the reading.
+- **The case against:** half the checks need a terminal, and the sales side rarely opens one.
+- **What would change it:** a member who cannot finish the check alone. Then the browser-only rows come first, and Kun's setup becomes a tech-only step.
 - **Disagree?** Write «اعتراض: start-here — your reason» in the group.
 
 Reviewed 9 November 2026.
 
 ## Related docs
 
-- [Team](/docs/team) — who owns what, and who decides.
-- [Sprint](/docs/sprint) — this sprint's goals and the tasks you can take.
-- [Shared economy](/docs/shared-economy) — why recorded work matters for what you get.
-- [Kun engine](/docs/kun) — the AI system that drafts the weekly plan.
+- [Team](/docs/team) — who owns what, and who to ask when a check is red.
+- [Kun engine](/docs/kun) — what the AI system does once your machine runs it.
+- [CRM](/docs/crm) — the stages and rules behind the CRM link.
+- [Support desk](/docs/support-desk) — how we use «Report an issue».
