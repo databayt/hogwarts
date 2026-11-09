@@ -49,10 +49,17 @@ print(json.dumps({"LIVEKIT_API_KEY": os.environ["LK_KEY"], "LIVEKIT_API_SECRET":
 esac
 
 $RESTART || { echo "==> secrets pushed; restart the container to apply"; exit 0; }
-# Restart = stop the container from its Durable Object; the next request starts a fresh one from
-# the CURRENT secrets (cf/worker.js POST /__ops/container/restart, cron-secret only). A redeploy is
-# NOT enough: an image rollout re-launches the container with the env it was first started with —
-# on 2026-11-09 the uptime reset and every browser still dialled LiveKit Cloud.
+# Making the container read new secrets takes BOTH steps, in this order (2026-11-09, measured):
+#   1. an Upload deployment, so the Durable Object is re-created with the current secrets.
+#      A secret change alone left it holding the old env: the restart came back on LiveKit Cloud;
+#   2. a container stop from that Durable Object (the ops route below). A deploy alone re-launched
+#      the container with the env it was first started with.
+# The Upload re-deploys the build in $CF_BUILD_DIR. It must be the build that is LIVE, or this
+# also ships whatever was built since.
+BUILD=${CF_BUILD_DIR:-$HOME/.cache/cf-build/hogwarts}
+echo "==> uploading the Worker again from $BUILD ($(head -1 "$HOME/.cache/cf-build/hogwarts-ship.status" 2>/dev/null || echo 'unknown source'))"
+(cd "$BUILD" && pnpm exec wrangler deploy) | grep -E "Current Version ID|No changes|Modified application" || { echo "    upload failed"; exit 5; }
+sleep 15
 echo "==> restarting the container so it reads the new secrets"
 code=$(printf 'Authorization: Bearer %s\n' "$(kc cf-hogwarts-CRON_SECRET)" \
   | curl -s -o /dev/null -w '%{http_code}' -X POST -H @- https://balqalam.com/__ops/container/restart)
