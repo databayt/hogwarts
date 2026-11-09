@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { SHOWN_FEATURES } from "@/components/saas-marketing/features/constants"
+import { FEATURES } from "@/components/saas-marketing/features/constants"
 import FeatureDetails from "@/components/saas-marketing/features/details"
 import { localizeFeature } from "@/components/saas-marketing/features/i18n"
 
@@ -13,16 +13,22 @@ interface Props {
   params: Promise<{ lang: Locale; id: string }>
 }
 
-// Every shown feature is prerendered per locale at build time (the locale
+// Every feature page is prerendered per locale at build time (the locale
 // comes from the root layout's generateStaticParams): the detail pages are
 // pure content, so a visitor gets static HTML instead of a server render.
+// That means all of FEATURES, not only the modules the /features grid shows:
+// planned modules are still linked from Related Features, and a page rendered
+// on demand returns a bare 500 inside the production container (2026-11-09).
+// Any other id is a plain 404.
+export const dynamicParams = false
+
 export function generateStaticParams() {
-  return SHOWN_FEATURES.map((feature) => ({ id: feature.id }))
+  return FEATURES.map((feature) => ({ id: feature.id }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, id } = await params
-  const feature = SHOWN_FEATURES.find((f) => f.id === id)
+  const feature = FEATURES.find((f) => f.id === id)
   if (!feature) {
     return {
       title: lang === "ar" ? "الميزة غير موجودة" : "Feature Not Found",
