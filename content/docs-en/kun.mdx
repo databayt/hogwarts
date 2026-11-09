@@ -5,6 +5,17 @@ description: Kun is the AI system Databayt runs on — what it does for the team
 
 **Kun («كن», "Be") is how a small team works like a big one: Claude, working inside our tools.**
 
+<Mermaid
+  chart={`flowchart TD
+    A["A request:<br/>the group, or «Report an issue»"] --> K["Kun drafts it:<br/>code, a plan, a message"]
+    K --> Q{"Leaves the company,<br/>or costs money?"}
+    Q -->|"No"| D["Done"]
+    Q -->|"Yes"| Y{"Abdout's yes?"}
+    Y -->|"Yes"| S["Sent, as «🧭 مكتب التشغيل»"]
+    Y -->|"No"| F["Back to Kun, with the fix"]
+    F --> K`}
+/>
+
 ## Why it pays
 
 Kun is why a team with no salaries can run like a company. It writes the code, the plans and the drafts, so people spend their hours with schools. It costs a share of the ~$500 a month on [Monetize](/docs/monetize), not a salary.
@@ -49,9 +60,10 @@ Each of these waits for Abdout's yes. People tend to trust automated advice too 
 - **What would change it:** every Kun mistake reported in a week is counted at Thursday's review. Two of the same kind change how Kun works.
 - **Disagree?** Write «اعتراض: kun — your reason» in the group.
 
-Reviewed 8 November 2026.
+Reviewed 9 November 2026.
 
-## References
+## Related docs
 
-- Schluntz & Zhang (2024), ["Building Effective Agents"](https://www.anthropic.com/engineering/building-effective-agents), Anthropic — find the simplest solution, and let agents pause for a person at checkpoints.
-- Parasuraman & Manzey (2010), [*Complacency and Bias in Human Use of Automation*](https://doi.org/10.1177/0018720810376055), Human Factors — people over-trust automated aids, and training does not remove it.
+- [CEO](/docs/ceo) — the office and the weekly plan Kun drafts.
+- [Support desk](/docs/support-desk) — how a reported problem reaches Kun and the team.
+- [Team](/docs/team) — the people who approve what Kun drafts.

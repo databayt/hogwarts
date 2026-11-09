@@ -5,6 +5,18 @@ description: How we look after our schools — where problems come in, who answe
 
 **A school that waits for an answer stops trusting us. Our standard: an answer the same school day.**
 
+<Mermaid
+  chart={`flowchart TD
+    A["A school writes:<br/>its group, or «Report an issue»"] --> B["On duty answers<br/>within the school day"]
+    B --> Q{"A bug?"}
+    Q -->|"No"| H["Point to the help center,<br/>or answer it"]
+    Q -->|"Yes"| R["«Report an issue»:<br/>a screenshot and the steps"]
+    R --> F["Fixed"]
+    F --> T["Tell the school"]
+    H --> Q2{"Asked twice?"}
+    Q2 -->|"Yes"| G["Tell Abdout:<br/>a help-center guide is missing"]`}
+/>
+
 ## Why it pays
 
 A school pays its first 50% after the free month, and only if that month went well. Support is where the free month is won: every answer on the same school day is part of the sale.
@@ -56,9 +68,10 @@ Tech sets up every new school the same way, so nothing is missed:
 - **What would change it:** more than 10 school messages a day on duty. Then we add a second person, or a help-center guide for the top question.
 - **Disagree?** Write «اعتراض: support-desk — your reason» in the group.
 
-Reviewed 8 November 2026.
+Reviewed 9 November 2026.
 
-## References
+## Related docs
 
-- Dixon, Toman & DeLisi (2013), [*The Effortless Experience*](https://www.penguinrandomhouse.com/books/312730/the-effortless-experience-by-matthew-dixon/) — loyalty follows low effort more than delight; 96% of customers with high-effort experiences became more disloyal.
-- Haynes et al. (2009), [*A Surgical Safety Checklist to Reduce Morbidity and Mortality in a Global Population*](https://doi.org/10.1056/NEJMsa0810119), NEJM — a one-page checklist cut deaths from 1.5% to 0.8% and complications from 11% to 7%.
+- [Sales](/docs/sales) — the yes that starts a school's free month.
+- [Kun engine](/docs/kun) — where reported problems go.
+- [Team](/docs/team) — who is on duty this sprint.

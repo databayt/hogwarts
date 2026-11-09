@@ -5,6 +5,16 @@ description: The one-page agreement every school signs — what we give, what th
 
 **One page, plain words, the same for every school.**
 
+<Mermaid
+  chart={`flowchart TD
+    A["Fill it: school, signer,<br/>students, dates, amounts"] --> Q{"The school asks<br/>to change a clause?"}
+    Q -->|"Yes"| W["Write the worry on the deal,<br/>send it to Abdout"]
+    W --> S
+    Q -->|"No"| S["Abdout signs for Databayt"]
+    S --> C["Signed copy in the CRM,<br/>the same day"]
+    C --> T["The free month starts"]`}
+/>
+
 ## Why it pays
 
 A one-page contract signed in a day is money a month sooner. Plain words remove the reason to send it to a lawyer, and one contract for everyone leaves nothing to negotiate.
@@ -49,9 +59,10 @@ Each clause answers a question schools ask before they sign: what do we get, wha
 - **What would change it:** two deals stuck on the contract for more than two weeks. Then we write a version for school groups.
 - **Disagree?** Write «اعتراض: contract — your reason» in the group.
 
-Reviewed 8 November 2026.
+Reviewed 9 November 2026.
 
-## References
+## Related docs
 
-- Fisher, Ury & Patton (3rd ed. 2011), [*Getting to Yes*](https://www.pon.harvard.edu/shop/getting-to-yes-negotiating-agreement-without-giving-in/) — negotiate the interest behind a request, not the position.
-- Kimble (2012), [*Writing for Dollars, Writing to Please*](https://cap-press.com/books/isbn/9781531024543/Writing-for-Dollars-Writing-to-Please-Second-Edition) — studies show plain language saves time and money, and readers prefer it.
+- [Pricing](/docs/pricing) — the amounts to fill in.
+- [Monetize](/docs/monetize) — what happens when an invoice is late.
+- [Support desk](/docs/support-desk) — the free month's first week, after signing.

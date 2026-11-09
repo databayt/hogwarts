@@ -5,7 +5,6 @@
 // Shared between desktop sidebar (client) and mobile menu (server)
 export const DOCS_LINKS = [
   { key: "introduction", href: "/docs", fallback: "Introduction" },
-  { key: "pitch", href: "/docs/pitch", fallback: "Pitch" },
   { key: "vision", href: "/docs/vision", fallback: "Vision" },
   { key: "prd", href: "/docs/prd", fallback: "PRD" },
   { key: "getStarted", href: "/docs/get-started", fallback: "Get Started" },

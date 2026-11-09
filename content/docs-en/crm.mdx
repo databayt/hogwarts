@@ -5,6 +5,18 @@ description: Where every school we talk to lives — the address, the stages we 
 
 **If it is not in the CRM, it did not happen.**
 
+<Mermaid
+  chart={`flowchart LR
+    C["Contacted"] --> D["Demo"]
+    D --> T["Trial<br/>free month, deal + amount"]
+    T --> P["Paid"]
+    C -.-> L["Lost — write why"]
+    D -.-> L
+    T -.-> L
+    T --> S{"No next step<br/>for 7 days?"}
+    S -->|"Yes"| X["Stalling: call,<br/>or move to Lost"]`}
+/>
+
 ## Why it pays
 
 The CRM is how we know how much money is coming, and when. Every Trial deal carries its amount and its next date, so Thursday's review can add up the next payments. A deal that lives only in your WhatsApp is invisible to everyone but you.
@@ -53,9 +65,10 @@ The stages match the six steps of [Sales](/docs/sales), so counting deals at eac
 - **What would change it:** logging a conversation takes more than five minutes. Then we cut fields, not the rule. When the CRM and what people say disagree, the CRM wins.
 - **Disagree?** Write «اعتراض: crm — your reason» in the group.
 
-Reviewed 8 November 2026.
+Reviewed 9 November 2026.
 
-## References
+## Related docs
 
-- Ross & Tyler (2011), [*Predictable Revenue*](https://predictablerevenue.com/) — split finding schools from closing them, and count the pipeline, so sales can be repeated.
-- Gawande (2009), [*The Checklist Manifesto*](https://atulgawande.com/book/the-checklist-manifesto/) — short, fixed rules catch the errors memory misses, even for experts.
+- [Sales](/docs/sales) — the six steps the stages follow.
+- [Monetize](/docs/monetize) — how Trial deals add up to the next payments.
+- [Team](/docs/team) — who cleans the CRM, and who owns each deal.
