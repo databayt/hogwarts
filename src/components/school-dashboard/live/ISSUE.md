@@ -4,6 +4,37 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Combined classes — one room per class — 2026-11-09 (hogwarts#471)
+
+`a4317012a`, `combined.ts`. A combined class is one teacher's ONLINE sections at one period START
+time on a day. Per-grade bells give each grade its own Period row, so the test is the start time, not
+the `periodId`. alabidae has 15 a week, all the same subject with a real teacher who has a login: تحسين
+(Islamic, G12×2), الطيب (English, G12×2), محمد نور (Math, G12×2), دينا (Arabic, G12×2), فادية
+(English, G7–G9). فادية's grades use a different catalog subject id per grade, so "same subject id"
+would miss her class. That is why the rule is teacher + start time.
+
+- **Sweep** (`materialize-day.ts`): the primary slot (smallest id) gets the one room; siblings are
+  tallied as `combined` and skipped. Only sections online that day group, so an in-person section in
+  a hybrid school neither takes an online sibling's room nor gets marked absent by its presence.
+- **Join link** (`join-slot.ts`): a sibling's link resolves to the primary's room, and writes the
+  primary's row when the sweep missed it. Students and guardians of any member section pass
+  (`canAccessSession` takes a section list).
+- **Room** (`join-core.ts`): `resolveParticipantRole` admits every member section. Its homeroom
+  teachers co-host.
+- **Detail page, notices, attendance**: `sessionSectionIds()` widens the reader gate and the notice
+  audience. `syncLiveAttendance` writes each section's register on its OWN slot and period from the
+  one room's presence. If nobody from any member section came, it writes nothing.
+- Tests: `combined.test.ts` + combined cases in the join-link, sweep and attendance suites (live
+  folder 654/654); tsc clean.
+
+**Open:**
+
+- A sibling's grid cell has no "live now" dot: `getLiveClassIndicators` keys rows by `timetableId`.
+  Its Join pill does work, because it comes from the online policy and the join window, not from a
+  row.
+- `attachLiveClasses` (mobile timetable API, parent-portal child timetable) finds no target for a
+  sibling slot. alabidae uses the web, not the native apps.
+
 ## Prod go-live — demo E2E + alabidae Online — 2026-11-09
 
 Deployed `main` (Worker `6696ac3d`, `f6609affa`) — the join link reached prod for the first time.
@@ -27,10 +58,8 @@ attendance sync on; all 52 Monday slots got a room. Logins issued for the 5 teac
 account (فادية, اماني, الطيب, محمد نور, مناسك ابراهيم).
 
 **Open:**
-- **Combined classes** — one teacher, same period, several sections (alabidae: تحسين G12×2 18:00,
-  الطيب G12×2 18:55, فادية G7–9 19:00 daily). The materializer makes one room per section; the teacher
-  can host one, the others wait in rooms that never start. Needs a primary room + sibling access
-  (resolver, join-core, roster/attendance, reminders) — hogwarts#471.
+
+- ~~**Combined classes**~~ — done in `a4317012a`, see the section above (hogwarts#471).
 - **LiveKit free cap** (5,000 participant-min/month, all schools): alabidae fully online ≈ 13k/school
   day — the cap is expected the first afternoon; then no school joins until the reset or self-hosting (#470).
 
@@ -47,6 +76,7 @@ connections fail until the reset — and alabidae alone is ~62.5k participant-mi
 attendance, so a fully online alabidae will reach it within a school day or two.
 
 Shipped:
+
 - **The join link** `/{lang}/live/join/{timetableId}` (`actions/join-slot.ts`, page under
   `(live-room)/live/join`). One stable URL per slot, resolved at tap time: today's slot row → an
   unanchored ad-hoc row for section+subject → the open room → (external school) the standing link →
@@ -76,6 +106,7 @@ Shipped:
 - `/live` landing shows the tab strip (Overview first).
 
 Still open:
+
 - Ops, in order (hogwarts#470): deploy → flip alabidae to Online in
   `/school/configuration/teaching-mode` (restore branch first). `LIVEKIT_TIER_*` defaults already
   equal the free plan (5,000 / 100 / 1,000), so no env change until the plan changes.
@@ -98,6 +129,7 @@ delivery `44473ab4b` · assignments `c45032510` `60fa1bdec` · dashboard `087f19
 Detail lives in each block's ISSUE.md.
 
 **Decisions owed (Abdout):**
+
 - Timetable-materialized classes carry no `catalogLessonId`, so recordings never reach a lumos lesson
   and the lesson's live strip never lists them. A "covering lesson" picker in the room, or an
   automatic next-lesson pointer per section+subject?
@@ -124,6 +156,7 @@ Upstash before scaling out (rate limits are in-memory otherwise) · P0 deploy + 
 weak-network class.
 
 Fixed in this pass:
+
 - [x] Observers (watching guardians) no longer draw an empty camera tile each (`room/stage.tsx`:
       subscribe-only participants without a track are left out of the grid; people list keeps them).
 - [x] Questions take their own direction (`dir="auto"`); chat already had it via the messaging bubbles.
@@ -157,7 +190,6 @@ Fixed in this pass:
       (an all-update hybrid section could exceed Prisma's 5s and lose the whole register).
 - [x] Day roll-up: one `updateMany` per status instead of one `update` per student.
 - [x] Attendance day register showed a random period row — fixed on the attendance side.
-
 
 First real classes on prod (`demo.balqalam.com`, LiveKit Cloud `hogwarts-jsmb894l`), driven by a
 scripted three-browser run (Chromium with fake camera/mic): teacher13 (HOST) · student@ (PARTICIPANT) ·
