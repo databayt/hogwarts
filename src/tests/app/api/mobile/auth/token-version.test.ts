@@ -19,7 +19,10 @@ vi.mock("@/lib/db", () => ({
     student: { findUnique: vi.fn() },
   },
 }))
-vi.mock("@/components/auth/user", () => ({ getUserByIdentifier: vi.fn() }))
+vi.mock("@/components/auth/user", () => ({
+  resolveLoginUser: vi.fn(),
+  normalizeEmail: (e: string) => e.trim().toLowerCase(),
+}))
 
 const USER = "user-1"
 

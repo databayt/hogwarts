@@ -28,7 +28,7 @@ import {
   generateTwoFactorToken,
   generateVerificationToken,
 } from "@/components/auth/tokens"
-import { getUserByIdentifier } from "@/components/auth/user"
+import { resolveLoginUser } from "@/components/auth/user"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
 
@@ -56,7 +56,7 @@ vi.mock("@/lib/db", () => ({
 }))
 
 vi.mock("@/components/auth/user", () => ({
-  getUserByIdentifier: vi.fn(),
+  resolveLoginUser: vi.fn(),
   getUserByEmail: vi.fn(),
 }))
 
@@ -109,7 +109,7 @@ vi.mock("next-auth", () => ({
 
 // Type the mocked functions
 const mockedDb = vi.mocked(db)
-const mockedGetUserByIdentifier = vi.mocked(getUserByIdentifier)
+const mockedResolveLoginUser = vi.mocked(resolveLoginUser)
 const mockedGetTwoFactorTokenByEmail = vi.mocked(getTwoFactorTokenByEmail)
 const mockedGetTwoFactorConfirmationByUserId = vi.mocked(
   getTwoFactorConfirmationByUserId
@@ -137,7 +137,7 @@ describe("Login Action - Validation", () => {
     })
 
     expect(result).toEqual({ error: "INVALID_FIELDS" })
-    expect(mockedGetUserByIdentifier).not.toHaveBeenCalled()
+    expect(mockedResolveLoginUser).not.toHaveBeenCalled()
   })
 
   it("should return error for empty password", async () => {
@@ -169,7 +169,7 @@ describe("Login Action - User Existence", () => {
   })
 
   it("should return error when user does not exist", async () => {
-    mockedGetUserByIdentifier.mockResolvedValue(null)
+    mockedResolveLoginUser.mockResolvedValue(null)
 
     const result = await login({
       identifier: "notfound@example.com",
@@ -180,7 +180,7 @@ describe("Login Action - User Existence", () => {
   })
 
   it("should return error when user has no password (OAuth user)", async () => {
-    mockedGetUserByIdentifier.mockResolvedValue({
+    mockedResolveLoginUser.mockResolvedValue({
       id: "user-1",
       email: "oauth@example.com",
       emailVerified: new Date(),
@@ -201,7 +201,7 @@ describe("Login Action - User Existence", () => {
   })
 
   it("should return error when user email is missing", async () => {
-    mockedGetUserByIdentifier.mockResolvedValue({
+    mockedResolveLoginUser.mockResolvedValue({
       id: "user-1",
       email: null, // Missing email
       emailVerified: new Date(),
@@ -248,7 +248,7 @@ describe("Login Action - Email Verification", () => {
       image: null,
       username: null,
     }
-    mockedGetUserByIdentifier.mockResolvedValue(unverifiedUser as never)
+    mockedResolveLoginUser.mockResolvedValue(unverifiedUser as never)
     mockedGenerateVerificationToken.mockResolvedValue({
       id: "token-id",
       email: "unverified@example.com",
@@ -279,7 +279,7 @@ describe("Login Action - Email Verification", () => {
   })
 
   it("should not proceed to sign in when not verified", async () => {
-    mockedGetUserByIdentifier.mockResolvedValue({
+    mockedResolveLoginUser.mockResolvedValue({
       id: "user-1",
       email: "test@example.com",
       emailVerified: null, // Not verified
@@ -322,7 +322,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGenerateTwoFactorToken.mockResolvedValue({
       id: "token-id",
       email: "2fa@example.com",
@@ -351,7 +351,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGetTwoFactorTokenByEmail.mockResolvedValue({
       id: "token-id",
       email: "2fa@example.com",
@@ -375,7 +375,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGetTwoFactorTokenByEmail.mockResolvedValue(null)
 
     const result = await login({
@@ -394,7 +394,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGetTwoFactorTokenByEmail.mockResolvedValue({
       id: "token-id",
       email: "2fa@example.com",
@@ -419,7 +419,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGetTwoFactorTokenByEmail.mockResolvedValue({
       id: "token-id",
       email: "2fa@example.com",
@@ -451,7 +451,7 @@ describe("Login Action - Two-Factor Authentication", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: true,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user2FA)
+    mockedResolveLoginUser.mockResolvedValue(user2FA)
     mockedGetTwoFactorTokenByEmail.mockResolvedValue({
       id: "token-id",
       email: "2fa@example.com",
@@ -493,7 +493,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
       schoolId: "school-123",
       role: "TEACHER",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedDb.school.findUnique.mockResolvedValue({
       id: "school-123",
       domain: "hogwarts",
@@ -525,7 +525,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
       schoolId: "school-123",
       role: "DEVELOPER",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(developer)
+    mockedResolveLoginUser.mockResolvedValue(developer)
     mockedSignIn.mockResolvedValue(undefined)
 
     const result = await login({
@@ -541,7 +541,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
   })
 
   it("should use default redirect when user has no schoolId", async () => {
-    mockedGetUserByIdentifier.mockResolvedValue({
+    mockedResolveLoginUser.mockResolvedValue({
       id: "user-1",
       email: "noschool@example.com",
       emailVerified: new Date(),
@@ -570,7 +570,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
       schoolId: "school-123",
       role: "TEACHER",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedDb.school.findUnique.mockRejectedValue(new Error("Database error"))
     mockedSignIn.mockResolvedValue(undefined)
 
@@ -591,7 +591,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
       schoolId: null,
       role: "USER",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedSignIn.mockResolvedValue(undefined)
 
     const result = await login(
@@ -632,7 +632,7 @@ describe("Login Action - Error Handling", () => {
       emailVerified: new Date(),
       password: "hashedpassword",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
 
     // Import AuthError from our mock
     const { AuthError } = await import("next-auth")
@@ -657,7 +657,7 @@ describe("Login Action - Error Handling", () => {
       emailVerified: new Date(),
       password: "hashedpassword",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
 
     const unexpectedError = new Error("Connection reset")
     mockedSignIn.mockRejectedValue(unexpectedError)
@@ -678,7 +678,7 @@ describe("Login Action - Error Handling", () => {
       emailVerified: new Date(),
       password: "hashedpassword",
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedSignIn.mockRejectedValue(new Error("Unexpected error"))
 
     const result = await login({
@@ -708,7 +708,7 @@ describe("Login Action - Successful Login", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: false,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedSignIn.mockResolvedValue(undefined)
 
     await login({
@@ -731,7 +731,7 @@ describe("Login Action - Successful Login", () => {
       password: "hashedpassword",
       isTwoFactorEnabled: false,
     })
-    mockedGetUserByIdentifier.mockResolvedValue(user)
+    mockedResolveLoginUser.mockResolvedValue(user)
     mockedSignIn.mockResolvedValue(undefined)
 
     await login({
@@ -741,5 +741,82 @@ describe("Login Action - Successful Login", () => {
 
     expect(mockedGenerateTwoFactorToken).not.toHaveBeenCalled()
     expect(mockedSendTwoFactorTokenEmail).not.toHaveBeenCalled()
+  })
+})
+
+// ============================================================================
+// Email login works like username login for admin-issued credentials
+// ============================================================================
+
+describe("Login Action - admin-issued credentials sign in by email", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockedSignIn.mockResolvedValue(undefined as never)
+  })
+
+  const issued = (role: string, email: string) => ({
+    id: `u-${role}`,
+    email,
+    emailVerified: null,
+    password: "hashed",
+    role,
+    schoolId: "school-1",
+    isTwoFactorEnabled: false,
+    isSuspended: false,
+    mustChangePassword: true,
+    image: null,
+    username: "260001",
+  })
+
+  it.each(["TEACHER", "STUDENT", "GUARDIAN", "STAFF"])(
+    "%s with an admin-minted password skips the verification gate",
+    async (role) => {
+      mockedResolveLoginUser.mockResolvedValue(
+        issued(role, "person@gmail.com") as never
+      )
+      const result = await login({
+        identifier: "Person@Gmail.com",
+        password: "1122",
+      })
+      expect(result).not.toHaveProperty("needsVerification")
+      expect(mockedSendVerificationEmail).not.toHaveBeenCalled()
+      expect(mockedSignIn).toHaveBeenCalled()
+    }
+  )
+
+  it("a @parent.local placeholder never triggers the gate", async () => {
+    mockedResolveLoginUser.mockResolvedValue({
+      ...issued("GUARDIAN", "omer@parent.local"),
+      mustChangePassword: false,
+    } as never)
+    await login({ identifier: "omer@parent.local", password: "1122" })
+    expect(mockedSendVerificationEmail).not.toHaveBeenCalled()
+  })
+
+  it("a self-chosen password on an unverified real email is still gated", async () => {
+    mockedResolveLoginUser.mockResolvedValue({
+      ...issued("STUDENT", "self@gmail.com"),
+      mustChangePassword: false,
+    } as never)
+    mockedGenerateVerificationToken.mockResolvedValue({
+      id: "t",
+      email: "self@gmail.com",
+      token: "tok",
+      expires: new Date(),
+    } as never)
+    const result = await login({ identifier: "self@gmail.com", password: "x" })
+    expect(result).toEqual({ needsVerification: true, email: "self@gmail.com" })
+  })
+
+  it("passes the password to the lookup so duplicate emails resolve to the right row", async () => {
+    mockedResolveLoginUser.mockResolvedValue(
+      issued("TEACHER", "dup@gmail.com") as never
+    )
+    await login({ identifier: "dup@gmail.com", password: "2580" })
+    expect(mockedResolveLoginUser).toHaveBeenCalledWith(
+      "dup@gmail.com",
+      "2580",
+      undefined
+    )
   })
 })

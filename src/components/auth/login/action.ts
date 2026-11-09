@@ -21,7 +21,7 @@ import {
   generateTwoFactorToken,
   generateVerificationToken,
 } from "@/components/auth/tokens"
-import { getUserByIdentifier } from "@/components/auth/user"
+import { resolveLoginUser } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
@@ -110,8 +110,9 @@ export const login = async (
   // Resolve schoolId from subdomain for tenant-aware user lookup
   const loginSchoolId: string | undefined = subdomainSchoolId ?? undefined
 
-  const existingUser = await getUserByIdentifier(
+  const existingUser = await resolveLoginUser(
     trimmedIdentifier,
+    password,
     loginSchoolId
   )
 
@@ -140,12 +141,16 @@ export const login = async (
   // Email verification gate only makes sense when:
   // (a) the user signed in with their email address (not a username), AND
   // (b) the User row actually has an email that could receive a token, AND
-  // (c) the email isn't a legacy `@school.local` placeholder.
+  // (c) the email isn't a placeholder (`@school.local`, `@parent.local`), AND
+  // (d) the person set their own password. `mustChangePassword` means a school
+  //     admin minted it and handed it over — the admin vouches for them, and
+  //     the email login must work exactly like the username login does.
   // Username logins and null-email logins bypass it — there's nothing to send.
   const hasRealEmail =
-    !!existingUser.email && !existingUser.email.endsWith("@school.local")
+    !!existingUser.email && !existingUser.email.toLowerCase().endsWith(".local")
   if (
     !existingUser.emailVerified &&
+    !existingUser.mustChangePassword &&
     identifierIsEmail &&
     hasRealEmail &&
     existingUser.email

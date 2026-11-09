@@ -9,7 +9,7 @@ import Google from "next-auth/providers/google"
 
 import { env } from "@/env.mjs"
 import { authLogger } from "@/lib/auth-logger"
-import { getUserByIdentifier } from "@/components/auth/user"
+import { resolveLoginUser } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -102,7 +102,11 @@ export default {
             schoolId,
           })
 
-          const user = await getUserByIdentifier(trimmedIdentifier, schoolId)
+          const user = await resolveLoginUser(
+            trimmedIdentifier,
+            password,
+            schoolId
+          )
           authLogger.debug("Credentials: User lookup result", {
             found: !!user,
             hasPassword: !!user?.password,

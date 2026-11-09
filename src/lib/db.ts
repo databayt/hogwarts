@@ -140,8 +140,62 @@ function withQueryTrace(client: PrismaClient): PrismaClient {
   }) as unknown as PrismaClient
 }
 
+/**
+ * `User.email` is a login key, so it is stored trimmed + lowercased no matter
+ * which of the many write paths (credential mints, CSV imports, admission,
+ * onboarding, settings) sets it. Lookups are case-insensitive too
+ * (`getUsersByEmail`), so a row written before this still signs in.
+ */
+const USER_WRITE_OPS = new Set([
+  "create",
+  "createMany",
+  "createManyAndReturn",
+  "update",
+  "updateMany",
+  "updateManyAndReturn",
+  "upsert",
+])
+
+function normalizeEmailField(data: unknown): void {
+  if (!data || typeof data !== "object") return
+  if (Array.isArray(data)) return data.forEach(normalizeEmailField)
+  const row = data as { email?: unknown }
+  if (typeof row.email === "string") {
+    row.email = row.email.trim().toLowerCase()
+  } else if (
+    row.email &&
+    typeof row.email === "object" &&
+    typeof (row.email as { set?: unknown }).set === "string"
+  ) {
+    const set = row.email as { set: string }
+    set.set = set.set.trim().toLowerCase()
+  }
+}
+
+function withEmailNormalization(client: PrismaClient): PrismaClient {
+  return client.$extends({
+    query: {
+      user: {
+        $allOperations({ operation, args, query }) {
+          if (USER_WRITE_OPS.has(operation)) {
+            const a = args as {
+              data?: unknown
+              create?: unknown
+              update?: unknown
+            }
+            normalizeEmailField(a.data)
+            normalizeEmailField(a.create)
+            normalizeEmailField(a.update)
+          }
+          return query(args)
+        },
+      },
+    },
+  }) as unknown as PrismaClient
+}
+
 function createClient(): PrismaClient {
-  const client = withQueryTrace(createBaseClient())
+  const client = withQueryTrace(withEmailNormalization(createBaseClient()))
 
   if (!IS_DEV) return client
 

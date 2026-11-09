@@ -17,6 +17,8 @@ last_audited: 2026-05-25
 
 Multi-tenant authentication layer (NextAuth v5): OAuth (Google, Facebook), credentials, 2FA, email verification, password reset, cross-subdomain SSO (85% complete, no blockers for core auth).
 
+**Credentials login (email OR username):** every sign-in path (`auth.config.ts` authorize, `login/action.ts`, `/api/mobile/auth`) resolves the account through `resolveLoginUser(identifier, password, schoolId)`. Emails are matched case-insensitively, and when two rows in a school share an address the password picks the right one. `User.email` is stored trimmed and lowercased (a Prisma query extension in `src/lib/db.ts`). The email-verification gate skips `.local` placeholders and admin-minted passwords (`mustChangePassword`), so generated credentials work by email exactly as they do by login code. Tests: `src/tests/auth/user-lookup.test.ts`.
+
 ## Before You Start
 
 1. Read `README.md` here for routes, file structure, and core config files

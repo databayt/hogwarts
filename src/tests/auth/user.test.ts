@@ -75,7 +75,10 @@ describe("getUserByEmail", () => {
     expect(result).toEqual(mockUser)
     // Current implementation: looks for platform users (schoolId: null) first
     expect(mockedDb.user.findMany).toHaveBeenCalledWith({
-      where: { email: "test@example.com", schoolId: null },
+      where: {
+        email: { equals: "test@example.com", mode: "insensitive" },
+        schoolId: null,
+      },
       orderBy: { updatedAt: "desc" },
     })
   })
@@ -135,7 +138,10 @@ describe("getUserByEmail", () => {
 
     // The query NOW includes schoolId: null filter (platform user lookup)
     expect(mockedDb.user.findMany).toHaveBeenCalledWith({
-      where: { email: "shared@example.com", schoolId: null },
+      where: {
+        email: { equals: "shared@example.com", mode: "insensitive" },
+        schoolId: null,
+      },
       orderBy: { updatedAt: "desc" },
     })
   })

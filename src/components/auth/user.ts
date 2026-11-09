@@ -7,93 +7,124 @@ import type { User as PrismaUser } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
+/** The login key form of an email: trimmed and lowercased. Emails are
+ *  stored as typed by whoever entered them, so every lookup goes through
+ *  this plus a case-insensitive match. */
+export const normalizeEmail = (email: string) => email.trim().toLowerCase()
+
+const emailMatch = (email: string) => ({
+  equals: normalizeEmail(email),
+  mode: "insensitive" as const,
+})
+
 /**
- * Tenant-aware user lookup by email.
+ * Every user an email could mean, best first — case-insensitive, so
+ * `Ahmed@Gmail.com` on file matches `ahmed@gmail.com` typed (and the
+ * reverse). A school can hold two rows with the same address (an admin
+ * adding a teacher twice), so callers that hold a password pick the row it
+ * opens via {@link resolveLoginUser} instead of trusting the first.
  *
- * Priority:
- * 1. If schoolId provided → exact match for that school
- * 2. Platform user (schoolId = null) with a password
- * 3. Any platform user (schoolId = null)
- * 4. Fallback: most recently updated user with that email (backward compat)
+ * Order:
+ * 1. If schoolId provided → that school's rows, most recently updated first
+ * 2. Platform users (schoolId = null), those with a password first
+ * 3. Fallback (no schoolId hint, no platform user): any row with the email
  */
-export const getUserByEmail = async (
+export const getUsersByEmail = async (
   email: string,
   schoolId?: string | null
-) => {
+): Promise<PrismaUser[]> => {
   try {
-    // When schoolId is provided, look for user in that specific school
+    const match = emailMatch(email)
     if (schoolId) {
-      const schoolUser = await db.user.findFirst({
-        where: { email, schoolId },
-      })
-      if (schoolUser) return schoolUser
-    }
-
-    // Look for platform user (no school association)
-    const platformUsers = await db.user.findMany({
-      where: { email, schoolId: null },
-      orderBy: { updatedAt: "desc" },
-    })
-
-    // Prefer platform user with a password (credential login)
-    const withPassword = platformUsers.find((u) => u.password)
-    if (withPassword) return withPassword
-    if (platformUsers[0]) return platformUsers[0]
-
-    // Fallback: any user with this email (backward compat for existing accounts)
-    // Only used when no schoolId hint and no platform user exists
-    if (!schoolId) {
-      const anyUser = await db.user.findFirst({
-        where: { email },
+      const schoolUsers = await db.user.findMany({
+        where: { email: match, schoolId },
         orderBy: { updatedAt: "desc" },
       })
-      return anyUser
+      if (schoolUsers.length) return schoolUsers
     }
 
-    return null
+    const platformUsers = await db.user.findMany({
+      where: { email: match, schoolId: null },
+      orderBy: { updatedAt: "desc" },
+    })
+    if (platformUsers.length) {
+      return [
+        ...platformUsers.filter((u) => u.password),
+        ...platformUsers.filter((u) => !u.password),
+      ]
+    }
+
+    // Backward compat for existing accounts — only without a school hint.
+    if (!schoolId) {
+      return await db.user.findMany({
+        where: { email: match },
+        orderBy: { updatedAt: "desc" },
+      })
+    }
+    return []
   } catch (error) {
-    console.error("[getUserByEmail] Database lookup failed:", error)
-    return null
+    console.error("[getUsersByEmail] Database lookup failed:", error)
+    return []
   }
 }
 
+/** Tenant-aware user lookup by email — the best candidate from {@link getUsersByEmail}. */
+export const getUserByEmail = async (
+  email: string,
+  schoolId?: string | null
+) => (await getUsersByEmail(email, schoolId))[0] ?? null
+
 /**
- * Tenant-aware user lookup that accepts either an email OR a username.
+ * Every user an identifier (email OR username) could mean, best first.
  *
- * Branches on presence of `@` in the identifier:
- * - Email path: delegates to {@link getUserByEmail} to preserve platform and
- *   cross-school fallback ordering.
- * - Username path: scoped by schoolId when available (students/teachers/
- *   guardians all live under a school). Usernames are populated by the
- *   student-code generator — per-school unique by construction because they
- *   mirror `Student.studentId` which has `@@unique([schoolId, studentId])`.
- *
- * The platform (schoolId = null) does not accept username login — DEVELOPER
- * accounts and SaaS users sign in with their email on the platform domain.
+ * - Email (contains `@`): {@link getUsersByEmail}.
+ * - Username: scoped by schoolId (students/teachers/guardians/staff all live
+ *   under a school; login codes are per-school unique). The platform
+ *   (schoolId = null) does not accept username login — DEVELOPER accounts
+ *   and SaaS users sign in with their email.
  */
+export const getUsersByIdentifier = async (
+  identifier: string,
+  schoolId?: string | null
+): Promise<PrismaUser[]> => {
+  try {
+    const trimmed = identifier.trim()
+    if (trimmed.includes("@")) return await getUsersByEmail(trimmed, schoolId)
+    if (!schoolId) return []
+    return await db.user.findMany({
+      where: { username: trimmed, schoolId },
+      orderBy: { updatedAt: "desc" },
+    })
+  } catch (error) {
+    console.error("[getUsersByIdentifier] Database lookup failed:", error)
+    return []
+  }
+}
+
+/** Tenant-aware user lookup that accepts either an email OR a username. */
 export const getUserByIdentifier = async (
   identifier: string,
   schoolId?: string | null
-) => {
-  try {
-    const trimmed = identifier.trim()
-    const isEmail = trimmed.includes("@")
+) => (await getUsersByIdentifier(identifier, schoolId))[0] ?? null
 
-    if (isEmail) {
-      return await getUserByEmail(trimmed, schoolId)
-    }
-
-    if (schoolId) {
-      return await db.user.findFirst({
-        where: { username: trimmed, schoolId },
-      })
-    }
-
-    return null
-  } catch (error) {
-    console.error("[getUserByIdentifier] Database lookup failed:", error)
-    return null
+/**
+ * The user a sign-in means: the first candidate whose password matches, or —
+ * when none does — the best candidate, so the caller's own password check
+ * fails exactly as before (wrong password, suspended, OAuth-only). One
+ * candidate costs one bcrypt compare, same as before.
+ */
+export const resolveLoginUser = async (
+  identifier: string,
+  password: string,
+  schoolId?: string | null
+): Promise<PrismaUser | null> => {
+  const candidates = await getUsersByIdentifier(identifier, schoolId)
+  if (candidates.length <= 1) return candidates[0] ?? null
+  const { compare } = await import("bcryptjs")
+  for (const user of candidates) {
+    if (user.password && (await compare(password, user.password))) return user
   }
+  return candidates[0]
 }
 
 export type ExtendedUser = PrismaUser & {

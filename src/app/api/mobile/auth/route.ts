@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs"
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
-import { getUserByIdentifier } from "@/components/auth/user"
+import { normalizeEmail, resolveLoginUser } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 import {
   buildAuthResponse,
@@ -85,9 +85,13 @@ export async function POST(request: NextRequest) {
 
     let user
     if (identifierIsEmail) {
-      user = await getUserByIdentifier(trimmedIdentifier, schoolId ?? undefined)
+      user = await resolveLoginUser(
+        trimmedIdentifier,
+        password,
+        schoolId ?? undefined
+      )
     } else if (schoolId) {
-      user = await getUserByIdentifier(trimmedIdentifier, schoolId)
+      user = await resolveLoginUser(trimmedIdentifier, password, schoolId)
     } else {
       // No school hint (older app builds): only an unambiguous username
       // resolves — never guess between two schools' 260001.
@@ -107,7 +111,13 @@ export async function POST(request: NextRequest) {
     if (user && identifierIsEmail && !user.schoolId) {
       // Platform user found but has no school — check for a school-scoped version
       const schoolUser = await db.user.findFirst({
-        where: { email: trimmedIdentifier, schoolId: { not: null } },
+        where: {
+          email: {
+            equals: normalizeEmail(trimmedIdentifier),
+            mode: "insensitive",
+          },
+          schoolId: { not: null },
+        },
         orderBy: { updatedAt: "desc" },
       })
       if (schoolUser) user = schoolUser
