@@ -367,7 +367,7 @@
   },
   "settings": {
     "title": "Live settings",
-    "description": "Per-school recording retention and capacity limits.",
+    "description": "Everything saves as you change it. The usual choices are open; recording and advanced options are folded below.",
     "retention": "Recording retention (days)",
     "maxConcurrent": "Max concurrent rooms",
     "maxDuration": "Max duration (minutes)",
@@ -494,7 +494,19 @@
       "error": "Could not update the grade.",
       "pick": "Grade",
       "overrides": "{count} grade(s) differ from the school default"
-    }
+    },
+    "groups": {
+      "joining": "Joining a class",
+      "attendance": "Attendance",
+      "room": "In the room",
+      "recording": "Recording",
+      "hybrid": "Which classes go live",
+      "advanced": "Advanced"
+    },
+    "deliverySummary": "Classes run: {mode}",
+    "deliveryChange": "Change",
+    "minutes": "min",
+    "attendancePreview": "Late after {late} min · present after {present} min · left early if gone {early} min before the end."
   },
   "attendanceNote": {
     "auto": "Attendance is marked automatically when this class ends.",

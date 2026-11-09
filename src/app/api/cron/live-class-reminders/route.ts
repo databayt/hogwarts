@@ -13,6 +13,7 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { runLiveDailyDigest } from "@/components/school-dashboard/live/actions/daily-digest"
 import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 import {
@@ -159,10 +160,22 @@ export async function GET(req: Request) {
     })
   }
 
+  // The admins' morning note on today's live classes — once per school day,
+  // from 06:00 school time. Best-effort, after the reminders.
+  let digest = { sent: 0 }
+  try {
+    digest = await runLiveDailyDigest()
+  } catch (err) {
+    console.error("[live-class] daily digest failed", {
+      err: err instanceof Error ? err.message : String(err),
+    })
+  }
+
   return NextResponse.json({
     ok: true,
     dispatched: due.length,
     materialized,
     minutesGuard,
+    digest,
   })
 }

@@ -4,6 +4,60 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Setup polish + the live class leads the dashboard — 2026-11-09
+
+Abdout: "make it more polished and easy to set up, and make it integrate well with notifications,
+messages, timetable and the important events in the dashboard. Make it the most important event,
+shown in the green banner."
+
+- **Teaching mode is the front door** (`config-teaching-mode-form.tsx`): three choice cards (Live
+  tagged "recommended for online schools") and a **Ready for today** checklist under them
+  (`live-readiness.tsx`). The checklist rows:
+  - the video service is connected;
+  - N of today's M classes are live, and the next start;
+  - every teacher of an online slot has a login. This is the alabidae gap: N classes can't start;
+  - the reminder lead;
+  - attendance from the room.
+
+  Each amber row links to its fix. The data comes from one read, `live-today.ts`
+  (`getLiveTodaySummary`, server-only, using the sweep's own slot filter).
+
+- **Live-classes page regrouped** (`settings-form.tsx`): the hub's `SettingsGroup` rows, with
+  **auto-save** (700 ms debounce, the whole-form `updateLiveSettings`) instead of a Save button.
+  - The duplicate delivery-mode picker became one line: "Classes run: Live · Change", linking to
+    teaching mode.
+  - Open groups: Joining (reminder, muted, guardians), Attendance (switch + thresholds + a sentence
+    preview), In the room (tool chips).
+  - Collapsed groups: Recording (+ per-section opt-out) and Advanced (provider, mode, fallback link +
+    coverage, carry-forward, caps, usage/protection).
+  - The Hybrid group (school default + grade/section policies) and the temporary window show when
+    relevant.
+- **Green banner** (`dashboard/next-action-rank.ts`). Abdout decided "all day":
+  - Today's online class is item one from the morning: `liveClassSoon`, "Maths is live today at
+    10:20". It flips to the pinned Join at the window.
+  - Guardians: `childLiveClassSoon` is ranked, no longer hidden as `pending`.
+  - Admin, principal, developer: `liveNow` ("3 live classes are running now"), then `liveBlocked`
+    ("2 online classes have no teacher login", linking to the checklist), then `liveToday` ("12
+    today, first at 08:00").
+  - Staff: `liveNow`/`liveToday`, no fix link.
+  - Times are the period's wall clock (`startsAt`, school time), never the device clock.
+  - The card calls `router.refresh()` once when a class window closes, so the next class arrives
+    without a reload.
+- **Notifications** (`actions/notifications.ts`):
+  - The teacher gets their own "Your live class starts soon — tap to start the class" notice to the
+    join link, and is left off the roster's notice.
+  - Arabic notices say الحصة, not الفصل.
+  - New **morning digest** to ADMINs (`actions/daily-digest.ts`, run from the reminders cron, once
+    per school day from 06:00 school time, deduped on its own notification row): the day's count,
+    the first start, and the blocked count.
+- **Timetable**: a combined class's sibling cells now get the "live now" dot
+  (`getLiveClassIndicators` → `spreadToCombinedSiblings`). This closes the open item below.
+- **Messages**: no change. Abdout chose notifications only. The messaging Calls feed already lists
+  live classes.
+
+Open: the timetable header "Live" legend chip was skipped (cells already carry the pills); browser
+verification owed if not done in this pass.
+
 ## Combined classes — one room per class — 2026-11-09 (hogwarts#471)
 
 `a4317012a`, `combined.ts`. A combined class is one teacher's ONLINE sections at one period START

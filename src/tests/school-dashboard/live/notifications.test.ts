@@ -56,29 +56,50 @@ beforeEach(() => {
 })
 
 describe("notifyClassStartingSoon — nl-02: actual lead time, not a hardcoded 10", () => {
+  // A roster to notify: the teacher gets a notice of their own (below).
+  beforeEach(() => {
+    mockDb.student.findMany.mockResolvedValue([
+      { id: "s-1", userId: "student-user-1" },
+    ] as never)
+  })
+  const rosterCall = () =>
+    mockDispatch.mock.calls.find(
+      ([c]) => (c.metadata as { kind?: string })?.kind === "startingSoon"
+    )![0]
+
+  it("sends the teacher their own Start notice, and leaves them off the roster's", async () => {
+    await notifyClassStartingSoon("school-1", "lcs-1", 8)
+    const host = mockDispatch.mock.calls.find(
+      ([c]) => (c.metadata as { kind?: string })?.kind === "startingSoonHost"
+    )![0]
+    expect(host.targetUserIds).toEqual(["teacher-user-1"])
+    expect(host.body).toBe("Algebra I خلال 8 دقائق — اضغط لبدء الحصة")
+    expect(rosterCall().targetUserIds).toEqual(["student-user-1"])
+  })
+
   it("substitutes the caller-provided lead minutes into the Arabic body (few: 3-10)", async () => {
     await notifyClassStartingSoon("school-1", "lcs-1", 8)
-    const call = mockDispatch.mock.calls[0][0]
-    expect(call.body).toBe("Algebra I يبدأ خلال 8 دقائق")
-    expect(call.title).toBe("فصل مباشر يبدأ قريباً")
+    const call = rosterCall()
+    expect(call.body).toBe("Algebra I تبدأ خلال 8 دقائق")
+    expect(call.title).toBe("حصة مباشرة تبدأ قريباً")
   })
 
   it("uses the Arabic DUAL form (no digit) for exactly 2 minutes", async () => {
     await notifyClassStartingSoon("school-1", "lcs-1", 2)
-    const call = mockDispatch.mock.calls[0][0]
-    expect(call.body).toBe("Algebra I يبدأ خلال دقيقتين")
+    const call = rosterCall()
+    expect(call.body).toBe("Algebra I تبدأ خلال دقيقتين")
   })
 
   it("uses the Arabic singular form (no digit) for exactly 1 minute", async () => {
     await notifyClassStartingSoon("school-1", "lcs-1", 1)
-    const call = mockDispatch.mock.calls[0][0]
-    expect(call.body).toBe("Algebra I يبدأ خلال دقيقة")
+    const call = rosterCall()
+    expect(call.body).toBe("Algebra I تبدأ خلال دقيقة")
   })
 
   it("uses the Arabic 'many' form for 11+ minutes", async () => {
     await notifyClassStartingSoon("school-1", "lcs-1", 45)
-    const call = mockDispatch.mock.calls[0][0]
-    expect(call.body).toBe("Algebra I يبدأ خلال 45 دقيقة")
+    const call = rosterCall()
+    expect(call.body).toBe("Algebra I تبدأ خلال 45 دقيقة")
   })
 
   it("renders the English body with the actual lead, for an English-preferred school", async () => {
@@ -87,16 +108,16 @@ describe("notifyClassStartingSoon — nl-02: actual lead time, not a hardcoded 1
       school: { preferredLanguage: "en" },
     } as never)
     await notifyClassStartingSoon("school-1", "lcs-1", 8)
-    const call = mockDispatch.mock.calls[0][0]
+    const call = rosterCall()
     expect(call.body).toBe("Algebra I starts in 8 minutes")
     expect(call.title).toBe("Live class starting soon")
   })
 
   it("defaults to 10 minutes when the caller passes no leadMinutes", async () => {
     await notifyClassStartingSoon("school-1", "lcs-1")
-    const call = mockDispatch.mock.calls[0][0]
+    const call = rosterCall()
     // 10 falls in Arabic's "few" category (n % 100 in 3..10).
-    expect(call.body).toBe("Algebra I يبدأ خلال 10 دقائق")
+    expect(call.body).toBe("Algebra I تبدأ خلال 10 دقائق")
   })
 
   it("does not floor 0 itself — flooring to a minimum of 1 is the CRON's job", async () => {
@@ -106,8 +127,8 @@ describe("notifyClassStartingSoon — nl-02: actual lead time, not a hardcoded 1
     // route.test.ts). A caller that skips the cron's rounding gets exactly
     // what it asked for, including a nonsensical 0.
     await notifyClassStartingSoon("school-1", "lcs-1", 0)
-    const call = mockDispatch.mock.calls[0][0]
-    expect(call.body).toBe("Algebra I يبدأ خلال 0 دقيقة")
+    const call = rosterCall()
+    expect(call.body).toBe("Algebra I تبدأ خلال 0 دقيقة")
   })
 })
 

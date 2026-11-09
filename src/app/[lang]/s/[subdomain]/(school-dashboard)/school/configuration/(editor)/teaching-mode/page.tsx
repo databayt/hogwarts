@@ -9,6 +9,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getLiveTodaySummary } from "@/components/school-dashboard/live/live-today"
 import { ConfigTeachingModeForm } from "@/components/school-dashboard/school/configuration/config-teaching-mode-form"
 
 interface Props {
@@ -40,18 +41,23 @@ export default async function TeachingModePage({ params }: Props) {
     redirect(`/${lang}/dashboard`)
   }
 
-  const school = schoolId
-    ? await db.school
-        .findUnique({
-          where: { id: schoolId },
-          select: { conferenceDeliveryMode: true },
-        })
-        .catch(() => null)
-    : null
+  const [school, readiness] = schoolId
+    ? await Promise.all([
+        db.school
+          .findUnique({
+            where: { id: schoolId },
+            select: { conferenceDeliveryMode: true },
+          })
+          .catch(() => null),
+        // Best-effort: a failed read hides the checklist, never the page.
+        getLiveTodaySummary(schoolId).catch(() => null),
+      ])
+    : [null, null]
 
   return (
     <ConfigTeachingModeForm
       initialMode={school?.conferenceDeliveryMode ?? "physical"}
+      readiness={readiness}
       lang={lang}
     />
   )

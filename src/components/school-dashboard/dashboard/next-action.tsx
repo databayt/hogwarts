@@ -3,9 +3,13 @@
 
 import { auth } from "@/auth"
 
+import { getLiveTodaySummary } from "@/components/school-dashboard/live/live-today"
+
 import { getUpcomingDataByRole } from "./actions"
 import { NextActionCard } from "./next-action-client"
 import { rankNextActions } from "./next-action-rank"
+
+const SCHOOL_SIDE = new Set(["ADMIN", "DEVELOPER", "PRINCIPAL", "STAFF"])
 
 /**
  * Server half of the dashboard's next-action banner: read the role, pull
@@ -27,8 +31,20 @@ export async function NextAction({
   try {
     const session = await auth()
     const role = session?.user?.role
-    const data = await getUpcomingDataByRole(role || "")
-    actions = rankNextActions(role, data)
+    const schoolId = session?.user?.schoolId
+    const [data, liveToday] = await Promise.all([
+      getUpcomingDataByRole(role || ""),
+      // The school's people (not students, teachers or guardians, whose own
+      // class payload already carries it) see today's live classes at the
+      // top of the card: running now, blocked, or the day's count.
+      schoolId && SCHOOL_SIDE.has((role || "").toUpperCase())
+        ? getLiveTodaySummary(schoolId).catch(() => null)
+        : Promise.resolve(null),
+    ])
+    actions = rankNextActions(
+      role,
+      data && liveToday ? { ...data, liveToday } : data
+    )
   } catch (error) {
     console.error("[NextAction] Error ranking actions:", error)
     return null

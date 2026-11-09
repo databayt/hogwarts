@@ -76,17 +76,33 @@ describe("rankNextActions — join window", () => {
     })
   })
 
-  it("is the plain next class before the window, carrying it so the card can flip", () => {
-    const [first] = rankNextActions(
+  it("leads with the class before its window — all day — carrying the window and time", () => {
+    const actions = rankNextActions(
       "STUDENT",
-      { nextClass: cls },
-      FROM - 60_000
+      { assignments: [overdue], nextClass: { ...cls, startsAt: "10:20" } },
+      FROM - 3 * 3_600_000
     )
-    expect(first).toMatchObject({
-      kind: "nextClass",
+    expect(actions[0]).toMatchObject({
+      kind: "liveClassSoon",
+      mark: "Maths",
+      detail: "10:20",
       href: "/timetable",
       live: { fromMs: FROM, untilMs: UNTIL, joinHref: "/live/join/slot-1" },
     })
+    expect(actions[1].kind).toBe("assignmentOverdue")
+    expect(actions.some((a) => a.kind === "nextClass")).toBe(false)
+  })
+
+  it("puts a teacher's upcoming online class above marking", () => {
+    const actions = rankNextActions(
+      "TEACHER",
+      { pendingGrading: 3, nextClass: cls },
+      FROM - 60_000
+    )
+    expect(actions.map((a) => a.kind)).toEqual([
+      "liveClassSoon",
+      "pendingGrading",
+    ])
   })
 
   it("does not call a class live once its window has closed", () => {
@@ -107,7 +123,7 @@ describe("rankNextActions — join window", () => {
     })
   })
 
-  it("carries a child's class that has not opened yet as PENDING, last", () => {
+  it("leads a guardian's card with a child's class that has not opened yet", () => {
     const actions = rankNextActions(
       "GUARDIAN",
       {
@@ -117,10 +133,52 @@ describe("rankNextActions — join window", () => {
       },
       FROM - 60_000
     )
-    expect(actions[0].kind).toBe("childOverdue")
-    expect(actions.at(-1)).toMatchObject({
-      kind: "childLiveClass",
-      pending: true,
+    expect(actions[0]).toMatchObject({
+      kind: "childLiveClassSoon",
+      mark: "Khadija",
     })
+    expect(actions[1].kind).toBe("childOverdue")
+  })
+})
+
+describe("rankNextActions — the school's live day", () => {
+  const today = {
+    deliveryMode: "online",
+    onlineToday: 12,
+    noTeacherLogin: 2,
+    liveNow: 0,
+    nextStart: "08:00",
+  }
+
+  it("tells an admin about the day's classes before anything else", () => {
+    const actions = rankNextActions("ADMIN", {
+      activeIssues: 1,
+      liveToday: today,
+    })
+    expect(actions.map((a) => a.kind)).toEqual([
+      "liveBlocked",
+      "liveToday",
+      "activeIssues",
+    ])
+    expect(actions[1]).toMatchObject({ mark: "12", detail: "08:00" })
+  })
+
+  it("puts classes running now first, and drops the day count", () => {
+    const actions = rankNextActions("PRINCIPAL", {
+      liveToday: { ...today, liveNow: 3, noTeacherLogin: 0 },
+    })
+    expect(actions).toEqual([{ kind: "liveNow", mark: "3", href: "/live" }])
+  })
+
+  it("never shows staff the admin-only fix", () => {
+    const actions = rankNextActions("STAFF", { liveToday: today })
+    expect(actions.some((a) => a.kind === "liveBlocked")).toBe(false)
+  })
+
+  it("says nothing for an in-person school", () => {
+    const actions = rankNextActions("ADMIN", {
+      liveToday: { ...today, deliveryMode: "physical" },
+    })
+    expect(actions).toEqual([])
   })
 })

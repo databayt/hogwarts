@@ -32,7 +32,7 @@ const TEMPLATES: Record<
 > = {
   scheduled: {
     ar: {
-      title: "تم جدولة فصل مباشر",
+      title: "تمت جدولة حصة مباشرة",
       body: "{title} مع {teacher} في {when}",
     },
     en: {
@@ -41,15 +41,15 @@ const TEMPLATES: Record<
     },
   },
   started: {
-    ar: { title: "الفصل المباشر يبث الآن", body: "انضم الآن إلى {title}" },
+    ar: { title: "الحصة المباشرة بدأت الآن", body: "انضم الآن إلى {title}" },
     en: { title: "Live class is now live", body: "Join {title} now" },
   },
   cancelled: {
-    ar: { title: "تم إلغاء الفصل المباشر", body: "{title} — {reason}" },
+    ar: { title: "أُلغيت الحصة المباشرة", body: "{title} — {reason}" },
     en: { title: "Live class cancelled", body: "{title} — {reason}" },
   },
   recordingReady: {
-    ar: { title: "تسجيل الفصل جاهز", body: "تسجيل {title} متاح للمشاهدة" },
+    ar: { title: "تسجيل الحصة جاهز", body: "تسجيل {title} متاح للمشاهدة" },
     en: {
       title: "Recording ready",
       body: "Recording for {title} is now available",
@@ -58,7 +58,7 @@ const TEMPLATES: Record<
 }
 
 const STARTING_SOON_TITLE: Record<"ar" | "en", string> = {
-  ar: "فصل مباشر يبدأ قريباً",
+  ar: "حصة مباشرة تبدأ قريباً",
   en: "Live class starting soon",
 }
 
@@ -78,12 +78,12 @@ const STARTING_SOON_BODY: Record<
   Record<Intl.LDMLPluralRule, string>
 > = {
   ar: {
-    zero: "{title} يبدأ خلال {lead} دقيقة",
-    one: "{title} يبدأ خلال دقيقة",
-    two: "{title} يبدأ خلال دقيقتين",
-    few: "{title} يبدأ خلال {lead} دقائق",
-    many: "{title} يبدأ خلال {lead} دقيقة",
-    other: "{title} يبدأ خلال {lead} دقيقة",
+    zero: "{title} تبدأ خلال {lead} دقيقة",
+    one: "{title} تبدأ خلال دقيقة",
+    two: "{title} تبدأ خلال دقيقتين",
+    few: "{title} تبدأ خلال {lead} دقائق",
+    many: "{title} تبدأ خلال {lead} دقيقة",
+    other: "{title} تبدأ خلال {lead} دقيقة",
   },
   en: {
     zero: "{title} starts in {lead} minutes",
@@ -97,6 +97,36 @@ const STARTING_SOON_BODY: Record<
 
 const arLeadPluralRules = new Intl.PluralRules("ar")
 const enLeadPluralRules = new Intl.PluralRules("en")
+
+/**
+ * The teacher's own "starting soon": they do not join a class, they START it.
+ * Same plural forms as the roster's body, a different sentence.
+ */
+const TEACHER_SOON_TITLE: Record<"ar" | "en", string> = {
+  ar: "حصتك المباشرة تبدأ قريباً",
+  en: "Your live class starts soon",
+}
+const TEACHER_SOON_BODY: Record<
+  "ar" | "en",
+  Record<Intl.LDMLPluralRule, string>
+> = {
+  ar: {
+    zero: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
+    one: "{title} خلال دقيقة — اضغط لبدء الحصة",
+    two: "{title} خلال دقيقتين — اضغط لبدء الحصة",
+    few: "{title} خلال {lead} دقائق — اضغط لبدء الحصة",
+    many: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
+    other: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
+  },
+  en: {
+    zero: "{title} in {lead} minutes — tap to start the class",
+    one: "{title} in {lead} minute — tap to start the class",
+    two: "{title} in {lead} minutes — tap to start the class",
+    few: "{title} in {lead} minutes — tap to start the class",
+    many: "{title} in {lead} minutes — tap to start the class",
+    other: "{title} in {lead} minutes — tap to start the class",
+  },
+}
 
 function leadPluralCategory(lang: "ar" | "en", n: number): Intl.LDMLPluralRule {
   return (lang === "ar" ? arLeadPluralRules : enLeadPluralRules).select(n)
@@ -266,12 +296,39 @@ async function dispatch(
     if (!resolved || resolved.userIds.length === 0) return { created: 0 }
     const { session, lang, teacherUserId } = resolved
     // "Your class is live" is news to everyone except the teacher who just
-    // started it — they are already in the room.
+    // started it — they are already in the room. "Starting soon" reaches the
+    // teacher too, but as their own notice (below): they START the class.
     const userIds =
-      kind === "started" && teacherUserId
+      (kind === "started" || kind === "startingSoon") && teacherUserId
         ? resolved.userIds.filter((id) => id !== teacherUserId)
         : resolved.userIds
-    if (userIds.length === 0) return { created: 0 }
+    let teacherCreated = 0
+    if (kind === "startingSoon" && teacherUserId) {
+      const lead = leadMinutes ?? 10
+      const r = await dispatchNotificationsToAudience({
+        schoolId,
+        type,
+        title: TEACHER_SOON_TITLE[lang],
+        body: render(TEACHER_SOON_BODY[lang][leadPluralCategory(lang, lead)], {
+          title: session.title,
+          lead: String(lead),
+        }),
+        lang,
+        priority: "high",
+        channels: ["in_app", "email", "push"],
+        metadata: {
+          kind: "startingSoonHost",
+          sessionId,
+          sectionId: session.sectionId,
+          // The join link starts the class for its host inside the window.
+          url: session.joinPath ?? session.routePath,
+          deep_link: session.routePath,
+        },
+        targetUserIds: [teacherUserId],
+      })
+      teacherCreated = r.created
+    }
+    if (userIds.length === 0) return { created: teacherCreated }
     const vars: Record<string, string> = {
       title: session.title,
       teacher: session.teacherFullName,
@@ -346,7 +403,7 @@ async function dispatch(
       },
       targetUserIds: userIds,
     })
-    return { created }
+    return { created: created + teacherCreated }
   } catch (err) {
     console.error("[live-class] notifyClass failed", {
       schoolId,

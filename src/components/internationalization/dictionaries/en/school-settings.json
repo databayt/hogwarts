@@ -224,7 +224,29 @@
     "moreSettings": "Live-class settings",
     "todayRooms": "{n} of today's classes are online — their rooms open from the timetable.",
     "todayNone": "None of today's classes are online yet.",
-    "updateError": "Couldn't save. Try again."
+    "updateError": "Couldn't save. Try again.",
+    "recommended": "Recommended for online schools",
+    "readiness": {
+      "title": "Ready for today",
+      "footer": "Checked when you open this page. Fix the amber rows before the first bell.",
+      "roomsOk": "Classroom video service is connected",
+      "roomsMissing": "Classroom video service is not connected",
+      "roomsMissingHint": "Classes will only open through a meeting link until the platform connects it. Contact support.",
+      "slotsNone": "No classes on today's timetable",
+      "slotsNoneHint": "A live class is a timetable class. Build or publish the timetable first.",
+      "onlineSome": "{n} of today's {total} classes are live",
+      "onlineNone": "None of today's classes are online",
+      "onlineNoneHint": "In hybrid mode, choose the grades or sections that go live.",
+      "liveNow": "Next one starts at {time}",
+      "loginsOk": "Every teacher can start their class",
+      "loginsMissing": "{n} classes can't start: {teachers} teachers have no login",
+      "loginsMissingHint": "Issue a login from the teacher's page so they can start the class.",
+      "reminders": "Students and guardians are notified {n} min before",
+      "attendanceOn": "Attendance is taken from who joined",
+      "attendanceOff": "Attendance is not taken automatically",
+      "fix": "Fix",
+      "change": "Change"
+    }
   },
   "holidays": {
     "footer": "No classes on these days: live classes are not created, reminders are not sent, and the timetable says the school is closed.",

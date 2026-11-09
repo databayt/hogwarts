@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -146,9 +147,16 @@ interface Piece {
  * order and the fade order have to continue through the boundary between the
  * emphasised phrase and the rest, not restart at it.
  */
-function toPieces(template: string | undefined, mark: string): Piece[] {
+function toPieces(
+  template: string | undefined,
+  mark: string,
+  detail = ""
+): Piece[] {
   const clusters = (s: string, bold: boolean): Piece[] =>
-    (s.match(CLUSTERS) ?? []).map((ch) => ({ ch, bold }))
+    (s.replace("{time}", detail).match(CLUSTERS) ?? []).map((ch) => ({
+      ch,
+      bold,
+    }))
 
   if (!template) return clusters(mark, true)
 
@@ -175,6 +183,13 @@ const MAX_VISIBLE = 4
 
 const isLiveKind = (kind: string | undefined) =>
   kind === "liveClass" || kind === "childLiveClass"
+
+/** Today's online class before its bell — promoted to Join when it opens. */
+const SOON_TO_LIVE: Record<string, NextAction["kind"]> = {
+  nextClass: "liveClass",
+  liveClassSoon: "liveClass",
+  childLiveClassSoon: "childLiveClass",
+}
 
 /**
  * Re-rank the class items against the reader's clock. `nowMs === null` (the
@@ -213,9 +228,13 @@ function retime(
       return
     }
     const open = nowMs >= a.live.fromMs && nowMs <= a.live.untilMs
-    if (a.kind === "nextClass") {
+    const promoted = SOON_TO_LIVE[a.kind]
+    if (promoted) {
+      // A "soon" item whose class is over leaves; the refresh below brings
+      // the day's next class in its place.
+      if (a.kind !== "nextClass" && nowMs > a.live.untilMs) return
       out.push({
-        action: open ? { ...a, kind: "liveClass", href: a.live.joinHref } : a,
+        action: open ? { ...a, kind: promoted, href: a.live.joinHref } : a,
         at,
       })
       return
@@ -238,6 +257,7 @@ export function NextActionCard({
   className,
 }: NextActionCardProps) {
   const { dictionary } = useDictionary()
+  const router = useRouter()
   const dict = dictionary?.school?.dashboard?.nextAction as
     | {
         cta?: string
@@ -280,6 +300,25 @@ export function NextActionCard({
     }
   }, [])
 
+  /**
+   * When a class's window closes, the server is asked once for a fresh
+   * ranking: it knows the day's NEXT class, which this card was never sent.
+   * Keyed per window so a slow refresh cannot loop.
+   */
+  const refreshedFor = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    if (nowMs === null) return
+    const closed = actions.find(
+      (a) =>
+        a.live &&
+        nowMs > a.live.untilMs &&
+        !refreshedFor.current.has(a.live.untilMs)
+    )
+    if (!closed?.live) return
+    refreshedFor.current.add(closed.live.untilMs)
+    router.refresh()
+  }, [actions, nowMs, router])
+
   // Each entry keeps its RANK position (`at`), which is what a dismissal
   // records — the retimed list reorders, the ranking does not.
   const ranked = useMemo(
@@ -301,9 +340,10 @@ export function NextActionCard({
   // would restart the scramble on its own output and never settle.
   const template = (action && dict?.kinds?.[action.kind]) ?? ""
   const mark = action?.mark ?? ""
+  const detail = action?.detail ?? ""
   const pieces = useMemo(
-    () => toPieces(template || undefined, mark),
-    [template, mark]
+    () => toPieces(template || undefined, mark, detail),
+    [template, mark, detail]
   )
 
   const revealMs = pieces.length * REVEAL_MS_PER_CHAR

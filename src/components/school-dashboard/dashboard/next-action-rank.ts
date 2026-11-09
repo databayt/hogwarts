@@ -19,7 +19,12 @@ export type NextActionKind =
   | "assignmentDue"
   | "nextClass"
   | "liveClass"
+  | "liveClassSoon"
   | "childLiveClass"
+  | "childLiveClassSoon"
+  | "liveNow"
+  | "liveBlocked"
+  | "liveToday"
   | "pendingGrading"
   | "attendanceDue"
   | "childOverdue"
@@ -40,6 +45,13 @@ export interface NextAction {
    * arrangement the /live and /library banners use.
    */
   mark: string
+  /**
+   * A second piece of data the sentence names, substituted for `{time}` — the
+   * class's start ("10:20") on the class items. Like `mark`, it is data: a
+   * wall-clock time formatted on the server in the SCHOOL's zone, never the
+   * reader's device clock.
+   */
+  detail?: string
   /** Locale-less path; the client prefixes `/${locale}`. */
   href: string
   /**
@@ -136,16 +148,18 @@ export function rankNextActions(
   if (!data || typeof data !== "object") return []
   const d = data as Unknown
   const actions: NextAction[] = []
-  // A child's class whose window has not opened yet: carried at the END, past
-  // the cap, so the client can promote it at the bell (see `live` above).
-  const pendingChildLive: NextAction[] = []
 
   switch ((role || "").toUpperCase()) {
     case "STUDENT": {
-      // A class that is live (or about to be) outranks everything: it is the
-      // one thing on the dashboard that is over in minutes. It opens the room.
+      // Today's online class outranks everything, ALL DAY (Abdout,
+      // 2026-11-09): live (or about to be) it opens the room; before its
+      // window it is "Math live at 10:20", and the client turns it into Join
+      // at the bell. It is the one thing on the dashboard that is over in
+      // minutes and cannot be done later.
       const live = liveAction(d.nextClass, nowMs)
+      const soon = live ? null : soonAction(d.nextClass, nowMs)
       if (live) actions.push(live)
+      if (soon) actions.push(soon)
 
       const assignments = Array.isArray(d.assignments)
         ? (d.assignments as Unknown[])
@@ -172,7 +186,7 @@ export function rankNextActions(
       }
 
       const nextClass = d.nextClass as Unknown | undefined
-      if (!live && nextClass && str(nextClass.subject)) {
+      if (!live && !soon && nextClass && str(nextClass.subject)) {
         actions.push({
           kind: "nextClass",
           mark: str(nextClass.subject),
@@ -185,7 +199,9 @@ export function rankNextActions(
 
     case "TEACHER": {
       const live = liveAction(d.nextClass, nowMs)
+      const soon = live ? null : soonAction(d.nextClass, nowMs)
       if (live) actions.push(live)
+      if (soon) actions.push(soon)
       if (num(d.pendingGrading) > 0) {
         actions.push({
           kind: "pendingGrading",
@@ -201,7 +217,7 @@ export function rankNextActions(
         })
       }
       const nextClass = d.nextClass as Unknown | undefined
-      if (!live && nextClass && str(nextClass.subject)) {
+      if (!live && !soon && nextClass && str(nextClass.subject)) {
         actions.push({
           kind: "nextClass",
           mark: str(nextClass.subject),
@@ -216,26 +232,32 @@ export function rankNextActions(
       const children = Array.isArray(d.children)
         ? (d.children as Unknown[])
         : []
-      // A child's class that is live right now comes first — it is the one
-      // thing here that is over within the hour. Only present when the school
-      // lets guardians watch (the loader checks the switch). A class not open
-      // yet rides along with its window, so the card can promote it at the
-      // bell; it is otherwise not worth a line of its own to a parent.
+      // A child's online class leads the card all day — live now, or "at
+      // 10:20" before its window. Only present when the school lets guardians
+      // watch (the loader checks the switch).
       for (const c of children) {
         const nc = c.nextClass as Unknown | undefined
         const live = liveAction(nc, nowMs, "childLiveClass", given(c.name))
         if (live) {
           actions.push(live)
-        } else if (nc && joinWindowOf(nc)) {
-          pendingChildLive.push({
-            kind: "childLiveClass",
+        } else if (nc && (joinWindowOf(nc)?.untilMs ?? 0) >= nowMs) {
+          // Ranked, not hidden: "Khadija's class is live at 10:20" leads the
+          // card all day, and the client flips it to Join at the bell.
+          actions.push({
+            kind: "childLiveClassSoon",
             mark: given(c.name),
+            detail: str(nc.startsAt) || undefined,
             href: "/parent",
             live: joinWindowOf(nc),
-            pending: true,
           })
         }
       }
+      // Live first, then the soon ones, whatever order the children came in.
+      actions.sort(
+        (a, b) =>
+          Number(b.kind === "childLiveClass") -
+          Number(a.kind === "childLiveClass")
+      )
       for (const c of children.filter((c) => num(c.overdueAssignments) > 0)) {
         actions.push({
           kind: "childOverdue",
@@ -276,6 +298,7 @@ export function rankNextActions(
     }
 
     case "STAFF": {
+      actions.push(...liveTodayActions(d.liveToday, false))
       const tasks = Array.isArray(d.urgentTasks)
         ? (d.urgentTasks as Unknown[])
         : []
@@ -301,6 +324,7 @@ export function rankNextActions(
     // ADMIN, DEVELOPER and PRINCIPAL all read the alert/approval shape;
     // principal's list is named `criticalAlerts` and admin's `activeIssues`.
     default: {
+      actions.push(...liveTodayActions(d.liveToday, true))
       const critical = Array.isArray(d.criticalAlerts)
         ? (d.criticalAlerts as Unknown[]).length
         : 0
@@ -323,10 +347,56 @@ export function rankNextActions(
     }
   }
 
-  return [
-    ...actions.filter((a) => a.mark).slice(0, MAX_ACTIONS),
-    ...pendingChildLive.filter((a) => a.mark),
-  ]
+  return actions.filter((a) => a.mark).slice(0, MAX_ACTIONS)
+}
+
+/**
+ * Today's online classes as the school's people see them. A class running now
+ * comes first; then a class nobody can start (its teacher has no login), which
+ * only an admin can fix; then the day's count with its first start.
+ */
+function liveTodayActions(raw: unknown, canFix: boolean): NextAction[] {
+  const t = raw as Unknown | undefined
+  if (!t || t.deliveryMode === "physical") return []
+  const out: NextAction[] = []
+  if (num(t.liveNow) > 0) {
+    out.push({ kind: "liveNow", mark: String(num(t.liveNow)), href: "/live" })
+  }
+  if (canFix && num(t.onlineToday) > 0 && num(t.noTeacherLogin) > 0) {
+    out.push({
+      kind: "liveBlocked",
+      mark: String(num(t.noTeacherLogin)),
+      href: "/school/configuration/teaching-mode",
+    })
+  }
+  if (num(t.liveNow) === 0 && num(t.onlineToday) > 0 && str(t.nextStart)) {
+    out.push({
+      kind: "liveToday",
+      mark: String(num(t.onlineToday)),
+      detail: str(t.nextStart),
+      href: "/live",
+    })
+  }
+  return out
+}
+
+/**
+ * Today's online class before its window opens: ranked first all day, with
+ * its start time. Carries the window, so the client promotes it to the pinned
+ * Join at the bell.
+ */
+function soonAction(raw: unknown, nowMs: number): NextAction | null {
+  const c = raw as Unknown | undefined
+  if (!c || !str(c.subject)) return null
+  const live = joinWindowOf(c)
+  if (!live || nowMs > live.untilMs) return null
+  return {
+    kind: "liveClassSoon",
+    mark: str(c.subject),
+    detail: str(c.startsAt) || undefined,
+    href: "/timetable",
+    live,
+  }
 }
 
 /**

@@ -23,6 +23,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
 import {
   DEFAULT_SCHOOL_TZ,
+  periodWallTime,
   schoolDayOfWeek,
   slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
@@ -179,7 +180,15 @@ function liveFields(next: NextSlot<TodaySlot> | null) {
     slotId: next?.joinable ? next.slot.id : null,
     liveFromMs: next?.joinable ? (next.window?.fromMs ?? null) : null,
     liveUntilMs: next?.joinable ? (next.window?.untilMs ?? null) : null,
+    // The banner's "live at 10:20": the period's wall-clock start, which IS
+    // the school's local time (a Time column read in UTC — `periodWallTime`).
+    startsAt: next?.slot.period ? wallHHMM(next.slot.period.startTime) : null,
   }
+}
+
+function wallHHMM(t: Date): string {
+  const { hour, minute } = periodWallTime(t)
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
 }
 
 async function getStudentUpcomingData(userId: string, schoolId: string) {
