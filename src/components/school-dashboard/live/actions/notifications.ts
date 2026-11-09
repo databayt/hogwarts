@@ -12,6 +12,7 @@ import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { sessionSectionIds } from "../combined"
+import { DEFAULT_SCHOOL_TZ } from "../day-window"
 
 type LiveEventKind =
   | "scheduled"
@@ -143,11 +144,17 @@ function render(template: string, vars: Record<string, string>): string {
   )
 }
 
-function formatWhen(d: Date, lang: "ar" | "en"): string {
+/**
+ * The class's start in the SCHOOL's zone. Without `timeZone` the server's zone
+ * applied — UTC on the container — and a 18:00 Khartoum class was announced
+ * as 16:00.
+ */
+function formatWhen(d: Date, lang: "ar" | "en", timeZone: string): string {
   try {
     return d.toLocaleString(lang === "ar" ? "ar-AE" : "en-AE", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone,
     })
   } catch {
     return d.toISOString()
@@ -161,6 +168,8 @@ interface ResolvedSession {
   sectionId: string | null
   teacherFullName: string
   scheduledStart: Date
+  /** The school's IANA zone — every time in a notice is school time. */
+  timeZone: string
   routePath: string
   /** The slot's join link, when the class is anchored to a timetable slot. */
   joinPath: string | null
@@ -194,7 +203,7 @@ async function loadSession(
           userId: true,
         },
       },
-      school: { select: { preferredLanguage: true } },
+      school: { select: { preferredLanguage: true, timezone: true } },
     },
   })
   if (!session) return null
@@ -266,6 +275,7 @@ async function loadSession(
       sectionId: session.sectionId,
       teacherFullName,
       scheduledStart: session.scheduledStart,
+      timeZone: session.school.timezone || DEFAULT_SCHOOL_TZ,
       routePath,
       joinPath,
     },
@@ -332,7 +342,7 @@ async function dispatch(
     const vars: Record<string, string> = {
       title: session.title,
       teacher: session.teacherFullName,
-      when: formatWhen(session.scheduledStart, lang),
+      when: formatWhen(session.scheduledStart, lang, session.timeZone),
       ...extraVars,
     }
     let title: string

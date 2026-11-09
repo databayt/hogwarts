@@ -140,6 +140,25 @@ describe("notifyClass* — other kinds keep their fixed templates", () => {
     expect(call.body).toContain("Ada Lovelace")
   })
 
+  it("prints the start in the SCHOOL's zone, not the server's", async () => {
+    // 10:00Z is 12:00 in Khartoum (UTC+2) and 13:00 in Riyadh (UTC+3).
+    mockDb.conference.findFirst.mockResolvedValue({
+      ...BASE_SESSION,
+      school: { preferredLanguage: "en", timezone: "Asia/Riyadh" },
+    } as never)
+    await notifyClassScheduled("school-1", "lcs-1")
+    expect(mockDispatch.mock.calls[0][0].body).toMatch(/1:00\s?PM/)
+
+    mockDispatch.mockClear()
+    mockDb.conference.findFirst.mockResolvedValue({
+      ...BASE_SESSION,
+      school: { preferredLanguage: "en", timezone: null },
+    } as never)
+    await notifyClassScheduled("school-1", "lcs-1")
+    // No zone on the school → the platform default, Africa/Khartoum.
+    expect(mockDispatch.mock.calls[0][0].body).toMatch(/12:00\s?PM/)
+  })
+
   it("notifyClassCancelled substitutes the reason", async () => {
     await notifyClassCancelled("school-1", "lcs-1", "Teacher unavailable")
     const call = mockDispatch.mock.calls[0][0]
