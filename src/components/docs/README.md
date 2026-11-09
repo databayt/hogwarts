@@ -24,8 +24,8 @@ The `/docs` site (fumadocs-mdx, mirrors the shadcn docs block). Routes live in
   `scripts/build-support-index.mjs` → `chatbot/support-index.json`.
 - **Team pages** (the `---Team---` group, 16 pages, en + ar) share one template:
   bold one-line summary → a `<Mermaid>` flowchart → Why it pays → … →
-  When this happens → What you do → Argue with this page → Related docs (no
-  external references). Order is the team member's journey, starting at
+  When this happens → What you do → Related docs (only
+  shared-economy keeps References). Order is the team member's journey, starting at
   `start-here` and `team` (who owns what). `pitch` folded into `sales` and
   `investors` into `fundraising` (Funding) on 2026-11-09; both slugs redirect.
 - Media (videos, stills) comes from `media-manifest.json` via `media.ts`
