@@ -1,0 +1,26 @@
+# Host networking (Linux only). Versions pinned — upgrade by editing the tags
+# here and on the server (/opt/livekit/docker-compose.yaml), then
+# `systemctl restart livekit-docker`.
+services:
+  caddy:
+    image: livekit/caddyl4:v2.11.3
+    command: run --config /etc/caddy.yaml --adapter yaml
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./caddy.yaml:/etc/caddy.yaml
+      - ./caddy_data:/data
+  livekit:
+    image: livekit/livekit-server:v1.13.11
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+  redis:
+    image: redis:7-alpine
+    command: redis-server /etc/redis.conf
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./redis.conf:/etc/redis.conf

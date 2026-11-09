@@ -1,0 +1,41 @@
+# Caddy (layer-4 build) — one :443 for both names, split by SNI: the TURN name
+# goes to LiveKit's TURN/TLS (5349), the primary name to the signal port (7880).
+# Verbatim from the LiveKit generator (github.com/livekit/deploy, caddy.go).
+logging:
+  logs:
+    default:
+      level: INFO
+storage:
+  "module": "file_system"
+  "root": "/data"
+apps:
+  tls:
+    certificates:
+      automate:
+        - __DOMAIN__
+        - __TURN_DOMAIN__
+  layer4:
+    servers:
+      main:
+        listen: [":443"]
+        routes:
+          - match:
+            - tls:
+                sni:
+                  - "__TURN_DOMAIN__"
+            handle:
+              - handler: tls
+              - handler: proxy
+                upstreams:
+                  - dial: ["localhost:5349"]
+          - match:
+              - tls:
+                  sni:
+                    - "__DOMAIN__"
+            handle:
+              - handler: tls
+                connection_policies:
+                  - alpn: ["http/1.1"]
+              - handler: proxy
+                upstreams:
+                  - dial: ["localhost:7880"]
