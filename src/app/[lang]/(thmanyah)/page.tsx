@@ -88,12 +88,12 @@ export default async function Home({
   //
   //   sans 400  -> the hero's "منصة بالقلم" title
   //   display 900 -> the "نظام" h1, which is this page's LCP element
-  preload("/fonts/thmanyah-sans-regular.woff2", {
+  preload("/fonts/thmanyah/thmanyah-sans-400.woff2", {
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
   })
-  preload("/fonts/thmanyah-serif-display-black.woff2", {
+  preload("/fonts/thmanyah/thmanyah-serif-display-900.woff2", {
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",

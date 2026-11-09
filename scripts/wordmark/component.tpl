@@ -58,7 +58,7 @@ import React from "react"
  * generated, not hand-drawn. To regenerate for another word or weight:
  *
  *   python3 scripts/wordmark/shape.py \
- *     public/fonts/thmanyah-serif-display-black.woff2 "بالقلم" ss01 \
+ *     public/fonts/thmanyah/thmanyah-serif-display-900.woff2 "بالقلم" ss01 \
  *     > .wordmark/word.json
  *   python3 scripts/wordmark/compose.py .wordmark
  *   python3 scripts/wordmark/emit-jsx.py && python3 scripts/wordmark/apply-css.py

@@ -12,7 +12,7 @@ retargeted to another word, so the word is rebuilt from the font instead.
 ```bash
 pip install fonttools brotli skia-pathops
 python3 scripts/wordmark/shape.py \
-  public/fonts/thmanyah-serif-display-black.woff2 "بالقلم" ss01 > .wordmark/word.json
+  public/fonts/thmanyah/thmanyah-serif-display-900.woff2 "بالقلم" ss01 > .wordmark/word.json
 python3 scripts/wordmark/compose.py .wordmark   # -> out.jsx + out.css + vb.txt
 ```
 
@@ -32,7 +32,7 @@ when regenerating.
 ```bash
 mkdir -p .wordmark
 python3 scripts/wordmark/shape.py \
-  public/fonts/thmanyah-serif-display-black.woff2 "بالقلم" ss01 > .wordmark/word.json
+  public/fonts/thmanyah/thmanyah-serif-display-900.woff2 "بالقلم" ss01 > .wordmark/word.json
 python3 scripts/wordmark/compose.py   .wordmark   # -> out.jsx / out.css / vb.txt
 python3 scripts/wordmark/emit-jsx.py             # -> thmanyah/atom/WordmarkWriting.tsx
 python3 scripts/wordmark/apply-css.py            # -> the .bq-* block in thmanyah-clone.css

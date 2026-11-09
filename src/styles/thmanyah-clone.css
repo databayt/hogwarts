@@ -44,7 +44,7 @@
 @font-face {
   font-family: "thmanyah sans";
   src:
-    url("/fonts/thmanyah-sans-light.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-sans-300.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/Lh8puxCFq405qBv7dKpg9NsHZNk.woff2")
       format("woff2");
   font-weight: 300;
@@ -55,7 +55,7 @@
 @font-face {
   font-family: "thmanyah sans";
   src:
-    url("/fonts/thmanyah-sans-regular.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-sans-400.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/x6EBzvXf1Fi35XhsRoHxePDVo.woff2")
       format("woff2");
   font-weight: 400;
@@ -66,7 +66,7 @@
 @font-face {
   font-family: "thmanyah sans";
   src:
-    url("/fonts/thmanyah-sans-medium.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-sans-500.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/oE98mOPE28KTzUeptOLRIaqW1I.woff2")
       format("woff2");
   font-weight: 500;
@@ -77,7 +77,7 @@
 @font-face {
   font-family: "thmanyah sans";
   src:
-    url("/fonts/thmanyah-sans-bold.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-sans-700.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/LZvgFRUsP7pGWYj3tKxMUrKuhSY.woff2")
       format("woff2");
   font-weight: 700;
@@ -88,7 +88,7 @@
 @font-face {
   font-family: "thmanyah sans";
   src:
-    url("/fonts/thmanyah-sans-black.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-sans-900.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/ulQLGTktcl2Qq4AmD6RuVgELZKg.woff2")
       format("woff2");
   font-weight: 900;
@@ -100,7 +100,7 @@
 @font-face {
   font-family: "thmanyah serif display";
   src:
-    url("/fonts/thmanyah-serif-display-light.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-display-300.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/zmxf3YlIwMxBTz61cviQtq5n3zU.woff2")
       format("woff2");
   font-weight: 300;
@@ -111,7 +111,7 @@
 @font-face {
   font-family: "thmanyah serif display";
   src:
-    url("/fonts/thmanyah-serif-display-regular.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-display-400.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/s1q2LvVNWBbqzMxMBxsexY73tE.woff2")
       format("woff2");
   font-weight: 400;
@@ -122,7 +122,7 @@
 @font-face {
   font-family: "thmanyah serif display";
   src:
-    url("/fonts/thmanyah-serif-display-medium.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-display-500.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/ahIxG21c1088n0jA0bPQBjKu6M.woff2")
       format("woff2");
   font-weight: 500;
@@ -133,7 +133,7 @@
 @font-face {
   font-family: "thmanyah serif display";
   src:
-    url("/fonts/thmanyah-serif-display-bold.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-display-700.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/AAY5hsAWwWmVC7qlScZUGjzCgE8.woff2")
       format("woff2");
   font-weight: 700;
@@ -144,7 +144,7 @@
 @font-face {
   font-family: "thmanyah serif display";
   src:
-    url("/fonts/thmanyah-serif-display-black.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-display-900.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/a9r2dKNoQcqFiTkwxTUnXgAfjws.woff2")
       format("woff2");
   font-weight: 900;
@@ -156,7 +156,7 @@
 @font-face {
   font-family: "thmanyah serif text";
   src:
-    url("/fonts/thmanyah-serif-text-light.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-text-300.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/pXAhTrUNoEDB4CTUcjXvXy1gFAc.woff2")
       format("woff2");
   font-weight: 300;
@@ -167,7 +167,7 @@
 @font-face {
   font-family: "thmanyah serif text";
   src:
-    url("/fonts/thmanyah-serif-text-regular.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-text-400.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/3WPjrTAizPcMoDaKDtKdNB0Jo50.woff2")
       format("woff2");
   font-weight: 400;
@@ -178,7 +178,7 @@
 @font-face {
   font-family: "thmanyah serif text";
   src:
-    url("/fonts/thmanyah-serif-text-medium.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-text-500.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/bsVNF5mKouPfUJiPWsBKDU324NM.woff2")
       format("woff2");
   font-weight: 500;
@@ -189,7 +189,7 @@
 @font-face {
   font-family: "thmanyah serif text";
   src:
-    url("/fonts/thmanyah-serif-text-bold.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-text-700.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/L62MixAFhJojtLTRD19wOsCnFg.woff2")
       format("woff2");
   font-weight: 700;
@@ -200,7 +200,7 @@
 @font-face {
   font-family: "thmanyah serif text";
   src:
-    url("/fonts/thmanyah-serif-text-black.woff2") format("woff2"),
+    url("/fonts/thmanyah/thmanyah-serif-text-900.woff2") format("woff2"),
     url("https://framerusercontent.com/assets/z8brS6Wjld2pvgVBkmzMQpyPO4.woff2")
       format("woff2");
   font-weight: 900;
@@ -213,7 +213,7 @@
    (e.g. the Trials "No." row numbers). Same files as on the live site. --- */
 @font-face {
   font-family: "thmanyah sans 1.2";
-  src: url("/fonts/thmanyah-sans-1.2-light.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-1.2-300.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -221,7 +221,7 @@
 
 @font-face {
   font-family: "thmanyah sans 1.2";
-  src: url("/fonts/thmanyah-sans-1.2-regular.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-1.2-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -229,7 +229,7 @@
 
 @font-face {
   font-family: "thmanyah sans 1.2";
-  src: url("/fonts/thmanyah-sans-1.2-medium.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-1.2-500.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -237,7 +237,7 @@
 
 @font-face {
   font-family: "thmanyah sans 1.2";
-  src: url("/fonts/thmanyah-sans-1.2-bold.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-1.2-700.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -245,7 +245,7 @@
 
 @font-face {
   font-family: "thmanyah serif display 1.2";
-  src: url("/fonts/thmanyah-serif-display-1.2-regular.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-display-1.2-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -253,7 +253,7 @@
 
 @font-face {
   font-family: "thmanyah serif text 1.2";
-  src: url("/fonts/thmanyah-serif-text-1.2-light.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-text-1.2-300.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -261,7 +261,7 @@
 
 @font-face {
   font-family: "thmanyah serif text 1.2";
-  src: url("/fonts/thmanyah-serif-text-1.2-regular.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-text-1.2-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -269,7 +269,7 @@
 
 @font-face {
   font-family: "thmanyah serif text 1.2";
-  src: url("/fonts/thmanyah-serif-text-1.2-medium.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-text-1.2-500.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -277,7 +277,7 @@
 
 @font-face {
   font-family: "thmanyah serif text 1.2";
-  src: url("/fonts/thmanyah-serif-text-1.2-bold.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-text-1.2-700.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -285,7 +285,7 @@
 
 @font-face {
   font-family: "thmanyah serif text 1.2";
-  src: url("/fonts/thmanyah-serif-text-1.2-black.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-serif-text-1.2-900.woff2") format("woff2");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -4209,14 +4209,14 @@ body:has(.thmanyah-shell) {
    site renders a synthesised bold. These aliases reproduce that. */
 @font-face {
   font-family: "thmanyah sans Regular";
-  src: url("/fonts/thmanyah-sans-regular.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "thmanyah sans Light";
-  src: url("/fonts/thmanyah-sans-light.woff2") format("woff2");
+  src: url("/fonts/thmanyah/thmanyah-sans-300.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;

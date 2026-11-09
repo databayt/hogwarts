@@ -62,6 +62,29 @@ const MANIFEST = {
     "https://framerusercontent.com/assets/L62MixAFhJojtLTRD19wOsCnFg.woff2",
   "thmanyah-serif-text-900.woff2":
     "https://framerusercontent.com/assets/z8brS6Wjld2pvgVBkmzMQpyPO4.woff2",
+  // The 1.2 preview files, for the two clone rules that set "… 1.2" families
+  // (.trials-row-number, .modern-eyebrow). Hashes matched to the committed
+  // copies they replace, 2026-11-09.
+  "thmanyah-sans-1.2-300.woff2":
+    "https://framerusercontent.com/assets/2MgF2LENj0ar3gdEjyf3HoLd6iw.woff2",
+  "thmanyah-sans-1.2-400.woff2":
+    "https://framerusercontent.com/assets/Ej0k3h4Mi5O7TSo2w2JaDCPRgvo.woff2",
+  "thmanyah-sans-1.2-500.woff2":
+    "https://framerusercontent.com/assets/3XGelYpTgxSxBXN4Oieg9Dt3bc.woff2",
+  "thmanyah-sans-1.2-700.woff2":
+    "https://framerusercontent.com/assets/JUv6rms2ye2kYL3UI3O9YyExQcQ.woff2",
+  "thmanyah-serif-display-1.2-400.woff2":
+    "https://framerusercontent.com/assets/gUSrlMNsoOIspcnYhQl24uNZZo.woff2",
+  "thmanyah-serif-text-1.2-300.woff2":
+    "https://framerusercontent.com/assets/3oNNmhaqdwdOlTnrXg8UrU8.woff2",
+  "thmanyah-serif-text-1.2-400.woff2":
+    "https://framerusercontent.com/assets/pTIPpIhdyoUL1Tl7cDpv1Ze80uQ.woff2",
+  "thmanyah-serif-text-1.2-500.woff2":
+    "https://framerusercontent.com/assets/oVoRwZKk5rDtzCpYG0Ol1gigl5s.woff2",
+  "thmanyah-serif-text-1.2-700.woff2":
+    "https://framerusercontent.com/assets/kzVXDC4kJxZgS0rOVcbdPBBC5sw.woff2",
+  "thmanyah-serif-text-1.2-900.woff2":
+    "https://framerusercontent.com/assets/e1GJ2wtz2b2fMo8i7AbRPck4Qo.woff2",
 }
 
 async function main() {
