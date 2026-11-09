@@ -15,7 +15,7 @@ description: One price for every school — $6.40 (24 SAR) per student a year, a
 
 ## Why it pays
 
-One public price makes every quote fast and every deal comparable. A per-student price grows with the school: a small school pays little, and when a school grows, so do we.
+One public price makes every quote fast and every deal comparable. A per-student price grows with the school: a small school pays little, and when a school grows, so do we. The price is set against the full cost of the company, not only the servers: a price that covers hosting alone never pays the people who build it.
 
 ## The price
 
@@ -29,7 +29,33 @@ One public price makes every quote fast and every deal comparable. A per-student
 - No free plan, no bands, no setup fee.
 - Over 1,000 students: the same rate, with its own contract.
 
-No discounts protects the price for everyone. A discount given once becomes the price the next school asks for.
+No discounts protects the price for everyone. A discount given once becomes the price the next school asks for. If we ever run an offer, it is written as a share off the full price for a set time — "50% off the first year" — so the school always sees the real price. Sales and marketing propose offers to fit the market, and the CEO office approves them.
+
+## What it costs to run
+
+One platform serves every school, so it costs the same for one school or ten.
+
+| Item                        | Per month     |
+| --------------------------- | ------------- |
+| App hosting (Cloudflare)    | about $30     |
+| Database (Neon)             | about $21     |
+| Live classes (Hetzner)      | about $13     |
+| Storage and domain (AWS)    | about $2–5    |
+| **Total now**               | **about $65–70** |
+
+These are estimates from usage. The Cloudflare invoice on 24 November and Hetzner's in early December show the real amounts. Not counted here: the $100 a month Claude plan, which serves the whole company.
+
+## Break-even, in students
+
+Each paying student brings $0.53 a month ($6.40 ÷ 12). **Students needed = monthly cost ÷ $0.53.**
+
+| What is covered                         | Per month    | Paying students            |
+| --------------------------------------- | ------------ | -------------------------- |
+| The platform                            | about $70    | about 130 (2–3 schools Al-Ibda's size) |
+| The platform and Claude                 | about $170   | about 320                  |
+| The full cost, with the team paid       | about $2,700 | about 5,000                |
+
+The last row is the real target. It uses the team estimate of $2,500 a month from our pricing discussion on 4 October. Our first school, Al-Ibda, pays about $25.60 a month.
 
 ## How a school pays
 
@@ -46,15 +72,16 @@ No discounts protects the price for everyone. A discount given once becomes the 
 
 ## When this happens
 
-- **"It's too expensive"** → ask what they spend today, in money and in staff hours, on fees, attendance and the timetable. Then offer the free month to judge it. Never cut the price.
+- **"It's too expensive"** → ask what they spend today, in money and in staff hours, on fees, attendance and the timetable. Then offer the free month to judge it. Never cut the price on the call.
 - **"Can you give us a discount?"** → "Our price is the same for every school. The first month is free, so you can judge it first."
-- **The school has more than 1,000 students** → the same rate, its own contract. Send the deal to Abdout.
-- **A school outside Sudan asks** → quote 24 SAR per student a year, and send the deal to Abdout for how it pays.
+- **The school has more than 1,000 students** → the same rate, its own contract. Send the deal to the CEO office.
+- **A school outside Sudan asks** → quote 24 SAR per student a year, and send the deal to the CEO office for how it pays.
 
 ## What you do
 
-- **Mutaz, Ali, Moed:** quote only this price. Never promise a discount.
-- **Needs Abdout's yes:** any exception. He is the only one who can approve one.
+- **Mutaz, Ali, Moed:** quote only this price. Never promise a discount; propose an offer in the group instead.
+- **Needs the CEO office's yes:** any offer or exception.
+- **Abdout:** update the cost table each month from the invoices.
 
 Reviewed 9 November 2026.
 
@@ -62,4 +89,4 @@ Reviewed 9 November 2026.
 
 - [Contract](/docs/contract) — where the price and the payments are written.
 - [Sales](/docs/sales) — when and how to quote it.
-- [Monetize](/docs/monetize) — what the price adds up to, and break-even.
+- [Monetize](/docs/monetize) — the road from the first payment to break-even.
