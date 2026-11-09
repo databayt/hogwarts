@@ -490,6 +490,7 @@ room decides who hosts.
 | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Timetable cell (student · guardian · teacher) | a **Join** pill on today's online class inside its window; tapping the cell joins too       |
 | Timetable cell (admin)                        | **Observe** on a class that is live now                                                     |
+| Timetable **Today** list + Current/Next card  | Join through the same link, gated on the server window (2026-11-09 — was the device clock)  |
 | Dashboard **Today** rows (desktop)            | Join, and **Start** for the teacher, the moment the class is online                         |
 | Dashboard phone strip                         | the class on now, one tap                                                                   |
 | Dashboard banner                              | "**Maths** is live — join", pinned, flips at the bell without a reload                      |
@@ -511,6 +512,10 @@ slot's teacher or a confirmed substitute (host), other teachers and admins (co-h
 the section only where the school lets guardians watch. Staff and accountants join school-wide
 sessions only — and an external session's meeting URL is never handed to a reader who may see the
 session but not enter it.
+
+**Combined classes are not supported yet** (2026-11-09): when one teacher teaches several sections
+in the same period, each section gets its own room and the teacher can host only one — the other
+sections wait. Until it ships, give a combined class one section on the timetable.
 
 **Teaching mode** is its own section of the school configuration
 (`/school/configuration/teaching-mode`): _In person_ · _Live_ · _Both_, writing

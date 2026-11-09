@@ -4,6 +4,36 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Prod go-live — demo E2E + alabidae Online — 2026-11-09
+
+Deployed `main` (Worker `6696ac3d`, `f6609affa`) — the join link reached prod for the first time.
+
+**Demo E2E on prod** (period 3, الأول ثانوي - أ, session `cmw8dm8mv0hrx0901iie45jyh`; Playwright, fake
+camera/mic; every reader started on `/ar/timetable`): student757 at 360×774 saw the Join pill → pre-join
+card → «لم يبدأ المعلّم الحصة بعد» → auto-joined when teacher4 started from the Today list; parent1589
+(Riyadh clock) observed via the `/timetable/full` pill. Webhooks `room_started` / `participant_joined` ×3 /
+`track_published` ×2; End for everyone → `ended`; attendance by itself: 1 PRESENT VIRTUAL («left early»),
+14 ABSENT VIRTUAL. Console: 0 errors except 3 LiveKit DataChannel closures on the observer at room end.
+
+**Found + fixed (ea011d9b7):** the teacher/guardian Today list and Current/Next card decided Join from
+the device wall clock and linked straight to the room — a Qatar-clock teacher and a Riyadh-clock
+guardian saw NO Join during their class. Now server windows + the join link, like the grid. Also: a slot
+falls back only to unanchored section+subject rows (double periods); the grace after the bell says
+"over"; the join page names a slot with no teacher and a holiday.
+
+**alabidae Online** (restore branch `br-tiny-butterfly-add73z3q`, settings backup
+`.backup/alabidae-2026-11-09/`): teaching mode Live via the UI → `online/livekit`, recording off,
+attendance sync on; all 52 Monday slots got a room. Logins issued for the 5 teachers who teach with no
+account (فادية, اماني, الطيب, محمد نور, مناسك ابراهيم).
+
+**Open:**
+- **Combined classes** — one teacher, same period, several sections (alabidae: تحسين G12×2 18:00,
+  الطيب G12×2 18:55, فادية G7–9 19:00 daily). The materializer makes one room per section; the teacher
+  can host one, the others wait in rooms that never start. Needs a primary room + sibling access
+  (resolver, join-core, roster/attendance, reminders) — hogwarts#471.
+- **LiveKit free cap** (5,000 participant-min/month, all schools): alabidae fully online ≈ 13k/school
+  day — the cap is expected the first afternoon; then no school joins until the reset or self-hosting (#470).
+
 ## One-click join, production pass — 2026-11-08
 
 Prompted by hogwarts#469 («ما قادر ادخل الحصه», an alabidae student on `/timetable` at 360px). Prod

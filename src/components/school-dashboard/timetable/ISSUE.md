@@ -11,6 +11,15 @@ docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-10-04
 ---
 
+## 2026-11-09 — Today list joins on the server clock (ea011d9b7)
+
+- Teacher + guardian Today list and Current/Next card now gate Join on `joinWindows` (server instants)
+  and link through `/live/join/{slot}`; the device-clock check is only the no-window fallback. Found by
+  the prod E2E: Qatar/Riyadh clocks showed no Join during the class.
+- `attachLiveClasses`: a slot entry falls back only to unanchored rows (double periods).
+- Still open: the student view's day column uses `new Date().getDay()`; RTL day order may reverse twice
+  in week mode (verify visually); the teacher `/full` grid merges same-time rows across grade bells.
+
 ## 2026-11-08 — Join from the timetable (hogwarts#469)
 
 - Every Join goes through the slot's join link (`live/actions/join-slot.ts`); a cell tap and a visible **Join** pill (student, guardian, teacher) open it, admin gets **Observe** on live cells.
