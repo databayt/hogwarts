@@ -17,6 +17,10 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }))
+const closeRoom = vi.fn(async () => undefined)
+vi.mock("@/components/school-dashboard/live/livekit/close-room", () => ({
+  closeRoom: (...a: unknown[]) => closeRoom(...a),
+}))
 vi.mock("@/components/school-dashboard/live/actions/attendance-sync", () => ({
   syncLiveAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
 }))
@@ -59,9 +63,13 @@ describe("end-stale-live-classes cron — detection", () => {
     }
     expect(call.where.status).toBe("live")
     expect(call.where.deletedAt).toBeNull()
-    expect(call.where.OR[0].scheduledEnd.lt.getTime()).toBe(NOW - 30 * 60 * 1000)
+    expect(call.where.OR[0].scheduledEnd.lt.getTime()).toBe(
+      NOW - 30 * 60 * 1000
+    )
     expect(call.where.OR[1].timetableId).toEqual({ not: null })
-    expect(call.where.OR[1].scheduledEnd.lt.getTime()).toBe(NOW - 10 * 60 * 1000)
+    expect(call.where.OR[1].scheduledEnd.lt.getTime()).toBe(
+      NOW - 10 * 60 * 1000
+    )
   })
 })
 
@@ -90,6 +98,42 @@ describe("end-stale-live-classes cron — close + sync", () => {
     expect(syncLiveAttendance).toHaveBeenCalledTimes(2)
     expect(syncLiveAttendance).toHaveBeenCalledWith("school-1", "lcs-1")
     expect(syncLiveAttendance).toHaveBeenCalledWith("school-2", "lcs-2")
+  })
+
+  // The clock ended the class in the database only: the room (and its
+  // recording) ran on while one tab stayed open, and the people in it read
+  // "token expired" instead of "the class has ended".
+  it("closes the SFU room of each class it ends, stopping a recording still running", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "lcs-1",
+        schoolId: "school-1",
+        roomName: "sch-school-1-lc-lcs-1",
+        recordings: [{ egressId: "egr-1" }],
+      },
+      {
+        id: "lcs-2",
+        schoolId: "school-2",
+        roomName: "sch-school-2-lc-lcs-2",
+        recordings: [],
+      },
+    ] as never)
+
+    await GET(req())
+
+    expect(closeRoom).toHaveBeenCalledWith("sch-school-1-lc-lcs-1", ["egr-1"])
+    expect(closeRoom).toHaveBeenCalledWith("sch-school-2-lc-lcs-2", [])
+  })
+
+  it("leaves the room alone when another writer already ended the class", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      { id: "lcs-1", schoolId: "school-1", roomName: "r", recordings: [] },
+    ] as never)
+    vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 0 } as never)
+
+    await GET(req())
+
+    expect(closeRoom).not.toHaveBeenCalled()
   })
 
   it("does not sync a session another worker already closed (count 0)", async () => {

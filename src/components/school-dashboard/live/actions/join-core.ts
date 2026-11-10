@@ -31,7 +31,12 @@ import {
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
-import { hostMayStart, joinPhase, joinWindow } from "../join-window"
+import {
+  hostMayStart,
+  JOIN_GRACE_AFTER_END_MIN,
+  joinPhase,
+  joinWindow,
+} from "../join-window"
 import { ROOM_NAME_USER_SELECT, roomDisplayName } from "../room-name"
 import { concurrentCapError } from "./helpers"
 import { transitionToLive } from "./went-live"
@@ -440,6 +445,18 @@ export async function performLiveClassJoin(
         recording: liveClass.recordingEnabled && isRecordingConfigured(),
       },
       expiresAt,
+      // The clock that closes a timetable class, as durations from NOW (the
+      // refresh route re-sends it every few minutes, so it stays true).
+      clock:
+        slotClass && liveClass.scheduledEnd
+          ? {
+              endsInMs: liveClass.scheduledEnd.getTime() - Date.now(),
+              closesInMs:
+                liveClass.scheduledEnd.getTime() +
+                JOIN_GRACE_AFTER_END_MIN * 60_000 -
+                Date.now(),
+            }
+          : null,
     },
   }
 }

@@ -33,6 +33,7 @@ import {
   muteParticipant,
 } from "@/components/school-dashboard/live/actions/moderation"
 import { recordClassEvent } from "@/components/school-dashboard/live/actions/room-events"
+import { JOIN_GRACE_AFTER_END_MIN } from "@/components/school-dashboard/live/join-window"
 import {
   ParticipantsPanel,
   type ParticipantsPanelLabels,
@@ -82,6 +83,8 @@ interface RoomShellProps {
   clock: { startsAtMs: number | null; endsAtMs: number | null }
   /** The viewer's email for the watermark's visible mark. */
   viewerEmail?: string | null
+  /** The bell has rung on a timetable class: the room closes after the grace. */
+  closing?: boolean
   /** Day pills and dates in the chat. */
   locale?: string
 }
@@ -124,6 +127,7 @@ export function RoomShell({
   config,
   clock,
   viewerEmail,
+  closing = false,
   locale = "en",
 }: RoomShellProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
@@ -254,6 +258,19 @@ export function RoomShell({
     channel,
     enabled: isHost && config.tools.whiteboard,
   })
+  // At the bell: say the room is closing, once, and long enough to be read.
+  useEffect(() => {
+    if (!closing) return
+    pushToast({
+      id: "class-time-over",
+      text: labels.classTimeOver.replace(
+        "{n}",
+        String(JOIN_GRACE_AFTER_END_MIN)
+      ),
+      ttl: 20_000,
+    })
+  }, [closing, pushToast, labels.classTimeOver])
+
   const onTimerDone = useCallback(() => {
     if (!audioMuted) chime("done")
     pushToast({ id: "timer-done", text: `⏰ ${labels.timerDone}`, ttl: 5000 })

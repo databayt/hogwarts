@@ -20,6 +20,7 @@ import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import { JOIN_GRACE_AFTER_END_MIN } from "@/components/school-dashboard/live/join-window"
+import { closeRoom } from "@/components/school-dashboard/live/livekit/close-room"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -54,7 +55,15 @@ export async function GET(req: Request) {
         { timetableId: { not: null }, scheduledEnd: { lt: slotCutoff } },
       ],
     },
-    select: { id: true, schoolId: true },
+    select: {
+      id: true,
+      schoolId: true,
+      roomName: true,
+      recordings: {
+        where: { status: { in: ["pending", "processing"] } },
+        select: { egressId: true },
+      },
+    },
     take: 1000,
   })
 
@@ -67,6 +76,14 @@ export async function GET(req: Request) {
     })
     if (count > 0) {
       ended++
+      // The clock closes the ROOM too, not only the row. It used to run on —
+      // recording included — for as long as one tab stayed open, and whoever
+      // was in it was told "token expired" at their next heartbeat. Ending it
+      // gives every client the class-has-ended screen at once.
+      await closeRoom(
+        s.roomName,
+        (s.recordings ?? []).map((r) => r.egressId)
+      )
       after(() => syncLiveAttendance(s.schoolId, s.id))
     }
   }

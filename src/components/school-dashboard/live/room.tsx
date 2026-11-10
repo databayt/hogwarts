@@ -261,6 +261,30 @@ export function RoomClient({
     }
   }, [ticket?.expiresAt, sessionId, labels.error, error])
 
+  // The clock closes a timetable class (`RoomJoinTicket.clock`). The ticket
+  // carries DURATIONS, armed here against this device's own clock at receipt —
+  // so a phone whose wall clock is wrong still closes on time — and every
+  // heartbeat brings a fresh pair, which keeps a long class true. At the bell
+  // the room says it is closing; at the close everyone gets the ended screen
+  // together, instead of "token expired" at whatever heartbeat came next.
+  const [closing, setClosing] = useState(false)
+  const clock = ticket?.clock
+  useEffect(() => {
+    if (!clock) return
+    const atBell = setTimeout(
+      () => setClosing(true),
+      Math.max(0, clock.endsInMs)
+    )
+    const atClose = setTimeout(
+      () => setEnded({ kind: "ended" }),
+      Math.max(0, clock.closesInMs)
+    )
+    return () => {
+      clearTimeout(atBell)
+      clearTimeout(atClose)
+    }
+  }, [clock])
+
   // While held on the card, ask again on a timer. A fresh wait starts the
   // backoff over; any other answer (a ticket, a real refusal) stops it.
   useEffect(() => {
@@ -461,6 +485,7 @@ export function RoomClient({
             slides={slides}
             config={ticket.roomConfig}
             clock={{ startsAtMs: card.startsAtMs, endsAtMs: card.endsAtMs }}
+            closing={closing}
             viewerEmail={viewerEmail}
             locale={locale}
           />

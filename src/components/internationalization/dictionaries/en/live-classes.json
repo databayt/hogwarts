@@ -89,6 +89,7 @@
     "connection": "Connection",
     "reconnecting": "Reconnecting…",
     "connecting": "Connecting…",
+    "classTimeOver": "Class time is over. The room closes in {n} minutes.",
     "watchOnly": "You are watching this class. Chat is read-only.",
     "moderation": {
       "remove": "Remove",

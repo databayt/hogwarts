@@ -60,6 +60,15 @@ export type RoomJoinTicket = {
   /** School + session configuration the room UI honours. */
   roomConfig: RoomConfig
   expiresAt: string // ISO
+  /**
+   * A timetable class closes by the clock. Milliseconds from the moment this
+   * ticket was issued until the bell (`endsInMs`) and until the room closes
+   * (`closesInMs`: the bell plus the join grace). DURATIONS, not instants —
+   * the client adds them to its own clock on receipt, so a phone whose wall
+   * clock is wrong cannot cut a class short or keep it open. Null for a class
+   * with no slot, which has no clock to close by.
+   */
+  clock?: { endsInMs: number; closesInMs: number } | null
 }
 
 /**

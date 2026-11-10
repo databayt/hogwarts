@@ -435,7 +435,9 @@ describe("joinLiveClass eligibility", () => {
     }
     function asStudent() {
       mockUser(STUDENT_USER_ID, "STUDENT")
-      vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "stu-1",
+      } as never)
     }
 
     it("a student who arrives before the teacher walks straight in and opens the room", async () => {
@@ -452,6 +454,33 @@ describe("joinLiveClass eligibility", () => {
           data: expect.objectContaining({ status: "live" }),
         })
       )
+    })
+
+    // The clock closes a timetable class. The ticket says how long is left
+    // as DURATIONS, so the room can close itself on time on a phone whose
+    // wall clock is wrong.
+    it("the ticket carries how long until the bell and until the room closes", async () => {
+      asStudent()
+      // Started 5 minutes ago, 45 minutes long: 40 to the bell, 50 to the close.
+      vi.mocked(db.conference.findFirst).mockResolvedValue(
+        slotSession("live", -5) as never
+      )
+      const result = await joinLiveClass(SESSION_ID)
+      expect("success" in result && result.success).toBe(true)
+      if (!("success" in result) || !result.success) return
+      const clock = result.data.clock
+      expect(clock).toBeTruthy()
+      expect(Math.round(clock!.endsInMs / MIN)).toBe(40)
+      expect(Math.round(clock!.closesInMs / MIN)).toBe(50)
+    })
+
+    it("a class with no slot has no clock to close by", async () => {
+      mockUser(TEACHER_USER_ID, "TEACHER")
+      // The default session of this file: ad hoc, no timetableId.
+      const result = await joinLiveClass(SESSION_ID)
+      expect("success" in result && result.success).toBe(true)
+      if (!("success" in result) || !result.success) return
+      expect(result.data.clock).toBeNull()
     })
 
     it("opens at the school's lead (10 min) for students, not before", async () => {

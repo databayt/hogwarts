@@ -12,6 +12,8 @@ export const DEFAULT_ROOM_LABELS = {
   connection: "Connection",
   reconnecting: "Reconnecting…",
   connecting: "Connecting…",
+  /** At the bell of a timetable class. Carries `{n}`, the grace in minutes. */
+  classTimeOver: "Class time is over. The room closes in {n} minutes.",
   /** The chat tab of someone who watches without a seat (a parent). */
   watchOnly: "You are watching this class. Chat is read-only.",
   micMuted: "Microphone muted",
