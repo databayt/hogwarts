@@ -162,6 +162,22 @@ describe("live-class-reminders cron — detection window", () => {
     expect(notifyClassStartingSoon).toHaveBeenCalledWith("s", "edge-0", 1)
   })
 
+  it("overnight, when the Worker ticks hourly, the window is an hour wide", async () => {
+    // 20:00 UTC: the quiet hours' first tick; the next run is 21:00.
+    vi.setSystemTime(new Date("2026-06-01T20:00:00Z"))
+    const at = Date.now()
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "evening",
+        schoolId: "s",
+        scheduledStart: new Date(at + 45 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 10 },
+      },
+    ] as never)
+    await GET(req())
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith("s", "evening", 45)
+  })
+
   it("sends the reminders' pushes in the same run, and only when something was due", async () => {
     await GET(req())
     expect(processPendingWebPushes).not.toHaveBeenCalled()

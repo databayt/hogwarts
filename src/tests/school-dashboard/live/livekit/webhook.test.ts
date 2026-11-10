@@ -35,6 +35,7 @@ vi.mock("@/lib/db", () => ({
     conferenceEvent: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }))
@@ -61,6 +62,11 @@ vi.mock("@/components/school-dashboard/live/actions/publish-recording", () => ({
     reason: "no_lesson",
   })),
 }))
+const removeParticipant = vi.fn(async () => undefined)
+vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
+  removeParticipant: (...a: unknown[]) => removeParticipant(...a),
+}))
+
 vi.mock("@/components/school-dashboard/live/livekit/egress", () => ({
   startCompositeEgress: (...a: unknown[]) => startCompositeEgress(...a),
 }))
@@ -95,7 +101,10 @@ beforeEach(() => {
     school: { conferenceRetentionDays: 90 },
   } as never)
   vi.mocked(db.conferenceEvent.findUnique).mockResolvedValue(null as never)
-  vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceEvent.create).mockResolvedValue({
+    id: "claim-1",
+  } as never)
+  vi.mocked(db.conferenceEvent.delete).mockResolvedValue({} as never)
   vi.mocked(db.conference.update).mockResolvedValue({} as never)
   vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 } as never)
   vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue(null as never)
@@ -117,7 +126,8 @@ function evt(over: Record<string, unknown>): never {
   return {
     id: `evt-${Math.random().toString(36).slice(2)}`,
     room: { name: ROOM_NAME, sid: "sid-1" },
-    createdAt: BigInt(Date.now() * 1_000_000),
+    // Epoch SECONDS, per @livekit/protocol (`int64 created_at = 7`).
+    createdAt: BigInt(Math.floor(Date.now() / 1000)),
     ...over,
   } as never
 }
@@ -163,7 +173,9 @@ describe("handleWebhookEvent — room lifecycle", () => {
     } as never)
     await handleWebhookEvent(evt({ event: "room_finished" }))
     expect(db.conference.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: "ended" }) })
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "ended" }),
+      })
     )
   })
 
@@ -261,6 +273,72 @@ describe("handleWebhookEvent — room lifecycle", () => {
     expect((call?.data as { durationSeconds?: number }).durationSeconds).toBe(
       300
     )
+  })
+
+  // Being removed is itself followed by `participant_left`. That event wrote
+  // `left` over `removed`, and join-core — which refuses a `removed` row — let
+  // the kicked student straight back in.
+  it("participant_left for a REMOVED participant closes the span and keeps them removed", async () => {
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(Date.now() - 5 * 60_000),
+      activeSince: new Date(Date.now() - 60_000),
+      durationSeconds: 0,
+      status: "removed",
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_left", participant: { identity: "u-stu-1" } })
+    )
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    const data = call?.data as Record<string, unknown>
+    expect("status" in data).toBe(false)
+    expect(data.activeSince).toBeNull()
+    expect(data.leftAt).toBeInstanceOf(Date)
+  })
+
+  it("a late participant_joined never flips a REMOVED participant back to joined", async () => {
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(Date.now() - 5 * 60_000),
+      activeSince: null,
+      status: "removed",
+    } as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_joined", participant: { identity: "u-stu-1" } })
+    )
+    expect(db.conferenceParticipant.update).not.toHaveBeenCalled()
+    // A token issued before the removal is good for five minutes: if they are
+    // really back in the room, they are put out again.
+    expect(removeParticipant).toHaveBeenCalledWith(
+      expect.stringContaining(SESSION_ID),
+      "u-stu-1"
+    )
+  })
+
+  // Retries are processed now; stamping "now" on a redelivered leave would
+  // lengthen the student's time in the room by however late the retry came.
+  it("a leave is stamped with the time the SFU says it happened", async () => {
+    const happened = Math.floor(Date.now() / 1000) - 180 // three minutes ago
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date((happened - 600) * 1000),
+      activeSince: new Date((happened - 600) * 1000),
+      durationSeconds: 0,
+      status: "joined",
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({
+        event: "participant_left",
+        participant: { identity: "u-stu-1" },
+        createdAt: BigInt(happened),
+      })
+    )
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    const data = call?.data as { leftAt: Date; durationSeconds: number }
+    expect(data.leftAt.getTime()).toBe(happened * 1000)
+    expect(data.durationSeconds).toBe(600)
   })
 
   it("participant_connection_aborted is treated as a leave", async () => {
@@ -494,6 +572,34 @@ describe("handleWebhookEvent — idempotency + safety", () => {
     expect(notifyClassStarted).not.toHaveBeenCalled()
   })
 
+  // The claim row was written before the work and never given back, so
+  // LiveKit's retry of a failed event was dropped as a duplicate: one database
+  // blip on `room_finished` and the class never closed, its register never
+  // written.
+  it("a handler failure gives the claim back, so the retry is processed", async () => {
+    vi.mocked(db.conference.updateMany).mockRejectedValueOnce(
+      new Error("db blip")
+    )
+    await expect(
+      handleWebhookEvent(evt({ event: "room_finished", id: "evt-retry" }))
+    ).rejects.toThrow("db blip")
+    expect(db.conferenceEvent.delete).toHaveBeenCalledWith({
+      where: { id: "claim-1" },
+    })
+
+    // The redelivery: no claim left behind, so it runs to the end.
+    const ok = await handleWebhookEvent(
+      evt({ event: "room_finished", id: "evt-retry" })
+    )
+    expect(ok).toBe(true)
+    expect(db.conference.updateMany).toHaveBeenCalledTimes(2)
+  })
+
+  it("a handled event keeps its claim", async () => {
+    await handleWebhookEvent(evt({ event: "room_started", id: "evt-ok" }))
+    expect(db.conferenceEvent.delete).not.toHaveBeenCalled()
+  })
+
   it("unknown room name → drops (no DB update)", async () => {
     const ok = await handleWebhookEvent(
       evt({
@@ -529,9 +635,9 @@ describe("handleWebhookEvent — idempotency + safety", () => {
 
 describe("egressObjectKey", () => {
   it("keeps a full storage path as the key", () => {
-    expect(
-      egressObjectKey({ filename: "schools/s/live-class/l/1.mp4" })
-    ).toBe("schools/s/live-class/l/1.mp4")
+    expect(egressObjectKey({ filename: "schools/s/live-class/l/1.mp4" })).toBe(
+      "schools/s/live-class/l/1.mp4"
+    )
   })
 
   it("falls back to the key inside location when filename is a basename", () => {

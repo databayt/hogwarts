@@ -16,6 +16,7 @@ import { transitionToLive } from "../actions/went-live"
 import { JOIN_GRACE_AFTER_END_MIN } from "../join-window"
 import { getLiveKitConfig, getLiveKitRecordingConfig } from "./client"
 import { parseRoomName } from "./room-naming"
+import { removeParticipant } from "./rooms"
 
 let receiver: WebhookReceiver | null = null
 
@@ -126,7 +127,9 @@ export async function handleWebhookEvent(
   })
   if (existing) return false
 
-  await db.conferenceEvent.create({
+  // This row is both the audit trail and the CLAIM on the event: a second
+  // delivery finds it above and is dropped.
+  const claim = await db.conferenceEvent.create({
     data: {
       schoolId,
       sessionId,
@@ -135,8 +138,55 @@ export async function handleWebhookEvent(
       payload: truncatePayload(event) as unknown as Prisma.InputJsonValue,
       eventId: event.id,
     },
+    select: { id: true },
   })
 
+  try {
+    await applyEvent(event, { schoolId, sessionId, roomName, session })
+  } catch (err) {
+    // Give the claim back. The route answers 500 and LiveKit redelivers; with
+    // the claim left in place that retry was dropped as a duplicate, so one
+    // database blip during `room_finished` meant the class never closed and
+    // its register was never written.
+    await db.conferenceEvent.delete({ where: { id: claim.id } }).catch(() => {})
+    throw err
+  }
+
+  return true
+}
+
+/**
+ * When the SFU says the event HAPPENED, not when we processed it. A retried
+ * delivery — retries are processed now — would otherwise stamp a leave minutes
+ * late and lengthen the student's time in the room. `createdAt` is epoch
+ * seconds; absent on a non-spec event, hence the fallback.
+ */
+function eventTime(event: WebhookEvent): Date {
+  const at = Number(event.createdAt ?? 0) * 1000
+  // Only a plausible moment is trusted: the SFU retries for minutes, never
+  // days, and a wrong unit or a zero must not write a date into presence.
+  return Math.abs(at - Date.now()) < 24 * 60 * 60 * 1000
+    ? new Date(at)
+    : new Date()
+}
+
+type EventContext = {
+  schoolId: string
+  sessionId: string
+  roomName: string
+  session: {
+    recordingEnabled: boolean
+    timetableId: string | null
+    scheduledEnd: Date | null
+    school: { conferenceRetentionDays: number }
+  }
+}
+
+/** The work one event asks for. Throws on failure — the caller un-claims. */
+async function applyEvent(
+  event: WebhookEvent,
+  { schoolId, sessionId, roomName, session }: EventContext
+): Promise<void> {
   switch (event.event) {
     case "room_started": {
       // Whoever wins the guarded `scheduled → live` write notifies the roster
@@ -197,12 +247,20 @@ export async function handleWebhookEvent(
     case "participant_joined": {
       const identity = event.participant?.identity
       if (identity) {
-        const now = new Date()
+        const now = eventTime(event)
         const existing = await db.conferenceParticipant.findFirst({
           where: { sessionId, userId: identity, schoolId },
-          select: { id: true, joinedAt: true, activeSince: true },
+          select: { id: true, joinedAt: true, activeSince: true, status: true },
         })
-        if (existing) {
+        // A participant the host REMOVED stays removed: a join must not flip
+        // the row back to `joined` — `removed` is what refuses their next
+        // attempt. And if they are really back in the room (a token issued
+        // before the removal is good for up to five minutes), put them out
+        // again. Best-effort: a late event for someone already gone is a no-op.
+        if (existing?.status === "removed") {
+          await removeParticipant(roomName, identity).catch(() => {})
+        }
+        if (existing && existing.status !== "removed") {
           // Presence accumulates across reconnects. `joinedAt` is the FIRST
           // join and is never overwritten; `activeSince` marks the span that is
           // open right now. A join while a span is already open (a duplicate or
@@ -237,10 +295,11 @@ export async function handleWebhookEvent(
             joinedAt: true,
             activeSince: true,
             durationSeconds: true,
+            status: true,
           },
         })
         if (existing) {
-          const leftAt = new Date()
+          const leftAt = eventTime(event)
           // Close the open span and ADD it to the running total. With no open
           // span (a duplicate leave) nothing is added — the total never double
           // counts.
@@ -257,7 +316,10 @@ export async function handleWebhookEvent(
               leftAt,
               activeSince: null,
               durationSeconds: (existing.durationSeconds ?? 0) + spanSeconds,
-              status: "left",
+              // Being removed is itself followed by this event. Writing
+              // `left` over `removed` here is what let a kicked student walk
+              // straight back in.
+              ...(existing.status === "removed" ? {} : { status: "left" }),
             },
             select: { id: true },
           })
@@ -276,7 +338,7 @@ export async function handleWebhookEvent(
           where: { egressId, NOT: { schoolId } },
           select: { id: true },
         })
-        if (conflict) return true
+        if (conflict) return
         // Populate s3Bucket + s3Region from config so playback can sign
         // URLs immediately on egress_ended without a separate update.
         // s3Key stays blank until egress_ended carries the final filename.
@@ -412,6 +474,4 @@ export async function handleWebhookEvent(
       break
     }
   }
-
-  return true
 }

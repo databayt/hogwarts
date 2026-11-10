@@ -19,11 +19,19 @@ import {
 import { requireContext } from "./helpers"
 
 /**
- * Remove (kick) a participant from a live conference. HOST roles only
- * (DEVELOPER/ADMIN/TEACHER via `end_live_class`). The session is resolved
+ * Remove (kick) a participant from a live conference. The session is resolved
  * scoped by `schoolId` so a host can never kick from another tenant's room.
  * Marks the participant row `removed`. No-op providers (external links) have
  * no SFU room → returns NOT_IMPLEMENTED.
+ *
+ * Who may remove: an ADMIN or DEVELOPER, or anyone holding a HOST / CO_HOST
+ * seat in THIS session — the rule mute already uses. It used to be "the
+ * session's own teacher" for a TEACHER, so a co-teacher (and a substitute
+ * hosting the class) was shown Remove and then refused.
+ *
+ * Who may be removed: students and observers. A host or co-host seat can only
+ * be removed by an ADMIN / DEVELOPER — a co-teacher must not be able to put
+ * the class's teacher out of their own room.
  */
 export async function kickParticipant(sessionId: string, userId: string) {
   const ctx = await requireContext("end_live_class")
@@ -32,28 +40,37 @@ export async function kickParticipant(sessionId: string, userId: string) {
 
   const session = await db.conference.findFirst({
     where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
-    select: { roomName: true, teacherId: true },
+    select: { roomName: true },
   })
   if (!session) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  // A TEACHER may only moderate their own session; ADMIN/DEVELOPER any.
-  if (ctx.role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { schoolId: ctx.schoolId, userId: ctx.userId },
+  const isAdmin = ctx.role === "ADMIN" || ctx.role === "DEVELOPER"
+  if (!isAdmin) {
+    const seat = await db.conferenceParticipant.findFirst({
+      where: {
+        sessionId,
+        schoolId: ctx.schoolId,
+        userId: ctx.userId,
+        role: { in: ["HOST", "CO_HOST"] },
+      },
       select: { id: true },
     })
-    if (!teacher || teacher.id !== session.teacherId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    if (!seat) return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   // Only kick an actual enrolled participant of THIS session/school — never
   // forward an arbitrary identity string straight to the SFU eviction call.
   const participant = await db.conferenceParticipant.findFirst({
     where: { sessionId, userId, schoolId: ctx.schoolId },
-    select: { id: true },
+    select: { id: true, role: true },
   })
   if (!participant) return actionError(ACTION_ERRORS.NOT_FOUND)
+  if (
+    !isAdmin &&
+    (participant.role === "HOST" || participant.role === "CO_HOST")
+  ) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
 
   // DB first, SFU second. The `removed` row is what blocks a rejoin (join +
   // token refresh both check it), so if the pair can only half-complete the

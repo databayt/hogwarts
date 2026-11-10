@@ -190,6 +190,17 @@ export async function processPendingWebPushes(
   let pruned = 0
 
   async function sendOne(row: PendingRow) {
+    // Claim the row before sending. This drain no longer runs from the cron
+    // alone: the reminders route and the scheduled-to-live writer call it
+    // right after they write a notice, in the same tick as the cron's own
+    // run. Whoever flips `pushSent` first owns the send; the other skips it,
+    // so a phone never buzzes twice for one notice.
+    const claim = await db.notification.updateMany({
+      where: { id: row.id, pushSent: false },
+      data: { pushSent: true, pushSentAt: new Date() },
+    })
+    if (claim.count === 0) return
+
     const subs = await db.pushSubscription.findMany({
       where: { userId: row.userId },
       select: { id: true, endpoint: true, p256dh: true, auth: true },
@@ -274,11 +285,15 @@ export async function processPendingWebPushes(
       })
       succeeded++
     } else {
-      // Every subscription failed for a transient reason: leave the row for
-      // the next tick, but record why so it is visible.
+      // Every subscription failed for a transient reason: give the claim
+      // back so the next tick retries, and record why so it is visible.
       await db.notification.update({
         where: { id: row.id },
-        data: { pushError: lastError.slice(0, 1000) },
+        data: {
+          pushSent: false,
+          pushSentAt: null,
+          pushError: lastError.slice(0, 1000),
+        },
       })
       failed++
       console.error("[push-web] send failed", {

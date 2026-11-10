@@ -13,9 +13,9 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { processPendingWebPushes } from "@/lib/notifications/push-web"
 import { runLiveDailyDigest } from "@/components/school-dashboard/live/actions/daily-digest"
 import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
-import { processPendingWebPushes } from "@/lib/notifications/push-web"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 import {
   runLiveMinutesGuard,
@@ -34,6 +34,18 @@ const MAX_REMINDER_LEAD_MINUTES = 60
  * lead instead; the notice prints the real minutes.
  */
 const CRON_CADENCE_MINUTES = 15
+
+/**
+ * Overnight the Worker runs this group on the hour only (`cf/worker.js`
+ * `isQuietTick`: 20:00–02:00 UTC), so the gap between two runs is an hour
+ * there, and an evening class in a school east of Khartoum needs the wider
+ * window or it meets the same bug.
+ */
+const QUIET_CADENCE_MINUTES = 60
+function cadenceMinutes(nowMs: number): number {
+  const hour = new Date(nowMs).getUTCHours()
+  return hour >= 20 || hour < 2 ? QUIET_CADENCE_MINUTES : CRON_CADENCE_MINUTES
+}
 
 /** A tick runs the materialization sweep first, so "now" drifts by seconds to
  *  a minute or two between runs; the window overlaps by this much. */
@@ -109,7 +121,7 @@ export async function GET(req: Request) {
   })
   const sessions = candidates.filter((s) => {
     const lead = s.school?.conferenceReminderLeadMinutes ?? 10
-    const reach = Math.max(lead, CRON_CADENCE_MINUTES) + TICK_SLACK_MINUTES
+    const reach = Math.max(lead, cadenceMinutes(now)) + TICK_SLACK_MINUTES
     return s.scheduledStart.getTime() - now <= reach * 60 * 1000
   })
 

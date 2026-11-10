@@ -144,6 +144,7 @@ describe("kickParticipant", () => {
     } as never)
     vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
       id: "p1",
+      role: "PARTICIPANT",
     } as never)
     vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue(
       {} as never
@@ -166,18 +167,68 @@ describe("kickParticipant", () => {
     expect(removeParticipant).not.toHaveBeenCalled()
   })
 
-  it("TEACHER kicking another teacher's session → UNAUTHORIZED", async () => {
+  it("a TEACHER with no host seat in this class → UNAUTHORIZED", async () => {
     asRole("TEACHER", "u-teacher")
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       roomName: "sch-sch1-lc-s1",
-      teacherId: "t-owner",
     } as never)
-    vi.mocked(db.teacher.findFirst).mockResolvedValue({
-      id: "t-other",
-    } as never)
+    // The seat lookup finds nothing: this teacher neither hosts nor co-hosts.
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValueOnce(
+      null as never
+    )
     const res = await kickParticipant("s1", "victim")
     expect("success" in res && res.success).toBe(false)
     expect(removeParticipant).not.toHaveBeenCalled()
+    expect(db.conferenceParticipant.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: "u-teacher",
+          role: { in: ["HOST", "CO_HOST"] },
+        }),
+      })
+    )
+  })
+
+  // A co-teacher was shown Remove and refused: the gate was "this session's
+  // own teacher", while mute already accepted any host seat.
+  it("a co-teacher (CO_HOST seat) removes a student", async () => {
+    asRole("TEACHER", "u-coteacher")
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      roomName: "sch-sch1-lc-s1",
+    } as never)
+    vi.mocked(db.conferenceParticipant.findFirst)
+      .mockResolvedValueOnce({ id: "seat" } as never) // the caller's seat
+      .mockResolvedValueOnce({ id: "p1", role: "PARTICIPANT" } as never)
+    vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue(
+      {} as never
+    )
+    const res = await kickParticipant("s1", "victim")
+    expect("success" in res && res.success).toBe(true)
+    expect(removeParticipant).toHaveBeenCalledWith("sch-sch1-lc-s1", "victim")
+  })
+
+  it("a co-teacher cannot remove the class's teacher; an ADMIN can", async () => {
+    asRole("TEACHER", "u-coteacher")
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      roomName: "sch-sch1-lc-s1",
+    } as never)
+    vi.mocked(db.conferenceParticipant.findFirst)
+      .mockResolvedValueOnce({ id: "seat" } as never)
+      .mockResolvedValueOnce({ id: "p-host", role: "HOST" } as never)
+    const refused = await kickParticipant("s1", "the-teacher")
+    expect("success" in refused && refused.success).toBe(false)
+    expect(removeParticipant).not.toHaveBeenCalled()
+
+    asRole("ADMIN")
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValueOnce({
+      id: "p-host",
+      role: "HOST",
+    } as never)
+    vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue(
+      {} as never
+    )
+    const ok = await kickParticipant("s1", "the-teacher")
+    expect("success" in ok && ok.success).toBe(true)
   })
 })
 
