@@ -22,6 +22,7 @@ import {
   type ClassMessage,
 } from "@/components/school-dashboard/live/room/class-channel"
 import {
+  HAND_AT_ATTRIBUTE,
   HAND_ATTRIBUTE,
   useClassChannel,
 } from "@/components/school-dashboard/live/room/use-class-channel"
@@ -189,6 +190,7 @@ describe("useClassChannel — host trust", () => {
     deliver({ t: "hand.clear" }, { identity: HOST_ID })
     expect(localParticipant.setAttributes).toHaveBeenCalledWith({
       [HAND_ATTRIBUTE]: "",
+      [HAND_AT_ATTRIBUTE]: "",
     })
   })
 })

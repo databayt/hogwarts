@@ -20,6 +20,7 @@ import {
   decodeMessage,
   encodeMessage,
   fitStroke,
+  handQueue,
   initialClassState,
   snapshotOf,
   type BoardGrant,
@@ -37,6 +38,9 @@ export type EphemeralEvent =
   | { kind: "muted" }
 
 export const HAND_ATTRIBUTE = "hand"
+/** When the hand went up, epoch ms on the raiser's clock — what the queue is
+ *  ordered by on every client (`handQueue`). */
+export const HAND_AT_ATTRIBUTE = "handAt"
 
 export interface ClassChannel {
   state: ClassState
@@ -151,7 +155,9 @@ export function useClassChannel(opts: {
     if (msg.t === "hand.clear" || msg.t === "hand.clearAll") {
       if (fromIsHost) {
         const wasUp = localParticipant.attributes?.[HAND_ATTRIBUTE] === "1"
-        void localParticipant.setAttributes({ [HAND_ATTRIBUTE]: "" })
+        void localParticipant
+          .setAttributes({ [HAND_ATTRIBUTE]: "", [HAND_AT_ATTRIBUTE]: "" })
+          .catch(() => {})
         if (wasUp) emit({ kind: "handLowered" })
       }
       return
@@ -292,6 +298,8 @@ export function useClassChannel(opts: {
         ...room.remoteParticipants.values(),
       ]
       const up = all.filter((p) => p.attributes?.[HAND_ATTRIBUTE] === "1")
+      // First-seen is only the fallback now, for a hand that carries no time
+      // of its own; the queue itself is ordered by the time on the hand.
       for (const p of up) {
         if (!orderRef.current.has(p.identity))
           orderRef.current.set(p.identity, Date.now())
@@ -299,15 +307,17 @@ export function useClassChannel(opts: {
       for (const id of [...orderRef.current.keys()]) {
         if (!up.some((p) => p.identity === id)) orderRef.current.delete(id)
       }
-      setHandsSince(new Map(orderRef.current))
-      setHands(
-        up
-          .map((p) => p.identity)
-          .sort(
-            (a, b) =>
-              (orderRef.current.get(a) ?? 0) - (orderRef.current.get(b) ?? 0)
-          )
+      const queue = handQueue(
+        up.map((p) => ({
+          identity: p.identity,
+          hand: p.attributes?.[HAND_ATTRIBUTE],
+          handAt: p.attributes?.[HAND_AT_ATTRIBUTE],
+          joinedAtMs: p.joinedAt?.getTime(),
+        })),
+        orderRef.current
       )
+      setHandsSince(new Map(queue.map((h) => [h.identity, h.since])))
+      setHands(queue.map((h) => h.identity))
     }
     recompute()
     room.on(RoomEvent.ParticipantAttributesChanged, recompute)
@@ -323,7 +333,10 @@ export function useClassChannel(opts: {
   const handUp = hands.includes(localParticipant.identity)
   const setHand = useCallback(
     (up: boolean) =>
-      localParticipant.setAttributes({ [HAND_ATTRIBUTE]: up ? "1" : "" }),
+      localParticipant.setAttributes({
+        [HAND_ATTRIBUTE]: up ? "1" : "",
+        [HAND_AT_ATTRIBUTE]: up ? String(Date.now()) : "",
+      }),
     [localParticipant]
   )
   const clearHand = useCallback(

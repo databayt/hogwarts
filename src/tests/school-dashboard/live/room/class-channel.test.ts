@@ -15,6 +15,7 @@ import {
   decodeMessage,
   encodeMessage,
   fitStroke,
+  handQueue,
   initialClassState,
   MAX_MESSAGE_BYTES,
   snapshotOf,
@@ -52,6 +53,94 @@ describe("messages off the wire never break the room", () => {
       STUDENT
     )
     expect(next.questions).toHaveLength(1)
+  })
+})
+
+// The queue used to be each client's own first-seen order: "#2 in line" on a
+// student's phone and the teacher's list were two different queues, and a
+// teacher who reloaded saw every hand first-seen at the same instant.
+describe("handQueue — one queue for everyone", () => {
+  const NOW = 1_800_000_000_000 // a real epoch, so "an hour ago" stays positive
+  const none = new Map<string, number>()
+
+  it("orders by the time each hand went up, whoever is looking", () => {
+    const q = handQueue(
+      [
+        { identity: "b", hand: "1", handAt: String(NOW - 5_000) },
+        { identity: "a", hand: "1", handAt: String(NOW - 20_000) },
+        { identity: "c", hand: "", handAt: String(NOW - 60_000) },
+      ],
+      none,
+      NOW
+    )
+    expect(q.map((h) => h.identity)).toEqual(["a", "b"])
+    expect(q[0].since).toBe(NOW - 20_000)
+  })
+
+  it("is the same queue after a reload, when every hand is first seen at once", () => {
+    const hands = [
+      { identity: "late", hand: "1", handAt: String(NOW - 1_000) },
+      { identity: "early", hand: "1", handAt: String(NOW - 90_000) },
+    ]
+    const afterReload = new Map([
+      ["late", NOW],
+      ["early", NOW],
+    ])
+    expect(handQueue(hands, afterReload, NOW).map((h) => h.identity)).toEqual([
+      "early",
+      "late",
+    ])
+  })
+
+  it("bounds a wrong device clock: never before they joined, never in the future", () => {
+    const q = handQueue(
+      [
+        // Claims an hour ago, but joined two minutes ago.
+        {
+          identity: "skewed-back",
+          hand: "1",
+          handAt: String(NOW - 3_600_000),
+          joinedAtMs: NOW - 120_000,
+        },
+        { identity: "honest", hand: "1", handAt: String(NOW - 300_000) },
+        // Claims the future.
+        { identity: "skewed-ahead", hand: "1", handAt: String(NOW + 900_000) },
+      ],
+      none,
+      NOW
+    )
+    expect(q.map((h) => h.identity)).toEqual([
+      "honest",
+      "skewed-back",
+      "skewed-ahead",
+    ])
+    expect(q[1].since).toBe(NOW - 120_000)
+    expect(q[2].since).toBe(NOW)
+  })
+
+  it("a hand with no time (an older client) falls back to when it was first seen", () => {
+    const q = handQueue(
+      [
+        { identity: "old-client", hand: "1" },
+        { identity: "new-client", hand: "1", handAt: String(NOW - 10_000) },
+      ],
+      new Map([["old-client", NOW - 30_000]]),
+      NOW
+    )
+    expect(q.map((h) => h.identity)).toEqual(["old-client", "new-client"])
+  })
+
+  it("breaks a tie the same way on every client", () => {
+    const at = String(NOW - 1_000)
+    const one = handQueue(
+      [
+        { identity: "zed", hand: "1", handAt: at },
+        { identity: "amy", hand: "1", handAt: at },
+      ],
+      none,
+      NOW
+    )
+    expect(one.map((h) => h.identity)).toEqual(["amy", "zed"])
   })
 })
 

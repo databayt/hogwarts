@@ -454,6 +454,44 @@ export function applyWireMessage(
   }
 }
 
+/**
+ * The hand queue: who has a hand up, earliest first.
+ *
+ * A hand is a participant attribute (`hand = "1"`), so late joiners see it for
+ * free. Its ORDER used to be each client's own first-seen time — which made
+ * "#2 in line" on a student's phone and the teacher's list two different
+ * queues, and gave a teacher who reloaded an arbitrary one (every hand first
+ * seen at the same instant). The raise time now travels with the hand
+ * (`handAt`, the raiser's clock), and every client sorts by it.
+ *
+ * A device clock can be wrong, so the claim is bounded: never before the
+ * participant joined (the SFU's own time), never in the future. A client that
+ * sends no time (one loaded before this shipped) falls back to first-seen, as
+ * before. Ties break on identity, so the order is the same everywhere.
+ */
+export function handQueue(
+  participants: ReadonlyArray<{
+    identity: string
+    hand?: string
+    handAt?: string
+    joinedAtMs?: number
+  }>,
+  firstSeen: ReadonlyMap<string, number>,
+  now: number = Date.now()
+): Array<{ identity: string; since: number }> {
+  return participants
+    .filter((p) => p.hand === "1")
+    .map((p) => {
+      const claimed = Number(p.handAt)
+      const since =
+        Number.isFinite(claimed) && claimed > 0
+          ? Math.min(Math.max(claimed, p.joinedAtMs ?? 0), now)
+          : (firstSeen.get(p.identity) ?? now)
+      return { identity: p.identity, since }
+    })
+    .sort((a, b) => a.since - b.since || a.identity.localeCompare(b.identity))
+}
+
 /** The snapshot a host sends a late joiner. */
 export function snapshotOf(
   state: ClassState,
