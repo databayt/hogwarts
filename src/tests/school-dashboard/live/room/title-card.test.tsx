@@ -15,7 +15,7 @@
  * `HD` (filled, always) plus honest outlined marks for what THIS room
  * actually offers.
  */
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
@@ -120,7 +120,7 @@ describe("RoomTitleCard action button accessible name (lr-04)", () => {
     expect(screen.getByRole("button", { name: "Joining…" })).toBeInTheDocument()
   })
 
-  it("keeps the label VISIBLE beside the countdown once progress shows", () => {
+  it("keeps the label VISIBLE beside the countdown once progress shows", async () => {
     const now = Date.now()
     const data: RoomTitleCardData = {
       ...baseData,
@@ -134,7 +134,9 @@ describe("RoomTitleCard action button accessible name (lr-04)", () => {
     // sighted reader needs them too. This is the deliberate departure from the
     // frame, which drops its word here.
     const button = screen.getByRole("button", { name: /Join C2, L1/ })
-    expect(button).toHaveTextContent(/m left/)
+    // The card's clock is read a tick after mount (never during render, which
+    // would hydrate to different markup), so the countdown arrives just after.
+    await waitFor(() => expect(button).toHaveTextContent(/m left/))
     expect(button).not.toHaveAttribute("aria-label")
   })
 })
