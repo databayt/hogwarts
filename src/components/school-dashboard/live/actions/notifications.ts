@@ -12,6 +12,7 @@ import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
+import { ON_ROSTER } from "../roster"
 
 type LiveEventKind =
   | "scheduled"
@@ -240,7 +241,12 @@ async function loadSession(
     // lookup below joins on StudentGuardian.studentId, which references
     // Student.id — NOT User.id.
     const students = await db.student.findMany({
-      where: { schoolId, userId: { not: null }, sectionId: session.sectionId },
+      where: {
+        schoolId,
+        userId: { not: null },
+        sectionId: session.sectionId,
+        ...ON_ROSTER,
+      },
       select: { id: true, userId: true },
     })
     for (const s of students) {
@@ -301,19 +307,26 @@ async function dispatch(
   // Only meaningful for `startingSoon` — the actual minutes-to-start the
   // cron computed, used to pick both the {lead} substitution and the
   // Arabic/English plural form of the body.
-  leadMinutes?: number
+  leadMinutes?: number,
+  // Only meaningful for `started` — who opened the room, when the caller
+  // knows. They are in it; everyone else is told.
+  openedByUserId?: string | null
 ): Promise<{ created: number }> {
   try {
     const resolved = await loadSession(schoolId, sessionId)
     if (!resolved || resolved.userIds.length === 0) return { created: 0 }
     const { session, lang, teacherUserId } = resolved
-    // "Your class is live" is news to everyone except the teacher who just
-    // started it — they are already in the room. "Starting soon" reaches the
-    // teacher too, but as their own notice (below): they START the class.
+    // "The class is live" is news to everyone except whoever just opened the
+    // room — they are in it. That used to mean "except the teacher", from
+    // when only a teacher could start a class; in a timetable class a student
+    // may be first in, and the teacher is then exactly who needs telling.
+    // "Starting soon" reaches the teacher as their own notice (below).
     const userIds =
-      (kind === "started" || kind === "startingSoon") && teacherUserId
-        ? resolved.userIds.filter((id) => id !== teacherUserId)
-        : resolved.userIds
+      kind === "started"
+        ? resolved.userIds.filter((id) => id !== openedByUserId)
+        : kind === "startingSoon" && teacherUserId
+          ? resolved.userIds.filter((id) => id !== teacherUserId)
+          : resolved.userIds
     let teacherCreated = 0
     if (kind === "startingSoon" && teacherUserId) {
       const lead = leadMinutes ?? 10
@@ -448,8 +461,21 @@ export const notifyClassStartingSoon = (
     leadMinutes
   )
 
-export const notifyClassStarted = (schoolId: string, sessionId: string) =>
-  dispatch(schoolId, sessionId, "started", "live_class_started")
+export const notifyClassStarted = (
+  schoolId: string,
+  sessionId: string,
+  /** Who opened the room, if known — the one person not told. */
+  openedByUserId?: string | null
+) =>
+  dispatch(
+    schoolId,
+    sessionId,
+    "started",
+    "live_class_started",
+    {},
+    undefined,
+    openedByUserId
+  )
 
 export const notifyClassCancelled = (
   schoolId: string,

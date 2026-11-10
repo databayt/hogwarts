@@ -185,6 +185,21 @@ describe("syncLiveAttendance", () => {
     expect(res.skipped).toBe("empty_roster")
   })
 
+  // Four archived students at the first school to go online were still placed
+  // in sections, and would have been marked ABSENT in every class.
+  it("writes the register for CURRENT students only — archived and inactive ones are not on the roster", async () => {
+    happySession()
+    await syncLiveAttendance("school1", "c1")
+    expect(mockDb.student.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "ACTIVE",
+          archivedAt: null,
+        }),
+      })
+    )
+  })
+
   it("derives PRESENT / LATE / ABSENT from participant presence", async () => {
     happySession()
     const res = await syncLiveAttendance("school1", "c1")

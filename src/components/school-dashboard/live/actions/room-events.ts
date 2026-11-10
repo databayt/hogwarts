@@ -8,6 +8,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
+import { holdsHostSeat } from "./host-seat"
 
 const KINDS = new Set([
   "poll_closed",
@@ -46,27 +47,22 @@ export async function recordClassEvent(input: {
 
   const session = await db.conference.findFirst({
     where: { id: input.sessionId, schoolId: ctx.schoolId, deletedAt: null },
-    select: { id: true },
+    select: { id: true, teacher: { select: { userId: true } } },
   })
   if (!session) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  // Any TEACHER of this school is host-side here, not only the session's
-  // assigned teacher — mirrors join-core's `resolveParticipantRole`, which
-  // admits every school TEACHER as CO_HOST (co-teaching is intentional). A
-  // co-host running the room alone must be able to persist closed polls and
-  // questions exactly as the owning teacher can (ISSUE.md: "a co-host's poll
-  // tallies nowhere when the teacher is absent" is the same failure family).
-  // Still tenant-scoped: the lookup proves this user IS a teacher of
-  // ctx.schoolId, not that they own this particular session.
-  if (ctx.role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { schoolId: ctx.schoolId, userId: ctx.userId },
-      select: { id: true },
-    })
-    if (!teacher) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
-  }
+  // Host-side on THIS class: an admin, its own teacher, or a co-host seated
+  // in it. A co-host running the room alone still persists closed polls and
+  // questions exactly as the owning teacher does — they hold a seat. What no
+  // longer passes is a teacher of the school with no seat in this class.
+  const seated = await holdsHostSeat({
+    schoolId: ctx.schoolId,
+    userId: ctx.userId,
+    role: ctx.role,
+    sessionId: session.id,
+    sessionTeacherUserId: session.teacher?.userId,
+  })
+  if (!seated) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
   const eventId = `lc:${session.id}:${input.kind}:${input.key}`
   const existing = await db.conferenceEvent.findUnique({

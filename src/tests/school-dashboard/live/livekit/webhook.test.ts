@@ -147,7 +147,11 @@ describe("handleWebhookEvent — room lifecycle", () => {
         }),
       })
     )
-    expect(notifyClassStarted).toHaveBeenCalledWith(SCHOOL_ID, SESSION_ID)
+    expect(notifyClassStarted).toHaveBeenCalledWith(
+      SCHOOL_ID,
+      SESSION_ID,
+      undefined
+    )
   })
 
   it("room_finished inside a timetable class's window keeps the class open (a break, not the end)", async () => {

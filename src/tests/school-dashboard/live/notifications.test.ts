@@ -165,6 +165,47 @@ describe("channels — the two go-in-now notices are the bell and a push only", 
   })
 })
 
+// A timetable class is a room anyone may be first into. "The class is live"
+// skipped the teacher unconditionally — so a teacher whose students were
+// already inside was the one person never told.
+describe("class is live — everyone but whoever opened the room", () => {
+  beforeEach(() => {
+    mockDb.student.findMany.mockResolvedValue([
+      { id: "s-1", userId: "student-user-1" },
+      { id: "s-2", userId: "student-user-2" },
+    ] as never)
+  })
+
+  it("a student opened it: the teacher and the other students are told", async () => {
+    await notifyClassStarted("school-1", "lcs-1", "student-user-1")
+    const ids = mockDispatch.mock.calls[0][0].targetUserIds as string[]
+    expect(ids).toContain("teacher-user-1")
+    expect(ids).toContain("student-user-2")
+    expect(ids).not.toContain("student-user-1")
+  })
+
+  it("the teacher opened it: the students are told, the teacher is not", async () => {
+    await notifyClassStarted("school-1", "lcs-1", "teacher-user-1")
+    const ids = mockDispatch.mock.calls[0][0].targetUserIds as string[]
+    expect(ids).not.toContain("teacher-user-1")
+    expect(ids).toEqual(
+      expect.arrayContaining(["student-user-1", "student-user-2"])
+    )
+  })
+
+  it("nobody known opened it (the SFU's own event won): everyone is told", async () => {
+    await notifyClassStarted("school-1", "lcs-1")
+    const ids = mockDispatch.mock.calls[0][0].targetUserIds as string[]
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        "teacher-user-1",
+        "student-user-1",
+        "student-user-2",
+      ])
+    )
+  })
+})
+
 describe("notifyClass* — other kinds keep their fixed templates", () => {
   it("notifyClassScheduled renders title/teacher/when", async () => {
     await notifyClassScheduled("school-1", "lcs-1")
@@ -221,6 +262,9 @@ describe("loadSession audience — nl-04: students placed in the section", () =>
     expect(where.schoolId).toBe("school-1")
     expect(where.sectionId).toBe("sec-1")
     expect(where).not.toHaveProperty("OR")
+    // Only CURRENT students: an archived or inactive one keeps their section,
+    // and was sent every class notice (roster.ts).
+    expect(where).toMatchObject({ status: "ACTIVE", archivedAt: null })
 
     const call = mockDispatch.mock.calls[0][0]
     expect(call.targetUserIds).toContain("student-user-1")

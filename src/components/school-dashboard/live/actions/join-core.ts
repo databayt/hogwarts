@@ -335,6 +335,7 @@ export async function performLiveClassJoin(
       sessionId,
       roomName: liveClass.roomName,
       recordingEnabled: liveClass.recordingEnabled,
+      openedByUserId: userId,
     })
   } else if (slotClass && allowAutoStart) {
     // A live timetable class whose SFU room closed while everyone had stepped

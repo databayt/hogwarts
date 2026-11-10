@@ -22,7 +22,7 @@ vi.mock("next/server", () => ({ after: vi.fn() }))
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findFirst: vi.fn() },
-    teacher: { findFirst: vi.fn() },
+    conferenceParticipant: { findFirst: vi.fn() },
     quickAssessment: { count: vi.fn() },
     schoolAssignment: { count: vi.fn(), create: vi.fn() },
     conferenceResource: { findFirst: vi.fn(), create: vi.fn() },
@@ -45,9 +45,11 @@ beforeEach(() => {
     subjectId: "sub-1",
     sectionId: "sec-1",
     teacherId: "t1",
+    // The caller IS the class's own teacher.
+    teacher: { userId: "u-teacher" },
     section: { gradeId: "g-7" },
   })
-  m(db.teacher.findFirst).mockResolvedValue({ id: "t1" })
+  m(db.conferenceParticipant.findFirst).mockResolvedValue(null)
   m(db.conferenceResource.findFirst).mockResolvedValue(null)
   m(db.conferenceResource.create).mockResolvedValue({ id: "r1" })
   m(db.schoolAssignment.create).mockResolvedValue({ id: "a1" })
@@ -72,7 +74,10 @@ describe("attachLiveClassResource", () => {
     m(db.conferenceResource.findFirst)
       .mockResolvedValueOnce(null) // not linked yet
       .mockResolvedValueOnce({ order: 2 }) // last row
-    await attachLiveClassResource({ sessionId: "s1", quickAssessmentId: "qa-1" })
+    await attachLiveClassResource({
+      sessionId: "s1",
+      quickAssessmentId: "qa-1",
+    })
     expect(db.conferenceResource.create).toHaveBeenCalledWith({
       data: {
         schoolId: "school-1",
@@ -128,6 +133,7 @@ describe("setClassHomework", () => {
       subjectId: null,
       sectionId: null,
       teacherId: "t1",
+      teacher: { userId: "u-teacher" },
       section: null,
     })
     const r = await setClassHomework({
@@ -139,8 +145,20 @@ describe("setClassHomework", () => {
     expect(db.schoolAssignment.create).not.toHaveBeenCalled()
   })
 
-  it("refuses a teacher of another school", async () => {
-    m(db.teacher.findFirst).mockResolvedValue(null)
+  const otherTeachersClass = {
+    id: "s1",
+    title: "Algebra",
+    subjectId: "sub-1",
+    sectionId: "sec-1",
+    teacherId: "t-owner",
+    teacher: { userId: "u-owner" },
+    section: { gradeId: "g-7" },
+  }
+
+  // Any teacher of the school used to pass: homework published to a class of
+  // a section the caller has nothing to do with.
+  it("refuses a teacher who neither teaches this class nor holds a seat in it", async () => {
+    m(db.conference.findFirst).mockResolvedValue(otherTeachersClass)
     const r = await setClassHomework({
       sessionId: "s1",
       title: "Read",
@@ -148,5 +166,25 @@ describe("setClassHomework", () => {
     })
     expect(r).toMatchObject({ success: false })
     expect(db.schoolAssignment.create).not.toHaveBeenCalled()
+    expect(db.conferenceParticipant.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          sessionId: "s1",
+          userId: "u-teacher",
+          role: { in: ["HOST", "CO_HOST"] },
+        }),
+      })
+    )
+  })
+
+  it("accepts a co-teacher seated in the class", async () => {
+    m(db.conference.findFirst).mockResolvedValue(otherTeachersClass)
+    m(db.conferenceParticipant.findFirst).mockResolvedValue({ id: "seat" })
+    const r = await setClassHomework({
+      sessionId: "s1",
+      title: "Read",
+      dueDate: "2026-10-20T08:00:00.000Z",
+    })
+    expect(r).toEqual({ success: true, data: { id: "a1" } })
   })
 })

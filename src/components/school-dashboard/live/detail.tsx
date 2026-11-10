@@ -54,11 +54,12 @@ function formatWhen(
   }
 }
 
-function formatDay(d: Date | string, locale: string): string {
+function formatDay(d: Date | string, locale: string, timeZone: string): string {
   const date = typeof d === "string" ? new Date(d) : d
   try {
     return date.toLocaleDateString(locale === "ar" ? "ar-AE" : "en-AE", {
       dateStyle: "medium",
+      timeZone,
     })
   } catch {
     return date.toISOString()
@@ -266,12 +267,14 @@ export async function LiveClassDetailContent({
         sessionId={session.id}
         locale={locale}
         dictionary={dictionary}
+        timeZone={timeZone}
       />
 
       <ClassWork
         sessionId={session.id}
         locale={locale}
         dictionary={dictionary}
+        timeZone={timeZone}
       />
 
       <div className="flex gap-2">
@@ -430,7 +433,7 @@ export async function LiveClassDetailContent({
                     </Link>
                     <Badge variant="secondary">{x.schoolExam!.examType}</Badge>
                     <span className="text-muted-foreground text-xs">
-                      {formatDay(x.schoolExam!.examDate, locale)}
+                      {formatDay(x.schoolExam!.examDate, locale, timeZone)}
                     </span>
                   </li>
                 ))}
@@ -453,7 +456,7 @@ export async function LiveClassDetailContent({
                       {x.schoolAssignment!.title}
                     </Link>
                     <span className="text-muted-foreground text-xs">
-                      {formatDay(x.schoolAssignment!.dueDate, locale)}
+                      {formatDay(x.schoolAssignment!.dueDate, locale, timeZone)}
                     </span>
                   </li>
                 ))}

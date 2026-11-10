@@ -80,7 +80,7 @@ describe("transitionToLive", () => {
 
   it("the winner notifies the roster and starts the egress", async () => {
     await transitionToLive(INPUT)
-    expect(notifyClassStarted).toHaveBeenCalledWith("sch1", "lcs1")
+    expect(notifyClassStarted).toHaveBeenCalledWith("sch1", "lcs1", undefined)
     expect(startCompositeEgress).toHaveBeenCalledWith({
       roomName: "sch-sch1-lc-lcs1",
       schoolId: "sch1",
@@ -110,6 +110,21 @@ describe("transitionToLive", () => {
     await expect(
       transitionToLive({ ...INPUT, recordingEnabled: false })
     ).resolves.toEqual({ transitioned: true })
+  })
+
+  // "The class is live" used to skip the teacher, from when only a teacher
+  // could start one. In a timetable class a student may be first in.
+  it("passes on who opened the room, so everyone ELSE is told", async () => {
+    await transitionToLive({
+      ...INPUT,
+      recordingEnabled: false,
+      openedByUserId: "u-student-1",
+    })
+    expect(notifyClassStarted).toHaveBeenCalledWith(
+      "sch1",
+      "lcs1",
+      "u-student-1"
+    )
   })
 
   it("a loser (the row was already live) does NOTHING — no double notification, no second egress", async () => {

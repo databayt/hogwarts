@@ -10,6 +10,7 @@ import { displayName, type NameDisplay } from "@/lib/name-utils"
 
 import { connectedSeconds } from "./actions/attendance-sync"
 import { DEFAULT_SCHOOL_TZ, schoolDayOfInstant } from "./day-window"
+import { ON_ROSTER } from "./roster"
 
 export interface AttendanceReviewViewer {
   userId: string | null | undefined
@@ -88,7 +89,7 @@ export async function loadAttendanceReview(
 
   const [roster, participants] = await Promise.all([
     db.student.findMany({
-      where: { schoolId, sectionId },
+      where: { schoolId, sectionId, ...ON_ROSTER },
       select: {
         id: true,
         userId: true,

@@ -13,7 +13,7 @@ vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findFirst: vi.fn() },
-    teacher: { findFirst: vi.fn() },
+    conferenceParticipant: { findFirst: vi.fn() },
     conferenceEvent: { findUnique: vi.fn(), create: vi.fn() },
   },
 }))
@@ -21,7 +21,7 @@ vi.mock("@/lib/db", () => ({
 const m = <T>(fn: T) => fn as unknown as ReturnType<typeof vi.fn>
 const mCtx = m(requireContext)
 const mSession = m(db.conference.findFirst)
-const mTeacher = m(db.teacher.findFirst)
+const mSeat = m(db.conferenceParticipant.findFirst)
 const mFind = m(db.conferenceEvent.findUnique)
 const mCreate = m(db.conferenceEvent.create)
 
@@ -33,8 +33,9 @@ beforeEach(() => {
     userId: "u-teacher",
     role: "TEACHER",
   })
-  mSession.mockResolvedValue({ id: "s1" })
-  mTeacher.mockResolvedValue({ id: "t1" })
+  // The caller is the class's own teacher unless a test says otherwise.
+  mSession.mockResolvedValue({ id: "s1", teacher: { userId: "u-teacher" } })
+  mSeat.mockResolvedValue(null)
   mFind.mockResolvedValue(null)
   mCreate.mockResolvedValue({ id: "ev1" })
 })
@@ -76,11 +77,9 @@ describe("recordClassEvent", () => {
     expect(mCreate).not.toHaveBeenCalled()
   })
 
-  it("a co-teaching TEACHER (not the session's assigned owner) may still persist events — CO_HOST parity with join-core", async () => {
-    // teacher.findFirst resolves a Teacher row in THIS school whose id differs
-    // from the session's assigned teacherId — exactly the co-host case
-    // join-core's resolveParticipantRole admits as CO_HOST.
-    mTeacher.mockResolvedValueOnce({ id: "someone-else" })
+  it("a co-teacher seated in the class (not its assigned owner) still persists events", async () => {
+    mSession.mockResolvedValueOnce({ id: "s1", teacher: { userId: "u-owner" } })
+    mSeat.mockResolvedValueOnce({ id: "seat" })
     const r = await recordClassEvent({
       sessionId: "s1",
       kind: "question",
@@ -95,8 +94,8 @@ describe("recordClassEvent", () => {
     )
   })
 
-  it("refuses a TEACHER with no Teacher row in this school (tenant-scoped), an unknown kind, and a bad key", async () => {
-    mTeacher.mockResolvedValueOnce(null)
+  it("refuses a teacher with no seat in this class, an unknown kind, and a bad key", async () => {
+    mSession.mockResolvedValueOnce({ id: "s1", teacher: { userId: "u-owner" } })
     let r = await recordClassEvent({
       sessionId: "s1",
       kind: "question",
@@ -123,7 +122,7 @@ describe("recordClassEvent", () => {
     expect(mCreate).not.toHaveBeenCalled()
   })
 
-  it("ADMIN as CO_HOST persists events with no Teacher lookup at all", async () => {
+  it("ADMIN persists events with no seat lookup at all", async () => {
     mCtx.mockResolvedValueOnce({
       ok: true,
       schoolId: "school-1",
@@ -137,6 +136,6 @@ describe("recordClassEvent", () => {
       payload: {},
     })
     expect(r.success).toBe(true)
-    expect(mTeacher).not.toHaveBeenCalled()
+    expect(mSeat).not.toHaveBeenCalled()
   })
 })

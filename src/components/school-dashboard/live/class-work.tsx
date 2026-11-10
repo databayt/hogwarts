@@ -12,11 +12,13 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { loadClassWork, type HomeworkItem } from "./class-work-load"
 import { SetHomeworkDialog } from "./set-homework-dialog"
 
-function formatDue(d: Date, locale: string): string {
+/** In the SCHOOL's zone — the server's own is UTC, two hours off Khartoum. */
+function formatDue(d: Date, locale: string, timeZone: string): string {
   try {
     return d.toLocaleString(locale === "ar" ? "ar-AE" : "en-AE", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone,
     })
   } catch {
     return d.toISOString()
@@ -34,10 +36,13 @@ export async function ClassWork({
   sessionId,
   locale,
   dictionary,
+  timeZone,
 }: {
   sessionId: string
   locale: string
   dictionary: Dictionary
+  /** The school's zone, for the due dates. */
+  timeZone: string
 }) {
   const [tenant, session] = await Promise.all([getTenantContext(), auth()])
   // A section of the class page, not the page: a failed read hides it.
@@ -139,7 +144,10 @@ export async function ClassWork({
                     {status}
                   </Badge>
                   <span className="text-muted-foreground text-xs">
-                    {L.due.replace("{date}", formatDue(h.dueDate, locale))}
+                    {L.due.replace(
+                      "{date}",
+                      formatDue(h.dueDate, locale, timeZone)
+                    )}
                   </span>
                 </li>
               )

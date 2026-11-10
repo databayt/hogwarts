@@ -21,11 +21,16 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { loadAttendanceReview } from "./attendance-review-load"
 import { AttendanceReviewStatus } from "./attendance-review-status"
 
-function formatTime(d: Date | null, locale: string): string {
+/**
+ * A clock time in the SCHOOL's zone. Without `timeZone` this formats in the
+ * runtime's — UTC on the server — and a Khartoum class's 16:02 join read 14:02.
+ */
+function formatTime(d: Date | null, locale: string, timeZone: string): string {
   if (!d) return ""
   try {
     return d.toLocaleTimeString(locale === "ar" ? "ar-AE" : "en-AE", {
       timeStyle: "short",
+      timeZone,
     })
   } catch {
     return d.toISOString().slice(11, 16)
@@ -45,10 +50,13 @@ export async function AttendanceReview({
   sessionId,
   locale,
   dictionary,
+  timeZone,
 }: {
   sessionId: string
   locale: string
   dictionary: Dictionary
+  /** The school's zone, for the joined / left times. */
+  timeZone: string
 }) {
   const [tenant, session] = await Promise.all([getTenantContext(), auth()])
   // A section of the class page, not the page: a failed read hides the
@@ -138,12 +146,14 @@ export async function AttendanceReview({
                 {review.hasPresence && (
                   <>
                     <TableCell className="tabular-nums">
-                      {r.joinedAt ? formatTime(r.joinedAt, locale) : "—"}
+                      {r.joinedAt
+                        ? formatTime(r.joinedAt, locale, timeZone)
+                        : "—"}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {r.joinedAt
                         ? r.leftAt
-                          ? formatTime(r.leftAt, locale)
+                          ? formatTime(r.leftAt, locale, timeZone)
                           : (t?.stillIn ?? "Still in")
                         : "—"}
                     </TableCell>

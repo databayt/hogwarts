@@ -410,6 +410,7 @@ export async function startLiveClass(input: IdOnly) {
       sessionId: session.id,
       roomName: session.roomName,
       recordingEnabled: session.recordingEnabled,
+      openedByUserId: ctx.userId,
     })
 
     for (const path of liveListRevalidatePaths()) {

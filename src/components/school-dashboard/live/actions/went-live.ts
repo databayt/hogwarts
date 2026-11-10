@@ -39,6 +39,9 @@ export type WentLiveInput = {
   recordingEnabled: boolean
   /** The SFU room SID when the caller knows it (the webhook). */
   roomSid?: string | null
+  /** Who opened the room, when the caller knows (a join, the Start action).
+   *  They are not sent "the class is live". The webhook does not know. */
+  openedByUserId?: string | null
 }
 
 /**
@@ -51,7 +54,14 @@ export type WentLiveInput = {
 export async function transitionToLive(
   input: WentLiveInput
 ): Promise<{ transitioned: boolean }> {
-  const { schoolId, sessionId, roomName, recordingEnabled, roomSid } = input
+  const {
+    schoolId,
+    sessionId,
+    roomName,
+    recordingEnabled,
+    roomSid,
+    openedByUserId,
+  } = input
 
   // Status-guarded and tenant-scoped: a late/retried caller — or the second of
   // two racing writers — must not resurrect an ended/cancelled session or
@@ -70,7 +80,7 @@ export async function transitionToLive(
   // — so its push leaves with it. Left to the push cron it would wait for the
   // next tick, up to fifteen minutes into a class that has already begun.
   defer(async () => {
-    await notifyClassStarted(schoolId, sessionId)
+    await notifyClassStarted(schoolId, sessionId, openedByUserId)
     await processPendingWebPushes(200).catch((err) => {
       console.error("[live-class] class-is-live push drain failed", {
         schoolId,

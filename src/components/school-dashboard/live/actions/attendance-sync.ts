@@ -24,6 +24,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { DEFAULT_SCHOOL_TZ, schoolDayOfInstant } from "../day-window"
+import { ON_ROSTER } from "../roster"
 
 // Minutes after the scheduled start beyond which a join counts as LATE.
 const LATE_GRACE_MINUTES = 10
@@ -141,10 +142,11 @@ export async function syncLiveAttendance(
           period: { select: { name: true } },
         },
       }),
-      // Roster = every student placed in the section (id + userId for the
-      // presence map). This is the authority for who should have attended.
+      // Roster = every CURRENT student placed in the section (id + userId for
+      // the presence map). This is the authority for who should have
+      // attended; an archived or inactive student is not on it (roster.ts).
       db.student.findMany({
-        where: { schoolId, sectionId },
+        where: { schoolId, sectionId, ...ON_ROSTER },
         select: { id: true, userId: true },
       }),
       // Presence: PARTICIPANT (student) rows for this session, keyed by
@@ -397,14 +399,22 @@ export async function syncLiveAttendance(
   }
 }
 
-type DailyStatus = "PRESENT" | "LATE" | "EXCUSED" | "SICK" | "HOLIDAY" | "ABSENT"
+type DailyStatus =
+  | "PRESENT"
+  | "LATE"
+  | "EXCUSED"
+  | "SICK"
+  | "HOLIDAY"
+  | "ABSENT"
 
 /**
  * The day's status from its period rows: in any period → the day counts.
  * PRESENT beats LATE (on time to some class is on time to school); a
  * recorded reason (EXCUSED, SICK, HOLIDAY) beats ABSENT.
  */
-export function dailyStatusFromPeriods(statuses: Iterable<string>): DailyStatus {
+export function dailyStatusFromPeriods(
+  statuses: Iterable<string>
+): DailyStatus {
   const seen = new Set(statuses)
   for (const s of ["PRESENT", "LATE", "EXCUSED", "SICK", "HOLIDAY"] as const) {
     if (seen.has(s)) return s

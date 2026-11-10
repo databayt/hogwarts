@@ -12,6 +12,7 @@ import { notifyAssignmentPublished } from "@/components/school-dashboard/listing
 import { prewarm } from "@/components/translation/prewarm"
 
 import { requireContext } from "./helpers"
+import { holdsHostSeat } from "./host-seat"
 
 /**
  * What the host works with from inside the room, after scheduling: the
@@ -24,9 +25,10 @@ import { requireContext } from "./helpers"
  */
 
 /**
- * The room is host-side for the session's school: an admin, or a teacher of
- * this school — the same rule `recordClassEvent` uses, because co-teaching is
- * intentional and a co-host may run the room alone.
+ * The caller acts host-side on THIS class: an admin, the class's own teacher,
+ * or a co-host seated in it (`holdsHostSeat`). Not "any teacher of the
+ * school" — that let a teacher publish homework to a class of a section they
+ * do not teach.
  */
 async function hostSession(sessionId: string) {
   const ctx = await requireContext("end_live_class")
@@ -40,6 +42,7 @@ async function hostSession(sessionId: string) {
       subjectId: true,
       sectionId: true,
       teacherId: true,
+      teacher: { select: { userId: true } },
       section: { select: { gradeId: true } },
     },
   })
@@ -50,16 +53,17 @@ async function hostSession(sessionId: string) {
     }
   }
 
-  if (ctx.role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { schoolId: ctx.schoolId, userId: ctx.userId },
-      select: { id: true },
-    })
-    if (!teacher) {
-      return {
-        ok: false as const,
-        response: actionError(ACTION_ERRORS.UNAUTHORIZED),
-      }
+  const seated = await holdsHostSeat({
+    schoolId: ctx.schoolId,
+    userId: ctx.userId,
+    role: ctx.role,
+    sessionId: session.id,
+    sessionTeacherUserId: session.teacher?.userId,
+  })
+  if (!seated) {
+    return {
+      ok: false as const,
+      response: actionError(ACTION_ERRORS.UNAUTHORIZED),
     }
   }
   return { ok: true as const, ctx, session }
