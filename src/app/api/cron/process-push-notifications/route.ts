@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       )
     } else {
       console.log(
-        `[Cron] process-push-notifications: web processed=${web.processed} succeeded=${web.succeeded} failed=${web.failed} pruned=${web.pruned}`
+        `[Cron] process-push-notifications: web processed=${web.processed} succeeded=${web.succeeded} noDevice=${web.noDevice} failed=${web.failed} pruned=${web.pruned}`
       )
     }
 

@@ -17,6 +17,7 @@ import {
   notifyClassCancelled,
   notifyClassRecordingReady,
   notifyClassScheduled,
+  notifyClassStarted,
   notifyClassStartingSoon,
 } from "@/components/school-dashboard/live/actions/notifications"
 
@@ -129,6 +130,38 @@ describe("notifyClassStartingSoon — nl-02: actual lead time, not a hardcoded 1
     await notifyClassStartingSoon("school-1", "lcs-1", 0)
     const call = rosterCall()
     expect(call.body).toBe("Algebra I تبدأ خلال 0 دقيقة")
+  })
+})
+
+// The mail queue is drained a cron tick later, so a ten-minute reminder by
+// email arrived after the bell — and at one mail per class per child.
+describe("channels — the two go-in-now notices are the bell and a push only", () => {
+  beforeEach(() => {
+    mockDb.student.findMany.mockResolvedValue([
+      { id: "s-1", userId: "student-user-1" },
+    ] as never)
+  })
+
+  it("starting soon: no email, for the roster and for the teacher's own notice", async () => {
+    await notifyClassStartingSoon("school-1", "lcs-1", 8)
+    expect(mockDispatch.mock.calls.length).toBe(2)
+    for (const [call] of mockDispatch.mock.calls) {
+      expect(call.channels).toEqual(["in_app", "push"])
+    }
+  })
+
+  it("class is live: no email", async () => {
+    await notifyClassStarted("school-1", "lcs-1")
+    expect(mockDispatch.mock.calls[0][0].channels).toEqual(["in_app", "push"])
+  })
+
+  it("scheduled, cancelled and recording-ready keep their email", async () => {
+    await notifyClassScheduled("school-1", "lcs-1")
+    await notifyClassCancelled("school-1", "lcs-1", "x")
+    await notifyClassRecordingReady("school-1", "lcs-1")
+    for (const [call] of mockDispatch.mock.calls) {
+      expect(call.channels).toEqual(["in_app", "email", "push"])
+    }
   })
 })
 

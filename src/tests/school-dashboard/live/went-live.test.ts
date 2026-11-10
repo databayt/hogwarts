@@ -24,6 +24,11 @@ vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
   notifyClassStarted: (...a: unknown[]) => notifyClassStarted(...a),
 }))
 
+const processPendingWebPushes = vi.fn(async () => ({ succeeded: 0 }))
+vi.mock("@/lib/notifications/push-web", () => ({
+  processPendingWebPushes: (...a: unknown[]) => processPendingWebPushes(...a),
+}))
+
 vi.mock("@/components/school-dashboard/live/livekit/egress", () => ({
   startCompositeEgress: vi.fn(async () => ({
     egressId: "egr-1",
@@ -94,11 +99,25 @@ describe("transitionToLive", () => {
     )
   })
 
+  // Left to the push cron, "the class is live" reached a phone a tick later.
+  it("the winner sends the notice's push right after it, and a push failure stays quiet", async () => {
+    await transitionToLive({ ...INPUT, recordingEnabled: false })
+    await vi.waitFor(() => expect(processPendingWebPushes).toHaveBeenCalled())
+    expect(notifyClassStarted.mock.invocationCallOrder[0]).toBeLessThan(
+      processPendingWebPushes.mock.invocationCallOrder[0]
+    )
+    processPendingWebPushes.mockRejectedValueOnce(new Error("vapid"))
+    await expect(
+      transitionToLive({ ...INPUT, recordingEnabled: false })
+    ).resolves.toEqual({ transitioned: true })
+  })
+
   it("a loser (the row was already live) does NOTHING — no double notification, no second egress", async () => {
     vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 0 } as never)
     const r = await transitionToLive(INPUT)
     expect(r.transitioned).toBe(false)
     expect(notifyClassStarted).not.toHaveBeenCalled()
+    expect(processPendingWebPushes).not.toHaveBeenCalled()
     expect(startCompositeEgress).not.toHaveBeenCalled()
     expect(db.conferenceRecording.upsert).not.toHaveBeenCalled()
   })

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { processPendingWebPushes } from "@/lib/notifications/push-web"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 import { GET } from "@/app/api/cron/live-class-reminders/route"
 
@@ -21,6 +22,16 @@ vi.mock("@/lib/db", () => ({
 }))
 vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
   notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
+}))
+vi.mock("@/lib/notifications/push-web", () => ({
+  processPendingWebPushes: vi.fn(async () => ({
+    processed: 0,
+    succeeded: 0,
+    failed: 0,
+    noDevice: 0,
+    pruned: 0,
+    skippedReason: null,
+  })),
 }))
 
 const NOW = new Date("2026-06-01T09:00:00Z").getTime()
@@ -53,18 +64,144 @@ describe("live-class-reminders cron — auth", () => {
 })
 
 describe("live-class-reminders cron — detection window", () => {
-  it("scans [now+1min, now+60min] — the widest lead a school may set — then applies each school's own lead", async () => {
+  it("scans from now to the widest reach a school may have (lead 60 + the tick slack), then applies each school's own", async () => {
     await GET(req())
     const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
       where: { scheduledStart: { gte: Date; lte: Date }; status: string }
     }
     const gte = call.where.scheduledStart.gte.getTime()
     const lte = call.where.scheduledStart.lte.getTime()
-    expect(gte).toBe(NOW + 1 * 60 * 1000)
-    expect(lte).toBe(NOW + 60 * 60 * 1000)
+    expect(gte).toBe(NOW)
+    expect(lte).toBe(NOW + 62 * 60 * 1000)
     expect(call.where.status).toBe("scheduled")
-    // Wider than the cron cadence (*/15): no start time can fall in a gap.
-    expect(lte - gte).toBeGreaterThanOrEqual(15 * 60 * 1000)
+  })
+
+  // The bug of 2026-11-09: lead 10 on a 15-minute cron. A class on the hour
+  // is 15 minutes out at :45 and starting at :00 — never inside the lead at
+  // any tick, so 40 of one school's 52 classes were never reminded.
+  it("reminds a class one cron cadence out when the school's lead is shorter than the cadence", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "lcs-on-the-hour",
+        schoolId: "school-a",
+        scheduledStart: new Date(NOW + 15 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 10 },
+      },
+      // 16.5 minutes out: the tick ran a little early relative to the last
+      // one — still this tick's, or the next would find it already starting.
+      {
+        id: "lcs-slack",
+        schoolId: "school-a",
+        scheduledStart: new Date(NOW + 16.5 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 10 },
+      },
+      // 20 minutes out: the NEXT tick's (5 minutes out then).
+      {
+        id: "lcs-next-tick",
+        schoolId: "school-a",
+        scheduledStart: new Date(NOW + 20 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 10 },
+      },
+    ] as never)
+    const res = await GET(req())
+    const body = (await res.json()) as { dispatched: number }
+    expect(body.dispatched).toBe(2)
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith(
+      "school-a",
+      "lcs-on-the-hour",
+      15
+    )
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith(
+      "school-a",
+      "lcs-slack",
+      17
+    )
+    expect(notifyClassStartingSoon).not.toHaveBeenCalledWith(
+      "school-a",
+      "lcs-next-tick",
+      expect.anything()
+    )
+  })
+
+  it("every start minute is inside the window at one of two consecutive ticks", async () => {
+    // For each minute-to-start m at this tick, the next tick sees m - 15.
+    // One of the two must be due, for the default lead.
+    const due = (m: number) => m >= 0 && m <= Math.max(10, 15) + 2
+    for (let m = 15; m <= 32; m++) {
+      expect(due(m) || due(m - 15), `start ${m} min out`).toBe(true)
+    }
+    // And the route agrees with that arithmetic at the edges.
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "edge-17",
+        schoolId: "s",
+        scheduledStart: new Date(NOW + 17 * 60 * 1000),
+        school: null,
+      },
+      {
+        id: "edge-18",
+        schoolId: "s",
+        scheduledStart: new Date(NOW + 18 * 60 * 1000),
+        school: null,
+      },
+      {
+        id: "edge-0",
+        schoolId: "s",
+        scheduledStart: new Date(NOW + 20 * 1000),
+        school: null,
+      },
+    ] as never)
+    await GET(req())
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith("s", "edge-17", 17)
+    expect(notifyClassStartingSoon).not.toHaveBeenCalledWith(
+      "s",
+      "edge-18",
+      expect.anything()
+    )
+    // Twenty seconds out still gets "in 1 minute", never "in 0".
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith("s", "edge-0", 1)
+  })
+
+  it("sends the reminders' pushes in the same run, and only when something was due", async () => {
+    await GET(req())
+    expect(processPendingWebPushes).not.toHaveBeenCalled()
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "lcs-1",
+        schoolId: "s",
+        scheduledStart: new Date(NOW + 8 * 60 * 1000),
+        school: null,
+      },
+    ] as never)
+    vi.mocked(processPendingWebPushes).mockResolvedValueOnce({
+      processed: 3,
+      succeeded: 2,
+      failed: 0,
+      noDevice: 1,
+      pruned: 0,
+      skippedReason: null,
+    })
+    const res = await GET(req())
+    const body = (await res.json()) as { pushed: number }
+    expect(processPendingWebPushes).toHaveBeenCalledTimes(1)
+    expect(body.pushed).toBe(2)
+  })
+
+  it("a push failure never costs the reminders", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "lcs-1",
+        schoolId: "s",
+        scheduledStart: new Date(NOW + 8 * 60 * 1000),
+        school: null,
+      },
+    ] as never)
+    vi.mocked(processPendingWebPushes).mockRejectedValueOnce(new Error("vapid"))
+    const res = await GET(req())
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as { dispatched: number; pushed: number }
+    expect(body.dispatched).toBe(1)
+    expect(body.pushed).toBe(0)
   })
 
   it("reminds only inside the school's own lead time", async () => {

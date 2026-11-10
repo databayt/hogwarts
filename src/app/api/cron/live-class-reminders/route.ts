@@ -1,13 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Cron: every 15 minutes — finds sessions starting in the next 5-20 min and
-// dispatches a `live_class_starting_soon` notification (idempotent via
-// ConferenceEvent eventType lookup). The 15-min-wide window matches the */15
-// cadence so no start time falls into a gap between consecutive runs; the
-// idempotency guard means the boundary overlap never double-sends.
-// (Cadence was reduced from */5 to */15 so Neon compute can scale to zero
-// between runs — see vercel.json crons.)
+// Cron: every 15 minutes — reminds each class once, shortly before it starts,
+// with a `live_class_starting_soon` notification (idempotent via a
+// ConferenceEvent row). A class is due once it is within the school's lead, or
+// within one cron cadence when the lead is shorter than that: the window must
+// be at least as wide as the gap between two runs, or some start times are
+// never inside it at any tick. (Cadence was reduced from */5 to */15 so Neon
+// compute can scale to zero between runs — see cf/crons.json.)
 
 import { NextResponse } from "next/server"
 
@@ -15,6 +15,7 @@ import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { runLiveDailyDigest } from "@/components/school-dashboard/live/actions/daily-digest"
 import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
+import { processPendingWebPushes } from "@/lib/notifications/push-web"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 import {
   runLiveMinutesGuard,
@@ -23,6 +24,20 @@ import {
 
 /** Upper bound of `School.conferenceReminderLeadMinutes` (mirrors the settings schema). */
 const MAX_REMINDER_LEAD_MINUTES = 60
+
+/**
+ * How often this route runs (cf/crons.json). A school's lead shorter than this
+ * cannot be honoured exactly: with the default 10 minutes, a class starting on
+ * a quarter hour is 15 minutes out at one tick and already starting at the
+ * next, so it was never inside the lead at any run — on 2026-11-09 that was 40
+ * of one school's 52 classes. Such a class is reminded at the tick BEFORE its
+ * lead instead; the notice prints the real minutes.
+ */
+const CRON_CADENCE_MINUTES = 15
+
+/** A tick runs the materialization sweep first, so "now" drifts by seconds to
+ *  a minute or two between runs; the window overlaps by this much. */
+const TICK_SLACK_MINUTES = 2
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -69,13 +84,15 @@ export async function GET(req: Request) {
   }
 
   // Each school sets how far ahead its reminder goes out
-  // (`conferenceReminderLeadMinutes`, default 10). Scan the widest lead the
-  // setting allows and keep the sessions inside THEIR school's lead and at
-  // least a minute out — a reminder for a class that has started is noise.
+  // (`conferenceReminderLeadMinutes`, default 10). Scan the widest reach the
+  // setting allows and keep the sessions inside THEIR school's reach that
+  // have not started — a reminder for a class that has started is noise.
   // The event-row dedupe below keeps re-runs idempotent.
   const now = Date.now()
-  const startMin = new Date(now + 1 * 60 * 1000)
-  const startMax = new Date(now + MAX_REMINDER_LEAD_MINUTES * 60 * 1000)
+  const startMin = new Date(now)
+  const startMax = new Date(
+    now + (MAX_REMINDER_LEAD_MINUTES + TICK_SLACK_MINUTES) * 60 * 1000
+  )
   const candidates = await db.conference.findMany({
     where: {
       status: "scheduled",
@@ -92,7 +109,8 @@ export async function GET(req: Request) {
   })
   const sessions = candidates.filter((s) => {
     const lead = s.school?.conferenceReminderLeadMinutes ?? 10
-    return s.scheduledStart.getTime() - now <= lead * 60 * 1000
+    const reach = Math.max(lead, CRON_CADENCE_MINUTES) + TICK_SLACK_MINUTES
+    return s.scheduledStart.getTime() - now <= reach * 60 * 1000
   })
 
   // Batch-load which of these sessions already have a reminder event — one
@@ -124,8 +142,7 @@ export async function GET(req: Request) {
   // that lead window (e.g. lead=45 catches one 40 minutes out and one 8
   // minutes out on the same sweep), and the notification body says the
   // actual count. Rounded to the nearest minute, floored at 1 — a session
-  // inside its window is by construction still >=60s out (startMin is
-  // `now + 1min`), but round() alone could still floor a ~30s remainder to 0.
+  // about to start would otherwise print "in 0 minutes".
   await inBatches(due, NOTIFY_CONCURRENCY, async (s) => {
     const leadMinutes = Math.max(
       1,
@@ -146,6 +163,22 @@ export async function GET(req: Request) {
       })),
       skipDuplicates: true,
     })
+  }
+
+  // Deliver the reminders' pushes NOW. The push drain is its own route on this
+  // same tick and the Worker fires a tick's routes in parallel (cf/worker.js),
+  // so it has usually finished before these rows exist — a "starts in 10
+  // minutes" push would then leave on the next tick, after the bell.
+  // Best-effort: the drain route still picks up whatever this misses.
+  let pushed = 0
+  if (due.length > 0) {
+    try {
+      pushed = (await processPendingWebPushes(400)).succeeded
+    } catch (err) {
+      console.error("[live-class] reminder push drain failed", {
+        err: err instanceof Error ? err.message : String(err),
+      })
+    }
   }
 
   // Once a day (its own tick check): the month's LiveKit minutes against the
@@ -174,6 +207,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     ok: true,
     dispatched: due.length,
+    pushed,
     materialized,
     minutesGuard,
     digest,

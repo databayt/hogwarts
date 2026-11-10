@@ -4,7 +4,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { processPendingWebPushes } from "@/lib/notifications/push-web"
+import {
+  NO_DEVICE,
+  processPendingWebPushes,
+} from "@/lib/notifications/push-web"
 
 const sendNotification = vi.fn(async () => ({}))
 vi.mock("web-push", () => ({
@@ -86,6 +89,40 @@ describe("processPendingWebPushes", () => {
     expect(opts.urgency).toBe("high")
     expect(opts.TTL).toBeGreaterThan(60)
     expect(opts.TTL).toBeLessThanOrEqual(30 * 60)
+  })
+
+  // A school where nobody had alerts on had every row stamped `pushSent`, and
+  // read as fully delivered.
+  it("retires a row with no device behind it as NO_DEVICE, not as delivered", async () => {
+    vi.mocked(db.notification.findMany).mockResolvedValue([row()] as never)
+    vi.mocked(db.pushSubscription.findMany).mockResolvedValue([] as never)
+
+    const res = await processPendingWebPushes(10)
+
+    expect(sendNotification).not.toHaveBeenCalled()
+    expect(db.notification.update).toHaveBeenCalledWith({
+      where: { id: "n1" },
+      data: {
+        pushSent: true,
+        pushSentAt: expect.any(Date),
+        pushError: NO_DEVICE,
+      },
+    })
+    expect(res.noDevice).toBe(1)
+    expect(res.succeeded).toBe(0)
+  })
+
+  it("counts a row a device took as delivered, with no error left on it", async () => {
+    vi.mocked(db.notification.findMany).mockResolvedValue([row()] as never)
+
+    const res = await processPendingWebPushes(10)
+
+    expect(db.notification.update).toHaveBeenCalledWith({
+      where: { id: "n1" },
+      data: { pushSent: true, pushSentAt: expect.any(Date), pushError: null },
+    })
+    expect(res.succeeded).toBe(1)
+    expect(res.noDevice).toBe(0)
   })
 
   it("keeps normal urgency and a day's TTL for ordinary rows", async () => {

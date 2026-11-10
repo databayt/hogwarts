@@ -26,10 +26,17 @@ import webpush, { WebPushError } from "web-push"
 import { db } from "@/lib/db"
 import { resolveActionUrl } from "@/lib/dispatch-notification"
 
+/** `Notification.pushError` for a row whose recipient has no push
+ *  subscription: retired from the queue, delivered to nobody. */
+export const NO_DEVICE = "no_device"
+
 export interface WebPushProcessResult {
   processed: number
+  /** Rows at least one device took. */
   succeeded: number
   failed: number
+  /** Rows retired because the recipient has no device subscribed. */
+  noDevice: number
   /** Subscriptions deleted because the push service said they are gone. */
   pruned: number
   skippedReason?: "not_configured" | null
@@ -157,6 +164,7 @@ export async function processPendingWebPushes(
       processed: 0,
       succeeded: 0,
       failed: 0,
+      noDevice: 0,
       pruned: 0,
       skippedReason: "not_configured",
     }
@@ -169,6 +177,7 @@ export async function processPendingWebPushes(
       processed: 0,
       succeeded: 0,
       failed: 0,
+      noDevice: 0,
       pruned: 0,
       skippedReason: null,
     }
@@ -177,6 +186,7 @@ export async function processPendingWebPushes(
   const domainCache = new Map<string, string>()
   let succeeded = 0
   let failed = 0
+  let noDevice = 0
   let pruned = 0
 
   async function sendOne(row: PendingRow) {
@@ -186,13 +196,16 @@ export async function processPendingWebPushes(
     })
 
     if (subs.length === 0) {
-      // No browser asked for push — mark sent so the queue never spins on it.
-      // The in-app bell still shows the notification.
+      // No browser asked for push — retire the row so the queue never spins
+      // on it (the in-app bell still shows the notification), but say so:
+      // `pushSent` alone read as "delivered" for a school where not one
+      // person had alerts on. `pushError: NO_DEVICE` is what reach is counted
+      // from (a delivered row has `pushError: null`).
       await db.notification.update({
         where: { id: row.id },
-        data: { pushSent: true, pushSentAt: new Date() },
+        data: { pushSent: true, pushSentAt: new Date(), pushError: NO_DEVICE },
       })
-      succeeded++
+      noDevice++
       return
     }
 
@@ -286,6 +299,7 @@ export async function processPendingWebPushes(
     processed: pending.length,
     succeeded,
     failed,
+    noDevice,
     pruned,
     skippedReason: null,
   }

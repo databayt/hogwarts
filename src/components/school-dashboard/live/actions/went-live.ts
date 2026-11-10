@@ -26,6 +26,7 @@ import "server-only"
 import { after } from "next/server"
 
 import { db } from "@/lib/db"
+import { processPendingWebPushes } from "@/lib/notifications/push-web"
 
 import { isRecordingConfigured } from "../livekit/client"
 import { startCompositeEgress } from "../livekit/egress"
@@ -65,8 +66,19 @@ export async function transitionToLive(
   })
   if (count === 0) return { transitioned: false }
 
-  // The one notification whose whole point is to get the reader INTO the room.
-  defer(() => notifyClassStarted(schoolId, sessionId))
+  // The one notification whose whole point is to get the reader INTO the room
+  // — so its push leaves with it. Left to the push cron it would wait for the
+  // next tick, up to fifteen minutes into a class that has already begun.
+  defer(async () => {
+    await notifyClassStarted(schoolId, sessionId)
+    await processPendingWebPushes(200).catch((err) => {
+      console.error("[live-class] class-is-live push drain failed", {
+        schoolId,
+        sessionId,
+        err: err instanceof Error ? err.message : String(err),
+      })
+    })
+  })
 
   // Auto-start recording when the session opted in. Create the recording row
   // immediately (status "pending") from the egress result so an early

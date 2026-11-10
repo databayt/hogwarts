@@ -277,6 +277,16 @@ async function loadSession(
   }
 }
 
+/**
+ * The channels of the two notices that mean "go in now" — "starting soon" and
+ * "the class is live". No email: the mail queue is drained by a cron a tick
+ * later, so a ten-minute reminder arrived after the bell, and at one mail per
+ * class per child it was a dozen a day into a parent's inbox. The bell and a
+ * phone push are the channels that are on time. Scheduled, cancelled,
+ * recording-ready and the admin's morning digest keep their email.
+ */
+const NOW_CHANNELS: Array<"in_app" | "push"> = ["in_app", "push"]
+
 async function dispatch(
   schoolId: string,
   sessionId: string,
@@ -317,7 +327,7 @@ async function dispatch(
         }),
         lang,
         priority: "high",
-        channels: ["in_app", "email", "push"],
+        channels: NOW_CHANNELS,
         metadata: {
           kind: "startingSoonHost",
           sessionId,
@@ -388,10 +398,12 @@ async function dispatch(
         kind === "started" || kind === "startingSoon" ? "high" : "normal",
       // Push is requested now that mobile can actually act on a live class
       // (/api/mobile/live/:id/join). Delivery still depends on the user
-      // having a registered device and on the push worker running; the hub
-      // filters per-user channel preferences either way, so a school with no
-      // mobile users simply never sends one.
-      channels: ["in_app", "email", "push"],
+      // having a registered device; the hub filters per-user channel
+      // preferences either way.
+      channels:
+        kind === "started" || kind === "startingSoon"
+          ? NOW_CHANNELS
+          : ["in_app", "email", "push"],
       metadata: {
         kind,
         sessionId,
