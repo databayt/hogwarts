@@ -88,6 +88,8 @@
     "participants": "المشاركون",
     "connection": "الاتصال",
     "reconnecting": "جارٍ إعادة الاتصال…",
+    "connecting": "جارٍ الاتصال…",
+    "watchOnly": "أنت تشاهد هذه الحصة. الدردشة للقراءة فقط.",
     "moderation": {
       "remove": "إزالة",
       "removing": "جارٍ الإزالة…",

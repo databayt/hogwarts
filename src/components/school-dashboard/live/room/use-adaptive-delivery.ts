@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useRoomContext } from "@livekit/components-react"
 import {
   ConnectionQuality,
+  ConnectionState,
   RoomEvent,
   Track,
   VideoQuality,
@@ -20,6 +21,10 @@ import {
   type DeliveryTier,
   type QualitySample,
 } from "./adaptive-delivery"
+
+/** How often the local connection is sampled into the ladder. With the
+ *  ladder's own thresholds, a steadily poor link steps down in 8–12 seconds. */
+export const QUALITY_SAMPLE_MS = 4_000
 
 const TIER_QUALITY: Record<Exclude<DeliveryTier, "audio">, VideoQuality> = {
   high: VideoQuality.HIGH,
@@ -107,9 +112,15 @@ export function useAdaptiveDelivery(): AdaptiveDelivery {
 
   // Feed the ladder with the LOCAL participant's quality — that is the
   // connection that decides what this viewer can receive.
+  //
+  // On a CLOCK as well as on the SDK's event. `ConnectionQualityChanged` fires
+  // only when the value changes, and the ladder wants two poor samples eight
+  // seconds apart before it steps down and twenty good seconds before it
+  // steps back up. A link that is steadily poor therefore produced exactly
+  // one sample and never stepped down — the case the ladder exists for — and
+  // one that recovered never stepped back up.
   useEffect(() => {
-    const onQuality = (q: ConnectionQuality, participant: Participant) => {
-      if (participant.identity !== room.localParticipant.identity) return
+    const feed = (q: ConnectionQuality) => {
       const sample = sampleOf(q)
       setQuality(sample)
       const next = nextAdaptiveState(stateRef.current, sample, Date.now())
@@ -117,9 +128,22 @@ export function useAdaptiveDelivery(): AdaptiveDelivery {
       stateRef.current = next
       if (changed) setTier(next.tier)
     }
+    const onQuality = (q: ConnectionQuality, participant: Participant) => {
+      if (participant.identity !== room.localParticipant.identity) return
+      feed(q)
+    }
     room.on(RoomEvent.ConnectionQualityChanged, onQuality)
+    const timer = setInterval(() => {
+      // Only while the call is up: a sample taken mid-reconnect reads as
+      // "unknown", which the ladder ignores anyway, but there is nothing to
+      // learn from it either.
+      if (room.state === ConnectionState.Connected) {
+        feed(room.localParticipant.connectionQuality)
+      }
+    }, QUALITY_SAMPLE_MS)
     return () => {
       room.off(RoomEvent.ConnectionQualityChanged, onQuality)
+      clearInterval(timer)
     }
   }, [room])
 

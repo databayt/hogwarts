@@ -14,6 +14,7 @@ import { parseRoomHostsMetadata } from "@/components/school-dashboard/live/types
 
 import {
   applyMessage,
+  applyWireMessage,
   canDrawOn,
   CLASS_TOPIC,
   decodeMessage,
@@ -184,7 +185,7 @@ export function useClassChannel(opts: {
     // Reduce through the ref, not only through setState: the tally broadcast
     // below must carry the post-vote counts, and React has not re-rendered
     // (so `stateRef` has not caught up) by the time it is sent.
-    const next = applyMessage(stateRef.current, msg, {
+    const next = applyWireMessage(stateRef.current, msg, {
       identity: from.identity,
       name: from.name ?? from.identity,
       isHost: fromIsHost,

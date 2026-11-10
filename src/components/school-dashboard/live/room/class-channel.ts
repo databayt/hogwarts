@@ -426,6 +426,31 @@ export function applyMessage(
     case "muted":
     case "sync.request":
       return state
+    // A message this build does not know. Clients stay in a class across a
+    // deploy, so the day a newer client sends a new type, an older one must
+    // ignore it — without this the switch fell through and returned
+    // `undefined` as the room's state, and the room crashed on its next read.
+    default:
+      return state
+  }
+}
+
+/**
+ * `applyMessage` for a message that came off the wire: never throws and never
+ * returns anything but a state. The decoder only checks that `t` is a string,
+ * so a malformed payload of a KNOWN type (a question with no text) reaches the
+ * reducer and throws there — and any participant can send one on purpose.
+ */
+export function applyWireMessage(
+  state: ClassState,
+  msg: ClassMessage,
+  from: { identity: string; name: string; isHost: boolean },
+  now: number = Date.now()
+): ClassState {
+  try {
+    return applyMessage(state, msg, from, now) ?? state
+  } catch {
+    return state
   }
 }
 

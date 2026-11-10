@@ -11,6 +11,9 @@ export const DEFAULT_ROOM_LABELS = {
   participants: "Participants",
   connection: "Connection",
   reconnecting: "Reconnecting…",
+  connecting: "Connecting…",
+  /** The chat tab of someone who watches without a seat (a parent). */
+  watchOnly: "You are watching this class. Chat is read-only.",
   micMuted: "Microphone muted",
   cameraOff: "Camera off",
   mic: "Microphone",

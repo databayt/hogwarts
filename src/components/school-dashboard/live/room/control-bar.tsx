@@ -211,9 +211,10 @@ export function ClassControls({
   const unanswered = channel.state.questions.filter((q) => !q.answered).length
   const hands = channel.hands.length
   const myPlace = channel.hands.indexOf(channel.localIdentity) + 1
-  // The host's hands have their own disc when the tool is on; otherwise they
-  // still count on the discussion disc, whose panel lists them.
-  const badge = unanswered + chatUnread + (isHost && !tools.hands ? hands : 0)
+  // Hands have their own disc, and only when the school's Hands tool is on.
+  // With it off nobody can raise one (the student's disc is gone too), so the
+  // discussion badge no longer counts hands the panel has no tab to list.
+  const badge = unanswered + chatUnread
   const pollOpen = Boolean(channel.state.poll?.open)
   const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
   const discussionOpen = Boolean(panel) && panel !== "hands"
@@ -242,22 +243,29 @@ export function ClassControls({
       className="relative flex items-center justify-center gap-2.5"
     >
       {/* The student's place in line, over the row while the hand is up. */}
-      {!isHost && channel.handUp && myPlace > 0 && pop === null && (
-        <p
-          className={cn(
-            glassPill,
-            "pointer-events-none absolute bottom-full left-1/2 mb-3 -translate-x-1/2 px-3.5 py-1.5 text-[15px] font-medium whitespace-nowrap text-white"
-          )}
-          style={{ ...glassSurface, background: "rgba(20, 20, 20, 0.7)" }}
-          aria-live="polite"
-        >
-          ✋ {labels.handInLine.replace("{n}", String(myPlace))}
-        </p>
-      )}
+      {!isHost &&
+        tools.hands &&
+        channel.handUp &&
+        myPlace > 0 &&
+        pop === null && (
+          <p
+            className={cn(
+              glassPill,
+              "pointer-events-none absolute bottom-full left-1/2 mb-3 -translate-x-1/2 px-3.5 py-1.5 text-[15px] font-medium whitespace-nowrap text-white"
+            )}
+            style={{ ...glassSurface, background: "rgba(20, 20, 20, 0.7)" }}
+            aria-live="polite"
+          >
+            ✋ {labels.handInLine.replace("{n}", String(myPlace))}
+          </p>
+        )}
 
       {canPublish && <CameraDisc labels={labels} />}
       {canPublish && <MicDisc labels={labels} />}
-      {canPublish && !isHost && (
+      {/* The school's Hands switch decides this disc. It used to render for
+          every student regardless, while the teacher's hands list exists only
+          with the tool on — a raised hand nobody could see or lower. */}
+      {canPublish && !isHost && tools.hands && (
         <button
           type="button"
           className={cn(disc, channel.handUp && "text-black")}
@@ -267,7 +275,7 @@ export function ClassControls({
           onClick={() => {
             const up = !channel.handUp
             if (up) navigator.vibrate?.(12)
-            void channel.setHand(up)
+            void channel.setHand(up).catch(() => {})
           }}
         >
           {/* A soft ring breathes round a raised hand, so the student can
@@ -315,7 +323,9 @@ export function ClassControls({
           <SfSymbol glyph={pencilAndScribble} pt={GLYPH_PT} />
         </button>
       )}
-      {!isHost && (
+      {/* Not for an observer: their seat cannot send data, so a reaction
+          showed on their own screen and reached nobody. */}
+      {!isHost && canPublish && (
         <button
           type="button"
           className={disc}

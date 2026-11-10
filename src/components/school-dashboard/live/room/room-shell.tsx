@@ -50,8 +50,8 @@ import { ClassTimerPill } from "./class-timer"
 import { ClassControls, ClassMoreMenu } from "./control-bar"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
-import { ReactionsOverlay } from "./reactions-overlay"
 import { QuizSheet } from "./quiz"
+import { ReactionsOverlay } from "./reactions-overlay"
 import { SidePanel, type PanelTab } from "./side-panel"
 import type { SlideOption } from "./slide-options"
 import { Stage } from "./stage"
@@ -61,6 +61,7 @@ import { useAutoHide } from "./use-auto-hide"
 import { useClassChannel } from "./use-class-channel"
 import { useClassNotices } from "./use-class-notices"
 import { useLiveChat } from "./use-live-chat"
+import { useWakeLock } from "./use-wake-lock"
 
 interface RoomShellProps {
   sessionId: string
@@ -128,6 +129,9 @@ export function RoomShell({
   const isHost = role === "HOST" || role === "CO_HOST"
   const channel = useClassChannel({ hostIdentity, isHost })
   const adaptive = useAdaptiveDelivery()
+  // The shell exists only while the call is on, so the screen stays awake
+  // for exactly that long.
+  useWakeLock(true)
   const room = useRoomContext()
   const { localParticipant } = useLocalParticipant()
   const [panel, setPanel] = useState<PanelTab | null>(null)

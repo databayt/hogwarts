@@ -127,6 +127,7 @@ export function SidePanel(props: SidePanelProps) {
             locale={props.locale}
             labels={labels}
             active={props.open && tab === "chat"}
+            canSend={props.canAsk}
           />
         )}
         {tab === "questions" && <QuestionsTab {...props} />}

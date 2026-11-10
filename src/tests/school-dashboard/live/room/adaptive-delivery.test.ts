@@ -124,3 +124,31 @@ describe("adaptive delivery ladder", () => {
     expect(stepUp("audio")).toBe("low")
   })
 })
+
+// The hook samples the connection every four seconds (QUALITY_SAMPLE_MS). The
+// SDK's own event fires only when the quality CHANGES, so a steadily poor link
+// used to produce one sample and never step down at all.
+describe("steady samples on a clock", () => {
+  it("a link that stays poor steps down within twelve seconds, and keeps stepping", () => {
+    let s = initialAdaptiveState("high")
+    const tiers: string[] = []
+    for (let t = 0; t <= 40_000; t += 4_000) {
+      s = nextAdaptiveState(s, "poor", t)
+      tiers.push(s.tier)
+    }
+    expect(tiers.indexOf("medium")).toBeGreaterThan(0)
+    expect(tiers.indexOf("medium") * 4_000).toBeLessThanOrEqual(12_000)
+    expect(tiers.at(-1)).toBe("audio")
+  })
+
+  it("a link that stays good climbs back one tier every twenty seconds", () => {
+    let s = initialAdaptiveState("low")
+    const tiers: string[] = []
+    for (let t = 0; t <= 44_000; t += 4_000) {
+      s = nextAdaptiveState(s, "good", t)
+      tiers.push(s.tier)
+    }
+    expect(tiers.at(-1)).toBe("high")
+    expect(tiers.indexOf("medium") * 4_000).toBeGreaterThanOrEqual(20_000)
+  })
+})

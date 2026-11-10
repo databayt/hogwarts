@@ -12,12 +12,28 @@
  * hook, so it renders without mocking any.
  */
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { initialClassState } from "@/components/school-dashboard/live/room/class-channel"
 import { ClassControls } from "@/components/school-dashboard/live/room/control-bar"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import type { ClassChannel } from "@/components/school-dashboard/live/room/use-class-channel"
+
+// A student's row mounts the camera and microphone discs, which read LiveKit
+// track state; an observer's mounts neither.
+vi.mock("@livekit/components-react", () => ({
+  useTrackToggle: () => ({
+    enabled: false,
+    pending: false,
+    toggle: async () => {},
+    buttonProps: {},
+  }),
+  useMediaDeviceSelect: () => ({
+    devices: [],
+    activeDeviceId: "",
+    setActiveMediaDevice: async () => {},
+  }),
+}))
 
 const labels = resolveRoomLabels(undefined)
 
@@ -107,5 +123,60 @@ describe("ClassControls discussion button aria-label (lr-03)", () => {
     render(<ClassControls {...baseProps} channel={channel} />)
     const badge = screen.getByText("1")
     expect(badge).toHaveAttribute("aria-hidden")
+  })
+})
+
+// The school's Hands switch hid the teacher's hands list but not the
+// student's disc: a hand went up that nobody had a place to see or lower.
+describe("ClassControls follows the school's Hands switch", () => {
+  const student = { ...baseProps, role: "PARTICIPANT" as const }
+
+  it("offers a student the hand when the tool is on", () => {
+    render(<ClassControls {...student} channel={makeChannel()} />)
+    expect(
+      screen.getByRole("button", { name: labels.raiseHand })
+    ).toBeInTheDocument()
+  })
+
+  it("offers no hand when the school turned the tool off", () => {
+    render(
+      <ClassControls
+        {...student}
+        tools={{ ...baseProps.tools, hands: false }}
+        channel={makeChannel()}
+      />
+    )
+    expect(
+      screen.queryByRole("button", { name: labels.raiseHand })
+    ).not.toBeInTheDocument()
+  })
+
+  it("the host's discussion badge no longer counts hands it has no tab for", () => {
+    const channel = { ...makeChannel(), hands: ["s1", "s2"] }
+    render(
+      <ClassControls
+        {...baseProps}
+        role="HOST"
+        tools={{ ...baseProps.tools, hands: false }}
+        channel={channel}
+      />
+    )
+    expect(
+      screen.getByRole("button", { name: labels.discussion })
+    ).toBeInTheDocument()
+  })
+})
+
+// An observer's seat cannot send data: a reaction showed on their own screen
+// and reached nobody.
+describe("ClassControls for a watching parent", () => {
+  it("offers no reactions, hand, camera or microphone", () => {
+    render(<ClassControls {...baseProps} channel={makeChannel()} />)
+    for (const name of [labels.react, labels.raiseHand]) {
+      expect(screen.queryByRole("button", { name })).not.toBeInTheDocument()
+    }
+    expect(
+      screen.getByRole("button", { name: labels.discussion })
+    ).toBeInTheDocument()
   })
 })

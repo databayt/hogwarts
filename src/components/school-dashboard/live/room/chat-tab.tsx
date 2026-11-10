@@ -26,6 +26,8 @@ interface ChatTabProps {
   labels: RoomLabels
   /** False while another tab is showing — the tab stays mounted, hidden. */
   active: boolean
+  /** False for an observer: their token cannot publish, so they read only. */
+  canSend?: boolean
 }
 
 /**
@@ -44,6 +46,7 @@ export const ChatTab = memo(function ChatTab({
   locale,
   labels,
   active,
+  canSend = true,
 }: ChatTabProps) {
   const { messages, send, retry, hasMore, loadOlder } = chat
 
@@ -119,13 +122,21 @@ export const ChatTab = memo(function ChatTab({
           />
         )}
       </ChatWallpaper>
-      <InputBar
-        textOnly
-        maxLength={1000}
-        onSend={send}
-        placeholder={labels.messagePlaceholder}
-        labels={composerLabels}
-      />
+      {canSend ? (
+        <InputBar
+          textOnly
+          maxLength={1000}
+          onSend={send}
+          placeholder={labels.messagePlaceholder}
+          labels={composerLabels}
+        />
+      ) : (
+        // A watching parent's seat cannot send data. The composer used to be
+        // offered anyway, and every message turned into a red "not sent".
+        <p className="text-muted-foreground shrink-0 px-4 py-3 text-center text-sm">
+          {labels.watchOnly}
+        </p>
+      )}
     </div>
   )
 })

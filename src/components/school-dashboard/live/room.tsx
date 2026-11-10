@@ -6,6 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LayoutContextProvider, LiveKitRoom } from "@livekit/components-react"
 import {
+  AudioPresets,
+  ConnectionError,
+  ConnectionErrorReason,
   DisconnectReason,
   MediaDeviceFailure,
   ScreenSharePresets,
@@ -118,6 +121,11 @@ function roomOptionsFor(role: ConferenceParticipantRole): RoomOptions {
         : VideoPresets.h360.resolution,
     },
     publishDefaults: {
+      // A class is speech. The SDK's default is its music preset (48 kbps);
+      // speech is 24 — half the audio every phone in the room has to pull
+      // down, on the links that can least afford it, for a voice that sounds
+      // the same.
+      audioPreset: AudioPresets.speech,
       simulcast: true,
       videoSimulcastLayers: isHost
         ? [VideoPresets.h180, VideoPresets.h360]
@@ -220,7 +228,14 @@ export function RoomClient({
           return
         }
         if (result.error && DENY_CODES.has(result.error)) {
-          setError(labels.error)
+          // The class ended (or was cancelled) under us: say THAT. It used to
+          // fall into the eligibility refusal below — "Token expired. Please
+          // rejoin." — for a class there was nothing left to rejoin.
+          if (result.error === "LIVE_CLASS_INVALID_STATE") {
+            setEnded({ kind: "ended" })
+          } else {
+            setError(labels.error)
+          }
           return
         }
       } catch {
@@ -376,6 +391,20 @@ export function RoomClient({
                   ? labels.room.deviceInUse
                   : labels.room.deviceFailed
           setDeviceNotice(text.replace("{device}", device))
+        }}
+        // A connection that never came up. Without this the only trace was a
+        // console warning and the reader sat on an empty stage. The same
+        // callback also fires for a camera or microphone that would not start
+        // — the device notice above covers that and the call carries on — so
+        // only a CONNECTION error ends the room, and never the cancel that a
+        // leave (or a remount) produces.
+        onError={(err) => {
+          if (
+            err instanceof ConnectionError &&
+            err.reason !== ConnectionErrorReason.Cancelled
+          ) {
+            setEnded({ kind: "lost" })
+          }
         }}
         onDisconnected={(reason) => {
           switch (reason) {

@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   applyMessage,
+  applyWireMessage,
   decodeMessage,
   encodeMessage,
   fitStroke,
@@ -23,6 +24,36 @@ import {
 const HOST = { identity: "teacher-1", name: "Ms. Amal", isHost: true }
 const STUDENT = { identity: "student-1", name: "Sara", isHost: false }
 const OTHER = { identity: "student-2", name: "Omar", isHost: false }
+
+// Clients stay in a class across a deploy, and the decoder only checks that
+// `t` is a string. An unknown type fell through the switch and returned
+// `undefined` as the room's state; a malformed known one threw in the reducer.
+describe("messages off the wire never break the room", () => {
+  const state: ClassState = { ...initialClassState(), whiteboard: true }
+
+  it("ignores a message type this build does not know", () => {
+    const unknown = { t: "something.new", x: 1 } as never
+    expect(applyMessage(state, unknown, HOST)).toBe(state)
+    expect(applyWireMessage(state, unknown, HOST)).toBe(state)
+  })
+
+  it("ignores a malformed message of a known type instead of throwing", () => {
+    const noText = { t: "q", id: "q1" } as never
+    expect(() => applyWireMessage(state, noText, STUDENT)).not.toThrow()
+    expect(applyWireMessage(state, noText, STUDENT)).toBe(state)
+    const noStroke = { t: "wb.stroke" } as never
+    expect(applyWireMessage(state, noStroke, HOST)).toBe(state)
+  })
+
+  it("still applies a well-formed message", () => {
+    const next = applyWireMessage(
+      state,
+      { t: "q", id: "q1", text: "why?", at: 1 },
+      STUDENT
+    )
+    expect(next.questions).toHaveLength(1)
+  })
+})
 
 describe("codec", () => {
   it("round-trips a message and rejects garbage", () => {

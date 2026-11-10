@@ -15,7 +15,11 @@ import {
 import type { QualitySample } from "./adaptive-delivery"
 import type { RoomLabels } from "./labels"
 
-/** "جارٍ إعادة الاتصال…" — over everything while the SDK re-establishes the call. */
+/**
+ * Over everything while the call is not up: "connecting" on the way in,
+ * "reconnecting" when the SDK is re-establishing a call that was. One word
+ * for both made every first join read as a dropped connection.
+ */
 export function ReconnectingOverlay({ labels }: { labels: RoomLabels }) {
   const state = useConnectionState()
   if (
@@ -34,7 +38,9 @@ export function ReconnectingOverlay({ labels }: { labels: RoomLabels }) {
         style={glassSurface}
       >
         <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-        {labels.reconnecting}
+        {state === ConnectionState.Connecting
+          ? labels.connecting
+          : labels.reconnecting}
       </div>
     </div>
   )

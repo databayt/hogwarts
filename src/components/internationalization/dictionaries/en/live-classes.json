@@ -88,6 +88,8 @@
     "participants": "Participants",
     "connection": "Connection",
     "reconnecting": "Reconnecting…",
+    "connecting": "Connecting…",
+    "watchOnly": "You are watching this class. Chat is read-only.",
     "moderation": {
       "remove": "Remove",
       "removing": "Removing…",
