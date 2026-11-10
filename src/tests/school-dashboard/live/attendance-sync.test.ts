@@ -10,7 +10,6 @@ import {
   rollUpDailyAttendance,
   syncLiveAttendance,
 } from "@/components/school-dashboard/live/actions/attendance-sync"
-import { combinedGroupForSlot } from "@/components/school-dashboard/live/combined"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -27,11 +26,6 @@ vi.mock("@/lib/db", () => ({
     },
     $transaction: vi.fn(),
   },
-}))
-
-// A class taught alone unless a test says otherwise (see ../combined.ts).
-vi.mock("@/components/school-dashboard/live/combined", () => ({
-  combinedGroupForSlot: vi.fn(async () => null),
 }))
 
 const mockDb = db as unknown as {
@@ -873,96 +867,5 @@ describe("syncLiveAttendance — a corrected VIRTUAL row is manual", () => {
     expect(mockDb.attendance.update).not.toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "att-A" } })
     )
-  })
-})
-
-describe("syncLiveAttendance — a combined class (one room, two sections)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockDb.attendance.groupBy.mockResolvedValue([])
-    mockDb.$transaction.mockImplementation(async (cb: any) =>
-      cb({
-        attendance: {
-          update: mockDb.attendance.update,
-          createMany: mockDb.attendance.createMany,
-        },
-      })
-    )
-  })
-
-  it("writes each section's register on its OWN slot from the one room", async () => {
-    happySession()
-    // tt1 (sec1) owns the room; tt2 (sec2) is the same teacher, same start.
-    vi.mocked(combinedGroupForSlot).mockResolvedValueOnce({
-      primaryId: "tt1",
-      members: [
-        { slotId: "tt1", sectionId: "sec1" },
-        { slotId: "tt2", sectionId: "sec2" },
-      ],
-    })
-    mockDb.timetable.findFirst.mockImplementation(async ({ where }: any) => ({
-      periodId: where.id === "tt1" ? "p1" : "p2",
-      period: { name: "Period 1" },
-    }))
-    mockDb.student.findMany.mockImplementation(async ({ where }: any) =>
-      where.sectionId === "sec1"
-        ? [
-            { id: "sA", userId: "uA" },
-            { id: "sB", userId: "uB" },
-          ]
-        : [
-            { id: "sD", userId: "uD" },
-            { id: "sE", userId: "uE" },
-          ]
-    )
-    const stayed = (userId: string) => ({
-      userId,
-      joinedAt: ON_TIME,
-      leftAt: null,
-      durationSeconds: null,
-      activeSince: null,
-    })
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([
-      stayed("uA"),
-      stayed("uD"),
-    ])
-
-    const res = await syncLiveAttendance("school1", "c1")
-
-    expect(res).toEqual({ marked: 4, updated: 0 })
-    // The group is read for the class's own day.
-    expect(combinedGroupForSlot).toHaveBeenCalledWith("school1", "tt1", START)
-    const written = mockDb.attendance.createMany.mock.calls.flatMap(
-      (c: any[]) => c[0].data
-    )
-    expect(
-      written.map((r: any) => [
-        r.studentId,
-        r.status,
-        r.sectionId,
-        r.timetableId,
-        r.periodId,
-      ])
-    ).toEqual([
-      ["sA", "PRESENT", "sec1", "tt1", "p1"],
-      ["sB", "ABSENT", "sec1", "tt1", "p1"],
-      ["sD", "PRESENT", "sec2", "tt2", "p2"],
-      ["sE", "ABSENT", "sec2", "tt2", "p2"],
-    ])
-  })
-
-  it("leaves both registers to the teachers when nobody from either section came", async () => {
-    happySession()
-    vi.mocked(combinedGroupForSlot).mockResolvedValueOnce({
-      primaryId: "tt1",
-      members: [
-        { slotId: "tt1", sectionId: "sec1" },
-        { slotId: "tt2", sectionId: "sec2" },
-      ],
-    })
-    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
-    const res = await syncLiveAttendance("school1", "c1")
-    expect(res).toEqual({ marked: 0, updated: 0, skipped: "empty_room" })
-    expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
   })
 })

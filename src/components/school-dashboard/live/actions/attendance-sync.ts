@@ -23,7 +23,6 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
-import { combinedGroupForSlot } from "../combined"
 import { DEFAULT_SCHOOL_TZ, schoolDayOfInstant } from "../day-window"
 
 // Minutes after the scheduled start beyond which a join counts as LATE.
@@ -129,46 +128,26 @@ export async function syncLiveAttendance(
     if (!session.sectionId || !session.timetableId) {
       return { marked: 0, updated: 0, skipped: "no_section_or_timetable" }
     }
+    const sectionId = session.sectionId
+    const timetableId = session.timetableId
 
-    // A combined class (one teacher, several sections, one room — see
-    // ../combined.ts) is one register PER SECTION, each on its own slot, all
-    // read from the same room's presence. A class taught alone is one member.
-    const group = await combinedGroupForSlot(
-      schoolId,
-      session.timetableId,
-      session.scheduledStart
-    )
-    const members = group
-      ? group.members.map((m) => ({
-          sectionId: m.sectionId,
-          timetableId: m.slotId,
-        }))
-      : [{ sectionId: session.sectionId, timetableId: session.timetableId }]
-
-    // Slots (→ periodId), rosters and presence depend only on the session, so
-    // they are read together — sequential trips to Neon were most of this
-    // function's wall time.
-    const [loaded, participants] = await Promise.all([
-      Promise.all(
-        members.map(async (m) => {
-          const [slot, roster] = await Promise.all([
-            db.timetable.findFirst({
-              where: { id: m.timetableId, schoolId },
-              select: {
-                periodId: true,
-                period: { select: { name: true } },
-              },
-            }),
-            // Roster = every student placed in the section (id + userId for
-            // the presence map). The authority for who should have attended.
-            db.student.findMany({
-              where: { schoolId, sectionId: m.sectionId },
-              select: { id: true, userId: true },
-            }),
-          ])
-          return { ...m, slot, roster }
-        })
-      ),
+    // Slot (→ periodId), roster and presence depend only on the session, so
+    // they are read together — three sequential trips to Neon were most of
+    // this function's wall time.
+    const [slot, roster, participants] = await Promise.all([
+      db.timetable.findFirst({
+        where: { id: timetableId, schoolId },
+        select: {
+          periodId: true,
+          period: { select: { name: true } },
+        },
+      }),
+      // Roster = every student placed in the section (id + userId for the
+      // presence map). This is the authority for who should have attended.
+      db.student.findMany({
+        where: { schoolId, sectionId },
+        select: { id: true, userId: true },
+      }),
       // Presence: PARTICIPANT (student) rows for this session, keyed by
       // userId. ConferenceParticipant is unique on (sessionId, userId).
       db.conferenceParticipant.findMany({
@@ -182,17 +161,11 @@ export async function syncLiveAttendance(
         },
       }),
     ])
-
-    // A member with no period or no roster has no register to write. When
-    // that is every member, say why — the first reason, as before.
-    const usable = loaded.filter((m) => m.slot?.periodId && m.roster.length > 0)
-    if (usable.length === 0) {
-      const first = loaded[0]
-      return {
-        marked: 0,
-        updated: 0,
-        skipped: !first?.slot?.periodId ? "no_period" : "empty_roster",
-      }
+    if (!slot?.periodId) return { marked: 0, updated: 0, skipped: "no_period" }
+    const periodId = slot.periodId
+    const periodName = slot.period?.name ?? null
+    if (roster.length === 0) {
+      return { marked: 0, updated: 0, skipped: "empty_roster" }
     }
 
     const presenceByUser = new Map<string, Presence>()
@@ -203,10 +176,9 @@ export async function syncLiveAttendance(
     // whole section from an empty room records a fact we do not have: the
     // class may have moved, the link may have failed, the teacher may have
     // opened it by mistake. Leave the register to the teacher; the class page
-    // says why it is empty. For a combined class the question is asked of the
-    // whole class: if any of its sections came, the class happened.
-    const anyoneJoined = usable.some((m) =>
-      m.roster.some((s) => s.userId && presenceByUser.get(s.userId)?.joinedAt)
+    // says why it is empty.
+    const anyoneJoined = roster.some(
+      (s) => s.userId && presenceByUser.get(s.userId)?.joinedAt
     )
     if (!anyoneJoined) {
       return { marked: 0, updated: 0, skipped: "empty_room" }
@@ -252,170 +224,165 @@ export async function syncLiveAttendance(
       session.scheduledEnd.getTime() - earlyLeaveMin * 60_000
     )
 
+    const studentIds = roster.map((s) => s.id)
+    // Prefetch existing rows in one query (no per-student findFirst N+1).
+    // Deliberately NOT filtered on deletedAt — per this block's revive-on-
+    // update convention (attendance/CLAUDE.md Danger Zones), a soft-deleted
+    // row still occupies the unique key and must be found here so it can be
+    // revived, not collided with by createMany. method/status/deletedAt are
+    // read for the hybrid-safety rule below — never for display, so the
+    // extra columns cost nothing at the call site.
+    const existingRows = await db.attendance.findMany({
+      where: {
+        schoolId,
+        sectionId,
+        date: dateObj,
+        periodId,
+        studentId: { in: studentIds },
+      },
+      select: {
+        id: true,
+        studentId: true,
+        method: true,
+        status: true,
+        markedBy: true,
+        deletedAt: true,
+      },
+    })
+    const existingByStudent = new Map(
+      existingRows.map((r) => [
+        r.studentId,
+        {
+          id: r.id,
+          method: r.method,
+          status: r.status,
+          markedBy: r.markedBy,
+          deletedAt: r.deletedAt,
+        },
+      ])
+    )
+
     let marked = 0
     let updated = 0
-    for (const member of usable) {
-      const { sectionId, timetableId, roster } = member
-      const periodId = member.slot!.periodId!
-      const periodName = member.slot!.period?.name ?? null
-      const studentIds = roster.map((s) => s.id)
-      // Prefetch existing rows in one query (no per-student findFirst N+1).
-      // Deliberately NOT filtered on deletedAt — per this block's revive-on-
-      // update convention (attendance/CLAUDE.md Danger Zones), a soft-deleted
-      // row still occupies the unique key and must be found here so it can be
-      // revived, not collided with by createMany. method/status/deletedAt are
-      // read for the hybrid-safety rule below — never for display, so the
-      // extra columns cost nothing at the call site.
-      const existingRows = await db.attendance.findMany({
-        where: {
-          schoolId,
-          sectionId,
-          date: dateObj,
-          periodId,
-          studentId: { in: studentIds },
-        },
-        select: {
-          id: true,
-          studentId: true,
-          method: true,
-          status: true,
-          markedBy: true,
-          deletedAt: true,
-        },
-      })
-      const existingByStudent = new Map(
-        existingRows.map((r) => [
-          r.studentId,
-          {
-            id: r.id,
-            method: r.method,
-            status: r.status,
-            markedBy: r.markedBy,
-            deletedAt: r.deletedAt,
-          },
-        ])
-      )
+    // An explicit timeout: on a re-sync, or in a hybrid school whose teacher
+    // took the register first, every roster row is an UPDATE, one trip each.
+    // Prisma's 5s default is ~50 of those at ~90 ms to Neon, and timing out
+    // throws away the WHOLE class's register (the catch below returns
+    // "error"). The writes are idempotent, so holding the transaction longer
+    // costs nothing but the connection.
+    await db.$transaction(async (tx) => {
+      const toCreate: Prisma.AttendanceCreateManyInput[] = []
 
-      // An explicit timeout: on a re-sync, or in a hybrid school whose teacher
-      // took the register first, every roster row is an UPDATE, one trip each.
-      // Prisma's 5s default is ~50 of those at ~90 ms to Neon, and timing out
-      // throws away the WHOLE class's register (the catch below returns
-      // "error"). The writes are idempotent, so holding the transaction longer
-      // costs nothing but the connection.
-      await db.$transaction(async (tx) => {
-        const toCreate: Prisma.AttendanceCreateManyInput[] = []
+      for (const student of roster) {
+        // A join that LASTED → PRESENT (LATE past the grace window). No
+        // participant row, no recorded join, or a join too short to count →
+        // ABSENT.
+        const presence = student.userId
+          ? (presenceByUser.get(student.userId) ?? null)
+          : null
+        const joinedAt = presence?.joinedAt ?? null
+        const connected = presence ? connectedSeconds(presence, syncedAt) : 0
+        let status: "PRESENT" | "ABSENT" | "LATE" = "ABSENT"
+        let checkInTime: Date | null = null
+        let checkOutTime: Date | null = null
+        let leftEarly = false
+        if (joinedAt && connected >= minPresenceMin * 60) {
+          checkInTime = joinedAt
+          status = joinedAt.getTime() > lateAfter.getTime() ? "LATE" : "PRESENT"
+          // Still connected at reconciliation → they stayed to the end.
+          checkOutTime = presence?.activeSince
+            ? null
+            : (presence?.leftAt ?? null)
+          leftEarly =
+            !presence?.activeSince &&
+            !!presence?.leftAt &&
+            presence.leftAt.getTime() < earlyLeaveBefore.getTime()
+        }
+        const notes = leftEarly
+          ? "auto: live-class presence · left early"
+          : "auto: live-class presence"
 
-        for (const student of roster) {
-          // A join that LASTED → PRESENT (LATE past the grace window). No
-          // participant row, no recorded join, or a join too short to count →
-          // ABSENT.
-          const presence = student.userId
-            ? (presenceByUser.get(student.userId) ?? null)
-            : null
-          const joinedAt = presence?.joinedAt ?? null
-          const connected = presence ? connectedSeconds(presence, syncedAt) : 0
-          let status: "PRESENT" | "ABSENT" | "LATE" = "ABSENT"
-          let checkInTime: Date | null = null
-          let checkOutTime: Date | null = null
-          let leftEarly = false
-          if (joinedAt && connected >= minPresenceMin * 60) {
-            checkInTime = joinedAt
-            status =
-              joinedAt.getTime() > lateAfter.getTime() ? "LATE" : "PRESENT"
-            // Still connected at reconciliation → they stayed to the end.
-            checkOutTime = presence?.activeSince
-              ? null
-              : (presence?.leftAt ?? null)
-            leftEarly =
-              !presence?.activeSince &&
-              !!presence?.leftAt &&
-              presence.leftAt.getTime() < earlyLeaveBefore.getTime()
+        const existing = existingByStudent.get(student.id)
+        if (existing) {
+          // Hybrid-school safety (attn-05): a MANUAL row already marking the
+          // student PRESENT/LATE/EXCUSED — i.e. they were seen in the
+          // physical room — must never be downgraded to ABSENT just because
+          // they didn't also join the online room. Presence can only FILL or
+          // UPGRADE such a row (write check-in/out + method VIRTUAL when the
+          // presence itself says PRESENT/LATE); when presence says ABSENT the
+          // manual mark is left untouched entirely. A VIRTUAL row (or one
+          // already ABSENT/SICK/HOLIDAY) has no such protection and is
+          // written normally, same as before. A SOFT-DELETED manual row is
+          // excluded from the protection: an admin-removed mark was never
+          // "seen in the room" and must not block the row from being
+          // revived (see the `deletedAt: null` write below).
+          // "Manual" = not ours: any method but VIRTUAL, or a VIRTUAL row a
+          // person has since corrected (the class page's override goes through
+          // markPeriodAttendance, which sets markedBy and keeps the method).
+          const isManualPresentLike =
+            existing.deletedAt == null &&
+            (existing.method !== "VIRTUAL" || existing.markedBy != null) &&
+            (existing.status === "PRESENT" ||
+              existing.status === "LATE" ||
+              existing.status === "EXCUSED")
+          // Never LOWER a manual mark (attn-05 tightened 2026-10-17): presence
+          // may only raise it — a manual LATE becomes PRESENT when the student
+          // was on time online. A manual PRESENT is never turned into a
+          // VIRTUAL LATE, and EXCUSED is a decision, not a presence reading.
+          if (
+            isManualPresentLike &&
+            (status === "ABSENT" ||
+              existing.status === "EXCUSED" ||
+              (existing.status === "PRESENT" && status === "LATE"))
+          ) {
+            continue
           }
-          const notes = leftEarly
-            ? "auto: live-class presence · left early"
-            : "auto: live-class presence"
-
-          const existing = existingByStudent.get(student.id)
-          if (existing) {
-            // Hybrid-school safety (attn-05): a MANUAL row already marking the
-            // student PRESENT/LATE/EXCUSED — i.e. they were seen in the
-            // physical room — must never be downgraded to ABSENT just because
-            // they didn't also join the online room. Presence can only FILL or
-            // UPGRADE such a row (write check-in/out + method VIRTUAL when the
-            // presence itself says PRESENT/LATE); when presence says ABSENT the
-            // manual mark is left untouched entirely. A VIRTUAL row (or one
-            // already ABSENT/SICK/HOLIDAY) has no such protection and is
-            // written normally, same as before. A SOFT-DELETED manual row is
-            // excluded from the protection: an admin-removed mark was never
-            // "seen in the room" and must not block the row from being
-            // revived (see the `deletedAt: null` write below).
-            // "Manual" = not ours: any method but VIRTUAL, or a VIRTUAL row a
-            // person has since corrected (the class page's override goes through
-            // markPeriodAttendance, which sets markedBy and keeps the method).
-            const isManualPresentLike =
-              existing.deletedAt == null &&
-              (existing.method !== "VIRTUAL" || existing.markedBy != null) &&
-              (existing.status === "PRESENT" ||
-                existing.status === "LATE" ||
-                existing.status === "EXCUSED")
-            // Never LOWER a manual mark (attn-05 tightened 2026-10-17): presence
-            // may only raise it — a manual LATE becomes PRESENT when the student
-            // was on time online. A manual PRESENT is never turned into a
-            // VIRTUAL LATE, and EXCUSED is a decision, not a presence reading.
-            if (
-              isManualPresentLike &&
-              (status === "ABSENT" ||
-                existing.status === "EXCUSED" ||
-                (existing.status === "PRESENT" && status === "LATE"))
-            ) {
-              continue
-            }
-            await tx.attendance.update({
-              where: { id: existing.id },
-              data: {
-                status,
-                method: "VIRTUAL",
-                markedAt: new Date(),
-                deletedAt: null, // revive a soft-deleted row on re-sync
-                notes,
-                ...(checkInTime ? { checkInTime } : {}),
-                ...(checkOutTime ? { checkOutTime } : {}),
-              },
-            })
-            updated++
-          } else {
-            toCreate.push({
-              schoolId,
-              studentId: student.id,
-              date: dateObj,
+          await tx.attendance.update({
+            where: { id: existing.id },
+            data: {
               status,
               method: "VIRTUAL",
-              periodId,
-              periodName,
-              timetableId,
-              sectionId,
-              markedBy: null,
-              checkInTime,
-              checkOutTime,
+              markedAt: new Date(),
+              deletedAt: null, // revive a soft-deleted row on re-sync
               notes,
-            })
-            marked++
-          }
-        }
-
-        if (toCreate.length > 0) {
-          // skipDuplicates: a genuine unique-constraint collision on one
-          // student (e.g. a manual period-scoped row created between the
-          // prefetch and this write) must not abort the whole batch and leave
-          // every other student in the roster unmarked.
-          await tx.attendance.createMany({
-            data: toCreate,
-            skipDuplicates: true,
+              ...(checkInTime ? { checkInTime } : {}),
+              ...(checkOutTime ? { checkOutTime } : {}),
+            },
           })
+          updated++
+        } else {
+          toCreate.push({
+            schoolId,
+            studentId: student.id,
+            date: dateObj,
+            status,
+            method: "VIRTUAL",
+            periodId,
+            periodName,
+            timetableId,
+            sectionId,
+            markedBy: null,
+            checkInTime,
+            checkOutTime,
+            notes,
+          })
+          marked++
         }
-      }, TX_OPTIONS)
-      await rollUpDailyAttendance(schoolId, sectionId, dateObj, studentIds)
-    }
+      }
+
+      if (toCreate.length > 0) {
+        // skipDuplicates: a genuine unique-constraint collision on one
+        // student (e.g. a manual period-scoped row created between the
+        // prefetch and this write) must not abort the whole batch and leave
+        // every other student in the roster unmarked.
+        await tx.attendance.createMany({
+          data: toCreate,
+          skipDuplicates: true,
+        })
+      }
+    }, TX_OPTIONS)
+
+    await rollUpDailyAttendance(schoolId, sectionId, dateObj, studentIds)
 
     return { marked, updated }
   } catch (err) {
@@ -428,22 +395,14 @@ export async function syncLiveAttendance(
   }
 }
 
-type DailyStatus =
-  | "PRESENT"
-  | "LATE"
-  | "EXCUSED"
-  | "SICK"
-  | "HOLIDAY"
-  | "ABSENT"
+type DailyStatus = "PRESENT" | "LATE" | "EXCUSED" | "SICK" | "HOLIDAY" | "ABSENT"
 
 /**
  * The day's status from its period rows: in any period → the day counts.
  * PRESENT beats LATE (on time to some class is on time to school); a
  * recorded reason (EXCUSED, SICK, HOLIDAY) beats ABSENT.
  */
-export function dailyStatusFromPeriods(
-  statuses: Iterable<string>
-): DailyStatus {
+export function dailyStatusFromPeriods(statuses: Iterable<string>): DailyStatus {
   const seen = new Set(statuses)
   for (const s of ["PRESENT", "LATE", "EXCUSED", "SICK", "HOLIDAY"] as const) {
     if (seen.has(s)) return s

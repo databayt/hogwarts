@@ -672,23 +672,29 @@ export async function detectTimetableConflicts(input?: unknown) {
     const where: Record<string, unknown> = { schoolId }
     if (validatedInput?.termId) where.termId = validatedInput.termId
 
-    // Step 1: Find teacher conflicts using database grouping
-    // Query slots grouped by (dayOfWeek, periodId, teacherId) with count > 1
+    // Step 1: Find teacher conflicts by CLOCK TIME, not period id. Schools with
+    // per-grade bells give each grade its own Period rows, so the same teacher
+    // at 19:00 on two grades sat on two different periodIds and was never
+    // flagged (alabidae had 15 such clashes straight from its sheets). A
+    // conflict is the same teacher, term, day and week with overlapping times.
     const teacherConflicts = await db.$queryRaw<
-      Array<{
-        dayOfWeek: number
-        periodId: string
-        teacherId: string
-        count: bigint
-      }>
+      Array<{ aId: string; bId: string }>
     >`
-      SELECT "dayOfWeek", "periodId", "teacherId", COUNT(*) as count
-      FROM timetables
-      WHERE "schoolId" = ${schoolId}
-        AND "teacherId" IS NOT NULL
-        ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
-      GROUP BY "dayOfWeek", "periodId", "teacherId"
-      HAVING COUNT(*) > 1
+      SELECT a.id AS "aId", b.id AS "bId"
+      FROM timetables a
+      JOIN periods pa ON pa.id = a."periodId"
+      JOIN timetables b
+        ON b."schoolId" = a."schoolId" AND b."termId" = a."termId"
+       AND b."dayOfWeek" = a."dayOfWeek" AND b."weekOffset" = a."weekOffset"
+       AND b."teacherId" = a."teacherId" AND b.id > a.id
+      JOIN periods pb ON pb.id = b."periodId"
+      WHERE a."schoolId" = ${schoolId}
+        AND a."teacherId" IS NOT NULL
+        AND NOT pa."isBreak" AND NOT pb."isBreak"
+        AND NOT pa.untimed AND NOT pb.untimed
+        AND pa."startTime" < pb."endTime" AND pb."startTime" < pa."endTime"
+        ${validatedInput?.termId ? Prisma.sql`AND a."termId" = ${validatedInput.termId}` : Prisma.empty}
+      LIMIT 500
     `
 
     // Step 2: Find room conflicts using database grouping
@@ -735,30 +741,16 @@ export async function detectTimetableConflicts(input?: unknown) {
     })
 
     if (teacherConflicts.length > 0) {
+      const ids = [...new Set(teacherConflicts.flatMap((c) => [c.aId, c.bId]))]
       const teacherSlots = await timetableModel.findMany({
-        where: {
-          schoolId,
-          ...(validatedInput?.termId && { termId: validatedInput.termId }),
-          OR: teacherConflicts.map((tc) => ({
-            dayOfWeek: tc.dayOfWeek,
-            periodId: tc.periodId,
-            teacherId: tc.teacherId,
-          })),
-        },
-        select: conflictSlotSelect,
+        where: { schoolId, id: { in: ids } },
+        select: { id: true, ...conflictSlotSelect },
       })
-
-      const grouped = new Map<string, typeof teacherSlots>()
-      for (const s of teacherSlots) {
-        const key = `${s.dayOfWeek}|${s.periodId}|${s.teacherId}`
-        const arr = grouped.get(key) ?? []
-        if (arr.length < 2) arr.push(s)
-        grouped.set(key, arr)
-      }
-
-      for (const slots of grouped.values()) {
-        if (slots.length < 2) continue
-        const [a, b] = slots
+      const byId = new Map(teacherSlots.map((s: { id: string }) => [s.id, s]))
+      for (const { aId, bId } of teacherConflicts) {
+        const a = byId.get(aId) as (typeof teacherSlots)[number] | undefined
+        const b = byId.get(bId) as (typeof teacherSlots)[number] | undefined
+        if (!a || !b) continue
         conflicts.push({
           type: "TEACHER",
           classA: cohortOf(a),

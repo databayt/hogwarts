@@ -11,7 +11,6 @@ import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
-import { sessionSectionIds } from "../combined"
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
 
 type LiveEventKind =
@@ -239,16 +238,8 @@ async function loadSession(
     // `id` (Student.id) is kept alongside `userId` because the guardian
     // lookup below joins on StudentGuardian.studentId, which references
     // Student.id — NOT User.id.
-    // A combined class (one teacher, several sections, one room) reaches
-    // every section it covers.
-    const sectionIds = await sessionSectionIds(schoolId, session)
     const students = await db.student.findMany({
-      where: {
-        schoolId,
-        userId: { not: null },
-        sectionId:
-          sectionIds.length > 1 ? { in: sectionIds } : session.sectionId,
-      },
+      where: { schoolId, userId: { not: null }, sectionId: session.sectionId },
       select: { id: true, userId: true },
     })
     for (const s of students) {

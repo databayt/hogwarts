@@ -303,21 +303,15 @@ describe("Timetable Actions", () => {
     it("detects teacher conflict when same teacher occupies same time", async () => {
       // $queryRaw is called for teacher conflicts then classroom conflicts
       vi.mocked(db.$queryRaw)
-        // First call: teacher conflicts — return a conflict row
-        .mockResolvedValueOnce([
-          {
-            dayOfWeek: 0,
-            periodId: CPERIOD1,
-            teacherId: CTEACHER1,
-            slot_count: BigInt(2),
-          },
-        ])
+        // First call: teacher conflicts — the overlapping pair of slot ids
+        .mockResolvedValueOnce([{ aId: "slot-a", bId: "slot-b" }])
         // Second call: classroom conflicts — no conflicts
         .mockResolvedValueOnce([])
 
       // findMany is called for detailed slot data when conflicts are found
       vi.mocked(db.timetable.findMany).mockResolvedValueOnce([
         {
+          id: "slot-a",
           dayOfWeek: 0,
           periodId: CPERIOD1,
           class: { id: CCLASS1, name: "Class 1" },
@@ -327,6 +321,7 @@ describe("Timetable Actions", () => {
           classroom: { roomName: "R1" },
         },
         {
+          id: "slot-b",
           dayOfWeek: 0,
           periodId: CPERIOD1,
           class: { id: CCLASS2, name: "Class 2" },
@@ -344,15 +339,14 @@ describe("Timetable Actions", () => {
 
     it("does not crash on section-based slots (classId/class null) and uses section names", async () => {
       vi.mocked(db.$queryRaw)
-        .mockResolvedValueOnce([
-          { dayOfWeek: 0, periodId: CPERIOD1, teacherId: CTEACHER1 },
-        ])
+        .mockResolvedValueOnce([{ aId: "slot-a", bId: "slot-b" }])
         .mockResolvedValueOnce([])
 
       // Section-based slots have classId = null and class = null — the old
       // a.class.id dereference threw here. cohortOf must fall back to section.
       vi.mocked(db.timetable.findMany).mockResolvedValueOnce([
         {
+          id: "slot-a",
           dayOfWeek: 0,
           periodId: CPERIOD1,
           classId: null,
@@ -365,6 +359,7 @@ describe("Timetable Actions", () => {
           classroom: { roomName: "R1" },
         },
         {
+          id: "slot-b",
           dayOfWeek: 0,
           periodId: CPERIOD1,
           classId: null,
@@ -384,6 +379,48 @@ describe("Timetable Actions", () => {
       )
       expect(teacherConflict).toBeDefined()
       expect(teacherConflict?.classA.name).toBe("Grade 1-A")
+    })
+    it("flags the same teacher at the same CLOCK time across two grades' bells", async () => {
+      // Per-grade bells: G8 and G9 each have their own Period row at 19:00. The
+      // query pairs slots by overlapping times, so different periodIds clash.
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([{ aId: "g8-1900", bId: "g9-1900" }])
+        .mockResolvedValueOnce([])
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce([
+        {
+          id: "g8-1900",
+          dayOfWeek: 2,
+          periodId: "period-g8-1900",
+          sectionId: "g8",
+          section: { id: "g8", name: "الثاني متوسط - أ" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "فادية", lastName: "" },
+          classroomId: CROOM1,
+          classroom: { roomName: "R1" },
+        },
+        {
+          id: "g9-1900",
+          dayOfWeek: 2,
+          periodId: "period-g9-1900",
+          sectionId: "g9",
+          section: { id: "g9", name: "الثالث متوسط - أ" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "فادية", lastName: "" },
+          classroomId: CROOM2,
+          classroom: { roomName: "R2" },
+        },
+      ] as any)
+
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      const c = res.conflicts.find((x: any) => x.type === "TEACHER")
+      expect(c?.classA.name).toBe("الثاني متوسط - أ")
+      expect(c?.classB.name).toBe("الثالث متوسط - أ")
+      // The teacher query compares clock times, not period ids.
+      const sql = (
+        vi.mocked(db.$queryRaw).mock.calls[0][0] as unknown as string[]
+      ).join("?")
+      expect(sql).toMatch(/pa\."startTime" < pb\."endTime"/)
+      expect(sql).not.toMatch(/GROUP BY "dayOfWeek", "periodId", "teacherId"/)
     })
   })
 

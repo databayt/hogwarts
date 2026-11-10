@@ -12,7 +12,6 @@ import {
   schoolDayWindow,
   slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
-import { groupCombinedSlots } from "@/components/school-dashboard/live/combined"
 import { joinWindow } from "@/components/school-dashboard/live/join-window"
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 
@@ -305,68 +304,7 @@ export async function getLiveClassIndicators(
     indicators[session.timetableId] =
       session.status === "live" ? "live" : "scheduled"
   }
-  await spreadToCombinedSiblings(schoolId, indicators)
   return indicators
-}
-
-/**
- * A combined class (`live/combined.ts`) has ONE room, written on its primary
- * slot, so only that cell got a dot. The other sections' cells were joinable
- * but looked idle. This copies the primary's state to each online sibling.
- * Best-effort: a failed read leaves the map as it was.
- */
-async function spreadToCombinedSiblings(
-  schoolId: string,
-  indicators: Record<string, "live" | "scheduled">
-): Promise<void> {
-  const slotIds = Object.keys(indicators)
-  if (slotIds.length === 0) return
-  try {
-    const primaries = await db.timetable.findMany({
-      where: { schoolId, id: { in: slotIds }, teacherId: { not: null } },
-      select: {
-        termId: true,
-        dayOfWeek: true,
-        weekOffset: true,
-        teacherId: true,
-      },
-    })
-    if (primaries.length === 0) return
-    const peers = await db.timetable.findMany({
-      where: {
-        schoolId,
-        sectionId: { not: null },
-        period: { isBreak: false },
-        OR: primaries.map((p) => ({
-          termId: p.termId,
-          dayOfWeek: p.dayOfWeek,
-          weekOffset: p.weekOffset,
-          teacherId: p.teacherId,
-        })),
-      },
-      select: {
-        id: true,
-        teacherId: true,
-        sectionId: true,
-        period: { select: { startTime: true } },
-      },
-      take: 2000,
-    })
-    const policies = await resolveOnlinePolicies(
-      schoolId,
-      peers.map((p) => p.sectionId!)
-    )
-    const online = peers.filter((p) => policies.get(p.sectionId!)?.online)
-    for (const [slotId, group] of groupCombinedSlots(online)) {
-      const state = indicators[group.primaryId]
-      if (state && !indicators[slotId]) indicators[slotId] = state
-    }
-  } catch (err) {
-    console.warn("[timetable] combined live dots failed", {
-      schoolId,
-      err: err instanceof Error ? err.message : String(err),
-    })
-  }
 }
 
 type TodaySlot = {

@@ -10,7 +10,6 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type { LiveClassAction } from "../authorization"
-import { sessionSectionIds } from "../combined"
 import { canAccessSession, type RequireContextResult } from "./helpers"
 
 type Ctx = Extract<RequireContextResult, { ok: true }>
@@ -111,12 +110,7 @@ export async function readLiveClass(
     // read_school_dashboard) keep whole-school read.
     if (
       (ctx.role === "STUDENT" || ctx.role === "GUARDIAN") &&
-      !(await canAccessSession(
-        ctx,
-        // A combined class admits every section it covers.
-        await sessionSectionIds(ctx.schoolId, session),
-        session.visibility
-      ))
+      !(await canAccessSession(ctx, session.sectionId, session.visibility))
     ) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
     }

@@ -173,28 +173,6 @@ describe("materializeSchoolDay", () => {
     expect(materializeSlotSession).toHaveBeenCalledTimes(1)
   })
 
-  it("writes ONE room for a combined class and skips its siblings", async () => {
-    // One teacher, two ONLINE sections, the same 08:00 start: one class.
-    vi.mocked(db.timetable.findMany).mockResolvedValue([
-      slot("tt-b", "sec-2"),
-      slot("tt-a", "sec-1"),
-    ] as never)
-    vi.mocked(resolveOnlinePolicies).mockResolvedValue(
-      new Map([
-        ["sec-1", ONLINE],
-        ["sec-2", ONLINE],
-      ]) as never
-    )
-    const out = await materializeSchoolDay(SCHOOL)
-    expect(out.created).toBe(1)
-    expect(out.reasons.combined).toBe(1)
-    expect(materializeSlotSession).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(materializeSlotSession).mock.calls[0][0]).toMatchObject({
-      id: "tt-a",
-      sectionId: "sec-1",
-    })
-  })
-
   it("does not let one bad slot abort the rest of the school's day", async () => {
     vi.mocked(db.timetable.findMany).mockResolvedValue([
       slot("tt-1"),
