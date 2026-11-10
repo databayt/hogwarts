@@ -32,6 +32,7 @@ import { issueAccessToken } from "@/components/school-dashboard/live/livekit/tok
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
 import { hostMayStart, joinPhase, joinWindow } from "../join-window"
+import { ROOM_NAME_USER_SELECT, roomDisplayName } from "../room-name"
 import { concurrentCapError } from "./helpers"
 import { transitionToLive } from "./went-live"
 
@@ -204,6 +205,7 @@ export async function performLiveClassJoin(
         teacher: { select: { userId: true } },
         school: {
           select: {
+            nameDisplay: true,
             conferenceReminderLeadMinutes: true,
             conferenceGuardiansObserve: true,
             conferenceStudentsJoinMuted: true,
@@ -219,7 +221,7 @@ export async function performLiveClassJoin(
     }),
     db.user.findUnique({
       where: { id: userId },
-      select: { username: true, email: true },
+      select: ROOM_NAME_USER_SELECT,
     }),
     db.conferenceParticipant.findUnique({
       where: { sessionId_userId: { sessionId, userId } },
@@ -273,8 +275,7 @@ export async function performLiveClassJoin(
   // and everyone else waits on the card (a distinct code the room retries on).
   const slotClass = liveClass.timetableId != null
   const mayOpen =
-    participantRole === "HOST" ||
-    (slotClass && participantRole !== "OBSERVER")
+    participantRole === "HOST" || (slotClass && participantRole !== "OBSERVER")
 
   if (slotClass && liveClass.scheduledStart && liveClass.scheduledEnd) {
     // The slot's window, enforced HERE and not only by the buttons that hide
@@ -383,7 +384,14 @@ export async function performLiveClassJoin(
     },
   })
 
-  const displayName = userRow?.username ?? userRow?.email ?? userId
+  // The person's own name, in the school's display — never the username,
+  // which for a school member is their login code (see room-name.ts).
+  const displayName = roomDisplayName(
+    userRow,
+    role,
+    liveClass.school.nameDisplay,
+    liveClass.lang
+  )
 
   let token: string
   let wsUrl: string

@@ -8,6 +8,10 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { checkMessageSendRateLimit } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  ROOM_NAME_USER_SELECT,
+  roomDisplayName,
+} from "@/components/school-dashboard/live/room-name"
 
 /**
  * The room chat's memory. Messages travel over the LiveKit data channel —
@@ -38,14 +42,20 @@ const ID_RE = /^[A-Za-z0-9_-]{1,64}$/
 async function chatContext(sessionId: string) {
   const session = await auth()
   const userId = session?.user?.id
-  if (!userId) return { ok: false as const, error: ACTION_ERRORS.NOT_AUTHENTICATED }
+  if (!userId)
+    return { ok: false as const, error: ACTION_ERRORS.NOT_AUTHENTICATED }
   const { schoolId } = await getTenantContext()
-  if (!schoolId) return { ok: false as const, error: ACTION_ERRORS.MISSING_SCHOOL }
+  if (!schoolId)
+    return { ok: false as const, error: ACTION_ERRORS.MISSING_SCHOOL }
 
   const [conference, participant] = await Promise.all([
     db.conference.findFirst({
       where: { id: sessionId, schoolId, deletedAt: null },
-      select: { id: true, school: { select: { conferenceToolChat: true } } },
+      select: {
+        id: true,
+        lang: true,
+        school: { select: { conferenceToolChat: true, nameDisplay: true } },
+      },
     }),
     db.conferenceParticipant.findUnique({
       where: { sessionId_userId: { sessionId, userId } },
@@ -56,7 +66,15 @@ async function chatContext(sessionId: string) {
   if (!conference.school.conferenceToolChat || !participant) {
     return { ok: false as const, error: ACTION_ERRORS.UNAUTHORIZED }
   }
-  return { ok: true as const, schoolId, userId, participant }
+  return {
+    ok: true as const,
+    schoolId,
+    userId,
+    role: session.user.role,
+    participant,
+    lang: conference.lang,
+    nameDisplay: conference.school.nameDisplay,
+  }
 }
 
 /** Save one message the caller just sent over the room. Fire-and-forget. */
@@ -78,16 +96,20 @@ export async function recordChatMessage(input: {
   const ctx = await chatContext(input.sessionId)
   if (!ctx.ok) return actionError(ctx.error)
 
-  const limit = checkMessageSendRateLimit(ctx.userId, input.sessionId, ctx.schoolId)
+  const limit = checkMessageSendRateLimit(
+    ctx.userId,
+    input.sessionId,
+    ctx.schoolId
+  )
   if (!limit.allowed) return actionError(ACTION_ERRORS.RATE_LIMITED)
 
   // The name is the server's, never the client's — the same one join-core
   // put on the room token, so history reads exactly as the live chat did.
   const user = await db.user.findUnique({
     where: { id: ctx.userId },
-    select: { username: true, email: true },
+    select: ROOM_NAME_USER_SELECT,
   })
-  const name = (user?.username ?? user?.email ?? "").slice(0, 80)
+  const name = roomDisplayName(user, ctx.role ?? "", ctx.nameDisplay, ctx.lang)
 
   const eventId = `lc:${input.sessionId}:chat:${input.messageId}`
   await db.conferenceEvent.upsert({
@@ -113,7 +135,10 @@ export async function recordChatMessage(input: {
 /**
  * The newest page of the room's chat, oldest first. `before` (ms) pages back.
  */
-export async function getRoomChat(input: { sessionId: string; before?: number }) {
+export async function getRoomChat(input: {
+  sessionId: string
+  before?: number
+}) {
   if (!ID_RE.test(input.sessionId)) {
     return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
@@ -134,7 +159,11 @@ export async function getRoomChat(input: { sessionId: string; before?: number })
   const hasMore = rows.length > PAGE
   const messages: RoomChatMessage[] = []
   for (const row of rows.slice(0, PAGE).reverse()) {
-    const p = row.payload as { id?: string; text?: string; name?: string } | null
+    const p = row.payload as {
+      id?: string
+      text?: string
+      name?: string
+    } | null
     if (!p?.id || !p.text) continue
     messages.push({
       id: p.id,
