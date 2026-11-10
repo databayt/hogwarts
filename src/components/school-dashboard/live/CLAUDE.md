@@ -1146,6 +1146,13 @@ of it. Detail and evidence: ISSUE.md, same date.
   seconds (`eventTime`).
 - **`RoomPageHeader` uses `LocaleDictionaryProvider`.** Passing the dictionary
   as a prop put 1.4 MB (322 KB gzipped) into every load of the room page.
+- **Why a seat dropped is in the class's own events**, not only the SFU's
+  log: `eventType: "client_trace"` rows from `room/use-connection-trace.ts`
+  (hidden, stall, offline, net, reconnecting, disconnected, wake). The SFU
+  reports a locked phone and a dead network identically. The hook holds
+  listeners only — it must never set state or render, and a failed write is
+  swallowed. Add a kind to `TRACE_KINDS` and the server accepts it; anything
+  else is dropped by `sanitizeTrace`.
 
 ## Danger Zones
 

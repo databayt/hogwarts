@@ -20,6 +20,25 @@ findings: `~/.claude/plans/read-hogwarts-to-read-prancy-pixel.md`.
 - 54 guardian records, 1 login. 5 archived students, 4 of them still placed in sections.
 - 12 of 48 students and 14 of 32 teachers had signed in over three days.
 
+**The first class with students (11-10, maths, grade 3, 12:00–12:50), from the SFU's log**
+
+- Teacher and both students were together for 6 of the 50 minutes (12:38–12:44). Before that
+  each came into an empty room, stayed under two minutes, left, and came back later: teacher
+  12:05–12:10 (three stays), student 12:17–12:21 (three stays, wrote «مرحبا» to nobody), teacher
+  12:23–12:26, the second student from 12:36. 16 joins for three people; the SFU closed the room
+  on its 120 s departure timeout three times.
+- Half the exits were `PEER_CONNECTION_DISCONNECTED` 20–90 s after joining, with a resume
+  attempt a minute later that the SFU refused (`could not restart participant`; the SDK then
+  rejoined in full). That is a phone that went away and came back — a locked screen or a switch
+  to WhatsApp — or a network cut; the SFU cannot tell which. The other half were clean leaves.
+- All three seats were Android phones (the teacher on Samsung Internet, Sudanese mobile data;
+  the students on Chrome from Saudi and UAE networks), all on direct UDP. No relay, no TCP.
+- No reminder was produced for the class (the on-the-hour bug) and nobody has push, so nothing
+  told either side the other had arrived. The room said «أنت وحدك في هذه الغرفة».
+- What follows: the wake lock (in Wave A) for the locked screen; the connection trace below to
+  tell a sleeping phone from a dead network; and, still open, a room that says the other side
+  has been called and a notice that calls them (see Open).
+
 **Shipped to main (Wave A, commits `47bb7c598` … `8b9b30593`), deploy owed**
 
 Alerts:
@@ -99,8 +118,27 @@ Server:
 - The same script on a local dev server with these changes: parent's chat read-only, names shown,
   hand toast, chat, media.
 
+**Connection trace (`3d6506ffb`, after Wave A)**
+
+- `room/connection-trace.ts` + `room/use-connection-trace.ts` + `actions/connection-trace.ts`.
+  Each seat keeps a short list of small events — page hidden and for how long, timers stalled,
+  offline, network type, reconnecting, why the room ended, the wake lock — and writes them as
+  `ConferenceEvent` rows, `eventType: "client_trace"`, while the page can send. A hidden or
+  offline page sends nothing; events wait, and survive a reload in session storage.
+- Listeners only, nothing drawn. Gated on a seat in the class; 60 events a write, 240 a page,
+  40 rows a seat per class. Read with SQL:
+  `select "actorUserId", payload from live_class_events where "sessionId" = '…' and "eventType" = 'client_trace' order by "occurredAt"`.
+- Reading it: `hidden` → `stall` → `visible` around an SFU drop is a sleeping or backgrounded
+  phone; `offline`, or `reconnecting` with detail `visible` and no `hidden` before it, is the
+  network.
+
 **Open, in order** (the plan's Wave B)
 
+- **Someone is waiting.** A person alone in the room is told nothing and nobody is told about
+  them. Planned: on `participant_joined`, when a student is in with no host (or a host with no
+  student) and the "class is live" notice is older than two minutes, one in-app + push notice to
+  the other side, rate-limited per class; and the alone stage says who has been called instead
+  of «أنت وحدك».
 - The room's state for late joiners who cannot ask (a watching parent) or are never asked (a
   co-host), and for a teacher who reloads: today a reload clears questions, poll, slides and timer
   for everyone, because every client re-asks the returning host. Lead host by seniority, push on
