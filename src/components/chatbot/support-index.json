@@ -59,6 +59,7 @@
   },
   {
     "slug": "online-school",
+    "flow": "live-setup",
     "roles": [
       "admin"
     ],
@@ -112,7 +113,10 @@
       "war",
       "emergency online"
     ],
-    "guide": "/docs/support/online-school"
+    "guide": "/docs/support/online-school",
+    "routes": [
+      "/school/configuration/teaching-mode"
+    ]
   },
   {
     "slug": "add-student",
@@ -576,6 +580,7 @@
   },
   {
     "slug": "live-classes",
+    "flow": "live-join-timetable",
     "roles": [
       "student",
       "parent",
@@ -650,6 +655,7 @@
   },
   {
     "slug": "teach-live",
+    "flow": "live-teacher",
     "roles": [
       "teacher",
       "admin"

@@ -46,6 +46,10 @@ function resolvePage(lang: string, slug: string[] | undefined) {
   return page ? { page, source: docsSource, fallback: false } : null
 }
 
+// Every guide is prerendered above, so an unknown slug is a 404 — not an
+// on-demand render, which fails inside the container (a bare 500).
+export const dynamicParams = false
+
 export function generateStaticParams({ params }: { params: { lang: string } }) {
   const slugs = new Map(
     docsSource.getPages().map((page) => [page.slugs.join("/"), page.slugs])

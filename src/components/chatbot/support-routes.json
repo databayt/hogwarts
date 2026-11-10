@@ -1,5 +1,18 @@
 [
   {
+    "slug": "online-school",
+    "routes": [
+      "/school/configuration/teaching-mode"
+    ],
+    "roles": [
+      "admin"
+    ],
+    "title": {
+      "ar": "تشغيل المدرسة عن بُعد",
+      "en": "Run your school online"
+    }
+  },
+  {
     "slug": "add-student",
     "routes": [
       "/students"
