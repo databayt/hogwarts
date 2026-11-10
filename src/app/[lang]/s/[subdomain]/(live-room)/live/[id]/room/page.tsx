@@ -525,7 +525,6 @@ export default async function Page({ params }: Props) {
             school={schoolLookup.data}
             lang={lang}
             role={session.user.role}
-            dictionary={dictionary}
           />
         ) : undefined
       }

@@ -2,8 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { SidebarProvider } from "@/components/ui/sidebar"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import type { School } from "@/components/school-marketing/types"
 import PlatformHeader from "@/components/template/platform-header/content"
@@ -12,7 +11,6 @@ interface RoomPageHeaderProps {
   school: School
   lang: string
   role?: string
-  dictionary: Dictionary
 }
 
 /**
@@ -35,22 +33,24 @@ interface RoomPageHeaderProps {
  *   itself over the artwork.
  * - `SidebarProvider` renders a `flex min-h-svh` wrapper; `contents` removes
  *   it from layout so it contributes a context and nothing else.
+ * - `LocaleDictionaryProvider`, never `DictionaryProvider dictionary={…}`: a
+ *   prop to a client component is serialized into the page. That put the
+ *   whole dictionary — about 1.3 MB in Arabic — into the room page AND into
+ *   every server-action response that re-renders it, which in a class is
+ *   Join, each saved chat message and each board save. On mobile data that
+ *   was megabytes a minute for a header nobody sees after joining. The locale
+ *   provider imports the same JSON as a cached chunk, fetched once per deploy.
  */
-export function RoomPageHeader({
-  school,
-  lang,
-  role,
-  dictionary,
-}: RoomPageHeaderProps) {
+export function RoomPageHeader({ school, lang, role }: RoomPageHeaderProps) {
   return (
     <div className="bg-background px-2 pb-6 md:hidden [&_[data-slot=platform-header]]:static">
-      <DictionaryProvider dictionary={dictionary}>
+      <LocaleDictionaryProvider lang={lang}>
         <SchoolProvider school={school}>
           <SidebarProvider className="contents min-h-0">
             <PlatformHeader school={school} lang={lang} serverRole={role} />
           </SidebarProvider>
         </SchoolProvider>
-      </DictionaryProvider>
+      </LocaleDictionaryProvider>
     </div>
   )
 }
