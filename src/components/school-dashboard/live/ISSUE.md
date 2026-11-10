@@ -132,13 +132,26 @@ Server:
   phone; `offline`, or `reconnecting` with detail `visible` and no `hidden` before it, is the
   network.
 
+**Someone is waiting (after Wave A; `9dff5196e` the sentence, then the notice)**
+
+- **The room says who is missing** (`room/waiting.ts`, `room/waiting-notice.tsx`). An empty
+  stage prints it; with a camera, the board or classmates on the stage it is a notice under the
+  top pills, three seconds late so a blip does not flash at a class. Roles come from each
+  participant's `role` attribute — a label for a sentence, never a permission.
+- **The other side is called** (`actions/waiting-nudge.ts`, from the webhook's
+  `participant_joined`, after the response). A student in with no teacher → the teacher is told
+  «طلابك في انتظارك»; a teacher in with no student → the roster and guardians are told
+  «<المعلم> في الحصة الآن». In-app + push, the "class is live" notification type (so a reader
+  who silenced that is not reached), the same join link.
+- Limits: a teacher at most 4 times a class, 5 minutes apart; a roster at most 2, 10 minutes
+  apart; nothing after the bell, nothing for a school-wide session, and nothing in the two
+  minutes after the class went live when "the class is live" has just reached the same people
+  (always so for the roster; for the teacher only when a student opened the room). The claim is
+  a `ConferenceEvent` row (`waiting_nudge_teacher` / `waiting_nudge_roster`) with a
+  minute-bucketed `eventId`, so two students walking in together send one notice.
+
 **Open, in order** (the plan's Wave B)
 
-- **Someone is waiting.** A person alone in the room is told nothing and nobody is told about
-  them. Planned: on `participant_joined`, when a student is in with no host (or a host with no
-  student) and the "class is live" notice is older than two minutes, one in-app + push notice to
-  the other side, rate-limited per class; and the alone stage says who has been called instead
-  of «أنت وحدك».
 - The room's state for late joiners who cannot ask (a watching parent) or are never asked (a
   co-host), and for a teacher who reloads: today a reload clears questions, poll, slides and timer
   for everyone, because every client re-asks the returning host. Lead host by seniority, push on

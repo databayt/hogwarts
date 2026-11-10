@@ -12,6 +12,7 @@ import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/a
 import { notifyClassRecordingReady } from "@/components/school-dashboard/live/actions/notifications"
 
 import { publishRecordingAsLessonVideo } from "../actions/publish-recording"
+import { nudgeWaiting } from "../actions/waiting-nudge"
 import { transitionToLive } from "../actions/went-live"
 import { JOIN_GRACE_AFTER_END_MIN } from "../join-window"
 import { getLiveKitConfig, getLiveKitRecordingConfig } from "./client"
@@ -277,6 +278,19 @@ async function applyEvent(
             },
             select: { id: true },
           })
+          // Someone is in the room now. If their other side is not, tell it
+          // (actions/waiting-nudge.ts). After the response and best-effort:
+          // a notice must never cost the presence write its delivery.
+          after(() =>
+            nudgeWaiting({ schoolId, sessionId, joinerUserId: identity }).catch(
+              (err) =>
+                console.error("[live-class] waiting nudge failed", {
+                  schoolId,
+                  sessionId,
+                  err: err instanceof Error ? err.message : err,
+                })
+            )
+          )
         }
       }
       break

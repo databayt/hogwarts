@@ -436,6 +436,104 @@ async function dispatch(
   }
 }
 
+/**
+ * "Someone is waiting" (actions/waiting-nudge.ts). Not a `LiveEventKind`: it
+ * has two audiences and its own sentences, and it reuses the "class is live"
+ * notification TYPE so a reader who silenced that one is not reached by this
+ * either, and so no enum changes for a notice of the same family.
+ */
+const WAITING: Record<
+  "teacher" | "roster",
+  Record<"ar" | "en", { title: string; body: string }>
+> = {
+  // To the teacher: a student is in the room and no teacher is.
+  teacher: {
+    ar: {
+      title: "طلابك في انتظارك",
+      body: "دخل طالب إلى {title} ولا يوجد معلم في الغرفة. اضغط للانضمام.",
+    },
+    en: {
+      title: "Your students are waiting",
+      body: "A student is in {title} and no teacher is. Tap to join.",
+    },
+  },
+  // To the roster: the teacher is in the room and no student is.
+  roster: {
+    ar: {
+      title: "{teacher} في الحصة الآن",
+      body: "{title} جارية الآن. اضغط للانضمام.",
+    },
+    en: {
+      title: "{teacher} is in the class now",
+      body: "{title} is under way. Tap to join.",
+    },
+  },
+}
+const THE_TEACHER: Record<"ar" | "en", string> = {
+  ar: "المعلم",
+  en: "The teacher",
+}
+
+export async function notifyClassWaiting(
+  schoolId: string,
+  sessionId: string,
+  /** Who is told: the class's teacher, or its students and their guardians. */
+  side: "teacher" | "roster",
+  /** People already in the room. */
+  excludeUserIds: string[] = []
+): Promise<{ created: number }> {
+  try {
+    const resolved = await loadSession(schoolId, sessionId)
+    if (!resolved) return { created: 0 }
+    const { session, lang, teacherUserId } = resolved
+    const skip = new Set(excludeUserIds)
+    const targets =
+      side === "teacher"
+        ? teacherUserId && !skip.has(teacherUserId)
+          ? [teacherUserId]
+          : []
+        : resolved.userIds.filter(
+            (id) => id !== teacherUserId && !skip.has(id)
+          )
+    if (targets.length === 0) return { created: 0 }
+
+    const template = WAITING[side][lang]
+    const vars = {
+      title: session.title,
+      teacher: session.teacherFullName.trim() || THE_TEACHER[lang],
+    }
+    const room = `${session.routePath}/room`
+    const { created } = await dispatchNotificationsToAudience({
+      schoolId,
+      type: "live_class_started",
+      title: render(template.title, vars),
+      body: render(template.body, vars),
+      lang,
+      priority: "high",
+      channels: NOW_CHANNELS,
+      metadata: {
+        kind: side === "teacher" ? "studentsWaiting" : "teacherWaiting",
+        sessionId,
+        sectionId: session.sectionId,
+        // Same targets as "the class is live": the join link on the web, the
+        // room for the native apps.
+        url: session.joinPath ?? room,
+        deep_link: room,
+      },
+      targetUserIds: targets,
+    })
+    return { created }
+  } catch (err) {
+    console.error("[live-class] notifyClassWaiting failed", {
+      schoolId,
+      sessionId,
+      side,
+      err: err instanceof Error ? err.message : err,
+    })
+    return { created: 0 }
+  }
+}
+
 export const notifyClassScheduled = (schoolId: string, sessionId: string) =>
   dispatch(schoolId, sessionId, "scheduled", "live_class_scheduled")
 

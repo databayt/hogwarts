@@ -171,12 +171,13 @@ export const DEFAULT_ROOM_LABELS = {
   back: "Back",
   /** The stage when no one else is in the call and the reader's camera is off. */
   aloneInRoom: "You're alone in this room",
-  /** Who the reader is waiting for (room/waiting.ts). The teacher's sentence
-   *  is true whoever opened the room: "the class is live" went to the roster. */
+  /** Who the reader is waiting for (room/waiting.ts). Both sentences promise
+   *  a notice, and both are kept by the server: "the class is live" at the
+   *  first walk-in, then actions/waiting-nudge.ts on each arrival. */
   waitingForStudents:
     "No students yet. Please stay in the room. They have been told the class has started.",
   waitingForTeacher:
-    "The teacher isn't here yet. Please stay in the room. The class starts when they come in.",
+    "The teacher isn't here yet. Please stay in the room. They have been told that students are waiting.",
   /** The same, for a parent who watches. */
   teacherNotIn: "The teacher isn't here yet.",
   /** The pre-join card's link to the connection check, under a refusal. */

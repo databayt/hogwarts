@@ -19,6 +19,7 @@ import {
   notifyClassScheduled,
   notifyClassStarted,
   notifyClassStartingSoon,
+  notifyClassWaiting,
 } from "@/components/school-dashboard/live/actions/notifications"
 
 vi.mock("@/lib/db", () => ({
@@ -356,5 +357,84 @@ describe("dispatch — best-effort error handling", () => {
     const result = await notifyClassScheduled("school-1", "lcs-1")
     expect(result).toEqual({ created: 0 })
     expect(mockDispatch).not.toHaveBeenCalled()
+  })
+})
+
+describe("notifyClassWaiting — someone is in the room without their other side", () => {
+  beforeEach(() => {
+    mockDb.conference.findFirst.mockResolvedValue({
+      ...BASE_SESSION,
+      timetableId: "tt-1",
+    } as never)
+    mockDb.student.findMany.mockResolvedValue([
+      { id: "s-1", userId: "student-user-1" },
+      { id: "s-2", userId: "student-user-2" },
+    ] as never)
+    mockDb.studentGuardian.findMany.mockResolvedValue([
+      { guardian: { userId: "guardian-user-1" } },
+    ] as never)
+  })
+
+  it("tells only the teacher that a student is waiting", async () => {
+    const r = await notifyClassWaiting("school-1", "lcs-1", "teacher", [
+      "student-user-1",
+    ])
+    expect(r).toEqual({ created: 1 })
+    const call = mockDispatch.mock.calls[0][0]
+    expect(call.targetUserIds).toEqual(["teacher-user-1"])
+    expect(call.title).toBe("طلابك في انتظارك")
+    expect(call.body).toContain("Algebra I")
+    expect(call.type).toBe("live_class_started")
+    expect(call.channels).toEqual(["in_app", "push"])
+    expect(call.priority).toBe("high")
+    expect(call.metadata).toMatchObject({
+      kind: "studentsWaiting",
+      sessionId: "lcs-1",
+      url: "/live/join/tt-1",
+      deep_link: "/live/lcs-1/room",
+    })
+  })
+
+  it("tells the students and their guardians that the teacher is in, by name", async () => {
+    await notifyClassWaiting("school-1", "lcs-1", "roster", ["teacher-user-1"])
+    const call = mockDispatch.mock.calls[0][0]
+    expect([...(call.targetUserIds ?? [])].sort()).toEqual([
+      "guardian-user-1",
+      "student-user-1",
+      "student-user-2",
+    ])
+    expect(call.title).toMatch(/Ada.*في الحصة الآن$/)
+    expect(call.metadata).toMatchObject({ kind: "teacherWaiting" })
+  })
+
+  it("leaves out people already in the room, and sends nothing when no one is left", async () => {
+    await notifyClassWaiting("school-1", "lcs-1", "roster", [
+      "student-user-2",
+      "guardian-user-1",
+    ])
+    expect(mockDispatch.mock.calls[0][0].targetUserIds).toEqual([
+      "student-user-1",
+    ])
+    mockDispatch.mockClear()
+    expect(
+      await notifyClassWaiting("school-1", "lcs-1", "teacher", [
+        "teacher-user-1",
+      ])
+    ).toEqual({ created: 0 })
+    expect(mockDispatch).not.toHaveBeenCalled()
+  })
+
+  it("points at the room when the class has no timetable slot, and never throws", async () => {
+    mockDb.conference.findFirst.mockResolvedValue(BASE_SESSION as never)
+    await notifyClassWaiting("school-1", "lcs-1", "teacher")
+    expect(mockDispatch.mock.calls[0][0].metadata).toMatchObject({
+      url: "/live/lcs-1/room",
+    })
+    mockDispatch.mockRejectedValueOnce(new Error("hub down"))
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+    expect(await notifyClassWaiting("school-1", "lcs-1", "teacher")).toEqual({
+      created: 0,
+    })
+    quiet.mockRestore()
   })
 })

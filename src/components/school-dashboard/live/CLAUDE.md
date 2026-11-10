@@ -1146,6 +1146,12 @@ of it. Detail and evidence: ISSUE.md, same date.
   seconds (`eventTime`).
 - **`RoomPageHeader` uses `LocaleDictionaryProvider`.** Passing the dictionary
   as a prop put 1.4 MB (322 KB gzipped) into every load of the room page.
+- **A room with one side missing calls the other.** `nudgeWaiting`
+  (`actions/waiting-nudge.ts`) runs after every confirmed arrival and sends at
+  most a handful of notices per class (see its limits). The sentences on the
+  stage (`labels.waitingForStudents` / `waitingForTeacher`) PROMISE those
+  notices — change one and the other with it. Never call it before the
+  presence write: it reads who is in the room from `activeSince`.
 - **Why a seat dropped is in the class's own events**, not only the SFU's
   log: `eventType: "client_trace"` rows from `room/use-connection-trace.ts`
   (hidden, stall, offline, net, reconnecting, disconnected, wake). The SFU
