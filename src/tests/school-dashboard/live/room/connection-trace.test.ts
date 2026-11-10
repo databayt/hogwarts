@@ -191,6 +191,25 @@ describe("createTraceRecorder", () => {
     expect(storage.map.has("live-trace:s1")).toBe(false)
   })
 
+  it("does not hand a batch in flight to the next page of the tab", async () => {
+    const storage = memoryStorage()
+    let release: (ok: boolean) => void = () => {}
+    const slow = vi.fn(
+      () => new Promise<boolean>((resolve) => void (release = resolve))
+    )
+    const first = recorder({ storage, send: slow })
+    first.r.note("join")
+    const inFlight = first.r.flush()
+    // The room remounts while the first write has not come back.
+    const second = recorder({ storage })
+    second.r.note("join")
+    await second.r.flush()
+    expect(second.sent[0].map((e) => e.k)).toEqual(["join"])
+    release(true)
+    await inFlight
+    expect(first.r.pending()).toBe(0)
+  })
+
   it("survives a storage that throws", async () => {
     const storage = {
       getItem: () => {

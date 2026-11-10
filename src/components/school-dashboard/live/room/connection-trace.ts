@@ -164,6 +164,12 @@ export function createTraceRecorder(deps: TraceRecorderDeps): TraceRecorder {
       const batch = queue.splice(0, MAX_TRACE_EVENTS)
       sending = true
       flushes++
+      // Out of the tab's storage BEFORE the request, not after it: a room
+      // that remounts while this write is in flight (leave and rejoin, or a
+      // double mount) would otherwise carry the same events and send them
+      // twice. A page killed mid-request loses one batch; that is the rarer
+      // and cheaper mistake.
+      persist()
       let ok = false
       try {
         ok = await deps.send(batch)
