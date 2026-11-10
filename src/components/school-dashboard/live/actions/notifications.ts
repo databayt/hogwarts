@@ -375,21 +375,15 @@ async function dispatch(
       title = render(template.title, vars)
       body = render(template.body, vars)
     }
-    // "The class is live" is the one notification whose whole point is to get
-    // the reader INTO the room, so it links straight there and skips the detail
-    // page's second Join click.
-    //
-    // Only that one. `startingSoon` fires 5–20 minutes BEFORE the start, and
-    // join-core rejects a non-HOST on a `scheduled` session with
-    // LIVE_CLASS_INVALID_STATE — a student following a /room link early would
-    // hit an error page instead of a waiting room. `scheduled`, `cancelled` and
-    // `recordingReady` all describe the session rather than an open room, so the
-    // detail page is their correct destination too.
+    // The DETAIL page for the notices that describe a session (`scheduled`,
+    // `cancelled`, `recordingReady`); the room for "the class is live". That is
+    // the push `deep_link`, which the native apps route on.
     const url =
       kind === "started" ? `${session.routePath}/room` : session.routePath
-    // The web bell and the email open the slot's join link for the two
-    // notices that mean "go in now" (see `joinPath`). The push `deep_link`
-    // keeps the session route: the native apps route on it.
+    // On the web, the two notices that mean "go in now" open the slot's JOIN
+    // LINK (`joinPath`). A reminder can arrive before the window opens, and
+    // the join link answers that with a waiting page that lets the reader in
+    // by itself at the opening instant — a bare room URL would not.
     const webUrl =
       (kind === "started" || kind === "startingSoon") && session.joinPath
         ? session.joinPath

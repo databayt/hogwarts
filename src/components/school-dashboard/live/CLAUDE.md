@@ -601,12 +601,14 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   silently not run since the Cloudflare cutover. Check them per RUNBOOK
   "Verifying the crons", never with `gh run list`.
 
-- **Only the `started` notification links to `/room`.** `startingSoon` fires 5–20
-  minutes BEFORE the class, and `join-core` refuses a non-HOST on a `scheduled`
-  session (`LIVE_CLASS_INVALID_STATE`) — a student following an early room link
-  would land on an error, not a waiting room. `scheduled` / `cancelled` /
-  `recordingReady` describe the session rather than an open room, so the detail
-  page is right for them.
+- **The two "go in now" notices open the slot's JOIN LINK** (`joinPath`), not a
+  room URL: "starting soon" and "class is live". A reminder can arrive before
+  the window opens — up to a cron cadence early — and the join link answers that
+  with its waiting page, which lets the reader in by itself at the opening
+  instant. `scheduled` / `cancelled` / `recordingReady` describe the session
+  rather than an open room, so the detail page is right for them. (This entry
+  used to say a non-host is refused on a `scheduled` session; since 2026-11-10 a
+  timetable class is opened by whoever arrives first.)
 
 - **`metadata.url` on a notification is stored RELATIVE.** It used to be
   absolutified at dispatch time into `{subdomain}.databayt.org` — the wrong host
@@ -726,7 +728,7 @@ this block:
 
 - The room passes `viewerEmail` (from the page's session) down to
   `RoomShell`. Never feed the watermark `localParticipant.name` — it is a
-  display name, and masked as an address it printed "Ahm***d".
+  display name, and masked as an address it printed "Ahm\*\*\*d".
 - The room mounts `useCaptureDeterrents` on the stage `<main>`, NOT
   `useVideoProtection`: there is no single `<video>`, and pausing on a hidden
   tab would drop a student out of their own class. The recording player is
@@ -1079,6 +1081,71 @@ Rejoin). Everything inside the call is `room/`:
   still leaves a record) and closed polls.
 - Slides are the browser's PDF viewer in an iframe over
   `/api/lumos/file/<kind>/<id>?inline=1`; the page rides in the URL fragment.
+
+## Reach, names and the clock (2026-11-10)
+
+Written after the first school's first online day, when 52 rooms opened and no
+student entered. The room was not the reason; these are the rules that came out
+of it. Detail and evidence: ISSUE.md, same date.
+
+- **A reminder window is never narrower than the gap between two cron runs.**
+  `live-class-reminders/route.ts`: `max(lead, cadence) + slack`. With a
+  10-minute lead on a 15-minute cron, a class on a quarter hour was never
+  inside the window at any tick — 40 of one school's 52 classes. The cadence
+  is 60 during the Worker's hourly quiet ticks (`cf/worker.js` `isQuietTick`);
+  if those hours change, change `cadenceMinutes` with them.
+- **A notice that must be on time sends its own push.** The Worker fires a
+  tick's routes in parallel, so the push cron has usually finished before a
+  route in the same tick writes its rows. The reminders route and
+  `went-live.ts` call `processPendingWebPushes` after they dispatch. That
+  drain therefore runs concurrently with the cron's, and CLAIMS each row
+  (`updateMany where pushSent: false`) before sending — keep the claim.
+- **`pushSent` is not "delivered".** A row whose recipient has no subscription
+  is retired with `pushError: NO_DEVICE` (`push-web.ts`). Delivered is
+  `pushSent && pushError == null`. Count reach from that, never from the flag.
+- **No email on "starting soon" / "class is live"** (`NOW_CHANNELS`). The mail
+  queue is a tick behind as well, and it was one mail per class per child.
+- **"Class is live" skips whoever OPENED the room** (`openedByUserId`), not the
+  teacher. A student may be first in; the teacher is then who needs telling.
+- **The alerts switch is one hook, offered where people join.**
+  `notifications/use-web-push.ts` backs both the preferences card and
+  `ClassAlertsPrompt` (title card `note` slot, under the dashboard banner, the
+  join link's waiting page). The prompt goes UNDER the green banner, never in
+  it — the banner keeps its two pills. `class-alerts-labels.ts` is a plain
+  module because server components resolve the labels (the `JOIN_ERROR_CODES`
+  lesson again).
+- **A person's room name is never a credential.** `room-name.ts`: the person's
+  own record in the school's name display; a username only when it is a real
+  display name; else the role's word. `User.username` is the six-digit login
+  code for school members. Use `ROOM_NAME_USER_SELECT` + `roomDisplayName`
+  anywhere a name enters a room (the ticket, saved chat).
+- **The clock closes the ROOM, as durations.** `RoomJoinTicket.clock`
+  (`endsInMs`, `closesInMs`) is armed against the client's own clock at
+  receipt, so a wrong wall clock cannot cut a class short; the heartbeat
+  re-sends it. `livekit/close-room.ts` is the server's side of the same rule:
+  any writer that ends a class by the clock also ends its SFU room.
+- **`onError` on `LiveKitRoom` is not "the room is lost".** It also fires for a
+  camera or microphone that would not start. Only a `ConnectionError` (and
+  never `Cancelled`) ends the room.
+- **Wire messages go through `applyWireMessage`.** The reducer now has a
+  default branch and the wrapper catches a malformed payload. Clients stay in
+  a class across a deploy: a new message type may only ship once this guard
+  has been live for a school day.
+- **The hand queue is `handQueue`** (`class-channel.ts`): ordered by the
+  `handAt` attribute on every client, bounded to [joined, now]. Do not order
+  hands by local first-seen time again — that made the student's "#2 in line"
+  and the teacher's list two different queues.
+- **`ON_ROSTER`** (`roster.ts`) is who a register is written for and a notice
+  goes to: `status: ACTIVE, archivedAt: null`. An archived student keeps their
+  `sectionId`. Spread it into any new roster query.
+- **`holdsHostSeat`** (`actions/host-seat.ts`) gates host-side class actions:
+  the class's teacher, a HOST/CO_HOST seat in it, or an admin. "Any teacher of
+  the school" is not a rule anywhere any more.
+- **Webhook**: the `ConferenceEvent` row is a CLAIM that is given back when
+  the handler throws; `removed` is never overwritten; `createdAt` is epoch
+  seconds (`eventTime`).
+- **`RoomPageHeader` uses `LocaleDictionaryProvider`.** Passing the dictionary
+  as a prop put 1.4 MB (322 KB gzipped) into every load of the room page.
 
 ## Danger Zones
 

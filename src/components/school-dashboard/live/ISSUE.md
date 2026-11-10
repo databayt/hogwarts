@@ -4,6 +4,118 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Review after the first online day: reach, then the room — 2026-11-10 (hogwarts#470)
+
+Al-Ibda's first online day (11-09): 52 rooms, teachers opened 5, **no student entered**. Three
+read-only audits (room client, server, integrations) plus queries on production. Full plan and
+findings: `~/.claude/plans/read-hogwarts-to-read-prancy-pixel.md`.
+
+**What production showed**
+
+- Only 12 of 52 classes produced a "starting soon" notice: the 12:50, 13:40, 16:55 and 18:55
+  starts. Every class on the hour got none (see the reminder fix below). Confirmed again on 11-10:
+  no reminder for the four 12:00 classes.
+- Nobody at the school had a push subscription; students have placeholder emails; WhatsApp is not
+  connected. 1 of 48 reminders was read. Rows were stamped `pushSent` with no device behind them.
+- 54 guardian records, 1 login. 5 archived students, 4 of them still placed in sections.
+- 12 of 48 students and 14 of 32 teachers had signed in over three days.
+
+**Shipped to main (Wave A, commits `47bb7c598` … `8b9b30593`), deploy owed**
+
+Alerts:
+
+- **Reminder window** (`live-class-reminders/route.ts`). It kept a class only inside the school's
+  lead (10 min) on a 15-min cron, so a class on a quarter hour was 15 out at one tick and starting
+  at the next. Now `max(lead, cadence) + 2` minutes, where the cadence is 60 during the Worker's
+  hourly quiet ticks (20:00–02:00 UTC). The notice prints the real minutes.
+- **Push leaves with the notice.** The Worker fires a tick's routes in parallel, so the push drain
+  had finished before the rows existed. The reminders route and `went-live.ts` now call
+  `processPendingWebPushes` right after dispatch. The drain claims each row first
+  (`updateMany where pushSent: false`), because it now runs beside the cron's own run.
+- **`pushError: "no_device"`** (`push-web.ts` `NO_DEVICE`) for a row whose recipient has no
+  subscription. A delivered row has `pushError: null`. Reach is counted from this.
+- **"Turn on class alerts"** (`notifications/use-web-push.ts`, `class-alerts-prompt.tsx`,
+  `class-alerts-labels.ts`): the switch from notification preferences, offered under the Join
+  button on the title card, under the dashboard banner for anyone with a class today, and on the
+  join link's waiting page. Renders nothing once alerts are on, with no Push, or for 3 days after
+  Later. `class-alerts-labels.ts` is a plain module on purpose (server components resolve labels).
+- **No email** for "starting soon" and "class is live" (`NOW_CHANNELS`): the mail queue is a tick
+  behind too. Scheduled, cancelled, recording-ready and the morning digest keep it.
+- **"Class is live" skips whoever opened the room**, not the teacher (`openedByUserId` through
+  `transitionToLive`). A teacher whose students are already inside is now told.
+
+The room:
+
+- **Names, never login codes** (`room-name.ts`). The room named people by `username ?? email`;
+  a school member's username is their six-digit login code. Now the person's own record, in the
+  school's name display; a username only when it is a real display name; else the role's word.
+- **The clock closes the room** (`RoomJoinTicket.clock`, `livekit/close-room.ts`). The ticket
+  carries `endsInMs` / `closesInMs` as durations; the client arms them against its own clock.
+  Bell: a notice. Close (bell + 10): everyone gets the ended screen, the room empties,
+  `room_finished` writes the register about two minutes later (it used to wait for the half-hourly
+  cron: 25 minutes on the demo on 11-10). The cron also ends the SFU room it closes.
+- **Honest states** (`room.tsx`, `overlays.tsx`): `LIVE_CLASS_INVALID_STATE` on the heartbeat is
+  the ended screen, not "Token expired"; a `ConnectionError` on connect offers Rejoin (`onError`
+  also fires for a camera that would not start: that is NOT a lost room); the first connect says
+  "Connecting".
+- **Hands follow the school's switch**; the discussion badge no longer counts hands with the tool
+  off. **One hand queue** (`handQueue` in `class-channel.ts`, attribute `handAt`): ordered by the
+  raise time on every client, bounded to [joined, now], first-seen as the fallback.
+- **A watching parent** is offered no chat box (`ChatTab canSend`) and no reactions.
+- **Weak links**: connection quality sampled every 4 s (`QUALITY_SAMPLE_MS`; the SDK's event fires
+  only on change, so a steadily poor link never stepped down); `AudioPresets.speech` (24 kbps);
+  `useWakeLock`; chat re-reads history after a reconnect.
+- **`applyWireMessage`**: an unknown or malformed data message returns the current state. The
+  reducer had no default branch, so an unknown `t` became `undefined` state. **This guard must be
+  live before any new message type ships.**
+- **Room page weight**: `RoomPageHeader` took the dictionary as a prop. Measured on production
+  before the fix: **1,398 KB raw, 322 KB gzipped** per load of the room page. Locally after: 179 KB
+  raw, 31 KB gzipped. _Correction to commit `d9fb8e57f`'s message:_ it says the dictionary rode on
+  every server action; measured, a server action on this page is about 1 KB. The cost was the
+  page document itself.
+
+Server:
+
+- **Webhook** (`livekit/webhook.ts`): the dedupe row is deleted when the handler throws, so a
+  retry is processed (it was dropped as a duplicate); `removed` is never overwritten by
+  `participant_joined/left`, and a removed identity that is back in the room is put out again;
+  presence uses the event's `createdAt` (epoch SECONDS). The handler body is `applyEvent`.
+- **Remove**: any host seat removes a student (it was the session's own teacher only); only an
+  admin removes a host (`moderation.ts`).
+- **Host seat** (`actions/host-seat.ts`): homework, quiz launch and room events need the class's
+  teacher, a HOST/CO_HOST seat, or an admin. It was any teacher of the school.
+- **Roster** (`roster.ts` `ON_ROSTER`): `status: ACTIVE, archivedAt: null` in the register, the
+  after-class review and the notice audience.
+- **School time** on the class page: joined/left, due dates, exam dates.
+
+**Verified**
+
+- 812 tests in the live, cron, webhook, conference and notification folders; `tsc` clean. The full
+  suite has 37 failures in 12 files, none in files changed here (payment webhooks, sales, report
+  scoring, mobile conversations, a students mock, a table test, i18n ratchets on other blocks; the
+  RTL ratchet's three `left-1/2` hits in `room/` predate this pass).
+- Production smoke before the deploy, three roles on the demo (fake devices, student first in,
+  parent watching, teacher last): 16/16. Script: session scratchpad `live-smoke.mjs`.
+- The same script on a local dev server with these changes: parent's chat read-only, names shown,
+  hand toast, chat, media.
+
+**Open, in order** (the plan's Wave B)
+
+- The room's state for late joiners who cannot ask (a watching parent) or are never asked (a
+  co-host), and for a teacher who reloads: today a reload clears questions, poll, slides and timer
+  for everyone, because every client re-asks the returning host. Lead host by seniority, push on
+  `ParticipantActive`, snapshot saved with the board.
+- Child's seat for parents; parent accounts in bulk; native push (FCM never sees a row: the web
+  pass stamps it first).
+- One row per slot per day by constraint; substitutes; slot move / retime / delete; delete of a
+  live row.
+- Adaptive stream with the ladder as a cap (`setVideoDimensions`, not `setVideoQuality`: student
+  cameras publish no HIGH layer); `useDataChannel` gets an inline callback, so the shell
+  re-renders on every packet.
+- `set-homework-dialog.tsx:75` sets state in an effect (lint error, untouched).
+- The teacher guide says a confirmed substitute enters the class; `join-core` refuses one
+  confirmed after the morning sweep.
+
 ## A timetable class is a classroom that is there — 2026-11-10
 
 Abdout's model, which replaces "the teacher starts the class" for every **timetable** class: the room is
@@ -168,8 +280,6 @@ verification owed if not done in this pass.
 > is a timetable conflict, not a combined class, because alabidae has one classroom per grade. The
 > merging was removed, every timetable slot gets its own room, and the timetable's conflict check now
 > catches these clashes by clock time (15 at alabidae, handed to the school to fix).
-
-
 
 `a4317012a`, `combined.ts`. A combined class is one teacher's ONLINE sections at one period START
 time on a day. Per-grade bells give each grade its own Period row, so the test is the start time, not

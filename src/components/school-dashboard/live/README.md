@@ -30,10 +30,13 @@ conference/
 ├── join-window.ts                                             when a class can be joined / started (pure instants; server gate + buttons)
 ├── join-link.ts                                               `liveJoinHref` — the one join URL every surface links to
 ├── room-entry.ts                                              `mayEnterRoom` — seeing a session vs entering it (external URL gate)
+├── room-name.ts                                               the name a person carries into a room — their record, never the login code
+├── roster.ts                                                  `ON_ROSTER` — current students only (register, review, notice audience)
 ├── join-auto-open.tsx                                         the join page's "too early" state reloads itself at the opening instant
 ├── school-calendar.ts                                         "is the school running today" — ScheduleException holiday gate (write side only)
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · liveRevalidatePath
+│   ├── host-seat.ts      `holdsHostSeat` — the class's teacher, a HOST/CO_HOST seat, or an admin
 │   ├── join-slot.ts      `resolveSlotJoin` — where `/live/join/{slot}` sends a reader right now
 │   ├── usage-guard.ts    daily LiveKit minutes check → platform email from 80% of the tier
 │   ├── slot-session.ts   day-qualified slot lookup + the cron's direct writer
@@ -64,6 +67,7 @@ conference/
 │   ├── reactions-overlay.tsx · class-timer.tsx · chime.ts   reactions, the countdown, the soft chime
 │   ├── class-progress.tsx the clock row: read-only class progress, elapsed · −left, ticks alone
 │   ├── use-auto-hide.ts   fades 3s after the last touch; a stage tap toggles; menus/panel/focus pin
+│   ├── use-wake-lock.ts   keeps the screen awake for the length of the class
 │   ├── glyph.ts           the bare-glyph control class the pills and the card share
 │   └── calendar-file.ts   the header's `+ ADD`: the class as an `.ics`, built in the browser
 ├── demo-clock.ts                                              the demo's three clock-straddling rows, and

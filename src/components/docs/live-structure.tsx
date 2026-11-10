@@ -49,6 +49,18 @@ export function LiveStructure({ className }: LiveStructureProps) {
             "is this online, over which back-end, delivered how (one resolver)",
         },
         {
+          name: "room-name.ts",
+          type: "file",
+          description:
+            "the name a person carries into a room: their record, never a login code",
+        },
+        {
+          name: "roster.ts",
+          type: "file",
+          description:
+            "current students only: register, review, notice audience",
+        },
+        {
           name: "day-window.ts",
           type: "file",
           description: "school-calendar day math (pure, DST-safe)",
@@ -320,6 +332,12 @@ export function LiveStructure({ className }: LiveStructureProps) {
               description: "role → VideoGrant",
             },
             { name: "rooms.ts", type: "file", description: "room lifecycle" },
+            {
+              name: "close-room.ts",
+              type: "file",
+              description:
+                "end a class's SFU room (and its recording) by the clock",
+            },
             {
               name: "egress.ts",
               type: "file",
