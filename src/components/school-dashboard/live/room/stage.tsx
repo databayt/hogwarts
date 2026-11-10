@@ -21,11 +21,13 @@ import {
   handRaisedFill,
   SfSymbol,
 } from "@/components/lumos/shared/video-player/sf-symbols"
+import type { ConferenceParticipantRole } from "@/components/school-dashboard/live/types"
 
 import { Board } from "./board/board"
 import type { RoomLabels } from "./labels"
 import { SlidesView } from "./slides"
 import type { ClassChannel } from "./use-class-channel"
+import { useWaitingText } from "./waiting-notice"
 
 /** Raised hands in order, read by every tile without threading props
  *  through LiveKit's layouts. */
@@ -59,6 +61,8 @@ function ClassTile({ trackRef }: { trackRef?: TrackReferenceOrPlaceholder }) {
 interface StageProps {
   channel: ClassChannel
   labels: RoomLabels
+  /** The reader's seat — picks who an empty stage says they are waiting for. */
+  role: ConferenceParticipantRole
 }
 
 /**
@@ -67,7 +71,8 @@ interface StageProps {
  * strip whenever something else has focus, so the teacher never disappears
  * behind their own slides.
  */
-export function Stage({ channel, labels }: StageProps) {
+export function Stage({ channel, labels, role }: StageProps) {
+  const waiting = useWaitingText(role, labels)
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -129,6 +134,9 @@ export function Stage({ channel, labels }: StageProps) {
     // Nobody else here and the reader's own camera off: say so, rather than
     // drawing the SDK's grey silhouette across the whole stage (Abdout,
     // 2026-09-13). A camera that is on still shows the reader to themselves.
+    // What it says is who is missing and why to stay, not "you are alone":
+    // on the first day with students each side read that and left. The
+    // marker is what tells the shell's own notice to step aside.
     if (
       cameras.length === 0 ||
       (cameras.length === 1 &&
@@ -136,9 +144,12 @@ export function Stage({ channel, labels }: StageProps) {
         !localParticipant.isCameraEnabled)
     ) {
       return (
-        <div className="flex h-full w-full items-center justify-center px-6">
-          <p className="text-center text-lg font-medium text-white/70">
-            {labels.aloneInRoom}
+        <div
+          className="flex h-full w-full items-center justify-center px-6"
+          data-stage-alone=""
+        >
+          <p className="max-w-md text-center text-lg font-medium text-balance text-white/70">
+            {waiting ?? labels.aloneInRoom}
           </p>
         </div>
       )

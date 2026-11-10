@@ -64,6 +64,7 @@ import { useClassNotices } from "./use-class-notices"
 import { useConnectionTrace } from "./use-connection-trace"
 import { useLiveChat } from "./use-live-chat"
 import { useWakeLock } from "./use-wake-lock"
+import { WaitingNotice } from "./waiting-notice"
 
 interface RoomShellProps {
   sessionId: string
@@ -358,12 +359,14 @@ export function RoomShell({
         <main
           ref={stageRef}
           data-video-protected
-          className="relative min-w-0 flex-1 select-none"
+          // `group/stage`: the waiting notice hides itself while the stage
+          // is printing the same sentence (`data-stage-alone`).
+          className="group/stage relative min-w-0 flex-1 select-none"
           onContextMenu={(e) => e.preventDefault()}
           onClick={hide.toggle}
         >
           <div className="absolute inset-0">
-            <Stage channel={channel} labels={labels} />
+            <Stage channel={channel} labels={labels} role={role} />
           </div>
           <ReactionsOverlay channel={channel} />
           {/* Forensic mark over the whole stage: a recording or screenshot
@@ -484,6 +487,7 @@ export function RoomShell({
             )}
             <RoomToastStack toasts={toasts.toasts} dismiss={toasts.dismiss} />
             <AudioOnlyBanner on={adaptive.tier === "audio"} labels={labels} />
+            <WaitingNotice role={role} labels={labels} />
 
             {config.recording && !consentSeen && (
               <div
