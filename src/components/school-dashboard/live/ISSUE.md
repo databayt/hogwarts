@@ -138,6 +138,13 @@ verification owed if not done in this pass.
 
 ## Combined classes — one room per class — 2026-11-09 (hogwarts#471)
 
+> **Superseded 2026-11-10 (`ff672ff8e`).** Abdout: one teacher booked in two sections at the same time
+> is a timetable conflict, not a combined class, because alabidae has one classroom per grade. The
+> merging was removed, every timetable slot gets its own room, and the timetable's conflict check now
+> catches these clashes by clock time (15 at alabidae, handed to the school to fix).
+
+
+
 `a4317012a`, `combined.ts`. A combined class is one teacher's ONLINE sections at one period START
 time on a day. Per-grade bells give each grade its own Period row, so the test is the start time, not
 the `periodId`. alabidae has 15 a week, all the same subject with a real teacher who has a login: تحسين

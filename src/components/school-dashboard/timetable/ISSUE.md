@@ -49,9 +49,10 @@ last_audited: 2026-10-04
       substituted; «بدون معلم» clears a teacher.
 - [ ] **Generator + analytics still treat all periods as one bell**
       (`generate/inputs.ts`) — grade-aware generation is a planner rewrite.
-- [ ] **Teacher conflict check compares period ids**, so the same teacher at the
-      same clock time on two grades' bells is not flagged (alabidae has 7 such
-      clashes straight from the school's sheets).
+- [x] **Teacher conflict check compares period ids**, so the same teacher at the
+      same clock time on two grades' bells is not flagged. Fixed 2026-11-10
+      (`ff672ff8e`): conflicts pair a teacher's slots by OVERLAPPING CLOCK TIME on the
+      same term/day/week, across Period rows. alabidae shows 15 clashes.
 
 ## 2026-10-04 — reads without classes; scope leaks closed (LOCAL, not pushed)
 
