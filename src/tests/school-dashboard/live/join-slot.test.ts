@@ -158,13 +158,10 @@ describe("resolveSlotJoin — the day and the window", () => {
     expect(materializeSlotForDay).not.toHaveBeenCalled()
   })
 
-  it("opens earlier for the class's own teacher (host floor, 15 min)", async () => {
-    const now = at("13:47") // 15:47 — students still wait until 15:50
+  it("opens at the same minute for the teacher and the students", async () => {
+    const now = at("13:47") // 15:47 — the room opens at 15:50 for everyone
     expect(await ask("STUDENT", now)).toMatchObject({ kind: "early" })
-    expect(await ask("TEACHER", now)).toEqual({
-      kind: "room",
-      sessionId: "room-new",
-    })
+    expect(await ask("TEACHER", now)).toMatchObject({ kind: "early" })
   })
 
   it("says over once the grace after the bell has passed", async () => {

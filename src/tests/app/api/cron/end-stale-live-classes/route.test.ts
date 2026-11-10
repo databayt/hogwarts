@@ -48,14 +48,20 @@ describe("end-stale-live-classes cron — auth", () => {
 })
 
 describe("end-stale-live-classes cron — detection", () => {
-  it("targets only live sessions whose scheduledEnd is >30 min past", async () => {
+  it("closes a timetable class 10 min after its bell, any other live session after 30", async () => {
     await GET(req())
     const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
-      where: { status: string; scheduledEnd: { lt: Date }; deletedAt: null }
+      where: {
+        status: string
+        deletedAt: null
+        OR: Array<{ scheduledEnd: { lt: Date }; timetableId?: unknown }>
+      }
     }
     expect(call.where.status).toBe("live")
     expect(call.where.deletedAt).toBeNull()
-    expect(call.where.scheduledEnd.lt.getTime()).toBe(NOW - 30 * 60 * 1000)
+    expect(call.where.OR[0].scheduledEnd.lt.getTime()).toBe(NOW - 30 * 60 * 1000)
+    expect(call.where.OR[1].timetableId).toEqual({ not: null })
+    expect(call.where.OR[1].scheduledEnd.lt.getTime()).toBe(NOW - 10 * 60 * 1000)
   })
 })
 

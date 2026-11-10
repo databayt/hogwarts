@@ -28,21 +28,13 @@ describe("joinWindow", () => {
     expect(w.closesAtMs).toBe(END + JOIN_GRACE_AFTER_END_MIN * MIN)
   })
 
-  it("never gives the host a SHORTER window than the students", () => {
-    const short = joinWindow({
-      startMs: START,
-      endMs: END,
-      leadMinutes: 5,
-      isHost: true,
-    })
-    expect(short.opensAtMs).toBe(START - HOST_EARLY_START_MIN * MIN)
-    const long = joinWindow({
-      startMs: START,
-      endMs: END,
-      leadMinutes: 30,
-      isHost: true,
-    })
-    expect(long.opensAtMs).toBe(START - 30 * MIN)
+  it("gives the teacher the same window as the students", () => {
+    for (const lead of [5, 10, 30]) {
+      const host = joinWindow({ startMs: START, endMs: END, leadMinutes: lead, isHost: true })
+      const student = joinWindow({ startMs: START, endMs: END, leadMinutes: lead, isHost: false })
+      expect(host).toEqual(student)
+      expect(host.opensAtMs).toBe(START - lead * MIN)
+    }
   })
 
   it("falls back to the default lead for missing or bad data, and clamps it", () => {

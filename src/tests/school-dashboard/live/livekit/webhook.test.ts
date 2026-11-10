@@ -140,6 +140,33 @@ describe("handleWebhookEvent — room lifecycle", () => {
     expect(notifyClassStarted).toHaveBeenCalledWith(SCHOOL_ID, SESSION_ID)
   })
 
+  it("room_finished inside a timetable class's window keeps the class open (a break, not the end)", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      scheduledEnd: new Date(Date.now() + 20 * 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(ok).toBe(true)
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("room_finished after a timetable class's window ends it", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      scheduledEnd: new Date(Date.now() - 11 * 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "ended" }) })
+    )
+  })
+
   it("room_finished → status=ended, actualEnd set", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
     expect(ok).toBe(true)

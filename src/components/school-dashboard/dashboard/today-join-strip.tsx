@@ -65,7 +65,7 @@ export function TodayJoinStrip({
       <JoinLinkButton
         timetableId={row.timetableId}
         lang={lang}
-        label={isTeacher && !row.live ? labels.start : labels.join}
+        label={labels.join}
         className="h-9 px-4"
       />
     </div>

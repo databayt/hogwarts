@@ -270,9 +270,10 @@ describe("syncLiveAttendance", () => {
     expect(created.map((r) => r.studentId).sort()).toEqual(["sB", "sC"])
   })
 
-  it("treats actualStart (when present) as the lateness anchor", async () => {
+  it("measures lateness from the bell, not from when the room was opened", async () => {
     happySession()
-    // Room actually started at 08:15 — uB's 08:20 join is now within grace.
+    // The first arrival opened the room at 08:15. That says nothing about who
+    // was late: uB's 08:20 join is still late against the 08:00 bell.
     mockDb.conference.findFirst.mockResolvedValue({
       id: "c1",
       provider: "livekit",
@@ -288,10 +289,8 @@ describe("syncLiveAttendance", () => {
       Record<string, unknown>
     >
     const byStudent = Object.fromEntries(rows.map((r) => [r.studentId, r]))
-    // uA joined at 08:05, before actualStart → still counts PRESENT.
     expect(byStudent.sA.status).toBe("PRESENT")
-    // uB joined at 08:20, within 10 min of the 08:15 actual start → PRESENT.
-    expect(byStudent.sB.status).toBe("PRESENT")
+    expect(byStudent.sB.status).toBe("LATE")
   })
 })
 

@@ -387,7 +387,7 @@ describe("joinLiveClass eligibility", () => {
     expect(db.conference.updateMany).not.toHaveBeenCalled()
   })
 
-  it("scheduled class holds a non-host in the waiting room → LIVE_CLASS_NOT_STARTED", async () => {
+  it("an ad-hoc (non-timetable) scheduled class holds a non-host in the waiting room → LIVE_CLASS_NOT_STARTED", async () => {
     mockUser(STUDENT_USER_ID, "STUDENT")
     vi.mocked(db.student.findFirst).mockResolvedValue({
       id: "stu-1",
@@ -410,6 +410,71 @@ describe("joinLiveClass eligibility", () => {
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_STARTED")
+  })
+
+  describe("a timetable class is a classroom that is there at its time", () => {
+    const MIN = 60_000
+    function slotSession(status: string, startOffsetMin: number) {
+      const start = new Date(Date.now() + startOffsetMin * MIN)
+      return {
+        id: SESSION_ID,
+        roomName: ROOM_NAME,
+        provider: "livekit",
+        recordingEnabled: false,
+        studentsJoinMuted: null,
+        sectionId: SECTION_ID,
+        maxParticipants: 50,
+        status,
+        scheduledStart: start,
+        scheduledEnd: new Date(start.getTime() + 45 * MIN),
+        timetableId: "tt-1",
+        lang: "ar",
+        teacher: { userId: TEACHER_USER_ID },
+        school: { ...SCHOOL_ROOM_CONFIG, conferenceReminderLeadMinutes: 10 },
+      }
+    }
+    function asStudent() {
+      mockUser(STUDENT_USER_ID, "STUDENT")
+      vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
+    }
+
+    it("a student who arrives before the teacher walks straight in and opens the room", async () => {
+      asStudent()
+      vi.mocked(db.conference.findFirst).mockResolvedValue(
+        slotSession("scheduled", -1) as never
+      )
+      const result = await joinLiveClass(SESSION_ID)
+      expect("success" in result && result.success).toBe(true)
+      expect(ensureRoom).toHaveBeenCalled()
+      expect(db.conference.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: SESSION_ID, schoolId: SCHOOL_ID, status: "scheduled" },
+          data: expect.objectContaining({ status: "live" }),
+        })
+      )
+    })
+
+    it("opens at the school's lead (10 min) for students, not before", async () => {
+      asStudent()
+      vi.mocked(db.conference.findFirst).mockResolvedValue(
+        slotSession("scheduled", 30) as never
+      )
+      const result = await joinLiveClass(SESSION_ID)
+      expect("success" in result && result.success).toBe(false)
+      if ("error" in result) expect(result.error).toBe("LIVE_CLASS_TOO_EARLY")
+      expect(ensureRoom).not.toHaveBeenCalled()
+    })
+
+    it("re-opens the SFU room for anyone arriving after everyone stepped out", async () => {
+      asStudent()
+      vi.mocked(db.conference.findFirst).mockResolvedValue(
+        slotSession("live", -20) as never
+      )
+      const result = await joinLiveClass(SESSION_ID)
+      expect("success" in result && result.success).toBe(true)
+      expect(ensureRoom).toHaveBeenCalled()
+      expect(db.conference.updateMany).not.toHaveBeenCalled()
+    })
   })
 
   it("cross-tenant: student in school B cannot join a class in school A", async () => {

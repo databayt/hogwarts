@@ -4,6 +4,32 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## A timetable class is a classroom that is there — 2026-11-10
+
+Abdout's model, which replaces "the teacher starts the class" for every **timetable** class: the room is
+there for the slot's time, and the teacher and the students walk in whenever they arrive, in any order.
+Nobody starts it and nobody waits.
+
+- **Entry** (`actions/join-core.ts`): inside the slot's window, any role allowed in (host, co-host,
+  student) may be the first arrival. That join opens the room (cap check, `ensureRoom`, the guarded
+  `scheduled → live` flip, and its "class is live" notice and auto-recording).
+  - Guardians (observers) still wait for someone to be inside.
+  - Ad-hoc classes (no `timetableId`) keep the host start and `LIVE_CLASS_NOT_STARTED`.
+- **One window** (`join-window.ts`): start − the school's lead through end + 10, the same for the
+  teacher and the students. The host's 15-minute floor now applies only to ad-hoc classes
+  (`hostMayStart`).
+- **The clock closes the class, not an empty room:**
+  - `room_finished` inside the window leaves the row `live` (everyone stepped out is a break), and the
+    next arrival re-opens the SFU room (`ensureRoom` on every join of a live slot class).
+  - The end-stale cron closes a live slot class 10 minutes after its bell (others: 30) and writes
+    attendance.
+  - **End class** stays as an optional early dismissal.
+- **Lateness from the bell** (`attendance-sync.ts`): `scheduledStart`, never `actualStart`.
+- **Words:** the dashboard and timetable buttons say «انضمام» for the teacher too; the teacher's
+  reminder says «اضغط للانضمام». The students' «الحصة المباشرة بدأت الآن» notice stays, sent on the
+  first arrival.
+- **Docs:** `teach-live` and `live-classes` were rewritten for this model; the support index was rebuilt.
+
 ## Production on our Hetzner LiveKit — 2026-11-09 (hogwarts#470)
 
 Prod has dialled `wss://live.balqalam.com` (Hetzner cax21, fsn1) since **19:42 CAT**. The fallback is

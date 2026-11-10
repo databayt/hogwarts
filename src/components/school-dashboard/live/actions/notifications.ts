@@ -99,8 +99,9 @@ const arLeadPluralRules = new Intl.PluralRules("ar")
 const enLeadPluralRules = new Intl.PluralRules("en")
 
 /**
- * The teacher's own "starting soon": they do not join a class, they START it.
- * Same plural forms as the roster's body, a different sentence.
+ * The teacher's own "starting soon". A timetable class is a classroom that is
+ * there at its time — the teacher walks in like the students, nobody starts
+ * it — so the sentence is "your class, in N minutes — tap to join".
  */
 const TEACHER_SOON_TITLE: Record<"ar" | "en", string> = {
   ar: "حصتك المباشرة تبدأ قريباً",
@@ -111,20 +112,20 @@ const TEACHER_SOON_BODY: Record<
   Record<Intl.LDMLPluralRule, string>
 > = {
   ar: {
-    zero: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
-    one: "{title} خلال دقيقة — اضغط لبدء الحصة",
-    two: "{title} خلال دقيقتين — اضغط لبدء الحصة",
-    few: "{title} خلال {lead} دقائق — اضغط لبدء الحصة",
-    many: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
-    other: "{title} خلال {lead} دقيقة — اضغط لبدء الحصة",
+    zero: "{title} خلال {lead} دقيقة — اضغط للانضمام",
+    one: "{title} خلال دقيقة — اضغط للانضمام",
+    two: "{title} خلال دقيقتين — اضغط للانضمام",
+    few: "{title} خلال {lead} دقائق — اضغط للانضمام",
+    many: "{title} خلال {lead} دقيقة — اضغط للانضمام",
+    other: "{title} خلال {lead} دقيقة — اضغط للانضمام",
   },
   en: {
-    zero: "{title} in {lead} minutes — tap to start the class",
-    one: "{title} in {lead} minute — tap to start the class",
-    two: "{title} in {lead} minutes — tap to start the class",
-    few: "{title} in {lead} minutes — tap to start the class",
-    many: "{title} in {lead} minutes — tap to start the class",
-    other: "{title} in {lead} minutes — tap to start the class",
+    zero: "{title} in {lead} minutes — tap to join",
+    one: "{title} in {lead} minute — tap to join",
+    two: "{title} in {lead} minutes — tap to join",
+    few: "{title} in {lead} minutes — tap to join",
+    many: "{title} in {lead} minutes — tap to join",
+    other: "{title} in {lead} minutes — tap to join",
   },
 }
 

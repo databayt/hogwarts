@@ -72,8 +72,10 @@ export function TodayLiveAction({
     (joinWindow
       ? inJoinWindow(nowMs, joinWindow)
       : isRowLiveJoinable(startTime, endTime))
-  const label =
-    startLabel && liveClass?.status !== "live" ? startLabel : joinLabel
+  // A timetable class is a classroom that is there at its time: the teacher
+  // walks in like the students do, so the slot's button always says Join.
+  // (`startLabel` stays in the props for callers; it no longer applies.)
+  const label = joinLabel
   return (
     <span className="flex shrink-0 items-center gap-2">
       {liveClass ? (

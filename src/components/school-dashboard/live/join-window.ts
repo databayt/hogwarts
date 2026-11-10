@@ -11,15 +11,14 @@
 // on a server in UTC and on a phone in Khartoum, so nothing here can be off by
 // the school's UTC offset, which is the bug class this block keeps meeting.
 
-/** How early a teacher may open a scheduled class. Before this, starting it
- *  would flip the row `live`, tell every student "your class has started" an
- *  hour early, and bill an empty room's minutes. */
+/** How early a teacher may open an AD-HOC class (one not on the timetable).
+ *  Timetable classes use `joinWindow` — one window for everyone. */
 export const HOST_EARLY_START_MIN = 15
 
 /** How long after the bell the join link still opens the room. Classes run
  *  over; a student who taps Join at 14:52 for a 14:50 end still belongs in the
- *  room the teacher has not closed yet. The end-stale cron is the real backstop
- *  (it closes rooms 30 minutes past their end). */
+ *  room. It is also when a timetable class closes by the clock: the end-stale
+ *  cron and the room_finished webhook end the session after this grace. */
 export const JOIN_GRACE_AFTER_END_MIN = 10
 
 /** The school's reminder lead (`conferenceReminderLeadMinutes`) when unset. */
@@ -32,13 +31,13 @@ export type JoinWindow = { opensAtMs: number; closesAtMs: number }
 export type JoinPhase = "early" | "open" | "over"
 
 /**
- * The window a class's join link is open, for one viewer.
+ * The window a class's join link is open — the same for everyone.
  *
- * A host opens at the later of the school's lead and the host floor — a
- * teacher needs a few minutes to set up before students arrive, so the host's
- * window is never SHORTER than the students'. Everyone else opens at the
- * school's lead time (the same minutes the "starting soon" reminder uses), so
- * the reminder and the button agree about when the class is joinable.
+ * A timetable class is a classroom that is simply THERE for its time: the
+ * teacher and the students walk in whenever they arrive, in any order, so
+ * there is one window, opening at the school's lead (the same minutes the
+ * "starting soon" reminder uses) and closing JOIN_GRACE_AFTER_END_MIN after
+ * the bell. `isHost` is kept for callers but no longer widens the window.
  */
 export function joinWindow(opts: {
   startMs: number
@@ -47,9 +46,8 @@ export function joinWindow(opts: {
   isHost: boolean
 }): JoinWindow {
   const lead = clampLead(opts.leadMinutes)
-  const openLead = opts.isHost ? Math.max(lead, HOST_EARLY_START_MIN) : lead
   return {
-    opensAtMs: opts.startMs - openLead * MIN,
+    opensAtMs: opts.startMs - lead * MIN,
     closesAtMs: opts.endMs + JOIN_GRACE_AFTER_END_MIN * MIN,
   }
 }

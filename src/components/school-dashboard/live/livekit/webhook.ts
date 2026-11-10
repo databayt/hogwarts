@@ -13,6 +13,7 @@ import { notifyClassRecordingReady } from "@/components/school-dashboard/live/ac
 
 import { publishRecordingAsLessonVideo } from "../actions/publish-recording"
 import { transitionToLive } from "../actions/went-live"
+import { JOIN_GRACE_AFTER_END_MIN } from "../join-window"
 import { getLiveKitConfig, getLiveKitRecordingConfig } from "./client"
 import { parseRoomName } from "./room-naming"
 
@@ -107,6 +108,8 @@ export async function handleWebhookEvent(
     select: {
       id: true,
       recordingEnabled: true,
+      timetableId: true,
+      scheduledEnd: true,
       school: { select: { conferenceRetentionDays: true } },
     },
   })
@@ -159,6 +162,19 @@ export async function handleWebhookEvent(
     }
 
     case "room_finished": {
+      // A TIMETABLE class closes by the clock, not by an empty room: everyone
+      // stepping out for a few minutes (the SFU's departure/empty timeout) is
+      // a break, not the end of the class. Inside the slot's window the row
+      // stays as it is and the next arrival re-opens the room (join-core);
+      // after the window the end-stale cron (or this event) closes it.
+      if (
+        session.timetableId &&
+        session.scheduledEnd &&
+        Date.now() <
+          session.scheduledEnd.getTime() + JOIN_GRACE_AFTER_END_MIN * 60_000
+      ) {
+        break
+      }
       // Only act on a session still in a pre-finished state — never clobber a
       // cancelled/ended row (which would corrupt audit + jitter actualEnd).
       const { count } = await db.conference.updateMany({

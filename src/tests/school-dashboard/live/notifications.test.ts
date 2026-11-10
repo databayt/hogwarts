@@ -73,7 +73,7 @@ describe("notifyClassStartingSoon — nl-02: actual lead time, not a hardcoded 1
       ([c]) => (c.metadata as { kind?: string })?.kind === "startingSoonHost"
     )![0]
     expect(host.targetUserIds).toEqual(["teacher-user-1"])
-    expect(host.body).toBe("Algebra I خلال 8 دقائق — اضغط لبدء الحصة")
+    expect(host.body).toBe("Algebra I خلال 8 دقائق — اضغط للانضمام")
     expect(rosterCall().targetUserIds).toEqual(["student-user-1"])
   })
 

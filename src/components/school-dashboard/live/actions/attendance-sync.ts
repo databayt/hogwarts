@@ -92,7 +92,6 @@ export async function syncLiveAttendance(
         timetableId: true,
         scheduledStart: true,
         scheduledEnd: true,
-        actualStart: true,
         school: {
           select: {
             timezone: true,
@@ -184,7 +183,10 @@ export async function syncLiveAttendance(
       return { marked: 0, updated: 0, skipped: "empty_room" }
     }
 
-    const start = session.actualStart ?? session.scheduledStart
+    // Late is measured from the BELL. A timetable class is a classroom that is
+    // there at its time — nobody starts it — so when the first arrival opened
+    // the room (actualStart) says nothing about who was late.
+    const start = session.scheduledStart
     const lateAfter = new Date(start.getTime() + lateGraceMin * 60_000)
     // Attendance.date is @db.Date — the stored value must be the SCHOOL-LOCAL
     // calendar day of the session, not the UTC calendar day of the start

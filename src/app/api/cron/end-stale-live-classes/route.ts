@@ -19,6 +19,7 @@ import { after, NextResponse } from "next/server"
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
+import { JOIN_GRACE_AFTER_END_MIN } from "@/components/school-dashboard/live/join-window"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -39,11 +40,19 @@ export async function GET(req: Request) {
 
   const cutoff = new Date(Date.now() - STALE_GRACE_MINUTES * 60 * 1000)
 
+  // A TIMETABLE class closes by the clock: the room is there for its slot,
+  // and once the slot's join window (end + JOIN_GRACE_AFTER_END_MIN) is over
+  // the class is over — attendance is written then, whoever was in the room.
+  // (An empty room inside the window does not end it; see the webhook.)
+  const slotCutoff = new Date(Date.now() - JOIN_GRACE_AFTER_END_MIN * 60 * 1000)
   const stale = await db.conference.findMany({
     where: {
       status: "live",
       deletedAt: null,
-      scheduledEnd: { lt: cutoff },
+      OR: [
+        { scheduledEnd: { lt: cutoff } },
+        { timetableId: { not: null }, scheduledEnd: { lt: slotCutoff } },
+      ],
     },
     select: { id: true, schoolId: true },
     take: 1000,

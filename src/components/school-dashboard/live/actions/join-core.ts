@@ -31,7 +31,7 @@ import {
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
-import { hostMayStart } from "../join-window"
+import { hostMayStart, joinPhase, joinWindow } from "../join-window"
 import { concurrentCapError } from "./helpers"
 import { transitionToLive } from "./went-live"
 
@@ -196,12 +196,15 @@ export async function performLiveClassJoin(
         maxParticipants: true,
         status: true,
         scheduledStart: true,
+        scheduledEnd: true,
+        timetableId: true,
         lang: true,
         recordingEnabled: true,
         studentsJoinMuted: true,
         teacher: { select: { userId: true } },
         school: {
           select: {
+            conferenceReminderLeadMinutes: true,
             conferenceGuardiansObserve: true,
             conferenceStudentsJoinMuted: true,
             conferenceRecordingConsentNote: true,
@@ -262,28 +265,52 @@ export async function performLiveClassJoin(
     return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
   }
 
-  // Hosts can start a not-yet-live class on join. Everyone else waits: a
-  // distinct code, not INVALID_STATE, because a student who arrives before the
-  // teacher is the normal case — the room holds them on the card and retries
-  // until the host's join flips the session `live`.
+  // A TIMETABLE class is a classroom that is simply there for its time: the
+  // teacher and the students walk in whenever they arrive, in any order, and
+  // nobody "starts" it. So inside the slot's window anyone allowed in may be
+  // the first arrival — their join opens the room. An AD-HOC class (no slot)
+  // keeps the host start: until its teacher opens it there is nothing to join,
+  // and everyone else waits on the card (a distinct code the room retries on).
+  const slotClass = liveClass.timetableId != null
+  const mayOpen =
+    participantRole === "HOST" ||
+    (slotClass && participantRole !== "OBSERVER")
+
+  if (slotClass && liveClass.scheduledStart && liveClass.scheduledEnd) {
+    // The slot's window, enforced HERE and not only by the buttons that hide
+    // Join outside it: opening a 16:00 room at 09:00 (a stale tab, a crafted
+    // request) would announce the class hours early and bill an empty room.
+    // A room already `live` stays enterable until the clock closes it.
+    const phase = joinPhase(
+      Date.now(),
+      joinWindow({
+        startMs: liveClass.scheduledStart.getTime(),
+        endMs: liveClass.scheduledEnd.getTime(),
+        leadMinutes: liveClass.school.conferenceReminderLeadMinutes,
+        isHost: participantRole === "HOST",
+      })
+    )
+    if (phase === "early" && liveClass.status === "scheduled") {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_TOO_EARLY)
+    }
+    if (phase === "over" && liveClass.status === "scheduled") {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
+  }
+
   if (liveClass.status === "scheduled") {
-    if (participantRole !== "HOST") {
+    if (!mayOpen) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_STARTED)
     }
     if (!allowAutoStart) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
-    // The opening edge, enforced HERE rather than only by the buttons that
-    // hide Join until close to the bell: a host's join is what STARTS the
-    // class — the SFU room, the `live` flip, the "your class has started"
-    // notification to every student — so a teacher opening a 16:00 class at
-    // 09:00 (a stale tab, a crafted request, a mis-tapped row) would announce
-    // it hours early and bill an empty room's minutes. See ../join-window.ts.
-    if (!hostMayStart(liveClass.scheduledStart)) {
+    // An ad-hoc class's opening edge (a slot class was checked above).
+    if (!slotClass && !hostMayStart(liveClass.scheduledStart)) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_TOO_EARLY)
     }
-    // Joining as HOST auto-starts the room, so it must respect the same
-    // per-school concurrent-room cap that startLiveClass enforces.
+    // Opening the room must respect the per-school concurrent-room cap that
+    // startLiveClass enforces.
     const capError = await concurrentCapError(schoolId)
     if (capError) return capError
     try {
@@ -295,14 +322,27 @@ export async function performLiveClassJoin(
       return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
     }
     // The guarded flip + its side effects (roster notification, recording
-    // egress) — performed by whichever writer wins, this one or the SFU's
-    // room_started webhook. See actions/went-live.ts.
+    // egress) — performed by whichever writer wins: this first arrival, a
+    // concurrent one, or the SFU's room_started webhook. See went-live.ts.
     await transitionToLive({
       schoolId,
       sessionId,
       roomName: liveClass.roomName,
       recordingEnabled: liveClass.recordingEnabled,
     })
+  } else if (slotClass && allowAutoStart) {
+    // A live timetable class whose SFU room closed while everyone had stepped
+    // out (emptyTimeout/departureTimeout) is still the class: the row stays
+    // `live` until the clock closes it, and the next arrival re-opens the
+    // room. Idempotent — an existing room is left untouched.
+    try {
+      await ensureRoom({
+        roomName: liveClass.roomName,
+        maxParticipants: liveClass.maxParticipants,
+      })
+    } catch {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+    }
   }
 
   // Publish this identity into the room's authoritative HOST set (ROOM
