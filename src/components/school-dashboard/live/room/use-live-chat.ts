@@ -3,7 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useChat } from "@livekit/components-react"
+import { useChat, useRoomContext } from "@livekit/components-react"
+import { RoomEvent } from "livekit-client"
 
 import {
   getRoomChat,
@@ -53,22 +54,48 @@ export function useLiveChat({
   const [hasMore, setHasMore] = useState(false)
   const [pending, setPending] = useState<Pending[]>([])
 
-  // The saved conversation, fetched once beside the join — never in front of
-  // the video. A failure leaves the chat live-only, as it was before.
+  // A dropped connection is a hole in the live feed: what the class said
+  // while this phone was reconnecting never arrived, and nothing asked for it
+  // again until a reload. Each reconnect re-reads the saved conversation.
+  const room = useRoomContext()
+  const [reconnects, setReconnects] = useState(0)
+  useEffect(() => {
+    const onReconnected = () => setReconnects((n) => n + 1)
+    room.on(RoomEvent.Reconnected, onReconnected)
+    return () => {
+      room.off(RoomEvent.Reconnected, onReconnected)
+    }
+  }, [room])
+
+  // The saved conversation, fetched beside the join — never in front of the
+  // video — and again after every reconnect. A failure leaves the chat
+  // live-only, as it was before.
   useEffect(() => {
     if (!enabled) return
     let live = true
     getRoomChat({ sessionId })
       .then((res) => {
         if (!live || !res?.success) return
-        setHistory(res.data.messages)
-        setHasMore(res.data.hasMore)
+        if (reconnects === 0) {
+          setHistory(res.data.messages)
+          setHasMore(res.data.hasMore)
+          return
+        }
+        // After a reconnect: add what is new and keep the older pages the
+        // reader already loaded (and their "has more" answer).
+        setHistory((had) => {
+          const known = new Set(had.map((m) => m.id))
+          const fresh = res.data.messages.filter((m) => !known.has(m.id))
+          return fresh.length === 0
+            ? had
+            : [...had, ...fresh].sort((a, b) => a.at - b.at)
+        })
       })
       .catch(() => {})
     return () => {
       live = false
     }
-  }, [enabled, sessionId])
+  }, [enabled, sessionId, reconnects])
 
   const historyRef = useRef(history)
   useEffect(() => {

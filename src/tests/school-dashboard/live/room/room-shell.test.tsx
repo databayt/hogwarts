@@ -26,7 +26,11 @@ vi.mock("@livekit/components-react", () => ({
   useLocalParticipant: () => ({
     localParticipant: { identity: "me-1", name: "Me" },
   }),
-  useRoomContext: () => ({ disconnect: async () => {} }),
+  useRoomContext: () => ({
+    disconnect: async () => {},
+    on: () => {},
+    off: () => {},
+  }),
   useConnectionState: () => "connected",
   useRemoteParticipants: () => [],
   RoomAudioRenderer: () => null,
