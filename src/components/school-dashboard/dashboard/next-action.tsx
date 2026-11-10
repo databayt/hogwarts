@@ -3,7 +3,12 @@
 
 import { auth } from "@/auth"
 
+import { cn } from "@/lib/utils"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getLiveTodaySummary } from "@/components/school-dashboard/live/live-today"
+import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
+import { ClassAlertsPrompt } from "@/components/school-dashboard/notifications/class-alerts-prompt"
 
 import { getUpcomingDataByRole } from "./actions"
 import { NextActionCard } from "./next-action-client"
@@ -52,7 +57,23 @@ export async function NextAction({
 
   if (!actions?.length) return null
 
+  // Someone with a class to join today (their own, or a child's) is the
+  // reader a class alert is for. The prompt sits UNDER the banner, never in
+  // it: the card keeps its two pills. It renders nothing once alerts are on.
+  const hasClassToday = actions.some((a) => Boolean(a.live))
+  if (!hasClassToday) {
+    return (
+      <NextActionCard actions={actions} locale={locale} className={className} />
+    )
+  }
+  const dictionary = await getDictionary(locale as Locale).catch(() => null)
   return (
-    <NextActionCard actions={actions} locale={locale} className={className} />
+    <div className={cn("flex flex-col gap-3", className)}>
+      <NextActionCard actions={actions} locale={locale} className="flex-1" />
+      <ClassAlertsPrompt
+        labels={resolveClassAlertsLabels(dictionary?.liveClasses?.alerts)}
+        className="px-2"
+      />
+    </div>
   )
 }

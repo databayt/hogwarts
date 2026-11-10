@@ -16,13 +16,24 @@
  * actually offers.
  */
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+
+import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
 
 import {
   RoomTitleCard,
   type RoomTitleCardData,
   type RoomTitleCardLabels,
 } from "@/components/school-dashboard/live/room/title-card"
+
+// The card carries the "turn on class alerts" prompt, whose hook imports the
+// subscription server actions — nothing this file exercises (jsdom has no
+// Push, so the prompt renders nothing).
+vi.mock("@/components/school-dashboard/notifications/push-actions", () => ({
+  isWebPushSubscribed: vi.fn(async () => false),
+  subscribeWebPush: vi.fn(async () => ({ success: true })),
+  unsubscribeWebPush: vi.fn(async () => ({ success: true })),
+}))
 
 const labels: RoomTitleCardLabels = {
   join: "Join",
@@ -49,6 +60,7 @@ const labels: RoomTitleCardLabels = {
   share: "Share",
   linkCopied: "Link copied",
   toggleTheme: "Light or dark",
+  alerts: resolveClassAlertsLabels(),
 }
 
 const baseData: RoomTitleCardData = {

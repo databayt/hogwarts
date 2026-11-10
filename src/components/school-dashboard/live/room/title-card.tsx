@@ -16,6 +16,8 @@ import {
   titleCardTopGlyph,
   titleCardTopPill,
 } from "@/components/lumos/shared/title-card"
+import type { ClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
+import { ClassAlertsPrompt } from "@/components/school-dashboard/notifications/class-alerts-prompt"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
 
 import { downloadClassIcs } from "./calendar-file"
@@ -116,6 +118,9 @@ export interface RoomTitleCardLabels {
   linkCopied: string
   /** The light ↔ dark switch beside Share. */
   toggleTheme: string
+  /** "Turn on class alerts", under the button — the one place every student,
+   *  parent and teacher passes on the way into a class. */
+  alerts: ClassAlertsLabels
 }
 
 /**
@@ -217,9 +222,14 @@ function useClassProgress(startsAtMs: number | null, endsAtMs: number | null) {
     if (startsAtMs === null || endsAtMs === null) return
     // Not in the initial render: the server has no clock the client agrees
     // with, and reading one during render would hydrate to different markup.
-    setNow(Date.now())
+    // The first read is deferred a tick rather than set in the effect body —
+    // the same value either way, without a synchronous re-render.
+    const first = setTimeout(() => setNow(Date.now()), 0)
     const timer = setInterval(() => setNow(Date.now()), 30_000)
-    return () => clearInterval(timer)
+    return () => {
+      clearTimeout(first)
+      clearInterval(timer)
+    }
   }, [startsAtMs, endsAtMs])
 
   if (startsAtMs === null || endsAtMs === null || now === null) return null
@@ -519,14 +529,24 @@ export function RoomTitleCard({
            pill sizes and the row stops matching the reference. A student who
            clicks Join on a class that has not started needs to read why while
            still looking at the class. */
-        error ? (
-          <p
-            role="alert"
-            className="mx-auto max-w-[42ch] text-center text-sm text-red-300 sm:mx-0 sm:mt-2 sm:text-start"
-          >
-            {error}
-          </p>
-        ) : undefined
+        <>
+          {error ? (
+            <p
+              role="alert"
+              className="mx-auto max-w-[42ch] text-center text-sm text-red-300 sm:mx-0 sm:mt-2 sm:text-start"
+            >
+              {error}
+            </p>
+          ) : null}
+          {/* Renders nothing once alerts are on, on a browser with no Push,
+              or for three days after "Later" — so the card keeps the frame's
+              rows for everyone it has nothing to offer. */}
+          <ClassAlertsPrompt
+            labels={labels.alerts}
+            tone="dark"
+            className="mx-auto mt-3 max-w-[42ch] sm:mx-0"
+          />
+        </>
       }
     />
   )

@@ -610,5 +610,14 @@
     "toLive": "Live classes",
     "unavailableHoliday": "The school is closed today.",
     "unavailableNoTeacher": "No teacher is assigned to this class yet — ask the school office."
+  },
+  "alerts": {
+    "title": "Turn on class alerts to get a notification on this device before each class.",
+    "enable": "Turn on",
+    "later": "Later",
+    "iosInstallFirst": "On iPhone, add the app to your Home Screen first (Share → Add to Home Screen), then turn alerts on from the installed app.",
+    "denied": "Notifications are blocked for this site in your browser settings. Allow them to get class alerts.",
+    "failed": "Couldn't turn alerts on. Try again.",
+    "done": "Done. Class alerts will arrive on this device."
   }
 }

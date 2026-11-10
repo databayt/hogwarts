@@ -19,6 +19,8 @@ import {
 } from "@/components/school-dashboard/live/actions/join-slot"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { JoinAutoOpen } from "@/components/school-dashboard/live/join-auto-open"
+import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
+import { ClassAlertsPrompt } from "@/components/school-dashboard/notifications/class-alerts-prompt"
 
 // Every visit is a decision made NOW (which room, whether it is open yet), so
 // nothing here may be cached or prerendered.
@@ -151,6 +153,14 @@ export default async function Page({ params }: Props) {
         >
           {hint}
         </p>
+      ) : null}
+      {outcome.kind === "early" ? (
+        // The reader is waiting for a class to open: the moment to offer the
+        // alert that would have told them when it does.
+        <ClassAlertsPrompt
+          labels={resolveClassAlertsLabels(dictionary?.liveClasses?.alerts)}
+          className="max-w-[44ch] justify-center"
+        />
       ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
         <Link

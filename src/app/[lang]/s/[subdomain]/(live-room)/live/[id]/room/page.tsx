@@ -43,6 +43,7 @@ import {
 import { getSlideOptions } from "@/components/school-dashboard/live/room/slide-options"
 import type { RoomTitleCardData } from "@/components/school-dashboard/live/room/title-card"
 import { getText } from "@/components/translation/display"
+import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
 import { getLabels, getName, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
@@ -607,6 +608,7 @@ export default async function Page({ params }: Props) {
           share: c?.share ?? "Share",
           linkCopied: c?.linkCopied ?? "Link copied",
           toggleTheme: c?.toggleTheme ?? "Light or dark",
+          alerts: resolveClassAlertsLabels(t?.alerts),
         },
         participants: {
           title: t?.room?.participants ?? "Participants",
