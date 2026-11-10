@@ -89,6 +89,9 @@ vi.mock("@/components/lumos/shared/video-player/video-watermark", () => ({
 vi.mock("@/components/school-dashboard/live/actions/room-events", () => ({
   recordClassEvent: vi.fn(async () => ({ success: true })),
 }))
+vi.mock("@/components/school-dashboard/live/actions/connection-trace", () => ({
+  recordConnectionTrace: vi.fn(async () => ({ success: true })),
+}))
 
 // Imported AFTER the mocks above, so RoomShell picks up the stubbed modules.
 const { RoomShell } =

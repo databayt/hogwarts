@@ -4,6 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 
+import { noteTrace } from "./connection-trace"
+
 /**
  * Keep the screen awake while a class is on.
  *
@@ -36,8 +38,11 @@ export function useWakeLock(active: boolean) {
             return
           }
           sentinel = lock
+          noteTrace("wake", "on")
+          // The browser lets go of it whenever the page is hidden.
+          lock.addEventListener?.("release", () => noteTrace("wake", "released"))
         })
-        .catch(() => {})
+        .catch(() => noteTrace("wake", "refused"))
     }
 
     acquire()

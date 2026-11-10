@@ -61,6 +61,7 @@ import { useAdaptiveDelivery } from "./use-adaptive-delivery"
 import { useAutoHide } from "./use-auto-hide"
 import { useClassChannel } from "./use-class-channel"
 import { useClassNotices } from "./use-class-notices"
+import { useConnectionTrace } from "./use-connection-trace"
 import { useLiveChat } from "./use-live-chat"
 import { useWakeLock } from "./use-wake-lock"
 
@@ -136,6 +137,9 @@ export function RoomShell({
   // The shell exists only while the call is on, so the screen stays awake
   // for exactly that long.
   useWakeLock(true)
+  // What this seat's connection goes through, for the people who read a class
+  // that went badly. Listeners only — it draws nothing.
+  useConnectionTrace(sessionId)
   const room = useRoomContext()
   const { localParticipant } = useLocalParticipant()
   const [panel, setPanel] = useState<PanelTab | null>(null)
