@@ -1744,7 +1744,6 @@ export function DashboardSkeleton({ role }: { role?: string | null } = {}) {
           <UsageSectionSkeleton rows={student ? 3 : 4} />
           <InvoiceSectionSkeleton />
         </div>
-        {shape === "LEARNER" ? <LearnerTailSkeleton /> : null}
         {shape === "STAFFROOM" ? <MetricRowSkeleton /> : null}
       </div>
     </div>
@@ -1847,57 +1846,6 @@ function MetricRowSkeleton() {
           </CardContent>
         </Card>
       ))}
-    </div>
-  )
-}
-
-/**
- * The student's and the teacher's tail: one metric tile in a three-column row
- * (the other two were removed, the row was not) and the classes card. Both are
- * `md`-and-up, so below that breakpoint this draws nothing — which is correct,
- * because below it the phone prefix above already shows the same day as a grid.
- */
-function LearnerTailSkeleton() {
-  return (
-    <div className="space-y-8">
-      <div className="hidden gap-4 md:grid md:grid-cols-3">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-28" />
-                <Skeleton className="h-9 w-10" />
-              </div>
-              <Skeleton className="size-10 rounded-lg" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Today's schedule. Four rows: a school day has more, but this card
-          lists only what is LEFT of it, so a full seven would over-draw by
-          more than four under-draws. */}
-      <Card className="hidden md:block">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-6 w-32 rounded-md" />
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 rounded-lg border p-3"
-            >
-              <Skeleton className="h-5 w-16 shrink-0" />
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-56" />
-              </div>
-              <Skeleton className="h-6 w-14 shrink-0 rounded-md" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   )
 }

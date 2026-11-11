@@ -16,14 +16,16 @@ import { joinWindow } from "@/components/school-dashboard/live/join-window"
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { getTodaySchedule } from "@/components/school-dashboard/timetable/actions"
 import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
-import SimpleGrid from "@/components/school-dashboard/timetable/views/simple-grid"
 
 import { SectionHeading } from "./section-heading"
-import { TodayJoinStrip, type TodayJoinRow } from "./today-join-strip"
+import { TodayGrid } from "./today-grid"
+import { type TodayJoinRow } from "./today-join-strip"
 
 /**
- * The day's classes on the phone dashboard, directly under the next-action
- * banner.
+ * The day's classes on the dashboard, at every width: under the next-action
+ * banner on a phone, a full row under the app grid from `md` up (where a
+ * separate "Today" card stood until 2026-11-11 — the same day in a second
+ * shape, with its own idea of what a row looks like).
  *
  * It is /timetable's own day mode, not a second timetable: the SAME `SimpleGrid`
  * the student surface renders, narrowed to one day column beside the period
@@ -42,7 +44,7 @@ import { TodayJoinStrip, type TodayJoinRow } from "./today-join-strip"
  *
  * Best-effort, like its neighbour `next-action.tsx` — a failed read, a school
  * with no periods configured, or a week with nothing on it renders nothing. The
- * phone dashboard already opens with a widget that says what today is; a second
+ * dashboard already opens with a widget that says what today is; a second
  * empty state under it would be the same silence twice.
  */
 export async function TodayTimetable({
@@ -71,7 +73,11 @@ export async function TodayTimetable({
   const labels = dictionary?.dashboard?.todaySchedule
 
   return (
-    <section className="md:hidden">
+    // From `md` up it is a full row of the dashboard's app grid, ordered after
+    // the quick-action tiles: those are grid items too (`contents`), and a
+    // full-width row between them and the home cluster would push them a row
+    // down, out from beside the calendar widget.
+    <section className="md:order-last md:col-span-full md:mt-3">
       <div className="mb-4 flex items-baseline justify-between gap-4">
         <SectionHeading
           title={
@@ -89,46 +95,20 @@ export async function TodayTimetable({
         </Link>
       </div>
 
-      {/* The way into the class that is on now — see today-join-strip. */}
-      {day.isToday && day.joinRows.length > 0 ? (
-        <TodayJoinStrip
-          rows={day.joinRows}
-          lang={locale as Locale}
-          isTeacher={role === "TEACHER"}
-          labels={{
-            join:
-              dictionary?.liveClasses?.join ??
-              (locale === "ar" ? "انضمام" : "Join"),
-            start:
-              dictionary?.liveClasses?.start ??
-              (locale === "ar" ? "بدء البث المباشر" : "Start live class"),
-            liveNow:
-              d?.liveNow ?? (locale === "ar" ? "مباشر الآن" : "Live now"),
-          }}
-        />
-      ) : null}
-
-      <SimpleGrid
+      <TodayGrid
         slots={day.slots}
-        workingDays={[day.dayOfWeek]}
         periods={day.periods}
-        isRTL={locale === "ar"}
+        dayOfWeek={day.dayOfWeek}
+        // Empty on a fallen-forward day: nothing there is joinable.
+        joinRows={day.isToday ? day.joinRows : []}
+        lang={locale as Locale}
         viewMode={role === "TEACHER" ? "teacher" : "class"}
-        editable={false}
-        // The single column IS the day, so the highlight has nothing to
-        // contrast against — and tailwind-merge collapses its `bg-primary/5`
-        // onto the subject colour rather than over it, greying the day out.
-        highlightToday={false}
-        // Deliberately NOT passed: `liveIndicators`. The grid's live lamp only
-        // lights on the cell it considers current, and that cell is decided by
-        // comparing a LOCAL wall clock against UTC-extracted period bounds — on
-        // /timetable that is fine, because the grid mounts after a client fetch
-        // and is never server-rendered. This card IS server-rendered, and in
-        // production the server's local zone is UTC while the reader's is
-        // Khartoum, so the two would light different cells and the lamp's label
-        // would be a hydration mismatch on every school day. Joining from
-        // here is the client-only strip above, which decides "now" after it
-        // mounts.
+        labels={{
+          join:
+            dictionary?.liveClasses?.join ??
+            (locale === "ar" ? "انضمام" : "Join"),
+          liveNow: d?.liveNow ?? (locale === "ar" ? "مباشر الآن" : "Live now"),
+        }}
         dictionary={{
           period: d?.period,
           break: d?.break,

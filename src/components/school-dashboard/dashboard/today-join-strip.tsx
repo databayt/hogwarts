@@ -27,7 +27,9 @@ export type TodayJoinRow = {
  * The phone day grid under it is server-rendered and cannot decide "now"
  * without a hydration mismatch (server zone UTC, reader's zone Khartoum — see
  * the note in `today-timetable.tsx`), so on a phone the dashboard had no way
- * into a class at all: the Today cards are desktop-only and the banner rotates.
+ * into a class at all. The grid's cells carry a Join pill too now
+ * (`today-grid.tsx`); this strip stays above them on phones, where the running
+ * class can sit rows below the fold.
  * This island renders NOTHING until it has mounted, then picks the class whose
  * join window (instants from the server, in the school's zone) holds now —
  * right on any device clock — and re-picks every 30 seconds, so a dashboard
@@ -36,13 +38,11 @@ export type TodayJoinRow = {
 export function TodayJoinStrip({
   rows,
   lang,
-  isTeacher,
   labels,
 }: {
   rows: TodayJoinRow[]
   lang: Locale
-  isTeacher: boolean
-  labels: { join: string; start: string; liveNow: string }
+  labels: { join: string; liveNow: string }
 }) {
   // `null` until mounted (nothing renders before the clock is real), then
   // re-read every 30 s.

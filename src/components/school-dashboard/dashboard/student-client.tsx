@@ -2,25 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { format } from "date-fns"
-import { ar, enUS } from "date-fns/locale"
-import { Clock } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { type Locale } from "@/components/internationalization/config"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-
 import type { QuickLookData } from "./actions"
-import { periodLabel, periodMinutes, useNowMinutes } from "./day-clock"
-import { EmptyState } from "./empty-state"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection } from "./lazy-charts"
-import { MetricCard } from "./metric-card"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { ScheduleItem } from "./schedule-item"
-import { TodayLiveAction } from "./today-live-action"
 import type { StudentDashboardData } from "./types"
 import type { WeatherData } from "./weather-actions"
 
@@ -34,174 +20,6 @@ export interface StudentDashboardClientProps {
   data: StudentDashboardData
   quickLookData?: QuickLookData
   weatherData?: WeatherData | null
-}
-
-/** Everything the student sections read out of `school.studentDashboard`. */
-function useStudentDict() {
-  const { dictionary } = useDictionary()
-  const school = dictionary?.school
-  const dict = school?.studentDashboard
-  return {
-    stats: dict?.stats,
-    sections: dict?.sections,
-    labels: dict?.labels,
-    quickActionsTitle: dict?.quickActions?.title,
-    liveClasses: school?.liveClasses,
-  }
-}
-
-// ============================================================================
-// SECTION: Quick Actions
-// ============================================================================
-
-// ============================================================================
-// SECTION: Key Metrics
-// ============================================================================
-
-function MetricsSection({
-  locale,
-  data,
-}: {
-  locale: string
-  data: StudentDashboardData
-}) {
-  const { stats } = useStudentDict()
-
-  // One tile left. Average grade, assignments due and attendance were all
-  // removed at the reader's request, and the grades/tasks rings and the
-  // performance gauge with them — see the block README. What remains counts
-  // today's classes, and only from `md` up: the phone dashboard opens with the
-  // real day grid (`today-timetable.tsx`), which shows those classes
-  // themselves, and on a weekend the grid falls forward to the next school day
-  // while this tile would still read 0 for today.
-  return (
-    <div className="hidden gap-4 md:grid md:grid-cols-3">
-      <MetricCard
-        title={stats?.classesToday || "Classes Today"}
-        value={data.todaysTimetable.length}
-        iconName="BookOpen"
-        iconColor="text-blue-500"
-        href={`/${locale}/timetable`}
-      />
-    </div>
-  )
-}
-
-// ============================================================================
-// SECTION: Today's Schedule
-// ============================================================================
-
-function TodaySection({
-  locale,
-  data,
-}: {
-  locale: string
-  data: StudentDashboardData
-}) {
-  const { sections, labels, liveClasses } = useStudentDict()
-  const dateLocale = locale === "ar" ? ar : enUS
-  const nowMin = useNowMinutes()
-
-  // What is LEFT of the day. A period drops off the moment it ENDS, not when
-  // it starts — a class in progress is the one row the student most needs.
-  // Before the clock is known (server render, first paint) the whole day
-  // stands: see `useNowMinutes`.
-  const remaining =
-    nowMin === null
-      ? data.todaysTimetable
-      : data.todaysTimetable.filter(
-          (entry) => periodMinutes(entry.endTime) > nowMin
-        )
-
-  // Told apart from a genuine day off, which is the same empty list with a
-  // very different meaning: "enjoy your day off" at 4pm after a full timetable
-  // reads as a bug.
-  const dayIsDone = data.todaysTimetable.length > 0 && remaining.length === 0
-
-  // Hidden below `md`. The phone dashboard opens with the real day grid
-  // (`today-timetable.tsx`, the timetable page's own day mode), and this card
-  // lists the same periods a screen further down — the same day twice, in two
-  // different shapes, which teaches the reader to trust neither. From `md` up
-  // there is no grid, so this card is the student's only schedule and stays.
-  // It used to share a three-column row with the activity rings, which are
-  // gone; the row went with them and the card now stands on its own.
-  return (
-    <Card className="hidden md:block">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Clock className="h-4 w-4" />
-          {sections?.todaySchedule || "Today's Schedule"}
-        </CardTitle>
-        <Badge variant="outline">
-          {format(new Date(), "EEEE, MMM d", { locale: dateLocale })}
-        </Badge>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {remaining.length > 0 ? (
-          remaining.map((entry, index) => {
-            // "Now" is a claim about the clock, so only a period the clock
-            // is actually inside may make it. Everything else is at most
-            // "Next", and only the first row of what is left can be that.
-            const isNow =
-              nowMin !== null &&
-              nowMin >= periodMinutes(entry.startTime) &&
-              nowMin < periodMinutes(entry.endTime)
-            const isNext = !isNow && nowMin !== null && index === 0
-
-            return (
-              <ScheduleItem
-                key={entry.id}
-                time={periodLabel(entry.startTime)}
-                title={entry.subject}
-                subtitle={`${labels?.room || "Room"} ${entry.room} • ${entry.teacher}`}
-                badge={
-                  isNow
-                    ? labels?.now || "Now"
-                    : isNext
-                      ? labels?.next || "Next"
-                      : undefined
-                }
-                badgeVariant={isNow ? "default" : "secondary"}
-                isActive={isNow}
-                // Join from the home page too — the room is still where the
-                // class meets; online is additive, so the marker sits beside it.
-                action={
-                  <TodayLiveAction
-                    liveClass={entry.liveClass}
-                    online={entry.online}
-                    timetableId={entry.id}
-                    joinWindow={entry.join}
-                    startTime={entry.startTime}
-                    endTime={entry.endTime}
-                    lang={locale as Locale}
-                    joinLabel={
-                      liveClasses?.join ?? (locale === "ar" ? "انضمام" : "Join")
-                    }
-                    onlineLabel={
-                      liveClasses?.online ??
-                      (locale === "ar" ? "مباشر" : "Online")
-                    }
-                  />
-                }
-              />
-            )
-          })
-        ) : dayIsDone ? (
-          <EmptyState
-            iconName="CheckCircle"
-            title={labels?.classesDone || "Classes are done for today"}
-            description={labels?.seeYouTomorrow || "See you tomorrow!"}
-          />
-        ) : (
-          <EmptyState
-            iconName="Calendar"
-            title={labels?.noClasses || "No classes scheduled for today"}
-            description={labels?.enjoyDayOff || "Enjoy your day off!"}
-          />
-        )}
-      </CardContent>
-    </Card>
-  )
 }
 
 // ============================================================================
@@ -219,6 +37,10 @@ export function StudentDashboardClient({
     <div className="space-y-8">
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
+        {/* The day's classes are not here: `today-timetable.tsx` draws them
+            once, above every section, at every width (content.tsx). The
+            Today card and the classes-today tile that stood below were its
+            desktop stand-ins and went on 2026-11-11. */}
         {/* Section 2, the Quick Look row of announcements / events /
             notifications / messages, is still hidden. Restore by
             un-commenting here and passing `quickLookData` from
@@ -240,15 +62,6 @@ export function StudentDashboardClient({
         {/* Section 6: Invoice History */}
         <InvoiceHistorySection role="STUDENT" />
       </div>
-
-      {/* ============ STUDENT-SPECIFIC SECTIONS ============ */}
-      {/* Both are `md`-and-up only, so below that the student dashboard is the
-          phone experience above plus the sections in the block ahead of it.
-          The performance gauge, upcoming assignments, recent grades and school
-          announcements that stood here were removed 2026-09-09; `data` still
-          carries all three lists, so restoring them is putting the JSX back. */}
-      <MetricsSection locale={locale} data={data} />
-      <TodaySection locale={locale} data={data} />
     </div>
   )
 }
