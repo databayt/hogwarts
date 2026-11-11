@@ -1,5 +1,11 @@
 # Students — Production Readiness Tracker
 
+## A teacher sees their own students — 2026-11-11
+
+Abdout: on /students a teacher should see only their students; supervisors see the grades they supervise. Until now a TEACHER read (and could edit and export) the whole school's roster. `studentViewerWhere` (`src/lib/teaching-scope.ts`) narrows a teacher to the sections they teach (timetable period or subject assignment) or supervise as class teacher (`Section.homeroomTeacherId`, any number of sections), plus students placed in those grades with no section yet. Applied to the list page, `getStudents` (search / load more), both exports, `getStudent`, `updateStudent` and `/students/[id]`. Admin, staff and accountant are not narrowed.
+
+Open: the profile page (`/profile/{userId}`), the Performance and Reports tabs, the add wizard's per-step reads and the credentials actions were not reviewed for the same rule. `actions.test.ts > getStudents > fetches students scoped to schoolId` fails on a missing `db.academicGrade.count` mock (grade-label helper), unrelated to this change.
+
 ## 2026-10-04 — placement gives Lumos access; no class enrollment (LOCAL, not pushed)
 
 Classes are being retired (plan S13). Nothing writes `StudentClass` any more.

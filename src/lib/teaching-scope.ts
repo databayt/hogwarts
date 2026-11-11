@@ -50,6 +50,45 @@ export async function getTeacherSectionIds(
   return sections.map((s) => s.id)
 }
 
+/**
+ * Which students a reader may see on the students pages, as a Prisma `where`
+ * to AND onto the query — or `null` for a reader the school does not narrow
+ * (admin, office staff, accountant).
+ *
+ * A TEACHER sees the students of their own sections (`getTeacherSectionIds`):
+ * the ones they teach, and the ones they supervise as the section's class
+ * teacher (`Section.homeroomTeacherId` — «مشرف الصف», who may teach nothing
+ * there, and may hold several sections, e.g. a stage supervisor). A student
+ * placed in one of those grades but not yet in a section counts for the grade.
+ * Until 2026-11-11 a teacher read the whole school's roster.
+ */
+export async function studentViewerWhere(
+  schoolId: string,
+  viewer: { userId: string | null | undefined; role: string | null | undefined }
+): Promise<Record<string, unknown> | null> {
+  if (viewer.role !== "TEACHER") return null
+  // A teacher account with no teacher record sees nobody — never everybody.
+  if (!viewer.userId) return { id: { in: [] } }
+
+  const sectionIds = await getTeacherSectionIds(schoolId, viewer.userId)
+  if (sectionIds.length === 0) return { id: { in: [] } }
+
+  const grades = await db.section.findMany({
+    where: { schoolId, id: { in: sectionIds } },
+    distinct: ["gradeId"],
+    select: { gradeId: true },
+  })
+  return {
+    OR: [
+      { sectionId: { in: sectionIds } },
+      {
+        sectionId: null,
+        academicGradeId: { in: grades.map((g) => g.gradeId) },
+      },
+    ],
+  }
+}
+
 export interface TeachingPair {
   sectionId: string
   subjectId: string

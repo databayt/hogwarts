@@ -101,6 +101,7 @@ import { schoolNameDisplay } from "@/lib/school-name-format"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
+import { studentViewerWhere } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -293,6 +294,16 @@ export async function updateStudent(
     // Parse and validate input
     const parsed = studentUpdateSchema.parse(input)
     const { id, ...rest } = parsed
+
+    // A teacher edits students of their own sections only.
+    const viewerScope = await studentViewerWhere(schoolId, authContext)
+    if (viewerScope) {
+      const mine = await db.student.findFirst({
+        where: { id, schoolId, AND: [viewerScope] },
+        select: { id: true },
+      })
+      if (!mine) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Build update data object
     const data: Record<string, unknown> = {}
@@ -938,8 +949,9 @@ export async function getStudent(input: {
 
     // Fetch student record
     const studentModel = getModelOrThrow("student")
+    const viewerScope = await studentViewerWhere(schoolId, authContext)
     const student = await studentModel.findFirst({
-      where: { id, schoolId },
+      where: { id, schoolId, ...(viewerScope ? { AND: [viewerScope] } : {}) },
       select: {
         id: true,
         schoolId: true,
@@ -1106,6 +1118,12 @@ export async function getStudents(
         sp.scope
       )
     )
+
+    // A teacher reads their own sections only (taught or supervised).
+    const viewerScope = await studentViewerWhere(schoolId, authContext)
+    if (viewerScope) {
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), viewerScope]
+    }
 
     // Build pagination
     const skip = (sp.page - 1) * sp.perPage
@@ -1299,6 +1317,12 @@ export async function getStudentsCSV(
     // Determine display language for translation
     const cookieStore = await cookies()
     const csvDisplayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+
+    // A teacher reads their own sections only (taught or supervised).
+    const viewerScope = await studentViewerWhere(schoolId, authContext)
+    if (viewerScope) {
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), viewerScope]
+    }
 
     // Fetch ALL students matching filters (no pagination for export)
     const studentModel = getModelOrThrow("student")
@@ -1525,6 +1549,12 @@ export async function getStudentsExportData(
       },
       sp.scope
     )
+
+    // A teacher reads their own sections only (taught or supervised).
+    const viewerScope = await studentViewerWhere(schoolId, authContext)
+    if (viewerScope) {
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), viewerScope]
+    }
 
     // Fetch ALL students matching filters (no pagination for export)
     const studentModel = getModelOrThrow("student")

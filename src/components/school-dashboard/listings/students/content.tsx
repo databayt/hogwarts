@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
 import { withArchiveScope } from "@/lib/archive-scope"
@@ -14,6 +15,7 @@ import {
   schoolNameDisplay,
   schoolNameFormat,
 } from "@/lib/school-name-format"
+import { studentViewerWhere } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -159,8 +161,17 @@ export default async function StudentsContent({
           }
         : {}),
     }
+    // A teacher's list is their own sections (taught or supervised); every
+    // other staff role reads the school. See `studentViewerWhere`.
+    const viewerScope = await studentViewerWhere(effectiveSchoolId, {
+      userId: (await auth())?.user?.id,
+      role,
+    })
     const where: any = hideEmptyStudentDrafts(
-      withArchiveScope(baseFilters, sp.scope)
+      withArchiveScope(
+        viewerScope ? { ...baseFilters, AND: [viewerScope] } : baseFilters,
+        sp.scope
+      )
     )
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
@@ -229,7 +240,12 @@ export default async function StudentsContent({
     for (const s of rows as any[]) {
       if (s.academicGrade?.gradeNumber != null) {
         gradeSet.add(
-          getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry, singleKg)
+          getGradeLabel(
+            s.academicGrade.gradeNumber,
+            lang,
+            gradeCountry,
+            singleKg
+          )
         )
       }
     }
@@ -246,7 +262,12 @@ export default async function StudentsContent({
 
       const gradeName =
         s.academicGrade?.gradeNumber != null
-          ? getGradeLabel(s.academicGrade.gradeNumber, lang, gradeCountry, singleKg)
+          ? getGradeLabel(
+              s.academicGrade.gradeNumber,
+              lang,
+              gradeCountry,
+              singleKg
+            )
           : null
 
       return {

@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { studentViewerWhere } from "@/lib/teaching-scope"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -20,9 +21,14 @@ export default async function StudentDetail({ params }: Props) {
   const schoolId = session?.user?.schoolId
   if (!schoolId) return notFound()
 
-  // Resolve userId from student record (scoped by schoolId)
+  // Resolve userId from student record (scoped by schoolId, and for a teacher
+  // by their own sections — see `studentViewerWhere`)
+  const viewerScope = await studentViewerWhere(schoolId, {
+    userId: session.user.id,
+    role: session.user.role,
+  })
   const student = await db.student.findFirst({
-    where: { id, schoolId },
+    where: { id, schoolId, ...(viewerScope ? { AND: [viewerScope] } : {}) },
     select: { userId: true },
   })
 
