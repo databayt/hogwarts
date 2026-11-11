@@ -491,7 +491,7 @@ room decides who hosts.
 | Timetable cell (student · guardian · teacher) | a **Join** pill on today's online class inside its window; tapping the cell joins too       |
 | Timetable cell (admin)                        | **Observe** on a class that is live now                                                     |
 | Timetable **Today** list + Current/Next card  | Join through the same link, gated on the server window (2026-11-09 — was the device clock)  |
-| Dashboard **Today** rows (desktop)            | Join, and **Start** for the teacher, the moment the class is online                         |
+| Dashboard day grid (every width, 2026-11-11)  | a **Join** pill on the cell of an online class inside its window, as on the timetable       |
 | Dashboard phone strip                         | the class on now, one tap                                                                   |
 | Dashboard banner                              | "**Maths** is live — join", pinned, flips at the bell without a reload                      |
 | `/live` landing strip                         | live now + still to come today, own sections + school-wide sessions                         |
@@ -499,13 +499,26 @@ room decides who hosts.
 | **Mobile**                                    | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/live/:id/join` |
 
 **The window** (`join-window.ts`, one rule everywhere): a student's link opens at the school's
-reminder lead before the bell (default 10 minutes); the class's teacher can open it from 15 minutes
-before (or the lead, if longer); it closes 10 minutes after the bell. Too early, the page says when
+reminder lead before the bell (default 10 minutes), the same for the teacher and the students
+(2026-11-10; the host's 15-minute floor now applies only to ad-hoc classes); it closes 10 minutes after the bell. Too early, the page says when
 the class starts and opens the room by itself at the opening instant. The windows reach the page as
 instants computed in the school's zone, so a pill shows at the right moment on a phone set to any
-clock — a pupil of an online school abroad included. A host's join is what starts
-the class, so the server refuses a start more than 15 minutes early (`LIVE_CLASS_TOO_EARLY`) — a
-stale tab can no longer announce a 16:00 class at 09:00.
+clock — a pupil of an online school abroad included.
+
+**A timetable class is a room that is there** (2026-11-10): nobody starts it. Inside the window the
+first arrival — teacher or student — opens the room, and that sends "the class is live" to everyone
+else. The clock closes it 10 minutes after the bell and writes the register; an empty room inside
+the window is a break, not an end. Only an ad-hoc class (no timetable slot) still waits for its
+host, and the server refuses that start more than 15 minutes early (`LIVE_CLASS_TOO_EARLY`).
+
+**Someone is waiting** (2026-11-10): an empty room says who is missing instead of "you are alone".
+A student in with no teacher sends the teacher "Your students are waiting"; a teacher in with no
+student sends the roster and guardians "<teacher> is in the class now" — in-app and push, bounded
+(teacher 4 a class, roster 2). **Class alerts** — the push switch — are offered under the Join
+button, under the dashboard banner and on the join link's waiting page until the device has them on.
+
+**The class link opens the room card** (2026-11-11): `/live/{id}` redirects an open class to
+`/live/{id}/room`; ended, cancelled and external sessions keep the plain page (`?view=details`).
 
 **Who** (checked before anything about the class is read): students of the slot's section, the
 slot's teacher or a confirmed substitute (host), other teachers and admins (co-host), guardians of
@@ -513,9 +526,9 @@ the section only where the school lets guardians watch. Staff and accountants jo
 sessions only — and an external session's meeting URL is never handed to a reader who may see the
 session but not enter it.
 
-**Combined classes are not supported yet** (2026-11-09): when one teacher teaches several sections
-in the same period, each section gets its own room and the teacher can host only one — the other
-sections wait. Until it ships, give a combined class one section on the timetable.
+**One room per timetable slot** (2026-11-10): when one teacher is booked for several sections in
+the same period, each slot has its own room and the timetable reports the booking as a conflict.
+Give a combined class one section on the timetable.
 
 **Teaching mode** is its own section of the school configuration
 (`/school/configuration/teaching-mode`): _In person_ · _Live_ · _Both_, writing

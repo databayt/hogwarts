@@ -3442,12 +3442,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.avif?v=34bc99d1",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.avif?v=2b6b0af8"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.avif?v=68e35aa5",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.avif?v=0dc948d6"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.webp?v=adf81951",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.webp?v=f1d57aa8"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live.webp?v=5b8f9a47",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/live/teacher/live@2x.webp?v=92c41633"
     }
   },
   "live-teacher/video-ar": {
@@ -3456,23 +3456,23 @@
       "ar": "المعلم يبدأ الحصة المباشرة",
       "en": "A teacher starts a live class"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.poster.webp?v=0df0ec9e",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.poster.webp?v=d15c700c",
     "width": 1920,
     "height": 1080,
-    "duration": 35.2,
+    "duration": 40.17,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.av1.mp4?v=1c4da78f",
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.av1.mp4?v=9835ab4c",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.mp4?v=a8fdd4f9",
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.mp4?v=2694dc13",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.vtt?v=5ce38e48",
+        "src": "https://cdn.databayt.org/hogwarts/ar/live/teacher/video.vtt?v=0a87a681",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -4034,12 +4034,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell.avif?v=8071730c",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell@2x.avif?v=2025d896"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell.avif?v=b5a130e4",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell@2x.avif?v=914be3b1"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell.webp?v=de98195c",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell@2x.webp?v=2b9f94da"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell.webp?v=6c3a4945",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/bell@2x.webp?v=70c25898"
     }
   },
   "live-join-notice/card-ar": {
@@ -4052,12 +4052,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card.avif?v=6625fef7",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card@2x.avif?v=1cd19500"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card.avif?v=b0d846fb",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card@2x.avif?v=35c72b71"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card.webp?v=f3785083",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card@2x.webp?v=9a042a04"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card.webp?v=0058e263",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/card@2x.webp?v=401b7304"
     }
   },
   "live-join-notice/room-ar": {
@@ -4070,12 +4070,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room.avif?v=d71fdf50",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room@2x.avif?v=1f46ba26"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room.avif?v=a107097d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room@2x.avif?v=02d3dbfe"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room.webp?v=c56423f0",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room@2x.webp?v=3c6a7bad"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room.webp?v=926283ad",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/notifications/live/room@2x.webp?v=e1408e3b"
     }
   },
   "live-join-notice/video-ar": {
@@ -4084,23 +4084,23 @@
       "ar": "الانضمام للحصة من الإشعار",
       "en": "Join a live class from a notification"
     },
-    "poster": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.poster.webp?v=298bf772",
+    "poster": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.poster.webp?v=b9292ec7",
     "width": 1920,
     "height": 1080,
-    "duration": 28.5,
+    "duration": 31.57,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.av1.mp4?v=9b906cd0",
+        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.av1.mp4?v=bc4eba03",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.mp4?v=d177b9db",
+        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.mp4?v=eaaec45f",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.vtt?v=f874cf00",
+        "src": "https://cdn.databayt.org/hogwarts/ar/notifications/live/video.vtt?v=ea24012a",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -4117,12 +4117,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner.avif?v=af28bec7",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner@2x.avif?v=313a5fd1"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner.avif?v=9a534e34",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner@2x.avif?v=3cc5c07f"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner.webp?v=d877244e",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner@2x.webp?v=0059e664"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner.webp?v=e4cc0e78",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/banner@2x.webp?v=347b5e0b"
     }
   },
   "live-join-banner/card-ar": {
@@ -4135,12 +4135,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card.avif?v=b2d61274",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card@2x.avif?v=206f8183"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card.avif?v=1c4fdb28",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card@2x.avif?v=00415bdf"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card.webp?v=c7e8fa4d",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card@2x.webp?v=065ff214"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card.webp?v=07f8df16",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/card@2x.webp?v=b8ff32d2"
     }
   },
   "live-join-banner/room-ar": {
@@ -4153,12 +4153,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room.avif?v=d71fdf50",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room@2x.avif?v=1f46ba26"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room.avif?v=a107097d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room@2x.avif?v=02d3dbfe"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room.webp?v=c56423f0",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room@2x.webp?v=3c6a7bad"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room.webp?v=926283ad",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/room@2x.webp?v=e1408e3b"
     }
   },
   "live-join-banner/video-ar": {
@@ -4170,20 +4170,20 @@
     "poster": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.poster.webp?v=aeff7228",
     "width": 1920,
     "height": 1080,
-    "duration": 23.87,
+    "duration": 27.57,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.av1.mp4?v=1efbf7dc",
+        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.av1.mp4?v=d1aed973",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.mp4?v=777b0206",
+        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.mp4?v=fbd5c7d4",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.vtt?v=94aa4b3e",
+        "src": "https://cdn.databayt.org/hogwarts/ar/dashboard/live/video.vtt?v=e6e073d7",
         "srclang": "ar",
         "label": "العربية",
         "default": true
@@ -4200,12 +4200,12 @@
     },
     "order": 1,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable.avif?v=943a665f",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable@2x.avif?v=ecd888ba"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable.avif?v=60b0eab5",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable@2x.avif?v=8b2aec3c"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable.webp?v=5f524ccb",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable@2x.webp?v=36987ad6"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable.webp?v=c4cbbba0",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/timetable@2x.webp?v=d949942f"
     }
   },
   "live-join-timetable/card-ar": {
@@ -4218,12 +4218,12 @@
     },
     "order": 2,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card.avif?v=4affa146",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card@2x.avif?v=b89d9688"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card.avif?v=1871edbb",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card@2x.avif?v=c71313cc"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card.webp?v=ff28d676",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card@2x.webp?v=9903bfcc"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card.webp?v=41565e2b",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/card@2x.webp?v=dbff44ef"
     }
   },
   "live-join-timetable/room-ar": {
@@ -4236,12 +4236,12 @@
     },
     "order": 3,
     "avif": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room.avif?v=d71fdf50",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room@2x.avif?v=1f46ba26"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room.avif?v=a107097d",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room@2x.avif?v=02d3dbfe"
     },
     "webp": {
-      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room.webp?v=c56423f0",
-      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room@2x.webp?v=3c6a7bad"
+      "1600": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room.webp?v=926283ad",
+      "2400": "https://cdn.databayt.org/hogwarts/ar/timetable/live/room@2x.webp?v=e1408e3b"
     }
   },
   "live-join-timetable/video-ar": {
@@ -4253,20 +4253,20 @@
     "poster": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.poster.webp?v=ca32794d",
     "width": 1920,
     "height": 1080,
-    "duration": 27.03,
+    "duration": 27.1,
     "sources": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.av1.mp4?v=e923aa57",
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.av1.mp4?v=1bd9e76f",
         "type": "video/mp4; codecs=\"av01.0.08M.10\""
       },
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.mp4?v=59ddf112",
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.mp4?v=e165767a",
         "type": "video/mp4; codecs=\"avc1.640029\""
       }
     ],
     "tracks": [
       {
-        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.vtt?v=ea4d171b",
+        "src": "https://cdn.databayt.org/hogwarts/ar/timetable/live/video.vtt?v=07cffe15",
         "srclang": "ar",
         "label": "العربية",
         "default": true

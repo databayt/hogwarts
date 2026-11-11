@@ -4,6 +4,18 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Support media and guides caught up — 2026-11-11
+
+The teacher tutorial on the CDN still told the old story (the 11-10 caption rewrite was never
+re-rendered: «دخولك يفتح الحصة», «اضغط إنهاء الحصة»), and all four join videos predated the class
+alerts offer, the dashboard day grid and the waiting sentence. Re-filmed on the demo inside a
+temporary class (removed after): `live-teacher`, `live-join-timetable`, `live-join-banner`,
+`live-join-notice`, with their stills. Guides `teach-live`, `live-classes`, `online-school` (ar + en)
+now cover class alerts, "someone is waiting" and its two notices; `online-school` no longer says the
+teacher starts the class. `content/docs-*/live.mdx`: the join window, the walk-in model, one room per
+slot, the room-card redirect. Capture note: headless Chrome reports notifications as blocked, so the
+sims present `Notification.permission` as `default` to film the offer a first-time visitor sees.
+
 ## The class link opens the room card again — 2026-11-11
 
 Abdout opened `/live/{id}` for an upcoming alabidae class and met the plain fact sheet, not the
