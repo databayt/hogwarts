@@ -302,6 +302,9 @@ export function RoomClient({
   }, [waiting, joining, join])
 
   const detailHref = `/${locale}/live/${sessionId}`
+  // The class page sends an open class straight back to this card, so the
+  // card's way OUT is the block's front page.
+  const landingHref = `/${locale}/live`
 
   // On a phone the header renders above the card; the page opens past it, on
   // the artwork's top edge, exactly as the lumos lesson does. Wider screens
@@ -365,6 +368,7 @@ export function RoomClient({
             labels={labels.card}
             sessionId={sessionId}
             detailHref={detailHref}
+            backHref={landingHref}
             pending={joining || waiting}
             error={joinError}
             onJoin={() => void join()}

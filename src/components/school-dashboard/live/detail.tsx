@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
@@ -70,7 +70,8 @@ export async function LiveClassDetailContent({
   id,
   locale,
   dictionary,
-}: Props) {
+  plain = false,
+}: Props & { plain?: boolean }) {
   const tenant = await getTenantContext()
   const detail = await loadLiveClassDetail(
     id,
@@ -110,6 +111,17 @@ export async function LiveClassDetailContent({
     hasReferences,
   } = detail
   const lessonHref = detail.lessonHref ? `/${locale}${detail.lessonHref}` : null
+
+  // A class that has not ended opens on its room card — the poster, Join, and
+  // the shelves under it — for anyone who may walk in. This page used to be
+  // where every link to an upcoming class landed, so a reader following the
+  // banner or a shared link met a plain fact sheet instead of the class
+  // (reported 2026-11-11). What this page is FOR starts when the class ends:
+  // the register, the class work, the recording. External sessions have no
+  // room card; they stay here.
+  if (!plain && canJoin && !isExternal) {
+    redirect(`/${locale}/live/${session.id}/room`)
+  }
 
   const t = dictionary?.liveClasses
   const r = t?.references

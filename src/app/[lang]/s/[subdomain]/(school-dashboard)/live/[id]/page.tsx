@@ -10,6 +10,7 @@ import { LiveClassDetailContent } from "@/components/school-dashboard/live/detai
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+  searchParams: Promise<{ view?: string | string[] }>
 }
 
 const ALLOWED_ROLES = [
@@ -22,14 +23,25 @@ const ALLOWED_ROLES = [
   "ACCOUNTANT",
 ]
 
-export default async function Page({ params }: Props) {
-  const [{ lang, id }, session] = await Promise.all([params, auth()])
+export default async function Page({ params, searchParams }: Props) {
+  const [{ lang, id }, { view }, session] = await Promise.all([
+    params,
+    searchParams,
+    auth(),
+  ])
   const role = session?.user?.role ?? ""
   if (!ALLOWED_ROLES.includes(role)) {
     redirect(`/${lang}/dashboard`)
   }
   const dictionary = await getDictionary(lang)
   return (
-    <LiveClassDetailContent id={id} locale={lang} dictionary={dictionary} />
+    <LiveClassDetailContent
+      id={id}
+      locale={lang}
+      dictionary={dictionary}
+      // `?view=details` asks for this page itself — the room card's "more"
+      // link — instead of being sent on to the card (see the component).
+      plain={view === "details"}
+    />
   )
 }

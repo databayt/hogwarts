@@ -156,6 +156,8 @@ interface RoomTitleCardProps {
    *  reader's entry instead of duplicating it. */
   sessionId: string
   detailHref: string
+  /** Where the card's Back goes: the block's front page. */
+  backHref: string
   pending: boolean
   error: string | null
   onJoin: () => void
@@ -263,6 +265,7 @@ export function RoomTitleCard({
   labels,
   sessionId,
   detailHref,
+  backHref,
   pending,
   error,
   onJoin,
@@ -408,7 +411,7 @@ export function RoomTitleCard({
       }
       topStart={
         <Link
-          href={detailHref}
+          href={backHref}
           className={cn(titleCardTopGlyph, "text-base font-medium")}
         >
           {/* The chevron is one of the few glyphs that MUST mirror: it points
@@ -427,7 +430,9 @@ export function RoomTitleCard({
         data.description ? (
           <TitleCardDescription
             text={data.description}
-            href={detailHref}
+            // The plain class page; without the flag it would send the
+            // reader straight back to this card.
+            href={`${detailHref}?view=details`}
             more={labels.more}
           />
         ) : undefined

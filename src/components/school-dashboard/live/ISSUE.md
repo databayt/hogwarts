@@ -4,6 +4,16 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The class link opens the room card again — 2026-11-11
+
+Abdout opened `/live/{id}` for an upcoming alabidae class and met the plain fact sheet, not the
+Apple TV card with its shelves. Nothing had been removed: the card lives at `/live/{id}/room`, and
+every link to a class that is not live (landing rows, banner, shared links) lands on `/live/{id}`.
+Now `/live/{id}` redirects an open class (scheduled or live, in-app room, a reader who may enter)
+to its card. Ended, cancelled and external sessions stay on the plain page (register, class work,
+recording). The card's Back goes to `/live`; its description's "more" opens `?view=details`, the
+plain page on request.
+
 ## Review after the first online day: reach, then the room — 2026-11-10 (hogwarts#470)
 
 Al-Ibda's first online day (11-09): 52 rooms, teachers opened 5, **no student entered**. Three
