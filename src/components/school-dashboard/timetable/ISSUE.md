@@ -11,6 +11,10 @@ docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-10-04
 ---
 
+## The teacher reads the student's surface — 2026-11-11
+
+Abdout: the teacher's /timetable should reuse the student's component, on laptop and phone. `StudentView` takes an optional `teacherId`: it then loads `getTimetableByTeacher`, draws the grid in `teacher` mode (the section that walks in) and keeps the teacher's Start for an in-person section of a live-enabled school (pill and cell tap). `teacher-view.tsx` is deleted with its header card, workload chips, Current/Next card, classroom/subject filters and Today list. The Today/Full tabs are hidden for TEACHER (the week/day toggle replaces them; GUARDIAN keeps the tabs), and `rendersStudentTimetable` counts TEACHER so the loading shape matches. A TEACHER account with no Teacher row gets the not-linked alert from the router.
+
 ## 2026-11-09 — Today list joins on the server clock (ea011d9b7)
 
 - Teacher + guardian Today list and Current/Next card now gate Join on `joinWindows` (server instants)

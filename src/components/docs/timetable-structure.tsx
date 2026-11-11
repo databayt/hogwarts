@@ -152,7 +152,6 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
               description:
                 "room / teacher grid, editable, cookie-persistent filter",
             },
-            { name: "teacher-view.tsx", type: "file" },
             { name: "student-view.tsx", type: "file" },
             { name: "guardian-view.tsx", type: "file" },
             { name: "simple-grid.tsx", type: "file" },

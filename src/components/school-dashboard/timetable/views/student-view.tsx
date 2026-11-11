@@ -11,7 +11,11 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getTimetableByStudentGrade, getTodaySchedule } from "../actions"
+import {
+  getTimetableByStudentGrade,
+  getTimetableByTeacher,
+  getTodaySchedule,
+} from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
 import { JoinLinkButton } from "./join-link-button"
 import {
@@ -21,6 +25,7 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import { StartLiveClassButton } from "./start-live-class-button"
 import { inJoinWindow, useNowMs } from "./use-now-ms"
 import { useSlotOpen } from "./use-slot-open"
 
@@ -46,6 +51,16 @@ interface Props {
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
+  /**
+   * Set for a TEACHER: the same surface, fed the teacher's own week instead
+   * of a section's. The cells then name the section that walks in (the
+   * grid's "teacher" mode), and a period with no room yet in a school that
+   * teaches live offers Start. Everything else — the week/day toggle, the
+   * bare grid, the phone's single day — is the student's, on purpose: the
+   * teacher's separate page (header card, workload chips, Today list) drew
+   * the same week in a second shape and was retired on 2026-11-11.
+   */
+  teacherId?: string
 }
 
 // `termInfo` and `lunchAfterPeriod` still arrive via RoleRouter's `commonProps`
@@ -58,7 +73,9 @@ export default function StudentView({
   workingDays,
   periods: schoolPeriods,
   isLoading,
+  teacherId,
 }: Props) {
+  const isTeacher = !!teacherId
   const d = dictionary?.timetable as Record<string, any> | undefined
   const sv = (d as Record<string, any>)?.studentViewUi
   const CLOSED_LABEL =
@@ -123,7 +140,14 @@ export default function StudentView({
   const [joinWindows, setJoinWindows] = useState<
     Record<string, { fromMs: number; untilMs: number }>
   >({})
+  // Teacher only: whether the school teaches live at all (its teaching mode).
+  // An in-person school offers no Start — Join to an existing room is never
+  // gated on it.
+  const [liveEnabled, setLiveEnabled] = useState(false)
   const nowMs = useNowMs()
+  const startErrorLabel =
+    dictionary?.liveClasses?.startError ??
+    (isRTL ? "تعذّر بدء البث المباشر" : "Couldn't start the live class")
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
   const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
@@ -134,6 +158,9 @@ export default function StudentView({
     onlineToday,
     joinWindows,
     onInspect: setInspectedSlotId,
+    // A teacher's tap inside the window, with no room yet, starts the class.
+    canStart: isTeacher && liveEnabled,
+    startErrorLabel,
   })
   // A JOIN the reader can SEE. The cell tap above already joins, but nothing
   // said so: on 2026-11-08 an alabidae student on a 360px phone reported «ما
@@ -142,12 +169,31 @@ export default function StudentView({
   // link will open — now carries a labelled pill.
   const joinLabel = dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
   const renderJoin = (slot: { id: string }) => {
-    if (!liveJoin[slot.id] && !onlineToday.has(slot.id)) return null
     // The window only exists for TODAY's slots (school zone), so this is
     // also the "is it today" check — on any device clock.
     if (!inJoinWindow(nowMs, joinWindows[slot.id])) return null
+    if (liveJoin[slot.id] || onlineToday.has(slot.id)) {
+      return (
+        <JoinLinkButton timetableId={slot.id} lang={lang} label={joinLabel} />
+      )
+    }
+    // An in-person section of a school that teaches live: its teacher can
+    // still open an online arm for this period.
+    if (!isTeacher || !liveEnabled) return null
     return (
-      <JoinLinkButton timetableId={slot.id} lang={lang} label={joinLabel} />
+      <StartLiveClassButton
+        timetableId={slot.id}
+        lang={lang}
+        label={
+          dictionary?.liveClasses?.start ??
+          (isRTL ? "بدء البث المباشر" : "Start live class")
+        }
+        startingLabel={
+          dictionary?.liveClasses?.starting ??
+          (isRTL ? "جارٍ البدء…" : "Starting…")
+        }
+        errorLabel={startErrorLabel}
+      />
     )
   }
 
@@ -160,7 +206,7 @@ export default function StudentView({
   // Load data
   useEffect(() => {
     loadData()
-  }, [termId])
+  }, [termId, teacherId])
 
   const loadData = async () => {
     setIsLoadingData(true)
@@ -168,7 +214,9 @@ export default function StudentView({
 
     try {
       const [weeklyResult, todayResult] = await Promise.all([
-        getTimetableByStudentGrade({ termId }),
+        teacherId
+          ? getTimetableByTeacher({ termId, teacherId })
+          : getTimetableByStudentGrade({ termId }),
         getTodaySchedule(),
       ])
 
@@ -180,6 +228,11 @@ export default function StudentView({
       setLiveJoin(weeklyResult.liveJoin ?? {})
       setOnlineToday(new Set(weeklyResult.onlineToday ?? []))
       setJoinWindows(weeklyResult.joinWindows ?? {})
+      setLiveEnabled(
+        "liveEnabled" in weeklyResult
+          ? (weeklyResult.liveEnabled ?? false)
+          : false
+      )
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -304,7 +357,7 @@ export default function StudentView({
             workingDays={visibleDays}
             periods={periods}
             isRTL={isRTL}
-            viewMode="class"
+            viewMode={isTeacher ? "teacher" : "class"}
             editable={false}
             // Only meaningful when there are other days to contrast against.
             // In day mode the single column IS today, and the highlight is a

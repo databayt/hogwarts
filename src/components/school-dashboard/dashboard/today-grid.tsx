@@ -2,19 +2,26 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, type ComponentProps } from "react"
+import { useMemo, useState, type ComponentProps } from "react"
 
 import { type Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { JoinLinkButton } from "@/components/school-dashboard/timetable/views/join-link-button"
 import SimpleGrid from "@/components/school-dashboard/timetable/views/simple-grid"
+import { SlotDetailDialog } from "@/components/school-dashboard/timetable/views/slot-detail-dialog"
 import {
   inJoinWindow,
   useNowMs,
 } from "@/components/school-dashboard/timetable/views/use-now-ms"
+import { useSlotOpen } from "@/components/school-dashboard/timetable/views/use-slot-open"
 
 import { TodayJoinStrip, type TodayJoinRow } from "./today-join-strip"
 
 type GridProps = ComponentProps<typeof SimpleGrid>
+
+/** `joinRows` already says which slots are online (a room, or the policy);
+ *  the per-room map /timetable also carries has nothing to add here. */
+const NO_ROOMS = {}
 
 /**
  * The dashboard's day grid with its way into a class.
@@ -26,6 +33,11 @@ type GridProps = ComponentProps<typeof SimpleGrid>
  * IN the cell, as on /timetable — an online school's reader looks for it on
  * the class itself. The Now strip above stays on phones, where the running
  * class can be rows below the fold.
+ *
+ * The cell TAP does what it does on /timetable (`useSlotOpen`), at every
+ * width: on today's online class inside its window it walks into the class
+ * through the slot's join link; on any other cell it opens the slot's detail
+ * dialog. One grid, one gesture, wherever it is drawn.
  */
 export function TodayGrid({
   slots,
@@ -52,6 +64,31 @@ export function TodayGrid({
     () => new Map(joinRows.map((row) => [row.timetableId, row])),
     [joinRows]
   )
+  // The same two facts /timetable hands `useSlotOpen`: which of today's slots
+  // are online, and each one's join window as instants.
+  const { onlineToday, joinWindows } = useMemo(
+    () => ({
+      onlineToday: new Set(joinRows.map((row) => row.timetableId)),
+      joinWindows: Object.fromEntries(
+        joinRows.map((row) => [
+          row.timetableId,
+          { fromMs: row.fromMs, untilMs: row.untilMs },
+        ])
+      ),
+    }),
+    [joinRows]
+  )
+  const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
+  const { open: openSlot } = useSlotOpen({
+    lang,
+    liveJoin: NO_ROOMS,
+    onlineToday,
+    joinWindows,
+    onInspect: setInspectedSlotId,
+  })
+  // The dialog reads the whole school dictionary; it is already on the client
+  // (the provider), so it is not sent a second time through this island.
+  const school = useDictionary().dictionary?.school
 
   return (
     <>
@@ -78,6 +115,7 @@ export function TodayGrid({
         // client fetch, but this grid is server-rendered (server UTC, reader
         // Khartoum), so the lamp would be a hydration mismatch every school
         // day.
+        onSlotInspect={openSlot}
         renderSlotAction={(slot) =>
           inJoinWindow(nowMs, windows.get(slot.id)) ? (
             <JoinLinkButton
@@ -89,6 +127,15 @@ export function TodayGrid({
         }
         dictionary={dictionary}
       />
+      {school ? (
+        <SlotDetailDialog
+          slotId={inspectedSlotId}
+          open={!!inspectedSlotId}
+          onOpenChange={(next) => !next && setInspectedSlotId(null)}
+          dictionary={school}
+          lang={lang}
+        />
+      ) : null}
     </>
   )
 }

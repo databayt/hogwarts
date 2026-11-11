@@ -31,9 +31,11 @@ export default async function TimetableLayout({ children, params }: Props) {
   const role = (session?.user?.role as TimetableRole) || null
   const isAdmin = canModifyTimetable(role)
   // A student sees one thing: the week grid for their own section, rendered by
-  // StudentView on this route. The Today/Full split is left in place for
-  // TEACHER and GUARDIAN, whose views still switch on it.
-  const isStudent = role === "STUDENT"
+  // StudentView on this route — and a teacher sees the same surface with
+  // their own week, its week/day toggle doing what the tabs did. The
+  // Today/Full split is left in place for GUARDIAN, whose view still switches
+  // on it.
+  const isStudent = role === "STUDENT" || role === "TEACHER"
   // Which SHAPE the loading placeholder takes — a wider question than the tab
   // strip's `isStudent`, since USER falls through to the student view too.
   const isStudentSurface = rendersStudentTimetable(role)

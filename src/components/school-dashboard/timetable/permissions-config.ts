@@ -265,7 +265,8 @@ export function getViewTypeForRole(
  *
  * Mirrors the `switch` in `getPersonalizedTimetable` (actions.ts), including its
  * `default` arm: STUDENT is explicit, and USER / an unknown role fall through to
- * the student view as the most restricted one. ACCOUNTANT and STAFF do NOT —
+ * the student view as the most restricted one. TEACHER lands on it too since
+ * 2026-11-11 (the same surface, fed the teacher's own week). ACCOUNTANT and STAFF do NOT —
  * they get the read-only admin grid. Deliberately not `getViewTypeForRole`,
  * which answers a different question (it needs a resolved profile and returns
  * "readonly" where this needs "which component mounts").
@@ -280,7 +281,6 @@ export function rendersStudentTimetable(
   switch (role) {
     case "DEVELOPER":
     case "ADMIN":
-    case "TEACHER":
     case "GUARDIAN":
     case "ACCOUNTANT":
     case "STAFF":

@@ -2,13 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import {
-  use,
-  useEffect,
-  useState,
-  useTransition,
-  type ReactNode,
-} from "react"
+import { use, useEffect, useState, useTransition, type ReactNode } from "react"
 import { TriangleAlert } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -26,7 +20,6 @@ import AdminView from "./admin-view"
 import { TimetableSurfaceSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
 import StudentView from "./student-view"
-import TeacherView from "./teacher-view"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -98,9 +91,7 @@ export default function RoleRouter({
   const initial = initialData ? use(initialData) : null
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [termId, setTermId] = useState<string | null>(
-    initial?.termId ?? null
-  )
+  const [termId, setTermId] = useState<string | null>(initial?.termId ?? null)
   const [viewData, setViewData] = useState<PersonalizedData | null>(
     (initial?.data as PersonalizedData | undefined) ?? null
   )
@@ -229,12 +220,26 @@ export default function RoleRouter({
       break
 
     case "teacher":
-      view = (
-        <TeacherView
+      // The student's surface, fed the teacher's week (see `teacherId` on
+      // StudentView). A TEACHER account with no Teacher row has no week to
+      // show; say so instead of drawing somebody else's section.
+      view = viewData.filterData.teacherId ? (
+        <StudentView
           {...commonProps}
           teacherId={viewData.filterData.teacherId}
-          defaultTab={defaultTab}
         />
+      ) : (
+        <Alert variant="destructive">
+          <TriangleAlert className="h-4 w-4" />
+          <AlertDescription>
+            {(
+              dictionary.timetable as {
+                teacherViewUi?: { profileNotLinked?: string }
+              }
+            ).teacherViewUi?.profileNotLinked ??
+              "Teacher profile not linked to your account"}
+          </AlertDescription>
+        </Alert>
       )
       break
 
@@ -253,9 +258,7 @@ export default function RoleRouter({
       // Student view is also the most-restricted fallback.
       // StudentView renders the week grid unconditionally — a student has a
       // single schedule, so there is no Today/Full split to select.
-      view = (
-        <StudentView {...commonProps} />
-      )
+      view = <StudentView {...commonProps} />
   }
 
   const isDraft = viewData.termInfo.id === DRAFT_TERM_ID
