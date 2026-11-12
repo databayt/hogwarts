@@ -7,7 +7,7 @@ import { addMinutes } from "date-fns"
 
 import { db } from "@/lib/db"
 import { sendVerificationCodeEmail } from "@/lib/email"
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 
 import type { NewcomerFormData } from "./validation"
 
@@ -126,8 +126,8 @@ export async function submitNewcomerApplication(
     // created -- not left to a separate client-invoked step. Pinning to the
     // request's tenant additionally stops school A's page being used to create
     // an account at school B by naming its id.
-    const tenant = await getTenantContext()
-    if (!tenant.schoolId || tenant.schoolId !== schoolId) {
+    const hostSchoolId = await getHostSchoolId()
+    if (!hostSchoolId || hostSchoolId !== schoolId) {
       return { success: false, errorCode: "SCHOOL_NOT_FOUND" }
     }
 

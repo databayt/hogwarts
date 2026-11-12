@@ -707,7 +707,14 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           }
 
           // Apply role from preview or token
-          if (previewModeCookie?.value === "true" && previewRoleCookie?.value) {
+          // Preview is a DEVELOPER's "view as role". These are plain cookies
+          // anyone can set in their own browser: applied to every session,
+          // they let a student name themselves ADMIN (or DEVELOPER).
+          if (
+            token.role === "DEVELOPER" &&
+            previewModeCookie?.value === "true" &&
+            previewRoleCookie?.value
+          ) {
             // Apply preview role if preview mode is active
             ;(session.user as any).role = previewRoleCookie.value
             ;(session.user as any).isPreviewMode = true

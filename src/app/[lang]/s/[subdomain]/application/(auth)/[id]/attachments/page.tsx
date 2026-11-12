@@ -3,7 +3,7 @@
 
 import type { Metadata } from "next"
 
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getAdmissionPortalFlags } from "@/components/school-marketing/admission/actions/portal-flags"
@@ -30,7 +30,7 @@ export default async function AttachmentsPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   // Surface the school's document requirement ON this step instead of letting
   // the applicant discover it at final submit (DOCUMENTS_REQUIRED), 4 steps late.
-  const { schoolId } = await getTenantContext()
+  const schoolId = await getHostSchoolId()
   const requireDocuments = schoolId
     ? (await getAdmissionPortalFlags(schoolId)).requireDocuments
     : false

@@ -47,6 +47,20 @@ Status legend: [x] done, [~] in progress, [ ] todo
       `member.password_reset` audit row, delivery in `after()`, no table refresh.
       Forgot-password resolves the account by the school host (emails are unique
       per school only) and links back to that host instead of NEXT_PUBLIC_APP_URL.
+- [x] **A school's member never gets another school's context (2026-11-12)** —
+      `getTenantContext()` preferred the subdomain over the session with no
+      membership check, and the session cookie is shared by every subdomain:
+      an admin of school A on school B's host got B's `schoolId`, so every page
+      that checks only the role rendered B's data (the layout's access-denied
+      screen does not stop the page segment). Membership writes were already
+      refused (`assertMembershipPermission` compares schools) — which is how it
+      surfaced: a reset from a tab whose session had become another school's
+      admin answered UNAUTHORIZED. Now such a request resolves no school; the
+      impersonation cookie is honoured for a DEVELOPER only; the `preview-role`
+      cookie is applied to a DEVELOPER's session only; public application /
+      join lookups use `getHostSchoolId()`. The reset dialog names the cause
+      (`signedInElsewhere`) instead of "failed". Tests:
+      `src/tests/lib/tenant-context.boundary.test.ts`.
 - [x] **Membership table + admin operations (2026-10-15)** — filters and
       sorting were dead (manual mode, no server handler, and only the first 20
       rows were in the table): the table now holds every member with client

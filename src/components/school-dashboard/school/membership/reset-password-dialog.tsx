@@ -99,6 +99,17 @@ export function ResetPasswordDialog({
       const result = await resetMemberPassword({ userId: member.id })
       if (result.success && result.data) {
         setIssued(result.data)
+      } else if (!result.success && result.error === "UNAUTHORIZED") {
+        // The session cookie is shared by every school's host: signing in to
+        // another school in a second tab leaves this page on screen while the
+        // server now sees that other account. Say so — "failed" sent the
+        // admin looking for a bug.
+        ErrorToast(
+          tr(
+            "signedInElsewhere",
+            "This tab is signed in to another account. Reload the page, then sign in as this school's admin."
+          )
+        )
       } else {
         ErrorToast(tr("failedToReset", "Failed to reset password"))
       }

@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { canUseAI } from "@/lib/ai/budget"
 import { extractWithSchema } from "@/lib/document-extraction"
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 import { extractForAutoFill } from "@/components/school-marketing/application/attachments/extract-action"
 
 // ---------------------------------------------------------------------------
@@ -28,15 +28,10 @@ vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }))
 
-// Mock tenant context — schoolId resolved server-side
+// Mock tenant context — the host's school, resolved server-side
 const SCHOOL_ID = "test-school-id"
 vi.mock("@/lib/tenant-context", () => ({
-  getTenantContext: vi.fn().mockResolvedValue({
-    schoolId: "test-school-id",
-    requestId: "test-request-id",
-    role: null,
-    isPlatformAdmin: false,
-  }),
+  getHostSchoolId: vi.fn().mockResolvedValue("test-school-id"),
 }))
 
 // Mock the prompts/schemas modules to avoid pulling in heavy deps
@@ -113,12 +108,7 @@ describe("extractForAutoFill", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Re-mock tenant context after clearAllMocks
-    vi.mocked(getTenantContext).mockResolvedValue({
-      schoolId: SCHOOL_ID,
-      requestId: "test-request-id",
-      role: null,
-      isPlatformAdmin: false,
-    })
+    vi.mocked(getHostSchoolId).mockResolvedValue(SCHOOL_ID)
     mockBudgetAllowed()
     mockFetchSuccess()
   })

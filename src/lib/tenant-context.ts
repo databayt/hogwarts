@@ -128,9 +128,18 @@ export async function getSchoolIdFromSubdomain(
  * Every database query MUST use the schoolId from this context.
  *
  * Resolution priority (first wins):
- * 1. Impersonation cookie → For admin debugging without switching accounts
+ * 1. Impersonation cookie → DEVELOPER only, for debugging a school
  * 2. x-subdomain header → From middleware URL rewriting (school.databayt.org)
  * 3. Session schoolId → From JWT token after authentication
+ *
+ * THE BOUNDARY: a member of one school never receives another school's
+ * context. The session cookie is shared by every subdomain, so an admin of
+ * school A who opens school B's host arrives with role ADMIN and B's
+ * subdomain. Preferring the subdomain handed them B's schoolId, and every
+ * page or action that checks only the role then served B's data (the layout's
+ * access-denied screen does not stop the page segment from rendering). The
+ * one-click demo admin made that reachable by anyone. For such a request the
+ * context carries no school at all.
  *
  * See: src/proxy.ts for how x-subdomain header is set
  */
@@ -141,11 +150,26 @@ type ExtendedUser = {
   email?: string | null
   role?: string
   schoolId?: string | null
+  isPreviewMode?: boolean
 }
 
 // Extended session type
 type ExtendedSession = {
   user: ExtendedUser
+}
+
+/**
+ * The school the request's host names, whoever is signed in — or nobody.
+ *
+ * Only for surfaces that are public by design (the application wizard's fee
+ * and grade lookups, joining with an emailed code): they must keep working
+ * for a visitor who still carries another school's session, such as someone
+ * who tried the demo first. Never use it to scope anything a role unlocks —
+ * that is what getTenantContext() is for.
+ */
+export async function getHostSchoolId(): Promise<string | null> {
+  const subdomain = (await headers()).get("x-subdomain")
+  return subdomain ? getSchoolIdFromSubdomain(subdomain) : null
 }
 
 export type TenantContext = {
@@ -165,11 +189,18 @@ async function resolveTenantContext(): Promise<TenantContext> {
     const session = (await auth()) as ExtendedSession | null
     const cookieStore = await cookies()
     const hdrs = await headers()
-    // Priority 1: Impersonation cookie (for admin debugging)
-    // CRITICAL: Must be first - allows DEVELOPERs to view any school without switching sessions
+    const role = (session?.user?.role as UserRole | undefined) ?? null
+    const isPlatformAdmin = role === "DEVELOPER"
+    const sessionSchoolId = session?.user?.schoolId ?? null
+
+    // Priority 1: Impersonation cookie (for debugging a school)
+    // Honoured for a DEVELOPER only (still one while previewing a role). It
+    // is a plain cookie: read for anyone, it let any visitor pick a school.
     // GOTCHA: Clear this cookie when done debugging to prevent stuck impersonation
     const impersonatedSchoolId =
-      cookieStore.get("impersonate_schoolId")?.value ?? null
+      isPlatformAdmin || session?.user?.isPreviewMode === true
+        ? (cookieStore.get("impersonate_schoolId")?.value ?? null)
+        : null
 
     // Priority 2: Subdomain from middleware header → resolve to schoolId via DB lookup
     // The x-subdomain header contains raw domain (e.g., "acme"), but queries need schoolId
@@ -182,10 +213,19 @@ async function resolveTenantContext(): Promise<TenantContext> {
 
     // Priority 3: Session schoolId (from JWT after auth)
     // CRITICAL: Order matters - impersonation > subdomain > session
-    const schoolId =
-      impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
-    const role = (session?.user?.role as UserRole | undefined) ?? null
-    const isPlatformAdmin = role === "DEVELOPER"
+    let schoolId =
+      impersonatedSchoolId ?? headerSchoolId ?? sessionSchoolId ?? null
+
+    // The boundary (see above): a school's member on another school's host.
+    if (
+      !impersonatedSchoolId &&
+      !isPlatformAdmin &&
+      sessionSchoolId &&
+      headerSchoolId &&
+      sessionSchoolId !== headerSchoolId
+    ) {
+      schoolId = null
+    }
     const requestId =
       hdrs.get("x-vercel-id") ?? hdrs.get("x-request-id") ?? crypto.randomUUID()
     return { schoolId, requestId, role, isPlatformAdmin }

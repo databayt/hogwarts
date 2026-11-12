@@ -7,7 +7,7 @@ import { extractWithSchema } from "@/lib/document-extraction"
 import type { GenericExtractionOptions } from "@/lib/document-extraction/types"
 import { logger } from "@/lib/logger"
 import { parseFullName } from "@/lib/name-utils"
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 import { UPLOAD_S3_HOST } from "@/lib/upload-url"
 import {
   admissionSystemMessage,
@@ -157,7 +157,7 @@ export async function extractForAutoFill(
 
   try {
     // Resolve schoolId server-side — never trust client-supplied schoolId
-    const { schoolId } = await getTenantContext()
+    const schoolId = await getHostSchoolId()
     if (!schoolId) {
       return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
     }

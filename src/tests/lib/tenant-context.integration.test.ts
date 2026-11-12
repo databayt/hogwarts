@@ -535,7 +535,7 @@ describe("getTenantContext - integration", () => {
       expect(ctx.schoolId).toBe(impersonatedId)
     })
 
-    it("header > session (no impersonation)", async () => {
+    it("a member of another school gets no school on this host", async () => {
       // No impersonation cookie
       mockCookiesGet.mockReturnValue(undefined)
 
@@ -555,7 +555,29 @@ describe("getTenantContext - integration", () => {
 
       const ctx = await getTenantContext()
 
-      // Header-resolved schoolId wins over session
+      // The subdomain used to win, handing school A's admin school B's data
+      expect(ctx.schoolId).toBeNull()
+    })
+
+    it("header > session for the school's own member", async () => {
+      mockCookiesGet.mockReturnValue(undefined)
+
+      mockHeadersGet.mockImplementation((name: string) => {
+        if (name === "x-subdomain") return testSchool.domain
+        return null
+      })
+
+      mockedAuth.mockResolvedValue({
+        user: {
+          id: "admin-1",
+          email: "admin@school.com",
+          role: "ADMIN",
+          schoolId: testSchool.id,
+        },
+      } as any)
+
+      const ctx = await getTenantContext()
+
       expect(ctx.schoolId).toBe(testSchool.id)
     })
   })

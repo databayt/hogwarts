@@ -7,7 +7,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getFeePreviewByGradeLabel, type FeePreview } from "@/lib/fee-preview"
 import { selfHealFeeProvisioning } from "@/lib/fee-provisioning-self-heal"
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 
 /**
  * Public action — no auth required. Uses subdomain-derived schoolId so the
@@ -18,7 +18,7 @@ export async function getApplicationFeePreview(
   campaignId?: string
 ): Promise<ActionResponse<FeePreview>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const schoolId = await getHostSchoolId()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     if (!applyingForClass || applyingForClass.trim().length === 0) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)

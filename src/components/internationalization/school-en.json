@@ -2546,6 +2546,7 @@
         "noEmail": "No email on file",
         "failedToGenerate": "Failed to load credentials",
         "failedToReset": "Failed to reset password",
+        "signedInElsewhere": "This tab is signed in to another account. Reload the page, then sign in as this school's admin.",
         "copyDetails": "Copy details to clipboard",
         "copyOrShare": "Copy or share the login credentials.",
         "copiedToClipboard": "Copied to clipboard",

@@ -6,7 +6,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getSchoolGradeCountry } from "@/lib/grade/school"
-import { getTenantContext } from "@/lib/tenant-context"
+import { getHostSchoolId } from "@/lib/tenant-context"
 
 import { academicSchema, type AcademicSchemaType } from "./validation"
 
@@ -20,7 +20,7 @@ export async function getSchoolGradeNumbers(): Promise<
   ActionResponse<{ numbers: number[]; country: string | null }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
+    const schoolId = await getHostSchoolId()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     const [grades, country] = await Promise.all([
       db.academicGrade.findMany({
