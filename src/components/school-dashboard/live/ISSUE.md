@@ -26,6 +26,12 @@ before, then a small protective pack. Plan: `~/.claude/plans/pasted-content-id-d
   a one-query probe stayed at 95 ms: requests were waiting for a connection. Prisma's default pool
   is CPUs × 2 + 1, and the container has one vCPU. It had not bitten because at most 14 people
   have been online together.
+- **The 60 "reconnects" on 11-11 are people leaving and coming back, not the network.** From the
+  connection traces (178 rows, 14 people, 15 classes): 75 joins, and 43 of 46 disconnects were
+  `CLIENT_INITIATED` (the person left). Only 13 reconnect attempts, 9 of them with the page
+  visible, from two people. Quality samples: 77 excellent, 18 good, 11 poor, 1 lost. It is the
+  11-10 pattern again: someone walks into an empty room, leaves, and returns later. The cure is
+  the other side arriving, not the reconnect code.
 - Sound: 0 duplicate rooms, 0 rooms stuck on a `pending-` name, no open presence spans on ended
   classes, recording off and attendance sync on for Al-Ibda, the SFU up 4 days with no error in
   72 h, the Cloud fallback keys answer, Join returns a token in 1.5 s.
@@ -55,10 +61,14 @@ before, then a small protective pack. Plan: `~/.claude/plans/pasted-content-id-d
 - The capacity numbers after the pool change, and the fuller run with 60 separate accounts.
 - The dashboard's ~35 sequential round trips (3.3 s for one reader): count with `pnpm perf:queries`,
   then merge and parallelise.
-- `listings/credentials`: a working PIN is replaced on open (#473).
-- One row per slot per day by constraint; reconnects (a token swap while reconnecting); a lost
-  "left" event; recording honest on our server; mute-all and the stale sweep in bounded parallel.
-- The reset page and the unknown-email message for code accounts.
+- One row per slot per day by constraint; a lost "left" event; recording honest on our server;
+  mute-all and the stale sweep in bounded parallel. A token swap while reconnecting stays on the
+  list, lower: the traces above show few real reconnects.
+- Done 11-14 (`a745af6c7`, `1377caf03`, `7b282d2bd`): the credentials dialog keeps a PIN that works
+  (#473); the school login page tells an unknown login to use the six-digit code; a delivered login
+  links to the school's live host (it pointed at `<school>.databayt.org`, which answers 404).
+- `scripts/live-smoke.mjs` is the end-to-end happy path: 19 checks, about a minute, 19/19 on the
+  demo school on 11-14.
 - Rollback has never been exercised here. `wrangler rollback` moves the Worker version, and the
   app lives in the container image, so it may not bring the previous app back. The prepared path
   re-points the container at the previous image by its registry digest
