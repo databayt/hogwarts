@@ -134,7 +134,9 @@ export default async function Page({ params }: Props) {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
       {outcome.kind === "early" ? (
-        <JoinAutoOpen opensAtMs={outcome.opensAt.getTime()} />
+        // A duration the server measured: the page counts it down without
+        // trusting the phone's clock.
+        <JoinAutoOpen opensInMs={outcome.opensInMs} />
       ) : null}
       <h1
         className={cn(

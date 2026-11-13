@@ -38,8 +38,11 @@ export type SlotJoinOutcome =
   | { kind: "room"; sessionId: string }
   /** The section's standing meeting link — a `ConferenceLink`, no row. */
   | { kind: "external"; url: string }
-  /** Too soon: the link opens at `opensAt`; the class starts at `startsAt`. */
-  | { kind: "early"; opensAt: Date; startsAt: Date }
+  /** Too soon: the link opens at `opensAt`; the class starts at `startsAt`.
+   *  `opensInMs` is the same wait as a DURATION, measured on the server at
+   *  the moment of this decision, for a page to count down without trusting
+   *  the device's clock. */
+  | { kind: "early"; opensAt: Date; startsAt: Date; opensInMs: number }
   /** The class is over for today. */
   | { kind: "over" }
   /** The teacher (or an admin) cancelled today's class. */
@@ -172,6 +175,7 @@ export async function resolveSlotJoin(input: {
     kind: "early",
     opensAt: new Date(window.opensAtMs),
     startsAt: instants.scheduledStart,
+    opensInMs: Math.max(window.opensAtMs - now.getTime(), 0),
   }
 
   // ── 1–3: a room that already exists ───────────────────────────────────────

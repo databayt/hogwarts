@@ -154,6 +154,8 @@ describe("resolveSlotJoin — the day and the window", () => {
       kind: "early",
       opensAt: at("13:50"),
       startsAt: at("14:00"),
+      // The same wait as a duration: 20 minutes from the server's "now".
+      opensInMs: 20 * 60_000,
     })
     expect(materializeSlotForDay).not.toHaveBeenCalled()
   })
