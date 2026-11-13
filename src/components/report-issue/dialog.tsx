@@ -48,6 +48,7 @@ import { useParams } from "next/navigation"
 import { Bug, Check, Loader2, X } from "lucide-react"
 
 import { REPORT_LIMITS } from "@/lib/report/limits"
+import { sanitizePageUrl } from "@/lib/report/sanitize"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
@@ -200,7 +201,13 @@ export function ReportIssueDialog({
 
     const payload: ReportIssueSubmitInput = {
       description,
-      pageUrl: typeof window !== "undefined" ? window.location.href : "",
+      // Origin and path only. This dialog is also on the pages an emailed
+      // link opens (`/new-password?token=…`); the server strips the query
+      // again, but the token should never leave the browser in the first place.
+      pageUrl:
+        typeof window !== "undefined"
+          ? sanitizePageUrl(window.location.href)
+          : "",
       category: "other",
       viewport:
         typeof window !== "undefined"

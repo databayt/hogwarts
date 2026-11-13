@@ -15,6 +15,7 @@ import { headers } from "next/headers"
 
 import { runReportPipeline } from "@/lib/report"
 import { hogwartsReportAdapter } from "@/lib/report/adapter"
+import { sanitizePageUrl } from "@/lib/report/sanitize"
 import type {
   ReportIssueSubmitInput,
   ReportIssueSubmitResult,
@@ -38,7 +39,8 @@ export async function reportIssue(
   const result = await runReportPipeline(
     {
       description: data.description,
-      pageUrl: data.pageUrl,
+      // Origin and path only: the query string can carry a one-time token.
+      pageUrl: sanitizePageUrl(data.pageUrl),
       category: data.category,
       reproSteps: data.reproSteps,
       expected: data.expected,

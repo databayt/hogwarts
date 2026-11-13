@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { runReportPipeline } from "@/lib/report"
 import { hogwartsReportAdapterFor } from "@/lib/report/adapter"
+import { sanitizePageUrl } from "@/lib/report/sanitize"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     const result = await runReportPipeline(
       {
         description: String(body.description ?? ""),
-        pageUrl: String(body.page_url ?? ""),
+        pageUrl: sanitizePageUrl(String(body.page_url ?? "")),
         category: "other",
         viewport: String(body.viewport ?? "0x0"),
         direction: body.direction === "rtl" ? "rtl" : "ltr",
@@ -59,7 +60,11 @@ export async function POST(request: NextRequest) {
     // As `reportIssue` answers the dialog: an issue number only when the
     // report became a verified issue, and nothing that tells a prober why a
     // report was dropped.
-    if (result.ok && result.bucket === "verified-report" && result.issueNumber) {
+    if (
+      result.ok &&
+      result.bucket === "verified-report" &&
+      result.issueNumber
+    ) {
       return NextResponse.json({ ok: true, issue_number: result.issueNumber })
     }
     return NextResponse.json({ ok: result.ok })
