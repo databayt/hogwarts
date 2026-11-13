@@ -426,6 +426,7 @@
       "tooManyAttempts": "Too many wrong attempts. Wait 15 minutes, or ask the school office to reset your password.",
       "accountSuspended": "This account is suspended. Contact the school office.",
       "accountNotFound": "Account not found",
+      "accountNotFoundSchool": "No account with this login at this school. Sign in with the 6-digit code the school gave you, or ask the school office.",
       "accountDisabled": "Your account has been disabled",
       "accountLocked": "Account locked due to multiple failed attempts",
       "emailNotVerified": "Please verify your email",

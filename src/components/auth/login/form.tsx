@@ -96,8 +96,18 @@ export const LoginForm = ({
   // Map server error codes to localized messages
   const authErrors = dictionary?.messages?.errors?.auth
   const validationMsgs = dictionary?.messages?.validation
+  // On a school's page most people who are "not found" typed a personal
+  // email: the school's logins are six-digit codes. Say so, instead of a bare
+  // "account not found" that sends them to a reset link they cannot receive.
+  const schoolAccountNotFound = (
+    authErrors as { accountNotFoundSchool?: string } | undefined
+  )?.accountNotFoundSchool
   const errorCodeMap: Record<string, string> = {
     EMAIL_NOT_FOUND:
+      (subdomain
+        ? (schoolAccountNotFound ??
+          "No account with this login at this school. Sign in with the 6-digit code the school gave you, or ask the school office.")
+        : undefined) ??
       authErrors?.accountNotFound ??
       validationMsgs?.accountNotFound ??
       "Account not found",
