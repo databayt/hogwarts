@@ -162,3 +162,45 @@ export async function clearLoginFailures(
     console.error("[AuditLog] Failed to clear login failures:", error)
   }
 }
+
+/**
+ * When one of these logins last signed in to this school, or null if none
+ * ever has. `identifiers` are what a person can type at the login page: the
+ * six-digit code (`User.username`) and the login email.
+ *
+ * The credentials dialog asks this before it mints a PIN: an account that has
+ * signed its owner in is working, and replacing its password locks them out
+ * (hogwarts#473). Throws on a database error so the caller can choose the
+ * safe side, which there is "do not mint".
+ */
+export async function lastSuccessfulSignIn(
+  schoolId: string,
+  identifiers: Array<string | null | undefined>
+): Promise<Date | null> {
+  const ids = [
+    ...new Set(
+      identifiers
+        .map((v) => v?.trim())
+        .filter((v): v is string => !!v)
+        .map((v) => v.toLowerCase())
+    ),
+  ]
+  if (ids.length === 0) return null
+  const row = await db.loginAttempt.findFirst({
+    where: {
+      success: true,
+      AND: [
+        {
+          OR: ids.map((id) => ({
+            email: { equals: id, mode: "insensitive" as const },
+          })),
+        },
+        // A sign-in at the school's own host, or one recorded with no school.
+        { OR: [{ schoolId }, { schoolId: null }] },
+      ],
+    },
+    orderBy: { timestamp: "desc" },
+    select: { timestamp: true },
+  })
+  return row?.timestamp ?? null
+}

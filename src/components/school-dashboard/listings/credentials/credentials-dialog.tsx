@@ -62,6 +62,16 @@ interface CredentialsDialogProps {
   onClosed?: () => void
 }
 
+/** A sign-in moment in the reader's own language and time zone. */
+function formatWhen(iso: string, lang: string): string {
+  const at = new Date(iso)
+  if (Number.isNaN(at.getTime())) return ""
+  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(at)
+}
+
 export function CredentialsDialog({
   labels,
   onClosed,
@@ -76,6 +86,8 @@ export function CredentialsDialog({
   // person's full name.
   const name = credentials?.fullName || listedName
   const [copied, setCopied] = useState(false)
+  // The Reset link asks twice (see handleReset); cleared whenever the dialog closes.
+  const [confirmingReset, setConfirmingReset] = useState(false)
   const [loginUrl, setLoginUrl] = useState("")
 
   const params = useParams<{ lang?: string }>()
@@ -145,6 +157,7 @@ export function CredentialsDialog({
       if (!next) {
         loadRef.current = null
         setCopied(false)
+        setConfirmingReset(false)
         closeCredentialsDialog()
         // Refresh the listing only when a brand-new account was created — not
         // on every close (which caused a full-page reload each time).
@@ -194,11 +207,18 @@ export function CredentialsDialog({
     let mailHref: string | undefined
     let smsHref: string | undefined
     if (credentials) {
+      // A kept password is not ours to print: the message names the login
+      // and says "the one you already use" instead of an empty line.
       const message = fillTemplate(
-        tr(
-          "shareMessage",
-          "Login for {studentName}\n\nUsername: {username}\nPassword: {password}\nLogin at: {loginUrl}"
-        ),
+        credentials.password
+          ? tr(
+              "shareMessage",
+              "Login for {studentName}\n\nUsername: {username}\nPassword: {password}\nLogin at: {loginUrl}"
+            )
+          : tr(
+              "shareMessageKept",
+              "Login for {studentName}\n\nUsername: {username}\nPassword: the one you already use\nLogin at: {loginUrl}"
+            ),
         {
           studentName: name,
           name,
@@ -258,7 +278,9 @@ export function CredentialsDialog({
 
   const copyLabel = tr("copyDetails", "Copy details to clipboard")
 
-  // Recovery: mint a new PIN for an account whose password isn't shown.
+  // Recovery: mint a new PIN for an account whose password isn't shown. Two
+  // taps, because the first PIN stops working the moment the second is made:
+  // the link turns into its own confirmation before anything is written.
   const [resetting, setResetting] = useState(false)
   const handleReset = useCallback(async () => {
     const s = getStore()
@@ -267,6 +289,7 @@ export function CredentialsDialog({
     setResetting(true)
     const result = await generateCredentials({ role, id, reset: true })
     setResetting(false)
+    setConfirmingReset(false)
     if (getStore().id !== id) return
     if (result.success && result.data) {
       setStore({ credentials: result.data, error: null })
@@ -320,16 +343,43 @@ export function CredentialsDialog({
         </dl>
 
         {credentials && !credentials.password ? (
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={resetting}
-            className="text-muted-foreground hover:text-foreground mx-auto text-xs underline underline-offset-4 disabled:opacity-50"
-          >
-            {resetting
-              ? tr("resettingPassword", "Resetting password...")
-              : tr("resetPassword", "Reset Password")}
-          </button>
+          <div className="mx-auto flex flex-col items-center gap-1 text-center">
+            {credentials.lastSignedInAt ? (
+              <p className="text-muted-foreground text-xs">
+                {fillTemplate(tr("lastSignedIn", "Last signed in: {date}"), {
+                  date: formatWhen(credentials.lastSignedInAt, lang),
+                })}
+              </p>
+            ) : null}
+            {credentials.passwordKept ? (
+              <p className="text-muted-foreground text-xs">
+                {tr(
+                  "loginWorks",
+                  "This login is in use, so its password was kept."
+                )}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={
+                confirmingReset ? handleReset : () => setConfirmingReset(true)
+              }
+              disabled={resetting}
+              className={cn(
+                "hover:text-foreground text-xs underline underline-offset-4 disabled:opacity-50",
+                confirmingReset ? "text-destructive" : "text-muted-foreground"
+              )}
+            >
+              {resetting
+                ? tr("resettingPassword", "Resetting password...")
+                : confirmingReset
+                  ? tr(
+                      "confirmReset",
+                      "Confirm: the current password stops working now"
+                    )
+                  : tr("resetPassword", "Reset Password")}
+            </button>
+          </div>
         ) : (
           <p className="text-muted-foreground text-center text-xs">
             {tr(

@@ -28,10 +28,17 @@ a role/grade badge, the username + password, and a row of contact icons.
   PIN** for every role. Lookup is case-insensitive and duplicate-safe
   (`resolveLoginUser` in `components/auth/user.ts`); `User.email` is stored
   lowercased by a Prisma extension in `@/lib/db`.
-- **Generate-on-open** — opening mints a fresh password to hand out. The one
-  exception is a **self-onboarded student** who set their own password — it
-  isn't clobbered (password shows `—`) and a **Reset Password** link appears:
-  the admin's recovery path always works.
+- **Generate-on-open, for a login nobody uses yet** — opening mints a fresh
+  password to hand out only when no one has ever signed in with that login.
+  A login that works is left alone: a **self-onboarded student** who set their
+  own password, and (since 2026-11-14, hogwarts#473) **any account that has
+  signed its owner in** — a successful row in `login_attempts`
+  (`lastSuccessfulSignIn`), or a password its owner chose and still holds
+  (`passwordChangedAt` with `mustChangePassword` off). Those show `—`, the
+  line "Last signed in: …", and a **Reset Password** link that asks twice,
+  because the old PIN stops working the moment a new one is made. If the
+  lookup itself fails the password is kept. On 2026-11-09, opening the dialog
+  to look logins up re-minted six working students at one school.
 - **Format (2026-10-14)** — username = the school's next **6-digit login code**
   (`YY` + a 4-digit serial shared by every role, `@/lib/login-code`); password =
   an **easy 4-digit PIN** (1122, 1212, 3456, 2580 — never 0000/1234/19xx,
@@ -101,5 +108,6 @@ the full dict via `useDictionary()`.
   a country code** — a bare national number is passed through as-is (wa.me may not
   resolve it; the copy fallback covers that). Improve at the data-entry layer.
 - Staff are minted with `role: STAFF` (not `ACCOUNTANT`).
-- Generate-on-open re-issues a fresh password each open (single-use,
-  `mustChangePassword`); there is no reset button by design.
+- A login nobody has signed in with is re-issued on each open (single-use,
+  `mustChangePassword`). A login that works is never re-issued on open; the
+  confirmed Reset link is the only way to replace its password.

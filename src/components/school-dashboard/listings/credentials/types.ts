@@ -36,4 +36,17 @@ export interface CredentialsPayload {
   isNew: boolean
   /** Student-only: signed up themselves and own their password. Always false for members. */
   isSelfOnboarded: boolean
+  /**
+   * Set when the password was KEPT because this login already works for its
+   * owner: the last successful sign-in (or the moment they chose their own
+   * password), as an ISO string. With it, `password` is null and the dialog
+   * offers an explicit, confirmed reset instead of a fresh PIN (hogwarts#473).
+   * Absent or null on a login that was minted or reset on this call.
+   */
+  lastSignedInAt?: string | null
+  /**
+   * True when the password was kept because we could not tell whether the
+   * login works (the lookup failed). Same dialog state, no date to show.
+   */
+  passwordKept?: boolean
 }

@@ -9,7 +9,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { clearLoginFailures } from "@/lib/audit-log"
+import { clearLoginFailures, lastSuccessfulSignIn } from "@/lib/audit-log"
 import { mintTempPassword } from "@/lib/credentials"
 import { canManageCredentials } from "@/lib/credentials-access"
 import { deliverCredentials } from "@/lib/credentials-delivery"
@@ -57,9 +57,12 @@ const ROLE_PREFIX: Record<MemberRole, string> = {
  * contact on file (so the dialog's Share icon can pick a channel). The login is
  * never displayed — the caller only copies/shares it.
  *
- * "Generate" means: mint a fresh temp password the admin can hand out. The one
- * exception is a self-onboarded student who set their own password during
- * sign-up — we don't clobber it; the admin just re-shares the username + URL.
+ * "Generate" means: mint a fresh temp password the admin can hand out. Two
+ * exceptions, both for a login its owner already uses: a self-onboarded
+ * student who set their own password during sign-up, and ANY account that has
+ * signed its owner in (`workingLogin`). Those keep their password — opening
+ * the dialog to look a login up must never lock someone out — and the admin
+ * re-issues only by asking for it (`reset`).
  */
 export async function generateCredentials(input: {
   role: CredentialsRole
@@ -81,13 +84,65 @@ export async function generateCredentials(input: {
     if (role === "student") {
       return handleStudent(id, schoolId, reset)
     }
-    return handleMember(role, id, schoolId)
+    return handleMember(role, id, schoolId, reset)
   } catch (error) {
     console.error("[generateCredentials] Error:", error)
     return actionError(
       ACTION_ERRORS.CREATE_FAILED,
       error instanceof Error ? error.message : undefined
     )
+  }
+}
+
+// ============================================================================
+// Does this login already work for its owner? (hogwarts#473)
+// ============================================================================
+
+type LoginOwner = {
+  email: string | null
+  username: string | null
+  passwordChangedAt: Date | null
+  mustChangePassword: boolean
+}
+
+const LOGIN_OWNER_SELECT = {
+  email: true,
+  username: true,
+  passwordChangedAt: true,
+  mustChangePassword: true,
+} as const
+
+/**
+ * A login "works" once it has signed its owner in, or once they chose their
+ * own password and still hold it. Minting over such a login replaces a PIN
+ * the family is using: on 2026-11-09, opening this dialog to look logins up
+ * re-minted six working students at Al-Ibda, one of whom had signed in three
+ * minutes earlier, and they found out at class time.
+ *
+ * When the lookup itself fails the answer is "keep": a missing PIN costs one
+ * more tap on Reset, a replaced one costs a child a class.
+ */
+async function workingLogin(
+  schoolId: string,
+  user: LoginOwner | null | undefined
+): Promise<{ keep: boolean; at: Date | null }> {
+  if (!user) return { keep: false, at: null }
+  try {
+    const signedIn = await lastSuccessfulSignIn(schoolId, [
+      user.username,
+      user.email,
+    ])
+    if (signedIn) return { keep: true, at: signedIn }
+    if (user.passwordChangedAt && !user.mustChangePassword) {
+      return { keep: true, at: user.passwordChangedAt }
+    }
+    return { keep: false, at: null }
+  } catch (error) {
+    console.error(
+      "[credentials] sign-in lookup failed; keeping the password:",
+      error
+    )
+    return { keep: true, at: null }
   }
 }
 
@@ -102,9 +157,10 @@ async function handleStudent(
   reset = false
 ): Promise<ActionResponse<CredentialsPayload>> {
   // First open creates the User (and mints a password); an existing admin-
-  // managed account returns password:null — mint a fresh one so there's always
-  // something to share. A self-onboarded student keeps their own password
-  // unless the admin explicitly resets it (`reset`).
+  // managed account returns password:null. If nobody has ever signed in with
+  // it, mint a fresh one so there is something to share. A login that works
+  // (a self-onboarded student, or anyone who has signed in) keeps its
+  // password unless the admin explicitly resets it (`reset`).
   const initial = reset
     ? await resetStudentPassword({ studentId: id })
     : await getStudentCredentials({ studentId: id })
@@ -113,9 +169,19 @@ async function handleStudent(
   }
 
   let data = initial.data
+  let kept: { at: Date | null } | null = null
   if (!data.password && !data.isSelfOnboarded) {
-    const reset = await resetStudentPassword({ studentId: id })
-    if (reset.success && reset.data) data = reset.data
+    const owner = await db.student.findFirst({
+      where: { id, schoolId },
+      select: { user: { select: LOGIN_OWNER_SELECT } },
+    })
+    const working = await workingLogin(schoolId, owner?.user)
+    if (working.keep) {
+      kept = { at: working.at }
+    } else {
+      const minted = await resetStudentPassword({ studentId: id })
+      if (minted.success && minted.data) data = minted.data
+    }
   }
 
   const [contact, person] = await Promise.all([
@@ -133,6 +199,8 @@ async function handleStudent(
       phone: contact.phone,
       email: data.email,
       contactEmail: contact.email ?? data.email,
+      lastSignedInAt: kept?.at ? kept.at.toISOString() : null,
+      passwordKept: kept !== null,
     },
   }
 }
@@ -306,16 +374,16 @@ async function linkMemberUser(
 async function handleMember(
   role: MemberRole,
   id: string,
-  schoolId: string
+  schoolId: string,
+  reset = false
 ): Promise<ActionResponse<CredentialsPayload>> {
   const entity = await loadMember(role, id, schoolId)
   if (!entity) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  const { plain, hashed } = await mintTempPassword()
-
   // Path 1: no User yet — mint one so the admin has something to share.
   // The username is the school's next 6-digit login code (YY + serial).
   if (!entity.userId) {
+    const { plain, hashed } = await mintTempPassword()
     const { newUser, username } = await db.$transaction(async (tx) => {
       const username = await allocateLoginCode(tx, schoolId)
       const newUser = await tx.user.create({
@@ -349,11 +417,37 @@ async function handleMember(
     }
   }
 
-  // Existing User: ensure a username, then mint a fresh shareable password.
   const user = await db.user.findUnique({
     where: { id: entity.userId },
-    select: { email: true, username: true, emailVerified: true },
+    select: { ...LOGIN_OWNER_SELECT, emailVerified: true },
   })
+
+  // Path 2: a login its owner already uses — hand back what signs them in and
+  // leave the password alone. Nothing is written.
+  if (!reset) {
+    const working = await workingLogin(schoolId, user)
+    if (working.keep) {
+      return {
+        success: true,
+        data: {
+          username: user?.username ?? "",
+          fullName: displayName(entity, "full"),
+          email: user?.email ?? null,
+          contactEmail: entity.email ?? user?.email ?? null,
+          password: null,
+          phone: entity.phone,
+          isNew: false,
+          isSelfOnboarded: false,
+          lastSignedInAt: working.at ? working.at.toISOString() : null,
+          passwordKept: true,
+        },
+      }
+    }
+  }
+
+  // Path 3: nobody has signed in with it (or the admin asked for a reset):
+  // ensure a username, then mint a fresh shareable password.
+  const { plain, hashed } = await mintTempPassword()
 
   // Regenerating moves an older login (email local-part, first.last) onto
   // the 6-digit code; someone already on a code keeps it.
