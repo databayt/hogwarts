@@ -23,6 +23,11 @@
  */
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  LIVE_ROOT_DOMAIN,
+  mainHostFor,
+  tenantOriginForRoot,
+} from "@/lib/root-domain"
 
 interface DeliverCredentialsInput {
   schoolId: string
@@ -175,17 +180,15 @@ function buildBody(args: {
 }
 
 /**
- * Local mirror of `buildTenantBaseUrl` from finance/fees/actions. Kept here
- * to avoid pulling a `"use server"` module into a generic library. Behaviour
- * must stay in sync with the finance helper — both default to the same
- * production / dev / fallback hosts.
+ * Where the person signs in: the school's own host on the LIVE root.
+ *
+ * This runs after the response (`after()`), with no request host to read a
+ * root from, so it names the live root itself. It used to hand-assemble
+ * `https://${subdomain}.databayt.org`, a root that stopped serving schools
+ * when the platform moved to balqalam.com: every delivered login (the email
+ * to a teacher, the in-app notice) carried a link that answered 404.
  */
 function buildLoginBaseUrl(subdomain: string | null | undefined): string {
-  if (!subdomain) {
-    return process.env.NEXT_PUBLIC_APP_URL || "https://app.databayt.org"
-  }
-  if (process.env.NODE_ENV === "production") {
-    return `https://${subdomain}.databayt.org`
-  }
-  return `http://${subdomain}.localhost:3000`
+  if (!subdomain) return `https://${mainHostFor(LIVE_ROOT_DOMAIN)}`
+  return tenantOriginForRoot(subdomain)
 }
