@@ -18,13 +18,12 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
-
 import {
   RoomTitleCard,
   type RoomTitleCardData,
   type RoomTitleCardLabels,
 } from "@/components/school-dashboard/live/room/title-card"
+import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
 
 // The card carries the "turn on class alerts" prompt, whose hook imports the
 // subscription server actions — nothing this file exercises (jsdom has no
@@ -90,6 +89,7 @@ const baseProps = {
   labels,
   sessionId: "s1",
   detailHref: "/en/live/s1",
+  backHref: "/en/live",
   pending: false,
   error: null,
   onJoin: () => {},
