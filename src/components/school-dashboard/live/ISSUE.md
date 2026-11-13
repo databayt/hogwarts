@@ -4,6 +4,67 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Launch week: reach first, then capacity — 2026-11-13 (hogwarts#470)
+
+Al-Ibda starts its first full week on Saturday 11-14. A read-only pass over production the evening
+before, then a small protective pack. Plan: `~/.claude/plans/pasted-content-id-dfcb-context-our-agile-rain.md`.
+
+**What production showed (all read-only)**
+
+- The platform is up; the school is not in the rooms. Wed 11-11: 52 classes, 15 rooms opened, 4
+  teachers and 10 students present, the largest room 4 people. 25 of 55 students and 20 of 32
+  teachers have signed in since 11-09. Of the 24 teachers with a Saturday class, 3 have never
+  signed in and 11 sign in but have never entered a room.
+- Reminders now cover every class (52 of 52 rows on 11-11) and reach almost nobody: 18 of 239
+  "starting soon" notices found a device, 6 people have alerts on, none was read in-app.
+- Families type a personal email; a school account signs in with a six-digit code. 18 logins that
+  exist on no school account were tried 49 times since 11-09, three of them self-made accounts
+  with no school. The reset page asks for an email these accounts do not have (reports #452, #463,
+  #467 are that).
+- **Capacity.** One database query is a 94 ms round trip. On the demo school the dashboard answered
+  in 3.3 s alone, 7 s with three requests at once and 15 s with nine (two timed out at 20 s), while
+  a one-query probe stayed at 95 ms: requests were waiting for a connection. Prisma's default pool
+  is CPUs × 2 + 1, and the container has one vCPU. It had not bitten because at most 14 people
+  have been online together.
+- Sound: 0 duplicate rooms, 0 rooms stuck on a `pending-` name, no open presence spans on ended
+  classes, recording off and attendance sync on for Al-Ibda, the SFU up 4 days with no error in
+  72 h, the Cloud fallback keys answer, Join returns a token in 1.5 s.
+
+**The pack (commits `1e65e9d54` … `2080bcc6b`)**
+
+- **SFU calls are bounded** (`livekit/client.ts`): 5 s for rooms, 10 s for egress. The SDK's default
+  is 60 s, not "none" as the first read of the code said. `probeLiveKit()` is one bounded
+  `listRooms`.
+- **The too-early page counts a duration** (`join-auto-open.tsx`, `actions/join-slot.ts`): the
+  `early` outcome carries `opensInMs`, measured on the server at the decision. The page never reads
+  the device clock as a time of day, rechecks when the tab comes back, and never reloads twice
+  within 30 s. A phone with a fast clock used to reload the page once a second until the room
+  opened.
+- **Pool of 15** (`src/lib/db-pool.ts`, `src/lib/db.ts`): `connection_limit` and `pool_timeout` are
+  added to the datasource URL when absent. `DB_POOL_SIZE` overrides it.
+- **Errors leave a line** (`src/instrumentation.ts`, `src/lib/request-error.ts`): Next's
+  `onRequestError` writes one JSON object per server error (`event: "request_error"`, `school`,
+  `routePath`, `digest`, the path without its query string, no header but the host).
+- **`/api/health` has a `livekit` check**: `warn` when the SFU is silent (the endpoint reads
+  `degraded`, HTTP 200), and the host the running process dials. Its presence is also the build
+  marker for this deploy.
+- `scripts/ops/watch.mjs` (one OK/FAIL line from four probes) and `scripts/load/capacity-check.mjs`.
+
+**Open, in order**
+
+- The capacity numbers after the pool change, and the fuller run with 60 separate accounts.
+- The dashboard's ~35 sequential round trips (3.3 s for one reader): count with `pnpm perf:queries`,
+  then merge and parallelise.
+- `listings/credentials`: a working PIN is replaced on open (#473).
+- One row per slot per day by constraint; reconnects (a token swap while reconnecting); a lost
+  "left" event; recording honest on our server; mute-all and the stale sweep in bounded parallel.
+- The reset page and the unknown-email message for code accounts.
+- Rollback has never been exercised here. `wrangler rollback` moves the Worker version, and the
+  app lives in the container image, so it may not bring the previous app back. The prepared path
+  re-points the container at the previous image by its registry digest
+  (`~/.cache/cf-build/hogwarts-rollback-1113.sh back`). Rehearse it, then write the result into
+  `DEPLOYMENT.md`.
+
 ## Support media and guides caught up — 2026-11-11
 
 The teacher tutorial on the CDN still told the old story (the 11-10 caption rewrite was never
