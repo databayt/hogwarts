@@ -42,12 +42,16 @@
  * - Memory check not available in Edge Runtime
  */
 
-import { NextRequest, NextResponse } from "next/server"
 import v8 from "node:v8"
+import { NextRequest, NextResponse } from "next/server"
 
 import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import {
+  isLiveKitConfigured,
+  probeLiveKit,
+} from "@/components/school-dashboard/live/livekit/client"
 
 interface HealthCheck {
   status: "healthy" | "unhealthy" | "degraded"
@@ -61,6 +65,7 @@ interface HealthCheck {
     dependencies: HealthCheckResult
     circuitBreaker: HealthCheckResult
     whatsappBridge: HealthCheckResult
+    livekit: HealthCheckResult
   }
 }
 
@@ -206,19 +211,58 @@ async function checkWhatsAppBridge(): Promise<HealthCheckResult> {
   }
 }
 
+/**
+ * The video server live classes run on. One authenticated `listRooms`, cut
+ * off at 2.5 s. It never fails the app — the school's pages work without
+ * video — but a silent SFU is "warn", so the endpoint reads `degraded` and a
+ * monitor sees it before a teacher does. `host` is reported because a switch
+ * between our server and the cloud fallback has silently not taken effect
+ * before: this is the server the running process actually dials.
+ */
+async function checkLiveKit(): Promise<HealthCheckResult> {
+  if (!isLiveKitConfigured()) {
+    return { status: "pass", details: { configured: false } }
+  }
+  let host: string | undefined
+  try {
+    host = new URL(process.env.LIVEKIT_HOST ?? "").host
+  } catch {
+    host = undefined
+  }
+  const probe = await probeLiveKit(2500)
+  return probe.ok
+    ? {
+        status: "pass",
+        responseTime: probe.ms,
+        details: { configured: true, host, rooms: probe.rooms },
+      }
+    : {
+        status: "warn",
+        responseTime: probe.ms,
+        details: { configured: true, host },
+        error: probe.error,
+      }
+}
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   const requestId = request.headers.get("x-request-id") || "health-check"
 
   try {
     // Perform health checks
-    const [databaseCheck, memoryCheck, dependenciesCheck, whatsappBridgeCheck] =
-      await Promise.all([
-        checkDatabase(),
-        Promise.resolve(checkMemory()),
-        Promise.resolve(checkDependencies()),
-        checkWhatsAppBridge(),
-      ])
+    const [
+      databaseCheck,
+      memoryCheck,
+      dependenciesCheck,
+      whatsappBridgeCheck,
+      livekitCheck,
+    ] = await Promise.all([
+      checkDatabase(),
+      Promise.resolve(checkMemory()),
+      Promise.resolve(checkDependencies()),
+      checkWhatsAppBridge(),
+      checkLiveKit(),
+    ])
 
     // Determine overall status
     const checks = {
@@ -227,6 +271,7 @@ export async function GET(request: NextRequest) {
       dependencies: dependenciesCheck,
       circuitBreaker: checkCircuitBreaker(),
       whatsappBridge: whatsappBridgeCheck,
+      livekit: livekitCheck,
     }
 
     const hasFailures = Object.values(checks).some(
@@ -317,6 +362,7 @@ export async function GET(request: NextRequest) {
         dependencies: { status: "fail", error: "Health check failed" },
         circuitBreaker: checkCircuitBreaker(),
         whatsappBridge: { status: "warn", error: "Health check failed" },
+        livekit: { status: "warn", error: "Health check failed" },
       },
     }
 
