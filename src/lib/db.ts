@@ -1,10 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "@prisma/client"
 
-import { traceQuery, TRACE_QUERIES } from "@/lib/perf-trace"
+import { withPoolParams } from "@/lib/db-pool"
+import { TRACE_QUERIES, traceQuery } from "@/lib/perf-trace"
 
 /**
  * Prisma Client Singleton - Database Connection Management
@@ -119,7 +120,15 @@ function createBaseClient(): PrismaClient {
     const adapter = new PrismaPg({ connectionString, maxUses: 1 })
     return new PrismaClient({ adapter })
   }
-  return new PrismaClient()
+  // The container runs the Rust query engine, whose default pool on one vCPU
+  // is three connections for the whole school (src/lib/db-pool.ts).
+  const datasourceUrl = withPoolParams(connectionString, {
+    DB_POOL_SIZE: process.env.DB_POOL_SIZE,
+    DB_POOL_TIMEOUT: process.env.DB_POOL_TIMEOUT,
+  })
+  return datasourceUrl
+    ? new PrismaClient({ datasourceUrl })
+    : new PrismaClient()
 }
 
 /**
