@@ -157,16 +157,64 @@ export function getLiveKitReadiness(): LiveKitReadiness {
   }
 }
 
+/**
+ * How long a call to the SFU may take, in seconds.
+ *
+ * The SDK's own default is 60. Every Join and every token heartbeat awaits one
+ * of these calls (`ensureRoom`, `addRoomHost`), so a stalled video server held
+ * each of them for a minute — on the app's one container, at the bell. Five
+ * seconds is far above a healthy call (tens of milliseconds from the container
+ * to the SFU) and short enough that Join answers "video is unavailable"
+ * instead of spinning. Recording start gets longer: it is rare and it waits on
+ * the egress service.
+ */
+export const LIVEKIT_REQUEST_TIMEOUT_S = 5
+export const LIVEKIT_EGRESS_TIMEOUT_S = 10
+
 export function getRoomServiceClient(): RoomServiceClient {
   if (roomServiceClient) return roomServiceClient
   const { host, apiKey, apiSecret } = getLiveKitConfig()
-  roomServiceClient = new RoomServiceClient(host, apiKey, apiSecret)
+  roomServiceClient = new RoomServiceClient(host, apiKey, apiSecret, {
+    requestTimeout: LIVEKIT_REQUEST_TIMEOUT_S,
+  })
   return roomServiceClient
 }
 
 export function getEgressClient(): EgressClient {
   if (egressClient) return egressClient
   const { host, apiKey, apiSecret } = getLiveKitConfig()
-  egressClient = new EgressClient(host, apiKey, apiSecret)
+  egressClient = new EgressClient(host, apiKey, apiSecret, {
+    requestTimeout: LIVEKIT_EGRESS_TIMEOUT_S,
+  })
   return egressClient
+}
+
+/**
+ * Is the SFU answering? One cheap authenticated call (`listRooms`), bounded by
+ * `timeoutMs` so a health check never waits on a dead box. Never throws.
+ */
+export async function probeLiveKit(
+  timeoutMs = 3000
+): Promise<{ ok: boolean; ms: number; rooms?: number; error?: string }> {
+  const started = Date.now()
+  try {
+    const svc = getRoomServiceClient()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const rooms = await Promise.race([
+      svc.listRooms(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`no answer in ${timeoutMs} ms`)),
+          timeoutMs
+        )
+      }),
+    ]).finally(() => clearTimeout(timer))
+    return { ok: true, ms: Date.now() - started, rooms: rooms.length }
+  } catch (error) {
+    return {
+      ok: false,
+      ms: Date.now() - started,
+      error: error instanceof Error ? error.message : "unreachable",
+    }
+  }
 }
