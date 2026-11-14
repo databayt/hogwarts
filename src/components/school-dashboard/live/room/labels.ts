@@ -106,7 +106,12 @@ export const DEFAULT_ROOM_LABELS = {
   mutedAll: "Everyone is muted",
   mutedByHost: "The teacher muted your microphone",
   muteOne: "Mute",
-  shareNeedsComputer: "Screen sharing needs a computer",
+  shareNeedsComputer:
+    "Screen sharing needs a computer. On a phone, show your book with the back camera (⋯ → Camera).",
+  /** macOS refused the browser the screen (System Settings, Screen Recording). */
+  shareBlockedBySystem:
+    "Your computer blocked screen sharing. Allow the browser in System Settings → Privacy & Security → Screen Recording, then restart it. Sharing a browser tab works meanwhile.",
+  shareFailed: "Screen sharing didn't start. Try again, or share a browser tab.",
   slides: "Slides",
   pickSlides: "Choose a document",
   noSlides: "No documents attached to this lesson",

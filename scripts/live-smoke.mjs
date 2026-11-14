@@ -20,7 +20,8 @@
 //   teacher's camera -- teacher and student see each other in the people list, and names are
 //   names (no login code, no address) -- the teacher sees the student's raised hand -- a chat
 //   message from the student reaches the teacher -- the parent reads it, with no chat box
-//   (read-only notice) -- no console `error` beyond known noise -- everyone leaves cleanly.
+//   (read-only notice) -- the teacher shares a screen (a fake 1280x720 screen, headless),
+//   the phone seat gets it on its stage, and it ends when the teacher stops -- no console `error` beyond known noise -- everyone leaves cleanly.
 //
 // THE WALK-IN MODEL. There is no "start class" button: the first person inside opens the
 // room, so the student enters first, the parent watches, the teacher arrives last and comes
@@ -139,6 +140,8 @@ const L =
         readOnly: /الدردشة للقراءة فقط/,
         waiting: /لم يدخل المعلم بعد/,
         alone: "أنت وحدك في هذه الغرفة",
+        share: "مشاركة الشاشة",
+        stopShare: "إيقاف المشاركة",
       }
     : {
         join: /^Join/,
@@ -151,6 +154,8 @@ const L =
         readOnly: /Chat is read-only/i,
         waiting: /teacher (has not|hasn't) (joined|arrived)/i,
         alone: "You are alone in this room",
+        share: "Share screen",
+        stopShare: "Stop sharing",
       }
 
 let playwright
@@ -217,7 +222,7 @@ async function openSeat(name) {
     if (m.type() === "error") seat.errors.push(m.text().slice(0, 300))
   })
   page.on("pageerror", (e) =>
-    seat.errors.push(`pageerror: ${String(e).slice(0, 300)}`)
+    seat.errors.push(`pageerror: ${String(e).slice(0, 300)}${process.env.SMOKE_STACK ? " @@ " + String(e.stack).slice(0, 900) : ""}`)
   )
   seats.push(seat)
   return seat
@@ -405,8 +410,11 @@ async function leaveRoom(s) {
     .waitFor({ state: "detached", timeout: 20000 })
     .then(() => true)
     .catch(async () => !(await leave.isVisible().catch(() => false)))
+  // Next's route announcer is a role=alert that reads the new page's title
+  // after a navigation (leaving lands on the class card) -- not an error.
   const alert = await s.page
-    .getByRole("alert")
+    .locator('[role="alert"]:not(next-route-announcer *)')
+    .filter({ hasText: /\S/ })
     .first()
     .textContent({ timeout: 800 })
     .catch(() => null)
@@ -648,6 +656,73 @@ try {
         .isVisible()
         .catch(() => false)
       await check(parent, sees, "parent reads the class chat")
+    }
+
+    // 6b. Screen share: the teacher (laptop seat) shares, the student (phone seat) gets it
+    // on the stage, the teacher stops. `--use-fake-device-for-media-stream` makes Chrome
+    // answer getDisplayMedia with a fake 1280x720 screen, headless, no picker.
+    const videos = (s) =>
+      s.page.evaluate(() =>
+        [...document.querySelectorAll("video")]
+          .filter((v) => v.videoWidth > 0 && v.readyState >= 2)
+          .map((v) => {
+            const r = v.getBoundingClientRect()
+            return { w: v.videoWidth, h: v.videoHeight, box: Math.round(r.width) }
+          })
+      )
+    const before = await videos(student)
+    await wake(teacher.page)
+    const shareBtn = teacher.page.getByRole("button", { name: L.share })
+    const hasShare = (await shareBtn.count()) > 0
+    await check(teacher, hasShare, "teacher has the share-screen control")
+    if (hasShare) {
+      await shareBtn.first().click({ timeout: 10000 }).catch(() => {})
+      const on = await teacher.page
+        .getByRole("button", { name: L.stopShare })
+        .first()
+        .waitFor({ timeout: 15000 })
+        .then(() => true)
+        .catch(() => false)
+      await check(teacher, on, "teacher's share starts (control turns to stop)")
+      let after = before
+      for (let i = 0; i < 15 && after.length <= before.length; i++) {
+        await student.page.waitForTimeout(1000)
+        after = await videos(student)
+      }
+      await check(
+        student,
+        after.length > before.length,
+        "student (phone) receives the teacher's screen",
+        `before ${JSON.stringify(before)} after ${JSON.stringify(after)}`
+      )
+      const big = after.reduce((m, v) => (v.box > (m?.box ?? 0) ? v : m), null)
+      await check(
+        student,
+        Boolean(big && big.box >= 300),
+        "the shared screen fills the phone's stage",
+        JSON.stringify(big)
+      )
+      if (parent && inRoom.has("parent")) {
+        const pv = await videos(parent)
+        await check(parent, pv.length > 0, "parent sees the shared screen", JSON.stringify(pv))
+      }
+      await wake(teacher.page)
+      await teacher.page
+        .getByRole("button", { name: L.stopShare })
+        .first()
+        .click({ timeout: 10000 })
+        .catch(() => {})
+      let gone = after
+      for (let i = 0; i < 10 && gone.length >= after.length; i++) {
+        await student.page.waitForTimeout(1000)
+        gone = await videos(student)
+      }
+      await check(
+        student,
+        gone.length < after.length,
+        "the share ends for the student when the teacher stops",
+        JSON.stringify(gone)
+      )
     }
   } else {
     await check(

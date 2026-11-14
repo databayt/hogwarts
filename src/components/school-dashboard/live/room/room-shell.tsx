@@ -234,6 +234,10 @@ export function RoomShell({
     },
     [channel, config.tools.whiteboard]
   )
+  const onShareError = useCallback(
+    (text: string) => pushToast({ id: "share-error", text, ttl: 9000 }),
+    [pushToast]
+  )
   const onMuteAll = useCallback(() => {
     void muteAll(sessionId).then((res) => {
       if (res && "success" in res && res.success) {
@@ -579,6 +583,7 @@ export function RoomShell({
                 chatUnread={config.tools.chat ? chat.unread : 0}
                 onPinned={setRowPinned}
                 onMuteAll={isHost ? onMuteAll : undefined}
+                onShareError={onShareError}
               />
             </div>
           </div>

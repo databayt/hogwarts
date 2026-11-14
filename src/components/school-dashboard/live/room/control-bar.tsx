@@ -108,6 +108,11 @@ function CountBadge({ count }: { count: number }) {
   )
 }
 
+/** Phones and tablets: iOS has no getDisplayMedia, and Chrome/Firefox on
+ *  Android define it but always refuse — the function's presence alone would
+ *  put a dead button on an Android teacher's row. */
+const MOBILE_UA = /Android|iPhone|iPad|iPod|Mobile/i
+
 /** Can this browser capture a screen? Read once, after hydration. */
 const noop = () => () => {}
 function useCanShareScreen(): boolean {
@@ -115,7 +120,10 @@ function useCanShareScreen(): boolean {
     noop,
     () =>
       typeof navigator !== "undefined" &&
-      typeof navigator.mediaDevices?.getDisplayMedia === "function",
+      typeof navigator.mediaDevices?.getDisplayMedia === "function" &&
+      !MOBILE_UA.test(navigator.userAgent) &&
+      // iPadOS asks for desktop pages with a Mac user agent.
+      !(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1),
     () => true
   )
 }
@@ -186,6 +194,8 @@ interface ControlsProps {
   onPinned?: (pinned: boolean) => void
   /** Host: mute every student. */
   onMuteAll?: () => void
+  /** A screen share that failed to start (picker cancel excluded). */
+  onShareError?: (message: string) => void
 }
 
 type Pop = "react" | "tools" | null
@@ -204,6 +214,7 @@ export function ClassControls({
   chatUnread = 0,
   onPinned,
   onMuteAll,
+  onShareError,
 }: ControlsProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const canPublish = role !== "OBSERVER"
@@ -357,7 +368,7 @@ export function ClassControls({
           )}
         </button>
       )}
-      {showShare && <ShareDisc labels={labels} />}
+      {showShare && <ShareDisc labels={labels} onError={onShareError} />}
       <button
         type="button"
         className={disc}
@@ -620,9 +631,39 @@ function CameraDisc({ labels }: { labels: RoomLabels }) {
   )
 }
 
-function ShareDisc({ labels }: { labels: RoomLabels }) {
+/**
+ * Why a share didn't start, in the teacher's words. Chrome says "Permission
+ * denied by system" when macOS has not granted Screen Recording, and a bare
+ * "Permission denied" when the teacher closed the picker — that one is a
+ * choice, not a failure, so it stays silent.
+ */
+export function shareErrorMessage(
+  e: Error,
+  labels: RoomLabels
+): string | null {
+  if (e.name === "NotAllowedError" || e.name === "AbortError") {
+    return /system/i.test(e.message) ? labels.shareBlockedBySystem : null
+  }
+  if (e.name === "NotSupportedError" || e.name === "TypeError")
+    return labels.shareNeedsComputer
+  return labels.shareFailed
+}
+
+function ShareDisc({
+  labels,
+  onError,
+}: {
+  labels: RoomLabels
+  onError?: (message: string) => void
+}) {
   const { toggle, enabled, pending } = useTrackToggle({
     source: Track.Source.ScreenShare,
+    // Without a handler the toggle rejects into nothing: the teacher presses
+    // Share and sees no picker, no share and no reason.
+    onDeviceError: (e) => {
+      const message = shareErrorMessage(e, labels)
+      if (message) onError?.(message)
+    },
   })
   return (
     <button
