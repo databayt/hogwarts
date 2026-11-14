@@ -102,6 +102,7 @@
     "camera": "Camera",
     "screenShare": "Share screen",
     "stopShare": "Stop sharing",
+    "screenOf": "{name}'s screen",
     "raiseHand": "Raise hand",
     "lowerHand": "Lower hand",
     "handsRaised": "Raised hands",

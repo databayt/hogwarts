@@ -22,6 +22,8 @@ export const DEFAULT_ROOM_LABELS = {
   camera: "Camera",
   screenShare: "Share screen",
   stopShare: "Stop sharing",
+  /** The name on a shared screen. Carries `{name}`. */
+  screenOf: "{name}'s screen",
   raiseHand: "Raise hand",
   lowerHand: "Lower hand",
   handsRaised: "Raised hands",

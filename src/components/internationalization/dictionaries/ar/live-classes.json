@@ -102,6 +102,7 @@
     "camera": "الكاميرا",
     "screenShare": "مشاركة الشاشة",
     "stopShare": "إيقاف المشاركة",
+    "screenOf": "شاشة {name}",
     "raiseHand": "رفع اليد",
     "lowerHand": "خفض اليد",
     "handsRaised": "الأيدي المرفوعة",

@@ -5,13 +5,15 @@
 import { createContext, useContext } from "react"
 import {
   CarouselLayout,
-  FocusLayout,
+  FocusToggle,
   GridLayout,
   isTrackReference,
   ParticipantTile,
   useLocalParticipant,
   useMaybeTrackRefContext,
   useTracks,
+  VideoTrack,
+  type TrackReference,
   type TrackReferenceOrPlaceholder,
 } from "@livekit/components-react"
 import { Track } from "livekit-client"
@@ -124,7 +126,7 @@ export function Stage({ channel, labels, role }: StageProps) {
       labels={labels}
     />
   ) : share && isTrackReference(share) ? (
-    <FocusLayout trackRef={share} className="h-full w-full" />
+    <ShareTile trackRef={share} label={labels.screenOf} />
   ) : spot ? (
     // "Give the floor": the student fills the stage for everyone.
     <ClassTile trackRef={spot} />
@@ -219,5 +221,35 @@ export function Stage({ channel, labels, role }: StageProps) {
         )}
       </div>
     </HandsContext.Provider>
+  )
+}
+
+/**
+ * A shared screen on the stage. The SDK's own tile names it "{name}'s screen"
+ * in English whatever the room's language; this one says it in the room's
+ * words and keeps the video and the fullscreen toggle.
+ */
+function ShareTile({
+  trackRef,
+  label,
+}: {
+  trackRef: TrackReference
+  label: string
+}) {
+  const name = trackRef.participant.name || trackRef.participant.identity
+  return (
+    <div className="lk-focus-layout h-full w-full">
+      <ParticipantTile trackRef={trackRef}>
+        <VideoTrack trackRef={trackRef} />
+        <div className="lk-participant-metadata">
+          <div className="lk-participant-metadata-item">
+            <span className="lk-participant-name">
+              {label.replace("{name}", name)}
+            </span>
+          </div>
+        </div>
+        <FocusToggle trackRef={trackRef} />
+      </ParticipantTile>
+    </div>
   )
 }
