@@ -113,8 +113,9 @@ function CountBadge({ count }: { count: number }) {
  *  put a dead button on an Android teacher's row. */
 const MOBILE_UA = /Android|iPhone|iPad|iPod|Mobile/i
 
+/** Always the latest signed APK (each release also keeps its own versioned key). */
 const ANDROID_APP_URL =
-  "https://cdn.databayt.org/balqalam/app/balqalam-1.1.0.apk"
+  "https://cdn.databayt.org/balqalam/app/balqalam.apk"
 
 /** Android phones only: the Balqalam app can share the phone's screen. */
 function useIsAndroid(): boolean {
