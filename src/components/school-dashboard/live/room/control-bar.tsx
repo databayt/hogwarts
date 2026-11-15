@@ -113,6 +113,19 @@ function CountBadge({ count }: { count: number }) {
  *  put a dead button on an Android teacher's row. */
 const MOBILE_UA = /Android|iPhone|iPad|iPod|Mobile/i
 
+const ANDROID_APP_URL =
+  "https://cdn.databayt.org/balqalam/app/balqalam-1.1.0.apk"
+
+/** Android phones only: the Balqalam app can share the phone's screen. */
+function useIsAndroid(): boolean {
+  return useSyncExternalStore(
+    noop,
+    () =>
+      typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent),
+    () => false
+  )
+}
+
 /** Can this browser capture a screen? Read once, after hydration. */
 const noop = () => () => {}
 function useCanShareScreen(): boolean {
@@ -429,6 +442,7 @@ function ClassToolsCard({
   onMuteAll?: () => void
   onClose: () => void
 }) {
+  const isAndroid = useIsAndroid()
   const now = useTimerNow(channel.state.timer)
   // A finished countdown offers a fresh one rather than Pause at 0:00.
   const timer = timerDone(channel.state.timer, now) ? null : channel.state.timer
@@ -578,7 +592,22 @@ function ClassToolsCard({
               pt={16}
               className="w-6"
             />
-            {labels.shareNeedsComputer}
+            <span>
+              {labels.shareNeedsComputer}
+              {isAndroid && (
+                <>
+                  {" "}
+                  <a
+                    href={ANDROID_APP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sky-300 underline"
+                  >
+                    {labels.shareFromAndroidApp}
+                  </a>
+                </>
+              )}
+            </span>
           </p>
         )}
       </div>
@@ -637,10 +666,7 @@ function CameraDisc({ labels }: { labels: RoomLabels }) {
  * "Permission denied" when the teacher closed the picker — that one is a
  * choice, not a failure, so it stays silent.
  */
-export function shareErrorMessage(
-  e: Error,
-  labels: RoomLabels
-): string | null {
+export function shareErrorMessage(e: Error, labels: RoomLabels): string | null {
   if (e.name === "NotAllowedError" || e.name === "AbortError") {
     return /system/i.test(e.message) ? labels.shareBlockedBySystem : null
   }
@@ -658,6 +684,14 @@ function ShareDisc({
 }) {
   const { toggle, enabled, pending } = useTrackToggle({
     source: Track.Source.ScreenShare,
+    // Chrome's picker offers "Share tab audio" / system audio only when asked;
+    // teachers play videos for children and the class must hear them.
+    captureOptions: {
+      audio: true,
+      systemAudio: "include",
+      selfBrowserSurface: "exclude",
+      surfaceSwitching: "include",
+    },
     // Without a handler the toggle rejects into nothing: the teacher presses
     // Share and sees no picker, no share and no reason.
     onDeviceError: (e) => {

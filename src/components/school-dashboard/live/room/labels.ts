@@ -110,10 +110,12 @@ export const DEFAULT_ROOM_LABELS = {
   muteOne: "Mute",
   shareNeedsComputer:
     "Screen sharing needs a computer. On a phone, show your book with the back camera (⋯ → Camera).",
+  shareFromAndroidApp: "On Android: share your screen from the Balqalam app",
   /** macOS refused the browser the screen (System Settings, Screen Recording). */
   shareBlockedBySystem:
     "Your computer blocked screen sharing. Allow the browser in System Settings → Privacy & Security → Screen Recording, then restart it. Sharing a browser tab works meanwhile.",
-  shareFailed: "Screen sharing didn't start. Try again, or share a browser tab.",
+  shareFailed:
+    "Screen sharing didn't start. Try again, or share a browser tab.",
   slides: "Slides",
   pickSlides: "Choose a document",
   noSlides: "No documents attached to this lesson",
