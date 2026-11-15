@@ -48,25 +48,31 @@ export function OfflineContent({ dictionary, lang }: OfflineContentProps) {
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
         {(fallback || !online) && (
-          <div className="flex flex-wrap items-center gap-4 rounded-lg border p-4">
-            <div className="bg-muted rounded-full p-3">
-              <WifiOff className="text-muted-foreground h-6 w-6" aria-hidden />
+          <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
+              <div className="bg-muted shrink-0 rounded-full p-3">
+                <WifiOff
+                  className="text-muted-foreground h-6 w-6"
+                  aria-hidden
+                />
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <h1 className="text-lg">
+                  {fallback
+                    ? (off?.notSavedTitle ??
+                      "This page isn't on this device yet")
+                    : (off?.offlineNow ?? "You're offline")}
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  {fallback
+                    ? (off?.notSavedHint ??
+                      "Open it once while you're connected and it will be here next time. Pages you've already opened still work.")
+                    : (off?.offlineHint ??
+                      "Downloaded lessons still play. Anything you do is saved and synced later.")}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1 space-y-1">
-              <h1 className="text-lg">
-                {fallback
-                  ? (off?.notSavedTitle ?? "This page isn't on this device yet")
-                  : (off?.offlineNow ?? "You're offline")}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {fallback
-                  ? (off?.notSavedHint ??
-                    "Open it once while you're connected and it will be here next time. Pages you've already opened still work.")
-                  : (off?.offlineHint ??
-                    "Downloaded lessons still play. Anything you do is saved and synced later.")}
-              </p>
-            </div>
-            <div className="ms-auto flex gap-2">
+            <div className="flex flex-wrap gap-2 sm:ms-auto sm:shrink-0">
               {fallback && (
                 // An installed iPhone app has no back button of its own.
                 <Button
