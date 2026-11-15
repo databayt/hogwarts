@@ -5,12 +5,24 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   RoomAudioRenderer,
+  useConnectionState,
   useLocalParticipant,
   useRoomContext,
 } from "@livekit/components-react"
+import { ConnectionState } from "livekit-client"
 import { Video, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   glassButton,
   glassPill,
@@ -59,6 +71,7 @@ import { Stage } from "./stage"
 import { RoomToastStack, useRoomToasts } from "./toasts"
 import { useAdaptiveDelivery } from "./use-adaptive-delivery"
 import { useAutoHide } from "./use-auto-hide"
+import { useBackGuard } from "./use-back-guard"
 import { useClassChannel } from "./use-class-channel"
 import { useClassNotices } from "./use-class-notices"
 import { useConnectionTrace } from "./use-connection-trace"
@@ -142,6 +155,14 @@ export function RoomShell({
   // that went badly. Listeners only — it draws nothing.
   useConnectionTrace(sessionId)
   const room = useRoomContext()
+  // Back inside the room asks before it leaves. Active only while the room is
+  // up: the Leave button, the class ending or a drop all end it, and then Back
+  // is the browser's again.
+  const connection = useConnectionState()
+  const [leaveAsk, setLeaveAsk] = useState(false)
+  useBackGuard(connection !== ConnectionState.Disconnected, () =>
+    setLeaveAsk(true)
+  )
   const { localParticipant } = useLocalParticipant()
   const [panel, setPanel] = useState<PanelTab | null>(null)
   // Lives here, not in the panel: history, the outbox and the unread count
@@ -625,6 +646,25 @@ export function RoomShell({
         />
       </div>
       <RoomAudioRenderer muted={audioMuted} />
+      <AlertDialog open={leaveAsk} onOpenChange={setLeaveAsk}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{labels.leaveAskTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {labels.leaveAskBody}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {/* Radix focuses the cancel button first: Stay is the default. */}
+            <AlertDialogCancel>{labels.leaveAskStay}</AlertDialogCancel>
+            {/* The same call as the ✕: CLIENT_INITIATED sends the reader back
+                to the class page. */}
+            <AlertDialogAction onClick={() => void room.disconnect()}>
+              {labels.leaveAskLeave}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

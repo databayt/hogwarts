@@ -8,6 +8,11 @@
  */
 export const DEFAULT_ROOM_LABELS = {
   leave: "Leave",
+  /** Back (system button or swipe) pressed inside the room. */
+  leaveAskTitle: "Leave the class?",
+  leaveAskBody: "You'll leave the live class.",
+  leaveAskStay: "Stay",
+  leaveAskLeave: "Leave",
   participants: "Participants",
   connection: "Connection",
   reconnecting: "Reconnecting…",
