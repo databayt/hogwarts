@@ -221,6 +221,16 @@ export const DEFAULT_ROOM_LABELS = {
     "No {device} was found on this device. You can still listen and chat.",
   deviceInUse: "Another app is using your {device}. Close it, then rejoin.",
   deviceFailed: "Your {device} could not start. You can still listen and chat.",
+  /** Android -> the school's app, and the silent-mic banner for hosts. */
+  androidAppTitle: "Open the class in the app",
+  androidAppOpen: "Open in the app",
+  androidAppNoApp: "Don't have the app?",
+  androidAppDownload: "Download it here",
+  androidAppContinue: "Continue in the browser",
+  androidAppWebview:
+    "WhatsApp's browser can't use your mic — open in the app",
+  micOffBanner: "Your mic is off — students can't hear you",
+  micOffAction: "Turn on mic",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

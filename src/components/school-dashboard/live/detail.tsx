@@ -14,11 +14,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
+import { AndroidAppCard } from "@/components/school-dashboard/live/android-app-card"
 import { AttendanceReview } from "@/components/school-dashboard/live/attendance-review"
 import { ClassWork } from "@/components/school-dashboard/live/class-work"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
+import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
 
 interface Props {
@@ -288,6 +290,10 @@ export async function LiveClassDetailContent({
         dictionary={dictionary}
         timeZone={timeZone}
       />
+
+      {canJoin && !isExternal && (
+        <AndroidAppCard labels={resolveRoomLabels(t?.room)} />
+      )}
 
       <div className="flex gap-2">
         {canJoin &&

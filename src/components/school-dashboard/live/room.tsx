@@ -25,9 +25,11 @@ import type {
   RoomJoinTicket,
 } from "@/components/school-dashboard/live/types"
 
+import { AndroidAppCard } from "./android-app-card"
 import { joinLiveClass } from "./actions/tokens"
 import type { RoomLabels } from "./room/labels"
 import { RoomShell } from "./room/room-shell"
+import { SilentHostBanner } from "./room/silent-host-banner"
 import type { SlideOption } from "./room/slide-options"
 import {
   RoomTitleCard,
@@ -175,6 +177,7 @@ export function RoomClient({
   // a student who denied the camera can still listen — so this is a notice
   // over the room, not an error that replaces it.
   const [deviceNotice, setDeviceNotice] = useState<string | null>(null)
+  const [micFailed, setMicFailed] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [ended, setEnded] = useState<Ended | null>(null)
   const options = useMemo(
@@ -363,6 +366,7 @@ export function RoomClient({
       <>
         {header}
         <div ref={cardRef}>
+          <AndroidAppCard labels={labels.room} />
           <RoomTitleCard
             data={card}
             labels={labels.card}
@@ -406,6 +410,7 @@ export function RoomClient({
           isHost || (ticket.role !== "OBSERVER" && !ticket.roomConfig.joinMuted)
         }
         onMediaDeviceFailure={(failure, kind) => {
+          if (kind === "audioinput") setMicFailed(true)
           const device =
             kind === "audioinput"
               ? labels.room.deviceMic
@@ -471,6 +476,9 @@ export function RoomClient({
               {labels.room.dismiss}
             </button>
           </div>
+        )}
+        {isHost && (
+          <SilentHostBanner micFailed={micFailed} labels={labels.room} />
         )}
         <LayoutContextProvider>
           <RoomShell
