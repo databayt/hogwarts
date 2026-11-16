@@ -75,6 +75,58 @@ describe("getLiveLandingCounts", () => {
     })
   })
 
+  it("a supervisor's sections widen the strip scope, never the counts", async () => {
+    const { getLiveLandingSessions, resolveSupervisedSectionIds } =
+      await import("@/components/school-dashboard/live/queries")
+    const findMany = vi.fn().mockResolvedValue([])
+    const mocked = db as unknown as {
+      conference: { findMany: unknown }
+      section: { findMany: unknown }
+    }
+    mocked.conference.findMany = findMany
+    mocked.section = {
+      findMany: vi.fn().mockResolvedValue([{ id: "sec-a" }, { id: "sec-b" }]),
+    }
+
+    // Her own supervised sections are resolved school-scoped.
+    await expect(resolveSupervisedSectionIds(SCHOOL, "t-1")).resolves.toEqual([
+      "sec-a",
+      "sec-b",
+    ])
+    expect(
+      (mocked.section.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0]
+        .where
+    ).toEqual({ schoolId: SCHOOL, homeroomTeacherId: "t-1" })
+
+    // The strip sees another teacher's session in a supervised section...
+    await getLiveLandingSessions(SCHOOL, {
+      now: NOW,
+      teacherId: "t-1",
+      supervisedSectionIds: ["sec-a", "sec-b"],
+    })
+    expect(findMany.mock.calls[0][0].where).toMatchObject({
+      AND: [
+        {
+          OR: [
+            { teacherId: "t-1" },
+            { isPractice: true },
+            { sectionId: { in: ["sec-a", "sec-b"] } },
+          ],
+        },
+      ],
+    })
+    // ...and only those sections: nothing broader than the given ids.
+    expect(JSON.stringify(findMany.mock.calls[0][0].where)).not.toContain(
+      "sec-c"
+    )
+
+    // Counts are never given the supervised ids: still "my classes" only.
+    await getLiveLandingCounts(SCHOOL, { now: NOW, teacherId: "t-1" })
+    expect(callArgs(0).where).toMatchObject({
+      AND: [{ OR: [{ teacherId: "t-1" }, { isPractice: true }] }],
+    })
+  })
+
   it("bounds the day in the SCHOOL's timezone, not the runtime's", async () => {
     // 22:30 UTC is already the 2nd in Khartoum, so the window must open on the
     // 2nd — a UTC-bounded query would still be counting the 1st.

@@ -5725,6 +5725,7 @@
         "networkTest": "فحص الشبكة"
       },
       "landing": {
+        "supervising": "إشراف",
         "hero": {
           "title": "{mark} تجعــــل التعليم أقرب وأكثر تأثيراً",
           "titleMark": "تجربــة تفاعلية",

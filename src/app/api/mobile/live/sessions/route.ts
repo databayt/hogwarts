@@ -9,6 +9,7 @@ import { schoolNameDisplay } from "@/lib/school-name-format"
 import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import {
   buildLiveClassWhere,
+  resolveSupervisedSectionIds,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
 
@@ -103,9 +104,32 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
+    // A TEACHER who is a section's homeroom (grade supervisor) gets her
+    // supervised-but-not-hers sessions flagged so the phone can label them.
+    let myTeacherId: string | null = null
+    let supervised = new Set<string>()
+    if (role === "TEACHER") {
+      const me = await db.teacher.findFirst({
+        where: { schoolId, userId },
+        select: { id: true },
+      })
+      if (me) {
+        myTeacherId = me.id
+        supervised = new Set(await resolveSupervisedSectionIds(schoolId, me.id))
+      }
+    }
+
     const nameDisplay = await schoolNameDisplay(schoolId)
     return NextResponse.json({
-      data: rows.map((row) => toSessionDto(row, nameDisplay)),
+      data: rows.map((row) => ({
+        ...toSessionDto(row, nameDisplay),
+        supervising:
+          myTeacherId !== null &&
+          !row.isPractice &&
+          row.teacher?.id !== myTeacherId &&
+          !!row.section &&
+          supervised.has(row.section.id),
+      })),
       total,
       page,
       per_page: perPage,

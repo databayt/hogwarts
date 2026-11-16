@@ -5709,6 +5709,7 @@
         "networkTest": "Network test"
       },
       "landing": {
+        "supervising": "Supervising",
         "hero": {
           "title": "{mark} that brings learning closer",
           "titleMark": "An interactive experience",

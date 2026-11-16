@@ -99,6 +99,12 @@ export function LandingSessionCard({
               {context}
             </Badge>
           ) : null}
+          {session.supervising ? (
+            <Badge variant="outline" className="shrink-0 font-normal">
+              {dictionary?.landing?.supervising ??
+                (lang === "ar" ? "إشراف" : "Supervising")}
+            </Badge>
+          ) : null}
         </div>
 
         {session.lessonName ? (

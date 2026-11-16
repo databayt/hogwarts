@@ -67,6 +67,9 @@ export interface LandingSession {
    * Always false on a live or upcoming row, which has nothing to record yet.
    */
   hasRecording: boolean
+  /** Shown to a grade supervisor for a class of a section she supervises that
+   *  another teacher teaches. Drives the «إشراف» badge. */
+  supervising?: boolean
 }
 
 /** What this viewer is allowed to do, resolved once on the server. */

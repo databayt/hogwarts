@@ -16,6 +16,7 @@ import {
   getLiveLandingRecordings,
   getLiveLandingSessions,
   resolveCatchUpAttendees,
+  resolveSupervisedSectionIds,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
 import { localize } from "@/components/translation/localize"
@@ -190,6 +191,10 @@ export async function loadLiveLanding(opts: {
             })
           : null
       const teacherId = teacher?.id ?? undefined
+      // Grade supervisors: the sections she is homeroom of join her strip.
+      const supervisedSectionIds = teacherId
+        ? await resolveSupervisedSectionIds(schoolId, teacherId)
+        : []
 
       // Every row below is now one this teacher teaches, so their cards stop
       // repeating their own name and name the SECTION instead. Keyed on the
@@ -206,15 +211,22 @@ export async function loadLiveLanding(opts: {
       // recent ones to a reader who missed nothing, so its candidate set is
       // not a subset of the shelf's.
       const [rows, catchUpRows, recordingRows] = await Promise.all([
-        getLiveLandingSessions(schoolId, { now, sectionIds, teacherId }),
+        getLiveLandingSessions(schoolId, {
+          now,
+          sectionIds,
+          teacherId,
+          supervisedSectionIds,
+        }),
         getLiveLandingCatchUp(schoolId, {
           sectionIds,
           teacherId,
+          supervisedSectionIds,
           attendeeUserIds,
         }),
         getLiveLandingRecordings(schoolId, {
           sectionIds,
           teacherId,
+          supervisedSectionIds,
           attendeeUserIds,
         }),
       ])
@@ -316,6 +328,12 @@ export async function loadLiveLanding(opts: {
           // `landingSessionInclude` takes at most ONE `ready` recording — the
           // card asks whether there is something to watch, not for the list.
           hasRecording: r.recordings.length > 0,
+          // Hers only because she supervises the section.
+          supervising:
+            Boolean(teacherId) &&
+            r.teacherId !== teacherId &&
+            !r.isPractice &&
+            Boolean(r.sectionId && supervisedSectionIds.includes(r.sectionId)),
         }
       }
 

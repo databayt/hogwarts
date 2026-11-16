@@ -833,7 +833,13 @@ export async function getAttendanceSyncEnabled(
  */
 function landingScope(
   schoolId: string,
-  opts: { sectionIds?: string[]; teacherId?: string }
+  opts: {
+    sectionIds?: string[]
+    teacherId?: string
+    /** Sections this teacher supervises (homeroom). Widens the teacher's own
+     *  scope; never passed to the counts, which stay "my classes". */
+    supervisedSectionIds?: string[]
+  }
 ): Prisma.ConferenceWhereInput {
   return {
     schoolId,
@@ -849,9 +855,39 @@ function landingScope(
     // A teacher's strip is their own classes — plus the school's practice room,
     // which is every member's.
     ...(opts.teacherId
-      ? { AND: [{ OR: [{ teacherId: opts.teacherId }, { isPractice: true }] }] }
+      ? {
+          AND: [
+            {
+              OR: [
+                { teacherId: opts.teacherId },
+                { isPractice: true },
+                // A grade supervisor also sees (and may cover) the classes of
+                // the sections she supervises.
+                ...(opts.supervisedSectionIds?.length
+                  ? [{ sectionId: { in: opts.supervisedSectionIds } }]
+                  : []),
+              ],
+            },
+          ],
+        }
       : {}),
   }
+}
+
+/**
+ * The sections a teacher supervises — `Section.homeroomTeacherId = teacher`.
+ * One schoolId-scoped read; callers resolve it once per request. A supervisor
+ * may hold one section, several grades or a whole stage.
+ */
+export async function resolveSupervisedSectionIds(
+  schoolId: string,
+  teacherId: string
+): Promise<string[]> {
+  const rows = await db.section.findMany({
+    where: { schoolId, homeroomTeacherId: teacherId },
+    select: { id: true },
+  })
+  return rows.map((r) => r.id)
 }
 
 /**
@@ -911,6 +947,7 @@ export async function getLiveLandingSessions(
   opts: {
     sectionIds?: string[]
     teacherId?: string
+    supervisedSectionIds?: string[]
     now: Date
     take?: number
   } = {
@@ -977,6 +1014,7 @@ export async function getLiveLandingCatchUp(
   opts: {
     sectionIds?: string[]
     teacherId?: string
+    supervisedSectionIds?: string[]
     attendeeUserIds?: string[]
     take?: number
   } = {}
@@ -1030,6 +1068,7 @@ export async function getLiveLandingRecordings(
   opts: {
     sectionIds?: string[]
     teacherId?: string
+    supervisedSectionIds?: string[]
     attendeeUserIds?: string[]
     take?: number
     candidates?: number
