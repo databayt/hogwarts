@@ -23,7 +23,23 @@ export function mayEnterRoom(opts: {
   role: string | null | undefined
   visibility: "section" | "school" | string | null | undefined
   guardiansObserve: boolean
+  /** The school's practice room, while its switch is on: every role enters. */
+  practice?: boolean
 }): boolean {
+  if (opts.practice) {
+    switch (opts.role) {
+      case "DEVELOPER":
+      case "ADMIN":
+      case "TEACHER":
+      case "STAFF":
+      case "ACCOUNTANT":
+      case "STUDENT":
+      case "GUARDIAN":
+        return true
+      default:
+        return false
+    }
+  }
   switch (opts.role) {
     case "DEVELOPER":
     case "ADMIN":

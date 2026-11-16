@@ -111,6 +111,7 @@ export async function handleWebhookEvent(
       id: true,
       recordingEnabled: true,
       timetableId: true,
+      isPractice: true,
       scheduledEnd: true,
       school: { select: { conferenceRetentionDays: true } },
     },
@@ -178,6 +179,7 @@ type EventContext = {
   session: {
     recordingEnabled: boolean
     timetableId: string | null
+    isPractice?: boolean
     scheduledEnd: Date | null
     school: { conferenceRetentionDays: number }
   }
@@ -213,6 +215,31 @@ async function applyEvent(
     }
 
     case "room_finished": {
+      // The PRACTICE room never ends: an empty room is just an empty room.
+      // Put it back to `scheduled` so the next arrival re-opens it (join-core
+      // lets anyone open it), and clear the run's marks. Only a row still
+      // scheduled/live is touched — a room the school switched OFF is
+      // `cancelled` and stays so. Anyone kicked during the run is let back in.
+      if (session.isPractice) {
+        await db.conference.updateMany({
+          where: {
+            id: sessionId,
+            schoolId,
+            status: { in: ["scheduled", "live"] },
+          },
+          data: {
+            status: "scheduled",
+            actualStart: null,
+            actualEnd: null,
+            roomSid: null,
+          },
+        })
+        await db.conferenceParticipant.updateMany({
+          where: { sessionId, schoolId, status: "removed" },
+          data: { status: "left" },
+        })
+        break
+      }
       // A TIMETABLE class closes by the clock, not by an empty room: everyone
       // stepping out for a few minutes (the SFU's departure/empty timeout) is
       // a break, not the end of the class. Inside the slot's window the row

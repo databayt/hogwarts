@@ -59,9 +59,40 @@ async function resolveParticipantRole(
   sessionId: string,
   sessionTeacherUserId: string | null,
   sessionSectionId: string | null,
-  sessionVisibility: ConferenceVisibility = "section"
+  sessionVisibility: ConferenceVisibility = "section",
+  isPractice = false
 ): Promise<ConferenceParticipantRole | null> {
   if (userRole === "DEVELOPER") return "HOST"
+  // The school's practice room: every member of THIS school, whatever the
+  // role. Staff roles rehearse the teacher's tools (CO_HOST); students and
+  // guardians are plain participants — a guardian is NOT an observer here.
+  // Students/guardians must still hold a row in this school (never across
+  // schools: the tenant schoolId scopes every lookup).
+  if (isPractice) {
+    if (
+      userRole === "ADMIN" ||
+      userRole === "TEACHER" ||
+      userRole === "STAFF" ||
+      userRole === "ACCOUNTANT"
+    ) {
+      return "CO_HOST"
+    }
+    if (userRole === "STUDENT") {
+      const student = await db.student.findFirst({
+        where: { schoolId, userId },
+        select: { id: true },
+      })
+      return student ? "PARTICIPANT" : null
+    }
+    if (userRole === "GUARDIAN") {
+      const guardian = await db.guardian.findFirst({
+        where: { schoolId, userId },
+        select: { id: true },
+      })
+      return guardian ? "PARTICIPANT" : null
+    }
+    return null
+  }
   if (userRole === "ADMIN") return "CO_HOST"
   if (userRole === "TEACHER") {
     if (sessionTeacherUserId === userId) return "HOST"
@@ -199,6 +230,7 @@ export async function performLiveClassJoin(
         provider: true,
         sectionId: true,
         visibility: true,
+        isPractice: true,
         maxParticipants: true,
         status: true,
         scheduledStart: true,
@@ -220,6 +252,7 @@ export async function performLiveClassJoin(
             conferenceToolPolls: true,
             conferenceToolWhiteboard: true,
             conferenceToolStudentShare: true,
+            conferencePracticeRoom: true,
           },
         },
       },
@@ -251,6 +284,12 @@ export async function performLiveClassJoin(
     return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
   }
 
+  // The practice room is open only while the school's switch is on; otherwise
+  // it is refused exactly like a cancelled class.
+  if (liveClass.isPractice && !liveClass.school.conferencePracticeRoom) {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+  }
+
   const participantRole = await resolveParticipantRole(
     userId,
     role,
@@ -258,7 +297,8 @@ export async function performLiveClassJoin(
     sessionId,
     liveClass.teacher.userId,
     liveClass.sectionId,
-    liveClass.visibility
+    liveClass.visibility,
+    liveClass.isPractice
   )
   // School switch: guardians observe only where the school allows it.
   if (
@@ -279,8 +319,11 @@ export async function performLiveClassJoin(
   // keeps the host start: until its teacher opens it there is nothing to join,
   // and everyone else waits on the card (a distinct code the room retries on).
   const slotClass = liveClass.timetableId != null
+  // Anyone who may enter the practice room may open it: no host is needed first.
   const mayOpen =
-    participantRole === "HOST" || (slotClass && participantRole !== "OBSERVER")
+    participantRole === "HOST" ||
+    liveClass.isPractice ||
+    (slotClass && participantRole !== "OBSERVER")
 
   if (slotClass && liveClass.scheduledStart && liveClass.scheduledEnd) {
     // The slot's window, enforced HERE and not only by the buttons that hide
@@ -312,12 +355,19 @@ export async function performLiveClassJoin(
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
     // An ad-hoc class's opening edge (a slot class was checked above).
-    if (!slotClass && !hostMayStart(liveClass.scheduledStart)) {
+    if (
+      !slotClass &&
+      !liveClass.isPractice &&
+      !hostMayStart(liveClass.scheduledStart)
+    ) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_TOO_EARLY)
     }
     // Opening the room must respect the per-school concurrent-room cap that
     // startLiveClass enforces.
-    const capError = await concurrentCapError(schoolId)
+    // (The practice room is outside the cap: it is permanent, not a class.)
+    const capError = liveClass.isPractice
+      ? null
+      : await concurrentCapError(schoolId)
     if (capError) return capError
     try {
       await ensureRoom({
@@ -337,7 +387,7 @@ export async function performLiveClassJoin(
       recordingEnabled: liveClass.recordingEnabled,
       openedByUserId: userId,
     })
-  } else if (slotClass && allowAutoStart) {
+  } else if ((slotClass || liveClass.isPractice) && allowAutoStart) {
     // A live timetable class whose SFU room closed while everyone had stepped
     // out (emptyTimeout/departureTimeout) is still the class: the row stays
     // `live` until the clock closes it, and the next arrival re-opens the
@@ -411,7 +461,10 @@ export async function performLiveClassJoin(
       displayName,
       lang: liveClass.lang,
       ttlSec: 300,
-      allowScreenShare: liveClass.school.conferenceToolStudentShare,
+      // The practice room lets a student share whatever the school's tool says:
+      // rehearsing the share is the point of it.
+      allowScreenShare:
+        liveClass.isPractice || liveClass.school.conferenceToolStudentShare,
     })
     wsUrl = getLiveKitConfig().wsUrl
   } catch {
@@ -430,15 +483,18 @@ export async function performLiveClassJoin(
       // Where hand-raises and poll votes are addressed over the data channel.
       hostIdentity: liveClass.teacher?.userId ?? null,
       roomConfig: {
-        joinMuted:
-          liveClass.studentsJoinMuted ??
-          liveClass.school.conferenceStudentsJoinMuted,
+        // Nobody rehearses a mic they enter muted on: the practice room opens live.
+        joinMuted: liveClass.isPractice
+          ? false
+          : (liveClass.studentsJoinMuted ??
+            liveClass.school.conferenceStudentsJoinMuted),
         tools: {
           chat: liveClass.school.conferenceToolChat,
           hands: liveClass.school.conferenceToolHands,
           polls: liveClass.school.conferenceToolPolls,
           whiteboard: liveClass.school.conferenceToolWhiteboard,
-          studentShare: liveClass.school.conferenceToolStudentShare,
+          studentShare:
+            liveClass.isPractice || liveClass.school.conferenceToolStudentShare,
         },
         consentNote: liveClass.school.conferenceRecordingConsentNote,
         // Only true when a recording can actually happen — the consent strip

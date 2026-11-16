@@ -127,7 +127,8 @@ export async function concurrentCapError(
       select: { conferenceMaxConcurrent: true },
     }),
     db.conference.count({
-      where: { schoolId, status: "live", deletedAt: null },
+      // The permanent practice room never counts against the cap.
+      where: { schoolId, status: "live", deletedAt: null, isPractice: false },
     }),
   ])
   if (!school) return actionError(ACTION_ERRORS.SCHOOL_NOT_FOUND)

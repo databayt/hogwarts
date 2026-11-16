@@ -194,6 +194,7 @@ async function loadSession(
       title: true,
       sectionId: true,
       visibility: true,
+      isPractice: true,
       scheduledStart: true,
       timetableId: true,
       teacher: {
@@ -208,6 +209,8 @@ async function loadSession(
     },
   })
   if (!session) return null
+  // The practice room is always open: no "class starting" / "class is live".
+  if (session.isPractice) return null
 
   const lang = pickLang(session.school.preferredLanguage)
   // A notification is a UI label — the school's short name.
@@ -492,9 +495,7 @@ export async function notifyClassWaiting(
         ? teacherUserId && !skip.has(teacherUserId)
           ? [teacherUserId]
           : []
-        : resolved.userIds.filter(
-            (id) => id !== teacherUserId && !skip.has(id)
-          )
+        : resolved.userIds.filter((id) => id !== teacherUserId && !skip.has(id))
     if (targets.length === 0) return { created: 0 }
 
     const template = WAITING[side][lang]

@@ -149,6 +149,11 @@ model Conference {
   // recordings access, and every list read path.
   visibility ConferenceVisibility @default(section)
 
+  // The school's permanent practice room (School.conferencePracticeRoom): open
+  // to every member, never ended by the SFU or the clock, no attendance, no
+  // "class starting" notice. At most one per school.
+  isPractice Boolean @default(false) @map("isPractice")
+
   // Optional catalog-lesson reference: one FK transitively surfaces the
   // lesson's videos, attachments, materials, and practice questions on the
   // session detail page (the catalog hierarchy-attachment pattern).
@@ -179,6 +184,7 @@ model Conference {
   @@index([timetableId])
   @@index([catalogLessonId])
   @@index([deletedAt])
+  @@index([schoolId, isPractice])
   @@map("live_class_sessions")
 }
 

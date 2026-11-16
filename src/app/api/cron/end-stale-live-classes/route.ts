@@ -50,6 +50,8 @@ export async function GET(req: Request) {
     where: {
       status: "live",
       deletedAt: null,
+      // The practice room never ends by the clock.
+      isPractice: false,
       OR: [
         { scheduledEnd: { lt: cutoff } },
         { timetableId: { not: null }, scheduledEnd: { lt: slotCutoff } },
@@ -104,6 +106,7 @@ export async function GET(req: Request) {
     where: {
       status: "scheduled",
       deletedAt: null,
+      isPractice: false,
       scheduledEnd: { lt: cutoff },
     },
     select: { id: true, schoolId: true },

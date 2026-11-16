@@ -27,6 +27,10 @@ vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
 vi.mock("@/components/school-dashboard/live/livekit/token", () => ({
   issueAccessToken: vi.fn().mockResolvedValue("jwt"),
 }))
+const transitionToLive = vi.fn().mockResolvedValue({ transitioned: true })
+vi.mock("@/components/school-dashboard/live/actions/went-live", () => ({
+  transitionToLive: (...a: unknown[]) => transitionToLive(...a),
+}))
 vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
   concurrentCapError: vi.fn().mockResolvedValue(null),
 }))
@@ -135,5 +139,127 @@ describe("guardians and the room configuration on join", () => {
     expect(issueAccessToken).toHaveBeenCalledWith(
       expect.objectContaining({ role: "PARTICIPANT", allowScreenShare: true })
     )
+  })
+})
+
+describe("the practice room", () => {
+  const practiceRow = (
+    over: Record<string, unknown> = {},
+    school: Record<string, unknown> = {}
+  ) => ({
+    ...liveClass({
+      conferencePracticeRoom: true,
+      conferenceGuardiansObserve: false,
+      conferenceToolStudentShare: false,
+      ...school,
+    }),
+    isPractice: true,
+    sectionId: null,
+    visibility: "school",
+    status: "scheduled",
+    recordingEnabled: false,
+    ...over,
+  })
+  const as = (role: string, userId = `u-${role}`) => ({
+    userId,
+    role: role as never,
+    schoolId: "school-1",
+  })
+
+  it("admits every role of the school — staff roles as CO_HOST, students and guardians as PARTICIPANT", async () => {
+    m(db.conference.findFirst).mockResolvedValue(practiceRow())
+    const expected: Record<string, string> = {
+      ADMIN: "CO_HOST",
+      TEACHER: "CO_HOST",
+      STAFF: "CO_HOST",
+      ACCOUNTANT: "CO_HOST",
+      STUDENT: "PARTICIPANT",
+      GUARDIAN: "PARTICIPANT",
+    }
+    for (const [role, want] of Object.entries(expected)) {
+      const r = await performLiveClassJoin("c1", { actor: as(role) })
+      expect(r.success, role).toBe(true)
+      if (r.success) expect(r.data.role, role).toBe(want)
+    }
+  })
+
+  it("lets ANY of them open it: no host needed first, no join-window check", async () => {
+    // Scheduled start far in the future would be TOO_EARLY for an ad-hoc class.
+    m(db.conference.findFirst).mockResolvedValue(
+      practiceRow({ scheduledStart: new Date(Date.now() + 86_400_000) })
+    )
+    const r = await performLiveClassJoin("c1", { actor: as("STUDENT") })
+    expect(r.success).toBe(true)
+    expect(transitionToLive).toHaveBeenCalledTimes(1)
+  })
+
+  it("a guardian is not an observer here, whatever the observe switch says", async () => {
+    m(db.conference.findFirst).mockResolvedValue(
+      practiceRow({}, { conferenceGuardiansObserve: false })
+    )
+    const r = await performLiveClassJoin("c1", { actor: guardian })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.role).toBe("PARTICIPANT")
+  })
+
+  it("lets a student share their screen even when the school's share tool is off, and opens unmuted", async () => {
+    m(db.conference.findFirst).mockResolvedValue(practiceRow())
+    const r = await performLiveClassJoin("c1", { actor: student })
+    expect(r.success).toBe(true)
+    if (!r.success) return
+    expect(issueAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({ role: "PARTICIPANT", allowScreenShare: true })
+    )
+    expect(r.data.roomConfig.tools.studentShare).toBe(true)
+    expect(r.data.roomConfig.joinMuted).toBe(false)
+  })
+
+  it("nobody enters while the school switch is off", async () => {
+    m(db.conference.findFirst).mockResolvedValue(
+      practiceRow({}, { conferencePracticeRoom: false })
+    )
+    for (const role of ["ADMIN", "TEACHER", "STAFF", "STUDENT", "GUARDIAN"]) {
+      const r = await performLiveClassJoin("c1", { actor: as(role) })
+      expect(r, role).toMatchObject({
+        success: false,
+        error: "LIVE_CLASS_INVALID_STATE",
+      })
+    }
+    expect(issueAccessToken).not.toHaveBeenCalled()
+  })
+
+  it("refuses a student or guardian who is not a member of THIS school", async () => {
+    m(db.conference.findFirst).mockResolvedValue(practiceRow())
+    m(db.student.findFirst).mockResolvedValue(null)
+    m(db.guardian.findFirst).mockResolvedValue(null)
+    for (const actor of [student, guardian]) {
+      const r = await performLiveClassJoin("c1", { actor })
+      expect(r).toMatchObject({
+        success: false,
+        error: "LIVE_CLASS_PARTICIPANT_DENIED",
+      })
+    }
+    // The membership lookup is scoped by the actor's school.
+    expect(db.student.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ schoolId: "school-1" }),
+      })
+    )
+  })
+
+  it("another school's room is not found at all (tenant scope on the read)", async () => {
+    m(db.conference.findFirst).mockResolvedValue(null)
+    const r = await performLiveClassJoin("c1", {
+      actor: { ...student, schoolId: "school-2" },
+    })
+    expect(r).toMatchObject({ success: false, error: "LIVE_CLASS_NOT_FOUND" })
+  })
+
+  it("a class that is not the practice room keeps the old matrix (a staff member is refused a section class)", async () => {
+    const r = await performLiveClassJoin("c1", { actor: as("STAFF") })
+    expect(r).toMatchObject({
+      success: false,
+      error: "LIVE_CLASS_PARTICIPANT_DENIED",
+    })
   })
 })

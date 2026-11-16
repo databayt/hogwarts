@@ -58,6 +58,9 @@ export async function loadLiveClassDetail(
       role: viewer.role,
       visibility: session.visibility,
       guardiansObserve,
+      // Open only while the school's switch is on: the room is `cancelled`
+      // otherwise, which the status test above already refuses.
+      practice: session.isPractice,
     })
   const latestRecording = session.recordings?.[0] ?? null
   const recordingState: "none" | "processing" | "ready" | "failed" =

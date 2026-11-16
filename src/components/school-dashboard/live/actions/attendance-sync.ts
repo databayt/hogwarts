@@ -91,6 +91,7 @@ export async function syncLiveAttendance(
         provider: true,
         sectionId: true,
         timetableId: true,
+        isPractice: true,
         scheduledStart: true,
         scheduledEnd: true,
         school: {
@@ -105,6 +106,10 @@ export async function syncLiveAttendance(
       },
     })
     if (!session) return { marked: 0, updated: 0, skipped: "session_not_found" }
+    // The practice room is nobody's class: it never writes a register.
+    if (session.isPractice) {
+      return { marked: 0, updated: 0, skipped: "practice_room" }
+    }
     if (!session.school.conferenceAttendanceSync) {
       return { marked: 0, updated: 0, skipped: "disabled" }
     }

@@ -26,6 +26,17 @@ export interface ModerationViewer {
   role: UserRole
 }
 
+async function isPracticeRoom(
+  schoolId: string,
+  sessionId: string
+): Promise<boolean> {
+  const row = await db.conference.findFirst({
+    where: { id: sessionId, schoolId, deletedAt: null, isPractice: true },
+    select: { id: true },
+  })
+  return Boolean(row)
+}
+
 /**
  * The caller must be a HOST or CO_HOST of this tenant's session — the same
  * participant row the room's host trust is published from. Co-teachers
@@ -33,12 +44,14 @@ export interface ModerationViewer {
  */
 async function hostRoom(viewer: ModerationViewer, sessionId: string) {
   const ctx = viewer
-  if (
-    !checkLiveClassPermission(
-      { userId: viewer.userId, role: viewer.role, schoolId: viewer.schoolId },
-      "end_live_class"
-    )
+  // STAFF/ACCOUNTANT hold no `end_live_class`, but in the school's practice
+  // room they are CO_HOSTs rehearsing the teacher's tools — the participant
+  // row check below is still what decides who may moderate.
+  const permitted = checkLiveClassPermission(
+    { userId: viewer.userId, role: viewer.role, schoolId: viewer.schoolId },
+    "end_live_class"
   )
+  if (!permitted && !(await isPracticeRoom(viewer.schoolId, sessionId)))
     return {
       ok: false as const,
       response: actionError(ACTION_ERRORS.UNAUTHORIZED),
@@ -110,4 +123,3 @@ export async function muteMicsFor(
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
-

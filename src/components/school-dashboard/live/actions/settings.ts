@@ -38,6 +38,11 @@ import {
   requireContext,
 } from "./helpers"
 import { materializeSchoolDay } from "./materialize-day"
+import {
+  closePracticeRoom,
+  ensurePracticeRoom,
+  findPracticeTeacher,
+} from "./practice-room"
 
 const SETTINGS_SELECT = {
   conferenceDeliveryMode: true,
@@ -50,6 +55,7 @@ const SETTINGS_SELECT = {
   conferenceToolPolls: true,
   conferenceToolWhiteboard: true,
   conferenceToolStudentShare: true,
+  conferencePracticeRoom: true,
   conferenceReminderLeadMinutes: true,
   conferenceLateGraceMinutes: true,
   conferenceMinPresenceMinutes: true,
@@ -156,10 +162,47 @@ export async function updateLiveSettings(input: unknown) {
       !physical && from ? parsed.data.conferenceOnlineNote || null : null,
   }
 
+  // The practice room needs a teacher to own its row: refuse BEFORE the
+  // switch is stored, so a school with no teacher is never left "on" with no
+  // room behind it.
+  const practice = parsed.data.conferencePracticeRoom
+  if (practice === true && !(await findPracticeTeacher(ctx.schoolId))) {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_PRACTICE_NO_TEACHER)
+  }
+
   try {
     await db.school.update({ where: { id: ctx.schoolId }, data })
   } catch {
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+
+  // The switch drives the row: on creates / re-opens it, off cancels it.
+  if (practice !== undefined) {
+    try {
+      if (practice) {
+        const res = await ensurePracticeRoom(ctx.schoolId)
+        if (!res.success) {
+          await db.school.update({
+            where: { id: ctx.schoolId },
+            data: { conferencePracticeRoom: false },
+          })
+          return res
+        }
+      } else {
+        await closePracticeRoom(ctx.schoolId)
+      }
+    } catch {
+      // Keep the switch and the room in step: a failed open turns it back off.
+      if (practice) {
+        await db.school
+          .update({
+            where: { id: ctx.schoolId },
+            data: { conferencePracticeRoom: false },
+          })
+          .catch(() => {})
+      }
+      return actionError(ACTION_ERRORS.UPDATE_FAILED)
+    }
   }
 
   // Make the flip take effect NOW rather than at the next */15 tick. An

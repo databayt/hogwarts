@@ -50,6 +50,11 @@ export function resolveLiveClassError(
       )
     case "LIVE_CLASS_TOKEN_FAILED":
       return errs?.tokenFailed ?? "Could not issue a room token."
+    case "LIVE_CLASS_PRACTICE_NO_TEACHER":
+      return (
+        errs?.practiceNoTeacher ??
+        "Add at least one active teacher before turning on the practice room."
+      )
     case "LIVE_CLASS_PARTICIPANT_DENIED":
       return errs?.participantDenied ?? "You are not enrolled in this class."
     case "LIVE_CLASS_PROVIDER_UNAVAILABLE":

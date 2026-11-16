@@ -312,9 +312,13 @@ export async function cancelLiveClass(input: CancelInput) {
         schoolId: ctx.schoolId,
         deletedAt: null,
       },
-      select: { id: true, status: true },
+      select: { id: true, status: true, isPractice: true },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    // The practice room is switched off in the school configuration, not here.
+    if (session.isPractice) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
     if (session.status !== "scheduled") {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
@@ -443,6 +447,7 @@ export async function endLiveClass(input: IdOnly) {
         id: true,
         status: true,
         roomName: true,
+        isPractice: true,
         teacher: { select: { userId: true } },
         recordings: {
           where: { status: { in: ["pending", "processing"] } },
@@ -452,6 +457,16 @@ export async function endLiveClass(input: IdOnly) {
       },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    // The practice room never ends: "End" only empties the room (the SFU's
+    // room_finished puts the row back to `scheduled`) — any teacher may do it.
+    if (session.isPractice) {
+      try {
+        await endRoom(session.roomName)
+      } catch {
+        // best-effort — the room may have already auto-closed
+      }
+      return { success: true as const, data: { id: session.id } }
+    }
     if (ctx.role === "TEACHER" && session.teacher.userId !== ctx.userId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }

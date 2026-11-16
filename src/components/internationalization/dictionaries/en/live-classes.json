@@ -321,6 +321,7 @@
     "tokenFailed": "Could not issue a room token.",
     "tokenExpired": "Token expired. Please rejoin.",
     "participantDenied": "You are not enrolled in this class.",
+    "practiceNoTeacher": "Add at least one active teacher before turning on the practice room.",
     "providerUnavailable": "Video service is unavailable. Try again shortly.",
     "recordingNotFound": "Recording not found.",
     "recordingFailed": "Could not load the recording."
@@ -484,6 +485,8 @@
     "toolPolls": "Polls",
     "toolWhiteboard": "Whiteboard",
     "toolStudentShare": "Students may share their screen",
+    "practiceRoom": "Practice room",
+    "practiceRoomHint": "An always-open room every member of the school can enter — teachers, students, parents and staff — to try camera, mic and screen sharing before class.",
     "reminderLead": "Remind before class (minutes)",
     "reminderLeadHint": "The “starting soon” notification goes out this many minutes before a class, on the next reminder run.",
     "protection": "Content protection",

@@ -320,6 +320,13 @@ export async function LiveSettingsPanel({
           toolWhiteboard: t?.toolWhiteboard ?? "Whiteboard",
           toolStudentShare:
             t?.toolStudentShare ?? "Students may share their screen",
+          practiceRoom: t?.practiceRoom ?? "Practice room",
+          practiceRoomHint:
+            t?.practiceRoomHint ??
+            "An always-open room every member of the school can enter — teachers, students, parents and staff — to try camera, mic and screen sharing before class.",
+          practiceNoTeacher:
+            dictionary?.liveClasses?.errors?.practiceNoTeacher ??
+            "Add at least one active teacher before turning on the practice room.",
           reminderLead: t?.reminderLead ?? "Remind before class (minutes)",
           reminderLeadHint:
             t?.reminderLeadHint ??

@@ -159,6 +159,10 @@ export function buildLiveClassWhere(
     ]
   }
 
+  // The practice room is hidden while its school switch is off (the row is
+  // then `cancelled`) — it is never shown as a cancelled class.
+  where.NOT = { isPractice: true, status: "cancelled" }
+
   return where
 }
 
@@ -276,7 +280,11 @@ export async function getLiveClassesList(
   params: Partial<LiveClassQueryParams> = {}
 ) {
   const where = buildLiveClassWhere(schoolId, params)
-  const orderBy = buildLiveClassOrderBy(params.sort)
+  // The practice room is pinned first, whatever the sort.
+  const orderBy = [
+    { isPractice: Prisma.SortOrder.desc },
+    ...buildLiveClassOrderBy(params.sort),
+  ]
   const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
 
   const [rows, count] = await Promise.all([
@@ -838,7 +846,11 @@ function landingScope(
           ],
         }
       : {}),
-    ...(opts.teacherId ? { teacherId: opts.teacherId } : {}),
+    // A teacher's strip is their own classes — plus the school's practice room,
+    // which is every member's.
+    ...(opts.teacherId
+      ? { AND: [{ OR: [{ teacherId: opts.teacherId }, { isPractice: true }] }] }
+      : {}),
   }
 }
 
@@ -874,6 +886,8 @@ export async function getLiveLandingCounts(
       where: {
         ...scope,
         status: { in: ["scheduled", "live", "ended"] },
+        // The practice room is not part of the school day.
+        isPractice: false,
         scheduledStart: { gte: start, lt: end },
       },
     }),
@@ -909,7 +923,7 @@ export async function getLiveLandingSessions(
   const [live, upcoming] = await Promise.all([
     db.conference.findMany({
       where: { ...scope, status: "live" },
-      orderBy: { scheduledStart: "desc" },
+      orderBy: [{ isPractice: "desc" }, { scheduledStart: "desc" }],
       take,
       include: landingSessionInclude,
     }),
@@ -923,7 +937,7 @@ export async function getLiveLandingSessions(
         // strip (it was not live either, so it was nowhere).
         scheduledEnd: { gte: opts.now },
       },
-      orderBy: { scheduledStart: "asc" },
+      orderBy: [{ isPractice: "desc" }, { scheduledStart: "asc" }],
       take,
       include: landingSessionInclude,
     }),

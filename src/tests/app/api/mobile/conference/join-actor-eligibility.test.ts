@@ -33,6 +33,7 @@ const SCHOOL_ROOM_CONFIG = {
   conferenceToolPolls: true,
   conferenceToolWhiteboard: true,
   conferenceToolStudentShare: false,
+  conferencePracticeRoom: true,
 }
 
 vi.mock("@/lib/db", () => ({
@@ -162,5 +163,45 @@ describe("performLiveClassJoin — JWT actor branch", () => {
         }),
       })
     )
+  })
+})
+
+describe("performLiveClassJoin — JWT actor branch, practice room", () => {
+  beforeEach(() => {
+    vi.mocked(db.conference.findFirst).mockImplementation(async (args) => {
+      const where = (args as { where: { schoolId: string } }).where
+      if (where.schoolId !== SCHOOL_ID) return null as never
+      return {
+        id: SESSION_ID,
+        roomName: ROOM_NAME,
+        provider: "livekit",
+        recordingEnabled: false,
+        studentsJoinMuted: null,
+        sectionId: null,
+        visibility: "school",
+        isPractice: true,
+        maxParticipants: 50,
+        status: "live",
+        lang: "ar",
+        teacher: { userId: TEACHER_USER_ID },
+        school: SCHOOL_ROOM_CONFIG,
+      } as never
+    })
+  })
+
+  it("STAFF via actor → CO_HOST in the practice room", async () => {
+    const result = await performLiveClassJoin(SESSION_ID, {
+      actor: { userId: "u-staff", role: "STAFF", schoolId: SCHOOL_ID },
+    })
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("CO_HOST")
+  })
+
+  it("another school's actor finds nothing", async () => {
+    const result = await performLiveClassJoin(SESSION_ID, {
+      actor: { userId: "u-staff", role: "STAFF", schoolId: OTHER_SCHOOL_ID },
+    })
+    expect("error" in result && result.error).toBe("LIVE_CLASS_NOT_FOUND")
   })
 })

@@ -87,6 +87,9 @@ model School {
   conferenceToolPolls             Boolean  @default(true) @map("liveClassToolPolls")
   conferenceToolWhiteboard        Boolean  @default(true) @map("liveClassToolWhiteboard")
   conferenceToolStudentShare      Boolean  @default(false) @map("liveClassToolStudentShare")
+  // A permanent, always-open room every member of the school may enter to try
+  // camera, mic and screen share. The row lives in Conference (isPractice).
+  conferencePracticeRoom          Boolean  @default(false) @map("liveClassPracticeRoom")
   // How many minutes before a class the "starting soon" reminder goes out.
   conferenceReminderLeadMinutes   Int      @default(10) @map("liveClassReminderLeadMinutes")
   // "This school teaches online": every timetable slot is delivered as a live

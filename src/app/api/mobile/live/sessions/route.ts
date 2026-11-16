@@ -82,6 +82,8 @@ export async function GET(request: NextRequest) {
       where.scheduledStart = { gt: now }
     } else if (window === "past") {
       where.scheduledEnd = { lt: now }
+      // The practice room is never "past" (it never ends).
+      where.isPractice = false
     }
 
     const [total, rows] = await Promise.all([
@@ -90,7 +92,11 @@ export async function GET(request: NextRequest) {
         where,
         // Today and upcoming read forwards; the past reads backwards, newest
         // first, which is how a student looks for the class they missed.
-        orderBy: { scheduledStart: window === "past" ? "desc" : "asc" },
+        // The practice room (always open) is pinned first in today/upcoming.
+        orderBy:
+          window === "past"
+            ? { scheduledStart: "desc" }
+            : [{ isPractice: "desc" }, { scheduledStart: "asc" }],
         skip: (page - 1) * perPage,
         take: perPage,
         select: SESSION_SELECT,
@@ -122,6 +128,7 @@ function startOfDay(date: Date): Date {
 const SESSION_SELECT = {
   id: true,
   title: true,
+  isPractice: true,
   status: true,
   scheduledStart: true,
   scheduledEnd: true,
@@ -160,6 +167,7 @@ const SESSION_SELECT = {
 type SessionRow = {
   id: string
   title: string | null
+  isPractice?: boolean
   status: string
   scheduledStart: Date
   scheduledEnd: Date
@@ -193,6 +201,8 @@ function toSessionDto(session: SessionRow, nameDisplay: NameDisplay) {
   return {
     id: session.id,
     title: session.title,
+    // The school's permanent practice room (always open, pinned first).
+    is_practice: session.isPractice ?? false,
     status: session.status,
     scheduled_start: session.scheduledStart.toISOString(),
     scheduled_end: session.scheduledEnd.toISOString(),

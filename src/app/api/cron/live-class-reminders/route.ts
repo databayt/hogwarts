@@ -109,6 +109,7 @@ export async function GET(req: Request) {
     where: {
       status: "scheduled",
       deletedAt: null,
+      isPractice: false,
       scheduledStart: { gte: startMin, lte: startMax },
     },
     select: {

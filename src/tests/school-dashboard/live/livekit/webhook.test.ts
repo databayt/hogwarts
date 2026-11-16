@@ -183,6 +183,41 @@ describe("handleWebhookEvent — room lifecycle", () => {
     )
   })
 
+  it("room_finished on the PRACTICE room never ends it — back to scheduled, run marks cleared", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: null,
+      isPractice: true,
+      scheduledEnd: new Date("2099-12-31T00:00:00Z"),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(ok).toBe(true)
+    expect(db.conference.updateMany).toHaveBeenCalledTimes(1)
+    expect(db.conference.updateMany).toHaveBeenCalledWith({
+      // Only a scheduled/live row: a room the school switched OFF stays cancelled.
+      where: {
+        id: SESSION_ID,
+        schoolId: SCHOOL_ID,
+        status: { in: ["scheduled", "live"] },
+      },
+      data: {
+        status: "scheduled",
+        actualStart: null,
+        actualEnd: null,
+        roomSid: null,
+      },
+    })
+    // Whoever was kicked during the run may come back next time.
+    expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: "removed" }),
+        data: { status: "left" },
+      })
+    )
+  })
+
   it("room_finished → status=ended, actualEnd set", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
     expect(ok).toBe(true)

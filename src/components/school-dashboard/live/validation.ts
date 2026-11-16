@@ -185,6 +185,8 @@ export const liveClassSettingsSchema = z
     conferenceToolPolls: z.boolean().optional(),
     conferenceToolWhiteboard: z.boolean().optional(),
     conferenceToolStudentShare: z.boolean().optional(),
+    // The permanent practice room (see actions/practice-room.ts).
+    conferencePracticeRoom: z.boolean().optional(),
     conferenceReminderLeadMinutes: z.number().int().min(1).max(60).optional(),
     // "This school teaches online" + the back-end to deliver it over. The
     // provider is stored as chosen even when the SFU is unprovisioned; it is

@@ -73,6 +73,22 @@ describe("end-stale-live-classes cron — detection", () => {
   })
 })
 
+describe("end-stale-live-classes cron — the practice room", () => {
+  it("skips practice rows in every arm (the live-past-clock scan and the never-started scan)", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      { id: "lcs-1", schoolId: "school-1", roomName: "r", recordings: [] },
+    ] as never)
+    await GET(req())
+
+    const finds = vi
+      .mocked(db.conference.findMany)
+      .mock.calls.map((c) => c[0] as { where: { isPractice?: boolean } })
+    // Arm 1 (live past the clock) and arm 2 (scheduled, never started).
+    expect(finds).toHaveLength(2)
+    for (const f of finds) expect(f.where.isPractice).toBe(false)
+  })
+})
+
 describe("end-stale-live-classes cron — close + sync", () => {
   it("status-guards the close and runs attendance sync per ended session", async () => {
     vi.mocked(db.conference.findMany).mockResolvedValue([

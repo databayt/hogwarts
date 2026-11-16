@@ -1004,7 +1004,8 @@ export async function updateLiveClass(
 
     // Tenant-safe scoped write: updateMany with {id, schoolId}.
     const result = await db.conference.updateMany({
-      where: { id: d.id, schoolId, deletedAt: null },
+      // The practice room is configured by its school switch, never edited here.
+      where: { id: d.id, schoolId, deletedAt: null, isPractice: false },
       data: updateData,
     })
 
@@ -1074,7 +1075,8 @@ export async function deleteLiveClass(params: {
 
     // Soft delete, tenant-scoped via updateMany on {id, schoolId}.
     const result = await db.conference.updateMany({
-      where: { id: params.id, schoolId, deletedAt: null },
+      // The practice room goes away through its school switch, not a delete.
+      where: { id: params.id, schoolId, deletedAt: null, isPractice: false },
       data: { deletedAt: new Date() },
     })
 

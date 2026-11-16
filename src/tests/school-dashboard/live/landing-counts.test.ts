@@ -69,7 +69,10 @@ describe("getLiveLandingCounts", () => {
     // A teacher is staff, so section scope hands them the whole school. The
     // hero says "your next class", so it has to ask a narrower question.
     await getLiveLandingCounts(SCHOOL, { now: NOW, teacherId: "t-1" })
-    expect(callArgs(0).where).toMatchObject({ teacherId: "t-1" })
+    // ...plus the school's practice room, which is every member's.
+    expect(callArgs(0).where).toMatchObject({
+      AND: [{ OR: [{ teacherId: "t-1" }, { isPractice: true }] }],
+    })
   })
 
   it("bounds the day in the SCHOOL's timezone, not the runtime's", async () => {

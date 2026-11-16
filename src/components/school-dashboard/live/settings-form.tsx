@@ -33,6 +33,7 @@ export interface LiveSettingsValues {
   conferenceToolPolls: boolean
   conferenceToolWhiteboard: boolean
   conferenceToolStudentShare: boolean
+  conferencePracticeRoom: boolean
   conferenceReminderLeadMinutes: number
   conferenceRetentionDays: number
   conferenceMaxConcurrent: number
@@ -138,6 +139,9 @@ interface Props {
     toolPolls: string
     toolWhiteboard: string
     toolStudentShare: string
+    practiceRoom: string
+    practiceRoomHint: string
+    practiceNoTeacher: string
     reminderLead: string
     reminderLeadHint: string
     retention: string
@@ -212,6 +216,8 @@ export function LiveSettingsForm({
   const [pending, startTransition] = useTransition()
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
+  // Why a save failed, when the server named it (the practice room needs a teacher).
+  const [failedCode, setFailedCode] = useState<string | null>(null)
 
   // Auto-save, like every other configuration page: each change bumps the
   // version, and the newest values are saved once the edits pause.
@@ -230,7 +236,18 @@ export function LiveSettingsForm({
         const res = await updateLiveSettings(latest.current)
         const ok = "success" in res && res.success
         setFailed(!ok)
+        setFailedCode(!ok && "error" in res ? (res.error ?? null) : null)
         if (ok) setSavedAt(Date.now())
+        // The server refused to open the practice room: the switch it did not
+        // store must not stay shown as on.
+        if (
+          !ok &&
+          "error" in res &&
+          res.error === "LIVE_CLASS_PRACTICE_NO_TEACHER"
+        ) {
+          latest.current = { ...latest.current, conferencePracticeRoom: false }
+          setValues(latest.current)
+        }
       })
     }, 700)
     return () => clearTimeout(timer)
@@ -298,7 +315,8 @@ export function LiveSettingsForm({
       | "conferenceAutoPublishRecordings"
       | "conferenceRecordingDefault"
       | "conferenceAttendanceSync"
-      | "conferenceOnlineDefault",
+      | "conferenceOnlineDefault"
+      | "conferencePracticeRoom",
     label: string,
     hint?: React.ReactNode,
     disabled?: boolean
@@ -371,10 +389,20 @@ export function LiveSettingsForm({
         <SaveStatus pending={pending} savedAt={savedAt} className="px-4" />
         {failed ? (
           <p role="alert" className="text-destructive px-4 text-xs">
-            {labels.error}
+            {failedCode === "LIVE_CLASS_PRACTICE_NO_TEACHER"
+              ? labels.practiceNoTeacher
+              : labels.error}
           </p>
         ) : null}
       </div>
+
+      <SettingsGroup>
+        {switchRow(
+          "conferencePracticeRoom",
+          labels.practiceRoom,
+          labels.practiceRoomHint
+        )}
+      </SettingsGroup>
 
       {!physical && (
         <SettingsGroup
