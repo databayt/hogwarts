@@ -4,6 +4,8 @@ import { db } from "@/lib/db"
 import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes } from "@/lib/teaching-scope"
 
+import type { AttachmentLink } from "./assignment-attachments"
+import { buildAttachmentLinks } from "./attachment-links"
 import {
   ownSubmissionSelect,
   toOwnSubmission,
@@ -15,6 +17,10 @@ export interface MyAssignment {
   title: string
   description: string | null
   instructions: string | null
+  /** Teacher-attached files, stored URLs (mobile re-signs these). */
+  attachments: string[]
+  /** The same, signed and ready to render. */
+  attachmentLinks: AttachmentLink[]
   type: string
   status: string
   totalPoints: number
@@ -67,6 +73,7 @@ export async function getAssignmentsForStudent(
       title: true,
       description: true,
       instructions: true,
+      attachments: true,
       type: true,
       status: true,
       totalPoints: true,
@@ -82,20 +89,24 @@ export async function getAssignmentsForStudent(
     },
   })
 
-  return rows.map((r) => {
-    const s = r.submissions[0]
-    return {
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      instructions: r.instructions,
-      type: r.type,
-      status: r.status,
-      totalPoints: Number(r.totalPoints),
-      dueDate: r.dueDate,
-      className: audienceLabel(r),
-      subjectName: r.subject?.name ?? null,
-      submission: s ? toOwnSubmission(s) : null,
-    }
-  })
+  return Promise.all(
+    rows.map(async (r) => {
+      const s = r.submissions[0]
+      return {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        instructions: r.instructions,
+        attachments: r.attachments,
+        attachmentLinks: await buildAttachmentLinks(r.attachments),
+        type: r.type,
+        status: r.status,
+        totalPoints: Number(r.totalPoints),
+        dueDate: r.dueDate,
+        className: audienceLabel(r),
+        subjectName: r.subject?.name ?? null,
+        submission: s ? toOwnSubmission(s) : null,
+      }
+    })
+  )
 }

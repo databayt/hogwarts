@@ -13,6 +13,7 @@ export const detailsSchema = z.object({
     .max(100, "Weight cannot exceed 100"),
   dueDate: z.coerce.date({ message: "Due date is required" }),
   instructions: z.string().optional(),
+  attachments: z.array(z.string().url()).max(10).default([]),
 })
 
 export type DetailsFormData = z.infer<typeof detailsSchema>

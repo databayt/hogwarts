@@ -20,6 +20,8 @@ import {
 } from "@/components/school-dashboard/listings/assignments/validation"
 import { prewarm } from "@/components/translation/prewarm"
 
+import type { AttachmentLink } from "./assignment-attachments"
+import { buildAttachmentLinks } from "./attachment-links"
 import { assertAssignmentPermission, getAuthContext } from "./authorization"
 import { gradeSubmissionCore, gradeSubmissionSchema } from "./grade-core"
 
@@ -33,6 +35,9 @@ type AssignmentSelectResult = {
   weight: number
   dueDate: Date
   instructions: string | null
+  attachments: string[]
+  /** Signed, render-ready links for `attachments`. */
+  attachmentLinks: AttachmentLink[]
   status: string
   createdAt: Date
   updatedAt: Date
@@ -302,6 +307,7 @@ export async function getAssignment(input: {
         weight: true,
         dueDate: true,
         instructions: true,
+        attachments: true,
         status: true,
         createdAt: true,
         updatedAt: true,
@@ -317,6 +323,7 @@ export async function getAssignment(input: {
             ...assignment,
             totalPoints: Number(assignment.totalPoints),
             weight: Number(assignment.weight),
+            attachmentLinks: await buildAttachmentLinks(assignment.attachments),
           } as AssignmentSelectResult)
         : null,
     }

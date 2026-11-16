@@ -2,19 +2,29 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Paperclip, X } from "lucide-react"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
+import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { attachmentName } from "../../assignment-attachments"
 import { completeAssignmentWizard } from "../actions"
-import { updateAssignmentDetails } from "./actions"
+import { presignAssignmentAttachment, updateAssignmentDetails } from "./actions"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
 interface DetailsFormProps {
@@ -39,8 +49,55 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
         weight: initialData?.weight ?? 10,
         dueDate: initialData?.dueDate,
         instructions: initialData?.instructions || "",
+        attachments: initialData?.attachments ?? [],
       },
     })
+
+    // Teacher-attached files (a photo of the worksheet, a PDF).
+    const files = form.watch("attachments") ?? []
+    const [uploading, setUploading] = useState(false)
+    const fileInput = useRef<HTMLInputElement>(null)
+
+    const handleFiles = async (list: FileList | null) => {
+      if (!list || list.length === 0) return
+      setUploading(true)
+      try {
+        let next = [...(form.getValues("attachments") ?? [])]
+        for (const file of Array.from(list).slice(0, 10 - next.length)) {
+          const failed = () =>
+            toast.error(
+              (fd?.uploadFailed || "Couldn't upload {name}").replace(
+                "{name}",
+                file.name
+              )
+            )
+          const res = await presignAssignmentAttachment({
+            assignmentId,
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+          })
+          if (!res.success) {
+            failed()
+            continue
+          }
+          const put = await fetch(res.data.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          })
+          if (!put.ok) {
+            failed()
+            continue
+          }
+          next = [...next, res.data.fileUrl]
+          form.setValue("attachments", next, { shouldDirty: true })
+        }
+      } finally {
+        setUploading(false)
+        if (fileInput.current) fileInput.current.value = ""
+      }
+    }
 
     // Notify parent of validity changes
     const totalPoints = form.watch("totalPoints")
@@ -129,6 +186,57 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
             }
             disabled={isPending}
           />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {fd?.attachments || "Assignment attachments (images or PDF)"}
+            </p>
+            {files.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {files.map((url) => (
+                  <li
+                    key={url}
+                    className="bg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs"
+                  >
+                    <Paperclip className="h-3 w-3" aria-hidden />
+                    <span dir="auto">{attachmentName(url)}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        form.setValue(
+                          "attachments",
+                          files.filter((f) => f !== url),
+                          { shouldDirty: true }
+                        )
+                      }
+                      aria-label={fd?.removeFile || "Remove"}
+                      className="relative ms-1 after:absolute after:-inset-2 after:content-['']"
+                    >
+                      <X className="h-3 w-3" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              accept="image/*,application/pdf"
+              className="sr-only"
+              onChange={(e) => void handleFiles(e.target.files)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInput.current?.click()}
+              disabled={isPending || uploading || files.length >= 10}
+            >
+              <Paperclip className="me-2 h-4 w-4" aria-hidden />
+              {uploading
+                ? fd?.uploading || "Uploading…"
+                : fd?.attachFile || "Attach an image or file"}
+            </Button>
+          </div>
         </form>
       </Form>
     )

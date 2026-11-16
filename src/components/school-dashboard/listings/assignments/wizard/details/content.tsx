@@ -59,6 +59,7 @@ export default function DetailsContent() {
                   weight: Number(data.weight),
                   dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
                   instructions: data.instructions ?? undefined,
+                  attachments: data.attachments ?? [],
                 }
               : undefined
           }

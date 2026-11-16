@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getStudentSubmission } from "@/components/school-dashboard/listings/assignments/submit-core"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { signAttachmentUrls } from "../../lib/tenant-storage"
 import {
   assignmentDto,
   resolveAssignmentAccess,
@@ -34,7 +35,13 @@ export async function GET(
     )
     if (!access.ok) return access.response
 
-    const body = assignmentDto(access.assignment)
+    const stored = access.assignment.attachments ?? []
+    const body = {
+      ...assignmentDto(access.assignment),
+      // Teacher-attached files: stored URLs + index-aligned signed URLs.
+      attachments: stored,
+      attachment_urls: await signAttachmentUrls(stored),
+    }
     if (access.mode === "staff") return NextResponse.json(body)
 
     const submission = await getStudentSubmission(

@@ -24,6 +24,10 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
+import {
+  AssignmentAttachments,
+  type AttachmentLink,
+} from "./assignment-attachments"
 import { StudentSubmissionCard } from "./submission-card"
 import type { SubmissionReview } from "./submissions-core"
 import { SubmissionsReview } from "./submissions-review"
@@ -40,6 +44,7 @@ interface AssignmentDetailResult {
   weight: number
   dueDate: Date
   instructions: string | null
+  attachmentLinks?: AttachmentLink[]
   status: string
   createdAt: Date
   updatedAt: Date
@@ -311,6 +316,14 @@ export function AssignmentDetailContent({
                     {t.noInstructions || "No instructions"}
                   </p>
                 )}
+              </div>
+              <div className="pt-4">
+                <AssignmentAttachments
+                  links={data.attachmentLinks}
+                  label={
+                    t.attachments || "Assignment attachments (images or PDF)"
+                  }
+                />
               </div>
             </CardContent>
           </Card>

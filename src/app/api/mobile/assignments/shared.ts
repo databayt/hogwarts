@@ -47,6 +47,9 @@ export async function studentAssignmentDto(a: MyAssignment) {
     title: a.title,
     description: a.description,
     instructions: a.instructions,
+    // Teacher-attached files: stored URLs + index-aligned signed URLs.
+    attachments: a.attachments ?? [],
+    attachment_urls: await signAttachmentUrls(a.attachments ?? []),
     type: a.type,
     status: a.status,
     total_points: a.totalPoints,
@@ -63,6 +66,7 @@ export const assignmentDetailFields = {
   ...assignmentListSelect,
   description: true,
   instructions: true,
+  attachments: true,
 } as const
 
 type AssignmentRow = {
@@ -84,6 +88,7 @@ type AssignmentRow = {
   _count: { submissions: number }
   description?: string | null
   instructions?: string | null
+  attachments?: string[]
 }
 
 /** Staff-side row (list + detail). */

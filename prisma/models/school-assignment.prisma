@@ -43,6 +43,8 @@ model SchoolAssignment {
   dueDate      DateTime
   publishDate  DateTime?
   instructions String?          @db.Text
+  // Teacher-attached files (worksheet photos, PDFs) — tenant storage URLs.
+  attachments  String[]         @default([])
 
   // Optional catalog FK bridge
   catalogLessonId     String?

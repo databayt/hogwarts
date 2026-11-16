@@ -21,6 +21,7 @@ export interface AssignmentWizardData {
   weight: number | string
   dueDate: Date | null
   instructions: string | null
+  attachments?: string[]
   wizardStep: string | null
 }
 

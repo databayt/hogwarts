@@ -45,6 +45,7 @@ export async function getAssignmentForWizard(
         weight: true,
         dueDate: true,
         instructions: true,
+        attachments: true,
         wizardStep: true,
       },
     })

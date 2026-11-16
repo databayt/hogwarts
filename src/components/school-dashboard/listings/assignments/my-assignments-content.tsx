@@ -18,6 +18,7 @@ import {
   StatPanel,
 } from "@/components/school-dashboard/shared"
 
+import { AssignmentAttachments } from "./assignment-attachments"
 import type { MyAssignment } from "./my-assignments"
 import { StudentSubmissionCard } from "./submission-card"
 
@@ -397,6 +398,10 @@ function AssignmentRow({
             {a.instructions}
           </p>
         ) : null}
+        <AssignmentAttachments
+          links={a.attachmentLinks}
+          label={detail?.attachments as string | undefined}
+        />
         <StudentSubmissionCard
           assignmentId={a.id}
           existing={a.submission}
