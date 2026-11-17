@@ -29,7 +29,7 @@ export default async function Page({ params }: Props) {
 
   const userId = session?.user?.id ?? ""
 
-  const [dictionary, sections, subjects, teacher] = await Promise.all([
+  const [dictionary, sections, subjects, teacher, school] = await Promise.all([
     getDictionary(lang),
     db.section.findMany({
       where: { schoolId },
@@ -50,6 +50,12 @@ export default async function Page({ params }: Props) {
           select: { id: true },
         })
       : null,
+    // The form reads the typed time as the SCHOOL's wall clock, not the
+    // device's: Al-Ibda's teachers sit in Bahrain, the UAE and Qatar.
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
   ])
 
   // An admin picks the host from the school's teachers; it used to be the
@@ -81,6 +87,7 @@ export default async function Page({ params }: Props) {
         teacherId={teacherId}
         teachers={teachers}
         recordingAvailable={isRecordingConfigured()}
+        timeZone={school?.timezone ?? "Africa/Khartoum"}
       />
     </div>
   )

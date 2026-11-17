@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+import { schoolWallTimeToUtc } from "@/lib/timezone"
 import { createLiveClass } from "@/components/school-dashboard/live/actions/sessions"
 import { resolveLiveClassError } from "@/components/school-dashboard/live/error-map"
 
@@ -25,6 +26,15 @@ interface Props {
   teachers?: { id: string; name: string }[]
   /** Whether Egress has a bucket to write to. Off → no checkbox, a note. */
   recordingAvailable?: boolean
+  /** The school's IANA zone; the typed start/end are wall-clock times there. */
+  timeZone?: string
+}
+
+/** "2026-11-18T16:00" typed in the form → the UTC instant it means in `tz`. */
+function wallToIso(value: string, tz: string | undefined): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value)
+  if (!m || !tz) return new Date(value).toISOString()
+  return schoolWallTimeToUtc(tz, +m[1], +m[2], +m[3], +m[4], +m[5]).toISOString()
 }
 
 export function ScheduleLiveClassForm({
@@ -35,6 +45,7 @@ export function ScheduleLiveClassForm({
   teacherId: ownTeacherId,
   teachers = [],
   recordingAvailable = false,
+  timeZone,
 }: Props) {
   const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
@@ -74,8 +85,8 @@ export function ScheduleLiveClassForm({
             sectionId: form.sectionId || undefined,
             subjectId: form.subjectId || undefined,
             teacherId,
-            scheduledStart: new Date(form.scheduledStart).toISOString(),
-            scheduledEnd: new Date(form.scheduledEnd).toISOString(),
+            scheduledStart: wallToIso(form.scheduledStart, timeZone),
+            scheduledEnd: wallToIso(form.scheduledEnd, timeZone),
             recordingEnabled: form.recordingEnabled,
             maxParticipants: form.maxParticipants,
           })
