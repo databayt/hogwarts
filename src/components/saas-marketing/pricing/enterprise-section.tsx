@@ -31,7 +31,7 @@ export default function EnterpriseSection({
       </h1>
       <p className="muted">
         {enterprise?.description ||
-          "Multi-campus networks and government contracts get a dedicated account manager, white-label branding, and SSO — priced per student for 1,000+ students."}
+          "Multi-campus networks and government contracts get a dedicated account manager, white-label branding, and SSO — at 14 SAR per student a year under its own contract, for 1,000+ students."}
       </p>
       <div className="flex justify-center">
         <Link

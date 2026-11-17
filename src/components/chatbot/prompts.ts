@@ -10,6 +10,7 @@ import {
   FALLBACK_RATES,
   formatMoney,
   quote,
+  RATE_TIERS,
   TRIAL_MONTHS,
   type Rates,
 } from "@/components/saas-marketing/pricing/rates"
@@ -107,40 +108,46 @@ export function deriveSchoolContext(
 
 /**
  * The pricing block of the SaaS system prompt, from the single source in
- * `pricing/rates.ts`: one rate per student from the first, after a free first
- * month, converted at today's exchange rates. A 20B model does arithmetic badly, so the formula
- * comes with worked examples it can quote instead of computing.
+ * `pricing/rates.ts`: graduated per-student rates (24 / 16 / 14 SAR a year)
+ * after a free first month, converted at today's exchange rates. A 20B model
+ * does arithmetic badly, so the formula comes with worked examples it can
+ * quote instead of computing.
  */
 function formatPricing(locale: string, rates: Rates): string {
   const isAr = locale === "ar"
   const sar = (n: number) => formatMoney(n, "SAR", locale)
-  const rate = quote(0, "SAR", rates).ratePerStudentYear
+  const [t1, t2, t3] = RATE_TIERS.map((t) => t.sarPerStudent)
   const converted = (["USD", "SDG", "EGP"] as const)
-    .map((c) => formatMoney(quote(0, c, rates).ratePerStudentYear, c, locale))
-    .join(isAr ? "، " : ", ")
-  const examples = [50, 100, 250, 500, 1000]
+    .map((c) => {
+      const fx = rates[c] ?? FALLBACK_RATES[c]
+      return [t1, t2, t3].map((r) => formatMoney(r * fx, c, locale)).join(" / ")
+    })
+    .join(isAr ? "؛ " : "; ")
+  const examples = [48, 100, 250, 300, 500, 1000, 1200]
     .map((n) => {
       const q = quote(n, "SAR", rates)
       return isAr
-        ? `${n} طالب ← ${sar(q.annual)} سنويًا (${sar(q.atSigning)} عند التوقيع)`
-        : `${n} students → ${sar(q.annual)} a year (${sar(q.atSigning)} at signing)`
+        ? `${n} طالب ← ${sar(q.annual)} سنويًا (${sar(q.atSigning)} عند نهاية الشهر المجاني)`
+        : `${n} students → ${sar(q.annual)} a year (${sar(q.atSigning)} when the free month ends)`
     })
     .join(isAr ? "؛ " : "; ")
 
   return isAr
     ? [
-        `- كل مدرسة جديدة تبدأ بشهر مجاني كامل (${TRIAL_MONTHS === 1 ? "شهر واحد" : `${TRIAL_MONTHS} أشهر`}) — بدون رسوم وبدون التزام.`,
-        `- بعده كل طالب بـ${sar(rate)} في السنة من أول طالب (≈ ${sar(rate / 12)} شهريًا) — بسعر اليوم: ${converted}. لا توجد باقة مجانية دائمة.`,
-        `- المعادلة: السعر السنوي = عدد الطلاب × ${sar(rate)}. أمثلة: ${examples}.`,
-        `- الدفع: 50% عند نهاية الشهر المجاني، ثم 12.5% في الأشهر 3 و6 و9 و12. مدارس السودان تدفع السعر بالدولار بالجنيه السوداني بسعر البنك يوم الدفع، بتحويل بنكي. الأسعار قبل الضريبة. الاستضافة والدعم (واتساب وبريد) والتحديثات مشمولة.`,
-        `- المؤسسات (أكثر من ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} طالب): السعر نفسه لكل طالب، مع عقد مخصص ومدير حساب.`,
+        `- كل مدرسة جديدة تبدأ بشهر مجاني كامل (${TRIAL_MONTHS === 1 ? "شهر واحد" : `${TRIAL_MONTHS} أشهر`}) — بدون رسوم وبدون التزام. لا توجد باقة مجانية دائمة ولا طلاب مجانيون.`,
+        `- بعده السعر سنوي لكل طالب من أول طالب، وينخفض كلما كبرت المدرسة: ${sar(t1)} للطالب للطلاب من 1 إلى 250، و${sar(t2)} من 251 إلى 500، و${sar(t3)} من 501 فصاعدًا — بسعر اليوم (للطالب في كل شريحة): ${converted}.`,
+        `- المعادلة: 24 × أول 250 طالبًا + 16 × الطلاب من 251 إلى 500 + 14 × من 501 فأكثر. المراسي: 250 طالبًا = 6,000 ريال، 500 = 10,000، 1,000 = 17,000. أمثلة: ${examples}.`,
+        `- الحصص المباشرة مشمولة ضمن حد الاستخدام العادل: 100 ساعة شهريًا للمدارس حتى 250 طالبًا، و200 حتى 500، و400 حتى 1,000؛ وما زاد يُسعَّر على حدة.`,
+        `- الدفع: 50% عند نهاية الشهر المجاني، ثم 4 أقساط بنسبة 12.5% حتى نهاية العام الدراسي. مدارس السودان تدفع السعر بالدولار بالجنيه السوداني بسعر البنك يوم الدفع، بتحويل بنكي. الأسعار قبل الضريبة. الاستضافة والدعم (واتساب وبريد) والتحديثات مشمولة.`,
+        `- المؤسسات (أكثر من ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} طالب): ${sar(t3)} للطالب أيضًا، بعقد مخصص ومدير حساب.`,
       ].join("\n")
     : [
-        `- Every new school starts with a free first month (${TRIAL_MONTHS === 1 ? "one month" : `${TRIAL_MONTHS} months`}) — no fees, no commitment.`,
-        `- After it, every student is ${sar(rate)} a year from the first student (≈ ${sar(rate / 12)} a month) — at today's rates: ${converted}. There is no permanent free plan.`,
-        `- Formula: annual price = students × ${sar(rate)}. Examples: ${examples}.`,
-        `- Payment: 50% when the free month ends, then 12.5% at months 3, 6, 9 and 12. Schools in Sudan pay the US-dollar price in Sudanese pounds at the bank rate on the day, by bank transfer. Prices are before tax. Hosting, support (WhatsApp and email) and updates are included.`,
-        `- Enterprise (over ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} students): the same per-student rate, with a dedicated contract and account manager.`,
+        `- Every new school starts with a free first month (${TRIAL_MONTHS === 1 ? "one month" : `${TRIAL_MONTHS} months`}) — no fees, no commitment. There is no permanent free plan and no free students.`,
+        `- After it, the price is per student per year from the first student, and falls as the school grows: ${sar(t1)} a student for students 1–250, ${sar(t2)} for 251–500, ${sar(t3)} from 501 — at today's rates (per student, per tier): ${converted}.`,
+        `- Formula: 24 × the first 250 students + 16 × students 251–500 + 14 × students from 501. Anchors: 250 students = 6,000 SAR, 500 = 10,000, 1,000 = 17,000. Examples: ${examples}.`,
+        `- Live classes are included up to a fair-use allowance: 100 hours a month for schools up to 250 students, 200 up to 500, 400 up to 1,000; more is quoted.`,
+        `- Payment: 50% when the free month ends, then 4 instalments of 12.5% ending with the school year. Schools in Saudi Arabia pay in riyals by bank transfer; schools in Sudan pay the riyal price in Sudanese pounds at the bank rate on the day, by Bankak. No VAT is added. Hosting, support (WhatsApp and email) and updates are included.`,
+        `- Enterprise (over ${ENTERPRISE_STUDENTS.toLocaleString("en-US")} students): ${sar(t3)} a student too, under its own contract with a dedicated account manager.`,
       ].join("\n")
 }
 
@@ -424,7 +431,9 @@ export function buildSchoolSitePrompt(
   // Contact
   const contact: string[] = []
   if (school.phoneNumber)
-    contact.push(`- ${dict.schoolPhrasePhone}: ${clean(school.phoneNumber, 40)}`)
+    contact.push(
+      `- ${dict.schoolPhrasePhone}: ${clean(school.phoneNumber, 40)}`
+    )
   if (school.email)
     contact.push(`- ${dict.schoolPhraseEmail}: ${clean(school.email, 120)}`)
   const website = siteUrl(school.website)

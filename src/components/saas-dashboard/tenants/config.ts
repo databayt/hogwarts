@@ -30,7 +30,7 @@ export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
  */
 export const PLAN_TYPE_DESCRIPTIONS: Record<PlanType, string> = {
   free: "Up to 100 students, 10 teachers",
-  pro: "The first 100 students free, then 24 SAR per student a year",
+  pro: "24 SAR per student a year for the first 250, then 16, then 14",
   enterprise: "1,000+ students, dedicated contract",
 } as const
 

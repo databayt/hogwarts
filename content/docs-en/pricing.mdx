@@ -1,81 +1,164 @@
 ---
 title: Pricing
-description: One price for every school — $6.40 (24 SAR) per student a year, after a free first month.
+description: Balqalam costs 24 SAR per student a year for the first 250 students, then less per student as a school grows — all-in, after a free first month.
 ---
 
-**One price, one rule: every student costs $6.40 (24 SAR) a year. Every new school gets its first month free.**
+**A school pays for the students it has, at 24 SAR each for the first 250, then 16 and 14 SAR. Software, hosting, support and updates are all in. The first month is free.**
 
 <Mermaid
   chart={`flowchart LR
-    A["Count the students"] --> B["× $6.40 a year"]
+    A["Count the students"] --> B["Add up the rates:<br/>24, then 16, then 14 SAR"]
     B --> C["Free first month"]
     C --> D["50% when it ends"]
-    D --> E["12.5% at months<br/>3, 6, 9 and 12"]`}
+    D --> E["4 × 12.5%, the last one<br/>by the end of the school year"]`}
 />
 
 ## Why it pays
 
-One public price makes every quote fast and every deal comparable. A per-student price grows with the school: a small school pays little, and when a school grows, so do we. The price is set against the full cost of the company, not only the servers: a price that covers hosting alone never pays the people who build it.
+One public price makes every quote fast and every deal comparable. The price grows one student at a time, so a small school pays little, a big school pays more, and no school hits a cliff when it grows. The price is set against the full cost of the company, not only the servers: a price that covers hosting alone never pays the people who build it.
+
+## How we reached the price
+
+The price came out of a team chat, a market comparison and three changes of mind. Here is the order.
+
+| Date | What happened |
+| ---- | ------------- |
+| 4 Oct | Abdout counts the hosting: about $25 a month on Cloudflare and a database about to cost $20, so about $50 a month. |
+| 4 Oct | Ibrahim (advisor): pricing by server cost will not carry us. Price on the full cost, direct and indirect. His illustration: development $3,000 + Claude $200 + marketing $1,000 + cloud $200 = $4,400 a month. Across 10 schools that is $440 a school a month to break even. Any discount is stated as a percentage off, such as "50% off the first year", so the policy is clear to us and to the school. |
+| 4 Oct | Abdout's own estimate: infrastructure, Claude $100 and a team of $2,500, about $4,000 a month. |
+| 9 Oct | The pricing rationale, a market comparison, is shared. Ibrahim: "a nice breakdown". Next is a proposal, and offers are the call of sales and marketing. |
+| 8 Nov | The "first 100 students free" offer ends. Every student counts from the first, at 24 SAR ($6.40) a year, with one free month. The contract is written in dollars, at one rate for every size. |
+| 15 Nov | Ali: go back to the agreed 6,000 SAR, and quote in riyals. |
+| 17 Nov | Abdout keeps the agreed prices as anchors but makes the price proportional. The rationale's flat bands charged a 100-student school 60 SAR a student and made cliffs at 250, 500 and 1,000. Graduated rates remove them. |
+
+## What the market charges
+
+6,000 SAR for 250 students sits in the middle of the market, level with Classe365, and not at the bottom. Figures come from third-party directories and vendor blogs, converted at 3.75 SAR to the dollar.
+
+| Benchmark | Listed price | Per student a year (SAR) |
+| --------- | ------------ | ------------------------ |
+| Balqalam | 6,000 SAR, 250 students | 24 |
+| Classe365 | $1,620 a year, 101–250 students | 24–60 |
+| Classera (Riyadh) | $900–$1,800 a year, flat | Not published |
+| India (Fedena, Teachmint, Entab) | ₹50–₹600 per student a year | about 2–27 |
+| Europe, off the shelf | 5–15 EUR per student a year | about 20–65 |
+
+Our first proposal, $500 per 250 students, was about a third of Classe365's price. A price that low would make schools doubt the product. Classera quotes schools privately, so its real prices are likely higher.
 
 ## The price
 
-| Students | A year | First payment (50%) | Then 4 payments (12.5% each) |
-| -------- | ------ | ------------------- | ---------------------------- |
-| 50       | $320   | $160                | $40                          |
-| 100      | $640   | $320                | $80                          |
-| 250      | $1,600 | $800                | $200                         |
-| 500      | $3,200 | $1,600              | $400                         |
+Each student is charged at the rate of the slice they fall in. A school adding its 251st student pays 16 SAR for that student, not 24 for all of them.
 
-- No free plan, no bands, no setup fee.
-- Over 1,000 students: the same rate, with its own contract.
+| Students | Rate per student a year |
+| -------- | ----------------------- |
+| 1–250 | 24 SAR |
+| 251–500 | 16 SAR |
+| 501–1,000 | 14 SAR |
+| Above 1,000 | 14 SAR, with its own contract |
 
-No discounts protects the price for everyone. A discount given once becomes the price the next school asks for. If we ever run an offer, it is written as a share off the full price for a set time — "50% off the first year" — so the school always sees the real price. Sales and marketing propose offers to fit the market, and the CEO office approves them.
+The rates come from the agreed anchors: 250 students pay 6,000, 500 pay 10,000 and 1,000 pay 17,000.
 
-## What it costs to run
+| Students | A year | At signing (50%) | Then 4 × 12.5% |
+| -------- | ------ | ---------------- | -------------- |
+| 50 | 1,200 SAR | 600 | 150 |
+| 100 | 2,400 SAR | 1,200 | 300 |
+| 250 | 6,000 SAR | 3,000 | 750 |
+| 300 | 6,800 SAR | 3,400 | 850 |
+| 500 | 10,000 SAR | 5,000 | 1,250 |
+| 1,000 | 17,000 SAR | 8,500 | 2,125 |
 
-One platform serves every school, so it costs the same for one school or ten.
-
-| Item                        | Per month     |
-| --------------------------- | ------------- |
-| App hosting (Cloudflare)    | about $30     |
-| Database (Neon)             | about $21     |
-| Live classes (Hetzner)      | about $13     |
-| Storage and domain (AWS)    | about $2–5    |
-| **Total now**               | **about $65–70** |
-
-These are estimates from usage. The Cloudflare invoice on 24 November and Hetzner's in early December show the real amounts. Not counted here: the $100 a month Claude plan, which serves the whole company.
-
-## Break-even, in students
-
-Each paying student brings $0.53 a month ($6.40 ÷ 12). **Students needed = monthly cost ÷ $0.53.**
-
-| What is covered                         | Per month    | Paying students            |
-| --------------------------------------- | ------------ | -------------------------- |
-| The platform                            | about $70    | about 130 (2–3 schools Al-Ibda's size) |
-| The platform and Claude                 | about $170   | about 320                  |
-| The full cost, with the team paid       | about $2,700 | about 5,000                |
-
-The last row is the real target. It uses the team estimate of $2,500 a month from our pricing discussion on 4 October. Our first school, Al-Ibda, pays about $25.60 a month.
+- Al-Ibda, our first school, has 48 students: 1,152 SAR a year. It signs at 576 SAR, then 4 × 144 SAR, ending June 2027. It already used its free period.
+- No free plan and no free allowance at any size. Only the first month is free.
+- Each payment counts the students enrolled on its date.
+- No setup fee.
 
 ## How a school pays
 
-- The free month ends, then the school pays 50%.
-- Then 12.5% at months 3, 6, 9 and 12.
-- Each payment counts the students on that day.
-- In Sudan the price is in US dollars, paid in Sudanese pounds at the bank rate on the payment day, by Bankak.
+- The first month is free for a new school.
+- 50% at signing, or when the trial ends. Then 4 × 12.5%, spaced so the last one falls by the end of the school year. The contract year follows the school year.
+- Schools in Saudi Arabia pay in riyals by bank transfer. There is no VAT line, because Databayt is not VAT-registered in Saudi Arabia.
+- Schools in Sudan pay the riyal price in Sudanese pounds, at the bank rate on the payment day, by Bankak.
+
+## What the price includes
+
+Software, hosting, support, fixes and updates, with no separate invoices.
+
+| Issue | First response | Target fix |
+| ----- | -------------- | ---------- |
+| Critical: the platform is down | Within 2 hours | Within 24 hours |
+| Major: a core feature fails | Within 1 working day | Within 3 working days |
+| Minor: a display error or a question | Within 2 working days | The next scheduled update |
+
+Support is by WhatsApp and email, Sunday to Thursday in working hours. These response targets are proposed.
+
+Live classes are included up to fair use:
+
+| School size | Live-class hours a month |
+| ----------- | ------------------------ |
+| Up to 250 students | 100 |
+| Up to 500 students | 200 |
+| Above 500 students | 400 |
+
+Extra hours are quoted. Custom features for one school are quoted separately.
+
+## What it costs us to serve a school
+
+One platform serves every school, so its cost is shared.
+
+| Item | Per month |
+| ---- | --------- |
+| App hosting (Cloudflare) | about $30 |
+| Database (Neon) | about $21 |
+| Live classes (Hetzner) | about $13 |
+| Storage and domain (AWS) | about $2–5 |
+| **Total now** | **about $65–70** |
+
+These are estimates from usage. The Cloudflare invoice on 24 November and Hetzner's in early December show the real amounts. Not counted here: the $100 a month Claude plan, which serves the whole company.
+
+A 250-student school pays 6,000 SAR, which is $1,600 a year or about $133 a month. Shared by ten schools, the platform costs about $7 a school: a small share of the fee. The rationale's own estimate was 2.4% to 3.5% of the fee without video. A typical software company keeps about 75–80% gross margin, and this leaves room above that.
+
+Video is the main risk. Unlimited video on AWS S3 could eat 19% to 64% of a 250-student school's fee, because every hour watched is billed by the gigabyte. That is why live classes have a fair-use allowance and extra hours are quoted. Moving video to a store with no download fees is the other lever.
+
+## Break-even, in schools
+
+A school of 250 students brings about $133 a month. **Schools needed = monthly cost ÷ $133.**
+
+| What is covered | Per month | Schools of 250 students |
+| --------------- | --------- | ----------------------- |
+| The platform | about $70 | 1 |
+| The platform and Claude | about $170 | 2 |
+| The full cost, with the team paid | about $2,700–4,000 | about 20–30 |
+
+The last row is the real target. It uses the team estimate from the 4 October discussion. Schools smaller than 250 count in proportion: Al-Ibda brings about $26 a month, so three schools of its size cover the platform. Paul Graham's test, Default Alive, asks whether growth at this rate reaches profit before the money runs out. Counting break-even in schools tells us that.
+
+## The science behind it
+
+Each idea below is tied to one choice we made.
+
+| Idea | Our choice |
+| ---- | ---------- |
+| Cost sets the floor, value sets the ceiling. | The floor is the full cost, with the team, not the servers. The ceiling is what schools pay for software they already know. |
+| Charge by a unit that grows with the customer's value, in tiers (good, better, best). | The unit is the student. The rate steps down as a school grows. |
+| Buyers read a low price as low quality. | We do not go to the bottom. At 250 students we sit level with Classe365. |
+| The first number a buyer sees anchors the rest. | The market table is the reference price. Our first proposal, a third of Classe365, would have anchored too low. |
+| A price tied to what the buyer gets feels fair. | The school pays in proportion to its students, with no cliffs. |
+| Marginal rates avoid cliffs. | Only the students above a line get the lower rate, the way tax brackets and cloud volume tiers work. |
+| Agree on objective criteria, not positions. | One public price. We never cut it on a call. An offer is a stated percentage off, for a set time. |
+| A company must reach profit before the money runs out. | Break-even is counted in schools. |
 
 ## How to quote
 
 1. Ask how many students the school has.
-2. Multiply by $6.40, or use the calculator at balqalam.com/pricing.
-3. Send the total and the payment plan in one message.
+2. Add the slices: 24 SAR for each of the first 250, 16 for each of the next 250, 14 for each after 500.
+3. Send the year price and the payment plan in one message. Quote in riyals.
 
 ## When this happens
 
 - **"It's too expensive"** → ask what they spend today, in money and in staff hours, on fees, attendance and the timetable. Then offer the free month to judge it. Never cut the price on the call.
-- **"Can you give us a discount?"** → "Our price is the same for every school. The first month is free, so you can judge it first."
-- **The school has more than 1,000 students** → the same rate, its own contract. Send the deal to the CEO office.
-- **A school outside Sudan asks** → quote 24 SAR per student a year, and send the deal to the CEO office for how it pays.
+- **"Can you give us a discount?"** → "Our price is the same for every school. The first month is free, so you can judge it first." An offer is only a stated percentage off the full price for a set time, proposed by sales and approved by the CEO office.
+- **The school has more than 1,000 students** → 14 SAR for each student above 1,000, with its own contract. Send the deal to the CEO office.
+- **A school outside Saudi Arabia and Sudan asks** → quote the riyal price and send the deal to the CEO office for how it pays.
+- **Enrolment crosses 250, 500 or 1,000** → nothing jumps. The next students are charged at the next rate, and each payment counts the students on its date.
 
 ## What you do
 
@@ -83,12 +166,16 @@ The last row is the real target. It uses the team estimate of $2,500 a month fro
 - **Needs the CEO office's yes:** any offer or exception.
 - **Abdout:** update the cost table each month from the invoices.
 
-Reviewed 9 November 2026.
+Reviewed 17 November 2026.
 
 ## References
 
 Where this page's way of working comes from:
 
 - Nagle & Müller (2017), [*The Strategy and Tactics of Pricing*, 6th ed.](https://doi.org/10.4324/9781315185309) — cost sets the floor, value sets the price, and discounts won by bargaining teach every buyer to bargain. Our full-cost floor and the no-discount rule.
-- Ramanujam & Tacke (2016), [*Monetizing Innovation*](https://www.wiley.com/en-us/Monetizing+Innovation-p-9781119240860) — design the price early, and charge by a unit that grows with the value the customer gets. Per student.
-- Graham (2015), ["Default Alive or Default Dead?"](http://paulgraham.com/aord.html) — a price is only right if it gets the company to profit before the money runs out. Why break-even is counted in students.
+- Ramanujam & Tacke (2016), [*Monetizing Innovation*](https://www.wiley.com/en-us/Monetizing+Innovation-p-9781119240860) — design the price early, charge by a unit that grows with the value, and offer tiers. The student as the unit, and the rate steps.
+- Rao & Monroe (1989), ["The Effect of Price, Brand Name, and Store Name on Buyers' Perceptions of Product Quality"](https://doi.org/10.1177/002224378902600309), *Journal of Marketing Research* — buyers infer quality from price. Why we do not price at the bottom.
+- Tversky & Kahneman (1974), ["Judgment under Uncertainty: Heuristics and Biases"](https://doi.org/10.1126/science.185.4157.1124), *Science* — the first number anchors judgment. Why the market table matters.
+- Kahneman, Knetsch & Thaler (1986), ["Fairness as a Constraint on Profit Seeking"](https://www.jstor.org/stable/1806070), *American Economic Review* — people accept a price that tracks what they get, and resent one that jumps. Why the price is proportional.
+- Fisher, Ury & Patton (2011), [*Getting to Yes*, 3rd ed.](https://www.pon.harvard.edu/tag/getting-to-yes/) — agree on objective criteria instead of bargaining over positions. One public price.
+- Graham (2015), ["Default Alive or Default Dead?"](http://paulgraham.com/aord.html) — a price is only right if it gets the company to profit before the money runs out. Why break-even is counted in schools.

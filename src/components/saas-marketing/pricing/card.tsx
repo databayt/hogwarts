@@ -21,18 +21,25 @@ import type { SubscriptionPlan } from "@/components/saas-marketing/pricing/types
 
 import { getCtaLabel, getIncludesHeading, isEnterprisePlan } from "./config"
 import { useCurrency } from "./currency"
-import { formatAmount, quote, SIGNS } from "./rates"
+import {
+  FALLBACK_RATES,
+  formatAmount,
+  RATE_TIERS,
+  SIGNS,
+  type RateTier,
+} from "./rates"
 
 interface PricingCardProps {
   offer: SubscriptionPlan
-  isYearly: boolean
+  /** A rate-tier card: the per-student rate, student range and live hours. */
+  tier?: { rate: RateTier; min: number; liveHours?: number }
   lang?: Locale
   dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
 export function PricingCard({
   offer,
-  isYearly,
+  tier,
   lang = "en",
   dictionary,
 }: PricingCardProps) {
@@ -40,17 +47,32 @@ export function PricingCard({
   const constants = pricing?.constants as Record<string, string> | undefined
   const { currency, rates } = useCurrency()
   const isEnterprise = isEnterprisePlan(offer.id)
-  const isFree = offer.prices.monthly === 0 && !isEnterprise
   const contactHref =
     pricing?.enterprise?.contactHref ||
     "mailto:sales@databayt.org?subject=Enterprise%20plan"
 
-  // One rate for every paid student (rates.ts) — the cards differ in what
-  // comes with it, not in what a student costs. The toggle only changes
-  // whether that rate reads per month or per year.
-  const { ratePerStudentYear } = quote(0, currency, rates)
-  const rate = isYearly ? ratePerStudentYear : ratePerStudentYear / 12
-  const amount = formatAmount(isFree ? 0 : rate)
+  // Graduated per-student rates (rates.ts): each card shows its tier's rate
+  // a year, in the visitor's currency. Enterprise is the last tier's rate
+  // under its own contract.
+  const fx = rates[currency] ?? FALLBACK_RATES[currency]
+  const tierSar =
+    tier?.rate.sarPerStudent ?? RATE_TIERS[RATE_TIERS.length - 1].sarPerStudent
+  const amount = formatAmount(tierSar * fx)
+  const fill = (t: string, v: Record<string, string>) =>
+    Object.entries(v).reduce((a, [k, x]) => a.replaceAll(`{${k}}`, x), t)
+  const n = (x: number) => x.toLocaleString("en-US")
+  const title = tier
+    ? tier.rate.upTo === null
+      ? fill(constants?.tierOver || "{min}+ students", { min: n(tier.min) })
+      : tier.min === 1
+        ? fill(constants?.tierFirst || "First {max} students", {
+            max: n(tier.rate.upTo),
+          })
+        : fill(constants?.tierRange || "Students {min}–{max}", {
+            min: n(tier.min),
+            max: n(tier.rate.upTo),
+          })
+    : offer.title
   const sign = SIGNS[currency]
   const signText = sign[lang === "ar" ? "ar" : "en"]
   const signLeads = !/[\u0600-\u06FF]/.test(signText)
@@ -62,16 +84,14 @@ export function PricingCard({
       {signText}
     </span>
   )
-  const priceSuffix = isYearly
-    ? constants?.perStudentPerYear || "/ student / year"
-    : constants?.perStudentPerMonth || "/ student / month"
+  const priceSuffix = constants?.perStudentPerYear || "/ student / year"
 
   const includesHeading = getIncludesHeading(offer.id, pricing)
 
   return (
     <Card className="bg-muted text-card-foreground relative flex h-full w-full flex-col items-start gap-0 overflow-hidden rounded-2xl border-none py-4 text-start shadow-none">
       <CardHeader className="w-full gap-1 pb-2">
-        <p className="lead text-foreground">{offer.title}</p>
+        <p className="lead text-foreground">{title}</p>
         <CardTitle className="tracking-tight whitespace-nowrap">
           <span className="text-2xl tabular-nums">
             {signLeads ? (
@@ -87,6 +107,9 @@ export function PricingCard({
           </span>
           <span className="muted ms-1">{priceSuffix}</span>
         </CardTitle>
+        <p className="muted text-sm">
+          {constants?.freeNote || "Your first month, on us"}
+        </p>
       </CardHeader>
 
       <div className="w-full px-6 py-1">
@@ -98,6 +121,18 @@ export function PricingCard({
           {includesHeading}
         </p>
         <ul>
+          {tier?.liveHours ? (
+            <li className="flex items-start gap-3">
+              <Check className="text-primary mt-2 size-3.5 shrink-0" />
+              <span className="text-muted-foreground text-base leading-7">
+                {fill(
+                  constants?.liveHours ||
+                    "Live classes included: up to {hours} hours a month",
+                  { hours: n(tier.liveHours) }
+                )}
+              </span>
+            </li>
+          ) : null}
           {offer.benefits.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
               <Check className="text-primary mt-2 size-3.5 shrink-0" />

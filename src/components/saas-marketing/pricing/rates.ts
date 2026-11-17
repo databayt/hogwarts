@@ -2,22 +2,48 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * The price, as one number per student. The pricing rationale (2026-10-09)
- * set 6,000 SAR a year for a 250-student school; flat bands made a
- * 100-student school pay 60 SAR a head. Instead every student weighs the
- * same — 6,000 ÷ 250 = 24 SAR (= $6.40) a year — so the bill grows in exact
- * proportion to enrolment, one student at a time.
+ * The price: graduated, proportional per student, in SAR (kun decision
+ * D-20261117-pricing-proportional-sar, which supersedes D-20261108's flat rate).
+ * No flat bands, so no cliffs — each extra student adds the rate of the tier
+ * it falls in, and the total is continuous. The tiers are derived from the
+ * agreed anchors (250 students = 6,000 SAR, 500 = 10,000, 1,000 = 17,000):
  *
- * Since 2026-11-08 every student counts from the first: the "first 100 free"
- * allowance made the first real schools (48 and 14 students) free forever.
- * A new school gets TRIAL_MONTHS free instead (kun decision
- * D-20261108-pricing-one-month-trial).
+ *   students    1 – 250   24 SAR each   (250  →  6,000)
+ *   students  251 – 500   16 SAR each   (500  → 10,000)
+ *   students  501 – 1,000 14 SAR each   (1,000 → 17,000)
+ *   above 1,000           14 SAR each, under its own contract
+ *
+ * Live classes are included up to a fair-use allowance (100 / 200 / 400 hours
+ * a month for schools up to 250 / 500 / 1,000 students); more is quoted.
+ * Every new school gets TRIAL_MONTHS free, then pays — no free allowance at
+ * any size. Other currencies are converted from SAR at display time.
  *
  * Single source for the pricing cards, the calculator and the chatbot.
  */
 
-/** SAR per billable student per year — 6,000 SAR ÷ 250 students. */
-export const RATE_SAR_PER_STUDENT_YEAR = 24
+export interface RateTier {
+  /** Last student this rate applies to; null = no upper limit. */
+  upTo: number | null
+  /** SAR per student per year, before VAT. */
+  sarPerStudent: number
+}
+
+export const RATE_TIERS: readonly RateTier[] = [
+  { upTo: 250, sarPerStudent: 24 },
+  { upTo: 500, sarPerStudent: 16 },
+  { upTo: 1000, sarPerStudent: 14 },
+  { upTo: null, sarPerStudent: 14 },
+]
+
+/** Live-class hours a month included, by school size (fair use; more is quoted). */
+export const LIVE_HOURS: readonly { upTo: number; hours: number }[] = [
+  { upTo: 250, hours: 100 },
+  { upTo: 500, hours: 200 },
+  { upTo: 1000, hours: 400 },
+]
+
+/** The first tier's rate — the "from" price on the cards. */
+export const RATE_SAR_PER_STUDENT_YEAR = RATE_TIERS[0].sarPerStudent
 /** No free allowance: billing starts at student 1. Kept so callers read 0. */
 export const FREE_STUDENTS = 0
 /** Every new school's free trial, in months, before the first payment. */
@@ -28,7 +54,7 @@ export const VAT_RATE = 0.15
 export const SIGNING_SHARE = 0.5
 export const INSTALMENT_SHARE = 0.125
 export const INSTALMENT_MONTHS = [3, 6, 9, 12] as const
-/** Above this the school gets a dedicated contract (same per-student rate). */
+/** Above this the school gets its own contract (same 14 SAR rate). */
 export const ENTERPRISE_STUDENTS = 1000
 
 export const CURRENCIES = ["SAR", "USD", "SDG", "EGP"] as const
@@ -78,9 +104,21 @@ export function billableStudents(students: number): number {
   return Math.max(0, Math.round(students) - FREE_STUDENTS)
 }
 
-/** Annual price in SAR, before VAT. */
+/**
+ * Annual price in SAR, before VAT: 24·min(n,250) + 16·clamp(n−250,0,250) +
+ * 14·max(n−500,0). Continuous — each added student costs its tier's rate.
+ */
 export function annualPriceSAR(students: number): number {
-  return billableStudents(students) * RATE_SAR_PER_STUDENT_YEAR
+  const n = billableStudents(students)
+  let total = 0
+  let from = 0
+  for (const tier of RATE_TIERS) {
+    const to = tier.upTo === null ? n : Math.min(n, tier.upTo)
+    if (to > from) total += (to - from) * tier.sarPerStudent
+    from = Math.max(from, to)
+    if (from >= n) break
+  }
+  return total
 }
 
 export interface Quote {
@@ -89,9 +127,9 @@ export interface Quote {
   /** All amounts in the requested currency, before VAT. */
   annual: number
   monthly: number
-  /** Annual ÷ all students — what one student really costs, free ones included. */
+  /** Annual ÷ students — derived, what one student works out to. */
   perStudentYear: number
-  /** The rate itself, converted. */
+  /** The first tier's rate (24 SAR), converted — the "from" price. */
   ratePerStudentYear: number
   atSigning: number
   instalment: number

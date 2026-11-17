@@ -48,7 +48,7 @@ export default function OutreachTouch4({
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             شهركم الأول مجاني: عنوان خاص بـ {school}، نجهّز المدرسة معكم، ودعم
-            أسبوعي. بعده كل طالب بـ24 ريالًا في السنة.
+            أسبوعي. بعده كل طالب بـ24 ريالًا في السنة حتى ٢٥٠ طالبًا، ثم 16 ثم 14 ريالًا — مدرسة من ٢٥٠ طالبًا تدفع 6,000 ريال في السنة.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             هل أحجز لكم ١٥ دقيقة هذا الأسبوع؟
@@ -61,7 +61,7 @@ export default function OutreachTouch4({
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             Your first month is free: your own {school} address, set up with
-            you, with weekly support. After it, every student is 24 SAR a year.
+            you, with weekly support. After it, every student is 24 SAR a year up to 250, then 16, then 14 SAR — a school of 250 pays 6,000 SAR a year.
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             Open to a 15-min demo this week?

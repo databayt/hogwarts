@@ -1,59 +1,76 @@
 ---
 title: Contract
-description: The one-page agreement every school signs — what we give, what the school pays, and how either side can stop.
+description: The agreement every school signs — what we give, what the school pays, and how either side can stop.
 ---
 
-**One page, plain words, the same for every school.**
+**Plain words, the same for every school: a short contract and a technical annex.**
 
 <Mermaid
   chart={`flowchart TD
-    A["Fill it: school, signer,<br/>students, dates, amounts"] --> Q{"The school asks<br/>to change a clause?"}
+    A["Generate it at the /contract page<br/>on the marketing site"] --> B["Fill it: school, signer, students,<br/>dates, amounts"]
+    B --> Q{"The school asks<br/>to change a clause?"}
     Q -->|"Yes"| W["Write the worry on the deal,<br/>send it to Abdout"]
     W --> S
     Q -->|"No"| S["Abdout signs for Databayt"]
     S --> C["Signed copy in the CRM,<br/>the same day"]
-    C --> T["The free month starts"]`}
+    C --> T["The free month starts,<br/>if the school has one"]`}
 />
 
 ## Why it pays
 
-A one-page contract signed in a day is money a month sooner. Plain words remove the reason to send it to a lawyer, and one contract for everyone leaves nothing to negotiate.
+A contract signed in a day is money a month sooner. Plain words remove the reason to send it to a lawyer, and one contract for everyone leaves nothing to negotiate. The annex keeps the details out of the contract, so the contract stays short.
+
+The clauses on term, data and the annex came from Ibrahim's review on 15 November 2026.
 
 ## What the contract says
 
-| Part         | In plain words                                                                    |
-| ------------ | --------------------------------------------------------------------------------- |
-| Service      | The whole Balqalam platform at the school's own address, with support and updates |
-| Free month   | The first month costs nothing                                                     |
-| Price        | $6.40 per student a year, counted on each payment date                            |
-| Payment      | 50% when the free month ends, then 12.5% every three months                       |
-| How to pay   | Sudanese pounds at the bank rate on the day, by Bankak, to the account on the invoice |
-| Data         | The school owns its data and can export it any time; we keep it private           |
-| Length       | One year, renewed unless either side says no 30 days before the end               |
-| Late payment | After 30 days late and a written notice, we may pause access; the data is kept    |
+The contract is generated at the marketing site's /contract page.
+
+| Part | In plain words |
+| ---- | -------------- |
+| Service | The whole Balqalam platform at the school's own address, with support and updates. The details are in the Technical Annex. |
+| Free period | The first month costs nothing, for a new school only. A school that already used it gets none. |
+| Price | Per student: 24 SAR each for the first 250, 16 for the next 250, 14 after that. Each payment counts the students enrolled on its date. See [Pricing](/docs/pricing). |
+| Payment | 50% at signing, or when the free month ends. Then 4 × 12.5%, spaced so the last falls by the end of the school year. |
+| How to pay | Schools in Saudi Arabia pay in riyals by bank transfer, with no VAT line. Schools in Sudan pay the riyal price in Sudanese pounds at the bank rate on the day, by Bankak. |
+| Length | One year, and it follows the school year. It renews unless either side gives 30 days' notice before the end. |
+| When it ends | Non-renewal with written notice, or a payment more than 60 days late after notice. |
+| Late payment | After 30 days late and a written notice, we may pause access. The data is kept. |
+| Data | The school owns its data and can export it any time. We keep it while the contract is in force and for 3 months after it ends. Then it is deleted automatically, and we have no responsibility for it after that. |
+| Technical Annex | What is included, the support levels, the live-class fair use, and what costs extra. |
 
 Each clause answers a question schools ask before they sign: what do we get, what does it cost, and who owns our data?
+
+## The Technical Annex
+
+Ibrahim's advice: keep the detail of the service in an annex, so you control what is inside the contract and what is added later for a fee.
+
+- **Included:** software, hosting, support, fixes and updates.
+- **Support levels:** first response in 2 hours and a fix in 24 hours for a critical fault; 1 and 3 working days for a major one; 2 working days and the next update for a minor one. Support is by WhatsApp and email, Sunday to Thursday.
+- **Live-class fair use:** 100 hours a month up to 250 students, 200 up to 500, 400 above.
+- **Paid extra:** custom features, extra live-class hours, non-standard data import, on-site training.
 
 ## How to fill it
 
 1. The school's name, who signs, and the number of students.
-2. The start date and the day the free month ends.
-3. The amounts — take them from the Pricing page.
+2. The start date, whether the school has a free month, and the payment dates up to the end of the school year.
+3. The amounts — take them from the [Pricing](/docs/pricing) page.
 4. Abdout signs for Databayt.
 
 ## When this happens
 
 - **A school asks to change a clause** → ask what worries them, and write the worry on the deal. Most worries are already answered by a clause: data, length, late payment. Anything else goes to Abdout.
-- **"Who owns our data?"** → the school does. It can export the data any time, and we keep it private.
-- **A school wants to stop** → the contract runs a year and renews unless either side says no 30 days before the end. Tell Abdout the same day.
+- **"Who owns our data?"** → the school does. It can export the data any time. After the contract ends we keep it for 3 months, then it is deleted automatically.
+- **A school wants to stop** → the contract follows the school year and renews unless either side gives 30 days' notice. Tell Abdout the same day.
 - **Payment is 30 days late** → the late-payment clause applies, and Abdout sends the written notice. The reminders before that are on [Monetize](/docs/monetize).
+- **A school asks for something outside the annex** → it is paid extra. Send the request to Abdout.
 
 ## What you do
 
 - Never change a clause yourself. Send any change the school asks for to Abdout.
 - Put the signed copy in the CRM the same day.
 
-Reviewed 9 November 2026.
+Reviewed 17 November 2026.
 
 ## References
 

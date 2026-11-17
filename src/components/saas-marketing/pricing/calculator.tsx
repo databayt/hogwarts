@@ -3,10 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Per-student price calculator. Every student beyond the free 100 weighs the
-// same (rates.ts), so the price moves with every single student — the slider
-// steps by one, and the bill, the per-student cost and the instalment plan
-// all recompute live in the chosen currency.
+// Per-student price calculator. The price is graduated and proportional
+// (rates.ts: 24 SAR a student up to 250, 16 up to 500, 14 beyond), so it moves
+// with every single student — the slider steps by one, and the total, the
+// per-tier breakdown, the average per student and the instalment plan all
+// recompute live in the chosen currency.
 import { useState } from "react"
 import Link from "next/link"
 
@@ -23,6 +24,7 @@ import {
   formatMoney,
   INSTALMENT_MONTHS,
   quote,
+  RATE_TIERS,
 } from "./rates"
 
 const MIN_STUDENTS = 1
@@ -45,6 +47,17 @@ export function Calculator({
   const [count, setCount] = useState(250)
 
   const q = quote(count, currency, rates)
+  const fx = rates[currency] ?? 1
+  // Students in each tier, for the breakdown lines.
+  const tierLines = RATE_TIERS.flatMap((tier, i) => {
+    const from = i === 0 ? 0 : (RATE_TIERS[i - 1].upTo ?? 0)
+    // The last tier repeats 14 SAR past 1,000 — fold it into the one above.
+    if (i === RATE_TIERS.length - 1) return []
+    const to =
+      i === RATE_TIERS.length - 2 ? q.students : (tier.upTo ?? q.students)
+    const students = Math.min(q.students, to) - from
+    return students > 0 ? [{ students, sar: tier.sarPerStudent }] : []
+  })
   const money = (n: number) => formatMoney(n, currency, lang)
   const fill = (template: string, values: Record<string, string>) =>
     Object.entries(values).reduce(
@@ -79,8 +92,12 @@ export function Calculator({
         <p className="muted">
           {fill(
             t?.subtitle ||
-              "Every student weighs the same — {rate} a year. Your first month is free.",
-            { rate: money(q.ratePerStudentYear) }
+              "{r1} a student up to 250, {r2} up to 500, {r3} beyond — a year. Your first month is free.",
+            {
+              r1: money(RATE_TIERS[0].sarPerStudent * fx),
+              r2: money(RATE_TIERS[1].sarPerStudent * fx),
+              r3: money(RATE_TIERS[2].sarPerStudent * fx),
+            }
           )}
         </p>
 
@@ -134,12 +151,14 @@ export function Calculator({
                 <p className="font-heading text-4xl font-extrabold tabular-nums">
                   {money(q.annual)}
                 </p>
-                <p className="muted mt-1 text-sm tabular-nums">
-                  {fill(t?.breakdown || "{billable} students × {rate}", {
-                    billable: q.billable.toLocaleString("en-US"),
-                    rate: money(q.ratePerStudentYear),
-                  })}
-                </p>
+                {tierLines.map((line) => (
+                  <p key={line.sar} className="muted mt-1 text-sm tabular-nums">
+                    {fill(t?.breakdown || "{billable} students × {rate}", {
+                      billable: line.students.toLocaleString("en-US"),
+                      rate: money(line.sar * fx),
+                    })}
+                  </p>
+                ))}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -153,7 +172,7 @@ export function Calculator({
                 </div>
                 <div className="bg-background rounded-xl p-4">
                   <p className="muted text-xs">
-                    {t?.perStudentLabel || "Per student, per year"}
+                    {t?.perStudentLabel || "Average per student, per year"}
                   </p>
                   <p className="font-heading text-lg font-bold tabular-nums">
                     {money(q.perStudentYear)}
@@ -194,7 +213,7 @@ export function Calculator({
                 <div className="flex flex-col items-center gap-3">
                   <p className="muted text-sm">
                     {t?.enterpriseNote ||
-                      "Over 1,000 students: the same rate, with a dedicated contract and account manager."}
+                      "Over 1,000 students: 14 SAR a student, under its own contract with a dedicated account manager."}
                   </p>
                   <Link
                     href={contactHref}
@@ -212,7 +231,7 @@ export function Calculator({
 
         <p className="muted mt-4 text-xs">
           {t?.vatNote ||
-            "Prices exclude VAT (15% in Saudi Arabia). Hosting, support and updates included."}
+            "All-in: hosting, support and updates included, with no VAT added."}
           {currency !== "SAR" && (
             <>
               {" "}
