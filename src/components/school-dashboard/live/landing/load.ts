@@ -44,6 +44,9 @@ const ENDING_MINUTES = 10
  * session that overran its booked end would otherwise report more minutes done
  * than it has.
  */
+/** Longer than any lesson: such a room is open-ended, not a class with a clock. */
+const OPEN_ENDED_MINUTES = 24 * 60
+
 function resolvePhase(
   row: { scheduledStart: Date; scheduledEnd: Date; actualStart: Date | null },
   ctx: { now: Date; isLive: boolean; isPast: boolean }
@@ -62,7 +65,9 @@ function resolvePhase(
     const left = minutes(row.scheduledEnd, ctx.now)
     return {
       phase: left <= ENDING_MINUTES ? "ending" : "started",
-      progress: { done, total },
+      // An always-open room (the practice room ends in 2099) has no clock to
+      // show: "1 of 38457855 minutes" read as a bug to teachers.
+      progress: total > OPEN_ENDED_MINUTES ? null : { done, total },
     }
   }
 
