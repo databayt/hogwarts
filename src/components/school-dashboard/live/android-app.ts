@@ -17,6 +17,36 @@ const SCHOOL_APK: Record<string, string> = {
   alabidae: "https://cdn.databayt.org/balqalam/app/alabidae/alabidae.apk",
 }
 
+/** How a school's own app introduces itself on the web install sheet. */
+const SCHOOL_APP: Record<
+  string,
+  { name: string; nameEn: string; icon: string }
+> = {
+  alabidae: {
+    name: "الإبداع",
+    nameEn: "Al-Ibda",
+    icon: "https://cdn.databayt.org/balqalam/app/alabidae/icon.png",
+  },
+}
+
+export function schoolAndroidApp(
+  subdomain: string | null | undefined,
+  lang: string
+): { url: string; name: string; icon: string } | null {
+  const key = subdomain?.toLowerCase()
+  const app = key ? SCHOOL_APP[key] : undefined
+  const url = schoolApkUrl(subdomain)
+  if (!app || !url) return null
+  return { url, name: lang === "en" ? app.nameEn : app.name, icon: app.icon }
+}
+
+/** The school's own APK, or null when the school has no app of its own. */
+export function schoolApkUrl(
+  subdomain: string | null | undefined
+): string | null {
+  return (subdomain && SCHOOL_APK[subdomain.toLowerCase()]) || null
+}
+
 export function apkUrlFor(subdomain: string | null | undefined): string {
   return (subdomain && SCHOOL_APK[subdomain.toLowerCase()]) || ANDROID_APP_URL
 }

@@ -63,7 +63,16 @@ const serverSnapshot = () => null
  * Shown on phones that have not installed the app, once per 14 days after a
  * dismissal.
  */
-export function InstallCard({ labels }: { labels?: OfflineLabels }) {
+export function InstallCard({
+  labels,
+  androidApk,
+}: {
+  labels?: OfflineLabels
+  /** A school with its own Android app: on Android the sheet offers that
+   *  app (screen sharing, live classes) instead of the home-screen web app,
+   *  which teachers kept opening and could not share from. */
+  androidApk?: { url: string; name: string; icon: string } | null
+}) {
   const detected = useSyncExternalStore(
     subscribeNoop,
     detectPlatform,
@@ -77,8 +86,10 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
 
   const t = (k: string, fallback: string) => labels?.[k] ?? fallback
 
+  const apk = detected === "android" && androidApk ? androidApk : null
+
   useEffect(() => {
-    if (detected !== "android") return
+    if (detected !== "android" || androidApk) return
     const onPrompt = (e: Event) => {
       e.preventDefault()
       setDeferred(e as BeforeInstallPromptEvent)
@@ -90,7 +101,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
       window.removeEventListener("beforeinstallprompt", onPrompt)
       window.removeEventListener("appinstalled", onInstalled)
     }
-  }, [detected])
+  }, [detected, androidApk])
 
   if (!platform) return null
 
@@ -123,6 +134,82 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
         // cancelled — nothing else to say
       }
     }
+  }
+
+  if (apk) {
+    return (
+      <Drawer
+        open
+        onOpenChange={(open) => {
+          if (!open) dismiss()
+        }}
+      >
+        <DrawerContent
+          aria-label={apk.name}
+          className="rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30"
+        >
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label={t("installDismiss", "Not now")}
+            className="text-foreground/70 absolute end-4 top-4 grid size-[30px] place-items-center rounded-full bg-black/[0.06] dark:bg-white/10"
+          >
+            <X className="size-4" strokeWidth={2.5} />
+          </button>
+          <div className="flex flex-col pt-8">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={apk.icon}
+                alt=""
+                width={60}
+                height={60}
+                className="size-[60px] shrink-0 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+              />
+              <div className="min-w-0 text-start">
+                <DrawerTitle className="pe-10 text-[24px] leading-tight font-bold tracking-tight">
+                  {apk.name}
+                </DrawerTitle>
+                <p className="text-muted-foreground mt-0.5 text-[14px] leading-snug">
+                  {t(
+                    "apkDesc",
+                    "Live classes and screen sharing from your phone"
+                  )}
+                </p>
+              </div>
+            </div>
+            <DrawerDescription
+              asChild
+              className="text-foreground mt-6 space-y-3 text-start text-[16px] leading-snug"
+            >
+              <ol>
+                {[
+                  t("apkStep1", "Tap Download the app"),
+                  t("apkStep2", "Open the file and tap Install"),
+                  t(
+                    "apkStep3",
+                    "If you see App blocked: More details, then Install anyway"
+                  ),
+                ].map((step, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="bg-muted text-foreground grid size-7 shrink-0 place-items-center rounded-full text-[14px] font-semibold tabular-nums">
+                      {i + 1}
+                    </span>
+                    <span className="pt-0.5">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </DrawerDescription>
+            <Button
+              asChild
+              className="bg-foreground text-background hover:bg-foreground/90 mt-8 h-14 w-full shrink-0 rounded-full text-[17px] font-semibold"
+            >
+              <a href={apk.url}>{t("apkDownload", "Download the app")}</a>
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
   }
 
   return (

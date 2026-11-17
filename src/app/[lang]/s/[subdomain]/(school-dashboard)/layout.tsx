@@ -25,6 +25,7 @@ import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
+import { schoolAndroidApp } from "@/components/school-dashboard/live/android-app"
 import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import PlatformHeader from "@/components/template/platform-header/content"
 import {
@@ -213,6 +214,7 @@ export default async function PlatformLayout({
                       labels={
                         (dictionary as Record<string, any>)?.lumos?.offline
                       }
+                      androidApk={schoolAndroidApp(subdomain, lang)}
                     />
                     <OfflineWarmup urls={warmUrls} />
                     {children}
