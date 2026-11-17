@@ -7,6 +7,10 @@
 
 import { db } from "@/lib/db"
 import {
+  combinedPrimaryForSlots,
+  groupCombinedSlots,
+} from "@/components/school-dashboard/live/combined"
+import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   schoolDayWindow,
@@ -165,6 +169,44 @@ export async function attachLiveClasses<
   // class — letting it in handed period 3 the room of period 2 on a double
   // period. An entry with no anchor of its own still sees every row.
   const unanchoredMap = new Map<string, (typeof sessions)[number]>()
+  // A combined class (live/combined.ts): the sibling section's slot has no row
+  // of its own — its class meets in the PRIMARY slot's room. Resolve each
+  // unmatched slot to its primary and load those rooms (they belong to another
+  // section, so the section-scoped read above never saw them).
+  const unmatched = entries
+    .map((e) => e.timetableId)
+    .filter((id): id is string => !!id)
+    .filter((id) => !sessions.some((s) => s.timetableId === id))
+  const primaryOf = await combinedPrimaryForSlots(schoolId, unmatched, date)
+  const primaryIds = [...new Set(primaryOf.values())]
+  const primarySessions = primaryIds.length
+    ? await db.conference.findMany({
+        where: {
+          schoolId,
+          timetableId: { in: primaryIds },
+          status: { in: ["scheduled", "live"] },
+          scheduledStart: { gte: dayStart, lt: dayEnd },
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          provider: true,
+          meetingUrl: true,
+          status: true,
+          sectionId: true,
+          subjectId: true,
+          timetableId: true,
+        },
+        orderBy: { scheduledStart: "asc" },
+      })
+    : []
+  const byPrimary = new Map<string, (typeof sessions)[number]>()
+  for (const s of primarySessions) {
+    if (s.timetableId && !byPrimary.has(s.timetableId)) {
+      byPrimary.set(s.timetableId, s)
+    }
+  }
+
   for (const s of sessions) {
     if (s.timetableId && !byTimetable.has(s.timetableId)) {
       byTimetable.set(s.timetableId, s)
@@ -190,7 +232,11 @@ export async function attachLiveClasses<
     if (!e.sectionId || !e.subjectId) return { ...e, liveClass: null }
     const k = keyOf(e.sectionId, e.subjectId)
     const sess = e.timetableId
-      ? (byTimetable.get(e.timetableId) ?? unanchoredMap.get(k))
+      ? (byTimetable.get(e.timetableId) ??
+        (primaryOf.has(e.timetableId)
+          ? byPrimary.get(primaryOf.get(e.timetableId)!)
+          : undefined) ??
+        unanchoredMap.get(k))
       : sessionMap.get(k)
     if (sess) {
       return {
@@ -304,7 +350,68 @@ export async function getLiveClassIndicators(
     indicators[session.timetableId] =
       session.status === "live" ? "live" : "scheduled"
   }
+  await spreadToCombinedSiblings(schoolId, indicators)
   return indicators
+}
+
+/**
+ * A combined class (`live/combined.ts`) has ONE room, written on its primary
+ * slot, so only that cell got a dot. The other sections' cells were joinable
+ * but looked idle. This copies the primary's state to each online sibling.
+ * Best-effort: a failed read leaves the map as it was.
+ */
+async function spreadToCombinedSiblings(
+  schoolId: string,
+  indicators: Record<string, "live" | "scheduled">
+): Promise<void> {
+  const slotIds = Object.keys(indicators)
+  if (slotIds.length === 0) return
+  try {
+    const primaries = await db.timetable.findMany({
+      where: { schoolId, id: { in: slotIds }, teacherId: { not: null } },
+      select: {
+        termId: true,
+        dayOfWeek: true,
+        weekOffset: true,
+        teacherId: true,
+      },
+    })
+    if (primaries.length === 0) return
+    const peers = await db.timetable.findMany({
+      where: {
+        schoolId,
+        sectionId: { not: null },
+        period: { isBreak: false },
+        OR: primaries.map((p) => ({
+          termId: p.termId,
+          dayOfWeek: p.dayOfWeek,
+          weekOffset: p.weekOffset,
+          teacherId: p.teacherId,
+        })),
+      },
+      select: {
+        id: true,
+        teacherId: true,
+        sectionId: true,
+        period: { select: { startTime: true } },
+      },
+      take: 2000,
+    })
+    const policies = await resolveOnlinePolicies(
+      schoolId,
+      peers.map((p) => p.sectionId!)
+    )
+    const online = peers.filter((p) => policies.get(p.sectionId!)?.online)
+    for (const [slotId, group] of groupCombinedSlots(online)) {
+      const state = indicators[group.primaryId]
+      if (state && !indicators[slotId]) indicators[slotId] = state
+    }
+  } catch (err) {
+    console.warn("[timetable] combined live dots failed", {
+      schoolId,
+      err: err instanceof Error ? err.message : String(err),
+    })
+  }
 }
 
 type TodaySlot = {

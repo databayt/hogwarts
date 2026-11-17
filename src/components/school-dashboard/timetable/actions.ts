@@ -76,11 +76,13 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { isCombinedClassPair } from "@/components/school-dashboard/live/combined"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   schoolDayWindow,
 } from "@/components/school-dashboard/live/day-window"
+import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { findSchoolClosure } from "@/components/school-dashboard/live/school-calendar"
 import { getDisplayLang } from "@/components/translation/locale"
 import { getLabels, getNames } from "@/components/translation/person"
@@ -678,9 +680,17 @@ export async function detectTimetableConflicts(input?: unknown) {
     // flagged (alabidae had 15 such clashes straight from its sheets). A
     // conflict is the same teacher, term, day and week with overlapping times.
     const teacherConflicts = await db.$queryRaw<
-      Array<{ aId: string; bId: string }>
+      Array<{
+        aId: string
+        bId: string
+        aSectionId: string | null
+        bSectionId: string | null
+        sameStart: boolean
+      }>
     >`
-      SELECT a.id AS "aId", b.id AS "bId"
+      SELECT a.id AS "aId", b.id AS "bId",
+             a."sectionId" AS "aSectionId", b."sectionId" AS "bSectionId",
+             (pa."startTime" = pb."startTime") AS "sameStart"
       FROM timetables a
       JOIN periods pa ON pa.id = a."periodId"
       JOIN timetables b
@@ -694,8 +704,40 @@ export async function detectTimetableConflicts(input?: unknown) {
         AND NOT pa.untimed AND NOT pb.untimed
         AND pa."startTime" < pb."endTime" AND pb."startTime" < pa."endTime"
         ${validatedInput?.termId ? Prisma.sql`AND a."termId" = ${validatedInput.termId}` : Prisma.empty}
-      LIMIT 500
+      LIMIT 2000
     `
+
+    // A combined class is not a conflict: one teacher, the SAME start time, in
+    // DIFFERENT sections that are both online share one room (live/combined.ts).
+    // Overlapping-but-different start times, the same section twice, and any
+    // in-person pair stay conflicts.
+    const candidates = teacherConflicts.filter(
+      (c) => c.sameStart && c.aSectionId && c.bSectionId
+    )
+    let combinedPairs = new Set<string>()
+    if (candidates.length > 0) {
+      const policies = await resolveOnlinePolicies(
+        schoolId,
+        [...new Set(candidates.flatMap((c) => [c.aSectionId!, c.bSectionId!]))],
+        new Date()
+      )
+      combinedPairs = new Set(
+        candidates
+          .filter((c) =>
+            isCombinedClassPair({
+              sameStart: c.sameStart,
+              sectionA: c.aSectionId,
+              sectionB: c.bSectionId,
+              onlineA: !!policies.get(c.aSectionId!)?.online,
+              onlineB: !!policies.get(c.bSectionId!)?.online,
+            })
+          )
+          .map((c) => `${c.aId}|${c.bId}`)
+      )
+    }
+    const teacherClashes = teacherConflicts.filter(
+      (c) => !combinedPairs.has(`${c.aId}|${c.bId}`)
+    )
 
     // Step 2: Find room conflicts using database grouping
     const roomConflicts = await db.$queryRaw<
@@ -740,14 +782,14 @@ export async function detectTimetableConflicts(input?: unknown) {
       name: s.section?.name ?? "",
     })
 
-    if (teacherConflicts.length > 0) {
-      const ids = [...new Set(teacherConflicts.flatMap((c) => [c.aId, c.bId]))]
+    if (teacherClashes.length > 0) {
+      const ids = [...new Set(teacherClashes.flatMap((c) => [c.aId, c.bId]))]
       const teacherSlots = await timetableModel.findMany({
         where: { schoolId, id: { in: ids } },
         select: { id: true, ...conflictSlotSelect },
       })
       const byId = new Map(teacherSlots.map((s: { id: string }) => [s.id, s]))
-      for (const { aId, bId } of teacherConflicts) {
+      for (const { aId, bId } of teacherClashes) {
         const a = byId.get(aId) as (typeof teacherSlots)[number] | undefined
         const b = byId.get(bId) as (typeof teacherSlots)[number] | undefined
         if (!a || !b) continue

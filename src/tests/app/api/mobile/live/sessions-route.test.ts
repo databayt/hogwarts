@@ -8,8 +8,8 @@ import { NextRequest } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { GET } from "@/app/api/mobile/live/sessions/route"
 import { authenticate } from "@/app/api/mobile/lib/authenticate"
+import { GET } from "@/app/api/mobile/live/sessions/route"
 
 vi.mock("@/app/api/mobile/lib/authenticate", () => ({
   authenticate: vi.fn(),
@@ -30,6 +30,10 @@ vi.mock("@/lib/name-utils", () => ({
 }))
 vi.mock("@/components/school-dashboard/live/demo-clock", () => ({
   ensureDemoClock: vi.fn(),
+}))
+const sharedRooms = vi.hoisted(() => ({ ids: [] as string[] }))
+vi.mock("@/components/school-dashboard/live/combined", () => ({
+  sharedRoomSlotIds: vi.fn(async () => sharedRooms.ids),
 }))
 vi.mock("@/components/school-dashboard/live/queries", () => ({
   resolveViewerSectionScope: vi.fn(async () => "all"),
@@ -105,8 +109,8 @@ describe("GET /api/mobile/live/sessions — supervising flag", () => {
       role: "ADMIN",
     })
     const body = await (await GET(req())).json()
-    expect(body.data.every((d: { supervising: boolean }) => !d.supervising)).toBe(
-      true
-    )
+    expect(
+      body.data.every((d: { supervising: boolean }) => !d.supervising)
+    ).toBe(true)
   })
 })

@@ -204,6 +204,15 @@ vi.mock("@/components/school-dashboard/timetable/permissions", () => ({
   filterTimetableByRole: vi.fn().mockImplementation((data: unknown) => data),
 }))
 
+const onlineSections = vi.hoisted(() => ({ ids: new Set<string>() }))
+vi.mock("@/components/school-dashboard/live/online-policy", () => ({
+  resolveOnlinePolicies: vi.fn(async (_school: string, ids: string[]) => {
+    return new Map(
+      ids.map((id) => [id, { online: onlineSections.ids.has(id) }])
+    )
+  }),
+}))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
@@ -421,6 +430,114 @@ describe("Timetable Actions", () => {
       ).join("?")
       expect(sql).toMatch(/pa\."startTime" < pb\."endTime"/)
       expect(sql).not.toMatch(/GROUP BY "dayOfWeek", "periodId", "teacherId"/)
+    })
+
+    // Combined class rule: one teacher, the SAME start time, DIFFERENT
+    // sections that are both online = one shared room, not a conflict.
+    const pairRows = (aSec: string | null, bSec: string | null) =>
+      [
+        {
+          id: "a",
+          dayOfWeek: 2,
+          periodId: "pa",
+          sectionId: aSec,
+          section: { id: aSec, name: "A" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "T", lastName: "" },
+          classroomId: CROOM1,
+          classroom: { roomName: "R1" },
+        },
+        {
+          id: "b",
+          dayOfWeek: 2,
+          periodId: "pb",
+          sectionId: bSec,
+          section: { id: bSec, name: "B" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "T", lastName: "" },
+          classroomId: CROOM2,
+          classroom: { roomName: "R2" },
+        },
+      ] as any
+
+    it("does not flag same start time, different online sections (combined class)", async () => {
+      onlineSections.ids = new Set(["g12s", "g12a"])
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([
+          {
+            aId: "a",
+            bId: "b",
+            aSectionId: "g12s",
+            bSectionId: "g12a",
+            sameStart: true,
+          },
+        ])
+        .mockResolvedValueOnce([])
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce(
+        pairRows("g12s", "g12a")
+      )
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      expect(res.conflicts.some((c: any) => c.type === "TEACHER")).toBe(false)
+    })
+
+    it("still flags same start time when a section is not online", async () => {
+      onlineSections.ids = new Set(["g12s"])
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([
+          {
+            aId: "a",
+            bId: "b",
+            aSectionId: "g12s",
+            bSectionId: "g12a",
+            sameStart: true,
+          },
+        ])
+        .mockResolvedValueOnce([])
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce(
+        pairRows("g12s", "g12a")
+      )
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      expect(res.conflicts.some((c: any) => c.type === "TEACHER")).toBe(true)
+    })
+
+    it("still flags overlapping slots with different start times", async () => {
+      onlineSections.ids = new Set(["g12s", "g12a"])
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([
+          {
+            aId: "a",
+            bId: "b",
+            aSectionId: "g12s",
+            bSectionId: "g12a",
+            sameStart: false,
+          },
+        ])
+        .mockResolvedValueOnce([])
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce(
+        pairRows("g12s", "g12a")
+      )
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      expect(res.conflicts.some((c: any) => c.type === "TEACHER")).toBe(true)
+    })
+
+    it("still flags the same section booked twice at one start time", async () => {
+      onlineSections.ids = new Set(["g12s"])
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([
+          {
+            aId: "a",
+            bId: "b",
+            aSectionId: "g12s",
+            bSectionId: "g12s",
+            sameStart: true,
+          },
+        ])
+        .mockResolvedValueOnce([])
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce(
+        pairRows("g12s", "g12s")
+      )
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      expect(res.conflicts.some((c: any) => c.type === "TEACHER")).toBe(true)
     })
   })
 

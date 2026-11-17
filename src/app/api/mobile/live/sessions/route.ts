@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { displayName, type NameDisplay } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
+import { sharedRoomSlotIds } from "@/components/school-dashboard/live/combined"
 import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import {
   buildLiveClassWhere,
@@ -70,6 +71,15 @@ export async function GET(request: NextRequest) {
       schoolId,
       scope === "all" ? {} : { sectionIds: scope.sectionIds }
     )
+
+    // A combined class (one teacher, several sections, one room) lives on its
+    // primary slot's section: a sibling section's student must see it too.
+    if (scope !== "all" && where.OR) {
+      const shared = await sharedRoomSlotIds(schoolId, scope.sectionIds)
+      if (shared.length > 0) {
+        where.OR = [...where.OR, { timetableId: { in: shared } }]
+      }
+    }
 
     // The three windows the landing page reads as: what is on now or later
     // today, everything still to come, and what already happened.

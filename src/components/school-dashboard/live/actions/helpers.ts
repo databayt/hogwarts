@@ -27,12 +27,20 @@ const SESSION_STAFF_ROLES: UserRole[] = [
  * (`visibility: school`), where any member of the school qualifies. Mirrors
  * resolveParticipantRole in actions/tokens.ts. Without this, any student
  * could pull another section's recording within the same school.
+ *
+ * `sectionId` may be a LIST: a combined class (one teacher, several sections,
+ * one room — see `../combined.ts`) admits the students and guardians of every
+ * section it covers.
  */
 export async function canAccessSession(
   ctx: { userId: string; role: UserRole; schoolId: string },
-  sectionId: string | null,
+  sectionIdOrIds: string | string[] | null,
   visibility: ConferenceVisibility = "section"
 ): Promise<boolean> {
+  const ids = (
+    Array.isArray(sectionIdOrIds) ? sectionIdOrIds : [sectionIdOrIds]
+  ).filter((id): id is string => Boolean(id))
+  const sectionId = ids.length > 1 ? { in: ids } : ids[0]
   if (SESSION_STAFF_ROLES.includes(ctx.role)) return true
   if (visibility === "school") {
     // School-wide session: membership in the school is the whole gate.

@@ -25,6 +25,14 @@ vi.mock("@/components/school-dashboard/live/online-policy", () => ({
   ),
 }))
 
+const primaryOf = new Map<string, string>()
+vi.mock("@/components/school-dashboard/live/combined", async (orig) => ({
+  ...(await orig<
+    typeof import("@/components/school-dashboard/live/combined")
+  >()),
+  combinedPrimaryForSlots: vi.fn(async () => primaryOf),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     school: { findUnique: vi.fn() },
@@ -40,6 +48,7 @@ const DATE = new Date("2026-06-01T12:00:00Z")
 beforeEach(() => {
   vi.clearAllMocks()
   onlineBySection.clear()
+  primaryOf.clear()
   // The day window is resolved in the SCHOOL's timezone, so every path now
   // reads School.timezone first.
   vi.mocked(db.school.findUnique).mockResolvedValue({
@@ -530,5 +539,48 @@ describe("resolveTodayJoinTargets — day filtering", () => {
     const map = await resolveTodayJoinTargets(SCHOOL, TERM, [])
     expect(map).toEqual({})
     expect(db.school.findUnique).not.toHaveBeenCalled()
+  })
+})
+
+describe("attachLiveClasses — combined class", () => {
+  it("resolves a sibling section's slot to the PRIMARY slot's room", async () => {
+    primaryOf.set("tt-sib", "tt-primary")
+    vi.mocked(db.conference.findMany).mockImplementation((async (args: {
+      where: { timetableId?: unknown; sectionId?: unknown }
+    }) => {
+      // The section-scoped read sees nothing for the sibling's section; the
+      // primary lookup is by slot id.
+      if (
+        args.where.timetableId &&
+        typeof args.where.timetableId === "object" &&
+        "in" in (args.where.timetableId as object)
+      ) {
+        return [
+          {
+            id: "room-primary",
+            provider: "livekit",
+            meetingUrl: null,
+            status: "live",
+            sectionId: "sec-primary",
+            subjectId: "sub-1",
+            timetableId: "tt-primary",
+          },
+        ]
+      }
+      return []
+    }) as never)
+
+    const [row] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { timetableId: "tt-sib", sectionId: "sec-sib", subjectId: "sub-1" },
+    ])
+    expect(row.liveClass?.sessionId).toBe("room-primary")
+    expect(row.liveClass?.status).toBe("live")
+  })
+
+  it("leaves a slot taught alone with no room", async () => {
+    const [row] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { timetableId: "tt-solo", sectionId: "sec-1", subjectId: "sub-1" },
+    ])
+    expect(row.liveClass).toBeNull()
   })
 })

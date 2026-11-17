@@ -31,6 +31,7 @@ import {
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
+import { sessionSectionIds } from "../combined"
 import {
   hostMayStart,
   JOIN_GRACE_AFTER_END_MIN,
@@ -58,10 +59,15 @@ async function resolveParticipantRole(
   schoolId: string,
   sessionId: string,
   sessionTeacherUserId: string | null,
-  sessionSectionId: string | null,
+  /** The section(s) the class covers — several for a combined class. */
+  sessionSectionIds: string[],
   sessionVisibility: ConferenceVisibility = "section",
   isPractice = false
 ): Promise<ConferenceParticipantRole | null> {
+  const sessionSectionId =
+    sessionSectionIds.length > 1
+      ? { in: sessionSectionIds }
+      : (sessionSectionIds[0] ?? null)
   if (userRole === "DEVELOPER") return "HOST"
   // The school's practice room: every member of THIS school, whatever the
   // role. Staff roles rehearse the teacher's tools (CO_HOST); students and
@@ -108,7 +114,11 @@ async function resolveParticipantRole(
           userId,
           OR: [
             { timetables: { some: { schoolId, sectionId: sessionSectionId } } },
-            { homeroomSections: { some: { id: sessionSectionId } } },
+            {
+              homeroomSections: {
+                some: { id: { in: sessionSectionIds } },
+              },
+            },
           ],
         },
         select: { id: true },
@@ -229,13 +239,13 @@ export async function performLiveClassJoin(
         roomName: true,
         provider: true,
         sectionId: true,
+        timetableId: true,
         visibility: true,
         isPractice: true,
         maxParticipants: true,
         status: true,
         scheduledStart: true,
         scheduledEnd: true,
-        timetableId: true,
         lang: true,
         recordingEnabled: true,
         studentsJoinMuted: true,
@@ -296,7 +306,7 @@ export async function performLiveClassJoin(
     schoolId,
     sessionId,
     liveClass.teacher.userId,
-    liveClass.sectionId,
+    await sessionSectionIds(schoolId, liveClass),
     liveClass.visibility,
     liveClass.isPractice
   )
