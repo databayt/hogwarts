@@ -1,18 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { redirect } from "next/navigation"
+
 import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { ChildAssignmentsView } from "@/components/school-dashboard/parent-portal/child-assignments-view"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
+/**
+ * A guardian's per-child assignments now live on the role-based
+ * `/assignments` page, which opens on this child (`?child=`).
+ */
 export default async function ChildAssignmentsPage({ params }: Props) {
   const { id, lang } = await params
-  const dictionary = await getDictionary(lang)
-  return (
-    <ChildAssignmentsView studentId={id} lang={lang} dictionary={dictionary} />
-  )
+  redirect(`/${lang}/assignments?child=${encodeURIComponent(id)}`)
 }

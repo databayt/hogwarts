@@ -174,14 +174,14 @@ export function rankNextActions(
         actions.push({
           kind: "assignmentOverdue",
           mark: str(a.title) || str(a.subject),
-          href: "/my-assignments",
+          href: "/assignments",
         })
       }
       for (const a of unsubmitted.filter((a) => a.isOverdue !== true)) {
         actions.push({
           kind: "assignmentDue",
           mark: str(a.title) || str(a.subject),
-          href: "/my-assignments",
+          href: "/assignments",
         })
       }
 

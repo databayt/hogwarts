@@ -8,6 +8,7 @@ import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
 } from "@/lib/rbac/ui-permissions"
+import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -18,14 +19,19 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-export type AssignmentRow = {
-  id: string
-  title: string
-  type: string
-  totalPoints: number
-  dueDate: string
-  createdAt: string
-}
+import { formatAssignmentDate } from "./date"
+import { ASSIGNMENT_TYPES, statusLabel, statusVariant, typeLabel } from "./labels"
+import type { AssignmentRow } from "./list-core"
+
+export type { AssignmentRow }
+
+const STATUSES = [
+  "DRAFT",
+  "PUBLISHED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "GRADED",
+] as const
 
 export interface AssignmentColumnCallbacks {
   onDelete?: (row: AssignmentRow) => void
@@ -46,16 +52,20 @@ export const getAssignmentColumns = ({
   callbacks,
   permissions = FULL_UI_PERMISSIONS,
 }: GetAssignmentColumnsProps): ColumnDef<AssignmentRow>[] => {
+  const d = (dictionary ?? {}) as Record<string, any>
+  const types = (d.detail?.types ?? {}) as Record<string, string>
+  const statuses = (d.detail?.statuses ?? {}) as Record<string, string>
   const t = {
-    title: (dictionary as Record<string, any>)?.titleColumn || "Title",
-    type: dictionary?.type || "Type",
-    points: dictionary?.points || "Points",
-    dueDate: dictionary?.dueDate || "Due Date",
-    created: dictionary?.created || "Created",
-    actions: (dictionary as Record<string, any>)?.actions || "Actions",
-    view: common?.actions?.view || "View",
-    edit: common?.actions?.edit || "Edit",
-    delete: common?.actions?.delete || "Delete",
+    title: d.titleColumn ?? "",
+    type: d.type ?? "",
+    status: d.detail?.status ?? "",
+    points: d.points ?? "",
+    dueDate: d.dueDate ?? "",
+    created: d.created ?? "",
+    actions: d.actions ?? "",
+    view: common?.actions?.view ?? "",
+    edit: common?.actions?.edit ?? "",
+    delete: common?.actions?.delete ?? "",
   }
 
   return [
@@ -73,9 +83,42 @@ export const getAssignmentColumns = ({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.type} />
       ),
-      meta: { label: t.type, variant: "text" },
+      cell: ({ getValue }) => (
+        <Badge variant="outline" className="font-normal">
+          {typeLabel(types, getValue<string>())}
+        </Badge>
+      ),
+      meta: {
+        label: t.type,
+        variant: "select",
+        options: ASSIGNMENT_TYPES.map((v) => ({
+          label: typeLabel(types, v),
+          value: v,
+        })),
+      },
       id: "type",
       enableColumnFilter: true,
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.status} />
+      ),
+      cell: ({ getValue }) => (
+        <Badge variant={statusVariant(getValue<string>())} className="font-normal">
+          {statusLabel(statuses, getValue<string>())}
+        </Badge>
+      ),
+      meta: {
+        label: t.status,
+        variant: "select",
+        options: STATUSES.map((v) => ({
+          label: statusLabel(statuses, v),
+          value: v,
+        })),
+      },
+      id: "status",
+      enableColumnFilter: false,
     },
     {
       accessorKey: "totalPoints",
@@ -95,9 +138,7 @@ export const getAssignmentColumns = ({
       id: "dueDate",
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(
-            lang === "ar" ? "ar-SA" : "en-US"
-          )}
+          {formatAssignmentDate(getValue<string>(), lang)}
         </span>
       ),
     },
@@ -109,9 +150,7 @@ export const getAssignmentColumns = ({
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(
-            lang === "ar" ? "ar-SA" : "en-US"
-          )}
+          {formatAssignmentDate(getValue<string>(), lang)}
         </span>
       ),
     },

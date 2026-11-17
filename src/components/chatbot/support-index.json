@@ -919,8 +919,7 @@
     ],
     "guide": "/docs/support/homework",
     "routes": [
-      "/assignments",
-      "/my-assignments"
+      "/assignments"
     ]
   },
   {

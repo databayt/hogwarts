@@ -37,7 +37,7 @@ export const ARABIC_KEYWORDS: Record<string, string[]> = {
   transportationFees: ["رسوم النقل", "اشتراك الباص"],
   myTransportation: ["باصي", "نقلي", "مواصلاتي"],
   transportationTrips: ["رحلات", "نقل"],
-  myAssignments: ["واجبات", "واجباتي", "تكليفات"],
+  assignments: ["واجبات", "واجباتي", "تكليفات"],
   lumos: ["بث", "فيديو", "دروس مصورة"],
   liveClasses: ["اجتماعات", "حصص مباشرة", "بث مباشر", "مؤتمر"],
   messages: ["رسائل", "محادثات"],

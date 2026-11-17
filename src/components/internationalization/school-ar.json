@@ -7707,9 +7707,6 @@
       "title": "الواجبات",
       "titleColumn": "العنوان",
       "description": "إدارة الواجبات والتقييمات الأكاديمية",
-      "navAll": "الكل",
-      "navUpcoming": "القادمة",
-      "navSubmitted": "المقدمة",
       "type": "النوع",
       "points": "الدرجات",
       "dueDate": "تاريخ التسليم",
@@ -7730,7 +7727,7 @@
         "errorTitle": "خطأ",
         "notFound": "الواجب غير موجود",
         "noDescription": "لا يوجد وصف",
-        "attachments": "مرفقات الواجب (صور أو PDF)",
+        "attachments": "المرفقات",
         "noInstructions": "لا توجد تعليمات",
         "types": {
           "homework": "واجب منزلي",
@@ -7761,7 +7758,6 @@
         "saveGrade": "حفظ",
         "gradeSaved": "تم حفظ الدرجة",
         "gradeFailed": "تعذّر حفظ الدرجة",
-        "attachments": "المرفقات",
         "yourSubmission": "تسليمك",
         "submissionPlaceholder": "اكتب إجابتك هنا…",
         "submit": "تسليم",
@@ -7779,7 +7775,19 @@
         "uploading": "جارٍ الرفع…",
         "uploadFailed": "تعذّر رفع {name}",
         "offlineFiles": "الملفات تحتاج اتصالاً لتسليمها",
-        "removeFile": "إزالة"
+        "removeFile": "إزالة",
+        "viewDetails": "عرض التفاصيل",
+        "childSubmission": "تسليم ابنك",
+        "notHandedIn": "لم يُسلَّم بعد",
+        "noReviewAccess": "تسليمات الطلاب ظاهرة لمعلمي هذا الواجب.",
+        "errorCodes": {
+          "NOT_FOUND": "الواجب غير موجود",
+          "UNAUTHORIZED": "ليست لديك صلاحية الوصول إلى هذا الواجب",
+          "FORBIDDEN": "ليست لديك صلاحية الوصول إلى هذا الواجب",
+          "NOT_AUTHENTICATED": "يرجى تسجيل الدخول للمتابعة",
+          "MISSING_SCHOOL": "لم تُحدَّد مدرسة",
+          "UNKNOWN": "حدث خطأ ما. حاول مرة أخرى"
+        }
       },
       "actions": "الإجراءات",
       "loading": "جاري التحميل...",
@@ -7924,6 +7932,64 @@
           "basicInformation": "المعلومات الأساسية",
           "detailsAndSettings": "التفاصيل والإعدادات"
         }
+      },
+      "empty": "لا توجد واجبات بعد",
+      "loadMore": "عرض المزيد",
+      "student": {
+        "title": "واجباتي",
+        "description": "كل ما كلّفتك به صفوفك، وما سلّمته.",
+        "empty": "لا توجد واجبات بعد.",
+        "points": "نقطة",
+        "nextDue": "الواجب القادم",
+        "allCaughtUp": "أنجزت كل واجباتك",
+        "allCaughtUpHint": "لا شيء بانتظار التسليم الآن.",
+        "overdueHeadline": "{count} متأخرة — ما زال بإمكانك تسليمها",
+        "open": "فتح",
+        "stats": {
+          "toDo": "المطلوب",
+          "overdue": "متأخرة",
+          "handedIn": "مُسلَّمة",
+          "graded": "مُصحَّحة"
+        },
+        "sections": {
+          "toDo": "المطلوب",
+          "toDoHint": "المتأخرة أولًا، ثم حسب موعد التسليم.",
+          "handedIn": "مُسلَّمة",
+          "handedInHint": "بانتظار تصحيح المعلم.",
+          "graded": "مُصحَّحة"
+        },
+        "when": {
+          "today": "اليوم",
+          "tomorrow": "غدًا",
+          "inDays": "بعد {count} أيام",
+          "overdue": "متأخر"
+        }
+      },
+      "guardian": {
+        "title": "واجبات {name}",
+        "description": "كل ما كلّفت به صفوف ابنك، وما سلّمه.",
+        "empty": "لا توجد واجبات لهذا الابن بعد.",
+        "noChildren": "لا يوجد أبناء مرتبطون بحسابك بعد.",
+        "switcherLabel": "الابن",
+        "allCaughtUp": "أنجز ابنك كل واجباته",
+        "allCaughtUpHint": "لا شيء بانتظار التسليم الآن.",
+        "overdueHeadline": "{count} متأخرة — لم تُسلَّم بعد",
+        "sections": {
+          "handedInHint": "بانتظار تصحيح المعلم."
+        }
+      },
+      "none": {
+        "title": "لا توجد واجبات لحسابك",
+        "description": "تظهر الواجبات للطلاب وأولياء الأمور والهيئة التعليمية."
+      },
+      "errors": {
+        "listTitle": "تعذّر تحميل الواجبات",
+        "listBody": "حدث خطأ غير متوقع أثناء تحميل الواجبات.",
+        "detailTitle": "تعذّر تحميل تفاصيل الواجب",
+        "detailBody": "حدث خطأ غير متوقع أثناء تحميل تفاصيل الواجب.",
+        "reference": "مرجع الخطأ",
+        "retry": "حاول مرة أخرى",
+        "backToList": "العودة إلى الواجبات"
       }
     },
     "school": {
@@ -8364,37 +8430,6 @@
       "manualPayment": "دفع يدوي",
       "uploadReceipt": "رفع الإيصال",
       "receiptApproval": "الموافقة على الإيصال"
-    },
-    "myAssignments": {
-      "title": "واجباتي",
-      "description": "كل ما كلّفتك به صفوفك، وما سلّمته.",
-      "empty": "لا توجد واجبات بعد.",
-      "due": "الاستحقاق",
-      "points": "نقطة",
-      "nextDue": "الواجب القادم",
-      "allCaughtUp": "أنجزت كل واجباتك",
-      "allCaughtUpHint": "لا شيء بانتظار التسليم الآن.",
-      "overdueHeadline": "{count} متأخرة — ما زال بإمكانك تسليمها",
-      "open": "فتح",
-      "stats": {
-        "toDo": "المطلوب",
-        "overdue": "متأخرة",
-        "handedIn": "مُسلَّمة",
-        "graded": "مُصحَّحة"
-      },
-      "sections": {
-        "toDo": "المطلوب",
-        "toDoHint": "المتأخرة أولًا، ثم حسب موعد التسليم.",
-        "handedIn": "مُسلَّمة",
-        "handedInHint": "بانتظار تصحيح المعلم.",
-        "graded": "مُصحَّحة"
-      },
-      "when": {
-        "today": "اليوم",
-        "tomorrow": "غدًا",
-        "inDays": "بعد {count} أيام",
-        "overdue": "متأخر"
-      }
     },
     "myFees": {
       "title": "رسومي",

@@ -14,6 +14,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 
 import { gradeSubmission } from "./actions"
+import { formatAssignmentDate } from "./date"
 import type { SubmissionReview, SubmissionReviewRow } from "./submissions-core"
 
 type Labels = Record<string, unknown> & {
@@ -116,7 +117,7 @@ function SubmissionRow({
   return (
     <li className="space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium">{row.studentName}</span>
+        <span className="font-medium break-words">{row.studentName}</span>
         <span className="flex items-center gap-2">
           {row.status === "LATE_SUBMITTED" && (
             <Badge variant="destructive">
@@ -128,10 +129,7 @@ function SubmissionRow({
           )}
           {row.submittedAt && (
             <span className="text-muted-foreground text-xs">
-              {new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(row.submittedAt))}
+              {formatAssignmentDate(row.submittedAt, locale, "datetime")}
             </span>
           )}
         </span>
@@ -176,11 +174,11 @@ function SubmissionRow({
             step="0.5"
             value={score}
             onChange={(e) => setScore(e.target.value)}
-            className="w-24"
+            className="w-24 max-sm:h-11"
             aria-invalid={score !== "" && !valid}
           />
         </label>
-        <label className="min-w-48 flex-1 space-y-1">
+        <label className="min-w-0 flex-1 basis-48 space-y-1">
           <span className="text-muted-foreground text-xs">
             {labels.feedback ?? "Feedback"}
           </span>
@@ -191,7 +189,12 @@ function SubmissionRow({
             dir="auto"
           />
         </label>
-        <Button onClick={save} disabled={!valid || pending} size="sm">
+        <Button
+          onClick={save}
+          disabled={!valid || pending}
+          size="sm"
+          className="max-sm:min-h-11 max-sm:w-full"
+        >
           {labels.saveGrade ?? "Save"}
         </Button>
       </div>

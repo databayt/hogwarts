@@ -7691,9 +7691,6 @@
       "title": "Assignments",
       "titleColumn": "Title",
       "description": "Manage academic assignments and assessments",
-      "navAll": "All",
-      "navUpcoming": "Upcoming",
-      "navSubmitted": "Submitted",
       "type": "Type",
       "points": "Points",
       "dueDate": "Due Date",
@@ -7714,7 +7711,7 @@
         "errorTitle": "Error",
         "notFound": "Assignment not found",
         "noDescription": "No description",
-        "attachments": "Assignment attachments (images or PDF)",
+        "attachments": "Attachments",
         "noInstructions": "No instructions",
         "types": {
           "homework": "Homework",
@@ -7745,7 +7742,6 @@
         "saveGrade": "Save",
         "gradeSaved": "Grade saved",
         "gradeFailed": "Couldn't save the grade",
-        "attachments": "Attachments",
         "yourSubmission": "Your submission",
         "submissionPlaceholder": "Write your answer here…",
         "submit": "Submit",
@@ -7763,7 +7759,19 @@
         "uploading": "Uploading…",
         "uploadFailed": "Couldn't upload {name}",
         "offlineFiles": "Files need a connection to hand in",
-        "removeFile": "Remove"
+        "removeFile": "Remove",
+        "viewDetails": "View details",
+        "childSubmission": "Your child's hand-in",
+        "notHandedIn": "Not handed in yet",
+        "noReviewAccess": "Hand-ins are visible to the teachers of this assignment.",
+        "errorCodes": {
+          "NOT_FOUND": "Assignment not found",
+          "UNAUTHORIZED": "You don't have access to this assignment",
+          "FORBIDDEN": "You don't have access to this assignment",
+          "NOT_AUTHENTICATED": "Please sign in to continue",
+          "MISSING_SCHOOL": "No school selected",
+          "UNKNOWN": "Something went wrong. Please try again"
+        }
       },
       "actions": "Actions",
       "loading": "Loading...",
@@ -7908,6 +7916,64 @@
           "basicInformation": "Basic Information",
           "detailsAndSettings": "Details & Settings"
         }
+      },
+      "empty": "No assignments yet",
+      "loadMore": "Load more",
+      "student": {
+        "title": "My assignments",
+        "description": "Everything your classes have set, and what you handed in.",
+        "empty": "No assignments yet.",
+        "points": "pts",
+        "nextDue": "Next due",
+        "allCaughtUp": "You're all caught up",
+        "allCaughtUpHint": "Nothing left to hand in right now.",
+        "overdueHeadline": "{count} overdue — you can still hand them in",
+        "open": "Open",
+        "stats": {
+          "toDo": "To do",
+          "overdue": "Overdue",
+          "handedIn": "Handed in",
+          "graded": "Graded"
+        },
+        "sections": {
+          "toDo": "To do",
+          "toDoHint": "Overdue first, then by due date.",
+          "handedIn": "Handed in",
+          "handedInHint": "Waiting for your teacher to mark.",
+          "graded": "Graded"
+        },
+        "when": {
+          "today": "Due today",
+          "tomorrow": "Due tomorrow",
+          "inDays": "In {count} days",
+          "overdue": "Overdue"
+        }
+      },
+      "guardian": {
+        "title": "Assignments — {name}",
+        "description": "Everything your child's classes have set, and what they handed in.",
+        "empty": "No assignments for this child yet.",
+        "noChildren": "No children are linked to your account yet.",
+        "switcherLabel": "Child",
+        "allCaughtUp": "Your child is all caught up",
+        "allCaughtUpHint": "Nothing is waiting to be handed in right now.",
+        "overdueHeadline": "{count} overdue — not handed in yet",
+        "sections": {
+          "handedInHint": "Waiting for the teacher to mark."
+        }
+      },
+      "none": {
+        "title": "No assignments for your account",
+        "description": "Assignments are shown to students, parents and teaching staff."
+      },
+      "errors": {
+        "listTitle": "Unable to load assignments",
+        "listBody": "An unexpected error occurred while loading assignments.",
+        "detailTitle": "Unable to load assignment details",
+        "detailBody": "An unexpected error occurred while loading the assignment details.",
+        "reference": "Error reference",
+        "retry": "Try again",
+        "backToList": "Back to assignments"
       }
     },
     "school": {
@@ -8348,37 +8414,6 @@
       "manualPayment": "Manual Payment",
       "uploadReceipt": "Upload Receipt",
       "receiptApproval": "Receipt Approval"
-    },
-    "myAssignments": {
-      "title": "My assignments",
-      "description": "Everything your classes have set, and what you handed in.",
-      "empty": "No assignments yet.",
-      "due": "Due",
-      "points": "pts",
-      "nextDue": "Next due",
-      "allCaughtUp": "You're all caught up",
-      "allCaughtUpHint": "Nothing left to hand in right now.",
-      "overdueHeadline": "{count} overdue — you can still hand them in",
-      "open": "Open",
-      "stats": {
-        "toDo": "To do",
-        "overdue": "Overdue",
-        "handedIn": "Handed in",
-        "graded": "Graded"
-      },
-      "sections": {
-        "toDo": "To do",
-        "toDoHint": "Overdue first, then by due date.",
-        "handedIn": "Handed in",
-        "handedInHint": "Waiting for your teacher to mark.",
-        "graded": "Graded"
-      },
-      "when": {
-        "today": "Due today",
-        "tomorrow": "Due tomorrow",
-        "inDays": "In {count} days",
-        "overdue": "Overdue"
-      }
     },
     "myFees": {
       "title": "My Fees",

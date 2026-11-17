@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
@@ -127,7 +128,9 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                 data
               )
               if (!saveResult.success) {
-                ErrorToast(saveResult.error || "Failed to save")
+                ErrorToast(
+                  actionErrorMessage(saveResult.error, dictionary, "Failed to save")
+                )
                 reject(new Error(saveResult.error))
                 return
               }
@@ -136,7 +139,13 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
               const completeResult =
                 await completeAssignmentWizard(assignmentId)
               if (!completeResult.success) {
-                ErrorToast(completeResult.error || "Failed to complete")
+                ErrorToast(
+                  actionErrorMessage(
+                    completeResult.error,
+                    dictionary,
+                    "Failed to complete"
+                  )
+                )
                 reject(new Error(completeResult.error))
                 return
               }
@@ -145,8 +154,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
               router.push("/assignments")
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
-              ErrorToast(msg)
+              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, "Failed to save"))
               reject(err)
             }
           })

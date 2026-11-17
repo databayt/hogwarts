@@ -54,6 +54,9 @@ export const ASSIGNMENT_EXPORT_COLUMNS: ExportColumn<AssignmentExportData>[] = [
       const statusMap: Record<string, { en: string; ar: string }> = {
         DRAFT: { en: "Draft", ar: "مسودة" },
         PUBLISHED: { en: "Published", ar: "منشور" },
+        IN_PROGRESS: { en: "In Progress", ar: "جاري" },
+        COMPLETED: { en: "Completed", ar: "مكتمل" },
+        GRADED: { en: "Graded", ar: "مصحح" },
         ACTIVE: { en: "Active", ar: "نشط" },
         CLOSED: { en: "Closed", ar: "مغلق" },
         ARCHIVED: { en: "Archived", ar: "مؤرشف" },

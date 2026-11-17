@@ -1,22 +1,26 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { Prisma } from "@prisma/client"
+import { ClipboardList } from "lucide-react"
+import { redirect } from "next/navigation"
 import { SearchParams } from "nuqs/server"
+import { auth } from "@/auth"
 
-import { db } from "@/lib/db"
-import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import { type AssignmentRow } from "@/components/school-dashboard/listings/assignments/columns"
-import { assignmentsSearchParams } from "@/components/school-dashboard/listings/assignments/list-params"
-import { getUIConfigForRole } from "@/components/school-dashboard/listings/assignments/permissions"
-import { AssignmentsTable } from "@/components/school-dashboard/listings/assignments/table"
-import { Shell as PageContainer } from "@/components/table/shell"
-import { localize } from "@/components/translation/localize"
-import { search } from "@/components/translation/search"
+
+import { getGuardianChildren, pickChild } from "./access"
+import { ChildSwitcher } from "./child-switcher"
+import { assignmentsSearchParams } from "./list-params"
+import {
+  getAssignmentsForStudent,
+  getMyAssignments,
+} from "./my-assignments"
+import { MyAssignmentsContent } from "./my-assignments-content"
+import StaffAssignmentsContent from "./staff-content"
+import { assignmentsViewForRole } from "./view"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -24,90 +28,97 @@ interface Props {
   lang: Locale
 }
 
+/**
+ * `/assignments` — ONE page, and each role gets its own side of it (the
+ * server decides; nothing about the role reaches the client):
+ *
+ *   ADMIN · TEACHER · STAFF · DEVELOPER   the management table, create, export
+ *   STUDENT                               their list, with hand-in
+ *   GUARDIAN                              their children's, read-only, with a
+ *                                         child switcher past one child
+ *   anyone else                           an honest "nothing here" state
+ *
+ * `/my-assignments` and `/parent/children/[id]/assignments` redirect here.
+ */
 export default async function AssignmentsContent({
   searchParams,
   dictionary,
   lang,
 }: Props) {
-  const sp = await assignmentsSearchParams.parse(await searchParams)
-  const { schoolId, role } = await getTenantContext()
-  const permissions = getUIConfigForRole(role as Role | null | undefined)
-  let data: AssignmentRow[] = []
-  let total = 0
-  const assignmentModel = db.schoolAssignment
-  if (schoolId && assignmentModel) {
-    // Bilingual title search: matches storage lang and its cached translations.
-    let titleFilter: object = {}
-    if (sp.title) {
-      const school = await db.school.findUnique({
-        where: { id: schoolId },
-        select: { preferredLanguage: true },
-      })
-      const titleConditions = await search(
-        sp.title,
-        ["title"],
-        schoolId,
-        (school?.preferredLanguage as "ar" | "en") || "ar",
-        lang === "en" ? "en" : "ar"
-      )
-      titleFilter = { OR: titleConditions }
-    }
-    const where: any = {
-      schoolId,
-      ...titleFilter,
-      ...(sp.type ? { type: sp.type } : {}),
-    }
-    const skip = (sp.page - 1) * sp.perPage
-    const take = sp.perPage
-    const orderBy: Prisma.SchoolAssignmentOrderByWithRelationInput[] =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: { id: string; desc: boolean }) => ({
-            [s.id]: s.desc ? "desc" : "asc",
-          }))
-        : [{ createdAt: "desc" }]
-    const [rows, count] = await Promise.all([
-      assignmentModel.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-      }),
-      assignmentModel.count({ where }),
-    ])
-    // Batched title localization — ONE findMany for all rows.
-    const localized = await localize("Assignment", rows, { schoolId })
-    const titleById = new Map(localized.map((r: any) => [r.id, r.title]))
-    data = rows.map((a: any) => ({
-      id: a.id,
-      title: titleById.get(a.id) ?? a.title,
-      type: a.type,
-      // Prisma Decimal → number: a Decimal cannot cross to a client component.
-      totalPoints: Number(a.totalPoints),
-      dueDate: (a.dueDate as Date).toISOString(),
-      createdAt: (a.createdAt as Date).toISOString(),
-    }))
-    total = count as number
+  const [session, { schoolId }] = await Promise.all([auth(), getTenantContext()])
+  if (!session?.user?.id) redirect(`/${lang}/login`)
+
+  const view = assignmentsViewForRole(session.user.role)
+
+  if (view === "staff") {
+    return (
+      <StaffAssignmentsContent
+        searchParams={searchParams}
+        dictionary={dictionary}
+        lang={lang}
+      />
+    )
   }
+
+  if (view === "student" && schoolId) {
+    const assignments = await getMyAssignments(session.user.id, schoolId)
+    return (
+      <MyAssignmentsContent
+        assignments={assignments}
+        dictionary={dictionary}
+        lang={lang}
+      />
+    )
+  }
+
+  if (view === "guardian" && schoolId) {
+    const [sp, children] = await Promise.all([
+      searchParams.then((p) => assignmentsSearchParams.parse(p)),
+      getGuardianChildren(session.user.id, schoolId),
+    ])
+    const child = pickChild(children, sp.child)
+    const assignments = child
+      ? await getAssignmentsForStudent(schoolId, child.id)
+      : []
+    const guardianText = ((dictionary?.school?.assignments as any)?.guardian ??
+      {}) as Record<string, string>
+    return (
+      <MyAssignmentsContent
+        assignments={assignments}
+        dictionary={dictionary}
+        lang={lang}
+        mode="guardian"
+        childName={child?.name}
+        childId={child?.id}
+        switcher={
+          child ? (
+            <ChildSwitcher
+              items={children}
+              activeId={child.id}
+              lang={lang}
+              label={guardianText.switcherLabel ?? ""}
+            />
+          ) : undefined
+        }
+      />
+    )
+  }
+
+  // ACCOUNTANT, USER, or a signed-in account with no school: nothing to show.
+  const none = ((dictionary?.school?.assignments as any)?.none ??
+    {}) as Record<string, string>
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeadingSetter
-          title={dictionary?.school?.assignments?.title || "Assignments"}
-          description={
-            dictionary?.school?.assignments?.description ||
-            "Manage academic assignments and assessments"
-          }
-        />
-        <AssignmentsTable
-          initialData={data}
-          total={total}
-          dictionary={dictionary?.school?.assignments}
-          common={dictionary?.school?.common}
-          lang={lang}
-          perPage={sp.perPage}
-          permissions={permissions}
-        />
-      </div>
-    </PageContainer>
+    <div className="flex flex-col items-center gap-3 rounded-[36px] border border-dashed px-4 py-16 text-center">
+      <PageHeadingSetter title={dictionary?.school?.assignments?.title ?? ""} />
+      <ClipboardList
+        className="text-muted-foreground size-8"
+        strokeWidth={1.5}
+        aria-hidden="true"
+      />
+      <p className="font-medium">{none.title}</p>
+      <p className="text-muted-foreground max-w-[42ch] text-sm">
+        {none.description}
+      </p>
+    </div>
   )
 }

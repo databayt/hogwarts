@@ -342,8 +342,31 @@ export const roleRoutes: Record<string, Role[]> = {
   // viewer's own student record / linked children. Sub-pages stay staff-only.
   "/grades": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/grades/*": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/assignments": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/assignments/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+  // ONE assignments page, role-based: /assignments and /assignments/[id]
+  // render staff, student and guardian views server-side (the detail page also
+  // checks the viewer may open that assignment). Creating and editing
+  // (/assignments/add/*) is staff-only. Longest-prefix wildcard wins, so the
+  // `/assignments/add/*` entry beats `/assignments/*` for the wizard. PRINCIPAL
+  // is not a role in this schema (UserRole has none); it will join the staff
+  // lists when it exists.
+  "/assignments": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/assignments/*": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/assignments/add": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  "/assignments/add/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
 
   // ============================================================================
   // Student management (admin, teachers, staff + students/guardians for self-view)
@@ -432,7 +455,8 @@ export const roleRoutes: Record<string, Role[]> = {
   "/my-grades": ["STUDENT", "GUARDIAN", "DEVELOPER"],
   // "/my-attendance" - removed: unified into /attendance with role-based views
   "/my-fees": ["STUDENT", "GUARDIAN", "DEVELOPER"],
-  "/my-assignments": ["STUDENT", "GUARDIAN", "DEVELOPER"],
+  // "/my-assignments" - removed: now a redirect to the role-based /assignments
+  // (old links and the Android app still land on it, for every role)
   "/my-timetable": ["STUDENT", "GUARDIAN", "DEVELOPER"],
 
   // ============================================================================

@@ -16,6 +16,8 @@ export const assignmentsSearchParams = createSearchParamsCache({
   title: parseAsString.withDefault(""),
   type: parseAsString.withDefault(""),
   sort: getSortingStateParser().withDefault([]),
+  // guardian view: which linked child's homework to read (Student.id)
+  child: parseAsString.withDefault(""),
 })
 
 export type AssignmentsSearch = Awaited<

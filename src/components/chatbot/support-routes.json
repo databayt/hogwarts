@@ -154,8 +154,7 @@
   {
     "slug": "homework",
     "routes": [
-      "/assignments",
-      "/my-assignments"
+      "/assignments"
     ],
     "roles": [
       "student",

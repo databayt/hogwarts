@@ -9,7 +9,6 @@ import {
   NO_UI_PERMISSIONS,
   type UIPermissions,
 } from "@/lib/rbac/ui-permissions"
-import type { PageNavItem } from "@/components/atom/page-nav"
 
 const VIEW_ROLES: readonly Role[] = [
   "DEVELOPER",
@@ -20,30 +19,6 @@ const VIEW_ROLES: readonly Role[] = [
   "STAFF",
 ] as const
 
-const WRITE_ROLES: readonly Role[] = ["DEVELOPER", "ADMIN", "TEACHER"] as const
-
-export function getTabsForRole(
-  role: Role | null | undefined,
-  lang: string,
-  d?: Record<string, string>
-): PageNavItem[] {
-  if (!isRoleIn(role, VIEW_ROLES)) return []
-  const tabs: PageNavItem[] = [
-    { name: d?.navAll || "All", href: `/${lang}/assignments` },
-    {
-      name: d?.navUpcoming || "Upcoming",
-      href: `/${lang}/assignments/upcoming`,
-    },
-  ]
-  if (isRoleIn(role, WRITE_ROLES) || role === "STUDENT") {
-    tabs.push({
-      name: d?.navSubmitted || "Submitted",
-      href: `/${lang}/assignments/submitted`,
-    })
-  }
-  return tabs
-}
-
 export function getUIConfigForRole(
   role: Role | null | undefined
 ): UIPermissions {
@@ -53,6 +28,16 @@ export function getUIConfigForRole(
     return {
       ...FULL_UI_PERMISSIONS,
       showImportButton: false,
+    }
+  }
+  // STAFF create, edit and export; deleting stays with admin and teacher
+  // (see authorization.ts).
+  if (role === "STAFF") {
+    return {
+      ...FULL_UI_PERMISSIONS,
+      showImportButton: false,
+      showDeleteAction: false,
+      showBulkActions: false,
     }
   }
   if (isRoleIn(role, VIEW_ROLES)) {

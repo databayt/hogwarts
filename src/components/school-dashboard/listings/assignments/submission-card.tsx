@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 
+import { formatAssignmentDate } from "./date"
 import { presignSubmissionUpload, submitAssignment } from "./submit-actions"
 import type { OwnSubmission } from "./submit-core"
 
@@ -22,7 +23,7 @@ interface SubmissionCardProps {
   /** The `school.assignments.detail` subtree — nested groups are skipped. */
   labels?: Record<string, unknown>
   locale?: string
-  /** Surface override — /my-assignments draws it as the kit's grey card. */
+  /** Surface override — the student list draws it as the kit's grey card. */
   className?: string
 }
 
@@ -172,7 +173,7 @@ export function StudentSubmissionCard({
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <Clock className="h-3.5 w-3.5" aria-hidden />
             {t("submittedAt", "Submitted")}{" "}
-            {new Date(state.submittedAt).toLocaleString(locale)}
+            {formatAssignmentDate(state.submittedAt, locale, "datetime")}
           </p>
         )}
 

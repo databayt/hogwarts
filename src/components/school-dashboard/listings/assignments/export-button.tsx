@@ -44,6 +44,7 @@ interface ExportButtonProps {
   showColumnSelector?: boolean
   /** Dictionary for translations */
   dictionary?: {
+    title?: string
     export?: string
     exportAs?: string
     csv?: string
@@ -100,7 +101,7 @@ export function ExportButton({
         filename: "assignments",
         columns: ASSIGNMENT_EXPORT_COLUMNS,
         locale,
-        title: dictionary?.export || "Assignment List",
+        title: dictionary?.title || "Assignment List",
       }}
       data={data}
       formats={formats}

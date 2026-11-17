@@ -8,7 +8,6 @@ import React, {
   useImperativeHandle,
   useTransition,
 } from "react"
-import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -18,7 +17,7 @@ import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { getAssignmentTypes } from "@/components/school-dashboard/listings/assignments/config"
+import { getDictAssignmentTypes } from "@/components/school-dashboard/listings/assignments/config"
 import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
 import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
@@ -37,10 +36,10 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     const { dictionary } = useDictionary()
     const fd = (dictionary?.school as Record<string, any>)?.assignments
       ?.form as Record<string, any> | undefined
-    // The route's language — the dictionary carries no `locale`, so the type
-    // list fell back to English on /ar.
-    const { lang: locale } = useParams<{ lang: string }>()
-    const typeOptions = getAssignmentTypes(locale)
+    // Type labels come from the dictionary (`school.assignments.detail.types`)
+    const typeOptions = getDictAssignmentTypes(
+      (dictionary?.school as Record<string, any>)?.assignments
+    )
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,8 +99,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
-              ErrorToast(msg)
+              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, "Failed to save"))
               reject(err)
             }
           })

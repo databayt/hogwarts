@@ -22,10 +22,22 @@ import { prewarm } from "@/components/translation/prewarm"
 
 import type { AttachmentLink } from "./assignment-attachments"
 import { buildAttachmentLinks } from "./attachment-links"
+import { resolveFamilyStudent } from "./access"
 import { assertAssignmentPermission, getAuthContext } from "./authorization"
+import {
+  assignmentRowSelect,
+  safeOrderBy,
+  safeTypeFilter,
+  toAssignmentRow,
+  type AssignmentRow,
+} from "./list-core"
+import { assignmentsViewForRole } from "./view"
 import { gradeSubmissionCore, gradeSubmissionSchema } from "./grade-core"
 
 type AssignmentSelectResult = {
+  /** Who it's for: the section, else the whole grade. */
+  className?: string
+  subjectName?: string | null
   id: string
   schoolId: string
   title: string
@@ -43,14 +55,7 @@ type AssignmentSelectResult = {
   updatedAt: Date
 }
 
-type AssignmentListResult = {
-  id: string
-  title: string
-  type: string
-  totalPoints: number
-  dueDate: string
-  createdAt: string
-}
+type AssignmentListResult = AssignmentRow
 
 const ASSIGNMENTS_PATH = "/assignments"
 
@@ -281,6 +286,8 @@ export async function gradeSubmission(input: {
 
 export async function getAssignment(input: {
   id: string
+  /** A guardian's child (Student.id) — checked against their own links. */
+  childId?: string | null
 }): Promise<ActionResponse<AssignmentSelectResult | null>> {
   try {
     const session = await auth()
@@ -292,7 +299,21 @@ export async function getAssignment(input: {
 
     assertAssignmentPermission(authContext, "read", { schoolId })
 
-    const { id } = z.object({ id: z.string().min(1) }).parse(input)
+    const { id } = z.object({ id: z.string().min(1) }).parse({ id: input.id })
+
+    // A student or guardian opens only what is set for their own (or their
+    // child's) section or grade, and never a draft. Anything else is "not
+    // found" — no existence oracle across sections or schools.
+    if (authContext.role === "STUDENT" || authContext.role === "GUARDIAN") {
+      const family = await resolveFamilyStudent({
+        schoolId,
+        userId: authContext.userId,
+        role: authContext.role,
+        assignmentId: id,
+        childId: input.childId,
+      })
+      if (!family) return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
 
     const assignmentModel = db.schoolAssignment
     const assignment = await assignmentModel.findFirst({
@@ -311,6 +332,9 @@ export async function getAssignment(input: {
         status: true,
         createdAt: true,
         updatedAt: true,
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        subject: { select: { name: true } },
       },
     })
 
@@ -321,6 +345,11 @@ export async function getAssignment(input: {
       data: assignment
         ? ({
             ...assignment,
+            section: undefined,
+            grade: undefined,
+            subject: undefined,
+            className: audienceLabel(assignment),
+            subjectName: assignment.subject?.name ?? null,
             totalPoints: Number(assignment.totalPoints),
             weight: Number(assignment.weight),
             attachmentLinks: await buildAttachmentLinks(assignment.attachments),
@@ -356,24 +385,28 @@ export async function getAssignments(
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     assertAssignmentPermission(authContext, "read", { schoolId })
+    // The management list (drafts included) is staff-only; students and
+    // guardians read their own through the student view.
+    if (assignmentsViewForRole(authContext.role) !== "staff") {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
     const assignmentModel = db.schoolAssignment
+    const type = safeTypeFilter(sp.type)
     const where: any = {
       schoolId,
+      wizardStep: null,
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
-      ...(sp.type ? { type: sp.type } : {}),
+      ...(type ? { type } : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ createdAt: "desc" }]
+    const orderBy = safeOrderBy(sp.sort)
 
     const [rows, count] = await Promise.all([
       assignmentModel.findMany({
@@ -381,18 +414,12 @@ export async function getAssignments(
         orderBy,
         skip,
         take,
+        select: assignmentRowSelect,
       }),
       assignmentModel.count({ where }),
     ])
 
-    const mapped: AssignmentListResult[] = (rows as Array<any>).map((a) => ({
-      id: a.id as string,
-      title: a.title as string,
-      type: a.type as string,
-      totalPoints: Number(a.totalPoints),
-      dueDate: (a.dueDate as Date).toISOString(),
-      createdAt: (a.createdAt as Date).toISOString(),
-    }))
+    const mapped: AssignmentListResult[] = rows.map(toAssignmentRow)
 
     return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {

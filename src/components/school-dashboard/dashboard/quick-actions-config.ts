@@ -109,8 +109,8 @@ export function getQuickActionsByRole(
           iconName: "Book",
           label: "Assignments",
           description: "View pending assignments",
-          // Students' own page; /assignments is staff-only in routes.ts.
-          href: "/my-assignments",
+          // /assignments is role-based: a student lands on their own list.
+          href: "/assignments",
         },
         {
           iconName: "Notebook",

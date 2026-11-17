@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
-import { useParams } from "next/navigation"
 
 import { WizardLayout } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { updateAssignmentWizardStep } from "@/components/school-dashboard/listings/assignments/wizard/actions"
-import { getAssignmentWizardConfig } from "@/components/school-dashboard/listings/assignments/wizard/config"
+import { getDictAssignmentWizardConfig } from "@/components/school-dashboard/listings/assignments/wizard/config"
 import {
   AssignmentWizardProvider,
   useAssignmentWizard,
@@ -18,10 +18,11 @@ export default function AssignmentWizardLayout({
 }: {
   children: React.ReactNode
 }) {
-  // The wizard's own labels in the page's language (the English config's
-  // "Create Assignment" showed on /ar).
-  const { lang } = useParams<{ lang: string }>()
-  const config = getAssignmentWizardConfig(lang)
+  // The wizard's own labels, from the dictionary in the page's language.
+  const { dictionary } = useDictionary()
+  const config = getDictAssignmentWizardConfig(
+    (dictionary?.school as Record<string, any> | undefined)?.assignments
+  )
   return (
     <WizardLayout
       config={config}

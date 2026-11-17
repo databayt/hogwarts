@@ -9,6 +9,7 @@
  * - DEVELOPER: Full access to all assignments across all schools
  * - ADMIN: Full access within their school
  * - TEACHER: Can manage assignments for their classes
+ * - STAFF: Can create, edit and export within their school (no delete/grade)
  * - STUDENT: Can view and submit assignments for enrolled classes
  * - GUARDIAN: Can view assignments (read-only)
  */
@@ -120,9 +121,11 @@ export function checkAssignmentPermission(
     return false
   }
 
-  // STAFF can read assignments
+  // STAFF run the homework desk: create, edit, export. Deleting and marking
+  // stay with the teacher and the admin.
   if (role === "STAFF") {
-    if (action === "read") {
+    if (action === "create") return true
+    if (action === "read" || action === "update" || action === "export") {
       if (!assignment?.schoolId) return false
       return schoolId === assignment.schoolId
     }
@@ -173,14 +176,14 @@ export function getAuthContext(session: any): AuthContext | null {
  * Check if role can create assignments
  */
 export function canCreateAssignment(role: UserRole): boolean {
-  return ["DEVELOPER", "ADMIN", "TEACHER"].includes(role)
+  return ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"].includes(role)
 }
 
 /**
  * Check if role can export assignments
  */
 export function canExportAssignments(role: UserRole): boolean {
-  return ["DEVELOPER", "ADMIN", "TEACHER"].includes(role)
+  return ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"].includes(role)
 }
 
 /**
@@ -218,8 +221,9 @@ export function getAllowedActions(role: UserRole): AssignmentAction[] {
       return ["create", "read", "update", "delete", "export", "grade"]
     case "STUDENT":
       return ["read", "submit"]
-    case "GUARDIAN":
     case "STAFF":
+      return ["create", "read", "update", "export"]
+    case "GUARDIAN":
     case "ACCOUNTANT":
       return ["read"]
     default:

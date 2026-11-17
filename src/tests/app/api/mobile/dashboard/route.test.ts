@@ -203,7 +203,7 @@ describe("GET /api/mobile/dashboard", () => {
     const { GET } = await import("@/app/api/mobile/dashboard/route")
     const body = await (await GET(get())).json()
     expect(body.next_actions).toEqual([
-      { kind: "assignmentOverdue", mark: "Essay", href: "/my-assignments" },
+      { kind: "assignmentOverdue", mark: "Essay", href: "/assignments" },
       { kind: "nextClass", mark: "Math", href: "/timetable" },
     ])
   })

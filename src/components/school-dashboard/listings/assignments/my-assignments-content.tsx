@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ReactNode } from "react"
+import Link from "next/link"
 import { differenceInCalendarDays } from "date-fns"
 import { ChevronDown, ClipboardList } from "lucide-react"
 
-import { formatDate } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import type { Locale } from "@/components/internationalization/config"
@@ -19,28 +19,27 @@ import {
 } from "@/components/school-dashboard/shared"
 
 import { AssignmentAttachments } from "./assignment-attachments"
+import { formatAssignmentDate } from "./date"
+import { typeLabel as lookupType } from "./labels"
 import type { MyAssignment } from "./my-assignments"
+import { FamilySubmissionStatus } from "./family-submission"
 import { StudentSubmissionCard } from "./submission-card"
 
 interface Props {
   assignments: MyAssignment[]
   dictionary: Dictionary
   lang: string
+  /** `student` hands in; `guardian` reads a child's list and cannot. */
+  mode?: "student" | "guardian"
+  /** The child being read (guardian mode) — named in the banner. */
+  childName?: string
+  /** Appended to detail links so the detail page opens for the same child. */
+  childId?: string
+  /** The child switcher, rendered between the banner and the list. */
+  switcher?: ReactNode
 }
 
 type Text = Record<string, string | undefined>
-
-/**
- * `AssessmentType` enum values (`FINAL_EXAM`, `LAB_REPORT`, …) as the
- * dictionary's camelCase keys (`finalExam`, `labReport`). A plain
- * `.toLowerCase()` left the underscore in place, so these two types never
- * matched a key and fell back to the raw enum string in both languages.
- */
-function typeKey(type: string): string {
-  return type
-    .toLowerCase()
-    .replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
-}
 
 function isGraded(a: MyAssignment) {
   return (
@@ -49,15 +48,12 @@ function isGraded(a: MyAssignment) {
 }
 
 /**
- * `/my-assignments` (واجباتي), in the vocabulary /library, /live, /lumos and
- * the student's /exams already speak — the saas-marketing green banner, one
- * grey stat panel, then records as rows (see `shared/README.md`, "Phone
- * pattern").
+ * The student's (and, read-only, a guardian's) side of `/assignments`, in the
+ * vocabulary /library, /live, /lumos and the student's /exams already speak —
+ * the saas-marketing green banner, one grey stat panel, then records as rows
+ * (see `shared/README.md`, "Phone pattern").
  *
- * The page used to be a column of bordered cards, each followed by an open
- * hand-in form, so every assignment the student ever had cost two cards and a
- * textarea of height: on a phone the one due tomorrow sat several screens down
- * under ones marked months ago. Now it is sorted by what the student has to DO:
+ * Sorted by what there is to DO:
  *
  *   banner    the next thing due (or that everything is handed in)
  *   panel     to do · overdue · handed in · graded
@@ -65,23 +61,45 @@ function isGraded(a: MyAssignment) {
  *   Handed in waiting for a mark
  *   Graded    with the score on the row
  *
- * Each row is a `<details>`: tapping it opens the brief and the same hand-in
- * card as before, in place. Native disclosure keeps the whole page a server
- * component — the hand-in card stays the only client piece on it.
+ * Each row is a `<details>`: tapping it opens the brief and — for a student —
+ * the hand-in card, in place. Native disclosure keeps the whole page a server
+ * component; the hand-in card is the only client piece on it.
  *
  * Layout is logical (`ms-`/`me-`, `text-start`) and the chevron turns on the
- * vertical axis, so /ar and /en need no direction branches.
+ * vertical axis, so /ar and /en need no direction branches. Copy comes from
+ * `school.assignments.student`, with `school.assignments.guardian` laid over
+ * it for the guardian's wording.
  */
-export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
+export function MyAssignmentsContent({
+  assignments,
+  dictionary,
+  lang,
+  mode = "student",
+  childName,
+  childId,
+  switcher,
+}: Props) {
   const school = dictionary?.school as Record<string, any> | undefined
-  const my = (school?.myAssignments ?? {}) as Record<string, any>
-  const t = my as Text
-  const stats = (my.stats ?? {}) as Text
-  const sections = (my.sections ?? {}) as Text
-  const when = (my.when ?? {}) as Text
-  const detail = (school?.assignments?.detail ?? {}) as Record<string, unknown>
+  const root = (school?.assignments ?? {}) as Record<string, any>
+  const own = (root.student ?? {}) as Record<string, any>
+  const over = (mode === "guardian" ? (root.guardian ?? {}) : {}) as Record<
+    string,
+    any
+  >
+  const t = { ...own, ...over } as Text
+  const stats = { ...(own.stats ?? {}), ...(over.stats ?? {}) } as Text
+  const sections = { ...(own.sections ?? {}), ...(over.sections ?? {}) } as Text
+  const when = { ...(own.when ?? {}) } as Text
+  const detail = (root.detail ?? {}) as Record<string, unknown>
   const types = (detail.types ?? {}) as Text
   const locale = lang as Locale
+  const readOnly = mode === "guardian"
+
+  // A guardian with no linked child has no name to put in the title.
+  const noChild = readOnly && !childId
+  const title = childName
+    ? (t.title ?? "").replace("{name}", childName)
+    : (root.title ?? "")
 
   const now = new Date()
   const daysUntil = (a: MyAssignment) =>
@@ -102,34 +120,36 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
 
   const whenOf = (a: MyAssignment) => {
     const days = daysUntil(a)
-    if (a.dueDate.getTime() < now.getTime()) return when.overdue ?? "Overdue"
-    if (days <= 0) return when.today ?? "Due today"
-    if (days === 1) return when.tomorrow ?? "Due tomorrow"
-    return (when.inDays ?? "In {count} days").replace("{count}", String(days))
+    if (a.dueDate.getTime() < now.getTime()) return when.overdue ?? ""
+    if (days <= 0) return when.today ?? ""
+    if (days === 1) return when.tomorrow ?? ""
+    return (when.inDays ?? "").replace("{count}", String(days))
   }
 
   const next = upcoming[0]
+  const detailQuery = childId ? `?child=${encodeURIComponent(childId)}` : ""
 
   // What every row needs besides its own assignment.
   const rowProps = {
     lang: locale,
     detail,
-    typeLabel: (type: string) => types[typeKey(type)] ?? type,
-    pointsLabel: t.points ?? "pts",
+    readOnly,
+    detailHref: (id: string) => `/${lang}/assignments/${id}${detailQuery}`,
+    typeLabel: (type: string) => lookupType(types, type),
+    pointsLabel: t.points ?? "",
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <BrandBanner
+        className="px-5 py-8 sm:px-8 sm:py-10"
         eyebrow={
-          next
-            ? `${t.title ?? "My assignments"} · ${t.nextDue ?? "Next due"} · ${whenOf(next)}`
-            : (t.title ?? "My assignments")
+          next ? `${title} · ${t.nextDue ?? ""} · ${whenOf(next)}` : title
         }
         actions={
           toDo.length > 0 ? (
             <BrandPill href={`#assignment-${(next ?? toDo[0]).id}`}>
-              {t.open ?? "Open"}
+              {t.open ?? ""}
             </BrandPill>
           ) : undefined
         }
@@ -141,7 +161,7 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
               <span className="mt-1 block text-lg">
                 {[
                   next.subjectName ?? next.className,
-                  formatDate(next.dueDate, locale, {
+                  formatAssignmentDate(next.dueDate, lang, {
                     day: "numeric",
                     month: "long",
                   }),
@@ -152,36 +172,37 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
             </>
           ) : overdue.length > 0 ? (
             <strong className="font-bold">
-              {(
-                t.overdueHeadline ??
-                "{count} overdue — you can still hand them in"
-              ).replace("{count}", String(overdue.length))}
+              {(t.overdueHeadline ?? "").replace(
+                "{count}",
+                String(overdue.length)
+              )}
             </strong>
           ) : (
             <>
-              <strong className="font-bold">
-                {t.allCaughtUp ?? "You're all caught up"}
-              </strong>
+              <strong className="font-bold">{t.allCaughtUp ?? ""}</strong>
               <span className="mt-1 block text-lg">
                 {assignments.length === 0
-                  ? (t.empty ?? "No assignments yet.")
-                  : (t.allCaughtUpHint ?? "Nothing left to hand in right now.")}
+                  ? noChild
+                    ? t.noChildren
+                    : t.empty
+                  : t.allCaughtUpHint}
               </span>
             </>
           )}
         </h1>
       </BrandBanner>
 
+      {switcher}
+
       {assignments.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-[36px] border border-dashed py-16 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-[36px] border border-dashed px-4 py-12 text-center sm:py-16">
           <ClipboardList
             className="text-muted-foreground size-8"
             strokeWidth={1.5}
             aria-hidden="true"
           />
           <p className="text-muted-foreground max-w-[42ch] text-sm">
-            {t.description ??
-              "Everything your classes have set, and what you handed in."}
+            {noChild ? t.noChildren : t.description}
           </p>
         </div>
       ) : (
@@ -191,24 +212,24 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
             items={[
               {
                 key: "toDo",
-                label: stats.toDo ?? "To do",
+                label: stats.toDo ?? "",
                 value: upcoming.length,
               },
               {
                 key: "overdue",
-                label: stats.overdue ?? "Overdue",
+                label: stats.overdue ?? "",
                 value: overdue.length,
                 tone: overdue.length > 0 ? "negative" : "default",
               },
               {
                 key: "handedIn",
-                label: stats.handedIn ?? "Handed in",
+                label: stats.handedIn ?? "",
                 value: handedIn.length,
                 tone: "info",
               },
               {
                 key: "graded",
-                label: stats.graded ?? "Graded",
+                label: stats.graded ?? "",
                 value: graded.length,
                 tone: "positive",
               },
@@ -216,7 +237,7 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
           />
 
           <AssignmentSection
-            title={sections.toDo ?? "To do"}
+            title={sections.toDo ?? ""}
             description={sections.toDoHint}
             rows={toDo}
             renderRow={(a) => (
@@ -235,14 +256,14 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
                     {whenOf(a)}
                   </Badge>
                 }
-                defaultOpen={a.id === next?.id}
+                defaultOpen={!readOnly && a.id === next?.id}
                 {...rowProps}
               />
             )}
           />
 
           <AssignmentSection
-            title={sections.handedIn ?? "Handed in"}
+            title={sections.handedIn ?? ""}
             description={sections.handedInHint}
             rows={handedIn}
             renderRow={(a) => (
@@ -259,8 +280,8 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
                     className="font-normal"
                   >
                     {a.submission?.status === "LATE_SUBMITTED"
-                      ? ((detail.submittedLate as string) ?? "Submitted late")
-                      : ((detail.submitted as string) ?? "Submitted")}
+                      ? (detail.submittedLate as string)
+                      : (detail.submitted as string)}
                   </Badge>
                 }
                 {...rowProps}
@@ -269,7 +290,7 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
           />
 
           <AssignmentSection
-            title={sections.graded ?? "Graded"}
+            title={sections.graded ?? ""}
             rows={graded}
             renderRow={(a) => (
               <AssignmentRow
@@ -322,7 +343,7 @@ function AssignmentSection({
 /**
  * One assignment: the kit's `ListRow` (due-date tile, title with its status
  * badge, subject, type · points) as the `<summary>` of a disclosure whose body
- * is the brief and the hand-in card.
+ * is the brief and the hand-in card (a guardian gets the status instead).
  *
  * `id` is the banner pill's anchor; `scroll-mt` keeps the row clear of the
  * sticky header when the pill jumps to it.
@@ -334,6 +355,8 @@ function AssignmentRow({
   defaultOpen = false,
   lang,
   detail,
+  readOnly,
+  detailHref,
   typeLabel,
   pointsLabel,
 }: {
@@ -343,6 +366,8 @@ function AssignmentRow({
   defaultOpen?: boolean
   lang: Locale
   detail: Record<string, unknown>
+  readOnly: boolean
+  detailHref: (id: string) => string
   typeLabel: (type: string) => string
   pointsLabel: string
 }) {
@@ -352,12 +377,14 @@ function AssignmentRow({
       open={defaultOpen}
       className="group scroll-mt-24 py-0.5"
     >
-      <summary className="focus-visible:ring-ring cursor-pointer list-none rounded-[10px] outline-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
+      <summary className="focus-visible:ring-ring min-h-11 cursor-pointer list-none rounded-[10px] outline-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
         <ListRow
           art={
             <DateTile
-              weekday={formatDate(a.dueDate, lang, { weekday: "short" })}
-              day={formatDate(a.dueDate, lang, { day: "numeric" })}
+              weekday={formatAssignmentDate(a.dueDate, lang, {
+                weekday: "short",
+              })}
+              day={formatAssignmentDate(a.dueDate, lang, { day: "numeric" })}
             />
           }
           title={a.title}
@@ -386,12 +413,12 @@ function AssignmentRow({
 
       <div className="space-y-3 pt-2 pb-4 md:ps-[68px]">
         {a.description ? (
-          <p className="whitespace-pre-wrap">{a.description}</p>
+          <p className="break-words whitespace-pre-wrap">{a.description}</p>
         ) : null}
         {a.instructions ? (
           <p
             className={cn(
-              "text-muted-foreground text-sm whitespace-pre-wrap",
+              "text-muted-foreground text-sm break-words whitespace-pre-wrap",
               !a.description && "pt-1"
             )}
           >
@@ -402,13 +429,28 @@ function AssignmentRow({
           links={a.attachmentLinks}
           label={detail?.attachments as string | undefined}
         />
-        <StudentSubmissionCard
-          assignmentId={a.id}
-          existing={a.submission}
-          labels={detail}
-          locale={lang}
-          className="bg-muted rounded-xl border-0 shadow-none"
-        />
+        {readOnly ? (
+          <FamilySubmissionStatus
+            submission={a.submission}
+            labels={detail}
+            lang={lang}
+            totalPoints={a.totalPoints}
+          />
+        ) : (
+          <StudentSubmissionCard
+            assignmentId={a.id}
+            existing={a.submission}
+            labels={detail}
+            locale={lang}
+            className="bg-muted rounded-xl border-0 shadow-none"
+          />
+        )}
+        <Link
+          href={detailHref(a.id)}
+          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-md text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-2"
+        >
+          {(detail.viewDetails as string) ?? ""}
+        </Link>
       </div>
     </details>
   )

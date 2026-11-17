@@ -33,7 +33,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { getAssignmentTypes } from "./config"
+import { getDictAssignmentTypes } from "./config"
 import { AssignmentFormStepProps } from "./types"
 import { assignmentCreateSchema } from "./validation"
 
@@ -42,10 +42,9 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
   const d = (dictionary?.school as Record<string, any>)?.assignments?.form as
     | Record<string, any>
     | undefined
-  const locale = (dictionary as Record<string, any>)?.locale as
-    | string
-    | undefined
-  const typeOptions = getAssignmentTypes(locale)
+  const typeOptions = getDictAssignmentTypes(
+    (dictionary?.school as Record<string, any>)?.assignments
+  )
 
   return (
     <div className="w-full space-y-4">

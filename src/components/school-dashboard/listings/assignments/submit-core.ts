@@ -147,7 +147,7 @@ export interface StudentSubmission extends OwnSubmission {
   gradedAt: Date | null
 }
 
-/** Prisma select behind `OwnSubmission` — shared with my-assignments.ts. */
+/** Prisma select behind `OwnSubmission` — shared with my-assignments.ts (the student/guardian query). */
 export const ownSubmissionSelect = {
   id: true,
   status: true,

@@ -33,7 +33,7 @@ const STATUSES = [
  *  - ADMIN / DEVELOPER: every assignment in the school
  *
  * Query: page, per_page; staff lists also take status, search.
- * Same queries as the web's /my-assignments and /assignments listings.
+ * Same queries as the web's role-based /assignments page.
  */
 export async function GET(request: NextRequest) {
   try {

@@ -111,9 +111,9 @@
         "label": "Live classes",
         "description": "Online classes in real time"
       },
-      "myAssignments": {
-        "label": "My assignments",
-        "description": "Homework list, for students"
+      "assignments": {
+        "label": "Assignments",
+        "description": "Homework: staff manage it, students hand in, parents read it"
       },
       "transportation": {
         "label": "Bus routes",

@@ -7,6 +7,7 @@ import { useEffect } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -14,6 +15,8 @@ interface ErrorProps {
 }
 
 export default function AssignmentsError({ error, reset }: ErrorProps) {
+  const dictionary = useDictionaryFallback()
+  const t = (dictionary?.school?.assignments as any)?.errors ?? {}
   useEffect(() => {
     console.error("Assignments page error:", error)
   }, [error])
@@ -22,12 +25,12 @@ export default function AssignmentsError({ error, reset }: ErrorProps) {
     <div className="grid gap-8">
       <Alert variant="destructive">
         <Icons.alertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load assignments</AlertTitle>
+        <AlertTitle>{t.listTitle ?? "Unable to load assignments"}</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading assignments.</p>
+          <p>{t.listBody ?? "An unexpected error occurred while loading assignments."}</p>
           {error.digest && (
             <p className="text-muted-foreground text-xs">
-              Error reference: {error.digest}
+              {t.reference ?? "Error reference"}: {error.digest}
             </p>
           )}
         </AlertDescription>
@@ -36,7 +39,7 @@ export default function AssignmentsError({ error, reset }: ErrorProps) {
       <div className="flex gap-4">
         <Button onClick={reset} variant="outline" className="gap-2">
           <Icons.refresh className="h-4 w-4" />
-          Try again
+          {t.retry ?? "Try again"}
         </Button>
       </div>
     </div>

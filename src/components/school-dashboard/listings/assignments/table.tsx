@@ -5,7 +5,7 @@
 import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Loader2, Plus } from "lucide-react"
 
 import {
   FULL_UI_PERMISSIONS,
@@ -25,6 +25,7 @@ import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteAssignment, getAssignments } from "./actions"
+import { AssignmentCard } from "./assignment-card"
 import { getAssignmentColumns, type AssignmentRow } from "./columns"
 import { ExportButton } from "./export-button"
 import { createDraftAssignment } from "./wizard/actions"
@@ -52,9 +53,12 @@ function AssignmentsTableInner({
 
   // Translations with fallbacks
   const d = dictionary as Record<string, any> | undefined
+  const cm = common as Record<string, any> | undefined
   const t = {
-    create: d?.create || "Create",
-    loading: d?.loading || "Loading...",
+    create: d?.create ?? "",
+    loading: d?.loading ?? "",
+    empty: d?.empty ?? "",
+    loadMore: d?.loadMore ?? "",
   }
 
   // Data management with optimistic updates
@@ -86,8 +90,7 @@ function AssignmentsTableInner({
   const handleDelete = useCallback(
     async (assignment: AssignmentRow) => {
       try {
-        const deleteLabel =
-          (common as Record<string, any>)?.actions?.delete || "Delete"
+        const deleteLabel = cm?.actions?.delete ?? ""
         const deleteMsg = `${deleteLabel} "${assignment.title}"?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
@@ -101,22 +104,14 @@ function AssignmentsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(
-            (common as Record<string, any>)?.toast?.error?.delete ||
-              "Failed to delete"
-          )
+          ErrorToast(cm?.toast?.error?.delete ?? "")
         }
       } catch (e) {
         refresh()
-        ErrorToast(
-          e instanceof Error
-            ? e.message
-            : (common as Record<string, any>)?.toast?.error?.delete ||
-                "Failed to delete"
-        )
+        ErrorToast(cm?.toast?.error?.delete ?? "")
       }
     },
-    [optimisticRemove, refresh]
+    [optimisticRemove, refresh, cm]
   )
 
   // Generate columns on the client side with dictionary, lang, and callbacks
@@ -145,8 +140,7 @@ function AssignmentsTableInner({
         pageSize: data.length || perPage,
       },
       columnVisibility: {
-        // Default visible: title, className, dueDate, status
-        type: false,
+        // Default visible: title, type, status, due date
         totalPoints: false,
         createdAt: false,
       },
@@ -159,30 +153,26 @@ function AssignmentsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/assignments/add/${result.data.id}/information`)
     } else {
-      ErrorToast(
-        result.error ||
-          (common as Record<string, any>)?.toast?.error?.create ||
-          "Failed to create"
-      )
+      // `result.error` is a machine code (UNAUTHORIZED …), never user copy.
+      ErrorToast(cm?.toast?.error?.create ?? "")
     }
-  }, [router, lang])
+  }, [router, lang, cm])
 
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={loadMore}
-    >
-      <DataTableToolbar table={table}>
+    <div className="flex w-full flex-col gap-2.5">
+      {/* Filters + create/export. On a phone the controls grow to 44px and the
+          search takes a full row. */}
+      <DataTableToolbar
+        table={table}
+        className="max-md:[&_button]:min-h-11 max-md:[&_input]:h-11 max-md:[&_input]:w-full"
+      >
         <div className="flex items-center gap-2">
           {permissions.showAddButton && (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 w-8 rounded-full p-0"
+              className="size-11 rounded-full p-0 md:size-8"
               onClick={handleCreate}
               aria-label={t.create}
               title={t.create}
@@ -190,10 +180,62 @@ function AssignmentsTableInner({
               <Plus className="h-4 w-4" />
             </Button>
           )}
-          {permissions.showExportButton && <ExportButton />}
+          {permissions.showExportButton && (
+            <ExportButton
+              locale={lang}
+              dictionary={d?.export}
+              size="sm"
+            />
+          )}
         </div>
       </DataTableToolbar>
-    </DataTable>
+
+      {/* Phone: stacked cards. md and up: the table. Same `table` state. */}
+      <div className="md:hidden">
+        {data.length === 0 ? (
+          <p className="text-muted-foreground py-12 text-center text-sm">
+            {t.empty}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {table.getRowModel().rows.map((row) => (
+              <AssignmentCard
+                key={row.id}
+                row={row.original}
+                lang={lang}
+                dictionary={d}
+                common={cm}
+                permissions={permissions}
+                onDelete={handleDelete}
+              />
+            ))}
+          </ul>
+        )}
+        {hasMore && (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 min-h-11 w-full"
+            onClick={loadMore}
+            disabled={isLoading}
+            aria-busy={isLoading}
+          >
+            {isLoading && <Loader2 className="me-2 size-4 animate-spin" />}
+            {t.loadMore}
+          </Button>
+        )}
+      </div>
+
+      <div className="hidden md:block">
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading}
+          onLoadMore={loadMore}
+        />
+      </div>
+    </div>
   )
 }
 

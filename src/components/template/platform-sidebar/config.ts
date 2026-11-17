@@ -189,20 +189,14 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["STUDENT", "GUARDIAN"],
   },
   {
-    // Teachers set homework here; the menu had only the student's list, so
-    // teachers could not find where to create one (Al-Ibda, 11-16).
+    // ONE assignments item. /assignments is role-based: staff manage, students
+    // hand in, guardians read their children's. (The student's separate
+    // "My assignments" item and the /my-assignments route are retired.)
     key: "assignments",
     title: "Assignments",
     href: "/assignments",
     icon: "bookOpen",
-    roles: ["ADMIN", "STAFF", "TEACHER"],
-  },
-  {
-    key: "myAssignments",
-    title: "My assignments",
-    href: "/my-assignments",
-    icon: "bookOpen",
-    roles: ["STUDENT"],
+    roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
   },
   {
     key: "parentPortal",
