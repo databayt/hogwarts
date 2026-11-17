@@ -14,13 +14,17 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
-import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { formatAssignmentDate } from "./date"
-import { ASSIGNMENT_TYPES, statusLabel, statusVariant, typeLabel } from "./labels"
+import {
+  ASSIGNMENT_TYPES,
+  statusLabel,
+  statusVariant,
+  typeLabel,
+} from "./labels"
 import type { AssignmentRow } from "./list-core"
 
 export type { AssignmentRow }
@@ -105,7 +109,10 @@ export const getAssignmentColumns = ({
         <DataTableColumnHeader column={column} title={t.status} />
       ),
       cell: ({ getValue }) => (
-        <Badge variant={statusVariant(getValue<string>())} className="font-normal">
+        <Badge
+          variant={statusVariant(getValue<string>())}
+          className="font-normal"
+        >
           {statusLabel(statuses, getValue<string>())}
         </Badge>
       ),
@@ -159,8 +166,6 @@ export const getAssignmentColumns = ({
       header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const assignment = row.original
-        const { openModal } = useModal()
-        const onEdit = () => openModal(assignment.id)
         const onDelete = () => {
           callbacks?.onDelete?.(assignment)
         }
@@ -173,7 +178,13 @@ export const getAssignmentColumns = ({
               href={`/${lang}/assignments/${assignment.id}`}
             />
             {permissions.showEditAction && (
-              <ActionMenuItem label={t.edit} onClick={onEdit} />
+              // Edit reopens the wizard on this assignment (it loads the
+              // saved values); the old modal form was never mounted, so the
+              // item did nothing (Al-Ibda, 11-17).
+              <ActionMenuItem
+                label={t.edit}
+                href={`/${lang}/assignments/add/${assignment.id}/information`}
+              />
             )}
             {permissions.showDeleteAction && (
               <ActionMenuItem label={t.delete} onClick={onDelete} />

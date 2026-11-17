@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
-import { useModal } from "@/components/atom/modal/context"
 
 import { formatAssignmentDate } from "./date"
 import { statusLabel, statusVariant, typeLabel } from "./labels"
@@ -41,9 +40,11 @@ export function AssignmentCard({
   permissions,
   onDelete,
 }: Props) {
-  const { openModal } = useModal()
   const types = (dictionary?.detail?.types ?? {}) as Record<string, string>
-  const statuses = (dictionary?.detail?.statuses ?? {}) as Record<string, string>
+  const statuses = (dictionary?.detail?.statuses ?? {}) as Record<
+    string,
+    string
+  >
   const href = `/${lang}/assignments/${row.id}`
   const actionsLabel = (dictionary?.actions as string) ?? ""
   const hasMenu = permissions.showEditAction || permissions.showDeleteAction
@@ -85,7 +86,7 @@ export function AssignmentCard({
             {permissions.showEditAction && (
               <ActionMenuItem
                 label={common?.actions?.edit ?? ""}
-                onClick={() => openModal(row.id)}
+                href={`/${lang}/assignments/add/${row.id}/information`}
               />
             )}
             {permissions.showDeleteAction && (
