@@ -6,7 +6,7 @@ Pricing and billing integration connecting the public pricing page to Stripe Che
 
 ### Pricing model (2026-11-17)
 
-Graduated and proportional per student, in SAR (kun decision D-20261117-pricing-proportional-sar, supersedes D-20261108): **24 SAR per student a year for students 1–250, 16 SAR for 251–500, 14 SAR for 501 and above** — `annualPriceSAR(n) = 24·min(n,250) + 16·clamp(n−250,0,250) + 14·max(n−500,0)`. Anchors: 250 students = 6,000 SAR, 500 = 10,000, 1,000 = 17,000; above 1,000 the same 14 SAR under its own contract. No flat bands, so no cliffs. Every new school gets **one free month** first (`TRIAL_MONTHS`), no free allowance at any size. Paid **50% when the free month ends, then 4 × 12.5% ending with the school year**; prices before tax. Live classes are included up to a fair-use allowance (100 / 200 / 400 hours a month for schools up to 250 / 500 / 1,000 students; more is quoted). Schools in Sudan pay the USD price in SDG at the bank rate on the day, by bank transfer.
+One rate per student, in SAR (kun decision D-20261117-pricing-proportional-sar): **24 SAR per student a year, every student, at every size** — 6,000 SAR ÷ 250, the agreed anchor. Above 1,000 students the same rate under its own contract. Every new school gets **one free month** first (`TRIAL_MONTHS`), no free allowance at any size. Paid **50% at signing or when the free month ends, then 4 × 12.5% ending with the school year**; all-in, no VAT added. Live classes are included up to fair use (100 / 200 / 400 hours a month for schools up to 250 / 500 / above). Saudi schools pay in riyals by bank transfer; schools in Sudan pay the riyal price in SDG at the bank rate on the day, by Bankak.
 
 - `rates.ts` — the single source for every number (`quote`, `formatMoney`); the cards, the calculator and the chatbot all read it.
 - `exchange-rates.ts` — live SAR → USD/SDG/EGP from open.er-api.com, cached a day, pinned `FALLBACK_RATES` when it fails.
@@ -27,7 +27,7 @@ src/components/saas-marketing/pricing/
 ├── pricing-header.tsx              # Page header
 ├── pricing-faqs.tsx                # Pricing FAQ (dictionary-driven)
 ├── calculator.tsx                  # Per-student price calculator (live, multi-currency)
-├── rates.ts                        # RATE_TIERS (24/16/14 SAR/student/yr), instalments — single source
+├── rates.ts                        # RATE_SAR_PER_STUDENT_YEAR (24), instalments — single source
 ├── exchange-rates.ts               # Live SAR → USD/SDG/EGP (daily cache + fallback)
 ├── currency.tsx                    # Page-wide currency context + toggle
 ├── CheckoutLauncher.tsx            # Stripe checkout trigger

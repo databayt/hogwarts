@@ -12,7 +12,7 @@ const defaultFaqs = [
   {
     question: "How is the price calculated?",
     answer:
-      "Every student counts from the first, at 24 SAR a year up to 250 students, 16 SAR from 251 to 500 and 14 SAR beyond. A school of 250 pays 6,000 SAR a year, 500 pays 10,000 SAR and 1,000 pays 17,000 SAR. Live classes are included up to a fair-use allowance (100, 200 or 400 hours a month by school size).",
+      "Every student weighs the same: 24 SAR (about $6.40) a year, from the first student. A school of 300 pays 7,200 SAR a year.",
   },
   {
     question: 'What counts as a "student"?',
@@ -27,7 +27,7 @@ const defaultFaqs = [
   {
     question: "How do I pay?",
     answer:
-      "One annual price: 50% when the free month ends, then four instalments of 12.5% ending with the school year. Schools in Saudi Arabia pay in riyals by bank transfer; schools in Sudan pay the riyal price in Sudanese pounds at the bank rate on the day, by Bankak. No VAT is added.",
+      "One annual price: half at signing or when the free month ends, the rest in four instalments of 12.5%, the last by the end of the school year. Schools in Saudi Arabia pay in riyals by bank transfer; schools in Sudan pay the riyal price in Sudanese pounds at the bank rate on the day, by Bankak. No VAT is added. Hosting, support and updates are included — no separate invoices.",
   },
 ]
 

@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// SaaS plan data: what each plan includes. What a school pays lives in
-// rates.ts — graduated per-student rates (24 / 16 / 14 SAR a year). The cards
-// show one card per rate tier (first 250 / 251–500 / 501+); the "free" id is
-// the free first month (TRIAL_MONTHS), kept as pricingData[0] for the legacy
-// subscription code. The dictionary overlays display text only.
+// SaaS plan data: what each plan includes. What a student costs lives in
+// rates.ts — one rate (24 SAR a year) for every student, from the first, on
+// every plan. The "free" plan id is the free first month (TRIAL_MONTHS): the
+// whole product, before the first payment. The dictionary overlays display
+// text only.
 
 import { env } from "@/env.mjs"
 import type {
@@ -31,12 +31,6 @@ type PricingDict =
         yearly?: string
         perMonth?: string
         perStudentPerMonth?: string
-        perStudentPerYear?: string
-        tierFirst?: string
-        tierRange?: string
-        tierOver?: string
-        liveHours?: string
-        freeNote?: string
         minimumNote?: string
         billedAnnuallyNote?: string
         contactToUpgrade?: string
@@ -89,8 +83,8 @@ export const getCtaLabel = (id: PlanId, pricing?: PricingDict): string =>
       : pricing?.constants?.startTrial || "Start your free month"
 
 // Legacy USD unit for the Stripe subscription code (billing-form-button,
-// lib/subscription): one student at the first tier's rate, per month at
-// today's SAR peg. The page, calculator and chatbot price from rates.ts.
+// lib/subscription): one billable student per month at today's SAR peg.
+// The page, calculator and chatbot price from rates.ts, never from this.
 const PER_STUDENT_USD_MONTH =
   Math.round(((RATE_SAR_PER_STUDENT_YEAR * FALLBACK_RATES.USD) / 12) * 10000) /
   10000
@@ -121,10 +115,9 @@ export const pricingData: SubscriptionPlan[] = [
   {
     id: "pro",
     title: "Pro",
-    description: "Per-student rates that fall as your school grows",
+    description: "For growing schools ready to scale",
     benefits: [
-      "Every student at the tier rate, from the first",
-      "Live classes included, up to a fair-use allowance",
+      "Every student, 24 SAR a year",
       "Unlimited teachers",
       "Custom branding",
       "Parent push notifications",
@@ -143,11 +136,12 @@ export const pricingData: SubscriptionPlan[] = [
   },
   {
     id: "enterprise",
-    // Over 1,000 students is a contract at the 14 SAR rate. The unit prices
-    // below are the legacy Stripe unit — don't remove them.
+    // The card headline renders "Custom" (see getPriceDisplay), but these
+    // unit prices are REAL consumers' inputs: the chatbot quotes them and the
+    // calculator estimates from them. Don't remove them as "unused".
     // Displayed as "Ultra"; the id stays "enterprise" for Stripe + subscription.
     title: "Ultra",
-    description: "Networks and large institutions, own contract",
+    description: "For networks and large institutions",
     benefits: [
       "Multi-campus networks",
       "Dedicated account manager",
@@ -199,10 +193,10 @@ export const comparePlans: PlansRow[] = [
   {
     feature: "Students included",
     free: "All, for one month",
-    pro: "Per student, graduated rates",
+    pro: "Unlimited, billed per student",
     enterprise: "1,000+ (custom)",
     tooltip:
-      "Every new school gets one free month. After it, every student costs 24 SAR a year up to 250, 16 SAR from 251 to 500 and 14 SAR beyond (250 students = 6,000 SAR).",
+      "Every new school gets one free month. After it, every student is 24 SAR a year, on every plan.",
   },
   {
     feature: "Teachers",
@@ -282,7 +276,7 @@ const compareFeatureKeys: Record<string, string> = {
 const compareValueKeys: Record<string, string> = {
   "All, for one month": "allForMonth",
   "Up to 100": "upTo100",
-  "Per student, graduated rates": "unlimitedPerStudent",
+  "Unlimited, billed per student": "unlimitedPerStudent",
   "1,000+ (custom)": "students1000Plus",
   Unlimited: "unlimited",
   "Up to 10": "upTo10",
