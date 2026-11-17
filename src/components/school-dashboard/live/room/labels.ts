@@ -83,6 +83,8 @@ export const DEFAULT_ROOM_LABELS = {
   boardEraser: "Eraser",
   boardUndo: "Undo",
   boardRedo: "Redo",
+  boardFullscreen: "Full screen",
+  boardExitFullscreen: "Exit full screen",
   clearBoardConfirm: "Tap again to clear",
   boardWho: "Who can draw",
   boardOnlyHosts: "Only teachers",

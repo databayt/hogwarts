@@ -251,6 +251,8 @@
     "boardEraser": "ممحاة",
     "boardUndo": "تراجع",
     "boardRedo": "إعادة",
+    "boardFullscreen": "ملء الشاشة",
+    "boardExitFullscreen": "خروج من ملء الشاشة",
     "clearBoardConfirm": "اضغط مرة أخرى للمسح",
     "boardWho": "من يرسم",
     "boardOnlyHosts": "المعلمون فقط",

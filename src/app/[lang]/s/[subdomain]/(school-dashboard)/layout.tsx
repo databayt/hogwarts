@@ -19,6 +19,7 @@ import {
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { InstallCard } from "@/components/offline/install-card"
+import { OldCopyBlocker } from "@/components/offline/old-copy-blocker"
 import { OfflineSyncBanner } from "@/components/offline/sync-banner"
 import { OfflineWarmup } from "@/components/offline/warmup"
 import { ReportIssueFooter } from "@/components/report-issue-footer"
@@ -215,6 +216,13 @@ export default async function PlatformLayout({
                         (dictionary as Record<string, any>)?.lumos?.offline
                       }
                       androidApk={schoolAndroidApp(subdomain, lang)}
+                    />
+                    <OldCopyBlocker
+                      labels={
+                        (dictionary as Record<string, any>)?.lumos?.offline
+                      }
+                      lang={lang}
+                      app={schoolAndroidApp(subdomain, lang)}
                     />
                     <OfflineWarmup urls={warmUrls} />
                     {children}

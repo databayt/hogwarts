@@ -18,6 +18,8 @@ import type { OfflineLabels } from "./outbox-view"
 
 const DISMISS_KEY = "pwa-install-dismissed-at"
 const DISMISS_DAYS = 14
+// The APK sheet is the only way in for an app school, so it comes back sooner.
+const APK_DISMISS_DAYS = 1
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -29,7 +31,7 @@ type Platform = "ios" | "android"
 /** Platform detection as an external snapshot: null on the server and on
  *  desktop, "ios" / "android" on phones that are not installed and not
  *  recently dismissed. Read once per render, no state set inside effects. */
-function detectPlatform(): Platform | null {
+function detectPlatform(hasOwnApp: boolean): Platform | null {
   if (typeof window === "undefined") return null
   // Opened from the school's own app (a Chrome Custom Tab: the referrer is
   // android-app://<package>): the person already has the app.
@@ -43,10 +45,13 @@ function detectPlatform(): Platform | null {
     /iPhone|iPad|iPod/i.test(ua) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) // iPadOS
   const android = /Android/i.test(ua)
+  // An app school never offers add-to-home-screen: iOS has no APK, so no sheet.
+  if (hasOwnApp && !android) return null
   if (!ios && !android) return null
+  const days = hasOwnApp ? APK_DISMISS_DAYS : DISMISS_DAYS
   try {
     const at = Number(localStorage.getItem(DISMISS_KEY) ?? 0)
-    if (at && Date.now() - at < DISMISS_DAYS * 86400_000) return null
+    if (at && Date.now() - at < days * 86400_000) return null
   } catch {
     // storage blocked — show the sheet anyway
   }
@@ -76,9 +81,10 @@ export function InstallCard({
    *  which teachers kept opening and could not share from. */
   androidApk?: { url: string; name: string; icon: string } | null
 }) {
+  const hasOwnApp = !!androidApk
   const detected = useSyncExternalStore(
     subscribeNoop,
-    detectPlatform,
+    () => detectPlatform(hasOwnApp),
     serverSnapshot
   )
   const [hidden, setHidden] = useState(false)

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRoomContext } from "@livekit/components-react"
+import { Maximize2, Minimize2 } from "lucide-react"
 
 import type { BoardTool, DraftStroke, Stroke } from "../class-channel"
 import type { RoomLabels } from "../labels"
@@ -98,6 +99,48 @@ export function Board({ channel, labels }: BoardProps) {
     if (rootRef.current) ro.observe(rootRef.current)
     return () => ro.disconnect()
   }, [])
+
+  // ---- full screen: the real API where it exists, else a fixed overlay
+  // (iPhone Safari has neither requestFullscreen on divs nor orientation lock).
+  const [full, setFull] = useState(false)
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) {
+        setFull(false)
+        try {
+          screen.orientation?.unlock?.()
+        } catch {
+          // not locked
+        }
+      }
+    }
+    document.addEventListener("fullscreenchange", onChange)
+    return () => document.removeEventListener("fullscreenchange", onChange)
+  }, [])
+  const toggleFull = useCallback(async () => {
+    if (full) {
+      setFull(false)
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen()
+        screen.orientation?.unlock?.()
+      } catch {
+        // already out
+      }
+      return
+    }
+    setFull(true)
+    try {
+      await rootRef.current?.requestFullscreen()
+      // Landscape fits the 16:9 page; refused outside real fullscreen.
+      await (
+        screen.orientation as ScreenOrientation & {
+          lock?: (o: string) => Promise<void>
+        }
+      )?.lock?.("landscape")
+    } catch {
+      // no Fullscreen/orientation API: the fixed overlay below stands in
+    }
+  }, [full])
 
   // ---- committed layer: only when the strokes or the page change
   useEffect(() => {
@@ -407,9 +450,12 @@ export function Board({ channel, labels }: BoardProps) {
     <div
       ref={rootRef}
       className={
-        portrait
+        (full ? "fixed inset-0 z-[100] " : "relative ") +
+        (portrait
           ? "flex h-full w-full flex-col items-center justify-center bg-neutral-900"
-          : "flex h-full w-full items-center bg-neutral-900 ps-2 sm:ps-3"
+          : full
+            ? "flex h-full w-full items-center bg-neutral-900"
+            : "flex h-full w-full items-center bg-neutral-900 ps-2 sm:ps-3")
       }
     >
       {rail && (
@@ -432,7 +478,9 @@ export function Board({ channel, labels }: BoardProps) {
         className={
           portrait
             ? "aspect-video w-full shrink-0"
-            : "h-full min-w-0 flex-1 sm:pt-16 sm:pb-40"
+            : full
+              ? "h-full min-w-0 flex-1"
+              : "h-full min-w-0 flex-1 sm:pt-16 sm:pb-40"
         }
       >
         <div ref={boxRef} className="relative h-full w-full">
@@ -454,6 +502,25 @@ export function Board({ channel, labels }: BoardProps) {
               onPointerCancel={onPointerUp}
               aria-hidden
             />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                void toggleFull()
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              aria-label={
+                full ? labels.boardExitFullscreen : labels.boardFullscreen
+              }
+              title={full ? labels.boardExitFullscreen : labels.boardFullscreen}
+              className="absolute end-2 top-2 z-10 grid size-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm hover:bg-black/60"
+            >
+              {full ? (
+                <Minimize2 className="size-4" />
+              ) : (
+                <Maximize2 className="size-4" />
+              )}
+            </button>
             {textAt && (
               <input
                 autoFocus

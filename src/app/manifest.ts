@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import { resolveCustomDomain } from "@/lib/custom-domain"
 import { getSubdomainFromHost, isMainDomainHost } from "@/lib/root-domain"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { schoolApkUrl } from "@/components/school-dashboard/live/android-app"
 
 /**
  * `/manifest.webmanifest` — one per tenant.
@@ -83,6 +84,11 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     ? (school!.branding!.primaryColor as string)
     : DEFAULT_THEME
 
+  // A school with its own app is not installable as a web app: the orange
+  // home-screen copy was mistaken for the real app. "browser" fails Chrome's
+  // install check, so no install prompt and no shortcuts.
+  const hasOwnApp = !!schoolApkUrl(subdomain)
+
   return {
     name,
     short_name: shortName,
@@ -93,7 +99,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     // bounced to login and land there after), never on the tenant marketing page.
     start_url: `/${lang}/dashboard`,
     scope: "/",
-    display: "standalone",
+    display: hasOwnApp ? "browser" : "standalone",
     orientation: "portrait-primary",
     background_color: "#ffffff",
     theme_color: themeColor,
@@ -105,7 +111,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
       // accept unsized icons. The house icons above satisfy the install check.
       ...(school?.logoUrl ? [{ src: school.logoUrl, sizes: "any" }] : []),
     ],
-    shortcuts: [
+    shortcuts: hasOwnApp ? undefined : [
       {
         name: copy.quick,
         // Teachers land on the quick-marking surface at the attendance index.

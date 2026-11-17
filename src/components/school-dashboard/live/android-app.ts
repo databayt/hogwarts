@@ -86,3 +86,15 @@ export function buildIntentUrl(
     `S.browser_fallback_url=${encodeURIComponent(apkUrl)};end`
   )
 }
+
+/**
+ * A school with its own app should not be reachable as a home-screen web app
+ * on Android: that old copy is what teachers mistake for the real app.
+ */
+export function isOldAppCopy(opts: {
+  standalone: boolean
+  ua: string | null | undefined
+  hasOwnApp: boolean
+}): boolean {
+  return opts.hasOwnApp && opts.standalone && /Android/i.test(opts.ua ?? "")
+}
