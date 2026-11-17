@@ -40,6 +40,9 @@ function makeRoom(metadata: string | null) {
       name: "Me",
       attributes: {} as Record<string, string>,
       setAttributes: vi.fn(async () => undefined),
+      // The hook publishes directly (not through useDataChannel's send).
+      publishData: (payload: Uint8Array, opts: unknown) =>
+        state.sendSpy(payload, opts),
     },
     remoteParticipants: new Map(),
     on(event: string, cb: Listener) {

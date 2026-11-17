@@ -238,7 +238,8 @@ function useClassProgress(startsAtMs: number | null, endsAtMs: number | null) {
   if (now < startsAtMs) return null
 
   const span = endsAtMs - startsAtMs
-  if (span <= 0) return null
+  // No bar and no "640963h left" for an always-open room (the practice room).
+  if (span <= 0 || span > 24 * 60 * 60_000) return null
 
   return {
     percent: Math.min(100, Math.max(0, ((now - startsAtMs) / span) * 100)),

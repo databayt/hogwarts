@@ -274,8 +274,12 @@ export default async function Page({ params }: Props) {
     startTime: row?.scheduledStart
       ? timeFormat.format(row.scheduledStart)
       : null,
+    // An always-open room (the practice room ends in 2099) has no length to
+    // print: it read «38461464 دقيقة». Anything over a day is open-ended.
     durationLabel:
-      minutes && minutes > 0 ? `${minutes} ${c?.minutes ?? "min"}` : null,
+      minutes && minutes > 0 && minutes <= 24 * 60
+        ? `${minutes} ${c?.minutes ?? "min"}`
+        : null,
     isLive: row?.status === "live",
     // A session can opt into recording before the bucket exists; the card
     // must not promise REC (nor the room a consent notice) until it can be true.

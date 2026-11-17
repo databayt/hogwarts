@@ -136,7 +136,7 @@ export function useClassChannel(opts: {
     }
   }, [room])
 
-  const { send: sendRaw } = useDataChannel(CLASS_TOPIC, (raw) => {
+  useDataChannel(CLASS_TOPIC, (raw) => {
     const msg = decodeMessage(raw.payload)
     if (!msg) return
     const from = raw.from
@@ -212,6 +212,24 @@ export function useClassChannel(opts: {
       }
     }
   })
+
+  // Publish straight through the local participant, not useDataChannel's
+  // `send`: that one calls `isSendingSubscriber.next()` on a subscriber that
+  // only exists once something subscribes to its isSending observable, so
+  // every send threw "Cannot read properties of undefined (reading 'next')"
+  // before publishing — a granted student's strokes never left the browser
+  // (Al-Ibda, 11-17). Same call the library makes, same topic.
+  const sendRaw = useCallback(
+    (
+      payload: Uint8Array,
+      options: { reliable?: boolean; destinationIdentities?: string[] }
+    ) =>
+      room.localParticipant.publishData(payload, {
+        topic: CLASS_TOPIC,
+        ...options,
+      }),
+    [room]
+  )
 
   const send = useCallback(
     async (msg: ClassMessage, to?: string[]) => {
