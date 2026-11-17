@@ -31,6 +31,9 @@ type Platform = "ios" | "android"
  *  recently dismissed. Read once per render, no state set inside effects. */
 function detectPlatform(): Platform | null {
   if (typeof window === "undefined") return null
+  // Opened from the school's own app (a Chrome Custom Tab: the referrer is
+  // android-app://<package>): the person already has the app.
+  if (document.referrer.startsWith("android-app://")) return null
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as unknown as { standalone?: boolean }).standalone === true

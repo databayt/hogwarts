@@ -67,6 +67,7 @@ export function ChatButton({
 }: ChatButtonProps) {
   const [shouldInvert, setShouldInvert] = useState(false)
   const pathname = usePathname()
+  const inWizard = /\/add\//.test(pathname ?? "")
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -175,6 +176,10 @@ export function ChatButton({
           className={cn(
             CHATBOT_POSITIONS[position],
             "z-[9999] block transition-all duration-700 ease-in-out",
+            // A wizard's footer (رجوع · التالي) sits in the same bottom corner
+            // on a phone; the bubble covered «التالي» and teachers could not
+            // get past the first step of a new homework (Al-Ibda, 11-17).
+            inWizard && "max-md:hidden",
             "h-12 w-12 rounded-full p-2 md:h-14 md:w-14",
             "border-none bg-transparent shadow-none hover:bg-transparent",
             "hover:scale-105",
