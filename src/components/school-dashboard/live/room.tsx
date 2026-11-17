@@ -16,6 +16,8 @@ import {
   type RoomOptions,
 } from "livekit-client"
 
+import { isMainDomainHost } from "@/lib/root-domain"
+
 import "@livekit/components-styles"
 
 import { useOpenOnHero } from "@/components/lumos/shared/title-card"
@@ -25,8 +27,8 @@ import type {
   RoomJoinTicket,
 } from "@/components/school-dashboard/live/types"
 
-import { AndroidAppCard } from "./android-app-card"
 import { joinLiveClass } from "./actions/tokens"
+import { AndroidAppCard } from "./android-app-card"
 import type { RoomLabels } from "./room/labels"
 import { RoomShell } from "./room/room-shell"
 import { SilentHostBanner } from "./room/silent-host-banner"
@@ -342,7 +344,18 @@ export function RoomClient({
             <button
               type="button"
               className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm"
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                // Opened on the bare root (balqalam.com) the room has no
+                // page, so a reload 404s. Route through /my-school, which
+                // resolves the school and forwards to its own host.
+                const { hostname, pathname, search } = window.location
+                if (isMainDomainHost(hostname)) {
+                  const next = encodeURIComponent(`${pathname}${search}`)
+                  window.location.assign(`/${locale}/my-school?next=${next}`)
+                  return
+                }
+                window.location.reload()
+              }}
             >
               {labels.room.rejoin}
             </button>

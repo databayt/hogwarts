@@ -15,6 +15,7 @@ import {
   getSubdomainFromHost,
   isMainDomainHost,
 } from "@/lib/root-domain"
+import { isTenantOnlyPath } from "@/lib/tenant-paths"
 import { currentSubjectSlug } from "@/components/catalog/legacy-slugs"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import {
@@ -375,6 +376,25 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
       loginUrl.searchParams.set("subdomain", subdomain)
     }
     return NextResponse.redirect(loginUrl)
+  }
+
+  // A school-only path (live room, timetable, ...) opened on the bare root
+  // (balqalam.com) has no page there and would 404 — and a reload of a live
+  // room 404s the same way. The edge can't look up the school (the JWT carries
+  // schoolId, not the subdomain), so hand a signed-in visitor to
+  // /<lang>/my-school, which resolves it and forwards to
+  // <school>.<root><next>. Unauthenticated visitors were already sent to login.
+  if (
+    authenticated &&
+    isMainDomainHost(host) &&
+    isTenantOnlyPath(pathWithoutLocale)
+  ) {
+    const mySchool = new URL(`/${locale}/my-school`, req.url)
+    mySchool.searchParams.set(
+      "next",
+      `/${locale}${pathWithoutLocale}${url.search}`
+    )
+    return NextResponse.redirect(mySchool, 307)
   }
 
   // Role-based access control for authenticated users on protected routes
