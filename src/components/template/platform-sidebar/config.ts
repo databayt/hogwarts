@@ -189,6 +189,15 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["STUDENT", "GUARDIAN"],
   },
   {
+    // Teachers set homework here; the menu had only the student's list, so
+    // teachers could not find where to create one (Al-Ibda, 11-16).
+    key: "assignments",
+    title: "Assignments",
+    href: "/assignments",
+    icon: "bookOpen",
+    roles: ["ADMIN", "STAFF", "TEACHER"],
+  },
+  {
     key: "myAssignments",
     title: "My assignments",
     href: "/my-assignments",
