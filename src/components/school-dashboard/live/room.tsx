@@ -88,9 +88,13 @@ interface Props {
 //
 // Literals mirror ACTION_ERRORS values (not imported — keep server-only
 // modules out of this client bundle).
+//
+// NOT_AUTHENTICATED / MISSING_SCHOOL are NOT here: they mean the web session
+// behind the heartbeat lapsed (cookie expiry on a phone browser), not that the
+// viewer lost the class. They fall to the retry path so the call keeps going —
+// an Al-Ibda Grade 6 student was thrown out of his own running class with
+// "Token expired" this way (11-17).
 const DENY_CODES = new Set([
-  "NOT_AUTHENTICATED",
-  "MISSING_SCHOOL",
   "UNAUTHORIZED",
   "LIVE_CLASS_NOT_FOUND",
   "LIVE_CLASS_PARTICIPANT_DENIED",

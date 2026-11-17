@@ -327,7 +327,7 @@
     "maxDuration": "Class duration exceeds the school maximum.",
     "maxConcurrent": "The school has reached its limit of concurrent live classes.",
     "tokenFailed": "Could not issue a room token.",
-    "tokenExpired": "Token expired. Please rejoin.",
+    "tokenExpired": "We couldn't confirm your place in this class. Go back to the class and join again.",
     "participantDenied": "You are not enrolled in this class.",
     "practiceNoTeacher": "Add at least one active teacher before turning on the practice room.",
     "providerUnavailable": "Video service is unavailable. Try again shortly.",
