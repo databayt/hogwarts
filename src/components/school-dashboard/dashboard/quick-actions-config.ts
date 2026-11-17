@@ -109,7 +109,8 @@ export function getQuickActionsByRole(
           iconName: "Book",
           label: "Assignments",
           description: "View pending assignments",
-          href: "/assignments",
+          // Students' own page; /assignments is staff-only in routes.ts.
+          href: "/my-assignments",
         },
         {
           iconName: "Notebook",
