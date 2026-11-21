@@ -418,6 +418,9 @@ export async function generateExam(
     const availableQuestions = await db.questionBank.findMany({
       where: {
         schoolId,
+        // Reviewed questions only: a draft (the question wizard's, or an
+        // unreviewed generated one) carries a wizardStep.
+        wizardStep: null,
         subjectId: exam.subjectId,
       },
       include: {
@@ -558,7 +561,7 @@ export async function getAnalyticsDashboard() {
         db.schoolExamTemplate.count({ where: { schoolId } }),
         db.generatedExam.count({ where: { schoolId } }),
         db.questionBank.findMany({
-          where: { schoolId },
+          where: { schoolId, wizardStep: null },
           include: {
             analytics: true,
             subject: {

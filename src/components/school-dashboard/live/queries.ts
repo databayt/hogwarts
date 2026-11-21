@@ -637,7 +637,7 @@ export type LiveClassReferenceData = {
  * (`verifyLessonAnchor`). A school that switched a lesson off must never see
  * it re-offered — or accepted — as a live-class anchor.
  */
-function lessonVisibilityFilter(schoolId: string): {
+export function lessonVisibilityFilter(schoolId: string): {
   status: "PUBLISHED"
   NOT: { overrides: { some: { schoolId: string; isHidden: true } } }
 } {

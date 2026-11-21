@@ -11,6 +11,12 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { notifyAssignmentPublished } from "@/components/school-dashboard/listings/assignments/notify"
 import { prewarm } from "@/components/translation/prewarm"
 
+import {
+  suggestNextLessonFor,
+  visibleLessons,
+} from "@/components/lesson-draft/suggest"
+
+import { verifyLessonAnchor } from "../queries"
 import { requireContext } from "./helpers"
 import { holdsHostSeat } from "./host-seat"
 
@@ -280,4 +286,91 @@ export async function setClassHomework(input: {
 
   refreshPage("/assignments")
   return { success: true as const, data: { id: assignment.id } }
+}
+
+/**
+ * The class's lesson («درس اليوم»): one lesson of the class's own subject, or
+ * null to clear it. Writes Conference.catalogLessonId — the lesson-draft
+ * button and the class page's lesson links read it.
+ */
+export async function setClassLesson(
+  sessionId: string,
+  lessonId: string | null
+) {
+  if (lessonId !== null && (typeof lessonId !== "string" || !lessonId)) {
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  }
+  const host = await hostSession(sessionId)
+  if (!host.ok) return host.response
+  const { ctx, session } = host
+
+  if (lessonId !== null) {
+    // The lesson must be visible to this school and belong to the class's subject
+    if (
+      !session.subjectId ||
+      !(await verifyLessonAnchor(ctx.schoolId, lessonId, session.subjectId))
+    ) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "lesson")
+    }
+  }
+
+  await db.conference.updateMany({
+    where: { id: session.id, schoolId: ctx.schoolId },
+    data: { catalogLessonId: lessonId },
+  })
+  refreshPage("/live")
+  return { success: true as const, data: { lessonId } }
+}
+
+/**
+ * The lesson this class most likely teaches next: after the last class of
+ * the same section and subject that had one, else the subject's first.
+ * Never saved — the teacher confirms it in the picker.
+ */
+export async function suggestNextLesson(sessionId: string) {
+  const host = await hostSession(sessionId)
+  if (!host.ok) return host.response
+  const { ctx, session } = host
+  if (!session.sectionId || !session.subjectId) {
+    return { success: true as const, data: { lessonId: null as string | null } }
+  }
+  const lessonId = await suggestNextLessonFor(ctx.schoolId, {
+    sectionId: session.sectionId,
+    subjectId: session.subjectId,
+  })
+  return { success: true as const, data: { lessonId } }
+}
+
+/** The picker's data: the subject's lessons, the saved one, the suggestion. */
+export async function getClassLessons(sessionId: string) {
+  const host = await hostSession(sessionId)
+  if (!host.ok) return host.response
+  const { ctx, session } = host
+  if (!session.subjectId) {
+    return {
+      success: true as const,
+      data: {
+        lessons: [] as { id: string; name: string }[],
+        currentId: null as string | null,
+        suggestedId: null as string | null,
+      },
+    }
+  }
+  const [lessons, saved, suggestedId] = await Promise.all([
+    visibleLessons(ctx.schoolId, session.subjectId),
+    db.conference.findFirst({
+      where: { id: session.id, schoolId: ctx.schoolId },
+      select: { catalogLessonId: true },
+    }),
+    session.sectionId
+      ? suggestNextLessonFor(ctx.schoolId, {
+          sectionId: session.sectionId,
+          subjectId: session.subjectId,
+        })
+      : null,
+  ])
+  return {
+    success: true as const,
+    data: { lessons, currentId: saved?.catalogLessonId ?? null, suggestedId },
+  }
 }

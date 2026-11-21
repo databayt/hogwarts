@@ -30,14 +30,17 @@ import { resolveTeachingScope } from "@/components/school-dashboard/teaching-sco
 
 vi.mock("@/lib/db", () => ({
   db: {
+    // launch now publishes in one transaction (it un-hides AI-draft questions)
+    $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
     quickAssessment: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
     quickAssessmentResponse: { findUnique: vi.fn(), create: vi.fn() },
-    questionBank: { findMany: vi.fn() },
+    questionBank: { findMany: vi.fn(), updateMany: vi.fn() },
     student: { findFirst: vi.fn(), findMany: vi.fn() },
     studentGuardian: { findMany: vi.fn() },
   },

@@ -37,7 +37,8 @@ export default async function PracticeContent({ lang }: Props) {
   // Fetch questions grouped by subject with counts by difficulty and type
   const [questions, subjects] = await Promise.all([
     db.questionBank.findMany({
-      where: { schoolId, subjectId: { in: subjectIds } },
+      // Reviewed questions only — never a draft still in a wizard.
+      where: { schoolId, subjectId: { in: subjectIds }, wizardStep: null },
       select: {
         id: true,
         questionText: true,

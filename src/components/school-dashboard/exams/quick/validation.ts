@@ -22,6 +22,15 @@ export const quickAssessmentUpdateSchema = quickAssessmentCreateSchema
     id: z.string().min(1, "ID is required"),
   })
 
+/** The review page's edit: rename, reorder or remove questions, duration, results. */
+export const quickAssessmentReviewSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  duration: z.number().int().min(1).max(60).optional(),
+  // Reorder / remove only: every id must already belong to the assessment
+  questionIds: z.array(z.string().min(1)).min(1).max(50).optional(),
+  showResults: z.boolean().optional(),
+})
+
 export const submitQuickResponseSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
   responses: z.array(

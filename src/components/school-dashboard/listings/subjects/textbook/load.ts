@@ -70,20 +70,31 @@ async function fetchTwin(url: string): Promise<string | null> {
   }
 }
 
+/** The twin, parsed and placed — everything before the reader's layout. */
+export type LoadedTwin =
+  | { status: "unavailable" | "noText"; pdfUrl: string }
+  | {
+      status: "ok"
+      pdfUrl: string
+      assetBaseUrl: string
+      pagesBaseUrl: string
+      parsed: ReturnType<typeof parseTwin>
+      /** Pages with cover pages filtered out when the subject has a cover. */
+      pages: TwinPage[]
+      offset: number | null
+      toc: TocChapter[]
+      coverUrl: string | null
+    }
+
 /**
- * The textbook as the reader lays it out: the text twin parsed into pages,
- * the contents resolved to pages, the book split into flows (front matter,
- * then one per chapter), and each chapter's and lesson's opener placed.
- *
- * The web reader (`content.tsx`) and `/api/mobile/textbooks/[slug]` both
- * build from this, so a phone and a browser can never disagree about what
- * is on a page — they only differ in how they paginate it.
+ * The front half of `loadTextbook`: fetch the text twin and structure, parse,
+ * drop cover pages, resolve the page offset and the table of contents. Needs
+ * no reader labels, so server code that only wants the book's text (the
+ * lesson-draft block) can call it.
  */
-export async function loadTextbook(
-  subject: TextbookSubject,
-  labels: ReaderLabels,
-  lang: string
-): Promise<LoadedTextbook> {
+export async function loadTextbookTwin(
+  subject: TextbookSubject
+): Promise<LoadedTwin> {
   // Every textbook file is a sibling of the stored PDF key — the catalog's URL
   // contract (catalog/<cur>/<grade>/<subject>/textbook.{pdf,md}), no URL fields.
   const pdfUrl = getCloudFrontUrl(subject.pdfKey)
@@ -119,6 +130,39 @@ export async function loadTextbook(
     parsed.meta.sourcePages,
     anchors
   )
+
+  return {
+    status: "ok",
+    pdfUrl,
+    assetBaseUrl,
+    pagesBaseUrl,
+    parsed,
+    pages,
+    offset,
+    toc,
+    coverUrl,
+  }
+}
+
+/**
+ * The textbook as the reader lays it out: the text twin parsed into pages,
+ * the contents resolved to pages, the book split into flows (front matter,
+ * then one per chapter), and each chapter's and lesson's opener placed.
+ *
+ * The web reader (`content.tsx`) and `/api/mobile/textbooks/[slug]` both
+ * build from this, so a phone and a browser can never disagree about what
+ * is on a page — they only differ in how they paginate it.
+ */
+export async function loadTextbook(
+  subject: TextbookSubject,
+  labels: ReaderLabels,
+  lang: string
+): Promise<LoadedTextbook> {
+  const twin = await loadTextbookTwin(subject)
+  if (twin.status !== "ok") return twin
+  const { pdfUrl, assetBaseUrl, pagesBaseUrl, parsed, pages, offset, toc, coverUrl } =
+    twin
+
   const groups = groupSections(pages, toc, parsed.hasPageMarkers)
 
   const bookLang = parsed.meta.lang || "ar"

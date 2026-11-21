@@ -19,6 +19,7 @@ import { prewarm } from "@/components/translation/prewarm"
 
 import {
   quickAssessmentCreateSchema,
+  quickAssessmentReviewSchema,
   quickAssessmentUpdateSchema,
   submitQuickResponseSchema,
 } from "../validation"
@@ -47,6 +48,7 @@ const AUTHOR_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
 async function getAuthor(): Promise<{
   schoolId: string
   userId: string
+  role: string
 } | null> {
   const [session, schoolId] = await Promise.all([auth(), getSchoolId()])
   const userId = session?.user?.id
@@ -54,7 +56,7 @@ async function getAuthor(): Promise<{
   if (!schoolId || !userId || !role || !AUTHOR_ROLES.includes(role)) {
     return null
   }
-  return { schoolId, userId }
+  return { schoolId, userId, role }
 }
 
 /**
@@ -83,7 +85,12 @@ export async function listQuickCheckQuestions(input: {
     return { success: false, error: "VALIDATION_ERROR" }
   }
   const rows = await db.questionBank.findMany({
-    where: { schoolId: author.schoolId, subjectId: input.subjectId },
+    // wizardStep null = the shared bank; unreviewed AI drafts ("ai-draft") stay out
+    where: {
+      schoolId: author.schoolId,
+      subjectId: input.subjectId,
+      wizardStep: null,
+    },
     select: {
       id: true,
       questionText: true,
@@ -130,7 +137,11 @@ async function viewerAudienceWhere(
               select: { studentId: true },
             })
           ).map((g) => g.studentId)
-    return studentAudienceWhere(await getStudentScopes(schoolId, studentIds))
+    // A student or guardian never sees a DRAFT — nor its questions
+    return {
+      ...studentAudienceWhere(await getStudentScopes(schoolId, studentIds)),
+      status: { in: ["ACTIVE", "CLOSED"] },
+    }
   }
   return {}
 }
@@ -212,10 +223,23 @@ export async function launchQuickAssessment(
       }
     }
 
-    await db.quickAssessment.update({
-      where: { id },
-      data: { status: "ACTIVE" },
-    })
+    // Publishing a reviewed AI draft brings its questions out of the hidden
+    // "ai-draft" state, so the shared question bank lists them from now on
+    // (the sentinel is documented in lesson-draft/README.md).
+    await db.$transaction([
+      db.questionBank.updateMany({
+        where: {
+          schoolId,
+          id: { in: existing.questionIds },
+          wizardStep: "ai-draft",
+        },
+        data: { wizardStep: null },
+      }),
+      db.quickAssessment.updateMany({
+        where: { id, schoolId },
+        data: { status: "ACTIVE" },
+      }),
+    ])
 
     refreshPage("/exams/quick")
     return { success: true }
@@ -347,6 +371,157 @@ export async function getQuickAssessment(id: string) {
   } catch (error) {
     console.error("Error fetching quick assessment:", error)
     return null
+  }
+}
+
+// ============================================================================
+// DRAFT REVIEW (a teacher edits a draft before publishing it)
+// ============================================================================
+
+/**
+ * The draft a review action may touch: the school's, still DRAFT, and the
+ * caller's own unless the caller is an admin.
+ */
+async function reviewableDraft(
+  author: { schoolId: string; userId: string; role: string },
+  id: string
+): Promise<
+  | { ok: true; assessment: { id: string; questionIds: string[] } }
+  | { ok: false; code: "NOT_FOUND" | "NOT_DRAFT" | "FORBIDDEN" }
+> {
+  const assessment = await db.quickAssessment.findFirst({
+    where: { id, schoolId: author.schoolId },
+    select: { id: true, status: true, createdBy: true, questionIds: true },
+  })
+  if (!assessment) return { ok: false, code: "NOT_FOUND" }
+  const isAdmin = author.role === "ADMIN" || author.role === "DEVELOPER"
+  if (!isAdmin && assessment.createdBy !== author.userId) {
+    return { ok: false, code: "FORBIDDEN" }
+  }
+  if (assessment.status !== "DRAFT") return { ok: false, code: "NOT_DRAFT" }
+  return { ok: true, assessment }
+}
+
+export async function updateQuickAssessment(
+  id: string,
+  input: unknown
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const author = await getAuthor()
+    if (!author) {
+      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+    }
+    const parsed = quickAssessmentReviewSchema.safeParse(input)
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: "Invalid input",
+        code: "VALIDATION_ERROR",
+      }
+    }
+    const draft = await reviewableDraft(author, id)
+    if (!draft.ok) {
+      return { success: false, error: draft.code, code: draft.code }
+    }
+    const { assessment } = draft
+    const patch = parsed.data
+
+    let removed: string[] = []
+    if (patch.questionIds) {
+      const owned = new Set(assessment.questionIds)
+      const unique = new Set(patch.questionIds)
+      if (
+        unique.size !== patch.questionIds.length ||
+        patch.questionIds.some((q) => !owned.has(q))
+      ) {
+        return {
+          success: false,
+          error: "Invalid questions",
+          code: "VALIDATION_ERROR",
+        }
+      }
+      removed = assessment.questionIds.filter((q) => !unique.has(q))
+    }
+
+    await db.$transaction([
+      db.quickAssessment.updateMany({
+        where: { id, schoolId: author.schoolId, status: "DRAFT" },
+        data: {
+          ...(patch.title !== undefined ? { title: patch.title } : {}),
+          ...(patch.duration !== undefined ? { duration: patch.duration } : {}),
+          ...(patch.showResults !== undefined
+            ? { showResults: patch.showResults }
+            : {}),
+          ...(patch.questionIds ? { questionIds: patch.questionIds } : {}),
+        },
+      }),
+      // A question the teacher dropped from an AI draft goes with it — it
+      // was never published, so nothing else can reference it
+      ...(removed.length
+        ? [
+            db.questionBank.deleteMany({
+              where: {
+                schoolId: author.schoolId,
+                id: { in: removed },
+                wizardStep: "ai-draft",
+              },
+            }),
+          ]
+        : []),
+    ])
+
+    refreshPage("/exams/quick")
+    return { success: true, data: { id } }
+  } catch (error) {
+    console.error("Error updating quick assessment:", error)
+    return {
+      success: false,
+      error: "Failed to update assessment",
+      code: "UPDATE_FAILED",
+    }
+  }
+}
+
+export async function deleteQuickAssessment(
+  id: string
+): Promise<ActionResponse> {
+  try {
+    const author = await getAuthor()
+    if (!author) {
+      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+    }
+    const draft = await reviewableDraft(author, id)
+    if (!draft.ok) {
+      return { success: false, error: draft.code, code: draft.code }
+    }
+    const { schoolId } = author
+
+    await db.$transaction([
+      db.conferenceResource.deleteMany({
+        where: { schoolId, quickAssessmentId: id },
+      }),
+      db.quickAssessment.deleteMany({
+        where: { id, schoolId, status: "DRAFT" },
+      }),
+      // Its unlaunched AI questions were never in the shared bank
+      db.questionBank.deleteMany({
+        where: {
+          schoolId,
+          id: { in: draft.assessment.questionIds },
+          wizardStep: "ai-draft",
+        },
+      }),
+    ])
+
+    refreshPage("/exams/quick")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting quick assessment:", error)
+    return {
+      success: false,
+      error: "Failed to delete assessment",
+      code: "DELETE_FAILED",
+    }
   }
 }
 

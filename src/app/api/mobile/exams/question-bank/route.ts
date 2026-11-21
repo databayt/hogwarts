@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.QuestionBankWhereInput = {
       schoolId: auth.schoolId,
+      // Reviewed questions only — never a draft still in a wizard.
+      wizardStep: null,
       ...(subjectId ? { subjectId } : {}),
       ...(difficulty
         ? { difficulty: difficulty as Prisma.EnumDifficultyLevelFilter }

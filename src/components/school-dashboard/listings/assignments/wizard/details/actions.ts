@@ -10,6 +10,12 @@ import { db } from "@/lib/db"
 import { isTenantStorageUrl } from "@/lib/tenant-storage"
 import { presignUpload } from "@/lib/upload/presign"
 
+import { lessonDraftEnabled } from "@/components/lesson-draft/claude"
+import {
+  suggestNextLessonFor,
+  visibleLessons,
+} from "@/components/lesson-draft/suggest"
+
 import { wizardEditor } from "../guard"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
@@ -127,5 +133,53 @@ export async function presignAssignmentAttachment(input: {
   return {
     success: true,
     data: { uploadUrl: out.presignedUrl, fileUrl: out.finalUrl },
+  }
+}
+
+/**
+ * The «اقترح من الدرس» button's data: whether the feature is on (the client
+ * never reads env), and — for the draft's own section and subject — the
+ * lessons to pick from and the one likely taught next. Off, or a draft with
+ * no subject: nothing is queried.
+ */
+export async function getLessonOptionsForAssignment(
+  assignmentId: string
+): Promise<
+  ActionResponse<{
+    enabled: boolean
+    lessons: { id: string; name: string }[]
+    suggestedId: string | null
+  }>
+> {
+  try {
+    const editor = await wizardEditor("update")
+    if (!editor) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const none = { enabled: false, lessons: [], suggestedId: null }
+    if (!lessonDraftEnabled()) return { success: true, data: none }
+
+    const row = await db.schoolAssignment.findFirst({
+      where: { id: assignmentId, schoolId: editor.schoolId, status: "DRAFT" },
+      select: { subjectId: true, sectionId: true },
+    })
+    if (!row?.subjectId) return { success: true, data: none }
+
+    const [lessons, suggestedId] = await Promise.all([
+      visibleLessons(editor.schoolId, row.subjectId),
+      row.sectionId
+        ? suggestNextLessonFor(editor.schoolId, {
+            sectionId: row.sectionId,
+            subjectId: row.subjectId,
+          })
+        : null,
+    ])
+    return {
+      success: true,
+      data: { enabled: lessons.length > 0, lessons, suggestedId },
+    }
+  } catch (error) {
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

@@ -121,6 +121,22 @@ on databayt/hogwarts#314 and uses the same `CRON_SECRET` repo secret.
 not run since the cutover. `live-class-reminders` is the only caller of `materializeOnlineSchools()`,
 so with it off a school that teaches online materializes **zero** sessions.
 
+## Lesson drafts (switched off by default)
+
+The «اقترح اختباراً وواجباً» feature (`src/components/lesson-draft/`) drafts a quick check and a
+homework from a class's textbook lesson, on a teacher's request. It reuses the chatbot's Claude
+key and is inert unless switched on:
+
+| Env | Default | Meaning |
+| --- | --- | --- |
+| `LESSON_DRAFT_ENABLED` | unset (off) | `1` turns the feature on. Also needs `CHATBOT_ANTHROPIC_API_KEY`. |
+| `LESSON_DRAFT_CAP_USD` | `10` | Monthly spend cap for the lane (AIUsageLog, jobType `lesson-draft`). |
+| `LESSON_DRAFT_DAILY_USD` | `1` | Daily spend cap for the lane. |
+| `LESSON_DRAFT_TEACHER_DAILY` | `10` | Runs per teacher per day. |
+
+Run the eval (`scripts/lesson-draft/eval.ts`, about $0.02) before setting `LESSON_DRAFT_ENABLED=1`
+on production. Never use the plain `ANTHROPIC_API_KEY`.
+
 ## Moving back to the paid account
 
 1. Restore the cron array: copy `vercel.crons.full.json`'s `crons` back into `vercel.json`,

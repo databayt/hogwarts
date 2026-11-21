@@ -9,8 +9,17 @@ import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import {
+  suggestNextLessonFor,
+  visibleLessons,
+} from "@/components/lesson-draft/suggest"
+
 import { loadClassWork, type HomeworkItem } from "./class-work-load"
 import { SetHomeworkDialog } from "./set-homework-dialog"
+import {
+  SuggestDraftsButton,
+  type SuggestDraftsLabels,
+} from "./suggest-drafts-button"
 
 /** In the SCHOOL's zone — the server's own is UTC, two hours off Khartoum. */
 function formatDue(d: Date, locale: string, timeZone: string): string {
@@ -52,9 +61,11 @@ export async function ClassWork({
     schoolId: tenant.schoolId,
   }).catch(() => null)
   if (!work) return null
-  const { homework, quickChecks, polls, canSetHomework, isStudent } = work
+  const { homework, quickChecks, polls, canSetHomework, isStudent, canSuggest } =
+    work
   if (
     !canSetHomework &&
+    !canSuggest &&
     homework.length === 0 &&
     quickChecks.length === 0 &&
     polls.length === 0
@@ -78,6 +89,27 @@ export async function ClassWork({
     handedIn: t?.handedIn ?? "{n} handed in",
     responses: t?.responses ?? "{n} responses",
   }
+
+  // The lesson picker + «اقترح اختباراً وواجباً» — only for a host, only with
+  // the feature on. Drafts stay the teacher's until published.
+  let suggest: {
+    lessons: { id: string; name: string }[]
+    suggestedId: string | null
+  } | null = null
+  if (canSuggest && tenant.schoolId && work.subjectId && work.sectionId) {
+    const [lessons, suggestedId] = await Promise.all([
+      visibleLessons(tenant.schoolId, work.subjectId),
+      suggestNextLessonFor(tenant.schoolId, {
+        sectionId: work.sectionId,
+        subjectId: work.subjectId,
+      }),
+    ]).catch(() => [[], null] as const)
+    if (lessons.length > 0) suggest = { lessons: [...lessons], suggestedId }
+  }
+  const ld = dictionary?.liveClasses?.lessonDraft as
+    | Record<string, unknown>
+    | undefined
+  const suggestLabels = (ld ?? {}) as unknown as SuggestDraftsLabels
 
   const homeworkStatus = (h: HomeworkItem) => {
     if (!isStudent) return L.handedIn.replace("{n}", String(h.handedIn ?? 0))
@@ -122,6 +154,17 @@ export async function ClassWork({
           />
         )}
       </div>
+
+      {suggest && (
+        <SuggestDraftsButton
+          sessionId={sessionId}
+          locale={locale}
+          lessons={suggest.lessons}
+          currentId={work.lessonId}
+          suggestedId={suggest.suggestedId}
+          labels={suggestLabels}
+        />
+      )}
 
       {homework.length > 0 && (
         <div>

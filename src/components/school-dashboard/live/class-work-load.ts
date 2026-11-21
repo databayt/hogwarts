@@ -4,6 +4,7 @@
 import "server-only"
 
 import { db } from "@/lib/db"
+import { lessonDraftEnabled } from "@/components/lesson-draft/claude"
 
 /**
  * What a class left behind, for its page: the homework and quick checks
@@ -66,11 +67,19 @@ export async function loadClassWork(
       id: true,
       status: true,
       sectionId: true,
+      subjectId: true,
+      catalogLessonId: true,
       resources: {
         orderBy: { order: "asc" },
         select: {
           schoolAssignment: {
-            select: { id: true, title: true, dueDate: true, totalPoints: true },
+            select: {
+              id: true,
+              title: true,
+              dueDate: true,
+              totalPoints: true,
+              status: true,
+            },
           },
           quickAssessment: {
             select: { id: true, title: true, status: true },
@@ -81,11 +90,19 @@ export async function loadClassWork(
   })
   if (!session) return null
 
+  // A teacher's DRAFT homework or quick check (an AI suggestion not yet
+  // published) belongs to the host until published — students, guardians and
+  // other staff never see it on the class page.
+  const seesDrafts = HOST_ROLES.includes(role ?? "")
   const assignments = session.resources.flatMap((r) =>
-    r.schoolAssignment ? [r.schoolAssignment] : []
+    r.schoolAssignment && (seesDrafts || r.schoolAssignment.status !== "DRAFT")
+      ? [r.schoolAssignment]
+      : []
   )
   const quick = session.resources.flatMap((r) =>
-    r.quickAssessment ? [r.quickAssessment] : []
+    r.quickAssessment && (seesDrafts || r.quickAssessment.status !== "DRAFT")
+      ? [r.quickAssessment]
+      : []
   )
   const assignmentIds = assignments.map((a) => a.id)
   const quickIds = quick.map((q) => q.id)
@@ -235,6 +252,13 @@ export async function loadClassWork(
       )
   }
 
+  // The lesson-draft button: a host of a class that has a section AND a
+  // subject, while the feature is switched on.
+  const canSuggest =
+    lessonDraftEnabled() &&
+    HOST_ROLES.includes(role ?? "") &&
+    Boolean(session.sectionId && session.subjectId)
+
   return {
     sessionId: session.id,
     isStudent: role === "STUDENT",
@@ -242,5 +266,10 @@ export async function loadClassWork(
     quickChecks,
     polls,
     canSetHomework,
+    canSuggest,
+    // For the picker: the class's own subject, section and saved lesson
+    subjectId: session.subjectId,
+    sectionId: session.sectionId,
+    lessonId: session.catalogLessonId,
   }
 }

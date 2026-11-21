@@ -112,6 +112,9 @@ export async function generateExam(
     const availableQuestions = await db.questionBank.findMany({
       where: {
         schoolId,
+        // Reviewed questions only: a draft (the question wizard's, or an
+        // unreviewed generated one) carries a wizardStep.
+        wizardStep: null,
         subjectId: exam.subjectId,
         ...(validated.questionIds && {
           id: {
@@ -270,6 +273,9 @@ export async function previewExamGeneration(
     const availableQuestions = await db.questionBank.findMany({
       where: {
         schoolId,
+        // Reviewed questions only: a draft (the question wizard's, or an
+        // unreviewed generated one) carries a wizardStep.
+        wizardStep: null,
         subjectId,
       },
       include: {
@@ -367,6 +373,9 @@ export async function regenerateExam(
     const availableQuestions = await db.questionBank.findMany({
       where: {
         schoolId,
+        // Reviewed questions only: a draft (the question wizard's, or an
+        // unreviewed generated one) carries a wizardStep.
+        wizardStep: null,
         subjectId: existingExam.exam.subjectId,
       },
       include: {

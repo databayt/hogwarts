@@ -69,6 +69,9 @@ export async function createGeneratedExamForPaper(
     const questions = await db.questionBank.findMany({
       where: {
         schoolId,
+        // Reviewed questions only: a draft (the question wizard's, or an
+        // unreviewed generated one) carries a wizardStep.
+        wizardStep: null,
         subjectId: exam.subjectId,
       },
       orderBy: [
