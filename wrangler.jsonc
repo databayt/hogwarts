@@ -15,6 +15,11 @@
       "class_name": "HogwartsContainer",
       "image": "./Dockerfile",
       "max_instances": 1,
+      // Pinned beside the database (Neon aws-eu-central-1, Frankfurt). Without
+      // a constraint the container starts wherever the first request after a
+      // deploy comes from; a move away from Frankfurt puts ~90 ms back on
+      // every query (#490).
+      "constraints": { "regions": ["WEUR"] },
       // 1 vCPU, 3 GiB (custom; the smallest custom size). Cheaper than
       // standard-1 (½ vCPU, 4 GiB) — memory is billed provisioned, CPU only
       // when used — and twice the CPU. Next + the bridge measured ~0.5–1 GiB
