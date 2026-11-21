@@ -24,7 +24,8 @@ import { assignmentsViewForRole } from "./view"
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary: Dictionary
+  /** A promise is fine: it is awaited alongside auth + tenant. */
+  dictionary: Dictionary | Promise<Dictionary>
   lang: Locale
 }
 
@@ -42,10 +43,14 @@ interface Props {
  */
 export default async function AssignmentsContent({
   searchParams,
-  dictionary,
+  dictionary: dictionaryInput,
   lang,
 }: Props) {
-  const [session, { schoolId }] = await Promise.all([auth(), getTenantContext()])
+  const [session, { schoolId }, dictionary] = await Promise.all([
+    auth(),
+    getTenantContext(),
+    dictionaryInput,
+  ])
   if (!session?.user?.id) redirect(`/${lang}/login`)
 
   const view = assignmentsViewForRole(session.user.role)

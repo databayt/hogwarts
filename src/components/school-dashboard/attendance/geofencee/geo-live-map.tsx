@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/card"
 import { SuccessToast } from "@/components/atom/toast"
 
+import "leaflet/dist/leaflet.css"
+
 import { phone } from "../shared/phone"
 import { getLiveStudentLocations } from "./actions"
 

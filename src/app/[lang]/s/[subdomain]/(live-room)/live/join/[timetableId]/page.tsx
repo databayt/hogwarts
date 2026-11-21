@@ -43,7 +43,12 @@ interface Props {
  * never run this page, because running it can write today's room.
  */
 export default async function Page({ params }: Props) {
-  const [{ lang, timetableId }, session] = await Promise.all([params, auth()])
+  // The tenant resolves beside the session: neither reads the other.
+  const [{ lang, timetableId }, session, { schoolId }] = await Promise.all([
+    params,
+    auth(),
+    getTenantContext(),
+  ])
   if (!session?.user?.id) {
     // Back here after signing in — this link is shared in reminders and
     // messages, and dropping a student on the dashboard defeats the tap.
@@ -54,7 +59,23 @@ export default async function Page({ params }: Props) {
     )
   }
 
-  const { schoolId } = await getTenantContext()
+  // What the "not yet / not today" screens print starts NOW, beside the join
+  // decision, instead of after it — neither depends on the other. The common
+  // outcome is a redirect that needs neither; the no-op catches only keep an
+  // unused failure from being reported as unhandled (the awaits below still
+  // throw it).
+  const dictionaryRead = getDictionary(lang)
+  // Clock times are in the SCHOOL's zone — a bare server-side format would
+  // print UTC, and a client one the reader's device zone.
+  const schoolRead = schoolId
+    ? db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    : Promise.resolve(null)
+  dictionaryRead.catch(() => {})
+  schoolRead.catch(() => {})
+
   const outcome: SlotJoinOutcome = schoolId
     ? await resolveSlotJoin({
         schoolId,
@@ -71,17 +92,9 @@ export default async function Page({ params }: Props) {
     redirect(outcome.url)
   }
 
-  const dictionary = await getDictionary(lang)
+  const [dictionary, school] = await Promise.all([dictionaryRead, schoolRead])
   const t = dictionary?.liveClasses?.joinLink
 
-  // Clock times in the SCHOOL's zone — a bare server-side format would print
-  // UTC, and a client one the reader's device zone.
-  const school = schoolId
-    ? await db.school.findUnique({
-        where: { id: schoolId },
-        select: { timezone: true },
-      })
-    : null
   const time = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",

@@ -1,10 +1,5 @@
-"use client"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { motion, MotionConfig } from "framer-motion"
-
-import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**
  * A scroll reveal for the one band that earns it.
@@ -26,19 +21,17 @@ import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * viewport stays at `opacity: 0.001` forever. Caught exactly that way: the
  * band rendered, occupied its full height, and showed nothing.
  *
- * `reducedMotion="user"` honours the OS setting; the spring is the same one
- * the homepage bands use, so the motion still matches the brand.
+ * Plain CSS (tw-animate-css), not framer-motion: this is the only motion
+ * import on the page, and a CSS entrance costs no JS and no hydration — the
+ * component is a server component again. The curve is an ease-out that
+ * matches the overdamped spring the homepage bands use (`REVEAL_SPRING`: it
+ * never overshoots, it settles in about a second), and
+ * `motion-reduce:animate-none` honours the OS setting.
  */
 export function Reveal({ children }: { children: React.ReactNode }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <motion.div
-        initial={{ opacity: 0.001, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={REVEAL_SPRING}
-      >
-        {children}
-      </motion.div>
-    </MotionConfig>
+    <div className="animate-in fade-in-0 slide-in-from-bottom-6 duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:animate-none">
+      {children}
+    </div>
   )
 }

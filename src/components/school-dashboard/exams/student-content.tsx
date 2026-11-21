@@ -17,7 +17,7 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
-import { getStudentScopes } from "@/lib/teaching-scope"
+import { STUDENT_SCOPE_SELECT, toStudentScope } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,8 +53,10 @@ interface Props {
 }
 
 export default async function StudentExamsContent({ dictionary, lang }: Props) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
+  const [session, { schoolId }] = await Promise.all([
+    auth(),
+    getTenantContext(),
+  ])
   const userId = session?.user?.id
 
   if (!schoolId || !userId) return null
@@ -62,7 +64,8 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
   // Get the student record
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true },
+    // Section + grade ride on the same row, so the scope needs no second read.
+    select: STUDENT_SCOPE_SELECT,
   })
 
   if (!student) {
@@ -84,7 +87,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
   }
 
   // Where the student sits: section, grade, and any legacy classes
-  const [scope] = await getStudentScopes(schoolId, [student.id])
+  const scope = toStudentScope(student)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -95,9 +98,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
       where: {
         schoolId,
         wizardStep: null,
-        ...studentExamsWhere(
-          scope ?? { sectionId: null, gradeId: null }
-        ),
+        ...studentExamsWhere(scope),
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
       },

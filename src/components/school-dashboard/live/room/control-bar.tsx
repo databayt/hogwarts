@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import {
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -54,8 +55,8 @@ import type {
   RoomTools,
 } from "@/components/school-dashboard/live/types"
 
-import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
 import { ANDROID_APP_URL } from "../android-app"
+import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
 import { REACTIONS, timerLeft } from "./class-channel"
 import { formatClock, timerDone, useTimerNow } from "./class-timer"
 import type { RoomLabels } from "./labels"
@@ -215,7 +216,7 @@ type Pop = "react" | "tools" | null
  * An OBSERVER publishes nothing, so their row is react + discussion — and
  * mounts no LiveKit track hook.
  */
-export function ClassControls({
+export const ClassControls = memo(function ClassControls({
   role,
   labels,
   channel,
@@ -416,9 +417,89 @@ export function ClassControls({
       )}
     </div>
   )
-}
+})
 
 const TIMER_PRESETS = [1, 3, 5, 10]
+
+/**
+ * The card's countdown block: the readout, and pause / stop (or the presets
+ * when none is running). It owns `useTimerNow`, which ticks at 4 Hz while a
+ * timer runs — in this leaf, so the rest of the tools card (reactions, mute,
+ * hands, board) is not re-rendered four times a second while it is open.
+ */
+function TimerSection({
+  channel,
+  labels,
+  onClose,
+}: {
+  channel: ClassChannel
+  labels: RoomLabels
+  onClose: () => void
+}) {
+  const now = useTimerNow(channel.state.timer)
+  // A finished countdown offers a fresh one rather than Pause at 0:00.
+  const timer = timerDone(channel.state.timer, now) ? null : channel.state.timer
+  const left = timer ? timerLeft(timer, now) : 0
+  const startTimer = (ms: number, totalMs = ms) =>
+    void channel.send({ t: "timer", remainingMs: ms, totalMs, running: true })
+
+  return (
+    <div className="px-1 pt-2 pb-1">
+      <p className="flex items-center gap-2 px-2 pb-1.5 text-[13px] font-medium text-white/60">
+        <SfSymbol glyph={timerGlyph} pt={14} />
+        {labels.timer}
+        {timer && (
+          <span className="ms-auto text-[15px] font-semibold text-white tabular-nums">
+            {formatClock(left)}
+          </span>
+        )}
+      </p>
+      {timer ? (
+        <div className="flex gap-2 px-1">
+          <button
+            type="button"
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
+            onClick={() =>
+              void channel.send({
+                t: "timer",
+                remainingMs: left,
+                totalMs: timer.totalMs,
+                running: !timer.running,
+              })
+            }
+          >
+            <SfSymbol glyph={timer.running ? pauseFill : playFill} pt={16} />
+            {timer.running ? labels.timerPause : labels.timerResume}
+          </button>
+          <button
+            type="button"
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
+            onClick={() => void channel.send({ t: "timer.stop" })}
+          >
+            <SfSymbol glyph={stopFill} pt={16} />
+            {labels.timerStop}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-2 px-1">
+          {TIMER_PRESETS.map((m) => (
+            <button
+              key={m}
+              type="button"
+              className="h-11 rounded-full bg-white/15 text-[15px] font-semibold tabular-nums hover:bg-white/25"
+              onClick={() => {
+                startTimer(m * 60_000)
+                onClose()
+              }}
+            >
+              {labels.timerMinutes.replace("{n}", String(m))}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /**
  * The host's class tools: reactions, the countdown, the room-wide moderation
@@ -441,12 +522,6 @@ function ClassToolsCard({
   onClose: () => void
 }) {
   const isAndroid = useIsAndroid()
-  const now = useTimerNow(channel.state.timer)
-  // A finished countdown offers a fresh one rather than Pause at 0:00.
-  const timer = timerDone(channel.state.timer, now) ? null : channel.state.timer
-  const left = timer ? timerLeft(timer, now) : 0
-  const startTimer = (ms: number, totalMs = ms) =>
-    void channel.send({ t: "timer", remainingMs: ms, totalMs, running: true })
   const row =
     "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-start text-[16px] transition-colors hover:bg-white/10 active:bg-white/15 disabled:opacity-40"
 
@@ -461,60 +536,7 @@ function ClassToolsCard({
       </div>
       <div className="mx-2 h-px bg-white/10" />
 
-      <div className="px-1 pt-2 pb-1">
-        <p className="flex items-center gap-2 px-2 pb-1.5 text-[13px] font-medium text-white/60">
-          <SfSymbol glyph={timerGlyph} pt={14} />
-          {labels.timer}
-          {timer && (
-            <span className="ms-auto text-[15px] font-semibold text-white tabular-nums">
-              {formatClock(left)}
-            </span>
-          )}
-        </p>
-        {timer ? (
-          <div className="flex gap-2 px-1">
-            <button
-              type="button"
-              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
-              onClick={() =>
-                void channel.send({
-                  t: "timer",
-                  remainingMs: left,
-                  totalMs: timer.totalMs,
-                  running: !timer.running,
-                })
-              }
-            >
-              <SfSymbol glyph={timer.running ? pauseFill : playFill} pt={16} />
-              {timer.running ? labels.timerPause : labels.timerResume}
-            </button>
-            <button
-              type="button"
-              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/15 text-[15px] font-semibold"
-              onClick={() => void channel.send({ t: "timer.stop" })}
-            >
-              <SfSymbol glyph={stopFill} pt={16} />
-              {labels.timerStop}
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-4 gap-2 px-1">
-            {TIMER_PRESETS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                className="h-11 rounded-full bg-white/15 text-[15px] font-semibold tabular-nums hover:bg-white/25"
-                onClick={() => {
-                  startTimer(m * 60_000)
-                  onClose()
-                }}
-              >
-                {labels.timerMinutes.replace("{n}", String(m))}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <TimerSection channel={channel} labels={labels} onClose={onClose} />
       <div className="mx-2 mt-1 h-px bg-white/10" />
 
       <div className="pt-1">
@@ -742,7 +764,7 @@ const LIST_MAX = 219
  * It opens UPWARD over the title and stops above the clock, exactly where the
  * lumos player's card stops.
  */
-export function ClassMoreMenu({
+export const ClassMoreMenu = memo(function ClassMoreMenu({
   role,
   labels,
   channel,
@@ -959,7 +981,7 @@ export function ClassMoreMenu({
       )}
     </div>
   )
-}
+})
 
 function appearanceLabel(a: Appearance, labels: RoomLabels): string {
   return a === "light"

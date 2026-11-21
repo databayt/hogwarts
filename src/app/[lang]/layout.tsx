@@ -25,8 +25,6 @@ import { DirectionProvider } from "@/components/providers/direction-provider"
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider"
 import { UserThemeProvider } from "@/components/theme/theme-provider"
 
-import "leaflet/dist/leaflet.css"
-
 // Rubik is NOT declared here. It was — with the same subsets, weights and
 // `--font-rubik` variable that `fontRubik` in @/components/atom/fonts already
 // declares — which made next/font emit the family twice and this layout

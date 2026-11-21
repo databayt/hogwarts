@@ -643,160 +643,215 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
+  // Four sequential steps at most (teacher row, substitutions, slots, then
+  // live/online/attendance together), where there were seven. What this teacher teaches, today's
+  // classes and the student count depend only on the teacher row, the school's
+  // timezone and the active term, so they run side by side as branches; each
+  // branch chains only what truly depends on its own earlier read. Each
+  // sequential step is a full app <-> database round trip.
+  const teacherNow = new Date()
+  const dayOfWeek = schoolDayOfWeek(
+    teacherSchoolRow?.timezone ?? "UTC",
+    teacherNow
+  )
+
   // What this teacher teaches: their (section, subject) assignments. Work
   // they see is the work those pairs cover, what they set themselves, and
   // legacy classes they lead — the same rules as the exam and assignment
   // lists.
-  const assigned = await db.subjectTeacher.findMany({
-    where: { schoolId, teacherId: teacher.id },
-    select: {
-      sectionId: true,
-      subjectId: true,
-      termId: true,
-      section: { select: { gradeId: true, name: true } },
-      subject: { select: { name: true } },
-    },
-  })
-  const pairs = assigned.map((a) => ({
-    sectionId: a.sectionId,
-    subjectId: a.subjectId,
-    gradeId: a.section.gradeId,
-  }))
-  const termPairs = teacherTerm
-    ? assigned.filter((a) => a.termId === teacherTerm.id)
-    : assigned
-  const teaches = { teacherId: teacher.id, userId, pairs }
+  const teachingBranch = (async () => {
+    const assigned = await db.subjectTeacher.findMany({
+      where: { schoolId, teacherId: teacher.id },
+      select: {
+        sectionId: true,
+        subjectId: true,
+        termId: true,
+        section: { select: { gradeId: true, name: true } },
+        subject: { select: { name: true } },
+      },
+    })
+    const pairs = assigned.map((a) => ({
+      sectionId: a.sectionId,
+      subjectId: a.subjectId,
+      gradeId: a.section.gradeId,
+    }))
+    const termPairs = teacherTerm
+      ? assigned.filter((a) => a.termId === teacherTerm.id)
+      : assigned
+    const teaches = { teacherId: teacher.id, userId, pairs }
+
+    const [
+      performance,
+      pendingGradingCount,
+      pendingAssignments,
+      upcomingExams,
+    ] = await Promise.all([
+      // The term's average score in each section·subject the teacher teaches
+      termPairs.length === 0
+        ? Promise.resolve([])
+        : db.result.groupBy({
+            by: ["sectionId", "subjectId"],
+            where: {
+              schoolId,
+              ...(teacherTerm ? { termId: teacherTerm.id } : {}),
+              OR: termPairs.map((p) => ({
+                sectionId: p.sectionId,
+                subjectId: p.subjectId,
+              })),
+            },
+            _avg: { percentage: true },
+          }),
+      db.assignmentSubmission.count({
+        where: {
+          schoolId,
+          status: "SUBMITTED",
+          assignment: teacherAssignmentsWhere(teaches),
+        },
+      }),
+      db.schoolAssignment.findMany({
+        where: {
+          schoolId,
+          status: "PUBLISHED",
+          ...teacherAssignmentsWhere(teaches),
+        },
+        select: {
+          id: true,
+          title: true,
+          dueDate: true,
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
+          subject: { select: { name: true } },
+          // Only the count is shown — no need to ship every submission row.
+          _count: {
+            select: { submissions: { where: { status: "SUBMITTED" } } },
+          },
+        },
+        orderBy: { dueDate: "asc" },
+        take: 5,
+      }),
+      db.schoolExam.findMany({
+        where: {
+          schoolId,
+          ...teacherExamsWhere(teaches),
+          examDate: { gte: today },
+          status: "PLANNED",
+        },
+        select: {
+          id: true,
+          title: true,
+          examDate: true,
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
+        },
+        orderBy: { examDate: "asc" },
+        take: 5,
+      }),
+    ])
+    return {
+      termPairs,
+      performance,
+      pendingGradingCount,
+      pendingAssignments,
+      upcomingExams,
+    }
+  })()
 
   // Today's periods — the same read the student dashboard does, for the same
   // reasons. The weekday used to come off the server clock (UTC on the
   // container), so for a school whose local day straddles the UTC boundary the
   // card showed the wrong day; and with no term filter a slot from a finished
   // term could still land in it.
-  const teacherNow = new Date()
-  const dayOfWeek = schoolDayOfWeek(
-    teacherSchoolRow?.timezone ?? "UTC",
-    teacherNow
-  )
-  // Their own slots minus the ones covered by someone else, plus the ones they
-  // are covering — the timetable's Today list uses the same filter, so a
-  // substitute sees (and can start) the class here too.
-  const teacherDayOr = await teacherDaySlotFilter(
-    schoolId,
-    teacher.id,
-    teacherSchoolRow?.timezone ?? "UTC",
-    teacherNow
-  )
-
-  const [
-    todaysClasses,
-    performance,
-    pendingGradingCount,
-    pendingAssignments,
-    upcomingExams,
-    assignedStudents,
-  ] = await Promise.all([
+  const todayBranch = (async () => {
+    // Their own slots minus the ones covered by someone else, plus the ones
+    // they are covering — the timetable's Today list uses the same filter, so
+    // a substitute sees (and can start) the class here too.
+    const teacherDayOr = await teacherDaySlotFilter(
+      schoolId,
+      teacher.id,
+      teacherSchoolRow?.timezone ?? "UTC",
+      teacherNow
+    )
     // Slots carry `teacherId` on the row itself
-    db.timetable
-      .findMany({
-        where: {
-          schoolId,
-          dayOfWeek: dayOfWeek,
-          weekOffset: 0,
-          ...(teacherTerm ? { termId: teacherTerm.id } : {}),
-          OR: teacherDayOr,
+    const todaysSlots = await db.timetable.findMany({
+      where: {
+        schoolId,
+        dayOfWeek: dayOfWeek,
+        weekOffset: 0,
+        ...(teacherTerm ? { termId: teacherTerm.id } : {}),
+        OR: teacherDayOr,
+      },
+      include: {
+        section: {
+          select: { name: true, _count: { select: { students: true } } },
         },
-        include: {
-          section: {
-            select: { name: true, _count: { select: { students: true } } },
-          },
-          subject: { select: { name: true } },
-          classroom: { select: { roomName: true } },
-          period: { select: { startTime: true, endTime: true } },
-        },
-        orderBy: { period: { startTime: "asc" } },
-      })
-      .then((todaysSlots) =>
-        // A class that is also online today gets its Join target — the same
-        // resolver the student card and the timetable today-cards use, so the
-        // teacher and the students in the room can never disagree about where
-        // the class meets.
-        teacherTerm
-          ? attachLiveClasses(
-              schoolId,
-              teacherTerm.id,
-              teacherNow,
-              todaysSlots.map((slot) => ({
-                ...slot,
-                timetableId: slot.id,
-              })),
-              teacherSchoolRow?.timezone
-            )
-          : todaysSlots.map((slot) => ({
+        subject: { select: { name: true } },
+        classroom: { select: { roomName: true } },
+        period: { select: { startTime: true, endTime: true } },
+      },
+      orderBy: { period: { startTime: "asc" } },
+    })
+
+    // Attendance still to take today: the sections on today's timetable with
+    // no mark yet (a daily or a period mark both count).
+    const todaySectionIds = [
+      ...new Set(
+        todaysSlots
+          .map((slot) => slot.sectionId)
+          .filter((id): id is string => !!id)
+      ),
+    ]
+
+    // The three reads below need only the slots, so they run together.
+    const [todaysClasses, teacherOnline, markedSections] = await Promise.all([
+      // A class that is also online today gets its Join target — the same
+      // resolver the student card and the timetable today-cards use, so the
+      // teacher and the students in the room can never disagree about where
+      // the class meets.
+      teacherTerm
+        ? attachLiveClasses(
+            schoolId,
+            teacherTerm.id,
+            teacherNow,
+            todaysSlots.map((slot) => ({
+              ...slot,
+              timetableId: slot.id,
+            })),
+            teacherSchoolRow?.timezone
+          )
+        : Promise.resolve(
+            todaysSlots.map((slot) => ({
               ...slot,
               timetableId: slot.id,
               liveClass: null,
             }))
+          ),
+      onlineSectionIds(
+        schoolId,
+        todaysSlots.map((slot) => slot.sectionId),
+        teacherNow
       ),
-    // The term's average score in each section·subject the teacher teaches
-    termPairs.length === 0
-      ? Promise.resolve([])
-      : db.result.groupBy({
-          by: ["sectionId", "subjectId"],
-          where: {
-            schoolId,
-            ...(teacherTerm ? { termId: teacherTerm.id } : {}),
-            OR: termPairs.map((p) => ({
-              sectionId: p.sectionId,
-              subjectId: p.subjectId,
-            })),
-          },
-          _avg: { percentage: true },
-        }),
-    db.assignmentSubmission.count({
-      where: {
-        schoolId,
-        status: "SUBMITTED",
-        assignment: teacherAssignmentsWhere(teaches),
-      },
-    }),
-    db.schoolAssignment.findMany({
-      where: {
-        schoolId,
-        status: "PUBLISHED",
-        ...teacherAssignmentsWhere(teaches),
-      },
-      select: {
-        id: true,
-        title: true,
-        dueDate: true,
-        section: { select: { name: true } },
-        grade: { select: { name: true } },
-        subject: { select: { name: true } },
-        // Only the count is shown — no need to ship every submission row.
-        _count: {
-          select: { submissions: { where: { status: "SUBMITTED" } } },
-        },
-      },
-      orderBy: { dueDate: "asc" },
-      take: 5,
-    }),
-    db.schoolExam.findMany({
-      where: {
-        schoolId,
-        ...teacherExamsWhere(teaches),
-        examDate: { gte: today },
-        status: "PLANNED",
-      },
-      select: {
-        id: true,
-        title: true,
-        examDate: true,
-        section: { select: { name: true } },
-        grade: { select: { name: true } },
-      },
-      orderBy: { examDate: "asc" },
-      take: 5,
-    }),
+      todaySectionIds.length === 0
+        ? Promise.resolve([])
+        : db.attendance.findMany({
+            where: {
+              schoolId,
+              sectionId: { in: todaySectionIds },
+              date: { gte: today, lt: tomorrow },
+            },
+            distinct: ["sectionId"],
+            select: { sectionId: true },
+          }),
+    ])
+    return {
+      todaysClasses,
+      teacherOnline,
+      attendanceDueCount: todaySectionIds.length - markedSections.length,
+    }
+  })()
+
+  const [teachingData, todayData, assignedStudents] = await Promise.all([
+    teachingBranch,
+    todayBranch,
     // Students in the sections this teacher teaches a subject in this term
     // (SubjectTeacher)
     db.student.count({
@@ -815,35 +870,15 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     }),
   ])
 
+  const {
+    termPairs,
+    performance,
+    pendingGradingCount,
+    pendingAssignments,
+    upcomingExams,
+  } = teachingData
+  const { todaysClasses, teacherOnline, attendanceDueCount } = todayData
   const totalStudents = assignedStudents
-  const teacherOnline = await onlineSectionIds(
-    schoolId,
-    todaysClasses.map((slot) => slot.sectionId),
-    teacherNow
-  )
-
-  // Attendance still to take today: the sections on today's timetable with
-  // no mark yet (a daily or a period mark both count).
-  const todaySectionIds = [
-    ...new Set(
-      todaysClasses
-        .map((slot) => slot.sectionId)
-        .filter((id): id is string => !!id)
-    ),
-  ]
-  const markedSections =
-    todaySectionIds.length === 0
-      ? []
-      : await db.attendance.findMany({
-          where: {
-            schoolId,
-            sectionId: { in: todaySectionIds },
-            date: { gte: today, lt: tomorrow },
-          },
-          distinct: ["sectionId"],
-          select: { sectionId: true },
-        })
-  const attendanceDueCount = todaySectionIds.length - markedSections.length
 
   const pairLabel = new Map(
     termPairs.map((p) => [
@@ -939,123 +974,142 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
-  // Today's classes — the same read the timetable block does: the student's
-  // section's slots, on the school's weekday (not the server clock's).
-  const [schoolRow, { term: activeTerm }, [scope]] = await Promise.all([
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { timezone: true, conferenceReminderLeadMinutes: true },
-    }),
-    resolveActiveTerm(schoolId),
-    getStudentScopes(schoolId, [student.id]),
-  ])
   const now = new Date()
-  const dayOfWeek = schoolDayOfWeek(schoolRow?.timezone ?? "UTC", now)
 
-  const todaysSlots = !student.sectionId
-    ? []
-    : await db.timetable.findMany({
-        where: {
-          schoolId,
-          dayOfWeek,
-          weekOffset: 0,
-          ...(activeTerm ? { termId: activeTerm.id } : {}),
-          sectionId: student.sectionId,
-        },
-        include: {
-          section: { select: { name: true } },
-          subject: { select: { name: true } },
-          teacher: {
-            select: { firstName: true, middleName: true, lastName: true },
+  // One wave. Everything below needs only the student row (and the user and
+  // school ids), so the reads run side by side as branches; a branch chains
+  // only what truly depends on its own earlier read. Each sequential step is
+  // a full app <-> database round trip.
+  const [
+    { schoolRow, todaysTimetable },
+    upcomingAssignments,
+    recentGrades,
+    announcements,
+    totalDays,
+    presentDays,
+    nameDisplay,
+    studentOnline,
+  ] = await Promise.all([
+    // Today's classes — the same read the timetable block does: the student's
+    // section's slots, on the school's weekday (not the server clock's).
+    (async () => {
+      const [schoolRow, { term: activeTerm }] = await Promise.all([
+        db.school.findUnique({
+          where: { id: schoolId },
+          select: { timezone: true, conferenceReminderLeadMinutes: true },
+        }),
+        resolveActiveTerm(schoolId),
+      ])
+      const dayOfWeek = schoolDayOfWeek(schoolRow?.timezone ?? "UTC", now)
+
+      const todaysSlots = !student.sectionId
+        ? []
+        : await db.timetable.findMany({
+            where: {
+              schoolId,
+              dayOfWeek,
+              weekOffset: 0,
+              ...(activeTerm ? { termId: activeTerm.id } : {}),
+              sectionId: student.sectionId,
+            },
+            include: {
+              section: { select: { name: true } },
+              subject: { select: { name: true } },
+              teacher: {
+                select: { firstName: true, middleName: true, lastName: true },
+              },
+              classroom: { select: { roomName: true } },
+              period: { select: { startTime: true, endTime: true } },
+            },
+            orderBy: { period: { startTime: "asc" } },
+          })
+
+      // A class that is also online today gets its Join target — the same
+      // resolver the timetable today-cards use, so the two surfaces can never
+      // disagree.
+      const todaysTimetable = activeTerm
+        ? await attachLiveClasses(
+            schoolId,
+            activeTerm.id,
+            now,
+            todaysSlots.map((slot) => ({
+              ...slot,
+              timetableId: slot.id,
+            })),
+            schoolRow?.timezone
+          )
+        : todaysSlots.map((slot) => ({
+            ...slot,
+            timetableId: slot.id,
+            liveClass: null,
+          }))
+      return { schoolRow, todaysTimetable }
+    })(),
+
+    // Work set for the student's section or their whole grade
+    getStudentScopes(schoolId, [student.id]).then(([scope]) =>
+      scope
+        ? db.schoolAssignment.findMany({
+            where: {
+              schoolId,
+              ...studentAudienceWhere(scope),
+              dueDate: { gte: today },
+              status: "PUBLISHED",
+            },
+            include: {
+              section: { select: { name: true } },
+              grade: { select: { name: true } },
+              subject: { select: { name: true } },
+              submissions: {
+                where: { studentId: student.id },
+                select: { status: true },
+              },
+            },
+            orderBy: { dueDate: "asc" },
+            take: 5,
+          })
+        : []
+    ),
+
+    db.examResult.findMany({
+      where: { studentId: student.id, schoolId },
+      include: {
+        exam: {
+          select: {
+            title: true,
+            totalMarks: true,
+            subject: { select: { name: true } },
           },
-          classroom: { select: { roomName: true } },
-          period: { select: { startTime: true, endTime: true } },
-        },
-        orderBy: { period: { startTime: "asc" } },
-      })
-
-  // A class that is also online today gets its Join target — the same resolver
-  // the timetable today-cards use, so the two surfaces can never disagree.
-  const todaysTimetable = activeTerm
-    ? await attachLiveClasses(
-        schoolId,
-        activeTerm.id,
-        now,
-        todaysSlots.map((slot) => ({
-          ...slot,
-          timetableId: slot.id,
-        })),
-        schoolRow?.timezone
-      )
-    : todaysSlots.map((slot) => ({
-        ...slot,
-        timetableId: slot.id,
-        liveClass: null,
-      }))
-
-  // Work set for the student's section or their whole grade
-  const upcomingAssignments = scope
-    ? await db.schoolAssignment.findMany({
-        where: {
-          schoolId,
-          ...studentAudienceWhere(scope),
-          dueDate: { gte: today },
-          status: "PUBLISHED",
-        },
-        include: {
-          section: { select: { name: true } },
-          grade: { select: { name: true } },
-          subject: { select: { name: true } },
-          submissions: {
-            where: { studentId: student.id },
-            select: { status: true },
-          },
-        },
-        orderBy: { dueDate: "asc" },
-        take: 5,
-      })
-    : []
-
-  const recentGrades = await db.examResult.findMany({
-    where: { studentId: student.id, schoolId },
-    include: {
-      exam: {
-        select: {
-          title: true,
-          totalMarks: true,
-          subject: { select: { name: true } },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  })
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
 
-  // Notices for the school, the student's grade or section, or their role
-  const announcements = await db.announcement.findMany({
-    where: {
-      schoolId,
-      ...(await buildViewerAudienceWhere(schoolId, userId, "STUDENT")),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  })
+    // Notices for the school, the student's grade or section, or their role
+    buildViewerAudienceWhere(schoolId, userId, "STUDENT").then((audience) =>
+      db.announcement.findMany({
+        where: {
+          schoolId,
+          ...audience,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      })
+    ),
 
-  const totalDays = await db.attendance.count({
-    where: { studentId: student.id, schoolId },
-  })
-  const presentDays = await db.attendance.count({
-    where: { studentId: student.id, schoolId, status: "PRESENT" },
-  })
+    db.attendance.count({
+      where: { studentId: student.id, schoolId },
+    }),
+    db.attendance.count({
+      where: { studentId: student.id, schoolId, status: "PRESENT" },
+    }),
+    schoolNameDisplay(schoolId),
+    onlineSectionIds(schoolId, [student.sectionId], now),
+  ])
+
   const attendancePercentage =
     totalDays > 0 ? (presentDays / totalDays) * 100 : 0
-  const nameDisplay = await schoolNameDisplay(schoolId)
-  const studentOnline = await onlineSectionIds(
-    schoolId,
-    [student.sectionId],
-    now
-  )
 
   return {
     todaysTimetable: todaysTimetable.map((entry) => {

@@ -78,11 +78,16 @@ describe("GET /api/mobile/timetable/[userId] — access control", () => {
     } as never)
     vi.mocked(canAccessStudent).mockResolvedValue(false)
 
+    // The slot read starts beside the access check (one wave, not two), so it
+    // may be issued — but what it returns must never reach a denied caller.
+    vi.mocked(db.timetable.findMany).mockResolvedValue([
+      { id: "slot-secret", dayOfWeek: 1 },
+    ] as never)
+
     const res = await GET(req(), { params })
 
     expect(res.status).toBe(403)
-    // The whole point: no slot query is ever issued for a denied caller.
-    expect(db.timetable.findMany).not.toHaveBeenCalled()
+    expect(JSON.stringify(await res.json())).not.toContain("slot-secret")
   })
 
   it("serves a student their own timetable", async () => {
@@ -107,10 +112,14 @@ describe("GET /api/mobile/timetable/[userId] — access control", () => {
     vi.mocked(db.student.findFirst).mockResolvedValue(null as never)
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "tea-1" } as never)
 
+    vi.mocked(db.timetable.findMany).mockResolvedValue([
+      { id: "slot-secret", dayOfWeek: 1 },
+    ] as never)
+
     const res = await GET(req(), { params })
 
     expect(res.status).toBe(403)
-    expect(db.timetable.findMany).not.toHaveBeenCalled()
+    expect(JSON.stringify(await res.json())).not.toContain("slot-secret")
   })
 
   it("lets an ADMIN read a teacher's schedule", async () => {

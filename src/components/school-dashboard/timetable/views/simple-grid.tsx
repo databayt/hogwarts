@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, type CSSProperties, type ReactNode } from "react"
+import { memo, useMemo, type CSSProperties, type ReactNode } from "react"
 import { Clock, TriangleAlert } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -94,7 +94,7 @@ interface SimpleGridProps {
   }
 }
 
-export default function SimpleGrid({
+function SimpleGrid({
   slots,
   workingDays,
   periods,
@@ -574,3 +574,7 @@ export default function SimpleGrid({
     </div>
   )
 }
+
+// Memoized: the views re-render for a clock tick, a toggle or a dialog, none of
+// which changes the grid's inputs — shallow-equal props skip all of its cells.
+export default memo(SimpleGrid)

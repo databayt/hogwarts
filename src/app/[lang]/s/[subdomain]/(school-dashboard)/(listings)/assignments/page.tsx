@@ -16,7 +16,8 @@ interface Props {
 
 export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  // Started here, awaited inside the content alongside auth + tenant.
+  const dictionary = getDictionary(lang)
 
   return (
     <AssignmentsContent

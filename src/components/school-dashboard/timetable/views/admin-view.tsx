@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { getCookie, setCookie } from "cookies-next"
 import { Check, ChevronsUpDown } from "lucide-react"
 
@@ -47,6 +47,7 @@ import type {
 import type { SectionForTimetable } from "../validation"
 import { TimetableGridSkeleton } from "./grid-skeleton"
 import { JoinLinkButton } from "./join-link-button"
+import type { InitialAdmin } from "./role-router"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -72,6 +73,13 @@ interface Props {
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
+  /**
+   * Both pickers' options, the selection the saved cookie (or the first room)
+   * lands on, and that selection's grid — streamed with the page (see
+   * `loadInitialTimetable`). When present the view starts on them and fires no
+   * server action on mount; every later pick still loads as before.
+   */
+  initialAdmin?: InitialAdmin
 }
 
 type ViewMode = "classroom" | "teacher"
@@ -108,31 +116,57 @@ export default function AdminView({
   periods: schoolPeriods,
   lunchAfterPeriod,
   isLoading,
+  initialAdmin,
 }: Props) {
+  // A selection is usable only together with its grid; with no selection (a
+  // school with no rooms) there is nothing further to load.
+  const seed =
+    initialAdmin && (initialAdmin.selection === null || initialAdmin.grid)
+      ? initialAdmin
+      : null
+  const seedGrid = seed?.grid ?? null
+  const seedSelection = seed?.selection ?? null
   const d = dictionary?.timetable as Record<string, any> | undefined
   const av = (d as Record<string, any>)?.adminViewUi
   const isRTL = lang === "ar"
 
-  const [viewMode, setViewMode] = useState<ViewMode>("classroom")
-  const [selectedId, setSelectedId] = useState<string>("")
-  const [selectedClassroom, setSelectedClassroom] = useState<string>("")
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    seedSelection?.viewMode ?? "classroom"
+  )
+  const [selectedId, setSelectedId] = useState<string>(() =>
+    seedSelection?.viewMode === "teacher" ? seedSelection.teacherId : ""
+  )
+  const [selectedClassroom, setSelectedClassroom] = useState<string>(() =>
+    seedSelection?.viewMode === "classroom" ? seedSelection.roomId : ""
+  )
+  // The selection the seed answers for; that load pass is skipped. Never
+  // reset, so a StrictMode re-run cannot fire the fetch the seed replaced.
+  const seededKey = useRef(
+    seed && seedSelection
+      ? `${seedSelection.viewMode}|${
+          seedSelection.viewMode === "teacher"
+            ? seedSelection.teacherId
+            : seedSelection.roomId
+        }|${termId}`
+      : null
+  )
   const [classroomOpen, setClassroomOpen] = useState(false)
   const [teacherOpen, setTeacherOpen] = useState(false)
 
   // Data lists for selectors
   const [teachers, setTeachers] = useState<
     Array<{ id: string; label: string }>
-  >([])
+  >(() => seed?.teachers ?? [])
   const [rooms, setRooms] = useState<
     Array<{ id: string; label: string; capacity: number }>
-  >([])
+  >(() => seed?.rooms ?? [])
 
   // Timetable data
-  const [slots, setSlots] = useState<any[]>([])
+  const [slots, setSlots] = useState<any[]>(() => seedGrid?.slots ?? [])
   // The grid's own bell, from the fetch: grades ring different bells, so the
   // school-wide list from the router is only the fallback until it lands.
   const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
-    null
+    () => seedGrid?.periods ?? null
   )
   const periods = gridPeriods ?? schoolPeriods
   // Periods in the open room that nobody teaches yet.
@@ -140,10 +174,16 @@ export default function AdminView({
     () => slots.filter((s) => !s.teacherId && !s.teacher).length,
     [slots]
   )
-  const [entityInfo, setEntityInfo] = useState<any>(null)
+  const [entityInfo, setEntityInfo] = useState<any>(() =>
+    seedGrid
+      ? "roomInfo" in seedGrid
+        ? seedGrid.roomInfo
+        : seedGrid.teacherInfo
+      : null
+  )
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
-  >({})
+  >(() => seedGrid?.liveIndicators ?? {})
   // An admin can look in on a class that is live right now — the room seats
   // them as co-host. Only on LIVE cells: a scheduled-but-unstarted room has
   // nothing to observe, and the editor stays the cell's own click.
@@ -182,14 +222,37 @@ export default function AdminView({
 
   const [isLoadingData, setIsLoadingData] = useState(false)
 
-  // Load selector options + slot editor resources on mount
+  // Load selector options on mount — unless the page streamed them in.
   useEffect(() => {
-    loadSelectorOptions()
-    loadSlotEditorResources()
+    if (!seed) loadSelectorOptions()
   }, [termId])
 
-  // Load timetable when selection changes
+  // The slot editor's lists are not part of the first screen: they are only
+  // read when a cell is opened, so they load once the grid is up (idle), or at
+  // the first click if that comes sooner. A read-only role never opens the
+  // editor and never loads them.
+  const editorLoadedFor = useRef<string | null>(null)
+  const ensureEditorResources = useCallback(() => {
+    if (!editableProp || editorLoadedFor.current === termId) return
+    editorLoadedFor.current = termId
+    loadSlotEditorResources()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editableProp, termId])
   useEffect(() => {
+    if (!editableProp) return
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(ensureEditorResources, { timeout: 3000 })
+      return () => cancelIdleCallback(id)
+    }
+    const id = setTimeout(ensureEditorResources, 1500)
+    return () => clearTimeout(id)
+  }, [ensureEditorResources, editableProp])
+
+  // Load timetable when selection changes — except the pass the streamed seed
+  // already answered.
+  useEffect(() => {
+    const key = `${viewMode}|${viewMode === "teacher" ? selectedId : selectedClassroom}|${termId}`
+    if (seededKey.current === key) return
     if (viewMode === "classroom" && selectedClassroom) {
       loadTimetable()
     } else if (viewMode === "teacher" && selectedId) {
@@ -245,7 +308,8 @@ export default function AdminView({
         getSubjectsForSlotEditor({ termId }),
         getTeachersForSlotEditor({ termId }),
         getSectionsForTimetable(),
-        getRoomsForSelection(),
+        // The picker's rooms are the editor's rooms: reuse the streamed list.
+        seed ? Promise.resolve({ rooms: seed.rooms }) : getRoomsForSelection(),
       ])
     setSlotEditorSubjects(subjectsResult.subjects)
     setSlotEditorTeachers(teachersResult.teachers)
@@ -312,12 +376,13 @@ export default function AdminView({
 
   const handleSlotClick = useCallback(
     (day: number, periodId: string, slot?: any) => {
+      ensureEditorResources()
       setSelectedDay(day)
       setSelectedPeriod(periodId)
       setSelectedSlot(slot || null)
       setSlotEditorOpen(true)
     },
-    []
+    [ensureEditorResources]
   )
 
   const handleSlotSave = useCallback(

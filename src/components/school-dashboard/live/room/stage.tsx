@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { createContext, useContext } from "react"
+import { createContext, memo, useContext } from "react"
 import {
   CarouselLayout,
   FocusToggle,
@@ -73,7 +73,11 @@ interface StageProps {
  * strip whenever something else has focus, so the teacher never disappears
  * behind their own slides.
  */
-export function Stage({ channel, labels, role }: StageProps) {
+export const Stage = memo(function Stage({
+  channel,
+  labels,
+  role,
+}: StageProps) {
   const waiting = useWaitingText(role, labels)
   const tracks = useTracks(
     [
@@ -222,7 +226,7 @@ export function Stage({ channel, labels, role }: StageProps) {
       </div>
     </HandsContext.Provider>
   )
-}
+})
 
 /**
  * A shared screen on the stage. The SDK's own tile names it "{name}'s screen"

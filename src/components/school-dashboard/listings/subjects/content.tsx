@@ -25,7 +25,6 @@ const SELECTION_SELECT = {
   subject: {
     select: {
       id: true,
-      subjectGroupId: true,
       name: true,
       slug: true,
       department: true,
@@ -33,7 +32,6 @@ const SELECTION_SELECT = {
       grades: true,
       color: true,
       thumbnail: true,
-      lang: true,
       totalChapters: true,
       totalLessons: true,
       averageRating: true,

@@ -2,7 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react"
 import {
   RoomAudioRenderer,
   useConnectionState,
@@ -62,6 +71,12 @@ import { ClassProgress } from "./class-progress"
 import { ClassTimerPill } from "./class-timer"
 import { ClassControls, ClassMoreMenu } from "./control-bar"
 import type { RoomLabels } from "./labels"
+import {
+  LiveChatProvider,
+  useChatUnread,
+  useLiveChatState,
+  useSetChatVisible,
+} from "./live-chat-provider"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
 import { QuizSheet } from "./quiz"
 import { ReactionsOverlay } from "./reactions-overlay"
@@ -72,10 +87,9 @@ import { RoomToastStack, useRoomToasts } from "./toasts"
 import { useAdaptiveDelivery } from "./use-adaptive-delivery"
 import { useAutoHide } from "./use-auto-hide"
 import { useBackGuard } from "./use-back-guard"
-import { useClassChannel } from "./use-class-channel"
+import { useClassChannel, type ClassChannel } from "./use-class-channel"
 import { useClassNotices } from "./use-class-notices"
 import { useConnectionTrace } from "./use-connection-trace"
-import { useLiveChat } from "./use-live-chat"
 import { useWakeLock } from "./use-wake-lock"
 import { WaitingNotice } from "./waiting-notice"
 
@@ -130,7 +144,38 @@ const gone = "pointer-events-none opacity-0"
  * It fades three seconds after the last touch and comes back on a tap of the
  * stage, and the stage runs edge to edge UNDER it rather than shrinking.
  */
-export function RoomShell({
+export function RoomShell(props: RoomShellProps) {
+  // The chat's state lives in a provider ABOVE the shell's content and hands
+  // it over as `children`: a chat message re-renders the provider and the two
+  // components that read it, not the shell (and so not the stage or the
+  // control bar). See `live-chat-provider.tsx`.
+  return (
+    <LiveChatProvider
+      sessionId={props.sessionId}
+      enabled={props.config.tools.chat}
+    >
+      <RoomShellContent {...props} />
+    </LiveChatProvider>
+  )
+}
+
+/** The side panel with the chat wired in — the one place a message re-renders it. */
+const ChatSidePanel = memo(function ChatSidePanel(
+  props: Omit<ComponentProps<typeof SidePanel>, "chat">
+) {
+  const chat = useLiveChatState()
+  return <SidePanel {...props} chat={chat} />
+})
+
+/** The control row with the discussion badge's unread count wired in. */
+const ChatControls = memo(function ChatControls(
+  props: Omit<ComponentProps<typeof ClassControls>, "chatUnread">
+) {
+  const unread = useChatUnread()
+  return <ClassControls {...props} chatUnread={unread} />
+})
+
+function RoomShellContent({
   sessionId,
   title,
   subtitle,
@@ -146,8 +191,79 @@ export function RoomShell({
   locale = "en",
 }: RoomShellProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
-  const channel = useClassChannel({ hostIdentity, isHost })
-  const adaptive = useAdaptiveDelivery()
+  const channelRaw = useClassChannel({ hostIdentity, isHost })
+  // `useClassChannel` returns a new object on every render, so nothing
+  // memoised could ever bail out on it. Rebuilt here from its parts and held
+  // until one of them changes: a chat message, a tap, a mute or the chrome
+  // fading no longer re-renders the stage, the control bar or the panel.
+  // Every field is listed (the literal must satisfy `ClassChannel`, and the
+  // dependency list is the same list), so a new field cannot be forgotten.
+  const {
+    state,
+    hostIdentity: channelHost,
+    send,
+    sendStroke,
+    hands,
+    handsSince,
+    handUp,
+    setHand,
+    clearHand,
+    clearAllHands,
+    canDraw,
+    sendDraft,
+    sendReaction,
+    setGrant,
+    subscribe,
+    localIdentity,
+  } = channelRaw
+  const channel = useMemo<ClassChannel>(
+    () => ({
+      state,
+      isHost,
+      hostIdentity: channelHost,
+      send,
+      sendStroke,
+      hands,
+      handsSince,
+      handUp,
+      setHand,
+      clearHand,
+      clearAllHands,
+      canDraw,
+      sendDraft,
+      sendReaction,
+      setGrant,
+      subscribe,
+      localIdentity,
+    }),
+    [
+      state,
+      isHost,
+      channelHost,
+      send,
+      sendStroke,
+      hands,
+      handsSince,
+      handUp,
+      setHand,
+      clearHand,
+      clearAllHands,
+      canDraw,
+      sendDraft,
+      sendReaction,
+      setGrant,
+      subscribe,
+      localIdentity,
+    ]
+  )
+  const adaptiveRaw = useAdaptiveDelivery()
+  // A new object every render in the hook; held until a field changes so the
+  // ⋯ menu (memoised) is not re-rendered by taps and fades.
+  const { tier, quality, manual, setManual } = adaptiveRaw
+  const adaptive = useMemo(
+    () => ({ tier, quality, manual, setManual }),
+    [tier, quality, manual, setManual]
+  )
   // The shell exists only while the call is on, so the screen stays awake
   // for exactly that long.
   useWakeLock(true)
@@ -164,15 +280,20 @@ export function RoomShell({
     setLeaveAsk(true)
   )
   const { localParticipant } = useLocalParticipant()
+  // Urgent on purpose, not a transition: in a busy class the room's own
+  // updates (speakers, hands, mutes) keep arriving, and a deferred panel
+  // render can be restarted by each of them — the tap must open the panel in
+  // its own frame. The memoised stage and control bar keep that render small.
   const [panel, setPanel] = useState<PanelTab | null>(null)
-  // Lives here, not in the panel: history, the outbox and the unread count
-  // survive the panel closing and every tab switch.
-  const chat = useLiveChat({
-    sessionId,
-    selfId: localParticipant.identity,
-    enabled: config.tools.chat,
-    visible: panel === "chat",
-  })
+  const closePanel = useCallback(() => setPanel(null), [])
+  // The chat's history, outbox and unread count live in the provider above,
+  // so they survive the panel closing and every tab switch. It only needs to
+  // know when the chat tab is on screen — layout effect, so the unread badge
+  // clears in the same frame the tab opens.
+  const setChatVisible = useSetChatVisible()
+  useLayoutEffect(() => {
+    setChatVisible(panel === "chat")
+  }, [panel, setChatVisible])
   const chatLocale = locale === "ar" ? "ar" : "en"
   // Recording consent: shown once per join, dismissible; the school can
   // replace the sentence.
@@ -594,14 +715,13 @@ export function RoomShell({
               className="mt-[13px] sm:mt-2"
             />
             <div className="mt-[13px] sm:mt-3">
-              <ClassControls
+              <ChatControls
                 role={role}
                 labels={labels}
                 channel={channel}
                 panel={panel}
                 onPanel={setPanel}
                 tools={config.tools}
-                chatUnread={config.tools.chat ? chat.unread : 0}
                 onPinned={setRowPinned}
                 onMuteAll={isHost ? onMuteAll : undefined}
                 onShareError={onShareError}
@@ -618,11 +738,11 @@ export function RoomShell({
             !panel && "hidden"
           )}
         >
-          <SidePanel
+          <ChatSidePanel
             title={title}
             tab={panel ?? (config.tools.chat ? "chat" : "questions")}
             onTab={setPanel}
-            onClose={() => setPanel(null)}
+            onClose={closePanel}
             channel={channel}
             canAsk={role !== "OBSERVER"}
             tools={config.tools}
@@ -631,7 +751,6 @@ export function RoomShell({
             labels={labels}
             onPollClosed={isHost ? onPollClosed : undefined}
             onQuestion={isHost ? onQuestion : undefined}
-            chat={chat}
             locale={chatLocale}
             open={Boolean(panel)}
             onGiveFloor={isHost ? giveFloor : undefined}

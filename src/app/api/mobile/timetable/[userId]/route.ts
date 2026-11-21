@@ -44,29 +44,47 @@ export async function GET(
     const dayParam = searchParams.get("day")
     const day = dayParam !== null ? parseInt(dayParam) : undefined
 
-    // Determine if student or teacher
-    const [student, teacher] = await Promise.all([
-      db.student.findFirst({
-        where: { userId, schoolId: auth.schoolId },
-        select: { id: true, sectionId: true },
-      }),
-      db.teacher.findFirst({
-        where: { userId, schoolId: auth.schoolId },
-        select: { id: true },
-      }),
-    ])
+    // Wave 1 — everything that needs only the caller's school and the :userId.
+    // The term, the school's zone and the name format are read here, beside the
+    // student/teacher lookup, rather than after the slots: they were three more
+    // sequential round trips. The term and the zone only serve the best-effort
+    // live-class step, so a failure there must not fail the request.
+    const [student, teacher, termResult, school, nameDisplay] =
+      await Promise.all([
+        db.student.findFirst({
+          where: { userId, schoolId: auth.schoolId },
+          select: { id: true, sectionId: true },
+        }),
+        db.teacher.findFirst({
+          where: { userId, schoolId: auth.schoolId },
+          select: { id: true },
+        }),
+        // resolveActiveTerm returns { term, source } — the term itself may be
+        // null for a school with no configured academic year.
+        resolveActiveTerm(auth.schoolId).catch((err) => {
+          console.error("Mobile timetable term resolution failed:", err)
+          return null
+        }),
+        db.school
+          .findUnique({
+            where: { id: auth.schoolId },
+            select: { timezone: true },
+          })
+          .catch(() => null),
+        schoolNameDisplay(auth.schoolId),
+      ])
 
     const where: Record<string, unknown> = { schoolId: auth.schoolId }
+    // Resolves to whether the caller may see this timetable.
+    let access: Promise<boolean>
 
     if (student) {
+      // Nothing to read for a student with no section yet — but the gate still
+      // runs first, so an outsider learns nothing, not even that.
+      if (student.sectionId) where.sectionId = student.sectionId
       // Same gate the other eight student-scoped mobile routes use: the student
       // themselves, a guardian linked through StudentGuardian, or staff.
-      if (!(await canAccessStudent(auth, student.id))) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
-
-      if (!student.sectionId) return NextResponse.json({ data: [] })
-      where.sectionId = student.sectionId
+      access = canAccessStudent(auth, student.id)
     } else if (teacher) {
       // A teacher's week is their own to see; staff roles carry `view_all`.
       const isSelf = userId === auth.userId
@@ -74,9 +92,7 @@ export async function GET(
         auth.role === "DEVELOPER" ||
         auth.role === "ADMIN" ||
         auth.role === "STAFF"
-      if (!isSelf && !isStaff) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
+      access = Promise.resolve(isSelf || isStaff)
       where.teacherId = teacher.id
     } else {
       return NextResponse.json({ data: [] })
@@ -86,34 +102,53 @@ export async function GET(
       where.dayOfWeek = day
     }
 
-    const slots = await db.timetable.findMany({
-      where,
-      orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
-      select: {
-        id: true,
-        dayOfWeek: true,
-        subject: { select: { id: true, name: true } },
-        teacher: {
+    // Wave 2 — the access check and the slot read run side by side. The read
+    // starts speculatively, but its rows are only ever used once the check has
+    // said yes; on a denial they are dropped and nothing of them is returned.
+    const hasWeek = !(student && !student.sectionId)
+    const slotsRead = hasWeek
+      ? db.timetable.findMany({
+          where,
+          orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
           select: {
             id: true,
-            firstName: true,
-            middleName: true,
-            lastName: true,
+            dayOfWeek: true,
+            subject: { select: { id: true, name: true } },
+            teacher: {
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
+            section: {
+              select: {
+                id: true,
+                name: true,
+                grade: { select: { name: true } },
+              },
+            },
+            classroom: { select: { id: true, roomName: true } },
+            period: {
+              select: { id: true, name: true, startTime: true, endTime: true },
+            },
           },
-        },
-        section: {
-          select: { id: true, name: true, grade: { select: { name: true } } },
-        },
-        classroom: { select: { id: true, roomName: true } },
-        period: {
-          select: { id: true, name: true, startTime: true, endTime: true },
-        },
-      },
-    })
+        })
+      : null
+    // If the check throws or says no, nobody awaits the read — keep a failure
+    // there from surfacing as an unhandled rejection.
+    slotsRead?.catch(() => {})
 
-    // Resolve today's live classes. Mobile previously returned raw slots with no
-    // live-class field and had no conference endpoint at all, so a phone could
-    // not discover that a class was online — let alone join it.
+    if (!(await access)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    if (!slotsRead) return NextResponse.json({ data: [] })
+    const slots = await slotsRead
+
+    // Wave 3 — resolve today's live classes. Mobile previously returned raw
+    // slots with no live-class field and had no conference endpoint at all, so
+    // a phone could not discover that a class was online — let alone join it.
     //
     // ONLY today's slots are passed in, and that restriction is load-bearing.
     // `attachLiveClasses` resolves most-specific-first, and only its first tier
@@ -128,23 +163,13 @@ export async function GET(
     // what the screen is actually for.
     const live = new Map<string, LiveClassJoinInfo>()
     try {
-      // resolveActiveTerm returns { term, source } — the term itself may be null
-      // for a school with no configured academic year.
-      const [{ term }, school] = await Promise.all([
-        resolveActiveTerm(auth.schoolId),
-        db.school.findUnique({
-          where: { id: auth.schoolId },
-          select: { timezone: true },
-        }),
-      ])
+      const term = termResult?.term
       if (term) {
         const now = new Date()
+        const timezone = school?.timezone ?? DEFAULT_SCHOOL_TZ
         // The school's weekday, not the server's — a UTC read puts a Sudanese
         // school on the wrong day for the hours either side of midnight.
-        const today = schoolDayOfWeek(
-          school?.timezone ?? DEFAULT_SCHOOL_TZ,
-          now
-        )
+        const today = schoolDayOfWeek(timezone, now)
         const todaySlots = slots.filter((s) => s.dayOfWeek === today)
         if (todaySlots.length > 0) {
           const attached = await attachLiveClasses(
@@ -155,7 +180,9 @@ export async function GET(
               timetableId: s.id,
               sectionId: s.section?.id ?? null,
               subjectId: s.subject?.id ?? null,
-            }))
+            })),
+            // Already read in wave 1 — saves the helper its own query.
+            timezone
           )
           for (const row of attached) {
             if (row.liveClass && row.timetableId) {
@@ -168,7 +195,6 @@ export async function GET(
       console.error("Mobile timetable live-class resolution failed:", err)
     }
 
-    const nameDisplay = await schoolNameDisplay(auth.schoolId)
     const data = slots.map((s) => {
       const lc = live.get(s.id) ?? null
       return {

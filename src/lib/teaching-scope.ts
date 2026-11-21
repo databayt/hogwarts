@@ -146,6 +146,32 @@ export interface StudentScope {
   gradeId: string | null
 }
 
+/**
+ * The columns a scope is built from. A caller that already reads the student
+ * row selects these and calls `toStudentScope`, instead of reading the same
+ * row a second time through `getStudentScopes`.
+ */
+export const STUDENT_SCOPE_SELECT = {
+  id: true,
+  sectionId: true,
+  academicGradeId: true,
+  section: { select: { gradeId: true } },
+} as const
+
+/** One student row (selected with STUDENT_SCOPE_SELECT) → its scope. */
+export function toStudentScope(r: {
+  id: string
+  sectionId: string | null
+  academicGradeId: string | null
+  section: { gradeId: string | null } | null
+}): StudentScope {
+  return {
+    studentId: r.id,
+    sectionId: r.sectionId,
+    gradeId: r.section?.gradeId ?? r.academicGradeId,
+  }
+}
+
 /** Section and grade for each of the given students. */
 export async function getStudentScopes(
   schoolId: string,
@@ -154,18 +180,9 @@ export async function getStudentScopes(
   if (studentIds.length === 0) return []
   const rows = await db.student.findMany({
     where: { schoolId, id: { in: [...studentIds] } },
-    select: {
-      id: true,
-      sectionId: true,
-      academicGradeId: true,
-      section: { select: { gradeId: true } },
-    },
+    select: STUDENT_SCOPE_SELECT,
   })
-  return rows.map((r) => ({
-    studentId: r.id,
-    sectionId: r.sectionId,
-    gradeId: r.section?.gradeId ?? r.academicGradeId,
-  }))
+  return rows.map(toStudentScope)
 }
 
 /**

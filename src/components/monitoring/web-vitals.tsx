@@ -13,6 +13,12 @@ import { useReportWebVitals } from "next/web-vitals"
  * `useReportWebVitals`; two app metrics are added here —
  *   NAV  click on a link → first paint of the new route (client navigation)
  *   SRV  the server's own `Server-Timing: total` for a full page load
+ * and, when LCP settles, its parts in ms — what a slow LCP is made of:
+ *   LCPD load delay (TTFB → the image request starts)   LCPR resource duration
+ *   LCPE element render delay (bytes in → painted)
+ * with `k`, the LCP element's coarse kind (img | text | other). The part
+ * before LCPD is TTFB, already reported. Numbers and that 3-value kind only —
+ * never the element's URL, selector or text.
  *
  * Everything is batched into one `sendBeacon` to /api/rum, which the
  * Cloudflare Worker answers itself (cf/worker.js → Analytics Engine): no
@@ -26,7 +32,7 @@ import { useReportWebVitals } from "next/web-vitals"
  * Kept tiny on purpose: this file is in every route's initial JavaScript.
  */
 
-type Sample = { n: string; v: number; r?: string; t?: string }
+type Sample = { n: string; v: number; r?: string; t?: string; k?: string }
 
 const ENDPOINT = "/api/rum"
 const LOCALE_RE = /^\/(ar|en)(?=\/|$)/
@@ -69,7 +75,7 @@ function flush(): void {
     mem: nav.deviceMemory ?? 0,
     cpu: navigator.hardwareConcurrency ?? 0,
     sw: navigator.serviceWorker?.controller ? 1 : 0,
-    samples: queue.splice(0, 12),
+    samples: queue.splice(0, 16),
   })
   queue = []
   try {
@@ -88,14 +94,53 @@ function record(sample: Sample): void {
   timer ??= setTimeout(flush, 5000)
 }
 
+type LcpEntry = PerformanceEntry & { url?: string; element?: Element | null }
+
+/** LCP's sub-parts from the browser's own entries, as extra samples. */
+function lcpParts(entries: PerformanceEntry[] | undefined): string | undefined {
+  const e = entries?.[entries.length - 1] as LcpEntry | undefined
+  if (!e) return
+  const nav = performance.getEntriesByType("navigation")[0] as
+    | PerformanceNavigationTiming
+    | undefined
+  const ttfb = nav?.responseStart ?? 0
+  const k = e.url ? "img" : e.element ? "text" : "other"
+  let parts: [string, number][] | null = null
+  if (!e.url) {
+    // Text: nothing to download, so all that follows the first byte is render.
+    parts = [
+      ["LCPD", 0],
+      ["LCPR", 0],
+      ["LCPE", e.startTime - ttfb],
+    ]
+  } else {
+    const res = performance.getEntriesByName(e.url)[0] as
+      | PerformanceResourceTiming
+      | undefined
+    if (res?.responseEnd)
+      parts = [
+        ["LCPD", res.startTime - ttfb],
+        ["LCPR", res.responseEnd - res.startTime],
+        ["LCPE", e.startTime - res.responseEnd],
+      ]
+  }
+  for (const [n, v] of parts ?? []) record({ n, v: Math.max(0, v), k })
+  return k
+}
+
 // Module scope: `useReportWebVitals` replays every metric to a NEW callback
 // reference, so the reference must never change between renders.
 const onVital: Parameters<typeof useReportWebVitals>[0] = (metric) => {
+  const k =
+    metric.name === "LCP"
+      ? lcpParts((metric as { entries?: PerformanceEntry[] }).entries)
+      : undefined
   record({
     n: metric.name,
     v: metric.value,
     r: metric.rating,
     t: metric.navigationType,
+    ...(k ? { k } : {}),
   })
 }
 

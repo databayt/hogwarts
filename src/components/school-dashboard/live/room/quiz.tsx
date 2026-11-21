@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { startExam } from "@/components/school-dashboard/exams/manage/actions/status"
 import {
   closeQuickAssessment,
-  getQuickAssessmentResults,
   launchQuickAssessment,
 } from "@/components/school-dashboard/exams/quick/actions"
 import type { QuickAssessmentResults } from "@/components/school-dashboard/exams/quick/actions/types"
@@ -41,10 +40,14 @@ export function QuizTab({
   channel,
   labels,
   sessionId,
+  active: panelOpen = true,
 }: {
   channel: ClassChannel
   labels: RoomLabels
   sessionId: string
+  /** The side panel is on screen — it stays mounted, hidden, while closed, and
+   *  a hidden tab has no reader for the live answer counts. */
+  active?: boolean
 }) {
   const live = channel.state.quiz
   const [items, setItems] = useState<RoomQuizItem[] | null>(null)
@@ -61,24 +64,55 @@ export function QuizTab({
     void load()
   }, [load])
 
-  // Answers coming in, while a quick check is open.
+  // Answers coming in, while a quick check is open — and only while this tab
+  // is on screen and the page is visible. A GET route, not the server action:
+  // an action poll ships a full RSC re-render with every response (see
+  // `/api/live/quick-results`).
   useEffect(() => {
     if (!live || live.kind !== "quick") {
       setResults(null)
       return
     }
+    if (!panelOpen) return
     let active = true
+    let h: number | undefined
     const tick = async () => {
-      const res = await getQuickAssessmentResults(live.id)
-      if (active && res.success && res.data) setResults(res.data)
+      try {
+        const res = await fetch(
+          `/api/live/quick-results?id=${encodeURIComponent(live.id)}`,
+          { cache: "no-store" }
+        )
+        const body = (await res.json()) as {
+          success?: boolean
+          data?: QuickAssessmentResults
+        }
+        if (active && body.success && body.data) setResults(body.data)
+      } catch {
+        // A missed poll is only a stale count; the next tick asks again.
+      }
     }
-    void tick()
-    const h = window.setInterval(tick, RESULTS_POLL_MS)
+    const start = () => {
+      if (h !== undefined) return
+      void tick()
+      h = window.setInterval(tick, RESULTS_POLL_MS)
+    }
+    const stop = () => {
+      if (h === undefined) return
+      window.clearInterval(h)
+      h = undefined
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") start()
+      else stop()
+    }
+    if (document.visibilityState === "visible") start()
+    document.addEventListener("visibilitychange", onVisibility)
     return () => {
       active = false
-      window.clearInterval(h)
+      stop()
+      document.removeEventListener("visibilitychange", onVisibility)
     }
-  }, [live])
+  }, [live, panelOpen])
 
   const launch = async (item: RoomQuizItem) => {
     setBusy(item.id)

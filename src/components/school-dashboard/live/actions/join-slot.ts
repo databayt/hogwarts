@@ -88,7 +88,11 @@ export async function resolveSlotJoin(input: {
   const { schoolId, userId, role, timetableId } = input
   const now = input.now ?? new Date()
 
-  const [slot, school] = await Promise.all([
+  // Wave 1: the slot, the school and the active term. The term is only needed
+  // once access has passed ("is it today?"), but it reads nothing of the
+  // slot's and nothing about the class, so it rides along instead of costing a
+  // round trip of its own. A refused reader never sees it.
+  const [slot, school, { term }] = await Promise.all([
     db.timetable.findFirst({
       where: { id: timetableId, schoolId },
       select: {
@@ -110,6 +114,7 @@ export async function resolveSlotJoin(input: {
         conferenceGuardiansObserve: true,
       },
     }),
+    resolveActiveTerm(schoolId),
   ])
   if (!slot || !school || !slot.sectionId || !slot.period) {
     return { kind: "not_found" }
@@ -131,46 +136,41 @@ export async function resolveSlotJoin(input: {
   // Decided BEFORE anything about the day, so an outsider learns nothing about
   // a class (not even that it is on another day) and can never make a row.
   const timeZone = school.timezone || DEFAULT_SCHOOL_TZ
-  let isHost = false
-  if (role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { schoolId, userId },
-      select: { id: true },
-    })
-    if (!teacher) return { kind: "forbidden" }
-    if (teacher.id === slot.teacherId) {
-      isHost = true
-    } else {
-      // A confirmed substitute hosts the class they are covering — the same
-      // rule the sweep uses when it writes the row.
-      const subs = await resolveSubstitutes(schoolId, timeZone, now, [slot.id])
-      isHost = subs.get(slot.id)?.teacherId === teacher.id
-    }
-    // Any other teacher of the school may still look in (the room decides
-    // CO_HOST or refuses); they just never get the host's earlier window.
-  } else if (role === "STUDENT") {
-    const ok = await canAccessSession(
-      { userId, role, schoolId },
-      readerSections
-    )
-    if (!ok) return { kind: "forbidden" }
-  } else if (role === "GUARDIAN") {
-    // The school switch first: with observing off there is nothing a guardian
-    // could do in the room, so the link refuses instead of the room.
-    if (!school.conferenceGuardiansObserve) return { kind: "forbidden" }
-    const ok = await canAccessSession(
-      { userId, role, schoolId },
-      readerSections
-    )
-    if (!ok) return { kind: "forbidden" }
-  } else if (role !== "ADMIN" && role !== "DEVELOPER") {
-    // STAFF and ACCOUNTANT join only school-wide sessions, and a slot's class
-    // is section-scoped (join-core's role matrix).
-    return { kind: "forbidden" }
+  const existingKey = {
+    slotId: roomSlotId,
+    sectionId,
+    subjectId: slot.subjectId,
   }
 
+  // Wave 3: the access check and, beside it, a SPECULATIVE read of today's
+  // room. The room read needs only the ids above, not the verdict, so it need
+  // not wait for it — but it is never used unless the verdict is yes: on a
+  // refusal it is dropped without being looked at, so an outsider learns
+  // nothing from it and can never make a row. Its failure is held, not thrown,
+  // so a refused reader still gets "forbidden" rather than a read error.
+  const speculativeRoom = findExistingRoom(
+    schoolId,
+    timeZone,
+    now,
+    existingKey
+  ).then(
+    (room) => ({ ok: true as const, room }),
+    (error: unknown) => ({ ok: false as const, error })
+  )
+  const access = await checkSlotAccess({
+    schoolId,
+    userId,
+    role,
+    timeZone,
+    now,
+    slot,
+    school,
+    readerSections,
+  })
+  if (!access.allowed) return { kind: "forbidden" }
+  const isHost = access.isHost
+
   // ── Is it today? ──────────────────────────────────────────────────────────
-  const { term } = await resolveActiveTerm(schoolId)
   const instants = slotInstantsOn(timeZone, now, slot.period)
   const isToday =
     Boolean(term) &&
@@ -196,11 +196,9 @@ export async function resolveSlotJoin(input: {
   }
 
   // ── 1–3: a room that already exists ───────────────────────────────────────
-  const existing = await findExistingRoom(schoolId, timeZone, now, {
-    slotId: roomSlotId,
-    sectionId,
-    subjectId: slot.subjectId,
-  })
+  const speculated = await speculativeRoom
+  if (!speculated.ok) throw speculated.error
+  const existing = speculated.room
   if (existing) {
     // A room the teacher already opened is open to everyone it admits, early
     // or late — the window only guards the moment of starting.
@@ -268,6 +266,70 @@ export async function resolveSlotJoin(input: {
   // not write a room for a period that has ended: that is "over", not a fault.
   if (reason === "period_over") return { kind: "over" }
   return { kind: "unavailable", reason }
+}
+
+/**
+ * Who is asking — may this reader follow the link at all, and do they host?
+ * Moved out of `resolveSlotJoin` unchanged so the room read can run beside it.
+ */
+async function checkSlotAccess(input: {
+  schoolId: string
+  userId: string
+  role: UserRole
+  timeZone: string
+  now: Date
+  slot: { id: string; teacherId: string | null }
+  school: { conferenceGuardiansObserve: boolean }
+  readerSections: string | string[]
+}): Promise<{ allowed: false } | { allowed: true; isHost: boolean }> {
+  const {
+    schoolId,
+    userId,
+    role,
+    timeZone,
+    now,
+    slot,
+    school,
+    readerSections,
+  } = input
+  let isHost = false
+  if (role === "TEACHER") {
+    const teacher = await db.teacher.findFirst({
+      where: { schoolId, userId },
+      select: { id: true },
+    })
+    if (!teacher) return { allowed: false }
+    if (teacher.id === slot.teacherId) {
+      isHost = true
+    } else {
+      // A confirmed substitute hosts the class they are covering — the same
+      // rule the sweep uses when it writes the row.
+      const subs = await resolveSubstitutes(schoolId, timeZone, now, [slot.id])
+      isHost = subs.get(slot.id)?.teacherId === teacher.id
+    }
+    // Any other teacher of the school may still look in (the room decides
+    // CO_HOST or refuses); they just never get the host's earlier window.
+  } else if (role === "STUDENT") {
+    const ok = await canAccessSession(
+      { userId, role, schoolId },
+      readerSections
+    )
+    if (!ok) return { allowed: false }
+  } else if (role === "GUARDIAN") {
+    // The school switch first: with observing off there is nothing a guardian
+    // could do in the room, so the link refuses instead of the room.
+    if (!school.conferenceGuardiansObserve) return { allowed: false }
+    const ok = await canAccessSession(
+      { userId, role, schoolId },
+      readerSections
+    )
+    if (!ok) return { allowed: false }
+  } else if (role !== "ADMIN" && role !== "DEVELOPER") {
+    // STAFF and ACCOUNTANT join only school-wide sessions, and a slot's class
+    // is section-scoped (join-core's role matrix).
+    return { allowed: false }
+  }
+  return { allowed: true, isHost }
 }
 
 /**

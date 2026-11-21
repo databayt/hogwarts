@@ -41,7 +41,7 @@ if (!traceFile || !fs.existsSync(traceFile)) {
   console.error("Start the app with PERF_TRACE=1 and its output redirected to a file, then pass --trace <file>.")
   process.exit(2)
 }
-const roles = list(arg("roles")) ?? ["admin", "teacher"]
+const roles = list(arg("roles")) ?? ["admin", "teacher", "student"]
 const locale = arg("locale", lab.locale)
 const outDir = ensureDir(path.resolve(arg("out") || path.join(labRoot, "reports/latest")))
 const password = process.env.PERF_PASSWORD || "1234"

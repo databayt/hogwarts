@@ -405,16 +405,10 @@ async function buildFromUser(
   // ---- real stats ----------------------------------------------------------
   const stats: ProfileStatValue[] = []
   if (role === "student" && user.student) {
-    // The grade's subjects — class enrollments are retired
-    const subjects = await getStudentSubjects(schoolId, user.student.id)
-    stats.push({ key: "subjects", value: subjects.length })
-    const classmates = user.student.sectionId
-      ? await db.student.count({
-          where: { schoolId, sectionId: user.student.sectionId },
-        })
-      : 0
-    if (classmates > 0)
-      stats.push({ key: "classmates", value: Math.max(classmates - 1, 0) })
+    // Placeholder: assembleShared overwrites it with the subjects tab length
+    // (same getStudentSubjects read, run once there). The classmates count is
+    // read in assembleShared's parallel wave (`classmatesOfSectionId`).
+    stats.push({ key: "subjects", value: 0 })
   } else if (role === "teacher" && user.teacher) {
     // What the teacher teaches this term (SubjectTeacher)
     const teacherId = user.teacher.id
@@ -487,6 +481,8 @@ async function buildFromUser(
     permission,
     entityId: entity?.id ?? user.id,
     stats,
+    classmatesOfSectionId:
+      role === "student" && user.student ? (user.student.sectionId ?? null) : null,
   })
 
   return { success: true, data: result }
@@ -680,57 +676,69 @@ interface AssembleArgs {
   permission: PermissionLevel
   entityId: string
   stats: ProfileStatValue[]
+  /** Student profiles: count the section's students in the shared parallel wave. */
+  classmatesOfSectionId?: string | null
 }
 
 async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   const { schoolId, userId, role, isOwner, displayLang } = args
   // The header shows the school's short name (first + second or first +
   // last); the full name rides along for the details line.
-  const nameDisplay = await schoolNameDisplay(schoolId)
+  // One wave: school name, the four userId-keyed reads, the role detail and
+  // the classmates count are independent of each other.
+  const [nameDisplay, [badgeRows, orgRows, pinnedRows, activityRows], roleDetail, classmates] =
+    await Promise.all([
+      schoolNameDisplay(schoolId),
+      // Badges, organizations, pinned, activity are keyed by userId. Orphan
+      // entities (no User) simply have none.
+      userId
+        ? Promise.all([
+            db.profileBadge.findMany({
+              where: {
+                schoolId,
+                userId,
+                ...(isOwner ? {} : { isPublic: true }),
+              },
+              orderBy: [{ level: "desc" }, { earnedAt: "desc" }],
+              take: 12,
+            }),
+            db.organizationMembership.findMany({
+              where: { schoolId, userId },
+              orderBy: { joinedAt: "asc" },
+              take: 12,
+              select: {
+                id: true,
+                role: true,
+                organization: {
+                  select: { id: true, name: true, type: true, avatarUrl: true },
+                },
+              },
+            }),
+            db.pinnedItem.findMany({
+              where: {
+                schoolId,
+                userId,
+                ...(isOwner ? {} : { isPublic: true }),
+              },
+              orderBy: { order: "asc" },
+              take: 6,
+            }),
+            db.userActivity.findMany({
+              where: { schoolId, userId },
+              orderBy: { createdAt: "desc" },
+              take: 10,
+            }),
+          ])
+        : Promise.resolve([[], [], [], []] as [any[], any[], any[], any[]]),
+      fetchRoleDetail(role, args.entityId, schoolId, args.privileged),
+      args.classmatesOfSectionId
+        ? db.student.count({
+            where: { schoolId, sectionId: args.classmatesOfSectionId },
+          })
+        : Promise.resolve(0),
+    ])
   const short = shortNameParts(args, nameDisplay)
   const rawFullName = displayName(args, "full")
-
-  // Badges, organizations, pinned, activity are keyed by userId. Orphan
-  // entities (no User) simply have none.
-  const [badgeRows, orgRows, pinnedRows, activityRows] = userId
-    ? await Promise.all([
-        db.profileBadge.findMany({
-          where: {
-            schoolId,
-            userId,
-            ...(isOwner ? {} : { isPublic: true }),
-          },
-          orderBy: [{ level: "desc" }, { earnedAt: "desc" }],
-          take: 12,
-        }),
-        db.organizationMembership.findMany({
-          where: { schoolId, userId },
-          orderBy: { joinedAt: "asc" },
-          take: 12,
-          select: {
-            id: true,
-            role: true,
-            organization: {
-              select: { id: true, name: true, type: true, avatarUrl: true },
-            },
-          },
-        }),
-        db.pinnedItem.findMany({
-          where: {
-            schoolId,
-            userId,
-            ...(isOwner ? {} : { isPublic: true }),
-          },
-          orderBy: { order: "asc" },
-          take: 6,
-        }),
-        db.userActivity.findMany({
-          where: { schoolId, userId },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        }),
-      ])
-    : [[], [], [], []]
 
   const organizations: ProfileOrgView[] = orgRows.map((m: any) => ({
     id: m.organization.id,
@@ -740,14 +748,6 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     avatarUrl: m.organization.avatarUrl,
   }))
 
-  // ---- role-detail lists (real, for the role tab) -------------------------
-  const roleDetail = await fetchRoleDetail(
-    role,
-    args.entityId,
-    schoolId,
-    args.privileged
-  )
-
   // The sidebar "subjects" stat should match the subjects tab: distinct
   // subjects, not class enrollments (a student can have several classes of
   // the same subject across terms).
@@ -755,6 +755,8 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     const subjectsStat = args.stats.find((s) => s.key === "subjects")
     if (subjectsStat) subjectsStat.value = roleDetail.subjects.length
   }
+  if (classmates > 0)
+    args.stats.push({ key: "classmates", value: Math.max(classmates - 1, 0) })
 
   // A teacher's primary department is a real organization-like membership —
   // surface it even when there's no explicit OrganizationMembership row.

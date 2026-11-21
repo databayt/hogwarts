@@ -136,6 +136,9 @@ const RUM_METRICS = new Set([
   "FID",
   "NAV",
   "SRV",
+  "LCPD", // LCP load delay, ms
+  "LCPR", // LCP resource load duration, ms
+  "LCPE", // LCP element render delay, ms
 ])
 const RUM_ROLES = new Set([
   "DEVELOPER",
@@ -170,7 +173,7 @@ async function collectRum(request, env) {
       request.headers.get("cookie") || ""
     )?.[1]
     const cf = request.cf || {}
-    for (const s of body.samples.slice(0, 12)) {
+    for (const s of body.samples.slice(0, 16)) {
       if (
         !s ||
         !RUM_METRICS.has(s.n) ||
@@ -193,6 +196,7 @@ async function collectRum(request, env) {
           clip(cf.country, 2), // blob9  country
           clip(cf.colo, 4), // blob10 Cloudflare location that served them
           body.sw ? "sw" : "no-sw", // blob11 service worker in control
+          clip(s.k, 8), // blob12 LCP element kind: img | text | other
         ],
         doubles: [s.v, Number(body.mem) || 0, Number(body.cpu) || 0],
       })

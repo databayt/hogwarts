@@ -2,7 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
-import { getStudentScopes } from "@/lib/teaching-scope"
+import {
+  getStudentScopes,
+  STUDENT_SCOPE_SELECT,
+  toStudentScope,
+  type StudentScope,
+} from "@/lib/teaching-scope"
 
 import type { AttachmentLink } from "./assignment-attachments"
 import { buildAttachmentLinks } from "./attachment-links"
@@ -40,12 +45,14 @@ export async function getMyAssignments(
   userId: string,
   schoolId: string
 ): Promise<MyAssignment[]> {
+  // One read: the student's id plus the section/grade the audience filter
+  // needs (what getStudentScopes would read again from the same row).
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true },
+    select: STUDENT_SCOPE_SELECT,
   })
   if (!student) return []
-  return getAssignmentsForStudent(schoolId, student.id)
+  return loadAssignments(schoolId, student.id, [toStudentScope(student)])
 }
 
 /**
@@ -57,6 +64,14 @@ export async function getAssignmentsForStudent(
   studentId: string
 ): Promise<MyAssignment[]> {
   const scopes = await getStudentScopes(schoolId, [studentId])
+  return loadAssignments(schoolId, studentId, scopes)
+}
+
+async function loadAssignments(
+  schoolId: string,
+  studentId: string,
+  scopes: StudentScope[]
+): Promise<MyAssignment[]> {
   if (scopes.length === 0) return []
 
   const rows = await db.schoolAssignment.findMany({

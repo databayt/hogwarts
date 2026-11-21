@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Calendar, ChevronRight, TriangleAlert, Users } from "lucide-react"
 
 import { initialsOf } from "@/lib/name-utils"
@@ -38,6 +38,7 @@ import {
   type LiveClassJoinInfo,
   type SchoolClosureInfo,
 } from "./live-join-button"
+import type { InitialGuardian } from "./role-router"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
 import { inJoinWindow, useNowMs } from "./use-now-ms"
@@ -67,6 +68,13 @@ interface Props {
   isLoading?: boolean
   childrenIds?: string[]
   defaultTab?: "today" | "full"
+  /**
+   * The children and the first child's week + day, streamed with the page
+   * (see `loadInitialTimetable`). When present the view starts on them and
+   * fires no server action on mount; picking another child still loads as
+   * before.
+   */
+  initialGuardian?: InitialGuardian
 }
 
 interface Child {
@@ -89,7 +97,22 @@ export default function GuardianView({
   lunchAfterPeriod,
   isLoading,
   defaultTab = "today",
+  initialGuardian,
 }: Props) {
+  // A seed with a child must carry that child's week and day to be usable.
+  const seed =
+    initialGuardian &&
+    (initialGuardian.childId === null ||
+      (initialGuardian.grid && initialGuardian.today))
+      ? initialGuardian
+      : null
+  const seedGrid = seed?.grid ?? null
+  const seedToday = seed?.today ?? null
+  // The (child, term) the seed answers for; that effect pass is skipped. Never
+  // reset, so a StrictMode re-run cannot fire the fetch the seed replaced.
+  const seededKey = useRef(
+    seed?.childId ? `${seed.childId}|${termId}` : null
+  )
   const d = dictionary?.timetable as Record<string, any> | undefined
   const gv = (d as Record<string, any>)?.guardianView
   // "Online" marker beside the physical room — set once here, used on both the
@@ -100,28 +123,40 @@ export default function GuardianView({
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
-  const [isLoadingChildren, setIsLoadingChildren] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [isLoadingChildren, setIsLoadingChildren] = useState(!seed)
+  const [error, setError] = useState<string | null>(() =>
+    seed && seed.children.length === 0
+      ? (gv?.noChildren ?? "No children linked to your guardian account")
+      : null
+  )
 
   // Children data
-  const [children, setChildren] = useState<Child[]>([])
-  const [selectedChild, setSelectedChild] = useState<string | null>(null)
+  const [children, setChildren] = useState<Child[]>(
+    () => (seed?.children as Child[] | undefined) ?? []
+  )
+  const [selectedChild, setSelectedChild] = useState<string | null>(
+    () => seed?.childId ?? null
+  )
 
   // Selected child's timetable
-  const [slots, setSlots] = useState<any[]>([])
+  const [slots, setSlots] = useState<any[]>(() => seedGrid?.slots ?? [])
   // The grid's own bell, from the fetch: grades ring different bells, so the
   // school-wide list from the router is only the fallback until it lands.
   const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
-    null
+    () => (seedGrid && seedGrid.periods.length > 0 ? seedGrid.periods : null)
   )
   const periods = gridPeriods ?? schoolPeriods
-  const [studentInfo, setStudentInfo] = useState<any>(null)
-  const [classInfo, setClassInfo] = useState<any>(null)
+  const [studentInfo, setStudentInfo] = useState<any>(
+    () => seedGrid?.studentInfo ?? null
+  )
+  const [classInfo, setClassInfo] = useState<any>(
+    () => (seedGrid as { classInfo?: any } | null)?.classInfo || null
+  )
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
-  >({})
+  >(() => (seedGrid && "liveIndicators" in seedGrid ? seedGrid.liveIndicators : {}))
   const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
-    {}
+    () => (seedGrid && "liveJoin" in seedGrid ? seedGrid.liveJoin : {})
   )
   // Which cell the reader opened. The grid is read-only here, so a click means
   // "tell me about this", not "let me change it".
@@ -129,12 +164,13 @@ export default function GuardianView({
   // Today's slots that are online by policy — empty unless the school lets
   // guardians watch (the server applies that switch before sending it).
   const [onlineToday, setOnlineToday] = useState<ReadonlySet<string>>(
-    () => new Set()
+    () =>
+      new Set(seedGrid && "onlineToday" in seedGrid ? seedGrid.onlineToday : [])
   )
   // Today's join windows as instants, from the server (school zone).
   const [joinWindows, setJoinWindows] = useState<
     Record<string, { fromMs: number; untilMs: number }>
-  >({})
+  >(() => (seedGrid && "joinWindows" in seedGrid ? seedGrid.joinWindows : {}))
   const nowMs = useNowMs()
   // A click on today's live cell IS the join; any other cell opens the dialog.
   const { open: openSlot } = useSlotOpen({
@@ -181,20 +217,27 @@ export default function GuardianView({
     ) : null
   }
 
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([])
+  const [todaySchedule, setTodaySchedule] = useState<any[]>(
+    () => seedToday?.schedule ?? []
+  )
   // The school lets guardians watch a class (join-core refuses them
   // otherwise). The Online marker shows either way — the child joins.
-  const [canJoin, setCanJoin] = useState(false)
-  const [closure, setClosure] = useState<SchoolClosureInfo>(null)
+  const [canJoin, setCanJoin] = useState(() =>
+    seedToday && "canJoin" in seedToday ? Boolean(seedToday.canJoin) : false
+  )
+  const [closure, setClosure] = useState<SchoolClosureInfo>(
+    () => seedToday?.closure ?? null
+  )
 
-  // Load children on mount
+  // Load children on mount — unless the page streamed them in.
   useEffect(() => {
-    loadChildren()
+    if (!seed) loadChildren()
   }, [])
 
-  // Load timetable when child selection changes
+  // Load timetable when child selection changes — except the pass the streamed
+  // seed already answered.
   useEffect(() => {
-    if (selectedChild) {
+    if (selectedChild && seededKey.current !== `${selectedChild}|${termId}`) {
       loadChildTimetable()
     }
   }, [selectedChild, termId])

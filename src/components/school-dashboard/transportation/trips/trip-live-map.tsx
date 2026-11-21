@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-// leaflet CSS is loaded globally in src/app/[lang]/layout.tsx
+// leaflet CSS ships with the map, not the root layout (it was in every route).
+import "leaflet/dist/leaflet.css"
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),

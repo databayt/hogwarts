@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    const user = await db.user.findUnique({
+    // The school id comes from the verified token, so both reads run at once.
+    const [user, school] = await Promise.all([
+      db.user.findUnique({
       where: { id: auth.userId },
       select: {
         id: true,
@@ -73,16 +75,16 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-    })
+    }),
+      db.school.findUnique({
+        where: { id: auth.schoolId },
+        select: { id: true, name: true, nameEn: true, domain: true },
+      }),
+    ])
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
-
-    const school = await db.school.findUnique({
-      where: { id: auth.schoolId },
-      select: { id: true, name: true, nameEn: true, domain: true },
-    })
 
     return NextResponse.json({
       id: user.id,

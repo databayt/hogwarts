@@ -127,6 +127,27 @@ describe("resolveSlotJoin — who may use the link", () => {
     expect(materializeSlotForDay).not.toHaveBeenCalled()
   })
 
+  it("reads today's room speculatively but never returns it to a refused reader", async () => {
+    // A live room exists today; the student is not enrolled.
+    rows.push({ id: "room-secret", status: "live" })
+    m(canAccessSession).mockResolvedValue(false)
+    const outcome = await ask("STUDENT", at("14:05"))
+    expect(outcome).toEqual({ kind: "forbidden" })
+    expect(JSON.stringify(outcome)).not.toContain("room-secret")
+    expect(materializeSlotForDay).not.toHaveBeenCalled()
+  })
+
+  it("a failed speculative room read does not turn a refusal into an error", async () => {
+    m(findSlotSessionForDay).mockRejectedValue(new Error("db down"))
+    m(canAccessSession).mockResolvedValue(false)
+    expect(await ask("STUDENT", at("14:05"))).toEqual({ kind: "forbidden" })
+  })
+
+  it("a failed room read still surfaces for a reader who IS admitted", async () => {
+    m(findSlotSessionForDay).mockRejectedValue(new Error("db down"))
+    await expect(ask("STUDENT", at("14:05"))).rejects.toThrow("db down")
+  })
+
   it("refuses staff and accountants (a slot's class is section-scoped)", async () => {
     expect(await ask("STAFF", at("13:55"))).toEqual({ kind: "forbidden" })
     expect(await ask("ACCOUNTANT", at("13:55"))).toEqual({ kind: "forbidden" })

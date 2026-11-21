@@ -42,15 +42,22 @@
       "/grades",
       "/timetable",
       "/classrooms",
-      "/exams"
+      "/exams",
+      "/live",
+      "/assignments",
+      "/profile",
+      "/subjects"
     ],
     "guardian": ["/dashboard", "/parent", "/attendance", "/grades", "/finance"],
     "student": [
       "/dashboard",
-      "/my-assignments",
+      "/assignments",
       "/grades",
       "/timetable",
-      "/library"
+      "/library",
+      "/live",
+      "/profile",
+      "/subjects"
     ]
   },
   "publicRoutes": [

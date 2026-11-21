@@ -15,10 +15,22 @@ import {
   getPersonalizedTimetable,
   provisionTimetableForSchool,
 } from "../actions"
+import type {
+  getChildTimetable,
+  getChildTodaySchedule,
+  getGuardianChildren,
+  getRoomsForSelection,
+  getTeachersForSelection,
+  getTimetableByRoom,
+  getTimetableByStudentGrade,
+  getTimetableByTeacher,
+  getTodaySchedule,
+} from "../actions"
 import { DRAFT_TERM_ID } from "../config"
 import AdminView from "./admin-view"
 import { TimetableSurfaceSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
+import type { SchoolClosureInfo } from "./live-join-button"
 import StudentView from "./student-view"
 
 interface Props {
@@ -44,9 +56,54 @@ interface Props {
   initialData?: Promise<InitialTimetable | null>
 }
 
+/** The week a StudentView draws: a student's section, or a teacher's own week. */
+export type InitialWeekly =
+  | Awaited<ReturnType<typeof getTimetableByStudentGrade>>
+  | Awaited<ReturnType<typeof getTimetableByTeacher>>
+
+/** What StudentView reads off `getTodaySchedule`: the closure and the weekday. */
+export interface InitialToday {
+  closure: SchoolClosureInfo
+  dayOfWeek: number
+}
+
+/** GuardianView's first screen: the children, the first child's week and day. */
+export interface InitialGuardian {
+  children: Awaited<ReturnType<typeof getGuardianChildren>>["children"]
+  /** The child auto-selected on mount (the first), null when there are none. */
+  childId: string | null
+  grid: Awaited<ReturnType<typeof getChildTimetable>> | null
+  today: Awaited<ReturnType<typeof getChildTodaySchedule>> | null
+}
+
+/**
+ * AdminView's first screen: both pickers' options, the selection the saved
+ * `tt_filter` cookie (or the first room) lands on, and that selection's grid.
+ */
+export interface InitialAdmin {
+  rooms: Awaited<ReturnType<typeof getRoomsForSelection>>["rooms"]
+  teachers: Awaited<ReturnType<typeof getTeachersForSelection>>["teachers"]
+  selection:
+    | { viewMode: "classroom"; roomId: string }
+    | { viewMode: "teacher"; teacherId: string }
+    | null
+  grid:
+    | Awaited<ReturnType<typeof getTimetableByRoom>>
+    | Awaited<ReturnType<typeof getTimetableByTeacher>>
+    | null
+}
+
 export interface InitialTimetable {
   termId: string
   data: unknown
+  /** STUDENT / TEACHER: the viewer's week, null when not loaded in the stream. */
+  grid?: InitialWeekly | null
+  /** STUDENT / TEACHER: today's closure state. */
+  today?: InitialToday | null
+  /** GUARDIAN: children + the first child's week and day. */
+  guardian?: InitialGuardian | null
+  /** Admin roles: pickers + the first selection's grid. */
+  admin?: InitialAdmin | null
 }
 
 type ViewType = "admin" | "teacher" | "student" | "guardian"
@@ -200,6 +257,11 @@ export default function RoleRouter({
   }
 
   // Route to appropriate view based on role
+  // The streamed first screen is only valid for the data it was streamed with:
+  // after a reload (provisioning a term) `viewData` is a new object and the
+  // views fall back to loading for themselves.
+  const seed = initial && viewData === initial.data ? initial : null
+
   const commonProps = {
     dictionary,
     lang,
@@ -215,7 +277,11 @@ export default function RoleRouter({
   switch (viewData.viewType) {
     case "admin":
       view = (
-        <AdminView {...commonProps} editable={viewData.editable !== false} />
+        <AdminView
+          {...commonProps}
+          editable={viewData.editable !== false}
+          initialAdmin={seed?.admin ?? undefined}
+        />
       )
       break
 
@@ -227,6 +293,8 @@ export default function RoleRouter({
         <StudentView
           {...commonProps}
           teacherId={viewData.filterData.teacherId}
+          initialGrid={seed?.grid ?? undefined}
+          initialToday={seed?.today ?? undefined}
         />
       ) : (
         <Alert variant="destructive">
@@ -249,6 +317,7 @@ export default function RoleRouter({
           {...commonProps}
           childrenIds={viewData.filterData.childrenIds}
           defaultTab={defaultTab}
+          initialGuardian={seed?.guardian ?? undefined}
         />
       )
       break
@@ -258,7 +327,13 @@ export default function RoleRouter({
       // Student view is also the most-restricted fallback.
       // StudentView renders the week grid unconditionally — a student has a
       // single schedule, so there is no Today/Full split to select.
-      view = <StudentView {...commonProps} />
+      view = (
+        <StudentView
+          {...commonProps}
+          initialGrid={seed?.grid ?? undefined}
+          initialToday={seed?.today ?? undefined}
+        />
+      )
   }
 
   const isDraft = viewData.termInfo.id === DRAFT_TERM_ID

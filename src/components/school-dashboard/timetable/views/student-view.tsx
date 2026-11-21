@@ -2,7 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { TriangleAlert } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -17,7 +24,6 @@ import {
   getTodaySchedule,
 } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
-import { JoinLinkButton } from "./join-link-button"
 import {
   ClosureNotice,
   type LiveClassJoinInfo,
@@ -25,8 +31,8 @@ import {
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
-import { StartLiveClassButton } from "./start-live-class-button"
-import { inJoinWindow, useNowMs } from "./use-now-ms"
+import type { InitialToday, InitialWeekly } from "./role-router"
+import { SlotJoinAction } from "./slot-join-action"
 import { useSlotOpen } from "./use-slot-open"
 
 interface Props {
@@ -61,6 +67,14 @@ interface Props {
    * the same week in a second shape and was retired on 2026-11-11.
    */
   teacherId?: string
+  /**
+   * The viewer's week and today's closure, streamed with the page (see
+   * `loadInitialTimetable`). When both are present the view starts on them and
+   * fires no server action on mount; the load effect still runs for any later
+   * change (another term, another teacher, a retry).
+   */
+  initialGrid?: InitialWeekly
+  initialToday?: InitialToday
 }
 
 // `termInfo` and `lunchAfterPeriod` still arrive via RoleRouter's `commonProps`
@@ -74,8 +88,17 @@ export default function StudentView({
   periods: schoolPeriods,
   isLoading,
   teacherId,
+  initialGrid,
+  initialToday,
 }: Props) {
   const isTeacher = !!teacherId
+  // The streamed first screen is usable only whole: the week without today's
+  // closure would paint a grid that might sit on a declared holiday.
+  const seed = initialGrid && initialToday ? initialGrid : null
+  // The load key the seed answers for. An effect pass for THIS key is skipped;
+  // any other key (term / teacher changed) loads as before. Never reset, so a
+  // StrictMode re-run of the effect cannot fire the fetch the seed replaced.
+  const seededKey = useRef(seed ? `${termId}|${teacherId ?? ""}` : null)
   const d = dictionary?.timetable as Record<string, any> | undefined
   const sv = (d as Record<string, any>)?.studentViewUi
   const CLOSED_LABEL =
@@ -87,7 +110,8 @@ export default function StudentView({
   // with no slots in it — a full week of "-" cells — before the skeleton
   // replaced it. The component has nothing to show until `loadData` returns, so
   // say so from the first render.
-  const [isLoadingData, setIsLoadingData] = useState(true)
+  // With the streamed seed there is nothing to wait for, so it starts false.
+  const [isLoadingData, setIsLoadingData] = useState(!seed)
   const [error, setError] = useState<string | null>(null)
 
   // Week / day view mode — the student's analogue of the admin toolbar's
@@ -104,7 +128,14 @@ export default function StudentView({
   // matchMedia is only readable after mount, and seeding state from it would
   // hydrate mismatched. `picked` stays null until the student chooses, so the
   // default keeps tracking a rotation; once chosen, their pick wins at any width.
-  const [picked, setPicked] = useState<"week" | "day" | null>(null)
+  const [picked, setPickedState] = useState<"week" | "day" | null>(null)
+  // The toggle repaints a whole grid; mark it a transition so the tap itself
+  // (the thumb sliding) answers first.
+  const [, startToggle] = useTransition()
+  const setPicked = useCallback(
+    (next: "week" | "day" | null) => startToggle(() => setPickedState(next)),
+    []
+  )
   const [isNarrow, setIsNarrow] = useState(false)
   const ORDER: ReadonlyArray<"week" | "day"> = isNarrow
     ? ["day", "week"]
@@ -119,32 +150,33 @@ export default function StudentView({
     return () => mq.removeEventListener("change", sync)
   }, [])
   // Weekly data
-  const [slots, setSlots] = useState<any[]>([])
+  const [slots, setSlots] = useState<any[]>(() => seed?.slots ?? [])
   // The grid's own bell, from the fetch: grades ring different bells, so the
   // school-wide list from the router is only the fallback until it lands.
   const [gridPeriods, setGridPeriods] = useState<typeof schoolPeriods | null>(
-    null
+    () => (seed && seed.periods.length > 0 ? seed.periods : null)
   )
   const periods = gridPeriods ?? schoolPeriods
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
-  >({})
+  >(() => seed?.liveIndicators ?? {})
   const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
-    {}
+    () => seed?.liveJoin ?? {}
   )
   // Today's slots that are online by policy, row or no row yet.
   const [onlineToday, setOnlineToday] = useState<ReadonlySet<string>>(
-    () => new Set()
+    () => new Set(seed?.onlineToday ?? [])
   )
   // Today's join windows as instants, from the server (school zone).
   const [joinWindows, setJoinWindows] = useState<
     Record<string, { fromMs: number; untilMs: number }>
-  >({})
+  >(() => seed?.joinWindows ?? {})
   // Teacher only: whether the school teaches live at all (its teaching mode).
   // An in-person school offers no Start — Join to an existing room is never
   // gated on it.
-  const [liveEnabled, setLiveEnabled] = useState(false)
-  const nowMs = useNowMs()
+  const [liveEnabled, setLiveEnabled] = useState(() =>
+    seed && "liveEnabled" in seed ? (seed.liveEnabled ?? false) : false
+  )
   const startErrorLabel =
     dictionary?.liveClasses?.startError ??
     (isRTL ? "تعذّر بدء البث المباشر" : "Couldn't start the live class")
@@ -168,43 +200,56 @@ export default function StudentView({
   // its window — a room, a standing link, or an online section whose room the
   // link will open — now carries a labelled pill.
   const joinLabel = dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
-  const renderJoin = (slot: { id: string }) => {
-    // The window only exists for TODAY's slots (school zone), so this is
-    // also the "is it today" check — on any device clock.
-    if (!inJoinWindow(nowMs, joinWindows[slot.id])) return null
-    if (liveJoin[slot.id] || onlineToday.has(slot.id)) {
-      return (
-        <JoinLinkButton timetableId={slot.id} lang={lang} label={joinLabel} />
-      )
-    }
-    // An in-person section of a school that teaches live: its teacher can
-    // still open an online arm for this period.
-    if (!isTeacher || !liveEnabled) return null
-    return (
-      <StartLiveClassButton
-        timetableId={slot.id}
+  // The clock lives in `SlotJoinAction`, a leaf per cell: a 30 s tick
+  // re-renders the cells' pills, not this view or the grid. The callback keeps
+  // its identity until the join inputs change, so the memoized grid is not
+  // re-rendered by anything else this view does.
+  const startLabel =
+    dictionary?.liveClasses?.start ??
+    (isRTL ? "بدء البث المباشر" : "Start live class")
+  const startingLabel =
+    dictionary?.liveClasses?.starting ?? (isRTL ? "جارٍ البدء…" : "Starting…")
+  const renderJoin = useCallback(
+    (slot: { id: string }) => (
+      <SlotJoinAction
+        slotId={slot.id}
         lang={lang}
-        label={
-          dictionary?.liveClasses?.start ??
-          (isRTL ? "بدء البث المباشر" : "Start live class")
-        }
-        startingLabel={
-          dictionary?.liveClasses?.starting ??
-          (isRTL ? "جارٍ البدء…" : "Starting…")
-        }
+        window={joinWindows[slot.id]}
+        joinable={!!liveJoin[slot.id] || onlineToday.has(slot.id)}
+        canStart={isTeacher && liveEnabled}
+        joinLabel={joinLabel}
+        startLabel={startLabel}
+        startingLabel={startingLabel}
         errorLabel={startErrorLabel}
       />
-    )
-  }
+    ),
+    [
+      lang,
+      joinWindows,
+      liveJoin,
+      onlineToday,
+      isTeacher,
+      liveEnabled,
+      joinLabel,
+      startLabel,
+      startingLabel,
+      startErrorLabel,
+    ]
+  )
 
   // Today's schedule is fetched for its CLOSURE only — the day list and the
   // current/next card it used to feed are both gone, but a declared holiday
   // still has to be announced above the grid.
-  const [closure, setClosure] = useState<SchoolClosureInfo>(null)
-  const [currentDay, setCurrentDay] = useState<number>(new Date().getDay())
+  const [closure, setClosure] = useState<SchoolClosureInfo>(
+    () => initialToday?.closure ?? null
+  )
+  const [currentDay, setCurrentDay] = useState<number>(
+    () => initialToday?.dayOfWeek ?? new Date().getDay()
+  )
 
-  // Load data
+  // Load data — except the pass the streamed seed already answered.
   useEffect(() => {
+    if (seededKey.current === `${termId}|${teacherId ?? ""}`) return
     loadData()
   }, [termId, teacherId])
 
@@ -263,7 +308,7 @@ export default function StudentView({
   // column, but a student opening this on a Friday would otherwise get a grid
   // with no days at all — so fall forward to the next working day, which the
   // column header names for itself.
-  const visibleDays = (() => {
+  const visibleDays = useMemo(() => {
     if (viewRange === "week" || workingDays.length === 0) return workingDays
     const today = new Date().getDay()
     if (workingDays.includes(today)) return [today]
@@ -272,7 +317,28 @@ export default function StudentView({
       if (workingDays.includes(candidate)) return [candidate]
     }
     return workingDays
-  })()
+  }, [viewRange, workingDays])
+
+  // Stable props for the memoized grid: a render of this view that changes
+  // none of the grid's inputs (the week/day thumb, the dialog opening) must
+  // not repaint ~50 cells.
+  const gridDictionary = useMemo(
+    () => ({
+      period: d?.period,
+      break: d?.break,
+      days: d?.dayNames,
+      conflict: d?.conflict,
+      liveNow: d?.liveNow,
+      scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+    }),
+    [d, dictionary?.liveClasses?.status?.scheduled]
+  )
+  const openSlotRef = useRef(openSlot)
+  openSlotRef.current = openSlot
+  const onSlotInspect = useCallback<typeof openSlot>(
+    (slot, period) => openSlotRef.current(slot, period),
+    []
+  )
 
   if (error) {
     return (
@@ -366,16 +432,9 @@ export default function StudentView({
             // whole day grey instead of admin's coloured cells.
             highlightToday={viewRange === "week"}
             liveIndicators={liveIndicators}
-            onSlotInspect={openSlot}
+            onSlotInspect={onSlotInspect}
             renderSlotAction={renderJoin}
-            dictionary={{
-              period: d?.period,
-              break: d?.break,
-              days: d?.dayNames,
-              conflict: d?.conflict,
-              liveNow: d?.liveNow,
-              scheduledToday: dictionary?.liveClasses?.status?.scheduled,
-            }}
+            dictionary={gridDictionary}
           />
         )}
       </div>

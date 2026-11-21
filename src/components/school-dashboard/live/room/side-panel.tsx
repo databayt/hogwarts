@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { useParticipants } from "@livekit/components-react"
 import { Check } from "lucide-react"
 
@@ -54,7 +54,9 @@ interface SidePanelProps {
   sessionId?: string
 }
 
-export function SidePanel(props: SidePanelProps) {
+// Memoised: the shell re-renders on every tap, auto-hide fade and mute change,
+// and none of those touch the panel. Its props are stable (see `room-shell.tsx`).
+export const SidePanel = memo(function SidePanel(props: SidePanelProps) {
   const { tab, onTab, onClose, labels, isHost, channel, tools } = props
   const tabs: Array<{ id: PanelTab; label: string; badge?: number }> = []
   if (tools.chat)
@@ -137,13 +139,16 @@ export function SidePanel(props: SidePanelProps) {
             channel={channel}
             labels={labels}
             sessionId={props.sessionId}
+            // The panel stays mounted while closed; only an open panel has a
+            // reader for the live answer counts.
+            active={props.open}
           />
         )}
         {tab === "hands" && <HandsTab {...props} />}
       </div>
     </aside>
   )
-}
+})
 
 // ---------------------------------------------------------------------------
 
@@ -454,12 +459,6 @@ function hostTargets(channel: ClassChannel): string[] | undefined {
 function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
   const participants = useParticipants()
   const byIdentity = new Map(participants.map((p) => [p.identity, p]))
-  // "2 min" ticks over on its own.
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const h = window.setInterval(() => setNow(Date.now()), 30_000)
-    return () => window.clearInterval(h)
-  }, [])
   const spotlight = channel.state.spotlight
   const spotName = spotlight
     ? byIdentity.get(spotlight)?.name || spotlight
@@ -518,7 +517,6 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
           {channel.hands.map((id, i) => {
             const name = byIdentity.get(id)?.name || id
             const at = channel.handsSince.get(id)
-            const mins = at ? Math.floor((now - at) / 60_000) : 0
             return (
               <li
                 key={id}
@@ -534,11 +532,7 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
                   <span className="block truncate text-[15px] font-medium">
                     {name}
                   </span>
-                  <span className="text-muted-foreground block text-[12px]">
-                    {mins < 1
-                      ? labels.handJustNow
-                      : labels.handMinutes.replace("{n}", String(mins))}
-                  </span>
+                  <HandWaiting at={at} labels={labels} />
                 </span>
                 {onGiveFloor && (
                   <button
@@ -566,6 +560,33 @@ function HandsTab({ channel, labels, onGiveFloor }: SidePanelProps) {
         </ol>
       )}
     </div>
+  )
+}
+
+/**
+ * "2 min" under a raised hand, ticking over on its own. The 30-second clock
+ * lives in this leaf, so a tick re-renders one line of text rather than the
+ * whole hands list (and its `useParticipants` subscription).
+ */
+function HandWaiting({
+  at,
+  labels,
+}: {
+  at: number | undefined
+  labels: RoomLabels
+}) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const h = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(h)
+  }, [])
+  const mins = at ? Math.floor((now - at) / 60_000) : 0
+  return (
+    <span className="text-muted-foreground block text-[12px]">
+      {mins < 1
+        ? labels.handJustNow
+        : labels.handMinutes.replace("{n}", String(mins))}
+    </span>
   )
 }
 

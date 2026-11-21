@@ -1775,6 +1775,27 @@ async function getTimetableBySection(input: {
 }
 
 /**
+ * The school year a term belongs to, or null when the term is not this
+ * school's. Read paths only: the request-cached active-term resolver answers
+ * the common case (the grid is almost always asked for the active term, which
+ * the page has already resolved this request) with no query; any other term id
+ * falls back to the one-row lookup. Never used after a write — `cache()` would
+ * serve a pre-write term.
+ */
+async function termYearId(
+  schoolId: string,
+  termId: string
+): Promise<string | null> {
+  const { term: active } = await resolveActiveTerm(schoolId)
+  if (active && active.id === termId) return active.yearId
+  const term = await db.term.findFirst({
+    where: { id: termId, schoolId },
+    select: { yearId: true },
+  })
+  return term?.yearId ?? null
+}
+
+/**
  * Get full weekly timetable for a student based on their grade level
  * Returns all subjects scheduled for the student's homeroom (e.g., "Grade 10")
  */
@@ -1784,74 +1805,68 @@ export async function getTimetableByStudentGrade(input: {
 }) {
   await requireReadAccess()
 
-  const { schoolId } = await getTenantContext()
+  const [{ schoolId }, session] = await Promise.all([
+    getTenantContext(),
+    auth(),
+  ])
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
-  const nameDisplay = await schoolNameDisplay(schoolId)
-
-  const session = await auth()
   const userId = session?.user?.id
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
-  // Get student record with their section placement
-  const student = await db.student.findFirst({
-    where: { userId, schoolId },
-    select: {
-      id: true,
-      firstName: true,
-      middleName: true,
-      lastName: true,
-      sectionId: true,
-    },
-  })
+  // Wave 1 — everything that needs only the session and the term id. These
+  // were ~10 sequential round trips to Neon and none depends on another: the
+  // student row carries its section's grade and its latest year level inline,
+  // and the PDF school name rides along instead of costing a step of its own.
+  const [nameDisplay, student, { config }, yearId, school] = await Promise.all([
+    schoolNameDisplay(schoolId),
+    db.student.findFirst({
+      where: { userId, schoolId },
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        sectionId: true,
+        section: { select: { gradeId: true } },
+        // Current year level, for display
+        studentYearLevels: {
+          where: { schoolId },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            yearLevel: { select: { id: true, levelName: true, lang: true } },
+          },
+        },
+      },
+    }),
+    getScheduleConfig({ termId: input.termId }),
+    termYearId(schoolId, input.termId),
+    // School name for PDF export
+    db.school.findFirst({
+      where: { id: schoolId },
+      select: { name: true },
+    }),
+  ])
   if (!student) throw new Error("STUDENT_NOT_FOUND")
+  if (!yearId) throw new Error("INVALID_TERM")
 
-  // Get student's current year level for display
-  const studentYearLevel = await db.studentYearLevel.findFirst({
-    where: { studentId: student.id, schoolId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      yearLevel: { select: { id: true, levelName: true, lang: true } },
-    },
-  })
-
+  const studentYearLevel = student.studentYearLevels[0]
   const gradeName = studentYearLevel?.yearLevel?.levelName || "Unknown Grade"
   const gradeLang = studentYearLevel?.yearLevel?.lang
 
-  // Get schedule config
-  const { config } = await getScheduleConfig({ termId: input.termId })
-
-  const term = await db.term.findFirst({
-    where: { id: input.termId, schoolId },
-    select: { yearId: true },
-  })
-  if (!term) throw new Error("INVALID_TERM")
-
-  // Get school name for PDF export
-  const school = await db.school.findFirst({
-    where: { id: schoolId },
-    select: { name: true },
-  })
-
-  const studentSection = student.sectionId
-    ? await db.section.findFirst({
-        where: { id: student.sectionId, schoolId },
-        select: { gradeId: true },
-      })
-    : null
-  const periods = await db.period.findMany({
-    where: {
-      schoolId,
-      yearId: term.yearId,
-      ...periodScope(studentSection?.gradeId),
-    },
-    orderBy: { startTime: "asc" },
-    select: PERIOD_GRID_SELECT,
-  })
-
   const studentSectionId = student.sectionId
 
-  // Get the student's section slots.
-  const [slots] = await Promise.all([
+  // Wave 2 — the bell and the section's slots, side by side.
+  const [periods, slots] = await Promise.all([
+    db.period.findMany({
+      where: {
+        schoolId,
+        yearId,
+        ...periodScope(student.section?.gradeId),
+      },
+      orderBy: { startTime: "asc" },
+      select: PERIOD_GRID_SELECT,
+    }),
     db.timetable.findMany({
       where: {
         schoolId,
@@ -1914,7 +1929,7 @@ export async function getTimetableByStudentGrade(input: {
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     // Dots, join targets (TODAY's slots only, so another day's cell misses
-    // the map) and whether the school teaches live — one pass, after the slot
+    // the map) and whether the school teaches live — wave 3, after the slot
     // fetch because it needs the slots.
     ...(await resolveTodayLive(schoolId, input.termId, slots)),
   }
@@ -1940,87 +1955,89 @@ export async function getTimetableByTeacher(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
-  const nameDisplay = await schoolNameDisplay(schoolId)
 
-  const { config } = await getScheduleConfig({ termId: input.termId })
-
-  const term = await db.term.findFirst({
-    where: { id: input.termId, schoolId },
-    select: { yearId: true },
-  })
-  if (!term) throw new Error("INVALID_TERM")
-
-  const [slots, teacherInfo] = await Promise.all([
-    db.timetable.findMany({
-      where: {
-        schoolId,
-        termId: input.termId,
-        teacherId: input.teacherId,
-        weekOffset: input.weekOffset ?? 0,
-      },
-      include: {
-        subject: { select: { id: true, name: true } },
-        section: {
-          select: {
-            id: true,
-            name: true,
-            gradeId: true,
-            grade: { select: { gradeNumber: true } },
+  // Wave 1 — nothing here depends on anything else, so it is one round trip
+  // deep instead of six: the name format, the week config, the term's year,
+  // the teacher's slots and the teacher row, and the display language.
+  const [nameDisplay, { config }, yearId, slots, teacherInfo, lang] =
+    await Promise.all([
+      schoolNameDisplay(schoolId),
+      getScheduleConfig({ termId: input.termId }),
+      termYearId(schoolId, input.termId),
+      db.timetable.findMany({
+        where: {
+          schoolId,
+          termId: input.termId,
+          teacherId: input.teacherId,
+          weekOffset: input.weekOffset ?? 0,
+        },
+        include: {
+          subject: { select: { id: true, name: true } },
+          section: {
+            select: {
+              id: true,
+              name: true,
+              gradeId: true,
+              grade: { select: { gradeNumber: true } },
+            },
+          },
+          classroom: { select: { id: true, roomName: true } },
+          period: {
+            select: { id: true, name: true, startTime: true, endTime: true },
           },
         },
-        classroom: { select: { id: true, roomName: true } },
-        period: {
-          select: { id: true, name: true, startTime: true, endTime: true },
+      }),
+      db.teacher.findFirst({
+        where: { id: input.teacherId, schoolId },
+        select: {
+          id: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          emailAddress: true,
         },
-      },
-    }),
-    db.teacher.findFirst({
-      where: { id: input.teacherId, schoolId },
-      select: {
-        id: true,
-        firstName: true,
-        middleName: true,
-        lastName: true,
-        emailAddress: true,
-      },
-    }),
-  ])
+      }),
+      getDisplayLang(),
+    ])
+  if (!yearId) throw new Error("INVALID_TERM")
 
-  // A teacher crosses grades, and grades ring different bells: the rows are
-  // the bells of the grades this teacher actually teaches (+ school-wide),
-  // with periods that ring at the same time collapsed into one row.
-  const { rows: periods, rowOf } = mergePeriodRows(
-    await db.period.findMany({
+  // Wave 2 — the bell and the two localizations, which need the slots, the
+  // language and the teacher row from wave 1. A teacher crosses grades, and
+  // grades ring different bells: the rows are the bells of the grades this
+  // teacher actually teaches (+ school-wide), with periods that ring at the
+  // same time collapsed into one row.
+  const rawSubject = (s: (typeof slots)[number]) => s.subject?.name || ""
+  const [rawPeriods, subjectLabels, teacherDisplayName] = await Promise.all([
+    db.period.findMany({
       where: {
         schoolId,
-        yearId: term.yearId,
+        yearId,
         ...periodScopeForGrades(slots.map((s) => s.section?.gradeId)),
       },
       orderBy: { startTime: "asc" },
       select: PERIOD_GRID_SELECT,
-    })
-  )
-
-  // Calculate workload
-  const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
-  const totalPeriods = slots.length
-
-  // Localize subject names to the app language (catalog names are stored in one
-  // language; e.g. show "Geography" on /en and its Arabic on /ar). Batched.
-  const lang = await getDisplayLang()
-  const rawSubject = (s: (typeof slots)[number]) => s.subject?.name || ""
-  const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
-  const teacherDisplayName = teacherInfo
-    ? (
-        await getNames(
+    }),
+    // Localize subject names to the app language (catalog names are stored in
+    // one language; e.g. show "Geography" on /en and its Arabic on /ar).
+    getLabels(slots.map(rawSubject), lang, schoolId),
+    teacherInfo
+      ? getNames(
           [teacherInfo],
           (t) => shortNameParts(t, nameDisplay),
           lang,
           schoolId
+        ).then(
+          (names) =>
+            names.get(displayName(teacherInfo, nameDisplay)) ||
+            displayName(teacherInfo, nameDisplay)
         )
-      ).get(displayName(teacherInfo, nameDisplay)) ||
-      displayName(teacherInfo, nameDisplay)
-    : ""
+      : Promise.resolve(""),
+  ])
+  const { rows: periods, rowOf } = mergePeriodRows(rawPeriods)
+
+  // Calculate workload
+  const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
+  const totalPeriods = slots.length
 
   return {
     teacherInfo: teacherInfo
