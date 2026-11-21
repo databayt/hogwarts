@@ -4,6 +4,75 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Speed, make-up classes, lesson drafts — 2026-11-21 (hogwarts#490)
+
+The school's screen recordings show slow answers; RUM (real phones, 7 days, p75) agrees: the
+room shows at 5.1 s (taps 360 ms, p95 976), `/live/join` at 6.3 s, `/live` at 4.4 s. Plan:
+`~/.claude/plans/read-live-block-in-splendid-starfish-of-49892513-0162-4c7c-b03f-dfb1db94bd86.md`.
+**Everything below is on `main`, typechecked and unit-tested. None of it is deployed, and none of
+the room changes has been seen in a real room yet — verify with the practice room and
+`scripts/live-smoke.mjs` right after the deploy.**
+
+**The cause that is not code.** The container is in Frankfurt and Postgres in N. Virginia: 94 ms
+per query, measured live. `scripts/db/move-region.sh` (prepare · rehearse · cutover · rollback ·
+verify) moves both databases to the Neon project `Hogwarts EU` (aws-eu-central-1, created empty
+on 11-21) with a read-only freeze during the copy; `wrangler.jsonc` pins the container to WEUR.
+Not run yet: the rehearsal needs `neon auth` (the CLI login expired).
+
+**Room and join (speed)**
+
+- `room.tsx` no longer ships LiveKit for the pre-join card: the in-call tree is `room/in-call.tsx`,
+  loaded with `next/dynamic` and warmed on pointer-down. `budgets.json` now asserts it (the room
+  route left the `livekit` exception list).
+- Chat state lives in `room/live-chat-provider.tsx`, so a message re-renders the chat tab and
+  the unread badge, not the stage or the control bar. `Stage`, `SidePanel`, `ClassControls` and
+  the ⋯ menu are memoised; `RoomShell` rebuilds `channel` from its fields (every field is listed
+  — add a field to `useClassChannel` and the literal fails to compile until it is added there).
+  The panel opens urgently on purpose (a transition can be restarted by the room's own updates).
+- Quiz results are polled through `GET /api/live/quick-results`, not a server action, and only
+  while the Quiz tab is open and the document visible.
+- Room page: ~9 sequential waits → ~4; the shelves stream behind their own Suspense. Join page and
+  `join-slot.ts`: three waves; the existing-room read is speculative and dropped on a refused
+  access check. Landing loader: 7 waves → 4; `landing/reveal.tsx` is CSS, no framer-motion.
+- Still open: `useClassChannel` calls `useLocalParticipant()` itself, so the shell re-renders on
+  mute/track changes (the memoised children absorb it); `HandsTab` still calls `useParticipants()`.
+
+**Make-up class («حصة تعويضية»)**
+
+- Rule: a class that ended `cancelled` with no `actualStart` (cancelled, or never started and
+  closed by `end-stale-live-classes`) can be replaced by its teacher, or by an admin, at a time
+  when the teacher and every section of the class are free. No approval.
+- Data: `Conference.makeupForId` → the ROOT missed class (additive column, index and FK in
+  `prisma/migrations/20261121120000_live_makeup_class/` — **apply by hand before the deploy**).
+  "Missed" is derived (`missedClassWhere` in `makeup-core.ts`); a cancelled make-up makes the
+  root missed again.
+- Code: `makeup-suggest.ts` (pure slot math), `makeup-core.ts` (list · suggest · create with the
+  block's first real overlap check, under a row lock · cancel · re-plan), `actions/makeup.ts`,
+  `actions/create-core.ts` (the body of `createLiveClassWithCtx`, shared).
+- **Danger zones:** `attachLiveClasses` (`timetable/live-class-join.ts`) must never hand a row
+  with `makeupForId` to a regular slot; `sessionSectionIds` (`combined.ts`) follows a make-up to
+  its original so a combined class's other sections can join; `cancelLiveClass` is admin-only,
+  so a teacher cancels a make-up through `cancelMakeup`.
+- Attendance: a make-up writes the register of the ORIGINAL date and period (`attendance-sync.ts`);
+  `makeup_no_origin` when the original cannot be resolved.
+- Screens: «حصص فائتة» shelf on the landing (hosts), `makeup-sheet.tsx` (day and time chips, any
+  other time), badge and links on the class page and the cards, a line on the teacher dashboard,
+  and the make-up among today's classes. Mobile payloads gained `is_makeup`, `makeup_for`,
+  `made_up_by` (additive).
+- Open: a scheduled make-up opens on the room card, where there is no re-plan/cancel (reach them
+  with `?view=details`); `/timetable`'s today list does not draw the make-up row; rotation weeks
+  and a covered teacher's freed slots are not modelled in the suggestions.
+
+**Lesson drafts (off)**
+
+- `src/components/lesson-draft/` (see its README): on the teacher's request a DRAFT quick check
+  and a DRAFT homework from the class's textbook lesson, through `POST /api/live/lesson-draft`.
+  Ships OFF (`LESSON_DRAFT_ENABLED`); the eval (`scripts/lesson-draft/eval.ts`) has not been run.
+- A leak closed on the way: students could list DRAFT quick checks, and a DRAFT homework linked to
+  a class reached them through the class page — filtered in `quick/actions`, `read-live-class.ts`
+  and `class-work-load.ts`.
+- Not built: the button in the room's Quiz tab.
+
 ## Launch week: reach first, then capacity — 2026-11-13 (hogwarts#470)
 
 Al-Ibda starts its first full week on Saturday 11-14. A read-only pass over production the evening

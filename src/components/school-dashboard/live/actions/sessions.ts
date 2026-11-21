@@ -9,7 +9,6 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { isLiveKitConfigured } from "@/components/school-dashboard/live/livekit/client"
 import { stopEgress } from "@/components/school-dashboard/live/livekit/egress"
-import { roomNameFor } from "@/components/school-dashboard/live/livekit/room-naming"
 import {
   endRoom,
   ensureRoom,
@@ -17,17 +16,16 @@ import {
 import {
   cancelSchema,
   idOnlySchema,
-  liveClassScheduleSchema,
   timetableStartSchema,
   type CancelInput,
   type IdOnly,
   type LiveClassServerInput,
 } from "@/components/school-dashboard/live/validation"
-import { prewarm } from "@/components/translation/prewarm"
 
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
 import { hostMayStart } from "../join-window"
 import { syncLiveAttendance } from "./attendance-sync"
+import { createLiveClassCore } from "./create-core"
 import {
   canAccessSession,
   concurrentCapError,
@@ -37,7 +35,7 @@ import {
   requireContext,
 } from "./helpers"
 import { resolveSubstitutes } from "./materialize-day"
-import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
+import { notifyClassCancelled } from "./notifications"
 import { readLiveClass } from "./read-live-class"
 import { findSlotSessionForDay } from "./slot-session"
 import { transitionToLive } from "./went-live"
@@ -82,113 +80,9 @@ async function createLiveClassWithCtx(
   input: LiveClassServerInput,
   ctx: Extract<Awaited<ReturnType<typeof requireContext>>, { ok: true }>
 ) {
-  const parsed = liveClassScheduleSchema.safeParse(input)
-  if (!parsed.success) {
-    return actionError(ACTION_ERRORS.VALIDATION_ERROR, parsed.error.message)
-  }
-  const data = parsed.data
-
-  // This form has no meeting-URL field, so every row it writes takes the
-  // schema's `provider = livekit`. Without an SFU that row looks scheduled and
-  // only fails when the teacher presses Start — refuse at create time, as the
-  // wizard does (list-actions.ts), and point the school at a link instead.
-  if (!isLiveKitConfigured()) {
-    return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
-  }
-
-  try {
-    // School config + (optional) the section's recording opt-out, in parallel.
-    const [school, section] = await Promise.all([
-      db.school.findUnique({
-        where: { id: ctx.schoolId },
-        select: {
-          conferenceMaxDuration: true,
-          conferenceRecordingDefault: true,
-          preferredLanguage: true,
-        },
-      }),
-      data.sectionId
-        ? db.section.findFirst({
-            where: { id: data.sectionId, schoolId: ctx.schoolId },
-            select: { conferenceRecordingOptOut: true },
-          })
-        : Promise.resolve(null),
-    ])
-    if (!school) return actionError(ACTION_ERRORS.SCHOOL_NOT_FOUND)
-    const sectionOptOut = section?.conferenceRecordingOptOut ?? false
-
-    const durationMin =
-      (new Date(data.scheduledEnd).getTime() -
-        new Date(data.scheduledStart).getTime()) /
-      60_000
-    if (durationMin > school.conferenceMaxDuration) {
-      return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_DURATION_EXCEEDED)
-    }
-
-    // Verify the teacher belongs to this school.
-    const teacher = await db.teacher.findFirst({
-      where: { id: data.teacherId, schoolId: ctx.schoolId },
-      select: { id: true, userId: true },
-    })
-    if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
-
-    // Two-step create so we can write the final roomName containing the cuid.
-    const placeholder = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const created = await db.conference.create({
-      data: {
-        schoolId: ctx.schoolId,
-        teacherId: teacher.id,
-        timetableId: data.timetableId ?? null,
-        sectionId: data.sectionId ?? null,
-        subjectId: data.subjectId ?? null,
-        title: data.title,
-        description: data.description ?? null,
-        lang: data.lang,
-        scheduledStart: new Date(data.scheduledStart),
-        scheduledEnd: new Date(data.scheduledEnd),
-        recordingEnabled:
-          (data.recordingEnabled ?? school.conferenceRecordingDefault) &&
-          !sectionOptOut,
-        maxParticipants: data.maxParticipants ?? 50,
-        visibility: data.visibility ?? "section",
-        catalogLessonId: data.catalogLessonId ?? null,
-        roomName: placeholder,
-      },
-    })
-    const finalRoomName = roomNameFor(ctx.schoolId, created.id)
-    const session = await db.conference.update({
-      where: { id: created.id },
-      data: { roomName: finalRoomName },
-    })
-
-    // Auto-invite the teacher as HOST. Students/observers are resolved
-    // lazily on join via the section roster, so we don't pre-fan-out.
-    if (teacher.userId) {
-      await db.conferenceParticipant.upsert({
-        where: {
-          sessionId_userId: { sessionId: session.id, userId: teacher.userId },
-        },
-        create: {
-          schoolId: ctx.schoolId,
-          sessionId: session.id,
-          userId: teacher.userId,
-          role: "HOST",
-        },
-        update: { role: "HOST" },
-      })
-    }
-
-    // Best-effort fan-out — failures here must not roll back the create.
-    after(() => notifyClassScheduled(ctx.schoolId, session.id))
-
-    after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
-    for (const path of liveListRevalidatePaths()) {
-      revalidatePath(path, "page")
-    }
-    return { success: true as const, data: session }
-  } catch {
-    return actionError(ACTION_ERRORS.LIVE_CLASS_CREATE_FAILED)
-  }
+  // The body lives in ./create-core.ts so the make-up core creates through the
+  // same checks, notifications and revalidation.
+  return createLiveClassCore({ schoolId: ctx.schoolId }, input)
 }
 
 /**

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 
@@ -91,6 +92,26 @@ export async function GET(
             : (at?.disabled ??
               "Automatic attendance is turned off for this school. Mark attendance as usual.")
 
+    // Make-up class (حصة تعويضية) links, read by id and school — detail-load
+    // does not carry them. Additive fields; null/false on an ordinary class.
+    const makeupLinks = await db.conference.findFirst({
+      where: { id: session.id, schoolId: auth.schoolId },
+      select: {
+        makeupForId: true,
+        makeupFor: { select: { id: true, scheduledStart: true } },
+        makeups: {
+          where: {
+            status: { in: ["scheduled", "live", "ended"] },
+            deletedAt: null,
+          },
+          orderBy: { scheduledStart: "desc" },
+          take: 1,
+          select: { id: true, scheduledStart: true },
+        },
+      },
+    })
+    const madeUpBy = makeupLinks?.makeups[0] ?? null
+
     const lc = detail.lessonContent
     const http = (u: string | null | undefined) => (u && /^https?:\/\//i.test(u) ? u : null)
 
@@ -101,6 +122,19 @@ export async function GET(
       status: session.status,
       status_label: (t?.status as Record<string, string> | undefined)?.[session.status] ?? session.status,
       scheduled_start: session.scheduledStart.toISOString(),
+      is_makeup: Boolean(makeupLinks?.makeupForId),
+      makeup_for: makeupLinks?.makeupFor
+        ? {
+            id: makeupLinks.makeupFor.id,
+            scheduled_start: makeupLinks.makeupFor.scheduledStart.toISOString(),
+          }
+        : null,
+      made_up_by: madeUpBy
+        ? {
+            id: madeUpBy.id,
+            scheduled_start: madeUpBy.scheduledStart.toISOString(),
+          }
+        : null,
       description: session.description,
       recording: detail.recordingState,
       can_join: detail.canJoin,

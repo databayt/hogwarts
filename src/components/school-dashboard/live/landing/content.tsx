@@ -4,14 +4,17 @@
 // nothing here reaches the client bundle except the one motion wrapper the
 // get-started band brings with it.
 
+import type { MakeupLabels } from "../makeup-badge"
 import { LiveCatchUpShelf } from "./catch-up-shelf"
 import { LiveGetStartedBand } from "./get-started-band"
+import { LiveMissedShelf } from "./missed-shelf"
 import { LiveNowStrip } from "./now-strip"
 import { LiveReadinessBand } from "./readiness-band"
 import { LiveRecordingsGrid } from "./recordings-grid"
 import { LiveRoleGuide } from "./role-guide"
 import { LiveStatusHero } from "./status-hero"
 import type {
+  LandingMissed,
   LandingPolicy,
   LandingReadiness,
   LandingSectionProps,
@@ -22,6 +25,8 @@ import type {
 
 interface Props extends LandingSectionProps {
   settings: LiveSettingsDictionary
+  /** `liveClasses.makeup` — the make-up shelf's labels (a separate dictionary file). */
+  makeup?: MakeupLabels
   viewer: LandingViewer
   policy: LandingPolicy
   readiness: LandingReadiness | null
@@ -29,6 +34,8 @@ interface Props extends LandingSectionProps {
   upcoming: LandingSession[]
   catchUp: LandingSession[]
   recordings: LandingSession[]
+  /** Host-only: classes still to make up. Empty for everyone else. */
+  missed?: LandingMissed[]
 }
 
 /**
@@ -49,6 +56,7 @@ export function LiveLandingContent({
   dictionary,
   lang,
   settings,
+  makeup,
   viewer,
   policy,
   readiness,
@@ -56,6 +64,7 @@ export function LiveLandingContent({
   upcoming,
   catchUp,
   recordings,
+  missed = [],
 }: Props) {
   // A class that exists is a class someone must be able to reach. A teacher
   // can open a room in a school still set to in-person (an ad-hoc class, a
@@ -93,6 +102,15 @@ export function LiveLandingContent({
           viewer={viewer}
         />
       ) : null}
+
+      {/* Between the strip and the catch-up shelf: what a host can still make
+          up. Gated on the rows AND on the host roles inside the shelf. */}
+      <LiveMissedShelf
+        missed={missed}
+        viewer={viewer}
+        lang={lang}
+        labels={makeup}
+      />
 
       {/* Gated on the ROWS, not on `policy.isOnline`: a school that has since
           gone back to the classroom still has classes it taught online, and

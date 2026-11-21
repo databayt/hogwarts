@@ -70,6 +70,18 @@ export interface LandingSession {
   /** Shown to a grade supervisor for a class of a section she supervises that
    *  another teacher teaches. Drives the «إشراف» badge. */
   supervising?: boolean
+  /** A make-up class («حصة تعويضية») — it replaces a missed one. Drives the badge. */
+  makeup: boolean
+}
+
+/** One missed class on a host's shelf, already localized and formatted by the loader. */
+export interface LandingMissed {
+  id: string
+  title: string
+  subjectName: string | null
+  sectionName: string | null
+  /** Weekday, date and time, formatted in the SCHOOL's zone. */
+  when: string
 }
 
 /** What this viewer is allowed to do, resolved once on the server. */

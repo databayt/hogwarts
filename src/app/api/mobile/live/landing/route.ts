@@ -57,6 +57,29 @@ export async function GET(request: NextRequest) {
 
     const { viewer, policy } = landing
 
+    // Which of the listed classes are make-ups (حصة تعويضية) — one query for
+    // all four lists, school-scoped. The landing loader does not carry the flag.
+    const listed = [
+      ...landing.live,
+      ...landing.upcoming,
+      ...landing.catchUp,
+      ...landing.recordings,
+    ].map((s) => s.id)
+    const makeupIds = new Set(
+      listed.length === 0
+        ? []
+        : (
+            await db.conference.findMany({
+              where: {
+                schoolId,
+                id: { in: [...new Set(listed)] },
+                makeupForId: { not: null },
+              },
+              select: { id: true },
+            })
+          ).map((r) => r.id)
+    )
+
     // Separately, so a settings failure cannot blank the strip — as on the page.
     let readiness: Record<string, unknown> | null = null
     if (viewer.canConfigure) {
@@ -96,10 +119,10 @@ export async function GET(request: NextRequest) {
         provider: policy.provider,
         degraded: policy.degraded,
       },
-      live: landing.live.map(toDto),
-      upcoming: landing.upcoming.map(toDto),
-      catch_up: landing.catchUp.map(toDto),
-      recordings: landing.recordings.map(toDto),
+      live: landing.live.map((s) => toDto(s, makeupIds)),
+      upcoming: landing.upcoming.map((s) => toDto(s, makeupIds)),
+      catch_up: landing.catchUp.map((s) => toDto(s, makeupIds)),
+      recordings: landing.recordings.map((s) => toDto(s, makeupIds)),
       readiness,
     })
   } catch (error) {
@@ -108,7 +131,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function toDto(s: LandingSession) {
+function toDto(s: LandingSession, makeupIds: Set<string>) {
   return {
     id: s.id,
     title: s.title,
@@ -126,5 +149,6 @@ function toDto(s: LandingSession) {
     image_url: s.imageUrl,
     color: s.color,
     has_recording: s.hasRecording,
+    makeup: makeupIds.has(s.id),
   }
 }

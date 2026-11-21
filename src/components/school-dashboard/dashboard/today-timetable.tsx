@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -13,6 +14,7 @@ import {
   slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
 import { joinWindow } from "@/components/school-dashboard/live/join-window"
+import { MakeupBadge } from "@/components/school-dashboard/live/makeup-badge"
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 import { getTodaySchedule } from "@/components/school-dashboard/timetable/actions"
 import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
@@ -118,12 +120,67 @@ export async function TodayTimetable({
           scheduledToday: dictionary?.liveClasses?.status?.scheduled,
         }}
       />
+
+      {/* Make-up classes («حصة تعويضية») of the day: no timetable slot, so no
+          cell in the grid above — one row each, at its own time. */}
+      {day.makeups.length > 0 ? (
+        <ul className="mt-3 space-y-2">
+          {day.makeups.map((m) => (
+            <li
+              key={m.id}
+              className="flex items-center justify-between gap-3 rounded-2xl border p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
+                  <bdi dir="auto">
+                    {[m.subject, m.sectionName].filter(Boolean).join(" · ")}
+                  </bdi>
+                </p>
+                <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs">
+                  <span className="tabular-nums">
+                    {formatWall(m.startTime, locale)} –{" "}
+                    {formatWall(m.endTime, locale)}
+                  </span>
+                  <MakeupBadge
+                    label={dictionary?.liveClasses?.landing?.makeupBadge}
+                  />
+                </p>
+              </div>
+              {day.isToday ? (
+                <Button asChild size="sm" className="min-h-11 shrink-0 px-4">
+                  <Link href={`/${locale}/live/${m.id}/room`}>
+                    {dictionary?.liveClasses?.join ??
+                      (locale === "ar" ? "انضمام" : "Join")}
+                  </Link>
+                </Button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }
 
+/** Period-style wall times are stored as UTC clocks (see `periodWallTime`). */
+function formatWall(t: Date | string, locale: string): string {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(t))
+}
+
 interface DaySchedule {
   dayOfWeek: number
+  /** The day's make-up classes — outside the grid, which is slot-shaped. */
+  makeups: Array<{
+    id: string
+    subject: string
+    sectionName: string
+    startTime: Date | string
+    endTime: Date | string
+  }>
   isToday: boolean
   /** Today's classes that are online (a room, or the policy) — the strip's
    *  candidates. Empty on a fallen-forward day: nothing there is joinable. */
@@ -224,11 +281,25 @@ async function resolveDay(role: string): Promise<DaySchedule | null> {
       })
   }
 
+  // Make-ups have their own time and no slot: they stay out of the grid's
+  // periods and slots and are listed under it instead.
+  const gridRows = rows.filter((row) => !row.makeup)
+  const makeups = rows
+    .filter((row) => row.makeup && row.liveClass?.sessionId)
+    .map((row) => ({
+      id: row.liveClass!.sessionId as string,
+      subject: row.subject,
+      sectionName: row.className,
+      startTime: row.startTime,
+      endTime: row.endTime,
+    }))
+
   return {
     dayOfWeek: result.dayOfWeek,
     isToday,
     joinRows,
-    periods: rows.map((row, i) => ({
+    makeups,
+    periods: gridRows.map((row, i) => ({
       id: row.periodId,
       name: row.periodName,
       order: i,
@@ -236,7 +307,7 @@ async function resolveDay(role: string): Promise<DaySchedule | null> {
       endTime: row.endTime,
       isBreak: row.isBreak,
     })),
-    slots: rows
+    slots: gridRows
       .filter((row) => row.timetableId)
       .map((row) => ({
         id: row.timetableId as string,

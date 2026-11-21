@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { BlurImage } from "@/components/atom/blur-image"
 import { blurFromColor } from "@/components/atom/blur-placeholder"
 
+import { MakeupBadge } from "../makeup-badge"
 import type {
   LandingSectionProps,
   LandingSession,
@@ -98,6 +99,9 @@ export function LandingSessionCard({
             <Badge variant="secondary" className="shrink-0 font-normal">
               {context}
             </Badge>
+          ) : null}
+          {session.makeup ? (
+            <MakeupBadge label={dictionary?.landing?.makeupBadge} />
           ) : null}
           {session.supervising ? (
             <Badge variant="outline" className="shrink-0 font-normal">

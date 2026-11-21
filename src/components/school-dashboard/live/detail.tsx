@@ -20,6 +20,11 @@ import { ClassWork } from "@/components/school-dashboard/live/class-work"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
+import { MakeupBadge } from "@/components/school-dashboard/live/makeup-badge"
+import {
+  CancelMakeupButton,
+  MakeupSheet,
+} from "@/components/school-dashboard/live/makeup-sheet"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
 
@@ -106,6 +111,7 @@ export async function LiveClassDetailContent({
     attendanceMode,
     canMarkAttendance,
     canEnd,
+    makeup,
     lessonContent,
     examResources,
     assignmentResources,
@@ -129,6 +135,9 @@ export async function LiveClassDetailContent({
   const r = t?.references
   const st = t?.states
   const at = t?.attendanceNote
+  const mk = t?.makeup
+  // The missed class a make-up replaces is the ROOT a re-plan books against.
+  const rootId = makeup.replaces?.id ?? session.id
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
@@ -140,8 +149,44 @@ export async function LiveClassDetailContent({
             {formatWhen(session.scheduledEnd, locale, timeZone)}
           </p>
         </div>
-        <Badge>{t?.status?.[session.status] ?? session.status}</Badge>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {makeup.isMakeup ? <MakeupBadge label={mk?.sheetTitle} /> : null}
+          <Badge>{t?.status?.[session.status] ?? session.status}</Badge>
+        </div>
       </div>
+
+      {/* Make-up class («حصة تعويضية»): where it came from, or where it went.
+          Every role reads these lines; the buttons are the owner's. */}
+      {mk && makeup.replaces ? (
+        <p className={typography.muted}>
+          <Link
+            className="underline underline-offset-4"
+            href={`/${locale}/live/${makeup.replaces.id}`}
+          >
+            {mk.replacesNote.replace(
+              "{date}",
+              formatDay(makeup.replaces.scheduledStart, locale, timeZone)
+            )}
+          </Link>
+        </p>
+      ) : null}
+      {mk && makeup.madeUpBy ? (
+        <p className={typography.muted}>
+          <Link
+            className="underline underline-offset-4"
+            href={`/${locale}/live/${makeup.madeUpBy.id}${
+              makeup.ownsClass && makeup.madeUpBy.status === "scheduled"
+                ? "?view=details"
+                : ""
+            }`}
+          >
+            {mk.madeUp.replace(
+              "{date}",
+              formatDay(makeup.madeUpBy.scheduledStart, locale, timeZone)
+            )}
+          </Link>
+        </p>
+      ) : null}
 
       {/* The student's one line: where the class is in its life, and the one
           thing to do about it. Upcoming counts down; live carries the big
@@ -295,7 +340,7 @@ export async function LiveClassDetailContent({
         <AndroidAppCard labels={resolveRoomLabels(t?.room)} />
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {canJoin &&
           canEnd &&
           (isExternal ? (
@@ -326,6 +371,30 @@ export async function LiveClassDetailContent({
             errorLabel={t?.actions?.endError ?? "Couldn't end the class"}
           />
         )}
+        {mk && makeup.canPlan ? (
+          <MakeupSheet
+            missedId={session.id}
+            labels={mk}
+            lang={locale}
+            description={mk.missedOn.replace(
+              "{date}",
+              formatDay(session.scheduledStart, locale, timeZone)
+            )}
+          />
+        ) : null}
+        {mk && makeup.canManage ? (
+          <>
+            <MakeupSheet
+              mode="replan"
+              missedId={rootId}
+              makeupId={session.id}
+              labels={mk}
+              lang={locale}
+              variant="outline"
+            />
+            <CancelMakeupButton makeupId={session.id} labels={mk} />
+          </>
+        ) : null}
         {session.status === "ended" && (
           <Button asChild variant="outline">
             <Link href={`/${locale}/live/${session.id}/recordings`}>

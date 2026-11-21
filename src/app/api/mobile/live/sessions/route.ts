@@ -171,6 +171,20 @@ const SESSION_SELECT = {
   provider: true,
   meetingUrl: true,
   visibility: true,
+  // Make-up class (حصة تعويضية): the class this one replaces, and the make-up
+  // (if any) that replaces this one. Additive — the app ignores what it does
+  // not know.
+  makeupForId: true,
+  makeupFor: { select: { id: true, scheduledStart: true } },
+  makeups: {
+    where: {
+      status: { in: ["scheduled", "live", "ended"] as ("scheduled" | "live" | "ended")[] },
+      deletedAt: null,
+    },
+    orderBy: { scheduledStart: "desc" as const },
+    take: 1,
+    select: { id: true, scheduledStart: true },
+  },
   subject: { select: { id: true, name: true, thumbnail: true, color: true } },
   section: {
     select: {
@@ -210,6 +224,9 @@ type SessionRow = {
   provider: string
   meetingUrl: string | null
   visibility: string
+  makeupForId?: string | null
+  makeupFor?: { id: string; scheduledStart: Date } | null
+  makeups?: { id: string; scheduledStart: Date }[]
   subject: {
     id: string
     name: string
@@ -248,6 +265,19 @@ function toSessionDto(session: SessionRow, nameDisplay: NameDisplay) {
     // with a URL.
     meeting_url: session.provider === "external" ? session.meetingUrl : null,
     visibility: session.visibility,
+    is_makeup: Boolean(session.makeupForId),
+    makeup_for: session.makeupFor
+      ? {
+          id: session.makeupFor.id,
+          scheduled_start: session.makeupFor.scheduledStart.toISOString(),
+        }
+      : null,
+    made_up_by: session.makeups?.[0]
+      ? {
+          id: session.makeups[0].id,
+          scheduled_start: session.makeups[0].scheduledStart.toISOString(),
+        }
+      : null,
     subject: session.subject && {
       id: session.subject.id,
       name: session.subject.name,

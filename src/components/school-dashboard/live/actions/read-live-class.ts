@@ -15,6 +15,9 @@ import { canAccessSession, type RequireContextResult } from "./helpers"
 
 type Ctx = Extract<RequireContextResult, { ok: true }>
 
+/** The roles that act host-side on a class — the only ones who see drafts. */
+const DRAFT_VISIBLE_ROLES: string[] = ["DEVELOPER", "ADMIN", "TEACHER"]
+
 /**
  * One live class for the viewer the resolver names — the session page's
  * read, shared by the web action and `/api/mobile/live/sessions/[id]`.
@@ -56,6 +59,19 @@ export async function readLiveClass(
         },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },
+        // Make-up class («حصة تعويضية»): the class this one replaces, and the
+        // latest make-up that still stands for this one (a cancelled one
+        // does not count — the class is "missed" again).
+        makeupFor: { select: { id: true, scheduledStart: true, title: true } },
+        makeups: {
+          where: {
+            status: { in: ["scheduled", "live", "ended"] },
+            deletedAt: null,
+          },
+          orderBy: { scheduledStart: "desc" },
+          take: 1,
+          select: { id: true, scheduledStart: true, status: true },
+        },
         catalogLesson: {
           select: {
             id: true,
@@ -97,7 +113,14 @@ export async function readLiveClass(
               },
             },
             schoolAssignment: {
-              select: { id: true, title: true, type: true, dueDate: true },
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                dueDate: true,
+                // Drafts are the teacher's until published
+                status: true,
+              },
             },
           },
         },
@@ -119,6 +142,20 @@ export async function readLiveClass(
       ))
     ) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    }
+    // A teacher's DRAFT homework (an AI suggestion not yet published) is not
+    // the class's yet: only host roles see it listed. (SchoolExam has no
+    // DRAFT status, so exams need no filter.)
+    if (!DRAFT_VISIBLE_ROLES.includes(ctx.role)) {
+      return {
+        success: true as const,
+        data: {
+          ...session,
+          resources: session.resources.filter(
+            (r) => r.schoolAssignment?.status !== "DRAFT"
+          ),
+        },
+      }
     }
     return { success: true as const, data: session }
   } catch {

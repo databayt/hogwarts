@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import {
   connectedSeconds,
   dailyStatusFromPeriods,
+  describeAttendanceSync,
   rollUpDailyAttendance,
   syncLiveAttendance,
 } from "@/components/school-dashboard/live/actions/attendance-sync"
@@ -978,5 +979,163 @@ describe("syncLiveAttendance — a combined class (one room, two sections)", () 
     const res = await syncLiveAttendance("school1", "c1")
     expect(res).toEqual({ marked: 0, updated: 0, skipped: "empty_room" })
     expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
+  })
+})
+
+describe("syncLiveAttendance — a make-up class fills the register of the class it replaces", () => {
+  // The make-up has no slot. Its attendance goes on the ORIGINAL's slot
+  // (→ periodId) and the ORIGINAL's school day, never on the make-up's own day.
+  const ORIGINAL_START = new Date("2026-06-15T08:00:00.000Z") // a Monday
+  const MAKEUP_START = new Date("2026-06-19T08:00:00.000Z") // the Friday after
+
+  function makeupSession(origin: unknown) {
+    happySession()
+    mockDb.conference.findFirst
+      .mockResolvedValueOnce({
+        id: "mk1",
+        provider: "livekit",
+        sectionId: "sec1",
+        timetableId: null,
+        makeupForId: "orig1",
+        scheduledStart: MAKEUP_START,
+        scheduledEnd: new Date(MAKEUP_START.getTime() + 45 * 60_000),
+        actualStart: null,
+        school: { conferenceAttendanceSync: true },
+      })
+      .mockResolvedValueOnce(origin)
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: new Date("2026-06-19T08:03:00.000Z"),
+        leftAt: null,
+        durationSeconds: null,
+        activeSince: null,
+      },
+    ])
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockDb.attendance.groupBy.mockResolvedValue([])
+    mockDb.$transaction.mockImplementation(async (cb: any) =>
+      cb({
+        attendance: {
+          update: mockDb.attendance.update,
+          createMany: mockDb.attendance.createMany,
+        },
+      })
+    )
+  })
+
+  it("writes the rows on the original's day, slot and period", async () => {
+    makeupSession({
+      timetableId: "tt-orig",
+      scheduledStart: ORIGINAL_START,
+      sectionId: "sec1",
+    })
+    const res = await syncLiveAttendance("school1", "mk1")
+    expect(res.skipped).toBeUndefined()
+
+    // The original was looked up by id AND school.
+    expect(mockDb.conference.findFirst.mock.calls[1][0].where).toEqual({
+      id: "orig1",
+      schoolId: "school1",
+    })
+    // The period comes from the ORIGINAL's slot.
+    expect(mockDb.timetable.findFirst.mock.calls[0][0].where).toEqual({
+      id: "tt-orig",
+      schoolId: "school1",
+    })
+    expect(vi.mocked(combinedGroupForSlot)).toHaveBeenCalledWith(
+      "school1",
+      "tt-orig",
+      ORIGINAL_START
+    )
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    expect(rows.length).toBe(3)
+    for (const r of rows) {
+      expect(r.date).toEqual(new Date("2026-06-15"))
+      expect(r.timetableId).toBe("tt-orig")
+      expect(r.periodId).toBe("p1")
+      expect(r.sectionId).toBe("sec1")
+    }
+    // Nothing on the make-up's own day.
+    expect(
+      rows.some((r) => (r.date as Date).getTime() === new Date("2026-06-19").getTime())
+    ).toBe(false)
+    expect(mockDb.attendance.findMany.mock.calls[0][0].where).toMatchObject({
+      date: new Date("2026-06-15"),
+      periodId: "p1",
+      schoolId: "school1",
+    })
+  })
+
+  it("still measures lateness from the make-up's own bell", async () => {
+    makeupSession({
+      timetableId: "tt-orig",
+      scheduledStart: ORIGINAL_START,
+      sectionId: "sec1",
+    })
+    await syncLiveAttendance("school1", "mk1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<{
+      studentId: string
+      status: string
+    }>
+    // uA joined 3 minutes after the make-up's bell: on time.
+    expect(rows.find((r) => r.studentId === "sA")?.status).toBe("PRESENT")
+  })
+
+  it("skips with makeup_no_origin when the original cannot be resolved", async () => {
+    makeupSession(null)
+    expect(await syncLiveAttendance("school1", "mk1")).toEqual({
+      marked: 0,
+      updated: 0,
+      skipped: "makeup_no_origin",
+    })
+    expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
+  })
+
+  it("skips with makeup_no_origin when the original had no slot of its own", async () => {
+    makeupSession({ timetableId: null, scheduledStart: ORIGINAL_START, sectionId: "sec1" })
+    const res = await syncLiveAttendance("school1", "mk1")
+    expect(res.skipped).toBe("makeup_no_origin")
+  })
+
+  it("leaves a slot-less session that is NOT a make-up skipped as before", async () => {
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: null,
+      makeupForId: null,
+      scheduledStart: START,
+      scheduledEnd: END,
+      actualStart: null,
+      school: { conferenceAttendanceSync: true },
+    })
+    expect((await syncLiveAttendance("school1", "c1")).skipped).toBe(
+      "no_section_or_timetable"
+    )
+  })
+})
+
+describe("describeAttendanceSync — make-up class", () => {
+  const base = { provider: "livekit", sectionId: "sec1", timetableId: null }
+  it("a make-up syncs, though it has no slot", () => {
+    expect(describeAttendanceSync({ ...base, makeupForId: "orig" }, true)).toBe("auto")
+  })
+  it("an ordinary slot-less class still does not", () => {
+    expect(describeAttendanceSync(base, true)).toBe("no_section_or_timetable")
+    expect(describeAttendanceSync({ ...base, makeupForId: null }, true)).toBe(
+      "no_section_or_timetable"
+    )
+  })
+  it("the school switch and the provider still win", () => {
+    expect(describeAttendanceSync({ ...base, makeupForId: "o" }, false)).toBe("disabled")
+    expect(
+      describeAttendanceSync({ ...base, provider: "external", makeupForId: "o" }, true)
+    ).toBe("external_provider")
   })
 })

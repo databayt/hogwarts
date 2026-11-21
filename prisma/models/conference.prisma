@@ -165,6 +165,14 @@ model Conference {
   description String? @db.Text
   lang        String  @default("ar")
 
+  // Make-up class («حصة تعويضية»): set on a class a teacher schedules to replace
+  // one that was cancelled or never started. Always the ROOT missed class — a
+  // re-planned make-up points at the same root, never at the make-up before it.
+  // Unrelated to SubstitutionRecord (a different teacher covering a slot).
+  makeupForId String?
+  makeupFor   Conference?  @relation("ConferenceMakeup", fields: [makeupForId], references: [id], onDelete: SetNull)
+  makeups     Conference[] @relation("ConferenceMakeup")
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -185,6 +193,7 @@ model Conference {
   @@index([catalogLessonId])
   @@index([deletedAt])
   @@index([schoolId, isPractice])
+  @@index([schoolId, makeupForId])
   @@map("live_class_sessions")
 }
 

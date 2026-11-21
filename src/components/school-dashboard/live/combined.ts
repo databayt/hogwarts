@@ -273,17 +273,50 @@ export function groupSectionIds(group: CombinedGroup): string[] {
  * Every section a session's class covers: its own, plus its combined
  * siblings' when the session is anchored to a combined slot. The siblings are
  * the ones online on the class's own day.
+ *
+ * A MAKE-UP class (حصة تعويضية) has no slot of its own (`timetableId` null) but
+ * stands in for the class it replaces: it covers the sections its ORIGINAL
+ * covered, so the sibling sections of a combined class can join the make-up
+ * too. The caller may pass `makeupForId`; a caller that selected only `id`
+ * (join-core) has it read here — slot-less sessions are rare, so it is one
+ * cheap query on the exception, not the rule. The original is a root (it never
+ * points at another class), so this recurses once.
  */
 export async function sessionSectionIds(
   schoolId: string,
   session: {
+    id?: string
     sectionId: string | null
     timetableId: string | null
     scheduledStart?: Date | null
+    makeupForId?: string | null
   }
 ): Promise<string[]> {
   if (!session.sectionId) return []
-  if (!session.timetableId) return [session.sectionId]
+  if (!session.timetableId) {
+    let makeupForId = session.makeupForId
+    if (makeupForId === undefined && session.id) {
+      const row = await db.conference.findFirst({
+        where: { id: session.id, schoolId },
+        select: { makeupForId: true },
+      })
+      makeupForId = row?.makeupForId ?? null
+    }
+    if (!makeupForId) return [session.sectionId]
+    const origin = await db.conference.findFirst({
+      where: { id: makeupForId, schoolId },
+      select: { sectionId: true, timetableId: true, scheduledStart: true },
+    })
+    if (!origin) return [session.sectionId]
+    // `makeupForId` is left off on purpose: the original is the end of the chain.
+    const covered = await sessionSectionIds(schoolId, {
+      sectionId: origin.sectionId,
+      timetableId: origin.timetableId,
+      scheduledStart: origin.scheduledStart,
+      makeupForId: null,
+    })
+    return [...new Set([session.sectionId, ...covered])]
+  }
   const group = await combinedGroupForSlot(
     schoolId,
     session.timetableId,

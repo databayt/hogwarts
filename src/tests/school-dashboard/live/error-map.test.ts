@@ -97,3 +97,37 @@ describe("resolveLiveClassError — fallbacks", () => {
     expect(out).toContain("not enrolled")
   })
 })
+
+describe("resolveLiveClassError — make-up class codes", () => {
+  const dict = {
+    liveClasses: {
+      makeup: {
+        errors: {
+          MAKEUP_CONFLICT: "AR-conflict",
+          MAKEUP_ALREADY_PLANNED: "AR-planned",
+          MAKEUP_NOT_ELIGIBLE: "AR-not-eligible",
+        },
+      },
+    },
+  } as never
+
+  it("maps each code to the make-up dictionary", () => {
+    expect(resolveLiveClassError(dict, ACTION_ERRORS.MAKEUP_CONFLICT)).toBe("AR-conflict")
+    expect(resolveLiveClassError(dict, ACTION_ERRORS.MAKEUP_ALREADY_PLANNED)).toBe("AR-planned")
+    expect(resolveLiveClassError(dict, ACTION_ERRORS.MAKEUP_NOT_ELIGIBLE)).toBe(
+      "AR-not-eligible"
+    )
+  })
+
+  it("falls back to English, never to the generic message, when a key is missing", () => {
+    for (const code of [
+      ACTION_ERRORS.MAKEUP_CONFLICT,
+      ACTION_ERRORS.MAKEUP_ALREADY_PLANNED,
+      ACTION_ERRORS.MAKEUP_NOT_ELIGIBLE,
+    ]) {
+      const out = resolveLiveClassError(emptyDict, code)
+      expect(out).not.toBe("Something went wrong.")
+      expect(out.length).toBeGreaterThan(10)
+    }
+  })
+})

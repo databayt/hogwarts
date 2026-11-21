@@ -16,7 +16,10 @@ import {
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 
 vi.mock("@/lib/db", () => ({
-  db: { timetable: { findFirst: vi.fn(), findMany: vi.fn() } },
+  db: {
+    timetable: { findFirst: vi.fn(), findMany: vi.fn() },
+    conference: { findFirst: vi.fn() },
+  },
 }))
 vi.mock("@/components/school-dashboard/live/online-policy", () => ({
   resolveOnlinePolicies: vi.fn(),
@@ -203,6 +206,110 @@ describe("sessionSectionIds", () => {
     expect(
       await sessionSectionIds("school", { sectionId: null, timetableId: "a" })
     ).toEqual([])
+  })
+})
+
+describe("sessionSectionIds — a make-up class (حصة تعويضية)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    m(resolveOnlinePolicies).mockImplementation(onlineExcept())
+  })
+
+  const combinedOriginal = () => {
+    m(db.conference.findFirst).mockResolvedValue({
+      sectionId: "g7",
+      timetableId: "a",
+      scheduledStart: new Date("2026-11-20T17:00:00Z"),
+    })
+    m(db.timetable.findFirst).mockResolvedValue({
+      termId: "term",
+      dayOfWeek: 5,
+      weekOffset: 0,
+      teacherId: "t-1",
+      sectionId: "g7",
+      period: { startTime: at(19), isBreak: false },
+    })
+    m(db.timetable.findMany).mockResolvedValue([
+      s("a", "g7"),
+      s("b", "g8"),
+      s("c", "g9"),
+    ])
+  }
+
+  it("covers every section its ORIGINAL covered, so the siblings can join", async () => {
+    combinedOriginal()
+    expect(
+      await sessionSectionIds("school", {
+        sectionId: "g7",
+        timetableId: null,
+        makeupForId: "orig",
+      })
+    ).toEqual(["g7", "g8", "g9"])
+    // The original is read by id AND school.
+    expect(m(db.conference.findFirst).mock.calls[0][0].where).toEqual({
+      id: "orig",
+      schoolId: "school",
+    })
+  })
+
+  it("reads makeupForId itself when the caller selected only the id", async () => {
+    m(db.conference.findFirst)
+      .mockResolvedValueOnce({ makeupForId: "orig" })
+      .mockResolvedValueOnce({
+        sectionId: "g7",
+        timetableId: "a",
+        scheduledStart: new Date("2026-11-20T17:00:00Z"),
+      })
+    m(db.timetable.findFirst).mockResolvedValue({
+      termId: "term",
+      dayOfWeek: 5,
+      weekOffset: 0,
+      teacherId: "t-1",
+      sectionId: "g7",
+      period: { startTime: at(19), isBreak: false },
+    })
+    m(db.timetable.findMany).mockResolvedValue([s("a", "g7"), s("b", "g8")])
+    expect(
+      await sessionSectionIds("school", {
+        id: "mk",
+        sectionId: "g7",
+        timetableId: null,
+      })
+    ).toEqual(["g7", "g8"])
+  })
+
+  it("is its own section when the original was taught alone, or cannot be found", async () => {
+    m(db.conference.findFirst).mockResolvedValue({
+      sectionId: "g7",
+      timetableId: null,
+      scheduledStart: new Date(),
+    })
+    expect(
+      await sessionSectionIds("school", {
+        sectionId: "g7",
+        timetableId: null,
+        makeupForId: "orig",
+      })
+    ).toEqual(["g7"])
+    m(db.conference.findFirst).mockResolvedValue(null)
+    expect(
+      await sessionSectionIds("school", {
+        sectionId: "g7",
+        timetableId: null,
+        makeupForId: "gone",
+      })
+    ).toEqual(["g7"])
+  })
+
+  it("does not touch the db for a slot-less session that is not a make-up", async () => {
+    expect(
+      await sessionSectionIds("school", {
+        sectionId: "g7",
+        timetableId: null,
+        makeupForId: null,
+      })
+    ).toEqual(["g7"])
+    expect(db.conference.findFirst).not.toHaveBeenCalled()
   })
 })
 

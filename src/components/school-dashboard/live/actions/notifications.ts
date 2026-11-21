@@ -21,6 +21,9 @@ type LiveEventKind =
   | "started"
   | "cancelled"
   | "recordingReady"
+  // The `scheduled` notice of a make-up class (حصة تعويضية) — never dispatched
+  // as a kind of its own: `dispatch` swaps its template in for `scheduled`.
+  | "makeupScheduled"
 
 // Minimal lang-aware templates. Kept inline to avoid coupling to the
 // dictionary loader at module init time (so cron + webhook stay cheap).
@@ -42,6 +45,16 @@ const TEMPLATES: Record<
       body: "{title} with {teacher} on {when}",
     },
   },
+  makeupScheduled: {
+    ar: {
+      title: "حصة تعويضية: {title}",
+      body: "تعويضًا عن حصة {missedWhen} — مع {teacher} في {when}",
+    },
+    en: {
+      title: "Make-up class: {title}",
+      body: "Makes up the class of {missedWhen} — with {teacher} on {when}",
+    },
+  },
   started: {
     ar: { title: "الحصة المباشرة بدأت الآن", body: "انضم الآن إلى {title}" },
     en: { title: "Live class is now live", body: "Join {title} now" },
@@ -58,6 +71,9 @@ const TEMPLATES: Record<
     },
   },
 }
+
+/** The prefix makeup-core stores on a make-up's title (ar / en). */
+const MAKEUP_TITLE_PREFIX = /^(?:حصة تعويضية|Make-up class):\s*/
 
 const STARTING_SOON_TITLE: Record<"ar" | "en", string> = {
   ar: "حصة مباشرة تبدأ قريباً",
@@ -175,6 +191,10 @@ interface ResolvedSession {
   routePath: string
   /** The slot's join link, when the class is anchored to a timetable slot. */
   joinPath: string | null
+  /** For a make-up class: when the class it replaces was scheduled. */
+  makeupMissedStart: Date | null
+  /** True for a make-up class (it points at the class it replaces). */
+  isMakeup: boolean
 }
 
 async function loadSession(
@@ -198,6 +218,8 @@ async function loadSession(
       isPractice: true,
       scheduledStart: true,
       timetableId: true,
+      makeupForId: true,
+      makeupFor: { select: { scheduledStart: true } },
       teacher: {
         select: {
           firstName: true,
@@ -284,6 +306,8 @@ async function loadSession(
       timeZone: session.school.timezone || DEFAULT_SCHOOL_TZ,
       routePath,
       joinPath,
+      makeupMissedStart: session.makeupFor?.scheduledStart ?? null,
+      isMakeup: Boolean(session.makeupForId),
     },
     lang,
     userIds: Array.from(userIds),
@@ -362,10 +386,19 @@ async function dispatch(
       teacherCreated = r.created
     }
     if (userIds.length === 0) return { created: teacherCreated }
+    // A make-up's stored title already carries «حصة تعويضية: » / "Make-up
+    // class: " (so lists show it without any template); its notice template
+    // adds the prefix itself, so strip the stored one rather than say it twice.
+    const makeup = kind === "scheduled" && session.isMakeup
     const vars: Record<string, string> = {
-      title: session.title,
+      title: makeup
+        ? session.title.replace(MAKEUP_TITLE_PREFIX, "")
+        : session.title,
       teacher: session.teacherFullName,
       when: formatWhen(session.scheduledStart, lang, session.timeZone),
+      missedWhen: session.makeupMissedStart
+        ? formatWhen(session.makeupMissedStart, lang, session.timeZone)
+        : "",
       ...extraVars,
     }
     let title: string
@@ -379,7 +412,7 @@ async function dispatch(
         lead: String(lead),
       })
     } else {
-      const template = TEMPLATES[kind][lang]
+      const template = TEMPLATES[makeup ? "makeupScheduled" : kind][lang]
       title = render(template.title, vars)
       body = render(template.body, vars)
     }

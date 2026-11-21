@@ -12,6 +12,7 @@ import { getLiveLinkCoverage } from "@/components/school-dashboard/live/actions/
 import { LiveLandingContent } from "@/components/school-dashboard/live/landing/content"
 import { loadLiveLanding } from "@/components/school-dashboard/live/landing/load"
 import type {
+  LandingMissed,
   LandingPolicy,
   LandingReadiness,
   LandingSession,
@@ -60,6 +61,7 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary.school.liveClasses
   const settings = dictionary.liveClasses?.settings
+  const makeup = dictionary.liveClasses?.makeup
   const { schoolId } = await getTenantContext()
 
   let viewer = resolveLandingViewer(role)
@@ -74,12 +76,13 @@ export default async function Page({ params }: Props) {
   let upcoming: LandingSession[] = []
   let catchUp: LandingSession[] = []
   let recordings: LandingSession[] = []
+  let missed: LandingMissed[] = []
   let readiness: LandingReadiness | null = null
 
   if (schoolId) {
     // Shared with `/api/mobile/live/landing`, so a phone and a browser signed
     // in as the same reader see the same classes, phases and rankings.
-    ;({ viewer, policy, live, upcoming, catchUp, recordings } =
+    ;({ viewer, policy, live, upcoming, catchUp, recordings, missed } =
       await loadLiveLanding({
         schoolId,
         userId: session?.user?.id,
@@ -126,6 +129,7 @@ export default async function Page({ params }: Props) {
         <LiveLandingContent
           dictionary={d}
           settings={settings}
+          makeup={makeup}
           lang={lang}
           viewer={viewer}
           policy={policy}
@@ -134,6 +138,7 @@ export default async function Page({ params }: Props) {
           upcoming={upcoming}
           catchUp={catchUp}
           recordings={recordings}
+          missed={missed}
         />
       </div>
     </div>

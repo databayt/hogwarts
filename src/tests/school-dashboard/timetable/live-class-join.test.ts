@@ -584,3 +584,54 @@ describe("attachLiveClasses — combined class", () => {
     expect(row.liveClass).toBeNull()
   })
 })
+
+describe("attachLiveClasses — a make-up class is never handed to a regular slot", () => {
+  // A make-up (حصة تعويضية) is slot-less and carries the SAME section + subject
+  // as the class it replaces. The unanchored map would hand it to any of that
+  // day's slots of the pair — a regular period's Join button would open the
+  // make-up room, and attendance would be written against the wrong class.
+  const makeup = {
+    id: "lcs-makeup",
+    provider: "livekit",
+    meetingUrl: null,
+    status: "scheduled",
+    sectionId: "sec-1",
+    subjectId: "sub-1",
+    timetableId: null,
+    makeupForId: "missed-1",
+  }
+  const adHoc = { ...makeup, id: "lcs-adhoc", makeupForId: null }
+
+  it("leaves a slot with no session of its own without a room", async () => {
+    // First read = the (section, subject) sessions; the open-room read stays empty.
+    vi.mocked(db.conference.findMany).mockResolvedValueOnce([makeup] as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-period-2" },
+    ])
+    expect(out.liveClass).toBeNull()
+  })
+
+  it("still hands an ordinary slot-less session (assembly, tutorial) to the slot", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValueOnce([adHoc] as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-period-2" },
+    ])
+    expect(out.liveClass?.sessionId).toBe("lcs-adhoc")
+  })
+
+  it("prefers the ordinary session when both exist", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValueOnce([makeup, adHoc] as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-period-2" },
+    ])
+    expect(out.liveClass?.sessionId).toBe("lcs-adhoc")
+  })
+
+  it("selects makeupForId so the exclusion has something to read", async () => {
+    await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-period-2" },
+    ])
+    const select = vi.mocked(db.conference.findMany).mock.calls[0][0]?.select
+    expect(select).toMatchObject({ makeupForId: true })
+  })
+})

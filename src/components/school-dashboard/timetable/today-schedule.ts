@@ -15,6 +15,7 @@
 import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
+import { sessionSectionIds } from "@/components/school-dashboard/live/combined"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
@@ -58,7 +59,10 @@ export async function loadTodaySchedule(input: {
 
   // Fetch periods (role-independent) alongside the role-entity lookup so the
   // today-view doesn't pay two serial round-trips on its hottest endpoint.
-  const [periods, teacher, student] = await Promise.all([
+  //
+  // The day's make-up classes («حصة تعويضية») ride in the same wave: they have
+  // no timetable slot, so no later read could find them from the slots.
+  const [periods, teacher, student, makeupRows] = await Promise.all([
     db.period.findMany({
       where: { schoolId, yearId: term.yearId },
       orderBy: { startTime: "asc" },
@@ -88,6 +92,7 @@ export async function loadTodaySchedule(input: {
           },
         })
       : Promise.resolve(null),
+    readTodayMakeups(schoolId, schoolTz, targetDate, role, userId),
   ])
 
   // Build filter based on role
@@ -227,8 +232,19 @@ export async function loadTodaySchedule(input: {
     findSchoolClosure(schoolId, schoolTz, targetDate),
   ])
 
+  // A make-up is added AFTER the join resolver on purpose: `attachLiveClasses`
+  // would hand a slot-less row the earliest session of its section + subject,
+  // while a make-up already carries its own room.
+  const makeups = await makeupRowsForViewer(
+    makeupRows,
+    { schoolId, role, teacherId: teacher?.id ?? null, student },
+    schoolTz,
+    nameDisplay
+  )
+  const withMakeups = insertMakeups(scheduleWithLiveClasses, makeups)
+
   return {
-    schedule: scheduleWithLiveClasses,
+    schedule: withMakeups,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,
@@ -323,4 +339,188 @@ export async function teacherDaySlotFilter(
     },
     ...(covering.length ? [{ id: { in: covering } }] : []),
   ]
+}
+
+// ============================================================================
+// Make-up classes («حصة تعويضية») on today's schedule
+// ============================================================================
+
+/**
+ * One card of the day. Spelled out because `attachLiveClasses` is generic:
+ * `ReturnType` of it only knows the three anchor fields, not the row.
+ */
+type TodayRow = {
+  periodId: string
+  periodName: string
+  untimed: boolean
+  startTime: Date
+  endTime: Date
+  subject: string
+  className: string
+  teacher: string
+  room: string
+  sectionId: string | null
+  subjectId: string | null
+  timetableId: string | null
+  isBreak: boolean
+  liveClass: Awaited<ReturnType<typeof attachLiveClasses>>[number]["liveClass"]
+  /** A make-up class — it has its own time and room, and no timetable slot. */
+  makeup?: true
+}
+
+type MakeupConference = Awaited<ReturnType<typeof readTodayMakeups>>[number]
+
+/**
+ * Today's make-up classes for the school, narrowed to the teacher in the
+ * query. ONE read, started with the loader's other reads; an empty answer is
+ * the common case and the end of the story. A failed read is an empty list,
+ * never a blank day.
+ */
+async function readTodayMakeups(
+  schoolId: string,
+  timeZone: string,
+  date: Date,
+  role: string | null | undefined,
+  userId: string
+) {
+  try {
+    const { start, end } = schoolDayWindow(timeZone, date)
+    return await db.conference.findMany({
+      where: {
+        schoolId,
+        makeupForId: { not: null },
+        status: { in: ["scheduled", "live"] },
+        deletedAt: null,
+        isPractice: false,
+        scheduledStart: { gte: start, lt: end },
+        ...(role === "TEACHER" ? { teacher: { userId } } : {}),
+      },
+      orderBy: { scheduledStart: "asc" },
+      select: {
+        id: true,
+        provider: true,
+        meetingUrl: true,
+        status: true,
+        sectionId: true,
+        subjectId: true,
+        teacherId: true,
+        scheduledStart: true,
+        scheduledEnd: true,
+        makeupForId: true,
+        // The original's slot: a combined class's sibling sections join the
+        // make-up too, and that is decided from the original.
+        makeupFor: { select: { timetableId: true } },
+        section: { select: { name: true } },
+        subject: { select: { name: true } },
+        teacher: {
+          select: { firstName: true, middleName: true, lastName: true },
+        },
+      },
+    })
+  } catch {
+    return []
+  }
+}
+
+/** A `Date` whose UTC clock reads the school-wall time of `at` — how `Period.startTime` is stored. */
+function wallClockAsUtc(at: Date, timeZone: string): Date {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone,
+  }).formatToParts(at)
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0)
+  return new Date(Date.UTC(1970, 0, 1, get("hour"), get("minute")))
+}
+
+/** Which of today's make-ups this viewer is in: a student's section (or a combined sibling), a teacher's own. */
+async function makeupRowsForViewer(
+  rows: MakeupConference[],
+  viewer: {
+    schoolId: string
+    role: string | null | undefined
+    teacherId: string | null
+    student: { sectionId: string | null } | null
+  },
+  timeZone: string,
+  nameDisplay: Parameters<typeof displayName>[1]
+): Promise<TodayRow[]> {
+  if (rows.length === 0) return []
+
+  let visible = rows
+  if (viewer.role === "TEACHER") {
+    visible = rows.filter(
+      (r) => viewer.teacherId && r.teacherId === viewer.teacherId
+    )
+  } else if (viewer.role === "STUDENT") {
+    const sectionId = viewer.student?.sectionId
+    if (!sectionId) return []
+    const own = (r: MakeupConference) => r.sectionId === sectionId
+    // The rest only matter when the original was a combined class — decided
+    // from the original's slot, the same way the room's own gate does it.
+    const others = rows.filter((r) => !own(r) && r.makeupFor?.timetableId)
+    const covered = new Set(
+      (
+        await Promise.all(
+          others.map(async (r) => ({
+            id: r.id,
+            sections: await sessionSectionIds(viewer.schoolId, {
+              id: r.id,
+              sectionId: r.sectionId,
+              timetableId: null,
+              makeupForId: r.makeupForId,
+            }).catch(() => [] as string[]),
+          }))
+        )
+      )
+        .filter((x) => x.sections.includes(sectionId))
+        .map((x) => x.id)
+    )
+    visible = rows.filter((r) => own(r) || covered.has(r.id))
+  }
+
+  return visible.map(
+    (r) =>
+      ({
+        periodId: `makeup:${r.id}`,
+        periodName: "",
+        untimed: false,
+        startTime: wallClockAsUtc(r.scheduledStart, timeZone),
+        endTime: wallClockAsUtc(r.scheduledEnd, timeZone),
+        subject: r.subject?.name || "",
+        className: r.section?.name || "",
+        teacher: r.teacher ? displayName(r.teacher, nameDisplay) : "",
+        room: "",
+        sectionId: r.sectionId,
+        subjectId: r.subjectId,
+        timetableId: null,
+        isBreak: false,
+        liveClass: {
+          sessionId: r.id,
+          provider: r.provider,
+          meetingUrl: r.meetingUrl,
+          status: r.status,
+        },
+        makeup: true,
+      }) as unknown as TodayRow
+  )
+}
+
+/** Each make-up goes in before the first timed row that starts after it. */
+function insertMakeups(rows: TodayRow[], makeups: TodayRow[]): TodayRow[] {
+  if (makeups.length === 0) return rows
+  const minutes = (d: Date | string) => {
+    const t = new Date(d)
+    return t.getUTCHours() * 60 + t.getUTCMinutes()
+  }
+  const out = [...rows]
+  for (const m of makeups) {
+    const at = minutes(m.startTime)
+    const i = out.findIndex((r) => !r.untimed && minutes(r.startTime) > at)
+    if (i === -1) out.push(m)
+    else out.splice(i, 0, m)
+  }
+  return out
 }

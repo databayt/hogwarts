@@ -246,3 +246,28 @@ describe("materializeSlotSession — a period that is already over", () => {
     expect(out).toEqual({ created: false, reason: "period_over" })
   })
 })
+
+describe("materializeSlotSession — a make-up class (حصة تعويضية) is not matched to a slot", () => {
+  // A make-up has timetableId = null and the SAME section + subject as the
+  // class it replaces. The slot's day lookup is keyed on timetableId alone, so
+  // a make-up neither counts as the slot's session (which would stop the slot
+  // from materializing) nor can the slot's cancelled row be mistaken for one.
+  it("looks the slot's day up by timetableId only — never by section + subject", async () => {
+    await materializeSlotSession(SLOT, ctx())
+    const where = vi.mocked(db.conference.findFirst).mock.calls[0]?.[0]?.where
+    expect(where).toMatchObject({ schoolId: SCHOOL, timetableId: "tt-1" })
+    expect(where).not.toHaveProperty("sectionId")
+    expect(where).not.toHaveProperty("subjectId")
+    expect(where).not.toHaveProperty("makeupForId")
+  })
+
+  it("creates a regular session with no make-up link", async () => {
+    await materializeSlotSession(SLOT, ctx())
+    const data = vi.mocked(db.conference.create).mock.calls[0][0].data as Record<
+      string,
+      unknown
+    >
+    expect(data.timetableId).toBe("tt-1")
+    expect(data.makeupForId).toBeUndefined()
+  })
+})

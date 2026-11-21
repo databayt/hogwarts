@@ -39,19 +39,39 @@ export async function loadLiveClassDetail(
   if (!("success" in result) || !result.success) return null
   const session = result.data
 
-  // Open, AND this reader may enter it — see `room-entry.ts`. For an external
-  // session the join href IS the meeting URL, so a reader who may see the
-  // session but not enter it (staff on a section class, a guardian where the
-  // school does not let guardians watch) must not be handed it.
-  const guardiansObserve =
-    viewer.role === "GUARDIAN" && viewer.schoolId
-      ? ((
-          await db.school.findUnique({
-            where: { id: viewer.schoolId },
-            select: { conferenceGuardiansObserve: true },
-          })
-        )?.conferenceGuardiansObserve ?? true)
-      : true
+  // Three reads that need only the session (and the viewer): the guardian's
+  // observe switch, whether attendance syncs, and the linked lesson's content.
+  // They were three round trips in a row; none reads another's result.
+  const { schoolId: tenantSchoolId, role: viewerRole } = viewer
+  const [guardiansObserve, attendanceEnabled, lessonContent] =
+    await Promise.all([
+      // Open, AND this reader may enter it — see `room-entry.ts`. For an
+      // external session the join href IS the meeting URL, so a reader who may
+      // see the session but not enter it (staff on a section class, a guardian
+      // where the school does not let guardians watch) must not be handed it.
+      viewer.role === "GUARDIAN" && viewer.schoolId
+        ? db.school
+            .findUnique({
+              where: { id: viewer.schoolId },
+              select: { conferenceGuardiansObserve: true },
+            })
+            .then((school) => school?.conferenceGuardiansObserve ?? true)
+        : Promise.resolve(true),
+      tenantSchoolId
+        ? getAttendanceSyncEnabled(tenantSchoolId)
+        : Promise.resolve(false),
+      // The linked catalog lesson's teachable content (videos, materials,
+      // practice questions) — one FK, whole payload. schoolId scopes the
+      // contributed content: without it the listing showed every school's
+      // private and unapproved videos/materials. A failure is an empty list,
+      // never a broken page.
+      session.catalogLessonId && tenantSchoolId
+        ? getLessonReferenceContent(
+            session.catalogLessonId,
+            tenantSchoolId
+          ).catch((): LessonReferenceContent | null => null)
+        : Promise.resolve(null),
+    ])
   const canJoin =
     (session.status === "live" || session.status === "scheduled") &&
     mayEnterRoom({
@@ -85,11 +105,12 @@ export async function loadLiveClassDetail(
 
   /** Roles that can open the manual register (mirrors /attendance/manual). */
   const ATTENDANCE_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
-  const { schoolId: tenantSchoolId, role: viewerRole } = viewer
   const attendanceMode = tenantSchoolId
-    ? describeAttendanceSync(
-        session,
-        await getAttendanceSyncEnabled(tenantSchoolId)
+    ? // A make-up's attendance is written to the ORIGINAL class's date and
+      // period, so it counts as tied to a slot (`makeupForId`).
+      describeAttendanceSync(
+        { ...session, makeupForId: session.makeupForId ?? null },
+        attendanceEnabled
       )
     : "disabled"
   // Only the roles that can actually open the manual register get the link.
@@ -106,22 +127,41 @@ export async function loadLiveClassDetail(
     END_ROLES.includes(viewerRole ?? "") &&
     (viewerRole !== "TEACHER" || session.teacher?.userId === viewerUserId)
 
-  // The linked catalog lesson's teachable content (videos, materials,
-  // practice questions) — one FK, whole payload.
-  let lessonContent: LessonReferenceContent | null = null
-  if (session.catalogLessonId) {
-    try {
-      // schoolId scopes the contributed content: without it the listing
-      // showed every school's private and unapproved videos/materials.
-      lessonContent = tenantSchoolId
-        ? await getLessonReferenceContent(
-            session.catalogLessonId,
-            tenantSchoolId
-          )
-        : null
-    } catch {
-      lessonContent = null
-    }
+  // Make-up class («حصة تعويضية»). Who may plan or move one: the class's own
+  // teacher, or an admin — what `makeup-core` enforces; this only decides
+  // whether to OFFER the button.
+  const MAKEUP_ADMIN_ROLES = ["DEVELOPER", "ADMIN"]
+  const ownsClass =
+    MAKEUP_ADMIN_ROLES.includes(viewerRole ?? "") ||
+    (viewerRole === "TEACHER" && session.teacher?.userId === viewerUserId)
+  const replaces = session.makeupFor ?? null
+  const madeUpBy = session.makeups?.[0] ?? null
+  const makeup = {
+    /** The viewer is this class's own teacher, or an admin. */
+    ownsClass,
+    /** This class replaces a missed one. */
+    isMakeup: Boolean(session.makeupForId),
+    /** The missed class it replaces — the ROOT a re-plan books against. */
+    replaces: replaces && {
+      id: replaces.id,
+      scheduledStart: replaces.scheduledStart,
+    },
+    /** The make-up standing for this missed class. */
+    madeUpBy,
+    /** «عوّض الحصة» — a missed class with no make-up yet, for its owner. */
+    canPlan:
+      ownsClass &&
+      session.status === "cancelled" &&
+      !session.actualStart &&
+      !session.isPractice &&
+      !session.makeupForId &&
+      Boolean(session.sectionId && session.subjectId) &&
+      !madeUpBy,
+    /** «غيّر الموعد» / «إلغاء» — a make-up still waiting to start, for its owner. */
+    canManage:
+      ownsClass &&
+      Boolean(session.makeupForId) &&
+      session.status === "scheduled",
   }
 
   const examResources = session.resources.filter((x) => x.schoolExam)
@@ -146,6 +186,7 @@ export async function loadLiveClassDetail(
     attendanceMode,
     canMarkAttendance,
     canEnd,
+    makeup,
     lessonContent,
     examResources,
     assignmentResources,

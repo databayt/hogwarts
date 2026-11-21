@@ -81,3 +81,39 @@ export async function isSchoolClosedOn(
 ): Promise<boolean> {
   return (await findSchoolClosure(schoolId, timeZone, date)) !== null
 }
+
+/** A closure with its range, for readers that walk many days (the make-up planner). */
+export type SchoolClosureRange = SchoolClosure & {
+  startDate: Date
+  endDate: Date
+}
+
+/**
+ * Every HOLIDAY / CANCELLED `ScheduleException` touching the school-calendar
+ * days in `[fromDay, toDay)` — ONE query, where asking
+ * `findSchoolClosure` per day would be one query per day of the horizon.
+ * `fromDay` is the START instant of the first school day and `toDay` the
+ * (exclusive) END instant of the last one — both from `schoolDayWindow`. The
+ * caller decides which of its days each range covers.
+ */
+export async function findClosuresInRange(
+  schoolId: string,
+  fromDay: Date,
+  toDay: Date
+): Promise<SchoolClosureRange[]> {
+  return db.scheduleException.findMany({
+    where: {
+      schoolId,
+      exceptionType: { in: CLOSED_TYPES },
+      startDate: { lt: toDay },
+      endDate: { gte: fromDay },
+    },
+    select: {
+      title: true,
+      exceptionType: true,
+      startDate: true,
+      endDate: true,
+    },
+    orderBy: { startDate: "asc" },
+  })
+}

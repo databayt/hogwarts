@@ -5710,6 +5710,7 @@
       },
       "landing": {
         "supervising": "Supervising",
+        "makeupBadge": "Make-up",
         "hero": {
           "title": "{mark} that brings learning closer",
           "titleMark": "An interactive experience",
@@ -6497,6 +6498,51 @@
           "cancel": "Cancel",
           "createAssessment": "Create Assessment",
           "titlePlaceholder": "e.g., Exit Ticket - Lesson 3"
+        },
+        "review": {
+          "heading": "Review quick check",
+          "draft": "Draft",
+          "aiBadge": "AI suggested",
+          "draftNotice": "This is a draft. Students see nothing until you publish it.",
+          "titleLabel": "Quick check title",
+          "durationLabel": "Duration (minutes)",
+          "showResultsLabel": "Show results to students after they submit",
+          "questions": "Questions",
+          "correct": "Correct answer",
+          "explanation": "Explanation",
+          "difficulty": {
+            "EASY": "Easy",
+            "MEDIUM": "Medium",
+            "HARD": "Hard"
+          },
+          "bloom": {
+            "REMEMBER": "Remember",
+            "UNDERSTAND": "Understand",
+            "APPLY": "Apply",
+            "ANALYZE": "Analyze",
+            "EVALUATE": "Evaluate",
+            "CREATE": "Create"
+          },
+          "moveUp": "Move question up",
+          "moveDown": "Move question down",
+          "remove": "Remove question",
+          "emptyQuestions": "No questions left. Delete the draft or suggest it again.",
+          "save": "Save changes",
+          "saved": "Saved",
+          "publish": "Publish",
+          "published": "Quick check published to students",
+          "delete": "Delete draft",
+          "deleteConfirm": "Delete this draft for good?",
+          "deleted": "Draft deleted",
+          "saving": "Saving…",
+          "back": "Back to quick checks",
+          "errors": {
+            "NOT_FOUND": "Draft not found",
+            "NOT_DRAFT": "A published quick check can't be edited",
+            "FORBIDDEN": "You can't edit another teacher's draft",
+            "VALIDATION_ERROR": "Check the values and try again",
+            "UNKNOWN": "Couldn't complete the request"
+          }
         }
       },
       "take": {

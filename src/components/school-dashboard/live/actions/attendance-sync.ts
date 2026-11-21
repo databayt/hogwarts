@@ -92,6 +92,7 @@ export async function syncLiveAttendance(
         provider: true,
         sectionId: true,
         timetableId: true,
+        makeupForId: true,
         isPractice: true,
         scheduledStart: true,
         scheduledEnd: true,
@@ -129,9 +130,29 @@ export async function syncLiveAttendance(
     if (session.provider !== "livekit") {
       return { marked: 0, updated: 0, skipped: "external_provider" }
     }
+    // A make-up class (حصة تعويضية) has no slot of its own: it fills the
+    // register of the class it REPLACES. Its attendance is written against the
+    // ORIGINAL's slot (→ periodId) and the ORIGINAL's school day — nothing lands
+    // on the make-up's own calendar day, where the section has no such period.
+    // Lateness and early leave still read the make-up's own bell below. Every
+    // guard and the never-lower-a-manual-mark rule below apply unchanged.
+    let slotTimetableId = session.timetableId
+    let registerStart = session.scheduledStart
+    if (session.makeupForId && !session.timetableId) {
+      const origin = await db.conference.findFirst({
+        where: { id: session.makeupForId, schoolId },
+        select: { timetableId: true, scheduledStart: true, sectionId: true },
+      })
+      if (!origin?.timetableId) {
+        return { marked: 0, updated: 0, skipped: "makeup_no_origin" }
+      }
+      slotTimetableId = origin.timetableId
+      registerStart = origin.scheduledStart
+    }
+
     // Need a section (roster) AND a timetable slot (→ periodId) so the
     // section-based unique key dedupes properly. Ad-hoc sessions don't sync.
-    if (!session.sectionId || !session.timetableId) {
+    if (!session.sectionId || !slotTimetableId) {
       return { marked: 0, updated: 0, skipped: "no_section_or_timetable" }
     }
 
@@ -140,15 +161,15 @@ export async function syncLiveAttendance(
     // read from the same room's presence. A class taught alone is one member.
     const group = await combinedGroupForSlot(
       schoolId,
-      session.timetableId,
-      session.scheduledStart
+      slotTimetableId,
+      registerStart
     )
     const members = group
       ? group.members.map((m) => ({
           sectionId: m.sectionId,
           timetableId: m.slotId,
         }))
-      : [{ sectionId: session.sectionId, timetableId: session.timetableId }]
+      : [{ sectionId: session.sectionId, timetableId: slotTimetableId }]
 
     // Slots (→ periodId), rosters and presence depend only on the session, so
     // they are read together — sequential trips to Neon were most of this
@@ -235,7 +256,7 @@ export async function syncLiveAttendance(
     // core.ts) — so a live-synced row and a manually-marked row for the same
     // school-local day always compare equal.
     const schoolTz = session.school.timezone ?? DEFAULT_SCHOOL_TZ
-    const schoolDay = schoolDayOfInstant(schoolTz, start)
+    const schoolDay = schoolDayOfInstant(schoolTz, registerStart)
     const dateObj = new Date(schoolDay)
 
     // A student still in the room when it closes may have no `leftAt` at all:
@@ -600,12 +621,19 @@ export function describeAttendanceSync(
     provider: string
     sectionId: string | null
     timetableId: string | null
+    /**
+     * A make-up class has no slot but writes the register of the class it
+     * replaces, so it syncs. Whether that original still resolves is only
+     * known at sync time (`makeup_no_origin`) — this reports intent.
+     */
+    makeupForId?: string | null
   },
   syncEnabled: boolean
 ): AttendanceSyncReason {
   if (!syncEnabled) return "disabled"
   if (session.provider !== "livekit") return "external_provider"
-  if (!session.sectionId || !session.timetableId) {
+  if (!session.sectionId) return "no_section_or_timetable"
+  if (!session.timetableId && !session.makeupForId) {
     return "no_section_or_timetable"
   }
   return "auto"

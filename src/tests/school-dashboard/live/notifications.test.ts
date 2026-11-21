@@ -438,3 +438,73 @@ describe("notifyClassWaiting — someone is in the room without their other side
     quiet.mockRestore()
   })
 })
+
+describe("notifyClassScheduled — a make-up class (حصة تعويضية)", () => {
+  const MAKEUP_SESSION = {
+    ...BASE_SESSION,
+    title: "حصة تعويضية: Algebra I",
+    timetableId: null,
+    makeupForId: "missed-1",
+    makeupFor: { scheduledStart: new Date("2026-05-29T10:00:00Z") },
+    school: { preferredLanguage: "ar", timezone: "Africa/Khartoum" },
+  }
+
+  beforeEach(() => {
+    mockDb.student.findMany.mockResolvedValue([
+      { id: "s-1", userId: "student-user-1" },
+    ] as never)
+  })
+
+  it("uses the make-up template: title once, the missed class's time, the new time", async () => {
+    mockDb.conference.findFirst.mockResolvedValue(MAKEUP_SESSION as never)
+    await notifyClassScheduled("school-1", "lcs-1")
+    const call = mockDispatch.mock.calls[0][0]
+    // The stored title already carries the prefix — it is not said twice.
+    expect(call.title).toBe("حصة تعويضية: Algebra I")
+    expect(call.body).toMatch(/^تعويضًا عن حصة .+ — مع Ada Lovelace في .+/)
+    // The missed class: 2026-05-29 12:00 Khartoum.
+    expect(call.body).toMatch(/29.+05.+2026، 12:00/)
+    // The audience and channels are the ordinary scheduled notice's.
+    expect(call.type).toBe("live_class_scheduled")
+    expect(call.channels).toEqual(["in_app", "email", "push"])
+    expect(call.targetUserIds).toEqual(
+      expect.arrayContaining(["teacher-user-1", "student-user-1"])
+    )
+    expect((call.metadata as { kind: string }).kind).toBe("scheduled")
+  })
+
+  it("speaks English to an English school", async () => {
+    mockDb.conference.findFirst.mockResolvedValue({
+      ...MAKEUP_SESSION,
+      title: "Make-up class: Algebra I",
+      school: { preferredLanguage: "en", timezone: "Africa/Khartoum" },
+    } as never)
+    await notifyClassScheduled("school-1", "lcs-1")
+    const call = mockDispatch.mock.calls[0][0]
+    expect(call.title).toBe("Make-up class: Algebra I")
+    expect(call.body).toMatch(/^Makes up the class of .+ — with Ada Lovelace on /)
+  })
+
+  it("reads makeupForId and the original's start from the session", async () => {
+    mockDb.conference.findFirst.mockResolvedValue(MAKEUP_SESSION as never)
+    await notifyClassScheduled("school-1", "lcs-1")
+    const select = mockDb.conference.findFirst.mock.calls[0][0]?.select as Record<
+      string,
+      unknown
+    >
+    expect(select.makeupForId).toBe(true)
+    expect(select.makeupFor).toEqual({ select: { scheduledStart: true } })
+  })
+
+  it("leaves an ordinary class's notice alone", async () => {
+    await notifyClassScheduled("school-1", "lcs-1")
+    expect(mockDispatch.mock.calls[0][0].title).not.toContain("تعويضية")
+    expect(mockDispatch.mock.calls[0][0].body).toContain("Algebra I")
+  })
+
+  it("does not rename the cancelled notice of a make-up", async () => {
+    mockDb.conference.findFirst.mockResolvedValue(MAKEUP_SESSION as never)
+    await notifyClassCancelled("school-1", "lcs-1", "أُلغيت الحصة التعويضية")
+    expect(mockDispatch.mock.calls[0][0].title).toBe("أُلغيت الحصة المباشرة")
+  })
+})

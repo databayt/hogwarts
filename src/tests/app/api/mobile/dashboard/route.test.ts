@@ -270,6 +270,7 @@ describe("GET /api/mobile/dashboard", () => {
           room: "R1",
           is_break: false,
           timetable_id: "tt1",
+          is_makeup: false,
           live_class: {
             session_id: "ls1",
             provider: "livekit",

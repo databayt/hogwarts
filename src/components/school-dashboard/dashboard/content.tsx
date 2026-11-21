@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Suspense } from "react"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { currentUser } from "@/components/auth/auth"
 import { CookieDebug } from "@/components/auth/cookie-debug"
@@ -11,10 +13,17 @@ import type { School } from "@/components/school-marketing/types"
 import { AccountantDashboard } from "./accountant"
 import { AdminDashboard } from "./admin"
 import { HomeBlock } from "./home-block"
+import { MissedClassesStrip } from "./missed-classes-strip"
 import { NextAction } from "./next-action"
 import { ParentDashboard } from "./parent"
 import { PhoneQuickActions } from "./phone-quick-actions"
 import { PrincipalDashboard } from "./principal"
+import {
+  HomeBlockSkeleton,
+  NextActionSkeleton,
+  RoleDashboardSkeleton,
+  TodayTimetableSkeleton,
+} from "./skeletons"
 import { StaffDashboard } from "./staff"
 import { StudentDashboard } from "./student"
 import { TeacherDashboard } from "./teacher"
@@ -152,18 +161,44 @@ export default async function DashboardContent({
     // (both `contents` there, so their tiles
     // are this grid's items). On phones the same pieces stack in DOM order —
     // home block, card, today's classes, the quick-action row.
+    //
+    // Every async widget streams behind its own boundary, so the first paint
+    // is the shell plus the quick actions (static) and each widget lands when
+    // its own reads finish, not when the slowest one does. The fallbacks draw
+    // the widget's box. Suspense adds no DOM, so the resolved tree is the one
+    // the single boundary produced.
+    const role = (user.role || "USER").toUpperCase()
+    const hasToday = role === "STUDENT" || role === "TEACHER"
+
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-6 md:grid md:grid-cols-8 md:gap-x-8 md:gap-y-5">
-          <HomeBlock locale={locale} />
-          <NextAction
-            locale={locale}
-            className="md:col-span-full md:row-start-1 md:mb-3"
-          />
-          <TodayTimetable locale={locale} dictionary={dictionary} />
+          <Suspense fallback={<HomeBlockSkeleton />}>
+            <HomeBlock locale={locale} />
+          </Suspense>
+          <Suspense
+            fallback={
+              <NextActionSkeleton className="md:col-span-full md:row-start-1 md:mb-3" />
+            }
+          >
+            <NextAction
+              locale={locale}
+              className="md:col-span-full md:row-start-1 md:mb-3"
+            />
+          </Suspense>
+          {role === "TEACHER" || role === "ADMIN" ? (
+            <Suspense fallback={null}>
+              <MissedClassesStrip locale={locale} />
+            </Suspense>
+          ) : null}
+          <Suspense fallback={hasToday ? <TodayTimetableSkeleton /> : null}>
+            <TodayTimetable locale={locale} dictionary={dictionary} />
+          </Suspense>
           <PhoneQuickActions role={user.role || "USER"} locale={locale} />
         </div>
-        {renderDashboard()}
+        <Suspense fallback={<RoleDashboardSkeleton role={user.role} />}>
+          {renderDashboard()}
+        </Suspense>
       </div>
     )
   } catch (error) {

@@ -5726,6 +5726,7 @@
       },
       "landing": {
         "supervising": "إشراف",
+        "makeupBadge": "تعويضية",
         "hero": {
           "title": "{mark} تجعــــل التعليم أقرب وأكثر تأثيراً",
           "titleMark": "تجربــة تفاعلية",
@@ -6513,6 +6514,51 @@
           "cancel": "إلغاء",
           "createAssessment": "إنشاء تقييم",
           "titlePlaceholder": "مثال: بطاقة خروج - الدرس 3"
+        },
+        "review": {
+          "heading": "مراجعة اختبار سريع",
+          "draft": "مسودة",
+          "aiBadge": "مقترح بالذكاء الاصطناعي",
+          "draftNotice": "هذه مسودة. لا يراها الطلاب حتى تنشرها أنت.",
+          "titleLabel": "عنوان الاختبار",
+          "durationLabel": "المدة (دقائق)",
+          "showResultsLabel": "عرض النتائج للطلاب بعد التسليم",
+          "questions": "الأسئلة",
+          "correct": "الإجابة الصحيحة",
+          "explanation": "التفسير",
+          "difficulty": {
+            "EASY": "سهل",
+            "MEDIUM": "متوسط",
+            "HARD": "صعب"
+          },
+          "bloom": {
+            "REMEMBER": "تذكّر",
+            "UNDERSTAND": "فهم",
+            "APPLY": "تطبيق",
+            "ANALYZE": "تحليل",
+            "EVALUATE": "تقويم",
+            "CREATE": "ابتكار"
+          },
+          "moveUp": "تقديم السؤال",
+          "moveDown": "تأخير السؤال",
+          "remove": "حذف السؤال",
+          "emptyQuestions": "لا توجد أسئلة. احذف المسودة أو أعد اقتراحها.",
+          "save": "حفظ التعديلات",
+          "saved": "تم الحفظ",
+          "publish": "نشر",
+          "published": "تم نشر الاختبار للطلاب",
+          "delete": "حذف المسودة",
+          "deleteConfirm": "حذف هذه المسودة نهائياً؟",
+          "deleted": "تم حذف المسودة",
+          "saving": "جارٍ الحفظ…",
+          "back": "رجوع إلى الاختبارات السريعة",
+          "errors": {
+            "NOT_FOUND": "المسودة غير موجودة",
+            "NOT_DRAFT": "لا يمكن تعديل اختبار تم نشره",
+            "FORBIDDEN": "لا يمكنك تعديل مسودة معلم آخر",
+            "VALIDATION_ERROR": "تحقق من البيانات وأعد المحاولة",
+            "UNKNOWN": "تعذّر تنفيذ الطلب"
+          }
         }
       },
       "take": {

@@ -114,3 +114,79 @@ describe("GET /api/mobile/live/sessions — supervising flag", () => {
     ).toBe(true)
   })
 })
+
+describe("GET /api/mobile/live/sessions — make-up classes (additive fields)", () => {
+  it("adds is_makeup / makeup_for / made_up_by and keeps every existing field", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        ...row("makeup", "t-me", "sec-mine"),
+        makeupForId: "missed-1",
+        makeupFor: { id: "missed-1", scheduledStart: new Date("2026-11-13T08:00:00Z") },
+        makeups: [],
+      },
+      {
+        ...row("missed", "t-me", "sec-mine"),
+        status: "cancelled",
+        makeupForId: null,
+        makeupFor: null,
+        makeups: [{ id: "makeup", scheduledStart: new Date("2026-11-16T08:00:00Z") }],
+      },
+      row("plain", "t-me", "sec-mine"), // an old-shaped row: none of the new fields
+    ] as never)
+    const body = await (await GET(req())).json()
+    const byId = Object.fromEntries(body.data.map((d: { id: string }) => [d.id, d]))
+
+    expect(byId.makeup.is_makeup).toBe(true)
+    expect(byId.makeup.makeup_for).toEqual({
+      id: "missed-1",
+      scheduled_start: "2026-11-13T08:00:00.000Z",
+    })
+    expect(byId.makeup.made_up_by).toBeNull()
+
+    expect(byId.missed.is_makeup).toBe(false)
+    expect(byId.missed.made_up_by).toEqual({
+      id: "makeup",
+      scheduled_start: "2026-11-16T08:00:00.000Z",
+    })
+
+    expect(byId.plain.is_makeup).toBe(false)
+    expect(byId.plain.makeup_for).toBeNull()
+    expect(byId.plain.made_up_by).toBeNull()
+
+    // Additive only: the fields the app already reads are all still there.
+    for (const key of [
+      "id",
+      "title",
+      "is_practice",
+      "status",
+      "scheduled_start",
+      "scheduled_end",
+      "actual_start",
+      "actual_end",
+      "provider",
+      "meeting_url",
+      "visibility",
+      "subject",
+      "section",
+      "teacher",
+      "has_recording",
+      "supervising",
+    ]) {
+      expect(byId.plain, key).toHaveProperty(key)
+    }
+  })
+
+  it("selects the make-up links, school-scoped through the list's own where", async () => {
+    await GET(req())
+    const select = vi.mocked(db.conference.findMany).mock.calls[0][0]?.select as Record<
+      string,
+      unknown
+    >
+    expect(select.makeupForId).toBe(true)
+    expect(select.makeupFor).toEqual({ select: { id: true, scheduledStart: true } })
+    expect(select.makeups).toMatchObject({
+      take: 1,
+      where: { deletedAt: null, status: { in: ["scheduled", "live", "ended"] } },
+    })
+  })
+})

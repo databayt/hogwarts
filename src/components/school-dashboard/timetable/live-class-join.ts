@@ -112,6 +112,9 @@ export async function attachLiveClasses<
         sectionId: true,
         subjectId: true,
         timetableId: true,
+        // A make-up class (حصة تعويضية) is never handed to a regular slot — see the
+        // unanchored map below.
+        makeupForId: true,
       },
       orderBy: { scheduledStart: "asc" },
     }),
@@ -196,6 +199,7 @@ export async function attachLiveClasses<
           sectionId: true,
           subjectId: true,
           timetableId: true,
+          makeupForId: true,
         },
         orderBy: { scheduledStart: "asc" },
       })
@@ -214,7 +218,13 @@ export async function attachLiveClasses<
     if (!s.sectionId || !s.subjectId) continue
     const k = keyOf(s.sectionId, s.subjectId)
     if (!sessionMap.has(k)) sessionMap.set(k, s) // earliest today wins
-    if (!s.timetableId && !unanchoredMap.has(k)) unanchoredMap.set(k, s)
+    // The unanchored map hands a slot-less session to ANY of that day's slots
+    // of the same section + subject. A make-up is slot-less by design and has
+    // the SAME section + subject as the class it replaces — it must never be
+    // handed to a regular slot's Join button.
+    if (!s.timetableId && !s.makeupForId && !unanchoredMap.has(k)) {
+      unanchoredMap.set(k, s)
+    }
   }
   const defaultMap = new Map<string, (typeof defaults)[number]>()
   for (const d of defaults) defaultMap.set(keyOf(d.sectionId, d.subjectId), d)

@@ -1,12 +1,18 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { UserRole } from "@prisma/client"
+
 import { db } from "@/lib/db"
 import { shortNameParts } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
+import {
+  listMissedClasses,
+  type MissedClass,
+} from "@/components/school-dashboard/live/makeup-core"
 import {
   effectivePolicy,
   ONLINE_POLICY_SELECT,
@@ -23,7 +29,12 @@ import { localize } from "@/components/translation/localize"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
-import type { LandingPolicy, LandingSession, LandingViewer } from "./types"
+import type {
+  LandingMissed,
+  LandingPolicy,
+  LandingSession,
+  LandingViewer,
+} from "./types"
 import { resolveLandingViewer } from "./viewer"
 
 /** A class this close to starting says so rather than printing a bare time. */
@@ -85,6 +96,8 @@ export interface LiveLanding {
   upcoming: LandingSession[]
   catchUp: LandingSession[]
   recordings: LandingSession[]
+  /** Host-only: classes missed in the last 14 days with no make-up yet. */
+  missed: LandingMissed[]
 }
 
 /**
@@ -128,6 +141,7 @@ export async function loadLiveLanding(opts: {
   let upcoming: LandingSession[] = []
   let catchUp: LandingSession[] = []
   let recordings: LandingSession[] = []
+  let missed: LandingMissed[] = []
 
   const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
 
@@ -146,10 +160,52 @@ export async function loadLiveLanding(opts: {
   // The strip and the counts are an accelerator, not the page — a failure
   // here must leave the landing standing rather than take the block down.
   try {
-    const school = await db.school.findUnique({
+    // Wave 1 — everything that needs only the reader: the school, the strip's
+    // scope, whose presence decides a MISSED class (a guardian catches up on
+    // their children's classes, not their own), the teacher row and the name
+    // display. None reads another's result, so they all start together.
+    //
+    // Same section scoping the sessions table uses: a student or guardian
+    // must never see another section's room, landing page or not.
+    //
+    // A teacher is staff, so the scope hands them the whole school. Right for
+    // the strip; the hero wants their OWN next class. `Conference.teacherId`
+    // references Teacher.id, NOT the User — a teacher is a separate person
+    // row, the same way a student is — so the session's user id has to be
+    // mapped through, exactly as the schedule form does it. Filtering on the
+    // raw user id would match no rows at all and show a teacher an empty page
+    // while their class was live.
+    const schoolRead = db.school.findUnique({
       where: { id: schoolId },
       select: ONLINE_POLICY_SELECT,
     })
+    // The host's missed classes (a make-up is offered for each) — needs only
+    // the reader, so it starts with wave 1. A failed read is an empty shelf,
+    // never a broken page.
+    const missedRead: Promise<MissedClass[]> =
+      viewer.isHost && userId
+        ? listMissedClasses(
+            { userId, role: role as UserRole, schoolId },
+            { days: 14 }
+          ).catch(() => [])
+        : Promise.resolve([])
+    missedRead.catch(() => {})
+    const restRead = Promise.all([
+      resolveViewerSectionScope(schoolId, userId, role),
+      resolveCatchUpAttendees(schoolId, userId, role),
+      role === "TEACHER" && userId
+        ? db.teacher.findFirst({
+            where: { schoolId, userId },
+            select: { id: true },
+          })
+        : Promise.resolve(null),
+      schoolNameDisplay(schoolId),
+    ])
+    // The school's answer lands in `policy` even if a sibling read fails, as it
+    // did when the reads were sequential; the catch only keeps the sibling's
+    // failure from being reported twice while we wait on the school.
+    restRead.catch(() => {})
+    const school = await schoolRead
 
     // No section or grade override: this is the school-wide answer, which is
     // what the hero and the readiness band are about.
@@ -165,38 +221,16 @@ export async function loadLiveLanding(opts: {
       }
     }
 
-    // Same section scoping the sessions table uses: a student or guardian
-    // must never see another section's room, landing page or not. Whose
-    // presence decides that a class was MISSED is a separate question —
-    // a guardian catches up on their children's classes, not their own — and
-    // the two reads are independent, so they go together.
-    const [scope, attendeeUserIds] = await Promise.all([
-      resolveViewerSectionScope(schoolId, userId, role),
-      resolveCatchUpAttendees(schoolId, userId, role),
-    ])
+    const [scope, attendeeUserIds, teacher, nameDisplay] = await restRead
 
     if (scope !== "none") {
       const now = new Date()
       const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
       const sectionIds = scope === "all" ? undefined : scope.sectionIds
 
-      // A teacher is staff, so the scope above hands them the whole school.
-      // Right for the strip; the hero wants their OWN next class.
-      //
-      // `Conference.teacherId` references Teacher.id, NOT the User — a
-      // teacher is a separate person row, the same way a student is — so the
-      // session's user id has to be mapped through, exactly as the schedule
-      // form does it. Filtering on the raw user id would match no rows at
-      // all and show a teacher an empty page while their class was live.
-      const teacher =
-        role === "TEACHER" && userId
-          ? await db.teacher.findFirst({
-              where: { schoolId, userId },
-              select: { id: true },
-            })
-          : null
       const teacherId = teacher?.id ?? undefined
-      // Grade supervisors: the sections she is homeroom of join her strip.
+      // Wave 2 — grade supervisors: the sections she is homeroom of join her
+      // strip. Needs the teacher row, so it cannot ride in wave 1.
       const supervisedSectionIds = teacherId
         ? await resolveSupervisedSectionIds(schoolId, teacherId)
         : []
@@ -210,7 +244,7 @@ export async function loadLiveLanding(opts: {
         teachesEveryRow: Boolean(teacherId),
       })
 
-      // Every landing read in one round trip. The recordings pair is a
+      // Wave 3 — every landing read in one round trip. The recordings pair is a
       // separate query rather than a filter over the catch-up rows: it ranks
       // a MISSED recording above an attended one but must still offer the
       // recent ones to a reader who missed nothing, so its candidate set is
@@ -248,7 +282,8 @@ export async function loadLiveLanding(opts: {
 
       // ONE batched translation pass over both slices — titles via localize,
       // names via getNames, labels via getLabels. Never per row.
-      const nameDisplay = await schoolNameDisplay(schoolId)
+      // Wave 4 (the name display was read in wave 1).
+      const missedRows = await missedRead
       const [localizedRows, teacherNames, labels] = await Promise.all([
         localize("Conference", all, { schoolId, lang: displayLang }),
         getNames(
@@ -258,13 +293,17 @@ export async function loadLiveLanding(opts: {
           schoolId
         ),
         getLabels(
-          all.flatMap((r) => [
-            r.subject?.name,
-            r.section?.name,
-            r.section?.grade?.name,
-            r.catalogLesson?.chapter?.name,
-            r.catalogLesson?.name,
-          ]),
+          all
+            .flatMap((r) => [
+              r.subject?.name,
+              r.section?.name,
+              r.section?.grade?.name,
+              r.catalogLesson?.chapter?.name,
+              r.catalogLesson?.name,
+            ])
+            .concat(
+              missedRows.flatMap((r) => [r.subject?.name, r.section?.name])
+            ),
           displayLang,
           schoolId
         ),
@@ -283,6 +322,31 @@ export async function loadLiveLanding(opts: {
         displayLang === "ar" ? "ar" : "en-US",
         { day: "numeric", month: "long", timeZone }
       )
+
+      // The missed shelf names the day AND the time — one class a week ago
+      // and one yesterday must read apart.
+      const missedFormat = new Intl.DateTimeFormat(
+        displayLang === "ar" ? "ar" : "en-US",
+        {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone,
+        }
+      )
+      missed = missedRows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        subjectName: r.subject?.name
+          ? (labels.get(r.subject.name) ?? r.subject.name)
+          : null,
+        sectionName: r.section?.name
+          ? (labels.get(r.section.name) ?? r.section.name)
+          : null,
+        when: missedFormat.format(r.scheduledStart),
+      }))
 
       const liveIds = new Set(rows.live.map((r) => r.id))
       const pastIds = new Set(catchUpRows.map((r) => r.id))
@@ -334,6 +398,7 @@ export async function loadLiveLanding(opts: {
           // card asks whether there is something to watch, not for the list.
           hasRecording: r.recordings.length > 0,
           // Hers only because she supervises the section.
+          makeup: Boolean(r.makeupForId),
           supervising:
             Boolean(teacherId) &&
             r.teacherId !== teacherId &&
@@ -365,5 +430,5 @@ export async function loadLiveLanding(opts: {
     console.error("[LiveLanding] Could not load sessions:", error)
   }
 
-  return { viewer, policy, live, upcoming, catchUp, recordings }
+  return { viewer, policy, live, upcoming, catchUp, recordings, missed }
 }

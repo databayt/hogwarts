@@ -66,6 +66,21 @@ export function resolveLiveClassError(
       return errs?.recordingNotFound ?? "Recording not found."
     case "LIVE_CLASS_RECORDING_FAILED":
       return errs?.recordingFailed ?? "Could not load the recording."
+    case "MAKEUP_CONFLICT":
+      return (
+        dictionary?.liveClasses?.makeup?.errors?.MAKEUP_CONFLICT ??
+        "This time clashes with another class."
+      )
+    case "MAKEUP_ALREADY_PLANNED":
+      return (
+        dictionary?.liveClasses?.makeup?.errors?.MAKEUP_ALREADY_PLANNED ??
+        "A make-up class is already planned for this class."
+      )
+    case "MAKEUP_NOT_ELIGIBLE":
+      return (
+        dictionary?.liveClasses?.makeup?.errors?.MAKEUP_NOT_ELIGIBLE ??
+        "This class cannot be made up."
+      )
     default:
       return fallback
   }
