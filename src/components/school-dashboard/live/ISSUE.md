@@ -17,7 +17,31 @@ the room changes has been seen in a real room yet — verify with the practice r
 per query, measured live. `scripts/db/move-region.sh` (prepare · rehearse · cutover · rollback ·
 verify) moves both databases to the Neon project `Hogwarts EU` (aws-eu-central-1, created empty
 on 11-21) with a read-only freeze during the copy; `wrangler.jsonc` pins the container to WEUR.
-Not run yet: the rehearsal needs `neon auth` (the CLI login expired).
+**Rehearsed 2026-11-21, 21:08–21:52 school time, no freeze.** The copy is bound by the link of
+the machine that runs it, not by Postgres:
+
+| Copy run from | `neondb` dump + restore | `evolution` | Whole copy + comparison |
+| --- | --- | --- | --- |
+| the Mac (Kigali) | 21m47s + 9m59s | 46 s + 42 s | about 33 min |
+| the Hetzner CRM server (`REMOTE=`) | 50 s + 28 s | 13 s + 2 s | **1m40s** |
+
+So the cutover is run with `REMOTE=root@<crm server> REMOTE_KEY=~/.ssh/hetzner_twenty`: the copy
+and the comparison happen in a throwaway `postgres:17` container there (the URLs reach it on
+stdin, never a file or an argument), and writes are frozen for about two minutes. Result of the
+server run: 336 + 37 tables and sequences identical. The Mac run differed on two tables only, both
+still growing while it copied (`attendances` +6, `notification_delivery_logs` +600).
+
+The rehearsal found two bugs, fixed in the script before any cutover:
+
+- The bridge's URL carries Prisma parameters (`schema=evolution_api`, `connection_limit`) that
+  `pg_dump` refuses, and its 37 tables are in `evolution_api`, not `public`. The first version
+  compared `public` only: two empty lists would have "matched", and the new bridge URL would have
+  pointed the bridge at an empty schema. Now every schema is wiped, copied and compared, an empty
+  comparison is a failure, and the new URLs take the old ones' parameters.
+- A failure after the freeze left through `exit`, which the `ERR` trap never saw, so the old
+  database could have stayed read-only. The unfreeze is an `EXIT` trap now, set before the freeze.
+
+Not done: the cutover itself, and a restore-and-sign-in smoke of the image against the copy.
 
 **Room and join (speed)**
 
