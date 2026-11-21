@@ -4385,7 +4385,8 @@
         "periodsPerWeek": "حصص/أسبوع",
         "today": "اليوم",
         "weekView": "عرض الأسبوع",
-        "week": "أسبوع"
+        "week": "أسبوع",
+        "makeupTitle": "حصص تعويضية قادمة"
       },
       "generate": {
         "title": "إنشاء الجدول",

@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { SuggestDraftsLabels } from "../suggest-drafts-button"
+
 /**
  * Every string the room renders, with English defaults. The page overlays
  * the dictionary's `liveClasses.room` subtree on top, so a missing key
@@ -236,15 +238,24 @@ export const DEFAULT_ROOM_LABELS = {
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS
-export type RoomLabels = Record<RoomLabelKey, string>
+export type RoomLabels = Record<RoomLabelKey, string> & {
+  /** The lesson-draft button's strings (`liveClasses.lessonDraft`). Present
+   *  ONLY for a host while the feature is on — absent, the Quiz tab renders no
+   *  button. Built once on the server like every other member. */
+  lessonDraft?: SuggestDraftsLabels
+}
 
 /** Overlay a dictionary subtree (any shape) on the defaults. */
-export function resolveRoomLabels(source: unknown): RoomLabels {
+export function resolveRoomLabels(
+  source: unknown,
+  lessonDraft?: SuggestDraftsLabels
+): RoomLabels {
   const out: Record<string, string> = { ...DEFAULT_ROOM_LABELS }
   if (source && typeof source === "object") {
     for (const [k, v] of Object.entries(source as Record<string, unknown>)) {
       if (typeof v === "string" && k in DEFAULT_ROOM_LABELS) out[k] = v
     }
   }
+  if (lessonDraft) (out as RoomLabels).lessonDraft = lessonDraft
   return out as RoomLabels
 }

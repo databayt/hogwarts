@@ -30,6 +30,7 @@ import { DRAFT_TERM_ID } from "../config"
 import AdminView from "./admin-view"
 import { TimetableSurfaceSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
+import type { UpcomingMakeup } from "../today-schedule"
 import type { SchoolClosureInfo } from "./live-join-button"
 import StudentView from "./student-view"
 
@@ -61,10 +62,14 @@ export type InitialWeekly =
   | Awaited<ReturnType<typeof getTimetableByStudentGrade>>
   | Awaited<ReturnType<typeof getTimetableByTeacher>>
 
-/** What StudentView reads off `getTodaySchedule`: the closure and the weekday. */
+/**
+ * What StudentView reads off `getTodaySchedule`: the closure, the weekday and
+ * the viewer's make-up classes for the coming week (the strip above the grid).
+ */
 export interface InitialToday {
   closure: SchoolClosureInfo
   dayOfWeek: number
+  upcomingMakeups: UpcomingMakeup[]
 }
 
 /** GuardianView's first screen: the children, the first child's week and day. */

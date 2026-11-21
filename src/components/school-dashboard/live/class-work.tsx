@@ -10,11 +10,10 @@ import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
-  suggestNextLessonFor,
-  visibleLessons,
-} from "@/components/lesson-draft/suggest"
-
-import { loadClassWork, type HomeworkItem } from "./class-work-load"
+  loadClassWork,
+  loadDraftSuggest,
+  type HomeworkItem,
+} from "./class-work-load"
 import { SetHomeworkDialog } from "./set-homework-dialog"
 import {
   SuggestDraftsButton,
@@ -97,14 +96,10 @@ export async function ClassWork({
     suggestedId: string | null
   } | null = null
   if (canSuggest && tenant.schoolId && work.subjectId && work.sectionId) {
-    const [lessons, suggestedId] = await Promise.all([
-      visibleLessons(tenant.schoolId, work.subjectId),
-      suggestNextLessonFor(tenant.schoolId, {
-        sectionId: work.sectionId,
-        subjectId: work.subjectId,
-      }),
-    ]).catch(() => [[], null] as const)
-    if (lessons.length > 0) suggest = { lessons: [...lessons], suggestedId }
+    suggest = await loadDraftSuggest(tenant.schoolId, {
+      subjectId: work.subjectId,
+      sectionId: work.sectionId,
+    })
   }
   const ld = dictionary?.liveClasses?.lessonDraft as
     | Record<string, unknown>

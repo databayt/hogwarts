@@ -264,6 +264,64 @@ export async function sharedRoomSlotIds(
   }
 }
 
+/**
+ * Which of `slotIds` share their room with a slot of `sectionId`: the slots
+ * that sit in a combined group that section is in. Batched — four queries for
+ * any number of slots — for readers that hold a LIST of classes of other
+ * sections and ask "is this student in any of them?" (the make-up classes on a
+ * student's day and week). `sessionSectionIds` answers the same question for
+ * ONE class with four queries of its own; called per row it turned a student's
+ * dashboard into dozens of queries on a day with make-ups.
+ *
+ * `date` decides which sections are online (the same rule the sweep groups
+ * by), once for the whole list. The room's own gate stays `sessionSectionIds`.
+ * Never throws: a failure answers "none", the one-room-per-section behaviour.
+ */
+export async function slotsSharedWithSection(
+  schoolId: string,
+  sectionId: string,
+  slotIds: string[],
+  date: Date = new Date()
+): Promise<Set<string>> {
+  const out = new Set<string>()
+  const wanted = [...new Set(slotIds)]
+  if (wanted.length === 0) return out
+  try {
+    const own = await db.timetable.findMany({
+      where: {
+        schoolId,
+        sectionId,
+        teacherId: { not: null },
+        period: { isBreak: false },
+      },
+      select: { id: true },
+      take: 2000,
+    })
+    if (own.length === 0) return out
+    const ownIds = own.map((o) => o.id)
+    const primaries = await combinedPrimaryForSlots(
+      schoolId,
+      [...new Set([...ownIds, ...wanted])],
+      date
+    )
+    const mine = new Set<string>()
+    for (const id of ownIds) {
+      const primary = primaries.get(id)
+      if (primary) mine.add(primary)
+    }
+    for (const id of wanted) {
+      const primary = primaries.get(id)
+      if (primary && mine.has(primary)) out.add(id)
+    }
+  } catch (err) {
+    console.warn("[conference] slotsSharedWithSection failed", {
+      schoolId,
+      err: err instanceof Error ? err.message : String(err),
+    })
+  }
+  return out
+}
+
 /** The section ids a group covers. */
 export function groupSectionIds(group: CombinedGroup): string[] {
   return group.members.map((m) => m.sectionId)

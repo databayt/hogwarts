@@ -316,6 +316,7 @@
   },
   "makeup": {
     "badge": "Make-up",
+    "replanLink": "Re-plan or cancel",
     "cta": "Make up this class",
     "sheetTitle": "Make-up class",
     "pickDay": "Pick a day",

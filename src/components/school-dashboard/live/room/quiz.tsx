@@ -3,6 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
+import dynamic from "next/dynamic"
+import { useParams } from "next/navigation"
 import { Check, ExternalLink, Loader2, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -17,6 +19,7 @@ import { QuickAssessmentTake } from "@/components/school-dashboard/exams/quick/t
 import {
   attachLiveClassResource,
   getRoomQuizzes,
+  type RoomDraftSuggest,
   type RoomQuizItem,
 } from "@/components/school-dashboard/live/actions/resources"
 import { recordClassEvent } from "@/components/school-dashboard/live/actions/room-events"
@@ -36,6 +39,17 @@ import type { ClassChannel } from "./use-class-channel"
 
 const RESULTS_POLL_MS = 4_000
 
+// The lesson-draft button ships OFF. A dynamic import, mounted only once the
+// server has sent `suggest`, keeps it (and the lesson-draft client) out of the
+// room's chunk for every viewer while the feature is off.
+const SuggestDraftsButton = dynamic(
+  () =>
+    import("@/components/school-dashboard/live/suggest-drafts-button").then(
+      (m) => m.SuggestDraftsButton
+    ),
+  { ssr: false }
+)
+
 export function QuizTab({
   channel,
   labels,
@@ -54,10 +68,15 @@ export function QuizTab({
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState(false)
   const [results, setResults] = useState<QuickAssessmentResults | null>(null)
+  // Local to this tab. `null` unless the server said this host may suggest.
+  const [suggest, setSuggest] = useState<RoomDraftSuggest | null>(null)
+  const lang = useParams<{ lang?: string }>()?.lang ?? "ar"
 
   const load = useCallback(async () => {
     const res = await getRoomQuizzes(sessionId)
-    setItems("success" in res && res.success ? res.data : [])
+    const ok = "success" in res && res.success
+    setItems(ok ? res.data : [])
+    setSuggest(ok ? (res.suggest ?? null) : null)
   }, [sessionId])
 
   useEffect(() => {
@@ -286,9 +305,35 @@ export function QuizTab({
 
   const linked = items.filter((q) => q.linked)
   const more = items.filter((q) => !q.linked)
+
+  // Needs BOTH the server's `suggest` and the labels the page built for a host
+  // with the feature on; either missing means no button.
+  const draftButton =
+    suggest && labels.lessonDraft ? (
+      <SuggestDraftsButton
+        sessionId={sessionId}
+        locale={lang}
+        lessons={suggest.lessons}
+        currentId={suggest.currentId}
+        suggestedId={suggest.suggestedId}
+        labels={labels.lessonDraft}
+        onDone={() => void load()}
+      />
+    ) : null
+
   if (items.length === 0) {
+    // Without the button (the feature is off, or not this viewer's) the empty
+    // state is the one line it always was.
+    if (!draftButton) {
+      return (
+        <p className="text-muted-foreground p-3 text-sm">{labels.quizEmpty}</p>
+      )
+    }
     return (
-      <p className="text-muted-foreground p-3 text-sm">{labels.quizEmpty}</p>
+      <div className="h-full space-y-4 overflow-y-auto p-3 text-sm">
+        <p className="text-muted-foreground">{labels.quizEmpty}</p>
+        {draftButton}
+      </div>
     )
   }
 
@@ -333,6 +378,7 @@ export function QuizTab({
           <ul className="space-y-1.5">{more.map(row)}</ul>
         </section>
       )}
+      {draftButton}
     </div>
   )
 }

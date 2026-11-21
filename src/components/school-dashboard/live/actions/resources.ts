@@ -16,6 +16,10 @@ import {
   visibleLessons,
 } from "@/components/lesson-draft/suggest"
 
+import {
+  loadDraftSuggest,
+  mayShowDraftSuggest,
+} from "../class-work-load"
 import { verifyLessonAnchor } from "../queries"
 import { requireContext } from "./helpers"
 import { holdsHostSeat } from "./host-seat"
@@ -48,6 +52,7 @@ async function hostSession(sessionId: string) {
       subjectId: true,
       sectionId: true,
       teacherId: true,
+      catalogLessonId: true,
       teacher: { select: { userId: true } },
       section: { select: { gradeId: true } },
     },
@@ -82,6 +87,15 @@ export type RoomQuizItem = {
   status: string
   /** Linked to this class (vs. offered from the subject's quick checks). */
   linked: boolean
+}
+
+/** What the Quiz tab's lesson-draft button needs (`SuggestDraftsButton`). */
+export type RoomDraftSuggest = {
+  lessons: { id: string; name: string }[]
+  /** The lesson already saved on the class. */
+  currentId: string | null
+  /** The lesson the section should be taught next. */
+  suggestedId: string | null
 }
 
 export async function getRoomQuizzes(sessionId: string) {
@@ -138,6 +152,23 @@ export async function getRoomQuizzes(sessionId: string) {
       })
     : []
 
+  // The lesson-draft button. The gate is HERE, on the server, and the same one
+  // the class page uses: flag on, a host role, a section and a subject. With
+  // the flag off `mayShowDraftSuggest` answers before any query, and `suggest`
+  // is `null`. (`hostSession` already refused anyone without a host seat.)
+  let suggest: RoomDraftSuggest | null = null
+  if (
+    mayShowDraftSuggest(ctx.role, session) &&
+    session.subjectId &&
+    session.sectionId
+  ) {
+    const found = await loadDraftSuggest(ctx.schoolId, {
+      subjectId: session.subjectId,
+      sectionId: session.sectionId,
+    })
+    if (found) suggest = { ...found, currentId: session.catalogLessonId }
+  }
+
   return {
     success: true as const,
     data: [
@@ -146,6 +177,7 @@ export async function getRoomQuizzes(sessionId: string) {
         .filter((q) => !linkedIds.has(q.id))
         .map((q) => ({ ...q, kind: "quick" as const, linked: false })),
     ],
+    suggest,
   }
 }
 

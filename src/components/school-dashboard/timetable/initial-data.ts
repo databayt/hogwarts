@@ -159,6 +159,7 @@ async function planForRole(): Promise<{
           getTodaySchedule().then((r) => ({
             closure: r.closure ?? null,
             dayOfWeek: r.dayOfWeek,
+            upcomingMakeups: r.upcomingMakeups,
           }))
         )
       : none

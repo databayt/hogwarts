@@ -15,7 +15,7 @@
 import { db } from "@/lib/db"
 import { displayName } from "@/lib/name-utils"
 import { schoolNameDisplay } from "@/lib/school-name-format"
-import { sessionSectionIds } from "@/components/school-dashboard/live/combined"
+import { slotsSharedWithSection } from "@/components/school-dashboard/live/combined"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
@@ -54,7 +54,12 @@ export async function loadTodaySchedule(input: {
   const dayOfWeek = schoolDayOfWeek(schoolTz, targetDate) // 0 = Sunday
 
   if (!term) {
-    return { schedule: [], dayOfWeek, message: "No active term" }
+    return {
+      schedule: [],
+      upcomingMakeups: [] as UpcomingMakeup[],
+      dayOfWeek,
+      message: "No active term",
+    }
   }
 
   // Fetch periods (role-independent) alongside the role-entity lookup so the
@@ -92,7 +97,7 @@ export async function loadTodaySchedule(input: {
           },
         })
       : Promise.resolve(null),
-    readTodayMakeups(schoolId, schoolTz, targetDate, role, userId),
+    readMakeups(schoolId, schoolTz, targetDate, role, userId),
   ])
 
   // Build filter based on role
@@ -235,16 +240,31 @@ export async function loadTodaySchedule(input: {
   // A make-up is added AFTER the join resolver on purpose: `attachLiveClasses`
   // would hand a slot-less row the earliest session of its section + subject,
   // while a make-up already carries its own room.
-  const makeups = await makeupRowsForViewer(
-    makeupRows,
-    { schoolId, role, teacherId: teacher?.id ?? null, student },
+  //
+  // ONE audience rule for both outputs: the rows the viewer is in are decided
+  // once, then split into today's cards and the coming week's strip.
+  const visibleMakeups = await makeupsForViewer(makeupRows, {
+    schoolId,
+    role,
+    teacherId: teacher?.id ?? null,
+    student,
+  })
+  const { start: dayStart, end: dayEnd } = schoolDayWindow(schoolTz, targetDate)
+  const makeups = makeupScheduleRows(
+    visibleMakeups.filter(
+      (r) => r.scheduledStart >= dayStart && r.scheduledStart < dayEnd
+    ),
     schoolTz,
     nameDisplay
   )
   const withMakeups = insertMakeups(scheduleWithLiveClasses, makeups)
+  const upcomingMakeups = visibleMakeups.map((r) =>
+    toUpcomingMakeup(r, schoolTz, nameDisplay)
+  )
 
   return {
     schedule: withMakeups,
+    upcomingMakeups,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,
@@ -368,15 +388,55 @@ type TodayRow = {
   makeup?: true
 }
 
-type MakeupConference = Awaited<ReturnType<typeof readTodayMakeups>>[number]
+type MakeupConference = Awaited<ReturnType<typeof readMakeups>>[number]
+
+/** Days after today the make-up strip looks ahead (today + this many, whole days). */
+export const UPCOMING_MAKEUP_DAYS = 7
 
 /**
- * Today's make-up classes for the school, narrowed to the teacher in the
- * query. ONE read, started with the loader's other reads; an empty answer is
- * the common case and the end of the story. A failed read is an empty list,
- * never a blank day.
+ * One entry of the timetable's make-up strip: a make-up class of the viewer's,
+ * scheduled or live, from the start of today through the next week. Instants
+ * are ISO strings (they cross the server → client boundary); the time zone
+ * rides along so the client formats in the SCHOOL's zone, never the device's.
  */
-async function readTodayMakeups(
+export interface UpcomingMakeup {
+  /** The Conference id — the class page is `/live/{id}`. */
+  id: string
+  status: string
+  scheduledStart: string
+  scheduledEnd: string
+  timeZone: string
+  subject: string
+  className: string
+  teacher: string
+}
+
+function toUpcomingMakeup(
+  r: MakeupConference,
+  timeZone: string,
+  nameDisplay: Parameters<typeof displayName>[1]
+): UpcomingMakeup {
+  return {
+    id: r.id,
+    status: r.status,
+    scheduledStart: r.scheduledStart.toISOString(),
+    scheduledEnd: r.scheduledEnd.toISOString(),
+    timeZone,
+    subject: r.subject?.name || "",
+    className: r.section?.name || "",
+    teacher: r.teacher ? displayName(r.teacher, nameDisplay) : "",
+  }
+}
+
+/**
+ * The make-up classes from the start of today through the next
+ * `UPCOMING_MAKEUP_DAYS` school days, narrowed to the teacher in the query.
+ * ONE read, started with the loader's other reads — today's cards are the
+ * rows of it that start today, the timetable strip is all of it; an empty
+ * answer is the common case and the end of the story. A failed read is an
+ * empty list, never a blank day.
+ */
+async function readMakeups(
   schoolId: string,
   timeZone: string,
   date: Date,
@@ -384,7 +444,12 @@ async function readTodayMakeups(
   userId: string
 ) {
   try {
-    const { start, end } = schoolDayWindow(timeZone, date)
+    const { start } = schoolDayWindow(timeZone, date)
+    // The end of the day UPCOMING_MAKEUP_DAYS ahead, in the school's calendar.
+    const { end } = schoolDayWindow(
+      timeZone,
+      new Date(date.getTime() + UPCOMING_MAKEUP_DAYS * 86_400_000)
+    )
     return await db.conference.findMany({
       where: {
         schoolId,
@@ -435,18 +500,16 @@ function wallClockAsUtc(at: Date, timeZone: string): Date {
   return new Date(Date.UTC(1970, 0, 1, get("hour"), get("minute")))
 }
 
-/** Which of today's make-ups this viewer is in: a student's section (or a combined sibling), a teacher's own. */
-async function makeupRowsForViewer(
+/** Which make-ups this viewer is in: a student's section (or a combined sibling), a teacher's own. THE audience rule. */
+async function makeupsForViewer(
   rows: MakeupConference[],
   viewer: {
     schoolId: string
     role: string | null | undefined
     teacherId: string | null
     student: { sectionId: string | null } | null
-  },
-  timeZone: string,
-  nameDisplay: Parameters<typeof displayName>[1]
-): Promise<TodayRow[]> {
+  }
+): Promise<MakeupConference[]> {
   if (rows.length === 0) return []
 
   let visible = rows
@@ -458,29 +521,33 @@ async function makeupRowsForViewer(
     const sectionId = viewer.student?.sectionId
     if (!sectionId) return []
     const own = (r: MakeupConference) => r.sectionId === sectionId
-    // The rest only matter when the original was a combined class — decided
-    // from the original's slot, the same way the room's own gate does it.
-    const others = rows.filter((r) => !own(r) && r.makeupFor?.timetableId)
-    const covered = new Set(
-      (
-        await Promise.all(
-          others.map(async (r) => ({
-            id: r.id,
-            sections: await sessionSectionIds(viewer.schoolId, {
-              id: r.id,
-              sectionId: r.sectionId,
-              timetableId: null,
-              makeupForId: r.makeupForId,
-            }).catch(() => [] as string[]),
-          }))
-        )
-      )
-        .filter((x) => x.sections.includes(sectionId))
-        .map((x) => x.id)
+    // The rest only matter when the original was a combined class this section
+    // is part of — decided from the original's slot, like the room's own gate,
+    // but for the whole list at once: a per-row lookup cost four queries for
+    // every make-up in the school on every student's dashboard.
+    const originSlots = rows
+      .filter((r) => !own(r))
+      .map((r) => r.makeupFor?.timetableId)
+      .filter((id): id is string => Boolean(id))
+    const shared =
+      originSlots.length > 0
+        ? await slotsSharedWithSection(viewer.schoolId, sectionId, originSlots)
+        : new Set<string>()
+    visible = rows.filter(
+      (r) =>
+        own(r) ||
+        Boolean(r.makeupFor?.timetableId && shared.has(r.makeupFor.timetableId))
     )
-    visible = rows.filter((r) => own(r) || covered.has(r.id))
   }
+  return visible
+}
 
+/** The day's cards for make-ups already filtered to the viewer and the day. */
+function makeupScheduleRows(
+  visible: MakeupConference[],
+  timeZone: string,
+  nameDisplay: Parameters<typeof displayName>[1]
+): TodayRow[] {
   return visible.map(
     (r) =>
       ({

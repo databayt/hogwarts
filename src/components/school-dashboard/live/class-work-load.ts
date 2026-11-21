@@ -5,6 +5,10 @@ import "server-only"
 
 import { db } from "@/lib/db"
 import { lessonDraftEnabled } from "@/components/lesson-draft/claude"
+import {
+  suggestNextLessonFor,
+  visibleLessons,
+} from "@/components/lesson-draft/suggest"
 
 /**
  * What a class left behind, for its page: the homework and quick checks
@@ -18,6 +22,45 @@ import { lessonDraftEnabled } from "@/components/lesson-draft/claude"
 
 const HANDED_IN = ["SUBMITTED", "LATE_SUBMITTED", "GRADED", "RETURNED"]
 const HOST_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
+
+/**
+ * The lesson-draft button's gate, in one place: the feature is on, the viewer
+ * is a host role, and the class has a section AND a subject. The class page
+ * (`loadClassWork`) and the room's Quiz tab (`getRoomQuizzes`) both ask it.
+ * Reads the flag first and nothing else — off means no query.
+ */
+export function mayShowDraftSuggest(
+  role: string | null | undefined,
+  session: { sectionId: string | null; subjectId: string | null }
+): boolean {
+  return (
+    lessonDraftEnabled() &&
+    HOST_ROLES.includes(role ?? "") &&
+    Boolean(session.sectionId && session.subjectId)
+  )
+}
+
+/**
+ * What `SuggestDraftsButton` needs beyond the class itself: the subject's
+ * lessons and the one to teach next. `null` when there is no lesson to pick
+ * (or the read failed) — no button then. Call only after `mayShowDraftSuggest`.
+ */
+export async function loadDraftSuggest(
+  schoolId: string,
+  ids: { subjectId: string; sectionId: string }
+): Promise<{
+  lessons: { id: string; name: string }[]
+  suggestedId: string | null
+} | null> {
+  const [lessons, suggestedId] = await Promise.all([
+    visibleLessons(schoolId, ids.subjectId),
+    suggestNextLessonFor(schoolId, {
+      sectionId: ids.sectionId,
+      subjectId: ids.subjectId,
+    }),
+  ]).catch(() => [[], null] as const)
+  return lessons.length > 0 ? { lessons: [...lessons], suggestedId } : null
+}
 
 export interface ClassWorkViewer {
   userId: string | null | undefined
@@ -254,10 +297,7 @@ export async function loadClassWork(
 
   // The lesson-draft button: a host of a class that has a section AND a
   // subject, while the feature is switched on.
-  const canSuggest =
-    lessonDraftEnabled() &&
-    HOST_ROLES.includes(role ?? "") &&
-    Boolean(session.sectionId && session.subjectId)
+  const canSuggest = mayShowDraftSuggest(role, session)
 
   return {
     sessionId: session.id,

@@ -11,6 +11,7 @@ import {
   type PersistInput,
 } from "@/components/lesson-draft/persist"
 import type { ValidDraft } from "@/components/lesson-draft/types"
+import { prewarm } from "@/components/translation/prewarm"
 
 const tx = {
   questionBank: { create: vi.fn(), deleteMany: vi.fn() },
@@ -20,6 +21,9 @@ const tx = {
   conferenceEvent: { create: vi.fn() },
 }
 vi.mock("@/lib/db", () => ({ db: { $transaction: vi.fn() } }))
+vi.mock("@/components/translation/prewarm", () => ({
+  prewarm: vi.fn().mockResolvedValue(undefined),
+}))
 
 const SCHOOL = "school-1"
 const draft: ValidDraft = {
@@ -201,6 +205,28 @@ describe("persistDraft", () => {
     expect(tx.quickAssessment.create).not.toHaveBeenCalled()
     expect(tx.conferenceResource.create).not.toHaveBeenCalled()
     expect(tx.conferenceEvent.create).not.toHaveBeenCalled()
+  })
+
+  it("warms the quick check's title in the other language, after the transaction and off the wait", async () => {
+    // A translation that never settles must not hold the teacher's answer.
+    vi.mocked(prewarm).mockReturnValue(new Promise<void>(() => {}))
+    const result = await persistDraft(base)
+
+    expect(result.quickAssessmentId).toBe("qa1")
+    expect(prewarm).toHaveBeenCalledWith(
+      "QuickAssessment",
+      { title: "الدرس" },
+      { schoolId: SCHOOL }
+    )
+  })
+
+  it("warms nothing when no quick check was written, and a failed warm-up changes nothing", async () => {
+    vi.mocked(prewarm).mockResolvedValue(undefined)
+    await persistDraft({ ...base, sessionId: undefined, assignmentId: "a1", homeworkOnly: true })
+    expect(prewarm).not.toHaveBeenCalled()
+
+    vi.mocked(prewarm).mockRejectedValue(new Error("translate down"))
+    await expect(persistDraft(base)).resolves.toMatchObject({ quickAssessmentId: "qa1" })
   })
 
   it("wizard path refuses a draft that is gone or already published", async () => {

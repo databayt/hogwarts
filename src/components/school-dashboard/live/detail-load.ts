@@ -10,6 +10,7 @@ import type { RequireContextResult } from "./actions/helpers"
 import { readLiveClass } from "./actions/read-live-class"
 import type { LiveClassAction } from "./authorization"
 import { isRecordingConfigured } from "./livekit/client"
+import { canManageMakeup, ownsMakeupClass } from "./makeup-rules"
 import {
   getAttendanceSyncEnabled,
   getLessonReferenceContent,
@@ -130,10 +131,8 @@ export async function loadLiveClassDetail(
   // Make-up class («حصة تعويضية»). Who may plan or move one: the class's own
   // teacher, or an admin — what `makeup-core` enforces; this only decides
   // whether to OFFER the button.
-  const MAKEUP_ADMIN_ROLES = ["DEVELOPER", "ADMIN"]
-  const ownsClass =
-    MAKEUP_ADMIN_ROLES.includes(viewerRole ?? "") ||
-    (viewerRole === "TEACHER" && session.teacher?.userId === viewerUserId)
+  const makeupViewer = { role: viewerRole, userId: viewerUserId }
+  const ownsClass = ownsMakeupClass(makeupViewer, session.teacher?.userId)
   const replaces = session.makeupFor ?? null
   const madeUpBy = session.makeups?.[0] ?? null
   const makeup = {
@@ -158,10 +157,11 @@ export async function loadLiveClassDetail(
       Boolean(session.sectionId && session.subjectId) &&
       !madeUpBy,
     /** «غيّر الموعد» / «إلغاء» — a make-up still waiting to start, for its owner. */
-    canManage:
-      ownsClass &&
-      Boolean(session.makeupForId) &&
-      session.status === "scheduled",
+    canManage: canManageMakeup(makeupViewer, {
+      makeupForId: session.makeupForId,
+      status: session.status,
+      teacherUserId: session.teacher?.userId,
+    }),
   }
 
   const examResources = session.resources.filter((x) => x.schoolExam)

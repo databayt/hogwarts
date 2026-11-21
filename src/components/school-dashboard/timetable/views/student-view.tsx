@@ -29,8 +29,10 @@ import {
   type LiveClassJoinInfo,
   type SchoolClosureInfo,
 } from "./live-join-button"
+import { MakeupStrip } from "./makeup-strip"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
+import type { UpcomingMakeup } from "../today-schedule"
 import type { InitialToday, InitialWeekly } from "./role-router"
 import { SlotJoinAction } from "./slot-join-action"
 import { useSlotOpen } from "./use-slot-open"
@@ -243,6 +245,12 @@ export default function StudentView({
   const [closure, setClosure] = useState<SchoolClosureInfo>(
     () => initialToday?.closure ?? null
   )
+  // The viewer's make-up classes for the coming week: seeded by the stream,
+  // refreshed by the same getTodaySchedule() call as the closure — no fetch of
+  // its own.
+  const [upcomingMakeups, setUpcomingMakeups] = useState<UpcomingMakeup[]>(
+    () => initialToday?.upcomingMakeups ?? []
+  )
   const [currentDay, setCurrentDay] = useState<number>(
     () => initialToday?.dayOfWeek ?? new Date().getDay()
   )
@@ -279,6 +287,7 @@ export default function StudentView({
           : false
       )
       setClosure(todayResult.closure ?? null)
+      setUpcomingMakeups(todayResult.upcomingMakeups ?? [])
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
       setError(
@@ -354,6 +363,18 @@ export default function StudentView({
       {/* Declared holiday / cancelled day — informs, never blanks. */}
       {!isLoadingData && (
         <ClosureNotice closure={closure} label={CLOSED_LABEL} />
+      )}
+
+      {/* Make-up classes («حصص تعويضية قادمة») — they have no slot, so the grid
+          cannot draw them. Nothing renders when there are none. */}
+      {!isLoadingData && (
+        <MakeupStrip
+          items={upcomingMakeups}
+          lang={lang}
+          title={d?.studentView?.makeupTitle}
+          badge={dictionary?.liveClasses?.landing?.makeupBadge}
+          showClass={isTeacher}
+        />
       )}
 
       {/* Toolbar + grid. The grid is BARE — no Card wrapper — under

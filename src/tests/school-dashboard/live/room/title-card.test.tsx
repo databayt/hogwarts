@@ -177,3 +177,48 @@ describe("RoomTitleCard mark row (lr-07)", () => {
     expect(screen.queryByText("Whiteboard")).not.toBeInTheDocument()
   })
 })
+
+describe("RoomTitleCard make-up class", () => {
+  const makeupLabels = { ...labels, makeup: "تعويضية", replan: "إعادة الجدولة أو الإلغاء" }
+
+  it("shows no badge and no link for an ordinary class", () => {
+    render(<RoomTitleCard data={baseData} {...baseProps} labels={makeupLabels} />)
+    expect(screen.queryByText("تعويضية")).toBeNull()
+    expect(screen.queryByText("إعادة الجدولة أو الإلغاء")).toBeNull()
+  })
+
+  it("shows the badge to every viewer but the link only to one who may manage", () => {
+    render(
+      <RoomTitleCard
+        data={{ ...baseData, isMakeup: true }}
+        {...baseProps}
+        labels={makeupLabels}
+      />
+    )
+    expect(screen.getByText("تعويضية")).toBeInTheDocument()
+    expect(screen.queryByText("إعادة الجدولة أو الإلغاء")).toBeNull()
+  })
+
+  it("links the manager to the detail view, not to a sheet", () => {
+    render(
+      <RoomTitleCard
+        data={{ ...baseData, isMakeup: true, canManageMakeup: true }}
+        {...baseProps}
+        labels={makeupLabels}
+      />
+    )
+    expect(
+      screen.getByRole("link", { name: "إعادة الجدولة أو الإلغاء" })
+    ).toHaveAttribute("href", "/en/live/s1?view=details")
+  })
+
+  it("renders no link without its label", () => {
+    render(
+      <RoomTitleCard
+        data={{ ...baseData, isMakeup: true, canManageMakeup: true }}
+        {...baseProps}
+      />
+    )
+    expect(screen.queryByRole("link", { name: /الجدولة|Re-plan/ })).toBeNull()
+  })
+})

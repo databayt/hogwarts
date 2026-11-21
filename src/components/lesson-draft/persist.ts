@@ -3,6 +3,7 @@
 import "server-only"
 
 import { db } from "@/lib/db"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { LessonDraftError, type ValidDraft } from "./types"
 
@@ -105,7 +106,7 @@ export async function persistDraft(input: PersistInput): Promise<PersistResult> 
   const now = input.now ?? new Date()
   const dueDate = schoolEndOfDay(now, draft.homework.dueInDays, input.timeZone)
 
-  return db.$transaction(async (tx) => {
+  const written = await db.$transaction(async (tx) => {
     // ── Replace: the class's earlier drafts go, with their hidden questions
     if (input.replaceOf) {
       const old = await tx.quickAssessment.findFirst({
@@ -286,4 +287,18 @@ export async function persistDraft(input: PersistInput): Promise<PersistResult> 
 
     return { quickAssessmentId, assignmentId }
   })
+
+  // The quick check's title is content a reader may open in the other
+  // language: warm that copy now, off the teacher's wait. Detached rather than
+  // `after()` — this runs inside the SSE stream of /api/live/lesson-draft,
+  // where a request scope is not guaranteed, and `after()` throws without one.
+  // The server is long-lived, so the promise finishes; prewarm never rejects.
+  if (written.quickAssessmentId) {
+    void prewarm(
+      "QuickAssessment",
+      { title: lesson.name.slice(0, 200) },
+      { schoolId }
+    ).catch(() => {})
+  }
+  return written
 }

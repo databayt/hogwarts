@@ -83,9 +83,19 @@ Not done: the cutover itself, and a restore-and-sign-in smoke of the image again
   other time), badge and links on the class page and the cards, a line on the teacher dashboard,
   and the make-up among today's classes. Mobile payloads gained `is_makeup`, `makeup_for`,
   `made_up_by` (additive).
-- Open: a scheduled make-up opens on the room card, where there is no re-plan/cancel (reach them
-  with `?view=details`); `/timetable`'s today list does not draw the make-up row; rotation weeks
-  and a covered teacher's freed slots are not modelled in the suggestions.
+- The room's title card carries the badge and, for the owner of a make-up that has not started,
+  one link «إعادة الجدولة أو الإلغاء» to `?view=details` (the sheet and the cancel stay on the
+  class page). `/timetable` lists the viewer's make-ups for today and the next seven days in a
+  strip above the grid (`timetable/views/makeup-strip.tsx`, fed by `loadTodaySchedule`'s
+  `upcomingMakeups`) — a make-up has no slot, so the grid cannot draw it. Who is offered the
+  buttons is one pure rule, `makeup-rules.ts`.
+- A student's make-ups from OTHER sections (a combined class) are resolved for the whole list at
+  once by `slotsSharedWithSection` (`combined.ts`, three reads). The first version asked
+  `sessionSectionIds` per row: four queries for every make-up in the school on every student
+  dashboard. Do not go back to a per-row lookup.
+- Open: the guardian's timetable has no strip (`getChildTodaySchedule` is its own loader);
+  rotation weeks and a covered teacher's freed slots are not modelled in the suggestions; the
+  strip and the title-card link have not been seen in a browser.
 
 **Lesson drafts (off)**
 
@@ -95,7 +105,9 @@ Not done: the cutover itself, and a restore-and-sign-in smoke of the image again
 - A leak closed on the way: students could list DRAFT quick checks, and a DRAFT homework linked to
   a class reached them through the class page — filtered in `quick/actions`, `read-live-class.ts`
   and `class-work-load.ts`.
-- Not built: the button in the room's Quiz tab.
+- The button is also in the room's Quiz tab (host only, loaded on demand; with the flag off the
+  tab, the action and the page's props are what they were). What is owed before the flag goes on:
+  `src/components/lesson-draft/ISSUE.md`.
 
 ## Launch week: reach first, then capacity — 2026-11-13 (hogwarts#470)
 

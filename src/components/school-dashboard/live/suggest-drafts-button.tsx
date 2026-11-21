@@ -57,6 +57,7 @@ export function SuggestDraftsButton({
   currentId,
   suggestedId,
   labels,
+  onDone,
 }: {
   sessionId: string
   locale: string
@@ -64,8 +65,14 @@ export function SuggestDraftsButton({
   currentId: string | null
   suggestedId: string | null
   labels: SuggestDraftsLabels
+  /** After the lesson was saved or a NEW draft was written (not the "already
+   *  exists" answer). When given it REPLACES `router.refresh()` — the room's
+   *  Quiz tab reloads its own list instead of re-rendering the whole room page.
+   *  The class page passes nothing and behaves exactly as before. */
+  onDone?: () => void
 }) {
   const router = useRouter()
+  const refreshed = () => (onDone ? onDone() : router.refresh())
   const [saved, setSaved] = useState(currentId)
   const [lessonId, setLessonId] = useState(currentId ?? suggestedId ?? "")
   const [savingLesson, setSavingLesson] = useState(false)
@@ -86,7 +93,7 @@ export function SuggestDraftsButton({
     if (res.success) {
       setSaved(lessonId || null)
       SuccessToast(labels.lessonSaved)
-      router.refresh()
+      refreshed()
     } else ErrorToast(labels.lessonSaveFailed)
   }
 
@@ -116,7 +123,7 @@ export function SuggestDraftsButton({
       return
     }
     setCreated(outcome.result)
-    router.refresh()
+    refreshed()
   }
 
   const topicTooShort = needTopic && topic.trim().length < TOPIC_MIN

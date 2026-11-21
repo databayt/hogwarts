@@ -283,6 +283,8 @@ const PREWARM_EXEMPT: Record<string, string> = {
     "non-content: token/roomSid bookkeeping only (was tokens.ts before the join-core split)",
   "src/components/school-dashboard/live/livekit/webhook.ts":
     "non-content: status/timestamp transitions only",
+  "src/components/school-dashboard/live/actions/sessions.ts":
+    "non-content: status transitions only (cancel, end) — the create and its prewarm moved to create-core.ts",
   "src/app/api/mobile/events/[id]/register/route.ts":
     "non-content: currentAttendees counter only",
   "src/components/school-dashboard/listings/announcements/wizard/actions.ts":

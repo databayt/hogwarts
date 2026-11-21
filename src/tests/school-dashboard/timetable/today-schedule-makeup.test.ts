@@ -9,7 +9,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { sessionSectionIds } from "@/components/school-dashboard/live/combined"
+import { slotsSharedWithSection } from "@/components/school-dashboard/live/combined"
 import { loadTodaySchedule } from "@/components/school-dashboard/timetable/today-schedule"
 
 vi.mock("@/lib/db", () => ({
@@ -30,7 +30,7 @@ vi.mock("@/components/school-dashboard/live/school-calendar", () => ({
   findSchoolClosure: vi.fn().mockResolvedValue(null),
 }))
 vi.mock("@/components/school-dashboard/live/combined", () => ({
-  sessionSectionIds: vi.fn(),
+  slotsSharedWithSection: vi.fn(),
 }))
 vi.mock("@/components/school-dashboard/timetable/live-class-join", () => ({
   attachLiveClasses: vi.fn(
@@ -99,7 +99,7 @@ beforeEach(() => {
   vi.mocked(db.timetable.findMany).mockResolvedValue([])
   vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([])
   vi.mocked(db.conference.findMany).mockResolvedValue([])
-  vi.mocked(sessionSectionIds).mockResolvedValue([])
+  vi.mocked(slotsSharedWithSection).mockResolvedValue(new Set())
 })
 
 const makeups = async (role: string) =>
@@ -138,7 +138,7 @@ describe("loadTodaySchedule — make-up classes", () => {
     expect(schedule.map((r) => r.periodId)).toEqual(["p1", "makeup:mk-1", "p2"])
   })
 
-  it("queries today's make-ups school-scoped, narrowed to the school day", async () => {
+  it("queries make-ups school-scoped, from the start of today through the next 7 days", async () => {
     await load("STUDENT")
 
     const args = vi.mocked(db.conference.findMany).mock.calls[0][0]!
@@ -150,9 +150,25 @@ describe("loadTodaySchedule — make-up classes", () => {
       isPractice: false,
       scheduledStart: {
         gte: new Date("2026-12-01T00:00:00Z"),
-        lt: new Date("2026-12-02T00:00:00Z"),
+        lt: new Date("2026-12-09T00:00:00Z"),
       },
     })
+    expect(vi.mocked(db.conference.findMany)).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps a later day's make-up off today's cards", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      makeupRow({
+        id: "mk-later",
+        scheduledStart: new Date("2026-12-03T13:30:00Z"),
+        scheduledEnd: new Date("2026-12-03T14:15:00Z"),
+      }),
+    ] as never)
+
+    const res = await load("STUDENT")
+
+    expect(res.schedule.map((r) => r.periodId)).toEqual(["p1", "p2"])
+    expect(res.upcomingMakeups.map((m) => m.id)).toEqual(["mk-later"])
   })
 
   it("does not show a student another section's make-up", async () => {
@@ -171,9 +187,37 @@ describe("loadTodaySchedule — make-up classes", () => {
         makeupFor: { timetableId: "slot-1" },
       }),
     ] as never)
-    vi.mocked(sessionSectionIds).mockResolvedValue(["8b", "7a"])
+    vi.mocked(slotsSharedWithSection).mockResolvedValue(new Set(["slot-1"]))
 
     expect(await makeups("STUDENT")).toHaveLength(1)
+    expect(vi.mocked(slotsSharedWithSection)).toHaveBeenCalledWith(
+      SCHOOL,
+      "7a",
+      ["slot-1"]
+    )
+  })
+
+  it("asks about the combined classes once for the whole list, and not at all without candidates", async () => {
+    // Own-section rows and rows whose original had no slot need no lookup.
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      makeupRow({ id: "own" }),
+      makeupRow({ id: "no-slot", sectionId: "8b" }),
+    ] as never)
+    await load("STUDENT")
+    expect(vi.mocked(slotsSharedWithSection)).not.toHaveBeenCalled()
+
+    // Many rows of other sections: still ONE batched lookup.
+    vi.mocked(db.conference.findMany).mockResolvedValue(
+      Array.from({ length: 12 }, (_, i) =>
+        makeupRow({
+          id: `mk-${i}`,
+          sectionId: "8b",
+          makeupFor: { timetableId: `slot-${i}` },
+        })
+      ) as never
+    )
+    await load("STUDENT")
+    expect(vi.mocked(slotsSharedWithSection)).toHaveBeenCalledTimes(1)
   })
 
   it("shows a teacher their own make-up and not a colleague's", async () => {
@@ -216,5 +260,100 @@ describe("loadTodaySchedule — make-up classes", () => {
 
     vi.mocked(db.conference.findMany).mockRejectedValue(new Error("boom"))
     expect((await load("STUDENT")).schedule).toHaveLength(2)
+  })
+})
+
+describe("loadTodaySchedule — upcomingMakeups (the timetable strip)", () => {
+  it("lists today's and the coming days' make-ups with their display fields", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      makeupRow(),
+      makeupRow({
+        id: "mk-2",
+        status: "live",
+        scheduledStart: new Date("2026-12-05T08:00:00Z"),
+        scheduledEnd: new Date("2026-12-05T08:45:00Z"),
+      }),
+    ] as never)
+
+    const { upcomingMakeups } = await load("STUDENT")
+
+    expect(upcomingMakeups).toEqual([
+      {
+        id: "mk-1",
+        status: "scheduled",
+        scheduledStart: "2026-12-01T13:30:00.000Z",
+        scheduledEnd: "2026-12-01T14:15:00.000Z",
+        timeZone: "UTC",
+        subject: "Math",
+        className: "7-A",
+        teacher: expect.any(String),
+      },
+      expect.objectContaining({ id: "mk-2", status: "live" }),
+    ])
+  })
+
+  it("applies the same audience rule: own section, combined sibling, never another section", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      makeupRow({ id: "own" }),
+      makeupRow({ id: "other", sectionId: "8b" }),
+      makeupRow({
+        id: "combined",
+        sectionId: "8c",
+        makeupFor: { timetableId: "slot-1" },
+      }),
+    ] as never)
+    vi.mocked(slotsSharedWithSection).mockResolvedValue(new Set(["slot-1"]))
+
+    const { upcomingMakeups } = await load("STUDENT")
+
+    expect(upcomingMakeups.map((m) => m.id)).toEqual(["own", "combined"])
+  })
+
+  it("shows a teacher only their own", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      makeupRow(),
+      makeupRow({ id: "mk-2", teacherId: "t-9" }),
+    ] as never)
+
+    expect((await load("TEACHER")).upcomingMakeups.map((m) => m.id)).toEqual([
+      "mk-1",
+    ])
+  })
+
+  it("is empty when there are none, the read fails, or there is no term", async () => {
+    expect((await load("STUDENT")).upcomingMakeups).toEqual([])
+
+    vi.mocked(db.conference.findMany).mockRejectedValue(new Error("boom"))
+    expect((await load("STUDENT")).upcomingMakeups).toEqual([])
+
+    const noTerm = await loadTodaySchedule({
+      schoolId: SCHOOL,
+      userId: "user-1",
+      role: "STUDENT",
+      term: null,
+      date: DATE,
+    })
+    expect(noTerm.upcomingMakeups).toEqual([])
+  })
+
+  it("cuts the window at the school's day boundary, not UTC's", async () => {
+    // Khartoum is UTC+2: 23:30 UTC on 11-30 is already 12-01 locally.
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      timezone: "Africa/Khartoum",
+    } as never)
+
+    await loadTodaySchedule({
+      schoolId: SCHOOL,
+      userId: "user-1",
+      role: "STUDENT",
+      term,
+      date: new Date("2026-11-30T23:30:00Z"),
+    })
+
+    const where = vi.mocked(db.conference.findMany).mock.calls[0][0]!.where as {
+      scheduledStart: { gte: Date; lt: Date }
+    }
+    expect(where.scheduledStart.gte).toEqual(new Date("2026-11-30T22:00:00Z"))
+    expect(where.scheduledStart.lt).toEqual(new Date("2026-12-08T22:00:00Z"))
   })
 })

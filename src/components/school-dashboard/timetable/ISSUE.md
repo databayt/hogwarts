@@ -11,6 +11,20 @@ docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-10-04
 ---
 
+## Make-up classes above the grid, first screen without a fetch — 2026-11-21 (hogwarts#490)
+
+- A make-up class («حصة تعويضية») has no timetable slot, so the grid cannot draw it.
+  `loadTodaySchedule` now also returns `upcomingMakeups` (today through the next seven days, the
+  viewer's own, school time zone), and `views/makeup-strip.tsx` lists them above the grid for
+  students and teachers. `schedule` — what the dashboard and the mobile route read — keeps today's
+  rows only, as before. One query for both, started with the loader's other reads.
+- The audience rule lives once, in `makeupsForViewer`. For a student it resolves combined classes
+  for the whole list with `slotsSharedWithSection` (`live/combined.ts`), not per row.
+- `StudentView` is seeded from the streamed load (`initialGrid` + `initialToday`) and makes no
+  server call after mount on the first view; the strip rides on that same data. Keep it so.
+- Open: no strip on the guardian's view (`getChildTodaySchedule` is a separate loader). Not yet
+  seen in a browser.
+
 ## The teacher reads the student's surface — 2026-11-11
 
 Abdout: the teacher's /timetable should reuse the student's component, on laptop and phone. `StudentView` takes an optional `teacherId`: it then loads `getTimetableByTeacher`, draws the grid in `teacher` mode (the section that walks in) and keeps the teacher's Start for an in-person section of a live-enabled school (pill and cell tap). `teacher-view.tsx` is deleted with its header card, workload chips, Current/Next card, classroom/subject filters and Today list. The Today/Full tabs are hidden for TEACHER (the week/day toggle replaces them; GUARDIAN keeps the tabs), and `rendersStudentTimetable` counts TEACHER so the loading shape matches. A TEACHER account with no Teacher row gets the not-linked alert from the router.

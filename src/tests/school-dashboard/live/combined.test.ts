@@ -12,6 +12,7 @@ import {
   periodStartKey,
   sessionSectionIds,
   sharedRoomSlotIds,
+  slotsSharedWithSection,
 } from "@/components/school-dashboard/live/combined"
 import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 
@@ -393,5 +394,71 @@ describe("combinedPrimaryForSlots / sharedRoomSlotIds", () => {
       .mockResolvedValueOnce([slotRow])
       .mockResolvedValueOnce(peers)
     expect(await sharedRoomSlotIds("school", ["sec-b"])).toEqual(["a-1"])
+  })
+
+  describe("slotsSharedWithSection — is this section in any of these classes?", () => {
+    it("says yes for a slot of the combined class the section is in — from either side", async () => {
+      // sec-b asks about sec-a's slot (the primary) and sec-c's (taught alone).
+      m(db.timetable.findMany)
+        .mockResolvedValueOnce([{ id: "b-1" }]) // the section's own slots
+        .mockResolvedValueOnce([slotRow])
+        .mockResolvedValueOnce(peers)
+      expect([
+        ...(await slotsSharedWithSection("school", "sec-b", ["a-1", "c-1"])),
+      ]).toEqual(["a-1"])
+
+      // sec-a (which owns the primary) asks about sec-b's sibling slot.
+      m(db.timetable.findMany)
+        .mockResolvedValueOnce([{ id: "a-1" }])
+        .mockResolvedValueOnce([slotRow])
+        .mockResolvedValueOnce(peers)
+      expect([
+        ...(await slotsSharedWithSection("school", "sec-a", ["b-1"])),
+      ]).toEqual(["b-1"])
+    })
+
+    it("costs the same three reads for one slot or many, and none for an empty list", async () => {
+      expect(
+        (await slotsSharedWithSection("school", "sec-b", [])).size
+      ).toBe(0)
+      expect(m(db.timetable.findMany)).not.toHaveBeenCalled()
+
+      m(db.timetable.findMany)
+        .mockResolvedValueOnce([{ id: "b-1" }])
+        .mockResolvedValueOnce([slotRow])
+        .mockResolvedValueOnce(peers)
+      await slotsSharedWithSection(
+        "school",
+        "sec-b",
+        Array.from({ length: 40 }, (_, i) => `x-${i}`)
+      )
+      expect(m(db.timetable.findMany)).toHaveBeenCalledTimes(3)
+    })
+
+    it("scopes the section's slots to the school", async () => {
+      m(db.timetable.findMany).mockResolvedValueOnce([])
+      await slotsSharedWithSection("school", "sec-b", ["a-1"])
+      expect(m(db.timetable.findMany).mock.calls[0][0].where).toMatchObject({
+        schoolId: "school",
+        sectionId: "sec-b",
+      })
+    })
+
+    it("says no when the sibling is taught in person that day, or the lookup fails", async () => {
+      m(resolveOnlinePolicies).mockImplementation(onlineExcept("sec-a"))
+      m(db.timetable.findMany)
+        .mockResolvedValueOnce([{ id: "b-1" }])
+        .mockResolvedValueOnce([slotRow])
+        .mockResolvedValueOnce(peers)
+      expect(
+        (await slotsSharedWithSection("school", "sec-b", ["a-1"])).size
+      ).toBe(0)
+
+      m(db.timetable.findMany).mockReset()
+      m(db.timetable.findMany).mockRejectedValue(new Error("db down"))
+      expect(
+        (await slotsSharedWithSection("school", "sec-b", ["a-1"])).size
+      ).toBe(0)
+    })
   })
 })

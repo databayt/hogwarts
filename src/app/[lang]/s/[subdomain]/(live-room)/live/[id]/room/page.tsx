@@ -28,7 +28,10 @@ import {
 import { RoomClient } from "@/components/school-dashboard/live/room"
 import { mayEnterRoom } from "@/components/school-dashboard/live/room-entry"
 import { JOIN_ERROR_CODES } from "@/components/school-dashboard/live/room/join-errors"
+import { mayShowDraftSuggest } from "@/components/school-dashboard/live/class-work-load"
+import { canManageMakeup } from "@/components/school-dashboard/live/makeup-rules"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
+import type { SuggestDraftsLabels } from "@/components/school-dashboard/live/suggest-drafts-button"
 import { RoomPageHeader } from "@/components/school-dashboard/live/room/page-header"
 import {
   RoomBonusShelf,
@@ -327,7 +330,27 @@ export default async function Page({ params }: Props) {
     // A normal state, not an error: the subject's colour is the ground.
     thumbnailUrl: getCatalogImageUrl(row?.subject?.thumbnail, "lg"),
     color: row?.subject?.color ?? null,
+    // Make-up class («حصة تعويضية»), off the row `getLiveClass` (the gate
+    // above) already read — `makeupForId`, `status` and `teacher.userId` are on
+    // it, so this costs no query and no wait. The rule is the class page's own
+    // (`makeup-rules.ts`): its teacher or an admin, while it has not started.
+    isMakeup: Boolean(detail.data.makeupForId),
+    canManageMakeup: canManageMakeup(
+      { role: session.user.role, userId: session.user.id },
+      {
+        makeupForId: detail.data.makeupForId,
+        status: detail.data.status,
+        teacherUserId: detail.data.teacher?.userId,
+      }
+    ),
   }
+
+  // The Quiz tab's lesson-draft labels: built only for a host while the
+  // feature is on (the production state is OFF → nothing is added to the room's
+  // props). The same gate `getRoomQuizzes` applies before it sends `suggest`.
+  const lessonDraftLabels = mayShowDraftSuggest(session.user.role, detail.data)
+    ? (t?.lessonDraft as unknown as SuggestDraftsLabels | undefined)
+    : undefined
 
   // ACCOUNTANT reads every session through `read_school_dashboard` but is
   // granted no `view_recordings`, so a tile linking one would be refused on
@@ -392,7 +415,7 @@ export default async function Page({ params }: Props) {
       labels={{
         error: t?.errors?.tokenExpired ?? "Token expired. Please rejoin.",
         joinErrors,
-        room: resolveRoomLabels(t?.room),
+        room: resolveRoomLabels(t?.room, lessonDraftLabels),
         card: {
           join: t?.actions?.join ?? "Join",
           joinLesson: c?.joinLesson ?? "Join C{c}, L{l}",
@@ -422,6 +445,8 @@ export default async function Page({ params }: Props) {
           linkCopied: c?.linkCopied ?? "Link copied",
           toggleTheme: c?.toggleTheme ?? "Light or dark",
           alerts: resolveClassAlertsLabels(t?.alerts),
+          makeup: t?.makeup?.badge,
+          replan: t?.makeup?.replanLink,
         },
         participants: {
           title: t?.room?.participants ?? "Participants",

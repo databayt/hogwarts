@@ -270,6 +270,7 @@
         "/exams/qbank/ai-generate",
         "/exams/qbank/new",
         "/exams/quick",
+        "/exams/quick/[id]",
         "/exams/quick/[id]/take",
         "/exams/quick/new",
         "/exams/quiz",
@@ -497,6 +498,15 @@
       "routes": [
         "/lab"
       ]
+    },
+    "lesson-draft": {
+      "path": "src/components/lesson-draft",
+      "context": [
+        "README.md",
+        "ISSUE.md"
+      ],
+      "docs": [],
+      "routes": []
     },
     "library": {
       "path": "src/components/library",

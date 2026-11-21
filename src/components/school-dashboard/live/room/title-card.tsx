@@ -73,6 +73,12 @@ export interface RoomTitleCardData {
   resourceCount: number
   thumbnailUrl: string | null
   color: string | null
+  /** This class replaces a missed one («حصة تعويضية») — for every viewer. */
+  isMakeup?: boolean
+  /** The viewer may re-plan or cancel this make-up (its teacher or an admin,
+   *  while it is still `scheduled`) — the rule of `detail-load.ts`. Decided on
+   *  the server; the card only shows a link to the detail view. */
+  canManageMakeup?: boolean
 }
 
 export interface RoomTitleCardLabels {
@@ -121,6 +127,10 @@ export interface RoomTitleCardLabels {
   /** "Turn on class alerts", under the button — the one place every student,
    *  parent and teacher passes on the way into a class. */
   alerts: ClassAlertsLabels
+  /** «تعويضية» — `liveClasses.makeup.badge`. Absent, no badge prints. */
+  makeup?: string
+  /** «إعادة الجدولة أو الإلغاء» — `liveClasses.makeup.replanLink`. */
+  replan?: string
 }
 
 /**
@@ -447,6 +457,9 @@ export function RoomTitleCard({
       }
       chips={
         <>
+          {/* «تعويضية» — a mark like the others in this row, first because it
+              is what tells this class apart from the section's usual one. */}
+          {data.isMakeup && labels.makeup && <Mark label={labels.makeup} />}
           {/* Whether the room is open. Outlined, because the reference spends
               its one filled mark on `4K` and this row mirrors it. */}
           <Mark label={data.isLive ? labels.live : labels.scheduled} />
@@ -458,6 +471,16 @@ export function RoomTitleCard({
           {marks.map((m) => (
             <Mark key={m} label={m} />
           ))}
+          {data.canManageMakeup && labels.replan && (
+            // A link to the detail view, where the sheet and the cancel live —
+            // never the sheet itself in the room. 44 px tall for a thumb.
+            <Link
+              href={`${detailHref}?view=details`}
+              className="inline-flex min-h-11 items-center underline underline-offset-2"
+            >
+              {labels.replan}
+            </Link>
+          )}
           {data.resourceCount > 0 && (
             <>
               <span>&middot;</span>
