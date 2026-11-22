@@ -2,10 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { NextRequest, NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
 
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { db } from "@/lib/db"
+import { passwordMatches } from "@/lib/password-match"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 import { normalizeEmail, resolveLoginUser } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { identifier, password } = validatedFields.data
-    const trimmedIdentifier = identifier.trim()
+    const trimmedIdentifier = toAsciiDigits(identifier.trim())
     const identifierIsEmail = trimmedIdentifier.includes("@")
 
     // The school the app is signed into: a subdomain ("alabidae") or an id.
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
-    const passwordsMatch = await bcrypt.compare(password, user.password)
+    const passwordsMatch = await passwordMatches(password, user.password)
 
     if (!passwordsMatch) {
       await fail("CredentialsSignin", user.schoolId)

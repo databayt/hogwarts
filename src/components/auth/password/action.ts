@@ -5,6 +5,7 @@
 import { headers } from "next/headers"
 import bcrypt from "bcryptjs"
 
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { clearLoginFailures } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
@@ -65,7 +66,7 @@ export const newPassword = async (
     return { error: a?.invalidToken ?? "This reset link is invalid." }
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10)
+  const hashedPassword = await bcrypt.hash(toAsciiDigits(password), 10)
 
   await db.user.update({
     where: { id: existingUser.id },

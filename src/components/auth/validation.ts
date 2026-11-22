@@ -42,6 +42,7 @@
 import type { UserRole } from "@prisma/client"
 import * as z from "zod"
 
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getValidationMessages } from "@/components/internationalization/helpers"
 
@@ -130,7 +131,7 @@ export function createLoginSchema(dictionary: Dictionary) {
           if (trimmed.includes("@")) {
             return z.string().email().safeParse(trimmed).success
           }
-          return USERNAME_LOGIN_RE.test(trimmed)
+          return USERNAME_LOGIN_RE.test(toAsciiDigits(trimmed))
         },
         { message: v.get("invalidIdentifier") }
       ),
@@ -217,7 +218,7 @@ export const LoginSchema = z.object({
         if (trimmed.includes("@")) {
           return z.string().email().safeParse(trimmed).success
         }
-        return USERNAME_LOGIN_RE.test(trimmed)
+        return USERNAME_LOGIN_RE.test(toAsciiDigits(trimmed))
       },
       { message: "Enter a valid email or username" }
     ),

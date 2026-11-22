@@ -1,14 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import bcrypt from "bcryptjs"
 import type { NextAuthConfig } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Facebook from "next-auth/providers/facebook"
 import Google from "next-auth/providers/google"
 
 import { env } from "@/env.mjs"
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { authLogger } from "@/lib/auth-logger"
+import { passwordMatches } from "@/lib/password-match"
 import { resolveLoginUser } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 
@@ -94,7 +95,7 @@ export default {
 
         if (validatedFields.success) {
           const { identifier, password } = validatedFields.data
-          const trimmedIdentifier = identifier.trim()
+          const trimmedIdentifier = toAsciiDigits(identifier.trim())
           // Extract schoolId hint passed from login action for tenant-aware lookup
           const schoolId = (credentials?.schoolId as string) || undefined
           authLogger.debug("Credentials: Validation passed", {
@@ -122,7 +123,7 @@ export default {
             return null
           }
 
-          const passwordsMatch = await bcrypt.compare(password, user.password)
+          const passwordsMatch = await passwordMatches(password, user.password)
           authLogger.debug("Credentials: Password check", {
             matches: passwordsMatch,
           })

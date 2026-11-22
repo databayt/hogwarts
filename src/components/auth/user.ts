@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import type { User as PrismaUser } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { passwordMatches } from "@/lib/password-match"
 
 /** The login key form of an email: trimmed and lowercased. Emails are
  *  stored as typed by whoever entered them, so every lookup goes through
@@ -120,9 +121,9 @@ export const resolveLoginUser = async (
 ): Promise<PrismaUser | null> => {
   const candidates = await getUsersByIdentifier(identifier, schoolId)
   if (candidates.length <= 1) return candidates[0] ?? null
-  const { compare } = await import("bcryptjs")
   for (const user of candidates) {
-    if (user.password && (await compare(password, user.password))) return user
+    if (user.password && (await passwordMatches(password, user.password)))
+      return user
   }
   return candidates[0]
 }

@@ -820,3 +820,66 @@ describe("Login Action - admin-issued credentials sign in by email", () => {
     )
   })
 })
+
+// ============================================================================
+// Arabic-keyboard digits
+// ============================================================================
+
+describe("Login Action - Arabic digits", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("looks up and signs in with the ASCII identifier", async () => {
+    const user = createMockUser({
+      email: null,
+      username: "260099",
+      password: "hashedpassword",
+      schoolId: "school-123",
+      role: "STUDENT",
+    })
+    mockedResolveLoginUser.mockResolvedValue(user)
+    mockedSignIn.mockResolvedValue(undefined)
+
+    const result = await login({ identifier: "٢٦٠٠٩٩", password: "٨٥٨٥" })
+
+    expect(mockedResolveLoginUser).toHaveBeenCalledWith(
+      "260099",
+      "٨٥٨٥",
+      undefined
+    )
+    expect(mockedSignIn).toHaveBeenCalledWith(
+      "credentials",
+      expect.objectContaining({ identifier: "260099" })
+    )
+    expect(result).toMatchObject({ success: "Login successful!" })
+  })
+
+  it("matches a suspended account's PIN typed in Arabic digits", async () => {
+    const { hash } = await import("bcryptjs")
+    mockedResolveLoginUser.mockResolvedValue(
+      {
+        ...createMockUser({ password: await hash("8585", 4) }),
+        username: "260099",
+        isSuspended: true,
+        schoolId: "school-123",
+      } as never
+    )
+    const result = await login({ identifier: "٢٦٠٠٩٩", password: "٨٥٨٥" })
+    expect(result).toEqual({ error: "ACCOUNT_SUSPENDED" })
+  })
+
+  it("falls back to the raw password for a PIN stored in Arabic digits", async () => {
+    const { hash } = await import("bcryptjs")
+    mockedResolveLoginUser.mockResolvedValue(
+      {
+        ...createMockUser({ password: await hash("٨٥٨٥", 4) }),
+        username: "260099",
+        isSuspended: true,
+        schoolId: "school-123",
+      } as never
+    )
+    const result = await login({ identifier: "260099", password: "٨٥٨٥" })
+    expect(result).toEqual({ error: "ACCOUNT_SUSPENDED" })
+  })
+})

@@ -9,8 +9,10 @@ import { AuthError } from "next-auth"
 import * as z from "zod"
 
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
+import { passwordMatches } from "@/lib/password-match"
 import { cookieDomainForHost, tenantOriginForHost } from "@/lib/root-domain"
 import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 import {
@@ -86,7 +88,7 @@ export const login = async (
   }
 
   const { identifier, password, code } = validatedFields.data
-  const trimmedIdentifier = identifier.trim()
+  const trimmedIdentifier = toAsciiDigits(identifier.trim())
   const identifierIsEmail = trimmedIdentifier.includes("@")
 
   // Brute-force protection keys on the identifier before any user lookup, so
@@ -132,8 +134,7 @@ export const login = async (
   // Suspended: say so — but only to someone who knows the password, so the
   // message can't be used to probe which accounts are suspended.
   if (existingUser.isSuspended) {
-    const { compare } = await import("bcryptjs")
-    if (await compare(password, existingUser.password)) {
+    if (await passwordMatches(password, existingUser.password)) {
       return { error: "ACCOUNT_SUSPENDED" }
     }
   }

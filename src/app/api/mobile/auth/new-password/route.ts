@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import * as z from "zod"
 
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { db } from "@/lib/db"
 import {
   checkRateLimitAsync,
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash new password and update
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    const hashedPassword = await bcrypt.hash(toAsciiDigits(newPassword), 10)
 
     await db.user.update({
       where: { id: user.id },

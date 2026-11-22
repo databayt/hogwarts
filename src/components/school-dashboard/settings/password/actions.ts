@@ -1,11 +1,13 @@
 "use server"
 
 import { auth } from "@/auth"
-import { compare, hash } from "bcryptjs"
+import { hash } from "bcryptjs"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { toAsciiDigits } from "@/lib/ascii-digits"
 import { db } from "@/lib/db"
+import { passwordMatches } from "@/lib/password-match"
 
 import { changePasswordSchema, firstPasswordSchema } from "./validation"
 
@@ -35,7 +37,7 @@ export async function changePassword(input: {
     if (user.password) {
       if (
         !parsed.currentPassword ||
-        !(await compare(parsed.currentPassword, user.password))
+        !(await passwordMatches(parsed.currentPassword, user.password))
       ) {
         return {
           success: false,
@@ -46,7 +48,7 @@ export async function changePassword(input: {
     }
     // OAuth users without a password can set one without providing current password
 
-    const hashedPassword = await hash(parsed.newPassword, 10)
+    const hashedPassword = await hash(toAsciiDigits(parsed.newPassword), 10)
 
     await db.user.update({
       where: { id: user.id },
@@ -100,7 +102,7 @@ export async function setFirstPassword(input: {
 
     if (
       user.password &&
-      (await compare(parsed.data.newPassword, user.password))
+      (await passwordMatches(parsed.data.newPassword, user.password))
     ) {
       return { success: false, error: "SAME_AS_OLD", code: "SAME_AS_OLD" }
     }
@@ -108,7 +110,7 @@ export async function setFirstPassword(input: {
     await db.user.update({
       where: { id: user.id },
       data: {
-        password: await hash(parsed.data.newPassword, 10),
+        password: await hash(toAsciiDigits(parsed.data.newPassword), 10),
         passwordChangedAt: new Date(),
         mustChangePassword: false,
       },
