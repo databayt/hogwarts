@@ -9,6 +9,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { rankNextActions } from "@/components/school-dashboard/dashboard/next-action-rank"
 import { getQuickActionsByRole } from "@/components/school-dashboard/dashboard/quick-actions-config"
 import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcoming-queries"
+import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
 import { loadTodaySchedule } from "@/components/school-dashboard/timetable/today-schedule"
 
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
           nameEn: true,
           logoUrl: true,
           enabledModules: true,
+          timezone: true,
         },
       }),
       db.user.findUnique({
@@ -357,6 +359,9 @@ export async function GET(request: NextRequest) {
         logo_url: school?.logoUrl ?? null,
         // null = every module enabled
         enabled_modules: parseEnabledModules(school?.enabledModules),
+        // The school's clock — a phone on another zone must not read the
+        // timetable's wall-clock times against its own.
+        timezone: school?.timezone || DEFAULT_SCHOOL_TZ,
       },
       unread_messages: unreadMessages._sum.unreadCount ?? 0,
       events_today: eventsToday,

@@ -7,11 +7,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import {
   closeIfHostGone,
   scheduleCloseAfterHost,
 } from "@/components/school-dashboard/live/actions/close-after-host"
-import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import {
   HOST_GONE_HOLD_MS,
   shouldCloseAfterHost,
@@ -21,8 +21,19 @@ vi.mock("server-only", () => ({}))
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findFirst: vi.fn(), updateMany: vi.fn() },
-    conferenceParticipant: { count: vi.fn() },
+    conferenceParticipant: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
+}))
+const listParticipants = vi.fn()
+vi.mock("@/components/school-dashboard/live/livekit/client", () => ({
+  isLiveKitConfigured: () => true,
+  getRoomServiceClient: () => ({
+    listParticipants: (...a: unknown[]) => listParticipants(...a),
+  }),
 }))
 const closeRoom = vi.fn(async () => undefined)
 vi.mock("@/components/school-dashboard/live/livekit/close-room", () => ({
@@ -74,6 +85,7 @@ function session(patch: Record<string, unknown> = {}) {
     isPractice: false,
     scheduledEnd: BELL,
     roomName: "room-1",
+    teacher: { userId: "u-teacher" },
     recordings: [{ egressId: "egr-1" }],
     ...patch,
   } as never)
@@ -84,6 +96,11 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(NOW)
   vi.mocked(db.conferenceParticipant.count).mockResolvedValue(0 as never)
+  vi.mocked(db.conferenceParticipant.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue({
+    count: 1,
+  } as never)
+  listParticipants.mockResolvedValue([])
   vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 } as never)
 })
 afterEach(() => vi.useRealTimers())
@@ -137,6 +154,56 @@ describe("closeIfHostGone", () => {
     session()
     vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 0 } as never)
     expect(await closeIfHostGone("sch1", "s1")).toBe(false)
+    expect(closeRoom).not.toHaveBeenCalled()
+  })
+
+  it("a host on the video server keeps the class open and repairs activeSince", async () => {
+    session()
+    vi.mocked(db.conferenceParticipant.findMany).mockResolvedValue([
+      { id: "p1", userId: "u-host", activeSince: null },
+    ] as never)
+    listParticipants.mockResolvedValue([{ identity: "u-host" }])
+    expect(await closeIfHostGone("sch1", "s1")).toBe(false)
+    expect(listParticipants).toHaveBeenCalledWith("room-1")
+    expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["p1"] }, schoolId: "sch1", activeSince: null },
+      data: { activeSince: expect.any(Date) },
+    })
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+    expect(closeRoom).not.toHaveBeenCalled()
+  })
+
+  it("the session teacher on the video server keeps the class open", async () => {
+    session()
+    listParticipants.mockResolvedValue([{ identity: "u-teacher" }])
+    expect(await closeIfHostGone("sch1", "s1")).toBe(false)
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("only students on the video server: closes", async () => {
+    session()
+    listParticipants.mockResolvedValue([{ identity: "u-student" }])
+    expect(await closeIfHostGone("sch1", "s1")).toBe(true)
+  })
+
+  it("a missing room (not found) closes as before", async () => {
+    session()
+    listParticipants.mockRejectedValue(
+      Object.assign(new Error("requested room does not exist"), {
+        status: 404,
+        code: "not_found",
+      })
+    )
+    expect(await closeIfHostGone("sch1", "s1")).toBe(true)
+    expect(db.conference.updateMany).toHaveBeenCalled()
+  })
+
+  it("an unreachable video server does not close", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    session()
+    listParticipants.mockRejectedValue(new Error("fetch failed"))
+    expect(await closeIfHostGone("sch1", "s1")).toBe(false)
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
     expect(closeRoom).not.toHaveBeenCalled()
   })
 

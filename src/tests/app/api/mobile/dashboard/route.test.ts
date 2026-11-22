@@ -74,6 +74,7 @@ beforeEach(() => {
     nameEn: "School",
     logoUrl: "https://cdn/logo.png",
     enabledModules: ["attendance", "finance"],
+    timezone: "Asia/Riyadh",
   } as never)
   vi.mocked(db.user.findUnique).mockResolvedValue({
     username: "Test",
@@ -134,6 +135,7 @@ describe("GET /api/mobile/dashboard", () => {
         name_en: "School",
         logo_url: "https://cdn/logo.png",
         enabled_modules: ["attendance", "finance"],
+        timezone: "Asia/Riyadh",
       },
       unread_messages: 7,
       next_actions: [],
@@ -159,6 +161,23 @@ describe("GET /api/mobile/dashboard", () => {
       _sum: { unreadCount: true },
     })
     expect(loadUpcomingData).toHaveBeenCalledWith(USER, SCHOOL, "GUARDIAN")
+  })
+
+  it("timezone falls back to the school default when unset", async () => {
+    await authAs("STAFF")
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      id: SCHOOL,
+      name: "S",
+      nameEn: null,
+      logoUrl: null,
+      enabledModules: null,
+      timezone: null,
+    } as never)
+    vi.mocked(db.student.count).mockResolvedValue(1)
+    vi.mocked(db.event.count).mockResolvedValue(0)
+    const { GET } = await import("@/app/api/mobile/dashboard/route")
+    const body = await (await GET(get())).json()
+    expect(body.school.timezone).toBe("Africa/Khartoum")
   })
 
   it("enabled_modules is null when the school never configured modules", async () => {

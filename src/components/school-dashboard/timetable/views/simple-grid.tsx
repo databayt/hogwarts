@@ -6,6 +6,7 @@ import { memo, useMemo, type CSSProperties, type ReactNode } from "react"
 import { Clock, TriangleAlert } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
 
 import {
   DAY_LABELS_AR,
@@ -13,6 +14,7 @@ import {
   EMPTY_CELL_STYLE,
   getSubjectTailwind,
 } from "../config"
+import { schoolNow } from "../school-now"
 import { LIVE_STATUS_TEXT, liveSlotStatus } from "./live-join-button"
 import { LiveMark } from "./live-mark"
 
@@ -110,6 +112,7 @@ function SimpleGrid({
   showNeedsTeacher = false,
   dictionary,
 }: SimpleGridProps) {
+  const now = schoolNow(useSchoolTimeZone())
   const liveNowLabel =
     dictionary?.liveNow ?? (isRTL ? "مباشر الآن" : "Live now")
   const scheduledTodayLabel =
@@ -118,13 +121,13 @@ function SimpleGrid({
     dictionary?.needsTeacher ?? (isRTL ? "بانتظار معلم" : "Needs teacher")
 
   // Get current day for highlighting
-  const today = highlightToday ? new Date().getDay() : -1
+  const today = highlightToday ? now.dayOfWeek : -1
 
   // The day a reader is actually living in, resolved independently of
   // `highlightToday` — that prop is a caller's styling choice (the student turns
   // it off in day mode), and emphasis must not ride on it. A weekend fallback
   // column is never `realToday`, so it falls out unemphasised for free.
-  const realToday = new Date().getDay()
+  const realToday = now.dayOfWeek
 
   // Break rows are DATA-driven: every non-teaching period renders in its real
   // time slot, keyed to the teaching period it precedes.
@@ -217,12 +220,11 @@ function SimpleGrid({
   const teachingPeriods = periods.filter((p) => !p.isBreak)
 
   // The period the reader is in, or the one about to start — the single cell in
-  // the whole grid worth looking at right now. Local `now` against UTC-extracted
+  // the whole grid worth looking at right now. The school's `now` against UTC-extracted
   // period bounds, matching the convention `isRowLiveJoinable` and the role
   // views already use; don't "fix" one side of it in isolation.
   const activePeriodId = (() => {
-    const now = new Date()
-    const nowMin = now.getHours() * 60 + now.getMinutes()
+    const nowMin = now.minutesOfDay
     let next: { id: string; startMin: number } | null = null
     for (const p of teachingPeriods) {
       if (p.untimed) continue
@@ -440,7 +442,7 @@ function SimpleGrid({
                   const isOnlineToday = day === realToday && !!liveState
                   const status =
                     isOnlineToday && isNowCell
-                      ? liveSlotStatus(period.startTime, period.endTime)
+                      ? liveSlotStatus(period.startTime, period.endTime, now)
                       : null
 
                   return (

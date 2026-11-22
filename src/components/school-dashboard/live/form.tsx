@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { schoolTimeStringOf } from "@/lib/timezone"
 import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
@@ -19,6 +20,8 @@ import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+import { schoolNow } from "@/components/school-dashboard/timetable/school-now"
 
 import {
   NONE,
@@ -80,6 +83,7 @@ export function LiveClassForm({
   dayNames,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
+  const timeZone = useSchoolTimeZone()
   // `isPending` reflects ONLY an in-flight submit — it drives the "Saving…"
   // footer label and disables every field while saving.
   const [isPending, startTransition] = useTransition()
@@ -199,7 +203,7 @@ export function LiveClassForm({
     form.setValue("sectionId", slot.sectionId)
     form.setValue("startTime", slot.startTime, { shouldValidate: true })
     form.setValue("endTime", slot.endTime, { shouldValidate: true })
-    const nextDate = nextDateForWeekday(slot.dayOfWeek)
+    const nextDate = nextDateForWeekday(slot.dayOfWeek, timeZone)
     form.setValue("startDate", nextDate)
     form.setValue("endDate", nextDate)
     // Name the session after the class unless the teacher already typed one.
@@ -258,8 +262,8 @@ export function LiveClassForm({
             meetingProvider: d.meetingProvider ?? "",
             startDate: start,
             endDate: end,
-            startTime: toTimeString(start),
-            endTime: toTimeString(end),
+            startTime: toTimeString(start, timeZone),
+            endTime: toTimeString(end, timeZone),
             visibility: d.visibility === "school" ? "school" : "section",
             description: d.description ?? "",
             recordingEnabled: d.recordingEnabled,
@@ -287,7 +291,7 @@ export function LiveClassForm({
         active = false
       }
     }
-  }, [isEdit, itemId, form])
+  }, [isEdit, itemId, form, timeZone])
 
   /** Compose the resources array from the three UI pickers. */
   const composeResources = (): LiveClassFormData["resources"] => {
@@ -536,7 +540,10 @@ export function LiveClassForm({
   )
 }
 
-function toTimeString(date: Date): string {
+function toTimeString(date: Date, timeZone?: string): string {
+  // An instant's wall-clock time is the SCHOOL's (the server stores/reads it
+  // there); the device's only when the zone is unknown.
+  if (timeZone) return schoolTimeStringOf(date, timeZone)
   const h = String(date.getHours()).padStart(2, "0")
   const m = String(date.getMinutes()).padStart(2, "0")
   return `${h}:${m}`
@@ -545,14 +552,19 @@ function toTimeString(date: Date): string {
 /**
  * The next calendar date falling on `dayOfWeek` (0 = Sun … 6 = Sat), today
  * included. A timetable slot is a weekly pattern; the session needs one
- * concrete date. Browser-local, like every other date the picker produces —
- * the server re-reads the day in the school's timezone on submit.
+ * concrete date. "Today" and the weekday are the
+ * SCHOOL's (a teacher in Bahrain is a day ahead of Khartoum after 22:00), and
+ * the Date is built at device-local noon so the server's school-zone re-read of
+ * the day lands on the same calendar day for any device offset.
  */
-function nextDateForWeekday(dayOfWeek: number): Date {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  d.setDate(d.getDate() + ((dayOfWeek - d.getDay() + 7) % 7))
-  return d
+function nextDateForWeekday(dayOfWeek: number, timeZone?: string): Date {
+  const now = schoolNow(timeZone)
+  return new Date(
+    now.year,
+    now.month - 1,
+    now.day + ((dayOfWeek - now.dayOfWeek + 7) % 7),
+    12
+  )
 }
 
 export default LiveClassForm

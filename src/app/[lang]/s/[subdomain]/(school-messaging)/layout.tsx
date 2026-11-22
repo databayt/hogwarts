@@ -7,10 +7,12 @@ import { auth } from "@/auth"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { ModalProvider } from "@/components/atom/modal/context"
+import { SwitchAccountButton } from "@/components/auth/switch-account-button"
 import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
@@ -74,6 +76,9 @@ export default async function MessagingLayout({
     session.user.schoolId !== school.id
   ) {
     const isAr = lang === "ar"
+    const denied = (
+      (await getDictionary(lang as Locale)) as Record<string, any>
+    )?.accessDenied
     return (
       <div
         dir={isAr ? "rtl" : "ltr"}
@@ -96,11 +101,23 @@ export default async function MessagingLayout({
             ? "ليس لديك صلاحية للوصول إلى لوحة تحكم هذه المدرسة."
             : "You don't have permission to access this school's dashboard."}
         </p>
+        <p style={{ color: "#666", marginBottom: 24, maxWidth: 420 }}>
+          {denied?.wrongAccount ??
+            (isAr
+              ? "دخلت بحساب ليس له مكان في هذه المدرسة. سجّل الدخول برقم الدخول الذي أعطته لك المدرسة."
+              : "You are signed in with an account that has no place in this school. Sign in with the login code the school gave you.")}
+        </p>
+        <SwitchAccountButton lang={lang}>
+          {denied?.signInOther ??
+            (isAr ? "تسجيل الدخول بحساب آخر" : "Sign in with another account")}
+        </SwitchAccountButton>
         <a
           href={`/${lang}`}
           style={{
             color: "#3b82f6",
             textDecoration: "underline",
+            marginTop: 16,
+            padding: "12px 8px",
           }}
         >
           {isAr ? "الذهاب إلى الصفحة الرئيسية" : "Go to homepage"}

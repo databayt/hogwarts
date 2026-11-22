@@ -77,3 +77,11 @@ export function useSchool() {
   }
   return context
 }
+
+/**
+ * The school's IANA time zone, or undefined outside a provider (never throws,
+ * so views render in tests and on pages without the dashboard layout).
+ */
+export function useSchoolTimeZone(): string | undefined {
+  return useContext(SchoolContext)?.school.timezone || undefined
+}

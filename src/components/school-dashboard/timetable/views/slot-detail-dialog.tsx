@@ -14,9 +14,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
 
 import { getSlotDetail } from "../actions"
 import { DAY_LABELS_AR, DAY_LABELS_EN } from "../config"
+import { schoolNow } from "../school-now"
 import {
   LiveJoinButton,
   liveSlotStatus,
@@ -58,6 +60,7 @@ export function SlotDetailDialog({
   const d = dictionary?.timetable
   const t = d?.slotDetail
   const isRTL = lang === "ar"
+  const now = schoolNow(useSchoolTimeZone())
 
   const [loaded, setLoaded] = useState<SlotDetail | null>(null)
 
@@ -110,10 +113,14 @@ export function SlotDetailDialog({
   // resolved against today to become "3/9".
   const slotDate = (() => {
     if (!detail) return null
-    const now = new Date()
-    const dt = new Date(now)
-    dt.setDate(now.getDate() + (detail.dayOfWeek - now.getDay()))
-    return `${dt.getDate()}/${dt.getMonth() + 1}`
+    const dt = new Date(
+      Date.UTC(
+        now.year,
+        now.month - 1,
+        now.day + (detail.dayOfWeek - now.dayOfWeek)
+      )
+    )
+    return `${dt.getUTCDate()}/${dt.getUTCMonth() + 1}`
   })()
 
   // Periods are stored as "Period 4"; the ordinal name comes from the
@@ -148,10 +155,8 @@ export function SlotDetailDialog({
   // build passes, and the comparison below is simply never true. The countdown
   // silently never rendered.
   const slotStatus =
-    detail?.startTime &&
-    detail?.endTime &&
-    detail.dayOfWeek === new Date().getDay()
-      ? liveSlotStatus(detail.startTime, detail.endTime)
+    detail?.startTime && detail?.endTime && detail.dayOfWeek === now.dayOfWeek
+      ? liveSlotStatus(detail.startTime, detail.endTime, now)
       : null
 
   // One short line, never a label/value pair. Before the class starts it is a
@@ -160,12 +165,9 @@ export function SlotDetailDialog({
   const statusLine = (() => {
     if (!detail) return null
     if (slotStatus === "upcoming" && detail.startTime) {
-      const now = new Date()
       const start = new Date(detail.startTime)
       const mins =
-        start.getUTCHours() * 60 +
-        start.getUTCMinutes() -
-        (now.getHours() * 60 + now.getMinutes())
+        start.getUTCHours() * 60 + start.getUTCMinutes() - now.minutesOfDay
       if (mins > 0) {
         return mins >= 60
           ? (t?.startsInHours ?? "Starts in {n} h").replace(

@@ -27,10 +27,10 @@ import type {
   getTodaySchedule,
 } from "../actions"
 import { DRAFT_TERM_ID } from "../config"
+import type { UpcomingMakeup } from "../today-schedule"
 import AdminView from "./admin-view"
 import { TimetableSurfaceSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
-import type { UpcomingMakeup } from "../today-schedule"
 import type { SchoolClosureInfo } from "./live-join-button"
 import StudentView from "./student-view"
 

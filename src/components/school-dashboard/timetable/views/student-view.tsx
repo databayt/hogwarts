@@ -17,12 +17,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
 
 import {
   getTimetableByStudentGrade,
   getTimetableByTeacher,
   getTodaySchedule,
 } from "../actions"
+import { schoolNow } from "../school-now"
+import type { UpcomingMakeup } from "../today-schedule"
 import { TimetableGridSkeleton } from "./grid-skeleton"
 import {
   ClosureNotice,
@@ -30,10 +33,9 @@ import {
   type SchoolClosureInfo,
 } from "./live-join-button"
 import { MakeupStrip } from "./makeup-strip"
+import type { InitialToday, InitialWeekly } from "./role-router"
 import SimpleGrid from "./simple-grid"
 import { SlotDetailDialog } from "./slot-detail-dialog"
-import type { UpcomingMakeup } from "../today-schedule"
-import type { InitialToday, InitialWeekly } from "./role-router"
 import { SlotJoinAction } from "./slot-join-action"
 import { useSlotOpen } from "./use-slot-open"
 
@@ -94,6 +96,7 @@ export default function StudentView({
   initialToday,
 }: Props) {
   const isTeacher = !!teacherId
+  const timeZone = useSchoolTimeZone()
   // The streamed first screen is usable only whole: the week without today's
   // closure would paint a grid that might sit on a declared holiday.
   const seed = initialGrid && initialToday ? initialGrid : null
@@ -252,7 +255,7 @@ export default function StudentView({
     () => initialToday?.upcomingMakeups ?? []
   )
   const [currentDay, setCurrentDay] = useState<number>(
-    () => initialToday?.dayOfWeek ?? new Date().getDay()
+    () => initialToday?.dayOfWeek ?? schoolNow(timeZone).dayOfWeek
   )
 
   // Load data — except the pass the streamed seed already answered.
@@ -319,14 +322,14 @@ export default function StudentView({
   // column header names for itself.
   const visibleDays = useMemo(() => {
     if (viewRange === "week" || workingDays.length === 0) return workingDays
-    const today = new Date().getDay()
+    const today = schoolNow(timeZone).dayOfWeek
     if (workingDays.includes(today)) return [today]
     for (let offset = 1; offset <= 7; offset++) {
       const candidate = (today + offset) % 7
       if (workingDays.includes(candidate)) return [candidate]
     }
     return workingDays
-  }, [viewRange, workingDays])
+  }, [viewRange, workingDays, timeZone])
 
   // Stable props for the memoized grid: a render of this view that changes
   // none of the grid's inputs (the week/day thumb, the dialog opening) must

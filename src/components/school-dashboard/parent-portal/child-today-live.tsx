@@ -10,6 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+import { schoolNow } from "@/components/school-dashboard/timetable/school-now"
 import {
   ClosureNotice,
   isRowLiveJoinable,
@@ -75,6 +77,7 @@ export function ChildTodayLive({
   canJoin,
   labels,
 }: Props) {
+  const now = schoolNow(useSchoolTimeZone())
   const teaching = rows.filter((r) => !r.isBreak && r.subject)
 
   return (
@@ -107,13 +110,14 @@ export function ChildTodayLive({
                     label={labels.online}
                   />
                 </span>
-                {canJoin && isRowLiveJoinable(row.startTime, row.endTime) && (
-                  <LiveJoinButton
-                    liveClass={row.liveClass}
-                    lang={lang}
-                    label={labels.join}
-                  />
-                )}
+                {canJoin &&
+                  isRowLiveJoinable(row.startTime, row.endTime, now) && (
+                    <LiveJoinButton
+                      liveClass={row.liveClass}
+                      lang={lang}
+                      label={labels.join}
+                    />
+                  )}
               </li>
             ))}
           </ul>

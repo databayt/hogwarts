@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation"
 
 import { ErrorToast } from "@/components/atom/toast"
 import { type Locale } from "@/components/internationalization/config"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
 import { createLiveClassFromTimetable } from "@/components/school-dashboard/live/actions/sessions"
 import { liveJoinHref } from "@/components/school-dashboard/live/join-link"
 
+import { schoolNow } from "../school-now"
 import { isRowLiveJoinable, type LiveClassJoinInfo } from "./live-join-button"
 import { inJoinWindow } from "./use-now-ms"
 
@@ -56,16 +58,18 @@ export function useSlotOpen({
   startErrorLabel?: string
 }) {
   const router = useRouter()
+  const timeZone = useSchoolTimeZone()
   const [pending, startTransition] = useTransition()
   const [startingId, setStartingId] = useState<string | null>(null)
 
   function open(slot: OpenableSlot, period: OpenablePeriod) {
     // The server's window (instants, school zone) when the read sent one —
     // right on any device clock; the old device-clock check otherwise.
+    const now = schoolNow(timeZone)
     const inWindow = joinWindows
       ? inJoinWindow(Date.now(), joinWindows[slot.id])
-      : slot.dayOfWeek === new Date().getDay() &&
-        isRowLiveJoinable(period.startTime, period.endTime)
+      : slot.dayOfWeek === now.dayOfWeek &&
+        isRowLiveJoinable(period.startTime, period.endTime, now)
     const target = liveJoin[slot.id]
 
     // A full navigation, not `router.push`: the join page may answer with a

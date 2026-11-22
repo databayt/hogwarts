@@ -21,12 +21,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
 
 import {
   getChildTimetable,
   getChildTodaySchedule,
   getGuardianChildren,
 } from "../actions"
+import { schoolNow } from "../school-now"
 import { TimetableGridSkeleton } from "./grid-skeleton"
 import { JoinLinkButton } from "./join-link-button"
 import {
@@ -110,9 +112,7 @@ export default function GuardianView({
   const seedToday = seed?.today ?? null
   // The (child, term) the seed answers for; that effect pass is skipped. Never
   // reset, so a StrictMode re-run cannot fire the fetch the seed replaced.
-  const seededKey = useRef(
-    seed?.childId ? `${seed.childId}|${termId}` : null
-  )
+  const seededKey = useRef(seed?.childId ? `${seed.childId}|${termId}` : null)
   const d = dictionary?.timetable as Record<string, any> | undefined
   const gv = (d as Record<string, any>)?.guardianView
   // "Online" marker beside the physical room — set once here, used on both the
@@ -154,7 +154,9 @@ export default function GuardianView({
   )
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
-  >(() => (seedGrid && "liveIndicators" in seedGrid ? seedGrid.liveIndicators : {}))
+  >(() =>
+    seedGrid && "liveIndicators" in seedGrid ? seedGrid.liveIndicators : {}
+  )
   const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
     () => (seedGrid && "liveJoin" in seedGrid ? seedGrid.liveJoin : {})
   )
@@ -172,6 +174,7 @@ export default function GuardianView({
     Record<string, { fromMs: number; untilMs: number }>
   >(() => (seedGrid && "joinWindows" in seedGrid ? seedGrid.joinWindows : {}))
   const nowMs = useNowMs()
+  const now = schoolNow(useSchoolTimeZone())
   // A click on today's live cell IS the join; any other cell opens the dialog.
   const { open: openSlot } = useSlotOpen({
     lang,
@@ -312,10 +315,6 @@ export default function GuardianView({
 
   // Get current/next class
   const getCurrentClass = () => {
-    const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
-
     for (const item of todaySchedule) {
       if (item.isBreak) continue
       // An untimed period has no clock to be «now» against.
@@ -329,7 +328,7 @@ export default function GuardianView({
       const endHour = endTime.getUTCHours()
       const endMinute = endTime.getUTCMinutes()
 
-      const currentTotalMinutes = currentHour * 60 + currentMinute
+      const currentTotalMinutes = now.minutesOfDay
       const startTotalMinutes = startHour * 60 + startMinute
       const endTotalMinutes = endHour * 60 + endMinute
 
@@ -538,7 +537,8 @@ export default function GuardianView({
                   currentClassInfo.item,
                   isLiveJoinable(
                     currentClassInfo.type as "current" | "next",
-                    currentClassInfo.item.startTime
+                    currentClassInfo.item.startTime,
+                    now
                   )
                 )}
             </div>
@@ -613,7 +613,7 @@ export default function GuardianView({
                     {canJoin &&
                       guardianJoin(
                         item,
-                        isRowLiveJoinable(item.startTime, item.endTime)
+                        isRowLiveJoinable(item.startTime, item.endTime, now)
                       )}
                   </div>
                 </CardContent>

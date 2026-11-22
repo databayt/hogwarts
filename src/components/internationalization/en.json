@@ -5,7 +5,9 @@
     "reason1": "You're not a member of this school",
     "reason2": "Your account doesn't have the required role",
     "reason3": "The school hasn't granted you access yet",
-    "backHome": "Go Back Home"
+    "backHome": "Go Back Home",
+    "wrongAccount": "You are signed in with an account that has no place in this school. Sign in with the login code the school gave you.",
+    "signInOther": "Sign in with another account"
   },
   "acceptInvite": {
     "invalidLinkTitle": "Invalid Link",

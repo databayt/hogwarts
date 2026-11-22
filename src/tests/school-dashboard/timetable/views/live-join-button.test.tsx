@@ -2,60 +2,76 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { render, screen } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 
+import { schoolNow } from "@/components/school-dashboard/timetable/school-now"
 import {
   ClosureNotice,
   isLiveJoinable,
+  isRowLiveJoinable,
   LiveJoinButton,
+  liveSlotStatus,
   OnlineBadge,
 } from "@/components/school-dashboard/timetable/views/live-join-button"
 
-// startTime is read via getUTCHours/getUTCMinutes (matching the timetable
-// convention where Period times are stored as @db.Time UTC wall-clock). Build a
-// Date whose UTC time-of-day is `minutesFromNow` after the local now.
-function startAtDelta(minutesFromNow: number): Date {
-  const now = new Date()
-  const targetLocalMin = now.getHours() * 60 + now.getMinutes() + minutesFromNow
-  const d = new Date()
-  d.setUTCHours(Math.floor(targetLocalMin / 60), targetLocalMin % 60, 0, 0)
-  return d
-}
+// Period times are school wall-clock stored as `1970-01-01T..Z`, read with UTC
+// getters; "now" is the school's clock (Africa/Khartoum, UTC+2).
+const TZ = "Africa/Khartoum"
+const at = (z: string) => schoolNow(TZ, new Date(`2026-11-21T${z}:00Z`))
+const START = "1970-01-01T16:00:00Z"
+const END = "1970-01-01T17:00:00Z"
+// 16:00 Khartoum is 14:00Z.
 
 describe("isLiveJoinable", () => {
-  // Pinned to local midday. `isLiveJoinable` compares minutes-of-the-day, so
-  // a run at 23:45 put "20 minutes from now" at 00:05 — numerically BEFORE
-  // now — and the custom-window case failed every night after 23:40.
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    const noon = new Date()
-    noon.setHours(12, 0, 0, 0)
-    vi.setSystemTime(noon)
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   it("current class is always joinable", () => {
-    expect(isLiveJoinable("current", startAtDelta(999))).toBe(true)
-    expect(isLiveJoinable("current", startAtDelta(-999))).toBe(true)
+    expect(isLiveJoinable("current", START, at("13:00"))).toBe(true)
+    expect(isLiveJoinable("current", START, at("20:00"))).toBe(true)
   })
 
   it("next class within the window (<=10 min) is joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(5))).toBe(true)
-    expect(isLiveJoinable("next", startAtDelta(10))).toBe(true)
+    expect(isLiveJoinable("next", START, at("13:55"))).toBe(true)
+    expect(isLiveJoinable("next", START, at("13:50"))).toBe(true)
   })
 
   it("next class outside the window (>10 min away) is not joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(20))).toBe(false)
+    expect(isLiveJoinable("next", START, at("13:40"))).toBe(false)
   })
 
-  it("next class already started (negative delta) is not joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(-5))).toBe(false)
+  it("next class already started is not joinable", () => {
+    expect(isLiveJoinable("next", START, at("14:05"))).toBe(false)
   })
 
   it("respects a custom window", () => {
-    expect(isLiveJoinable("next", startAtDelta(20), 30)).toBe(true)
+    expect(isLiveJoinable("next", START, at("13:30"), 30)).toBe(true)
+  })
+
+  it("does not read the device clock: a UTC+3 reading is the same instant", () => {
+    expect(
+      isLiveJoinable(
+        "next",
+        START,
+        schoolNow(TZ, new Date("2026-11-21T13:50:00Z"))
+      )
+    ).toBe(true)
+  })
+})
+
+describe("isRowLiveJoinable / liveSlotStatus around a 16:00-17:00 period", () => {
+  it("13:00Z: upcoming, not joinable", () => {
+    expect(liveSlotStatus(START, END, at("13:00"))).toBe("upcoming")
+    expect(isRowLiveJoinable(START, END, at("13:00"))).toBe(false)
+  })
+  it("13:50Z: upcoming and joinable", () => {
+    expect(liveSlotStatus(START, END, at("13:50"))).toBe("upcoming")
+    expect(isRowLiveJoinable(START, END, at("13:50"))).toBe(true)
+  })
+  it("14:00Z: live", () => {
+    expect(liveSlotStatus(START, END, at("14:00"))).toBe("live")
+    expect(isRowLiveJoinable(START, END, at("14:00"))).toBe(true)
+  })
+  it("15:00Z: missed", () => {
+    expect(liveSlotStatus(START, END, at("15:00"))).toBe("missed")
+    expect(isRowLiveJoinable(START, END, at("15:00"))).toBe(false)
   })
 })
 

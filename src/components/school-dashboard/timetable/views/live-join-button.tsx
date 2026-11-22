@@ -8,6 +8,8 @@ import { Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 
+import type { SchoolNow } from "../school-now"
+
 // Mirror of LiveClassJoinInfo from the timetable resolver (kept local so this
 // client component has no server import).
 export type LiveClassJoinInfo = {
@@ -71,19 +73,18 @@ export function LiveJoinButton({
 /**
  * Whether the Join button should show for the current/next card. Current
  * classes are always joinable; the next class becomes joinable within
- * `windowMin` minutes of its start. Mirrors getCurrentClass's local-vs-UTC
- * time convention used across the timetable views (now read in local time,
- * the period start read in UTC).
+ * `windowMin` minutes of its start. `now` is the school's clock (`schoolNow`), the period start is read in UTC
+ * wall-clock.
  */
 export function isLiveJoinable(
   type: "current" | "next",
   startTime: Date | string,
+  now: SchoolNow,
   windowMin = 10
 ): boolean {
   if (type === "current") return true
-  const now = new Date()
   const start = new Date(startTime)
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMin = now.minutesOfDay
   const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
   return startMin - nowMin <= windowMin && startMin - nowMin >= 0
 }
@@ -97,19 +98,16 @@ export function isLiveJoinable(
  * about to start. Without this the list showed an "Online" badge on every online
  * class of the day and a way to act on exactly one of them.
  *
- * Same local-vs-UTC convention as `isLiveJoinable` and `getCurrentClass`: now is
- * read in the browser's local time, the period bounds are stored as UTC
- * wall-clock. That is the timetable block's standing convention, not a choice
- * made here — it lines up for a viewer in the school's timezone, which is the
- * case that matters.
+ * `now` is the school's clock (`schoolNow`); the period bounds are stored as UTC
+ * wall-clock, so both sides are school wall-clock on any device.
  */
 export function isRowLiveJoinable(
   startTime: Date | string,
   endTime: Date | string,
+  now: SchoolNow,
   windowMin = 10
 ): boolean {
-  const now = new Date()
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMin = now.minutesOfDay
   const start = new Date(startTime)
   const end = new Date(endTime)
   const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
@@ -189,9 +187,8 @@ export type LiveSlotStatus = "live" | "upcoming" | "missed"
 /**
  * Which lamp is lit for this slot.
  *
- * Keeps the block's local-vs-UTC convention (browser-local `now`, UTC-extracted
- * wall-clock period bounds) — the same one `isRowLiveJoinable` and the role
- * views use. Match it; don't fix one side in isolation.
+ * `now` is the school's clock (`schoolNow`), compared with the UTC-extracted
+ * wall-clock period bounds.
  *
  * Callers must only ask this of TODAY's slots. It reads clock time alone, so a
  * Monday period would otherwise report "missed" all week — the join/indicator
@@ -199,10 +196,10 @@ export type LiveSlotStatus = "live" | "upcoming" | "missed"
  */
 export function liveSlotStatus(
   startTime: Date | string,
-  endTime: Date | string
+  endTime: Date | string,
+  now: SchoolNow
 ): LiveSlotStatus {
-  const now = new Date()
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMin = now.minutesOfDay
   const start = new Date(startTime)
   const end = new Date(endTime)
   const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()

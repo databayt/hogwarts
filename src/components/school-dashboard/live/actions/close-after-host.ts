@@ -13,6 +13,7 @@ import "server-only"
 import { db } from "@/lib/db"
 
 import { HOST_GONE_HOLD_MS, shouldCloseAfterHost } from "../join-window"
+import { getRoomServiceClient, isLiveKitConfigured } from "../livekit/client"
 import { closeRoom } from "../livekit/close-room"
 import { syncLiveAttendance } from "./attendance-sync"
 
@@ -62,6 +63,16 @@ export function scheduleCloseAfterHost(input: {
   }
 }
 
+/** The video server answering "no such room" — as opposed to not answering. */
+function isRoomMissing(err: unknown): boolean {
+  const e = err as { status?: number; code?: string; message?: string }
+  return (
+    e?.status === 404 ||
+    e?.code === "not_found" ||
+    /not found|does not exist/i.test(e?.message ?? "")
+  )
+}
+
 /**
  * Close the class when the rule says so: live, timetable, not practice, bell
  * rung, no host in the room. Re-reads everything (scoped by school) — a host
@@ -83,6 +94,7 @@ export async function closeIfHostGone(
         isPractice: true,
         scheduledEnd: true,
         roomName: true,
+        teacher: { select: { userId: true } },
         recordings: {
           where: { status: { in: ["pending", "processing"] } },
           select: { egressId: true },
@@ -112,6 +124,52 @@ export async function closeIfHostGone(
       })
     ) {
       return false
+    }
+
+    // The rows above come from webhooks. A webhook lost while the server
+    // restarted would make a teaching teacher look absent — so before closing,
+    // ask the video server who is actually in the room.
+    if (isLiveKitConfigured()) {
+      const hostRows = await db.conferenceParticipant.findMany({
+        where: { sessionId, schoolId, role: { in: ["HOST", "CO_HOST"] } },
+        select: { id: true, userId: true, activeSince: true },
+      })
+      const hostIds = new Set<string>(hostRows.map((h) => h.userId))
+      if (session.teacher?.userId) hostIds.add(session.teacher.userId)
+
+      let identities: string[]
+      try {
+        const live = await getRoomServiceClient().listParticipants(
+          session.roomName
+        )
+        identities = live.map((p) => p.identity)
+      } catch (err) {
+        if (!isRoomMissing(err)) {
+          // Unreachable: never close on a guess — the 15-minute job retries.
+          console.error("[live-class] close-after-host room check failed", {
+            schoolId,
+            sessionId,
+            err: err instanceof Error ? err.message : err,
+          })
+          return false
+        }
+        identities = [] // no such room: nobody is in it
+      }
+
+      const present = identities.filter((id) => hostIds.has(id))
+      if (present.length > 0) {
+        // Repair the row so the next check agrees with the video server.
+        const stale = hostRows
+          .filter((h) => h.activeSince === null && present.includes(h.userId))
+          .map((h) => h.id)
+        if (stale.length > 0) {
+          await db.conferenceParticipant.updateMany({
+            where: { id: { in: stale }, schoolId, activeSince: null },
+            data: { activeSince: new Date() },
+          })
+        }
+        return false
+      }
     }
 
     const { count } = await db.conference.updateMany({
