@@ -13,6 +13,7 @@
 #                                        #   REMOTE=root@server …      the copy runs on that server
 #   scripts/db/move-region.sh cutover    # freeze → copy → compare → secrets → deploy → restart → verify
 #   scripts/db/move-region.sh rollback   # old secrets back → deploy → restart → unfreeze
+#   scripts/db/move-region.sh freeze-test # lock every table → a write through the pooler must wait → release; no copy
 #   scripts/db/move-region.sh verify     # health + database round trip of the live site
 #
 # Secrets: the OLD urls come from the Keychain (cf-hogwarts-*), the NEW ones
@@ -69,16 +70,23 @@ with_params_of() {
   printf '%s%s' "$base" "${q:+?$q}"
 }
 
+# Read KEY=VALUE lines into the environment WITHOUT evaluating them as shell —
+# a connection string's '&' would otherwise background half of the line.
+load_env_file() {
+  local k v
+  while IFS='=' read -r k v || [[ -n $k ]]; do
+    [[ $k =~ ^[A-Z_][A-Z0-9_]*$ ]] || continue
+    printf -v "$k" '%s' "$v"; export "${k?}"
+  done < "$1"
+}
+
 load_urls() {
   OLD_POOLED=${OLD_DATABASE_URL:-$(kc cf-hogwarts-DATABASE_URL)}
   OLD_DIRECT=${OLD_DIRECT_URL:-$(kc cf-hogwarts-DIRECT_URL)}
   OLD_EVO=${OLD_EVOLUTION_DATABASE_URL:-$(kc cf-hogwarts-EVOLUTION_DATABASE_URL)}
   if [[ -z ${EU_DIRECT_URL:-} ]]; then
     [[ -s $EU_ENV ]] || die "$EU_ENV is missing — run: scripts/db/move-region.sh prepare"
-    set -a
-    # shellcheck disable=SC1090
-    . "$EU_ENV"
-    set +a
+    load_env_file "$EU_ENV"
   fi
   : "${EU_DATABASE_URL:?}" "${EU_DIRECT_URL:?}" "${EU_EVOLUTION_DATABASE_URL:?}"
   [[ $(host_of "$OLD_DIRECT") != "$(host_of "$EU_DIRECT_URL")" ]] || die "old and new hosts are the same — the Keychain was already re-pointed"
@@ -209,29 +217,95 @@ copy_phase() {
 
 # Writes stop, reads keep working. A role default only reaches NEW backends, so
 # the open ones are closed; the pooler opens fresh ones that inherit it.
-freeze() {
-  say "freeze: old database → read-only"
-  "$PG/psql" -X -q -v ON_ERROR_STOP=1 "$PG_OLD_DIRECT" <<'SQL'
-ALTER ROLE neondb_owner SET default_transaction_read_only = on;
-SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity
-WHERE usename = 'neondb_owner' AND pid <> pg_backend_pid();
+# Writes are frozen with a TABLE LOCK held for the whole copy. Two simpler
+# freezes failed on Neon (2026-11-22):
+#   - a role default (`ALTER ROLE … default_transaction_read_only`): the pooler
+#     sets it back to `off` on every pooled session, and its server connections
+#     survive a terminate;
+#   - revoking write privileges: neondb_owner inherits pg_write_all_data through
+#     neon_superuser, so no revoke can stop it.
+# A lock does not care who asks. One session per database holds
+# `LOCK TABLE <every table> IN EXCLUSIVE MODE`: reads (the dump, the compare,
+# the site's pages) go on, every INSERT/UPDATE/DELETE waits behind it. The
+# holder is a psql fed through a fifo so the lock outlives each command.
+LOCKS=()   # "pid fifo-fd" of each holder
+
+# Hold the lock on every user table of $2 (named $1) until release_locks.
+hold_lock() {
+  local name=$1 url=$2 fifo=$MOVE_DIR/lock-$1.fifo out=$MOVE_DIR/lock-$1.out tables fd
+  tables=$("$PG/psql" -X -A -t -q -v ON_ERROR_STOP=1 "$url" -c "
+    SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY schemaname, tablename)
+    FROM pg_tables WHERE schemaname !~ '^pg_' AND schemaname <> 'information_schema'")
+  [[ -n $tables ]] || die "$name: no table to lock"
+  rm -f "$fifo" "$out"; mkfifo "$fifo"
+  "$PG/psql" -X -q -v ON_ERROR_STOP=1 "$url" < "$fifo" > "$out" 2>&1 &
+  local pid=$!
+  # macOS bash 3.2 has no {fd} allocation: fixed descriptors, 7 + the holder's index.
+  fd=$((7 + ${#LOCKS[@]}))
+  eval "exec $fd> \"\$fifo\""
+  LOCKS+=("$pid $fd")
+  # lock_timeout: a transaction already writing gets 30 s to finish, then we give up (unfrozen).
+  printf "SET lock_timeout = '30s';\nBEGIN;\nLOCK TABLE %s IN EXCLUSIVE MODE;\n\\\\echo LOCKED\n" "$tables" >&$fd
+  local i
+  for i in $(seq 1 70); do
+    grep -q '^LOCKED' "$out" 2>/dev/null && { say "$name: every table locked (writes wait)"; return 0; }
+    kill -0 "$pid" 2>/dev/null || break
+    sleep 0.5
+  done
+  die "$name: could not take the lock: $(tail -3 "$out" 2>/dev/null)"
+}
+
+release_locks() {
+  local entry pid fd
+  (( ${#LOCKS[@]} )) || return 0
+  for entry in "${LOCKS[@]}"; do
+    pid=${entry% *}; fd=${entry#* }
+    { printf 'ROLLBACK;\n\\q\n' >&$fd; } 2>/dev/null || true
+    eval "exec $fd>&-" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+  done
+  LOCKS=()
+  rm -f "$MOVE_DIR"/lock-*.fifo
+}
+
+# 0 when a real write through $1 is refused within 2 s (it waits on the lock).
+write_blocked() {
+  local t
+  t=$("$PG/psql" -X -A -t -q -v ON_ERROR_STOP=1 "$1" -c "
+    SELECT format('%I.%I', schemaname, tablename) FROM pg_tables
+    WHERE schemaname !~ '^pg_' AND schemaname <> 'information_schema' ORDER BY 1 LIMIT 1")
+  ! "$PG/psql" -X -q -v ON_ERROR_STOP=1 "$1" >/dev/null 2>&1 <<SQL
+SET lock_timeout = '2s';
+BEGIN;
+INSERT INTO $t SELECT * FROM $t WHERE false;
+ROLLBACK;
 SQL
-  sleep 2
-  if "$PG/psql" -X -q "$PG_OLD_POOLED" -c 'CREATE TEMP TABLE _freeze_probe (x int)' >/dev/null 2>&1; then
-    die "freeze failed: a write still succeeds"
-  fi
-  say "freeze: confirmed — a write is refused"
+}
+
+freeze() {
+  say "freeze: lock every table of both old databases"
+  hold_lock neondb "$PG_OLD_DIRECT"
+  hold_lock evolution "$PG_OLD_EVO"
+  # Asked through the POOLED url — the connection the app actually uses.
+  write_blocked "$PG_OLD_POOLED" || die "freeze failed: a write through the pooler still went through"
+  write_blocked "$PG_OLD_EVO" || die "freeze failed: a write to evolution still went through"
+  say "freeze: confirmed — a write through the pooler waits and times out"
 }
 
 unfreeze() {
-  say "unfreeze: old database → read-write"
-  # The session must lift its own read-only default first, or the ALTER is refused.
-  "$PG/psql" -X -q -v ON_ERROR_STOP=1 "$PG_OLD_DIRECT" <<'SQL'
-SET default_transaction_read_only = off;
-ALTER ROLE neondb_owner RESET default_transaction_read_only;
-SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity
-WHERE usename = 'neondb_owner' AND pid <> pg_backend_pid();
-SQL
+  say "unfreeze: release the locks"
+  release_locks
+  # Leftovers of the earlier freezes, in case a run was interrupted.
+  "$PG/psql" -X -q "$PG_OLD_DIRECT" -c 'SET default_transaction_read_only = off' \
+    -c 'ALTER ROLE neondb_owner RESET default_transaction_read_only' >/dev/null 2>&1 || true
+  write_blocked "$PG_OLD_POOLED" && die "unfreeze: writes are still refused — check by hand"
+  say "unfreeze: confirmed — writes go through again"
+}
+
+# 1 when every table in $1 accepts a write (the new database, before the switch).
+all_writable() {
+  write_blocked "$1" && { echo 0; return; }
+  echo 1
 }
 
 # Three secrets → Worker, then the only sequence that delivers them to the
@@ -249,8 +323,35 @@ point_app_at() {
   pnpm exec wrangler secret bulk "$out" >/dev/null; rm -f "$out"
   say "deploy from $CF_BUILD_DIR"
   CF_BUILD_DIR=$CF_BUILD_DIR scripts/deploy-cloudflare.sh "$PROD_ENV" deploy
-  say "restart the container with the new secrets"
-  curl -fsS -X POST "$SITE/__ops/container/restart" -H "authorization: Bearer $(kc cf-hogwarts-CRON_SECRET)" >/dev/null
+}
+
+# Restart the container until the app's connections show up on $1 (a libpq URL
+# of the database the app should now use). A restart sent seconds after the
+# deploy can reach the PREVIOUS Worker version, whose Durable Object still holds
+# the old secrets — the container then comes back on the old database (first
+# cutover, 2026-11-22 21:43: switched secrets, restarted, still 101 ms). So:
+# restart, let a request through, ask the target who connected since; retry.
+restart_until_on() {
+  local target=$1 label=$2 attempt t0 n
+  for attempt in 1 2 3 4 5; do
+    sleep 30   # the new version propagates
+    t0=$(date +%s)
+    say "restart the container (attempt $attempt) — expecting it on $label"
+    curl -fsS -X POST "$SITE/__ops/container/restart" -H "authorization: Bearer $(kc cf-hogwarts-CRON_SECRET)" >/dev/null || true
+    local i
+    for i in $(seq 1 30); do curl -fsS -m 20 "$SITE/api/health" >/dev/null 2>&1 && break; sleep 4; done
+    curl -fsS -m 20 "$SITE/api/health" >/dev/null 2>&1 || true
+    n=$("$PG/psql" -X -A -t -q "$target" -c "
+      SELECT count(*) FROM pg_stat_activity
+      WHERE usename = 'neondb_owner' AND pid <> pg_backend_pid()
+        AND backend_start > to_timestamp($t0)" 2>/dev/null || echo 0)
+    if [[ ${n:-0} =~ ^[0-9]+$ ]] && (( n > 0 )); then
+      say "the app is on $label ($n new connections since the restart)"
+      return 0
+    fi
+    say "no connection from the app on $label yet"
+  done
+  return 1
 }
 
 verify() {
@@ -321,9 +422,18 @@ case $MODE in
     trap 'rc=$?; if (( rc )); then say "FAILED before the switch — unfreezing the old database"; unfreeze || true; fi' EXIT
     freeze
     copy_phase 1
-    trap - EXIT
-    say "copy verified in $(elapsed $T); switching the app"
+    [[ $(all_writable "$PG_EU_DIRECT") == 1 && $(all_writable "$PG_EU_EVO") == 1 ]] \
+      || die "the new databases are not fully writable — not switching"
+    say "copy verified in $(elapsed $T); new databases writable; switching the app"
     point_app_at "$EU_DATABASE_URL" "$EU_DIRECT_URL" "$EU_EVOLUTION_DATABASE_URL"
+    if ! restart_until_on "$PG_EU_DIRECT" "the Frankfurt database"; then
+      say "the app never reached Frankfurt — putting the old secrets back BEFORE unlocking"
+      point_app_at "$OLD_POOLED" "$OLD_DIRECT" "$OLD_EVO"
+      restart_until_on "$PG_OLD_DIRECT" "the old database" \
+        || say "!! could not confirm the app on the old database either — check by hand"
+      die "cutover abandoned; the old database stays the only one in use"
+    fi
+    trap - EXIT
     if verify; then
       repoint_local
       say "DONE. The old project stays frozen as the fallback: scripts/db/move-region.sh rollback"
@@ -334,15 +444,22 @@ case $MODE in
     ;;
   rollback)
     [[ -s $MOVE_DIR/old.env ]] || die "$MOVE_DIR/old.env is missing (written by cutover)"
-    set -a; . "$MOVE_DIR/old.env"; set +a
-    PG_OLD_DIRECT=$(libpq_url "$OLD_DIRECT_URL")
+    load_env_file "$MOVE_DIR/old.env"
+    PG_OLD_DIRECT=$(libpq_url "$OLD_DIRECT_URL"); PG_OLD_POOLED=$(libpq_url "$OLD_DATABASE_URL"); PG_OLD_EVO=$(libpq_url "$OLD_EVOLUTION_DATABASE_URL")
     point_app_at "$OLD_DATABASE_URL" "$OLD_DIRECT_URL" "$OLD_EVOLUTION_DATABASE_URL"
+    restart_until_on "$PG_OLD_DIRECT" "the old database" || say "!! could not confirm the app on the old database — check by hand"
     unfreeze
     security add-generic-password -U -s cf-hogwarts-DATABASE_URL -a abdout -w "$OLD_DATABASE_URL"
     security add-generic-password -U -s cf-hogwarts-DIRECT_URL -a abdout -w "$OLD_DIRECT_URL"
     security add-generic-password -U -s cf-hogwarts-EVOLUTION_DATABASE_URL -a abdout -w "$OLD_EVOLUTION_DATABASE_URL"
     MAX_DB_MS=400 verify || true
     say "rolled back to the old database. Anything written to the new one since the cutover is NOT here."
+    ;;
+  freeze-test)   # freeze, check, unfreeze — a few seconds of refused writes, no copy
+    load_urls
+    trap 'rc=$?; if (( rc )); then say "freeze-test failed — unfreezing"; unfreeze || true; fi' EXIT
+    T=$SECONDS; freeze; unfreeze; trap - EXIT
+    say "freeze-test passed: refused and restored in $(elapsed $T)"
     ;;
   verify) verify ;;
   *) die "unknown mode: $MODE" ;;
