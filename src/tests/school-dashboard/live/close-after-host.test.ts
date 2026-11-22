@@ -61,8 +61,8 @@ describe("shouldCloseAfterHost", () => {
   ])("does not close with %s", (_name, patch) => {
     expect(shouldCloseAfterHost({ ...base, ...patch })).toBe(false)
   })
-  it("holds 90 seconds", () => {
-    expect(HOST_GONE_HOLD_MS).toBe(90_000)
+  it("holds two and a half minutes — longer than a weak line's slowest reconnect", () => {
+    expect(HOST_GONE_HOLD_MS).toBe(150_000)
   })
 })
 

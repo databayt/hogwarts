@@ -83,8 +83,10 @@ function clampLead(lead: number | null | undefined): number {
 
 /** How long a timetable class's host must be gone, after the bell, before the
  *  room is closed under the students. A teacher who drops and reconnects in
- *  this time finds the class as she left it. */
-export const HOST_GONE_HOLD_MS = 90_000
+ *  this time finds the class as she left it. Sized from the video server's
+ *  logs for a teacher on a weak line (2026-11-21): her reconnects took 4–84
+ *  seconds, so ninety would have closed a class running over on her. */
+export const HOST_GONE_HOLD_MS = 150_000
 
 /**
  * Should a timetable class close now because its teacher has left after the

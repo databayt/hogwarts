@@ -20,7 +20,8 @@ two hours early.
 
 - **A timetable class closes with its time.** After the bell, an empty room ends a `live` class
   at once (`livekit/webhook.ts`; a `scheduled` row keeps the ten-minute grace so a late teacher
-  can still open it). When a host or co-host leaves, a timer checks ninety seconds later — or
+  can still open it). When a host or co-host leaves, a timer checks two and a half minutes later (her slowest
+  reconnect on 11-21 was 84 seconds) — or
   five seconds after the bell if the bell is still to come — and closes the class if no host is
   back (`actions/close-after-host.ts`, rule `shouldCloseAfterHost` in `join-window.ts`). The
   end-stale job runs the same check first, and moved from every 30 minutes to every 15
@@ -49,7 +50,7 @@ two hours early.
 **Not done.**
 
 - Nothing here has run in a real room. After the deploy: two back-to-back practice classes, the
-  teacher leaves the first after its bell, the first must read "ended" within two minutes and
+  teacher leaves the first after its bell, the first must read "ended" within three minutes and
   the end screen must offer the second.
 - A stage principal has no way to follow her stage's classes: supervision is one teacher per
   section (`Section.homeroomTeacherId`). The middle-stage principal has no account at all.
