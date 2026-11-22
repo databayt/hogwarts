@@ -47,6 +47,15 @@ two hours early.
   a class. Students already saw links on the web page and in the app; nothing wrote them except
   the scheduling wizard.
 
+- **Never closed under a teacher (same day, after a design review).** Host presence comes only
+  from webhooks; one lost while the server restarts would make a teaching teacher look absent
+  and close her class at the bell. `closeIfHostGone` now asks the video server who is in the
+  room first (`listParticipants`): a host there keeps the class and repairs the row; a missing
+  room closes as before; an unreachable server closes nothing on that pass.
+- **The scheduling wizard** (`form.tsx`) takes "today" and its prefilled times from the school's
+  clock (`schoolNow`), like `schedule-form.tsx` since 11-17 — a teacher in Bahrain had her
+  classes refused. See `timetable/ISSUE.md` for the same fault on the timetable page.
+
 **Not done.**
 
 - Nothing here has run in a real room. After the deploy: two back-to-back practice classes, the

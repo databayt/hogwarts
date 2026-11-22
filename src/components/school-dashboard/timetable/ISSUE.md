@@ -11,6 +11,34 @@ docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-10-04
 ---
 
+## The school's clock, not the device's — 2026-11-22 (hogwarts#490)
+
+Al-Ibda's clock is Africa/Khartoum; many of its teachers and families are in Saudi Arabia,
+Bahrain, Qatar (one hour ahead) and the UAE (two). The timetable views read "now" from the
+browser (`new Date().getHours()`, `getDay()`) and compared it with the school's wall-clock
+periods, so for them a class read "missed" at the moment it started and the join control was
+gone. A teacher in Bahrain reported exactly that on 11-21. The old comments in
+`views/live-join-button.tsx` called this "the block's standing convention … it lines up for a
+viewer in the school's timezone, which is the case that matters" — at an online school it is
+not the case that matters.
+
+- `school-now.ts` → `schoolNow(timeZone, at)`: minute of day, weekday and calendar date in the
+  school's zone, through `Intl.DateTimeFormat`. No imports; a bad zone falls back to the device.
+- The zone reaches the views through the school context (`useSchoolTimeZone()` in
+  `context/school-context.tsx` — the layout's school row already carries `timezone`).
+- `isLiveJoinable`, `isRowLiveJoinable` and `liveSlotStatus` take a `SchoolNow` (the object, so a
+  stale call fails to compile). Callers: `simple-grid`, `slot-detail-dialog`, `guardian-view`,
+  `use-slot-open` (its fallback only — the path with server `joinWindows` was already right),
+  `student-view`, and `parent-portal/child-today-live`.
+- The Android app had the same fault and the same fix (`SchoolZone`, android-app `786561e`);
+  `GET /api/mobile/dashboard` now sends `school.timezone` for it.
+
+**Do not read the device's clock for anything a period is compared with.** Server code has
+`live/day-window.ts`; client code has `schoolNow`.
+
+Not verified: seen in a browser with the zone emulated. Unit tests cover the helper (Khartoum,
+Riyadh, Dubai, the midnight edge) and the three functions around a 16:00–17:00 period.
+
 ## Make-up classes above the grid, first screen without a fetch — 2026-11-21 (hogwarts#490)
 
 - A make-up class («حصة تعويضية») has no timetable slot, so the grid cannot draw it.
