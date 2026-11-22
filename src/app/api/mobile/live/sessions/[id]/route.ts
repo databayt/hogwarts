@@ -188,7 +188,12 @@ export async function GET(
           ? (at?.markLink ?? "Go to attendance")
           : null,
       labels: {
-        upcoming: st?.upcoming ?? "The class has not started yet",
+        // Past the start time a scheduled class is waiting for someone to go in: "not started yet"
+        // read as a dead end to a teacher whose Join button sat right under it (نفحات, 11-22).
+        upcoming:
+          session.status === "scheduled" && session.scheduledStart.getTime() <= Date.now()
+            ? (st?.due ?? "It's class time — go in now")
+            : (st?.upcoming ?? "The class has not started yet"),
         starts_at: st?.startsAt ?? "Starts at {time}",
         starts_in: st?.startsIn ?? "Starts in {value}",
         live: st?.live ?? "The class is live now",

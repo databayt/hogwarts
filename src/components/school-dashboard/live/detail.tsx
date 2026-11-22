@@ -261,6 +261,7 @@ export async function LiveClassDetailContent({
           upcoming: st?.upcoming ?? "The class has not started yet",
           startsAt: st?.startsAt ?? "Starts at {time}",
           startsIn: st?.startsIn ?? "Starts in {value}",
+          due: st?.due ?? "It's class time — go in now",
           live: st?.live ?? "The class is live now",
           enter: st?.enter ?? "Enter the live class",
           ended: st?.ended ?? "The class has ended",

@@ -11,6 +11,8 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type SessionStateLabels = {
   upcoming: string
+  /** Start time has passed and the room is not open yet: "not started" read as a dead end (11-22). */
+  due?: string
   startsAt: string
   startsIn: string
   live: string
@@ -97,7 +99,9 @@ export function SessionState({
         tone={soon ? "primary" : "muted"}
         icon={<Clock className="h-5 w-5" />}
       >
-        <p className="font-medium">{labels.upcoming}</p>
+        <p className="font-medium">
+          {startMs <= now && labels.due ? labels.due : labels.upcoming}
+        </p>
         <p className="text-muted-foreground text-sm">
           {labels.startsAt.replace("{time}", fmtTime.format(startMs))}
           {startMs > now

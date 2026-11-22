@@ -624,6 +624,7 @@
   },
   "states": {
     "upcoming": "The class has not started yet",
+    "due": "It's class time — go in now",
     "startsAt": "Starts at {time}",
     "startsIn": "Starts in {value}",
     "live": "The class is live now",
