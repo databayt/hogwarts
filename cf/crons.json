@@ -8,7 +8,8 @@
       "/api/cron/process-broadcast-batches",
       "/api/cron/exam-lifecycle",
       "/api/cron/live-class-reminders",
-      "/api/cron/process-email-notifications"
+      "/api/cron/process-email-notifications",
+      "/api/cron/end-stale-live-classes"
     ],
     "0 * * * *": [
       "/api/cron/expire-announcements",
@@ -18,7 +19,6 @@
       "/api/cron/process-report-card-pdfs",
       "/api/cron/process-transcript-pdfs",
       "/api/cron/absence-followup",
-      "/api/cron/end-stale-live-classes",
       "/api/cron/process-document-jobs"
     ],
     "0 3 * * *": [

@@ -44,6 +44,7 @@ import {
   type RoomRelatedItem,
   type RoomShelfItem,
 } from "@/components/school-dashboard/live/room/shelves"
+import { resolveNextClassLabels } from "@/components/school-dashboard/live/next-class-card"
 import { getSlideOptions } from "@/components/school-dashboard/live/room/slide-options"
 import type { RoomTitleCardData } from "@/components/school-dashboard/live/room/title-card"
 import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
@@ -382,6 +383,8 @@ export default async function Page({ params }: Props) {
       slides={slides}
       card={card}
       viewerEmail={session.user.email ?? null}
+      nextClassLabels={resolveNextClassLabels(t?.nextClass)}
+      timeZone={timeZone}
       header={
         schoolLookup.success ? (
           <RoomPageHeader

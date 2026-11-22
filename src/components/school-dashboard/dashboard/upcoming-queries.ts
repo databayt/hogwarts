@@ -281,6 +281,27 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
   }
 }
 
+/**
+ * How many of today's sections are owed a register: those whose class has
+ * begun (by the school's clock) and that carry no attendance mark for today.
+ * A slot with no readable start time never counts. Pure.
+ */
+export function attendanceDueCount(
+  slots: { sectionId: string | null; startMs: number | null }[],
+  marked: ReadonlySet<string>,
+  nowMs: number
+): number {
+  const begun = new Set<string>()
+  for (const s of slots) {
+    if (s.sectionId && s.startMs !== null && s.startMs <= nowMs) {
+      begun.add(s.sectionId)
+    }
+  }
+  let due = 0
+  for (const id of begun) if (!marked.has(id)) due++
+  return due
+}
+
 async function getTeacherUpcomingData(userId: string, schoolId: string) {
   const teacher = await db.teacher.findFirst({
     where: { userId, schoolId },
@@ -360,7 +381,24 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
           select: { sectionId: true },
         }),
   ])
-  const attendanceDue = todaySectionIds.length - markedSections.length
+  // Only a class that has already begun can be owed a register. Counting the
+  // whole day told a teacher at 9:40 that two classes "await attendance" when
+  // her first one was at 16:00 — and that line outranked "your next class".
+  const attendanceDue = attendanceDueCount(
+    todaysClasses.map((slot) => ({
+      sectionId: slot.sectionId,
+      startMs: slot.period
+        ? (slotInstantsOn(tz, now, slot.period)?.scheduledStart.getTime() ??
+          null)
+        : null,
+    })),
+    new Set(
+      markedSections
+        .map((m) => m.sectionId)
+        .filter((id): id is string => !!id)
+    ),
+    now.getTime()
+  )
 
   const next = await currentOrNextSlot(
     schoolId,

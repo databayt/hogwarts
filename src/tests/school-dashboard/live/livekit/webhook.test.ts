@@ -26,6 +26,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+      count: vi.fn(async () => 0),
     },
     conferenceRecording: {
       findFirst: vi.fn(),
@@ -69,6 +70,11 @@ vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
 
 vi.mock("@/components/school-dashboard/live/livekit/egress", () => ({
   startCompositeEgress: (...a: unknown[]) => startCompositeEgress(...a),
+}))
+
+const scheduleCloseAfterHost = vi.fn(async () => undefined)
+vi.mock("@/components/school-dashboard/live/actions/close-after-host", () => ({
+  scheduleCloseAfterHost: (...a: unknown[]) => scheduleCloseAfterHost(...a),
 }))
 
 const SCHOOL_ID = "sch1"
@@ -181,6 +187,117 @@ describe("handleWebhookEvent — room lifecycle", () => {
         data: expect.objectContaining({ status: "ended" }),
       })
     )
+  })
+
+  it("room_finished AFTER the bell ends a LIVE timetable class at once (no join grace)", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "live",
+      scheduledEnd: new Date(Date.now() - 2 * 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "ended" }),
+      })
+    )
+  })
+
+  it("room_finished after the bell leaves the class open when someone is back in the room", async () => {
+    // The SFU reports the OLD room two minutes after it emptied; a teacher who
+    // walked back in meanwhile sits in a new room of the same class.
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "live",
+      scheduledEnd: new Date(Date.now() - 2 * 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    vi.mocked(db.conferenceParticipant.count).mockResolvedValueOnce(1)
+    await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("room_finished BEFORE the bell leaves a LIVE timetable class open", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "live",
+      scheduledEnd: new Date(Date.now() + 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("room_finished after the bell keeps the join grace for a SCHEDULED row", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "scheduled",
+      scheduledEnd: new Date(Date.now() - 2 * 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    await handleWebhookEvent(evt({ event: "room_finished" }))
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("participant_left of the HOST in a live timetable class arms the close timer", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "live",
+      scheduledEnd: new Date(Date.now() + 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(),
+      activeSince: new Date(),
+      durationSeconds: 0,
+      status: "joined",
+      role: "HOST",
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_left", participant: { identity: "u-teacher" } })
+    )
+    expect(scheduleCloseAfterHost).toHaveBeenCalledWith({
+      schoolId: SCHOOL_ID,
+      sessionId: SESSION_ID,
+      scheduledEnd: expect.any(Date),
+    })
+  })
+
+  it("participant_left of a student does not arm it", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      timetableId: "tt-1",
+      status: "live",
+      scheduledEnd: new Date(Date.now() + 60_000),
+      school: { conferenceRetentionDays: null },
+    } as never)
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-2",
+      joinedAt: new Date(),
+      activeSince: new Date(),
+      durationSeconds: 0,
+      status: "joined",
+      role: "PARTICIPANT",
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_left", participant: { identity: "u-stu" } })
+    )
+    expect(scheduleCloseAfterHost).not.toHaveBeenCalled()
   })
 
   it("room_finished on the PRACTICE room never ends it — back to scheduled, run marks cleared", async () => {

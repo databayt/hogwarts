@@ -11,7 +11,9 @@ import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { checkLiveClassPermission } from "@/components/school-dashboard/live/authorization"
+import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
+import { loadNextClassToday } from "@/components/school-dashboard/live/next-class"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 
@@ -49,9 +51,36 @@ export async function GET(
     const at = t?.attendanceNote
     const { session } = detail
     const locale = lang === "ar" ? "ar-AE" : "en-AE"
+    // The SCHOOL's zone, exactly as the web page formats: a bare format here
+    // runs on a UTC server and put every time two hours early in the app.
+    const school = await db.school.findUnique({
+      where: { id: auth.schoolId },
+      select: { timezone: true },
+    })
+    const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
     const when = (d: Date) =>
-      d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })
-    const day = (d: Date) => d.toLocaleDateString(locale, { dateStyle: "medium" })
+      d.toLocaleString(locale, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone,
+      })
+    const day = (d: Date) =>
+      d.toLocaleDateString(locale, { dateStyle: "medium", timeZone })
+
+    // A class that is over leads to the reader's next period today — and so
+    // does one whose bell has rung while its row is still open (the minute
+    // after a teacher steps out at the bell).
+    const bellRung =
+      !!session.scheduledEnd && session.scheduledEnd.getTime() <= Date.now()
+    const nextClass =
+      session.status === "ended" || session.status === "cancelled" || bellRung
+        ? await loadNextClassToday({
+            schoolId: auth.schoolId,
+            userId: auth.userId,
+            role: auth.role,
+            afterTimetableId: session.timetableId,
+          }).catch(() => null)
+        : null
 
     const rows: { label: string; value: string }[] = []
     if (session.section) rows.push({ label: t?.labels?.section ?? "Section", value: session.section.name })
@@ -122,6 +151,16 @@ export async function GET(
       status: session.status,
       status_label: (t?.status as Record<string, string> | undefined)?.[session.status] ?? session.status,
       scheduled_start: session.scheduledStart.toISOString(),
+      next: nextClass
+        ? {
+            timetable_id: nextClass.timetableId,
+            title: [nextClass.subject, nextClass.section]
+              .filter(Boolean)
+              .join(" · "),
+            starts_at: nextClass.startsAt.toISOString(),
+            ends_at: nextClass.endsAt.toISOString(),
+          }
+        : null,
       is_makeup: Boolean(makeupLinks?.makeupForId),
       makeup_for: makeupLinks?.makeupFor
         ? {

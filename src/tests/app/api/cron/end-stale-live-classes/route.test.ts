@@ -17,6 +17,10 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }))
+const closeIfHostGone = vi.fn(async () => false)
+vi.mock("@/components/school-dashboard/live/actions/close-after-host", () => ({
+  closeIfHostGone: (...a: unknown[]) => closeIfHostGone(...a),
+}))
 const closeRoom = vi.fn(async () => undefined)
 vi.mock("@/components/school-dashboard/live/livekit/close-room", () => ({
   closeRoom: (...a: unknown[]) => closeRoom(...a),
@@ -54,7 +58,8 @@ describe("end-stale-live-classes cron — auth", () => {
 describe("end-stale-live-classes cron — detection", () => {
   it("closes a timetable class 10 min after its bell, any other live session after 30", async () => {
     await GET(req())
-    const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
+    // calls[0] is the host-gone arm; the stale-live arm is the second read.
+    const call = vi.mocked(db.conference.findMany).mock.calls[1][0] as {
       where: {
         status: string
         deletedAt: null
@@ -73,6 +78,30 @@ describe("end-stale-live-classes cron — detection", () => {
   })
 })
 
+describe("end-stale-live-classes cron — host gone after the bell", () => {
+  it("asks for live, non-practice timetable classes past the bell and closes each through closeIfHostGone", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValueOnce([
+      { id: "lcs-1", schoolId: "school-1" },
+      { id: "lcs-2", schoolId: "school-2" },
+    ] as never)
+    closeIfHostGone.mockResolvedValueOnce(true).mockResolvedValueOnce(false)
+
+    const res = await GET(req())
+    const first = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
+      where: Record<string, unknown>
+    }
+    expect(first.where).toMatchObject({
+      status: "live",
+      isPractice: false,
+      timetableId: { not: null },
+      scheduledEnd: { lt: new Date(NOW) },
+    })
+    expect(closeIfHostGone).toHaveBeenCalledWith("school-1", "lcs-1")
+    expect(closeIfHostGone).toHaveBeenCalledWith("school-2", "lcs-2")
+    expect(((await res.json()) as { hostGone: number }).hostGone).toBe(1)
+  })
+})
+
 describe("end-stale-live-classes cron — the practice room", () => {
   it("skips practice rows in every arm (the live-past-clock scan and the never-started scan)", async () => {
     vi.mocked(db.conference.findMany).mockResolvedValue([
@@ -83,8 +112,8 @@ describe("end-stale-live-classes cron — the practice room", () => {
     const finds = vi
       .mocked(db.conference.findMany)
       .mock.calls.map((c) => c[0] as { where: { isPractice?: boolean } })
-    // Arm 1 (live past the clock) and arm 2 (scheduled, never started).
-    expect(finds).toHaveLength(2)
+    // Arm 0 (host gone), arm 1 (live past the clock), arm 2 (never started).
+    expect(finds).toHaveLength(3)
     for (const f of finds) expect(f.where.isPractice).toBe(false)
   })
 })

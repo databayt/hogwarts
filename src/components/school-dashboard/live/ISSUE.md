@@ -4,6 +4,60 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## From one class to the next — 2026-11-22 (teachers' group, week of 11-15)
+
+Read from the school's teachers' group and checked against production records and the video
+server's logs. **On `main`, typechecked, unit-tested; not deployed, not seen in a browser.**
+
+**What teachers met.** They teach back-to-back periods. A class its teacher had left stayed
+`live` until the end-stale job closed it — every 30 minutes, ten minutes after the bell — so a
+finished class showed as "live" 10–40 minutes into the next period and a tap went back into it.
+On 11-21 one teacher reached her next two classes 17 and 36 minutes late; another was told
+"today's class has ended" with nothing to tap. The Android app's class page printed every time
+two hours early.
+
+**What changed.**
+
+- **A timetable class closes with its time.** After the bell, an empty room ends a `live` class
+  at once (`livekit/webhook.ts`; a `scheduled` row keeps the ten-minute grace so a late teacher
+  can still open it). When a host or co-host leaves, a timer checks ninety seconds later — or
+  five seconds after the bell if the bell is still to come — and closes the class if no host is
+  back (`actions/close-after-host.ts`, rule `shouldCloseAfterHost` in `join-window.ts`). The
+  end-stale job runs the same check first, and moved from every 30 minutes to every 15
+  (`cf/crons.json`). Ad-hoc classes and the practice room are untouched.
+  - The timer is in the process. That is acceptable only because the app is one long-lived
+    container; the job is the backstop. A second container would need a queue instead.
+  - `room_finished` can describe a room that has already been replaced (the SFU reports it two
+    minutes after it emptied). The handler skips the close when anyone has an open span.
+- **"Your next class".** `next-class.ts` → `loadNextClassToday` (teacher: the slots she teaches
+  today, a confirmed substitute included; student: the section's). `NextClassCard` shows on the
+  join page (`over`, `cancelled`, `unavailable`), on the class page once the class is over or
+  its bell has rung, and on the room's end screen — there it is asked for when the class ends
+  (`actions/next-class.ts`), never at room load. A combined class is ONE class: every slot is
+  judged by the slot that owns its room, or a teacher leaving the G12 science room is offered
+  the arts slot of the class she just taught.
+- **The app.** `GET /api/mobile/live/join-slot/[timetableId]` is the join page as data, so a
+  timetable tap in the app opens the native room (the app's router sent slot links to the web).
+  `/api/mobile/live/sessions/[id]` formats in the school's zone and carries `next`.
+- **A link on the class page.** `addClassLink` / `removeClassLink` (`actions/resources.ts`) and
+  `class-link-form.tsx`: the class's teacher, or an admin, puts a link on the page at any time,
+  after the class too — the lesson she recorded and uploaded herself, for whoever missed it. It
+  answers the teacher who asked where to put a recorded lesson (11-17). http(s) only, ten links
+  a class. Students already saw links on the web page and in the app; nothing wrote them except
+  the scheduling wizard.
+
+**Not done.**
+
+- Nothing here has run in a real room. After the deploy: two back-to-back practice classes, the
+  teacher leaves the first after its bell, the first must read "ended" within two minutes and
+  the end screen must offer the second.
+- A stage principal has no way to follow her stage's classes: supervision is one teacher per
+  section (`Section.homeroomTeacherId`). The middle-stage principal has no account at all.
+  Either an admin account (what the secondary principal uses) or extra supervisors per section —
+  the school's call.
+- The teacher dashboard's "teaching analytics" charts still show placeholder numbers
+  (`dashboard/chart-section.tsx`, `defaultDataByRole`).
+
 ## Speed, make-up classes, lesson drafts — 2026-11-21 (hogwarts#490)
 
 The school's screen recordings show slow answers; RUM (real phones, 7 days, p75) agrees: the

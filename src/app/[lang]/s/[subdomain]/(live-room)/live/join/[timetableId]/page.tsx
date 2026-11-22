@@ -19,6 +19,11 @@ import {
 } from "@/components/school-dashboard/live/actions/join-slot"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { JoinAutoOpen } from "@/components/school-dashboard/live/join-auto-open"
+import { loadNextClassToday } from "@/components/school-dashboard/live/next-class"
+import {
+  NextClassCard,
+  resolveNextClassLabels,
+} from "@/components/school-dashboard/live/next-class-card"
 import { resolveClassAlertsLabels } from "@/components/school-dashboard/notifications/class-alerts-labels"
 import { ClassAlertsPrompt } from "@/components/school-dashboard/notifications/class-alerts-prompt"
 
@@ -92,7 +97,25 @@ export default async function Page({ params }: Props) {
     redirect(outcome.url)
   }
 
-  const [dictionary, school] = await Promise.all([dictionaryRead, schoolRead])
+  // A dead end is where a teacher with back-to-back periods gets lost: for the
+  // outcomes that say "not this class", offer the next one.
+  const nextRead =
+    schoolId &&
+    (outcome.kind === "over" ||
+      outcome.kind === "cancelled" ||
+      outcome.kind === "unavailable")
+      ? loadNextClassToday({
+          schoolId,
+          userId: session.user.id,
+          role: session.user.role,
+          afterTimetableId: timetableId,
+        }).catch(() => null)
+      : Promise.resolve(null)
+  const [dictionary, school, nextClass] = await Promise.all([
+    dictionaryRead,
+    schoolRead,
+    nextRead,
+  ])
   const t = dictionary?.liveClasses?.joinLink
 
   const time = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-US", {
@@ -175,6 +198,18 @@ export default async function Page({ params }: Props) {
         <ClassAlertsPrompt
           labels={resolveClassAlertsLabels(dictionary?.liveClasses?.alerts)}
           className="max-w-[44ch] justify-center"
+        />
+      ) : null}
+      {nextClass ? (
+        <NextClassCard
+          next={{
+            ...nextClass,
+            startsAt: nextClass.startsAt.toISOString(),
+            endsAt: nextClass.endsAt.toISOString(),
+          }}
+          lang={lang}
+          timeZone={school?.timezone || DEFAULT_SCHOOL_TZ}
+          labels={resolveNextClassLabels(dictionary?.liveClasses?.nextClass)}
         />
       ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">

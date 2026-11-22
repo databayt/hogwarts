@@ -16,11 +16,21 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
 import { AndroidAppCard } from "@/components/school-dashboard/live/android-app-card"
 import { AttendanceReview } from "@/components/school-dashboard/live/attendance-review"
+import {
+  ClassLinkForm,
+  RemoveClassLinkButton,
+  resolveClassLinkLabels,
+} from "@/components/school-dashboard/live/class-link-form"
 import { ClassWork } from "@/components/school-dashboard/live/class-work"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
 import { MakeupBadge } from "@/components/school-dashboard/live/makeup-badge"
+import { loadNextClassToday } from "@/components/school-dashboard/live/next-class"
+import {
+  NextClassCard,
+  resolveNextClassLabels,
+} from "@/components/school-dashboard/live/next-class-card"
 import {
   CancelMakeupButton,
   MakeupSheet,
@@ -80,10 +90,11 @@ export async function LiveClassDetailContent({
   plain = false,
 }: Props & { plain?: boolean }) {
   const tenant = await getTenantContext()
+  const viewerId = (await auth())?.user?.id
   const detail = await loadLiveClassDetail(
     id,
     {
-      userId: (await auth())?.user?.id,
+      userId: viewerId,
       role: tenant.role,
       schoolId: tenant.schoolId,
     },
@@ -131,8 +142,30 @@ export async function LiveClassDetailContent({
     redirect(`/${locale}/live/${session.id}/room`)
   }
 
+  // A class that is over leads somewhere: the reader's next period today.
+  // "Over" includes a class whose bell has rung but whose row is still open —
+  // a teacher who steps out at the bell lands here a minute before the row
+  // closes, and that minute is when she needs the way to her next class.
+  const bellRung =
+    !!session.scheduledEnd &&
+    new Date(session.scheduledEnd).getTime() <= Date.now()
+  const nextClass =
+    (session.status === "ended" ||
+      session.status === "cancelled" ||
+      bellRung) &&
+    viewerId &&
+    tenant.schoolId
+      ? await loadNextClassToday({
+          schoolId: tenant.schoolId,
+          userId: viewerId,
+          role: tenant.role,
+          afterTimetableId: session.timetableId,
+        }).catch(() => null)
+      : null
+
   const t = dictionary?.liveClasses
   const r = t?.references
+  const linkLabels = resolveClassLinkLabels(t?.classLink)
   const st = t?.states
   const at = t?.attendanceNote
   const mk = t?.makeup
@@ -154,6 +187,20 @@ export async function LiveClassDetailContent({
           <Badge>{t?.status?.[session.status] ?? session.status}</Badge>
         </div>
       </div>
+
+      {nextClass ? (
+        <NextClassCard
+          next={{
+            ...nextClass,
+            startsAt: nextClass.startsAt.toISOString(),
+            endsAt: nextClass.endsAt.toISOString(),
+          }}
+          lang={locale}
+          timeZone={timeZone}
+          labels={resolveNextClassLabels(t?.nextClass)}
+          className="max-w-none"
+        />
+      ) : null}
 
       {/* Make-up class («حصة تعويضية»): where it came from, or where it went.
           Every role reads these lines; the buttons are the owner's. */}
@@ -404,7 +451,7 @@ export async function LiveClassDetailContent({
         )}
       </div>
 
-      {hasReferences && (
+      {(hasReferences || makeup.ownsClass) && (
         <section className="space-y-4 rounded-lg border p-4">
           <h2 className={typography.h4}>{r?.title ?? "Lesson & references"}</h2>
 
@@ -558,9 +605,9 @@ export async function LiveClassDetailContent({
               </h3>
               <ul className="space-y-1 text-sm">
                 {linkResources.map((x) => (
-                  <li key={x.id}>
+                  <li key={x.id} className="flex items-center gap-2">
                     <a
-                      className="underline underline-offset-2"
+                      className="inline-flex min-h-11 min-w-0 items-center break-all underline underline-offset-2"
                       href={x.url!}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -571,11 +618,25 @@ export async function LiveClassDetailContent({
                           common one) keeps its natural direction. */}
                       {x.title || <span dir="ltr">{x.url}</span>}
                     </a>
+                    {makeup.ownsClass ? (
+                      <RemoveClassLinkButton
+                        sessionId={session.id}
+                        resourceId={x.id}
+                        labels={linkLabels}
+                      />
+                    ) : null}
                   </li>
                 ))}
               </ul>
             </div>
           )}
+
+          {/* The class's teacher (or an admin) adds a link at any time —
+              after the class too: the lesson she recorded, for whoever
+              missed it. */}
+          {makeup.ownsClass ? (
+            <ClassLinkForm sessionId={session.id} labels={linkLabels} />
+          ) : null}
         </section>
       )}
     </div>

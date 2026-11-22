@@ -13,6 +13,12 @@ import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
 import { joinLiveClass } from "./actions/tokens"
 import { AndroidAppCard } from "./android-app-card"
+import { getNextClassAfter } from "./actions/next-class"
+import {
+  NextClassCard,
+  type NextClassData,
+  type NextClassLabels,
+} from "./next-class-card"
 import type { RoomLabels } from "./room/labels"
 import type { SlideOption } from "./room/slide-options"
 import {
@@ -51,6 +57,9 @@ interface Props {
     card: RoomTitleCardLabels
   }
   slides: SlideOption[]
+  nextClassLabels?: NextClassLabels
+  /** The school's timezone, to print the next class's start in it. */
+  timeZone?: string
   /** The signed-in viewer's email, for the watermark's visible mark. The
    *  LiveKit participant NAME is a display name, not an address. */
   viewerEmail?: string | null
@@ -128,6 +137,8 @@ export function RoomClient({
   labels,
   slides,
   viewerEmail,
+  nextClassLabels,
+  timeZone,
 }: Props) {
   const router = useRouter()
   // No ticket until the viewer asks for one. Minting it is not a read: as
@@ -144,6 +155,22 @@ export function RoomClient({
   const waitTries = useRef(0)
   const [error, setError] = useState<string | null>(null)
   const [ended, setEnded] = useState<Ended | null>(null)
+  // The way forward once the class is over — asked for when it ends, so the
+  // answer is current and entering a room costs nothing for it.
+  const [nextClass, setNextClass] = useState<NextClassData | null>(null)
+  const endedKind = ended?.kind
+  useEffect(() => {
+    if (endedKind !== "ended") return
+    let cancelled = false
+    void getNextClassAfter(sessionId)
+      .then((next) => {
+        if (!cancelled) setNextClass(next)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [endedKind, sessionId])
 
   const join = useCallback(async () => {
     setJoining(true)
@@ -298,6 +325,14 @@ export function RoomClient({
         >
           {message}
         </p>
+        {ended?.kind === "ended" && nextClassLabels ? (
+          <NextClassCard
+            next={nextClass}
+            lang={locale}
+            timeZone={timeZone ?? "UTC"}
+            labels={nextClassLabels}
+          />
+        ) : null}
         <div className="flex gap-3">
           {ended?.kind === "lost" && (
             // A full reload re-runs the server join: fresh eligibility check,

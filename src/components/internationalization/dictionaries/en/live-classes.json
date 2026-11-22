@@ -606,6 +606,22 @@
     "assignments": "Assignments",
     "links": "Links"
   },
+  "classLink": {
+    "add": "Add a link",
+    "hint": "Recorded the lesson? Upload it to YouTube or Drive and paste its link here — students who missed the class will find it on this page.",
+    "url": "Link",
+    "urlPlaceholder": "https://",
+    "title": "Name (optional)",
+    "titlePlaceholder": "Lesson video",
+    "save": "Add",
+    "saving": "Adding…",
+    "cancel": "Cancel",
+    "saved": "The link is on the class page",
+    "failed": "The link was not added. Try again.",
+    "invalid": "Paste a full link that starts with https://",
+    "remove": "Remove link",
+    "removed": "The link was removed"
+  },
   "states": {
     "upcoming": "The class has not started yet",
     "startsAt": "Starts at {time}",
@@ -711,6 +727,12 @@
     "toLive": "Live classes",
     "unavailableHoliday": "The school is closed today.",
     "unavailableNoTeacher": "No teacher is assigned to this class yet — ask the school office."
+  },
+  "nextClass": {
+    "title": "Your next class",
+    "enter": "Enter the class",
+    "startsAt": "Starts at {time}",
+    "running": "Started"
   },
   "alerts": {
     "title": "Turn on class alerts to get a notification on this device before each class.",

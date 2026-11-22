@@ -95,7 +95,7 @@
     },
     {
       "path": "/api/cron/end-stale-live-classes",
-      "schedule": "*/30 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/expire-live-recordings",

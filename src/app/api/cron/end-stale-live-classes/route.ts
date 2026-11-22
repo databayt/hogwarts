@@ -1,12 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Cron: every 30 minutes (vercel.json `*/30`) — closes conference sessions
-// stuck in `live` long past their scheduled end. A LiveKit `room_finished` webhook normally ends a
-// session, but if it's never delivered (SFU restart, network blip) the row
-// would stay `live` forever and its attendance would never sync. This is the
-// backstop: flip those to `ended` (status-guarded so a concurrent webhook can't
-// be clobbered) and run the best-effort attendance sync for each.
+// Cron: every 15 minutes (cf/crons.json `*/15`) — closes conference sessions
+// that are over but still `live`.
+//
+// Arm 0: a timetable class whose bell has rung and whose teacher is no longer
+// in the room closes now, through `closeIfHostGone` (the rule lives there, and
+// the webhook's own timer uses it too) — so a finished class is not "live"
+// into the next period.
+//
+// Arm 1: a LiveKit `room_finished` webhook normally ends a session, but if
+// it's never delivered (SFU restart, network blip) the row would stay `live`
+// forever and its attendance would never sync. This is the backstop: flip
+// those to `ended` (status-guarded so a concurrent webhook can't be clobbered)
+// and run the best-effort attendance sync for each.
 //
 // Only LiveKit sessions ever reach `live` (external pasted-link sessions stay
 // `scheduled`), so no provider filter is needed on that arm.
@@ -19,6 +26,7 @@ import { after, NextResponse } from "next/server"
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
+import { closeIfHostGone } from "@/components/school-dashboard/live/actions/close-after-host"
 import { JOIN_GRACE_AFTER_END_MIN } from "@/components/school-dashboard/live/join-window"
 import { closeRoom } from "@/components/school-dashboard/live/livekit/close-room"
 
@@ -40,6 +48,25 @@ export async function GET(req: Request) {
   }
 
   const cutoff = new Date(Date.now() - STALE_GRACE_MINUTES * 60 * 1000)
+
+  // Arm 0: timetable classes past the bell with nobody hosting. The candidate
+  // read is cheap; `closeIfHostGone` re-reads presence and applies the rule,
+  // so a teacher still in the room keeps her class.
+  const bellRung = await db.conference.findMany({
+    where: {
+      status: "live",
+      deletedAt: null,
+      isPractice: false,
+      timetableId: { not: null },
+      scheduledEnd: { lt: new Date() },
+    },
+    select: { id: true, schoolId: true },
+    take: 1000,
+  })
+  let hostGone = 0
+  for (const s of bellRung) {
+    if (await closeIfHostGone(s.schoolId, s.id)) hostGone++
+  }
 
   // A TIMETABLE class closes by the clock: the room is there for its slot,
   // and once the slot's join window (end + JOIN_GRACE_AFTER_END_MIN) is over
@@ -147,6 +174,7 @@ export async function GET(req: Request) {
     ok: true,
     scanned: stale.length,
     ended,
+    hostGone,
     abandoned: abandoned.length,
     cancelled,
     recordingsFailed,

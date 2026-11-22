@@ -6,7 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
 import {
+  addClassLink,
   attachLiveClassResource,
+  removeClassLink,
   setClassHomework,
 } from "@/components/school-dashboard/live/actions/resources"
 
@@ -25,7 +27,12 @@ vi.mock("@/lib/db", () => ({
     conferenceParticipant: { findFirst: vi.fn() },
     quickAssessment: { count: vi.fn() },
     schoolAssignment: { count: vi.fn(), create: vi.fn() },
-    conferenceResource: { findFirst: vi.fn(), create: vi.fn() },
+    conferenceResource: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }))
 
@@ -52,6 +59,8 @@ beforeEach(() => {
   m(db.conferenceParticipant.findFirst).mockResolvedValue(null)
   m(db.conferenceResource.findFirst).mockResolvedValue(null)
   m(db.conferenceResource.create).mockResolvedValue({ id: "r1" })
+  m(db.conferenceResource.findMany).mockResolvedValue([])
+  m(db.conferenceResource.deleteMany).mockResolvedValue({ count: 1 })
   m(db.schoolAssignment.create).mockResolvedValue({ id: "a1" })
 })
 
@@ -186,5 +195,102 @@ describe("setClassHomework", () => {
       dueDate: "2026-10-20T08:00:00.000Z",
     })
     expect(r).toEqual({ success: true, data: { id: "a1" } })
+  })
+})
+
+describe("addClassLink", () => {
+  const VIDEO = "https://youtu.be/abc123"
+
+  it("stores an http(s) link on the class, scoped to the school, after the last row", async () => {
+    m(db.conferenceResource.findFirst).mockResolvedValueOnce({ order: 4 })
+    const r = await addClassLink({
+      sessionId: "s1",
+      url: `  ${VIDEO} `,
+      title: " فيديو الدرس ",
+    })
+    expect(r).toMatchObject({ success: true, data: { id: "r1" } })
+    expect(db.conferenceResource.create).toHaveBeenCalledWith({
+      data: {
+        schoolId: "school-1",
+        sessionId: "s1",
+        url: VIDEO,
+        title: "فيديو الدرس",
+        order: 5,
+      },
+      select: { id: true },
+    })
+  })
+
+  it.each([
+    ["javascript:alert(1)"],
+    ["data:text/html,<script>1</script>"],
+    ["youtu.be/abc123"],
+    ["https://"],
+    [""],
+  ])("refuses %s before touching the class", async (url) => {
+    const r = await addClassLink({ sessionId: "s1", url })
+    expect(r).toMatchObject({ success: false })
+    expect(requireContext).not.toHaveBeenCalled()
+    expect(db.conferenceResource.create).not.toHaveBeenCalled()
+  })
+
+  it("the same link twice is one link", async () => {
+    m(db.conferenceResource.findMany).mockResolvedValue([
+      { id: "r-old", url: VIDEO },
+    ])
+    const r = await addClassLink({ sessionId: "s1", url: VIDEO })
+    expect(r).toMatchObject({ success: true, data: { id: "r-old" } })
+    expect(db.conferenceResource.create).not.toHaveBeenCalled()
+  })
+
+  it("stops at ten links", async () => {
+    m(db.conferenceResource.findMany).mockResolvedValue(
+      Array.from({ length: 10 }, (_, i) => ({
+        id: `r${i}`,
+        url: `https://example.com/${i}`,
+      }))
+    )
+    const r = await addClassLink({ sessionId: "s1", url: VIDEO })
+    expect(r).toMatchObject({ success: false })
+    expect(db.conferenceResource.create).not.toHaveBeenCalled()
+  })
+
+  it("a teacher who does not hold the class is refused", async () => {
+    m(db.conference.findFirst).mockResolvedValue({
+      id: "s1",
+      title: "Algebra",
+      subjectId: "sub-1",
+      sectionId: "sec-1",
+      teacherId: "t2",
+      teacher: { userId: "u-other" },
+      section: { gradeId: "g-7" },
+    })
+    const r = await addClassLink({ sessionId: "s1", url: VIDEO })
+    expect(r).toMatchObject({ success: false })
+    expect(db.conferenceResource.create).not.toHaveBeenCalled()
+  })
+})
+
+describe("removeClassLink", () => {
+  it("deletes only a LINK row of this class and school", async () => {
+    const r = await removeClassLink({ sessionId: "s1", resourceId: "r9" })
+    expect(r).toMatchObject({ success: true })
+    expect(db.conferenceResource.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "r9",
+        schoolId: "school-1",
+        sessionId: "s1",
+        url: { not: null },
+        schoolExamId: null,
+        schoolAssignmentId: null,
+        quickAssessmentId: null,
+      },
+    })
+  })
+
+  it("reports a row that is not a link of this class", async () => {
+    m(db.conferenceResource.deleteMany).mockResolvedValue({ count: 0 })
+    const r = await removeClassLink({ sessionId: "s1", resourceId: "qa-row" })
+    expect(r).toMatchObject({ success: false })
   })
 })

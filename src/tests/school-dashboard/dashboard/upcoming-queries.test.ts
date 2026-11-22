@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getStudentScopes } from "@/lib/teaching-scope"
-import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcoming-queries"
+import {
+  attendanceDueCount,
+  loadUpcomingData,
+} from "@/components/school-dashboard/dashboard/upcoming-queries"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -98,5 +101,43 @@ describe("loadUpcomingData", () => {
       pendingPayments: { count: 3 },
       overdueInvoices: { count: 1 },
     })
+  })
+})
+
+describe("attendanceDueCount", () => {
+  const NOON = Date.UTC(2026, 10, 21, 10, 0) // 12:00 in Khartoum
+  const HOUR = 60 * 60 * 1000
+
+  it("a class later today is not owed a register yet", () => {
+    const slots = [
+      { sectionId: "g4", startMs: NOON + 4 * HOUR },
+      { sectionId: "g5", startMs: NOON + 6 * HOUR },
+    ]
+    expect(attendanceDueCount(slots, new Set(), NOON)).toBe(0)
+  })
+
+  it("a class that has begun and is unmarked is owed one", () => {
+    const slots = [
+      { sectionId: "g4", startMs: NOON - HOUR },
+      { sectionId: "g5", startMs: NOON + HOUR },
+    ]
+    expect(attendanceDueCount(slots, new Set(), NOON)).toBe(1)
+  })
+
+  it("a marked section is never owed, and two periods of one section count once", () => {
+    const slots = [
+      { sectionId: "g4", startMs: NOON - 2 * HOUR },
+      { sectionId: "g4", startMs: NOON - HOUR },
+      { sectionId: "g5", startMs: NOON - HOUR },
+    ]
+    expect(attendanceDueCount(slots, new Set(["g5"]), NOON)).toBe(1)
+  })
+
+  it("a slot with no section or no readable start never counts", () => {
+    const slots = [
+      { sectionId: null, startMs: NOON - HOUR },
+      { sectionId: "g4", startMs: null },
+    ]
+    expect(attendanceDueCount(slots, new Set(), NOON)).toBe(0)
   })
 })

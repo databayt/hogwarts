@@ -13,6 +13,7 @@ import { notifyClassRecordingReady } from "@/components/school-dashboard/live/ac
 
 import { publishRecordingAsLessonVideo } from "../actions/publish-recording"
 import { nudgeWaiting } from "../actions/waiting-nudge"
+import { scheduleCloseAfterHost } from "../actions/close-after-host"
 import { transitionToLive } from "../actions/went-live"
 import { JOIN_GRACE_AFTER_END_MIN } from "../join-window"
 import { getLiveKitConfig, getLiveKitRecordingConfig } from "./client"
@@ -113,6 +114,7 @@ export async function handleWebhookEvent(
       timetableId: true,
       isPractice: true,
       scheduledEnd: true,
+      status: true,
       school: { select: { conferenceRetentionDays: true } },
     },
   })
@@ -181,6 +183,7 @@ type EventContext = {
     timetableId: string | null
     isPractice?: boolean
     scheduledEnd: Date | null
+    status?: string
     school: { conferenceRetentionDays: number }
   }
 }
@@ -242,16 +245,29 @@ async function applyEvent(
       }
       // A TIMETABLE class closes by the clock, not by an empty room: everyone
       // stepping out for a few minutes (the SFU's departure/empty timeout) is
-      // a break, not the end of the class. Inside the slot's window the row
-      // stays as it is and the next arrival re-opens the room (join-core);
-      // after the window the end-stale cron (or this event) closes it.
-      if (
-        session.timetableId &&
-        session.scheduledEnd &&
-        Date.now() <
-          session.scheduledEnd.getTime() + JOIN_GRACE_AFTER_END_MIN * 60_000
-      ) {
-        break
+      // a break, not the end of the class. A LIVE class is left alone only
+      // until the bell; after it an empty room is a finished class (the next
+      // period is waiting, and a row still "live" sends people back into this
+      // one). A `scheduled` row — nobody started it — keeps the join grace so
+      // a late teacher can still open it.
+      if (session.timetableId && session.scheduledEnd) {
+        const endMs = session.scheduledEnd.getTime()
+        const holdUntil =
+          session.status === "live"
+            ? endMs
+            : endMs + JOIN_GRACE_AFTER_END_MIN * 60_000
+        if (Date.now() < holdUntil) break
+        // This event may describe a room that has already been replaced: the
+        // SFU reports an empty room two minutes after the last person left,
+        // and a teacher who walked back in during those minutes is sitting in
+        // a NEW room of the same class. Ending the row here would close it on
+        // her. Anyone with an open span means the class is still on.
+        if (session.status === "live") {
+          const present = await db.conferenceParticipant.count({
+            where: { sessionId, schoolId, activeSince: { not: null } },
+          })
+          if (present > 0) break
+        }
       }
       // Only act on a session still in a pre-finished state — never clobber a
       // cancelled/ended row (which would corrupt audit + jitter actualEnd).
@@ -337,6 +353,7 @@ async function applyEvent(
             activeSince: true,
             durationSeconds: true,
             status: true,
+            role: true,
           },
         })
         if (existing) {
@@ -364,6 +381,21 @@ async function applyEvent(
             },
             select: { id: true },
           })
+          // The teacher of a timetable class left: if the bell has rung (or
+          // is close), arm the close timer. A host who comes back inside the
+          // hold keeps the class — the timer re-reads presence when it fires.
+          if (
+            session.timetableId &&
+            !session.isPractice &&
+            session.status === "live" &&
+            (existing.role === "HOST" || existing.role === "CO_HOST")
+          ) {
+            scheduleCloseAfterHost({
+              schoolId,
+              sessionId,
+              scheduledEnd: session.scheduledEnd,
+            })
+          }
         }
       }
       break

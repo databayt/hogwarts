@@ -80,3 +80,32 @@ function clampLead(lead: number | null | undefined): number {
   // negative lead would open the link after the class started.
   return Math.min(60, Math.max(0, Math.round(lead)))
 }
+
+/** How long a timetable class's host must be gone, after the bell, before the
+ *  room is closed under the students. A teacher who drops and reconnects in
+ *  this time finds the class as she left it. */
+export const HOST_GONE_HOLD_MS = 90_000
+
+/**
+ * Should a timetable class close now because its teacher has left after the
+ * bell? Only a `live`, non-practice, slot-anchored class with a schedule end
+ * that has passed and NO host (HOST / CO_HOST) in the room. Ad-hoc and
+ * practice rooms never close by this rule.
+ */
+export function shouldCloseAfterHost(opts: {
+  status: string
+  timetableId: string | null | undefined
+  isPractice: boolean | null | undefined
+  scheduledEnd: Date | null | undefined
+  nowMs: number
+  hostsPresent: number
+}): boolean {
+  return (
+    opts.status === "live" &&
+    Boolean(opts.timetableId) &&
+    !opts.isPractice &&
+    Boolean(opts.scheduledEnd) &&
+    opts.nowMs >= opts.scheduledEnd!.getTime() &&
+    opts.hostsPresent === 0
+  )
+}

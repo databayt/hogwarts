@@ -231,6 +231,104 @@ export async function attachLiveClassResource(input: {
   return { success: true as const, data: { id: row.id } }
 }
 
+/** A class carries a handful of links, not a link dump. */
+const CLASS_LINK_MAX = 10
+
+/**
+ * A link put on the class page by its teacher — most often the lesson she
+ * recorded herself and uploaded somewhere (YouTube, Drive, Telegram), for the
+ * students who missed the class. Works before, during and AFTER the class:
+ * the question came from a teacher whose class had already ended.
+ *
+ * Only http(s) is stored: the value is rendered as an `<a href>`, and a bare
+ * URL check admits `javascript:` and `data:`.
+ */
+export async function addClassLink(input: {
+  sessionId: string
+  url: string
+  title?: string
+}) {
+  const url = typeof input.url === "string" ? input.url.trim() : ""
+  const title =
+    typeof input.title === "string" ? input.title.trim().slice(0, 120) : ""
+  if (!isHttpUrl(url) || url.length > 2000) {
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  }
+
+  const host = await hostSession(input.sessionId)
+  if (!host.ok) return host.response
+  const { ctx } = host
+
+  const links = await db.conferenceResource.findMany({
+    where: {
+      schoolId: ctx.schoolId,
+      sessionId: input.sessionId,
+      url: { not: null },
+    },
+    select: { id: true, url: true },
+    take: CLASS_LINK_MAX + 1,
+  })
+  // The same link twice is one link (a double tap, a second try).
+  const same = links.find((l) => l.url === url)
+  if (same) return { success: true as const, data: { id: same.id } }
+  if (links.length >= CLASS_LINK_MAX) {
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  }
+
+  const last = await db.conferenceResource.findFirst({
+    where: { schoolId: ctx.schoolId, sessionId: input.sessionId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  })
+  const row = await db.conferenceResource.create({
+    data: {
+      schoolId: ctx.schoolId,
+      sessionId: input.sessionId,
+      url,
+      title: title || null,
+      order: (last?.order ?? -1) + 1,
+    },
+    select: { id: true },
+  })
+  refreshPage("/live")
+  return { success: true as const, data: { id: row.id } }
+}
+
+/** Take a link off the class page. Only link rows — never a quiz or homework. */
+export async function removeClassLink(input: {
+  sessionId: string
+  resourceId: string
+}) {
+  const host = await hostSession(input.sessionId)
+  if (!host.ok) return host.response
+  const { ctx } = host
+
+  const { count } = await db.conferenceResource.deleteMany({
+    where: {
+      id: input.resourceId,
+      schoolId: ctx.schoolId,
+      sessionId: input.sessionId,
+      url: { not: null },
+      schoolExamId: null,
+      schoolAssignmentId: null,
+      quickAssessmentId: null,
+    },
+  })
+  if (count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+  refreshPage("/live")
+  return { success: true as const }
+}
+
+function isHttpUrl(value: string): boolean {
+  if (!/^https?:\/\//i.test(value)) return false
+  try {
+    const u = new URL(value)
+    return (u.protocol === "http:" || u.protocol === "https:") && !!u.hostname
+  } catch {
+    return false
+  }
+}
+
 /**
  * Homework set as the class ends: an assignment filed under the class's own
  * subject and audience (its section, its grade, the active term) and
