@@ -12,6 +12,17 @@ import {
 import { SessionRevoked } from "./session-revoked"
 
 /**
+ * Who must swap the school's PIN for their own at first sign-in. Not students
+ * and parents: on 2026-11-22 every one of Al-Ibda's 26 failed sign-ins was a
+ * child or family who had picked a new PIN, forgotten it, and kept typing the
+ * school's — which the teacher kept re-sending. They keep the school's PIN
+ * (changing it stays possible in settings); staff still choose their own.
+ */
+export function mustSwapSchoolPin(role: string | null | undefined): boolean {
+  return role !== "STUDENT" && role !== "GUARDIAN"
+}
+
+/**
  * Renders the forced password-change modal when an admin reset left the user
  * with `mustChangePassword`, and signs out a session the reset revoked.
  *
@@ -34,7 +45,7 @@ export async function MustChangePasswordGate({
 }) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { mustChangePassword: true, tokenVersion: true },
+    select: { mustChangePassword: true, tokenVersion: true, role: true },
   })
   if (!user) return null
   // A reset since this session signed in revokes it (same read, no extra query).
@@ -42,6 +53,7 @@ export async function MustChangePasswordGate({
     return <SessionRevoked lang={lang} />
   }
   if (!user.mustChangePassword) return null
+  if (!mustSwapSchoolPin(user.role)) return null
   // Only the rare first-login render pays for the dictionary.
   const dictionary = await getDictionary(lang as Locale)
   const labels = (dictionary.auth as { firstLogin?: FirstLoginLabels })
