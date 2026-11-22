@@ -64,17 +64,22 @@ const STATUS_VARIANT: Record<
   failed: "destructive",
 }
 
-function formatTime(iso: string, locale: Locale): string {
+// In the SCHOOL's zone when it is known. Without one this printed the reader's
+// own clock: an admin in Riyadh read every class an hour late, and the server's
+// first render (UTC) never matched the browser's, so the table redrew itself.
+function formatTime(iso: string, locale: Locale, timeZone?: string): string {
   return new Date(iso).toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    ...(timeZone ? { timeZone } : {}),
   })
 }
 
 export const getLiveClassColumns = (
   dictionary: Dictionary["school"]["liveClasses"],
   locale: Locale,
-  callbacks?: ColumnCallbacks
+  callbacks?: ColumnCallbacks,
+  timeZone?: string
 ): ColumnDef<LiveClassRow>[] => {
   const t = dictionary
   const c = t.columns
@@ -153,8 +158,8 @@ export const getLiveClassColumns = (
       ),
       meta: { label: c.time, variant: "text" },
       cell: ({ row }) => {
-        const start = formatTime(row.original.scheduledStart, locale)
-        const end = formatTime(row.original.scheduledEnd, locale)
+        const start = formatTime(row.original.scheduledStart, locale, timeZone)
+        const end = formatTime(row.original.scheduledEnd, locale, timeZone)
         return (
           <span className="text-muted-foreground text-xs tabular-nums">
             {start} – {end}

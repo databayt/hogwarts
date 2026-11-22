@@ -1,5 +1,20 @@
 # Assignments -- Production Readiness Tracker
 
+## 2026-11-22 — open: due dates are printed in two zones
+
+Seen on `/assignments` in a browser on Gulf time (local, demo data): React reports a hydration
+mismatch on the phone card's line — «١٥ ديسمبر» from the server, «١٦ ديسمبر» in the browser.
+`date.ts` → `formatAssignmentDate` takes no time zone, so the server prints UTC and the browser
+its own zone; a due time between 20:00 and 24:00 UTC lands on different days, the page redraws
+itself, and two readers see two dates. Not fixed. Al-Ibda's 20 assignments have no due time in
+that range today (7 at 00:00 UTC, the rest by day), so nobody there sees it yet.
+
+Fix when touched: give `formatAssignmentDate` a `timeZone` and pass the school's — client callers
+have `useSchoolTimeZone()` (`context/school-context.tsx`), server callers the school row. Call
+sites: `assignment-card`, `columns`, `detail`, `my-assignments-content`, `submission-card`,
+`family-submission`, `submissions-review`. The same fault was fixed on the timetable page and in
+`live/` the same day (`timetable/ISSUE.md`).
+
 ## 2026-10-19 — online-school pass (LOCAL, not pushed) · `c45032510` `60fa1bdec`
 
 - [x] **The wizard never published.** Finishing it left the row DRAFT; students' lists hide drafts and

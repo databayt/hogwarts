@@ -33,6 +33,8 @@ import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import type { LiveClassRow } from "./columns"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { getLiveClassColumns } from "./columns"
 import { LiveClassForm } from "./form"
 import { deleteLiveClass, getLiveClasses } from "./list-actions"
@@ -148,16 +150,31 @@ function LiveClassesTableInner({
     [t, optimisticRemove, refresh]
   )
 
+  const timeZone = useSchoolTimeZone()
   const columns = useMemo(
     () =>
-      getLiveClassColumns(t, lang, {
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onView: handleView,
-        onJoinRoom: handleJoinRoom,
-        permissions,
-      }),
-    [t, lang, handleEdit, handleDelete, handleView, handleJoinRoom, permissions]
+      getLiveClassColumns(
+        t,
+        lang,
+        {
+          onEdit: handleEdit,
+          onDelete: handleDelete,
+          onView: handleView,
+          onJoinRoom: handleJoinRoom,
+          permissions,
+        },
+        timeZone
+      ),
+    [
+      t,
+      lang,
+      handleEdit,
+      handleDelete,
+      handleView,
+      handleJoinRoom,
+      permissions,
+      timeZone,
+    ]
   )
 
   const { table } = useDataTable<LiveClassRow>({
