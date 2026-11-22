@@ -325,12 +325,12 @@
       "en": "Pricing and payment"
     },
     "summary": {
-      "ar": "السعر لكل طالب، الشهر المجاني، الحاسبة، وخطة الدفع",
-      "en": "The per-student price, the free month, the calculator, the payment plan"
+      "ar": "السعر لكل طالب، الشهر المجاني، ما هو مشمول، وطريقة الدفع",
+      "en": "The per-student rate, the free month, what is included, how to pay"
     },
     "answer": {
-      "ar": "استخدم قسم «الأسعار المباشرة» أعلاه، ووجّه الزائر إلى حاسبة الأسعار المرفقة ليرى سعر مدرسته بعملته.",
-      "en": "Answer from the live pricing section above, and point the visitor to the attached price calculator to see their school's price in their currency."
+      "ar": "استخدم قسم «الأسعار المباشرة» أعلاه: السعر الواحد لكل طالب، والشهر الأول المجاني، وما هو مشمول، وطريقة الدفع. لا تعرض خصومات.",
+      "en": "Answer from the live pricing section above: the one rate per student, the free first month, what is included and how payment works. Do not offer discounts."
     },
     "keywords": [
       "سعر",
