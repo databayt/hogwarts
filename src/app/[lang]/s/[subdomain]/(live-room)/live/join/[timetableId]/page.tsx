@@ -11,6 +11,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { typographyVariants } from "@/lib/typography"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { SwitchAccountButton } from "@/components/auth/switch-account-button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -124,6 +125,8 @@ export default async function Page({ params }: Props) {
     timeZone: school?.timezone || DEFAULT_SCHOOL_TZ,
   })
 
+  // `session.user.name` falls back to the username in the session callback.
+  const signedInName = session.user.name?.trim() || null
   let title: string
   let hint: string | null = null
   switch (outcome.kind) {
@@ -162,6 +165,20 @@ export default async function Page({ params }: Props) {
       break
     case "forbidden":
       title = t?.forbidden ?? "This class isn't one of yours."
+      // A shared phone: say which account this is and how to change it.
+      // Nothing about the class itself is shown to an outsider.
+      hint = [
+        signedInName
+          ? (t?.forbiddenSignedInAs ?? "You're signed in as {name}.").replace(
+              "{name}",
+              signedInName
+            )
+          : null,
+        t?.forbiddenHint ??
+          "If more than one student uses this device, sign in with the account of the student this class belongs to.",
+      ]
+        .filter(Boolean)
+        .join(" ")
       break
     default:
       title = t?.notFound ?? "We couldn't find this class."
@@ -213,9 +230,19 @@ export default async function Page({ params }: Props) {
         />
       ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+        {outcome.kind === "forbidden" ? (
+          <SwitchAccountButton
+            lang={lang}
+            callbackUrl={`/${lang}/live/join/${timetableId}`}
+          >
+            {t?.switchAccount ?? "Sign in with another account"}
+          </SwitchAccountButton>
+        ) : null}
         <Link
           href={`/${lang}/timetable`}
-          className={buttonVariants({ variant: "default" })}
+          className={buttonVariants({
+            variant: outcome.kind === "forbidden" ? "outline" : "default",
+          })}
         >
           {t?.toTimetable ?? "Back to timetable"}
         </Link>

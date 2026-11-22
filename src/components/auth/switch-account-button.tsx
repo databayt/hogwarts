@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { forgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 import { logout } from "./logout-action"
+import { loginUrlFor } from "./switch-account-url"
 
 /**
  * Sign out, then land on this school's login page — for a person who is signed
@@ -17,16 +18,19 @@ import { logout } from "./logout-action"
  */
 export function SwitchAccountButton({
   lang,
+  callbackUrl,
   children,
 }: {
   lang: string
+  /** Where to return after signing in with the other account. */
+  callbackUrl?: string
   children: React.ReactNode
 }) {
   const [pending, setPending] = useState(false)
 
   const onClick = async () => {
     setPending(true)
-    const loginUrl = `/${lang}/login`
+    const loginUrl = loginUrlFor(lang, callbackUrl)
     try {
       await forgetSavedPages()
       await logout(loginUrl)
