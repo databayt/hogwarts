@@ -19,8 +19,8 @@ import { AttendanceReview } from "@/components/school-dashboard/live/attendance-
 import {
   ClassLinkForm,
   RemoveClassLinkButton,
-  resolveClassLinkLabels,
 } from "@/components/school-dashboard/live/class-link-form"
+import { resolveClassLinkLabels } from "@/components/school-dashboard/live/class-link-labels"
 import { ClassWork } from "@/components/school-dashboard/live/class-work"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
@@ -241,6 +241,7 @@ export async function LiveClassDetailContent({
       <SessionState
         status={session.status}
         scheduledStart={session.scheduledStart.toISOString()}
+        timeZone={timeZone}
         recording={recordingState}
         joinHref={
           !canJoin

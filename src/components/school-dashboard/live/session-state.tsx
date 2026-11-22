@@ -47,9 +47,14 @@ export function SessionState({
   lessonHref,
   locale,
   labels,
+  timeZone,
 }: {
   status: "scheduled" | "live" | "ended" | "cancelled" | "failed"
   scheduledStart: string // ISO
+  /** The school's zone. Without it the start time printed in the reader's own
+   *  zone — two hours later than the page's header for a family in the UAE —
+   *  and a school keeps one clock. */
+  timeZone?: string
   recording: RecordingState
   /** In-app room or external meeting link (rendered as a plain anchor). */
   joinHref: string | null
@@ -69,6 +74,7 @@ export function SessionState({
   const fmtTime = new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
     hour: "2-digit",
     minute: "2-digit",
+    ...(timeZone ? { timeZone } : {}),
   })
 
   if (status === "cancelled" || status === "failed") {

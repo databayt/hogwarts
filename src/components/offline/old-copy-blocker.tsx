@@ -111,11 +111,21 @@ export function OldCopyBlocker({
         >
           {t("apkDownload", "Download the app")}
         </a>
+        {/* Some phones cannot install the app at all — a child's supervised
+            phone, a Samsung with its installer lock on. A parent on one of
+            those read "delete this, install the app" and had nowhere to go:
+            the way out was one small grey line. Say it, and make it a button. */}
+        <p className="text-muted-foreground mt-5 text-center text-[15px] leading-snug">
+          {t(
+            "oldCopyCantInstall",
+            "Your phone will not install the app? Open the school in the browser."
+          )}
+        </p>
         <a
           href={browserUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted-foreground mt-4 text-center text-[15px] underline underline-offset-4"
+          className="border-border mt-2 grid min-h-12 w-full shrink-0 place-items-center rounded-full border text-[16px] font-medium"
         >
           {t("oldCopyBrowser", "Open in the browser instead")}
         </a>

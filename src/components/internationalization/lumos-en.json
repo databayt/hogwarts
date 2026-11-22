@@ -786,6 +786,7 @@
       "oldCopyStep1": "Press and hold this icon on your phone, then choose “Uninstall” or “Remove”",
       "oldCopyStep2": "Tap “Download the app” below and install “{app}”",
       "oldCopyStep3": "Open “{app}” (the blue icon) and sign in",
+      "oldCopyCantInstall": "Your phone will not install the app? Open the school in the browser.",
       "oldCopyBrowser": "Open in the browser instead",
       "installAppName": "balqalam",
       "installAppDesc": "Feels native, opens full screen, and works offline.",
