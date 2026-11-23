@@ -36,14 +36,12 @@ function isAuthorizedCron(request: Request): boolean {
 /**
  * Cron — deliver queued FCM push notifications.
  *
- * Schedule: every 5 minutes (vercel.json). Picks up Notifications with
- * `channels has "push"` and `pushSent: false`, calls firebase-admin per
- * recipient's registered device tokens, marks sent.
+ * Drains Web Push first, then native push through the FCM HTTP v1 API
+ * (push-fcm.ts) for each recipient's registered device tokens.
  *
- * Scaffold mode (firebase-admin not installed OR FIREBASE_* env unset):
- * the processor returns `{ processed: 0, skippedReason: "not_configured" }`
- * and the cron logs a single warning per tick. No production impact
- * until ops wires up the SDK + credentials.
+ * FIREBASE_* env unset: the FCM processor returns
+ * `{ processed: 0, skippedReason: "not_configured" }` and the cron logs a
+ * single warning per tick.
  */
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request)) {
@@ -53,8 +51,8 @@ export async function GET(request: Request) {
   const startedAt = Date.now()
 
   try {
-    // Web Push first: it owns the queue rows today. The FCM scaffold below
-    // stays a no-op until a native app registers device tokens.
+    // Web Push first, then FCM. FCM keeps its own claim on each row (see
+    // push-fcm.ts), so web's pushSent flag does not hide rows from phones.
     const web = await processPendingWebPushes(400)
     if (web.skippedReason === "not_configured") {
       console.warn(
@@ -72,7 +70,7 @@ export async function GET(request: Request) {
       // One log per tick is enough — flag the configuration gap without
       // burying useful logs in noise.
       console.warn(
-        "[Cron] process-push-notifications: FCM not configured (install firebase-admin + set FIREBASE_* env vars)"
+        "[Cron] process-push-notifications: FCM not configured (set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY)"
       )
     } else {
       console.log(

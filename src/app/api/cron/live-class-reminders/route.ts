@@ -13,6 +13,7 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { processPendingPushNotifications } from "@/lib/notifications/push-fcm"
 import { processPendingWebPushes } from "@/lib/notifications/push-web"
 import { runLiveDailyDigest } from "@/components/school-dashboard/live/actions/daily-digest"
 import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
@@ -184,11 +185,21 @@ export async function GET(req: Request) {
   // minutes" push would then leave on the next tick, after the bell.
   // Best-effort: the drain route still picks up whatever this misses.
   let pushed = 0
+  let pushedNative = 0
   if (due.length > 0) {
     try {
       pushed = (await processPendingWebPushes(400)).succeeded
     } catch (err) {
       console.error("[live-class] reminder push drain failed", {
+        err: err instanceof Error ? err.message : String(err),
+      })
+    }
+    // Phones too (FCM): the 10-minutes-before push must not wait for the
+    // push cron's own tick. A no-op when FCM is not configured.
+    try {
+      pushedNative = (await processPendingPushNotifications(400)).succeeded
+    } catch (err) {
+      console.error("[live-class] reminder native push drain failed", {
         err: err instanceof Error ? err.message : String(err),
       })
     }
@@ -221,6 +232,7 @@ export async function GET(req: Request) {
     ok: true,
     dispatched: due.length,
     pushed,
+    pushedNative,
     materialized,
     minutesGuard,
     digest,

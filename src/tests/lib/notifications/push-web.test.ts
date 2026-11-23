@@ -181,3 +181,23 @@ describe("processPendingWebPushes", () => {
     expect(opts.TTL).toBe(60 * 60 * 24)
   })
 })
+
+describe("processPendingWebPushes — 48h bound", () => {
+  it("only pulls rows created in the last 48 hours", async () => {
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = "pub"
+    process.env.VAPID_PRIVATE_KEY = "priv"
+    process.env.VAPID_SUBJECT = "mailto:x@example.com"
+    vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 0 } as never)
+    vi.mocked(db.notification.findMany).mockResolvedValue([] as never)
+    const before = Date.now()
+
+    await processPendingWebPushes(10)
+
+    const arg = vi.mocked(db.notification.findMany).mock.calls.at(-1)![0] as {
+      where: { createdAt: { gte: Date } }
+    }
+    expect(
+      Math.abs(before - arg.where.createdAt.gte.getTime() - 48 * 3600_000)
+    ).toBeLessThan(5_000)
+  })
+})

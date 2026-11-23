@@ -26,6 +26,9 @@ import webpush, { WebPushError } from "web-push"
 import { db } from "@/lib/db"
 import { resolveActionUrl } from "@/lib/dispatch-notification"
 
+/** The queue only looks at rows this young. */
+const PUSH_LOOKBACK_MS = 48 * 60 * 60 * 1000
+
 /** `Notification.pushError` for a row whose recipient has no push
  *  subscription: retired from the queue, delivered to nobody. */
 export const NO_DEVICE = "no_device"
@@ -110,16 +113,23 @@ interface PendingRow {
  */
 async function pullPending(limit: number): Promise<PendingRow[]> {
   const now = new Date()
+  // Never rescan the whole table: nothing older than 48 h is worth pushing.
+  const since = new Date(now.getTime() - PUSH_LOOKBACK_MS)
   await db.notification.updateMany({
     where: {
       pushSent: false,
       channels: { has: "push" },
+      createdAt: { gte: since },
       expiresAt: { lte: now },
     },
     data: { pushSent: true, pushSentAt: now, pushError: "expired" },
   })
   const rows = await db.notification.findMany({
-    where: { pushSent: false, channels: { has: "push" } },
+    where: {
+      pushSent: false,
+      channels: { has: "push" },
+      createdAt: { gte: since },
+    },
     orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
     take: limit,
     select: {
