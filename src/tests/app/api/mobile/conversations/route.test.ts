@@ -63,7 +63,11 @@ describe("GET /api/mobile/conversations", () => {
     await authAs("STUDENT")
     vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([])
     const { GET } = await import("@/app/api/mobile/conversations/route")
-    expect(await (await GET(get())).json()).toEqual({ data: [], total: 0 })
+    expect(await (await GET(get())).json()).toEqual({
+      data: [],
+      total: 0,
+      communityMemberCount: 0,
+    })
     expect(db.conversation.findMany).not.toHaveBeenCalled()
   })
 
@@ -79,7 +83,12 @@ describe("GET /api/mobile/conversations", () => {
     ] as never)
     vi.mocked(db.conversation.findMany).mockResolvedValue([])
     const { GET } = await import("@/app/api/mobile/conversations/route")
-    expect(await (await GET(get())).json()).toEqual({ data: [], total: 0 })
+    // No visible conversation: the Communities count is just the reader.
+    expect(await (await GET(get())).json()).toEqual({
+      data: [],
+      total: 0,
+      communityMemberCount: 1,
+    })
     expect(vi.mocked(db.conversation.findMany).mock.calls[0][0]).toMatchObject({
       where: { id: { in: ["other-school-convo"] }, schoolId: SCHOOL },
     })
@@ -137,6 +146,9 @@ describe("GET /api/mobile/conversations", () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
       total: 2,
+      // Distinct people across the non-direct rooms plus the reader:
+      // Me + Huda + Omar (the direct chat does not count).
+      communityMemberCount: 3,
       data: [
         {
           id: "d1",

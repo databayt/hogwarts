@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { QuickLookData } from "./actions"
 import { InvoiceHistorySection } from "./invoice-history-section"
-import { ChartSection } from "./lazy-charts"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import type { TeacherDashboardData } from "./types"
@@ -51,10 +50,13 @@ export function TeacherDashboardClient({
           data={quickLookData}
         /> */}
 
-        {/* Section 4: Analytics Charts. Directly under the quick actions,
-            ahead of the two tables, as on the student dashboard. The quick-action tiles
-            themselves render once, above every role, from `content.tsx`. */}
-        <ChartSection role="TEACHER" />
+        {/* Section 4, the Teaching Analytics charts, is hidden: its numbers
+            were placeholders (`chart-section.tsx` defaults, not read from the
+            teacher's own lessons or grading), so every teacher saw the same
+            fake «الدروس / المصحح» totals. Restore `<ChartSection
+            role="TEACHER" />` (import from `./lazy-charts`) once the
+            dashboard actions supply real per-teacher counts. The mobile
+            payload never carried this card, so the app is unaffected. */}
 
         {/* Section 5: Resource Usage */}
         <ResourceUsageSection role="TEACHER" />

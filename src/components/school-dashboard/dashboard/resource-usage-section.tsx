@@ -164,9 +164,9 @@ export function ResourceUsageSection({
   className,
   sectionTitle,
 }: ResourceUsageSectionProps) {
-  const [resources, setResources] = useState<KeyedUsageResource[]>(
-    defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
-  )
+  // Starts EMPTY: the role defaults below are made-up numbers ("Lessons This
+  // Week: 18") and a teacher read them as her own. Nothing real → no card.
+  const [resources, setResources] = useState<KeyedUsageResource[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { dictionary } = useDictionary()
   const dict = dictionary?.school?.dashboard?.resourceUsage as
@@ -218,6 +218,8 @@ export function ResourceUsageSection({
     name: resDict?.[r.key ?? toCamelCase(r.name)] || r.name,
     unit: r.unit ? unitDict?.[r.unit] || r.unit : r.unit,
   }))
+
+  if (!isLoading && resources.length === 0) return null
 
   return (
     <section className={className}>

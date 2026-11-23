@@ -67,7 +67,9 @@ export async function loadTodaySchedule(input: {
   //
   // The day's make-up classes («حصة تعويضية») ride in the same wave: they have
   // no timetable slot, so no later read could find them from the slots.
-  const [periods, teacher, student, makeupRows] = await Promise.all([
+  // The school's name format rides in the same wave: it needs only schoolId,
+  // and was a serial read after the slots.
+  const [periods, teacher, student, makeupRows, nameDisplay] = await Promise.all([
     db.period.findMany({
       where: { schoolId, yearId: term.yearId },
       orderBy: { startTime: "asc" },
@@ -98,6 +100,7 @@ export async function loadTodaySchedule(input: {
         })
       : Promise.resolve(null),
     readMakeups(schoolId, schoolTz, targetDate, role, userId),
+    schoolNameDisplay(schoolId),
   ])
 
   // Build filter based on role
@@ -166,7 +169,6 @@ export async function loadTodaySchedule(input: {
     slots.map((s) => s.id)
   )
 
-  const nameDisplay = await schoolNameDisplay(schoolId)
   const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
@@ -227,7 +229,9 @@ export async function loadTodaySchedule(input: {
 
   // Attach the Join target (today's session, else the recurring default link)
   // for each entry. Scoped by schoolId + active term.
-  const [scheduleWithLiveClasses, closure] = await Promise.all([
+  // The viewer's make-ups depend only on the wave-one rows, so they resolve
+  // alongside the join targets and the closure instead of after them.
+  const [scheduleWithLiveClasses, closure, visibleMakeups] = await Promise.all([
     attachLiveClasses(schoolId, term.id, targetDate, fullSchedule, schoolTz),
     // Informs, never blanks. A declared holiday is reported alongside the
     // normal day so the view can say so; the pattern still renders, because
@@ -235,20 +239,20 @@ export async function loadTodaySchedule(input: {
     // school's whole timetable away with no explanation. The conference sweep
     // reads the SAME predicate and suppresses — see conference/school-calendar.
     findSchoolClosure(schoolId, schoolTz, targetDate),
+    // ONE audience rule for both outputs: the rows the viewer is in are decided
+    // once, then split into today's cards and the coming week's strip.
+    makeupsForViewer(makeupRows, {
+      schoolId,
+      role,
+      teacherId: teacher?.id ?? null,
+      student,
+    }),
   ])
 
   // A make-up is added AFTER the join resolver on purpose: `attachLiveClasses`
   // would hand a slot-less row the earliest session of its section + subject,
   // while a make-up already carries its own room.
   //
-  // ONE audience rule for both outputs: the rows the viewer is in are decided
-  // once, then split into today's cards and the coming week's strip.
-  const visibleMakeups = await makeupsForViewer(makeupRows, {
-    schoolId,
-    role,
-    teacherId: teacher?.id ?? null,
-    student,
-  })
   const { start: dayStart, end: dayEnd } = schoolDayWindow(schoolTz, targetDate)
   const makeups = makeupScheduleRows(
     visibleMakeups.filter(

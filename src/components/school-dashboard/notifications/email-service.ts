@@ -115,6 +115,10 @@ function generateNotificationEmailHtml(
       live_class_started: "الفصل المباشر يبث الآن",
       live_class_cancelled: "تم إلغاء الفصل المباشر",
       live_class_recording_ready: "تسجيل الفصل جاهز",
+      live_class_no_teacher: "حصة بلا معلم",
+      live_class_makeup_booked: "حصة تعويضية جديدة",
+      live_class_makeup_moved: "تغيّر موعد الحصة التعويضية",
+      live_class_makeup_cancelled: "أُلغيت الحصة التعويضية",
       content_review: "محتوى بانتظار المراجعة",
       content_approved: "تمت الموافقة على المحتوى",
       content_rejected: "المحتوى يحتاج تعديلاً",
@@ -150,6 +154,10 @@ function generateNotificationEmailHtml(
       live_class_started: "Live Class Live",
       live_class_cancelled: "Live Class Cancelled",
       live_class_recording_ready: "Recording Ready",
+      live_class_no_teacher: "Class without a teacher",
+      live_class_makeup_booked: "Make-up class booked",
+      live_class_makeup_moved: "Make-up class moved",
+      live_class_makeup_cancelled: "Make-up class cancelled",
       content_review: "Pending Platform Review",
       content_approved: "Content Approved",
       content_rejected: "Content Needs Changes",
@@ -465,7 +473,7 @@ async function logDeliveryAttempt(data: {
  * job on without this would have sent months-old mail for days. The sweep
  * below makes the cutoff self-enforcing rather than a one-off SQL statement.
  */
-export const EMAIL_QUEUE_MAX_AGE_DAYS = 3
+export const EMAIL_QUEUE_MAX_AGE_DAYS = 2
 
 export async function processPendingEmailNotifications(
   schoolId?: string,

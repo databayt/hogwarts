@@ -115,6 +115,14 @@ async function recordNotificationFailure(
  * including previously-failed ones still within their retry budget.
  * Called by cron job every 5 minutes.
  */
+/**
+ * Only the last 48 hours are swept. The unbounded scan walked every row ever
+ * written (41k of them can never send: no phone, no session); a reminder older
+ * than two days is noise anyway, and the bound lets the planner use the
+ * createdAt index.
+ */
+export const WHATSAPP_QUEUE_WINDOW_MS = 48 * 60 * 60 * 1000
+
 export async function processWhatsAppNotifications(): Promise<{
   processed: number
   sent: number
@@ -124,6 +132,7 @@ export async function processWhatsAppNotifications(): Promise<{
     where: {
       channels: { has: "whatsapp" },
       whatsappSent: false,
+      createdAt: { gte: new Date(Date.now() - WHATSAPP_QUEUE_WINDOW_MS) },
       // Errored notifications stay in the sweep (bounded by the retry budget
       // below); only exhausted ones are filtered out permanently.
       NOT: { whatsappError: { startsWith: MAX_RETRIES_MARKER } },
