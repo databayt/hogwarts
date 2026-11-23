@@ -1,14 +1,25 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DashboardContent } from "@/components/saas-dashboard/dashboard/content"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-export const metadata = {
-  title: "Overview",
-  description: "Platform overview",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: b?.overview || "Overview",
+    description: "Platform overview",
+  }
 }
 
 interface Props {

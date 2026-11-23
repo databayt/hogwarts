@@ -2784,7 +2784,15 @@
       "versions": "Versions",
       "videos": "Videos",
       "view": "View",
-      "year-levels": "Year levels"
+      "year-levels": "Year levels",
+      "domains": "Domains",
+      "tenants": "Tenants",
+      "users": "Users",
+      "products": "Products",
+      "observability": "Observability",
+      "kanban": "Kanban",
+      "import": "Import",
+      "receipts": "Receipts"
     },
     "notifications": "Notifications",
     "messages": "Messages"

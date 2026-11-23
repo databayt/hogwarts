@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -9,9 +10,20 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ContributeBookContent } from "@/components/library/contribute/content"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-export const metadata = {
-  title: "Contribute a Book",
-  description: "Contribute a book to the global catalog",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.library, b?.contribute].every(Boolean)
+      ? [b?.library, b?.contribute].join(" - ")
+      : "Contribute a Book",
+    description: "Contribute a book to the global catalog",
+  }
 }
 
 interface Props {

@@ -1,11 +1,26 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import TeacherSettingsContent from "@/components/school-dashboard/listings/teachers/settings/content"
 
-export const metadata = { title: "Dashboard: Teacher Settings" }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.teachers, b?.settings].every(Boolean)
+      ? [b?.teachers, b?.settings].join(" - ")
+      : "Dashboard: Teacher Settings",
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

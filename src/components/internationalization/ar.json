@@ -2590,7 +2590,7 @@
       "fines": "الغرامات",
       "scholarships": "المنح الدراسية",
       "structures": "هياكل الرسوم",
-      "assignments": "التخصيصات",
+      "assignments": "الواجبات",
       "payments": "المدفوعات",
       "payroll": "كشف الرواتب",
       "salary": "الراتب",
@@ -2784,7 +2784,15 @@
       "versions": "الإصدارات",
       "videos": "الفيديوهات",
       "view": "عرض",
-      "year-levels": "المراحل الدراسية"
+      "year-levels": "المراحل الدراسية",
+      "domains": "النطاقات",
+      "tenants": "المدارس",
+      "users": "المستخدمون",
+      "products": "المنتجات",
+      "observability": "المراقبة",
+      "kanban": "لوحة المهام",
+      "import": "استيراد",
+      "receipts": "الإيصالات"
     },
     "notifications": "الإشعارات",
     "messages": "الرسائل"

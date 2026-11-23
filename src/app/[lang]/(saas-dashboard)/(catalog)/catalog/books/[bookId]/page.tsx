@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -9,9 +10,20 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { BookDetailView } from "@/components/saas-dashboard/catalog/book-detail"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-export const metadata = {
-  title: "Book Detail",
-  description: "View and manage a catalog book",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.books, b?.details].every(Boolean)
+      ? [b?.books, b?.details].join(" - ")
+      : "Book Detail",
+    description: "View and manage a catalog book",
+  }
 }
 
 interface Props {

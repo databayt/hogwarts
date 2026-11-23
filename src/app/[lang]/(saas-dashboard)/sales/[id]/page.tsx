@@ -11,9 +11,20 @@ import {
 } from "@/components/saas-dashboard/sales/actions"
 import { LeadDetailContent } from "@/components/saas-dashboard/sales/detail"
 
-export const metadata: Metadata = {
-  title: "Sales | Lead",
-  description: "Lead detail and activity log",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.leads, b?.details].every(Boolean)
+      ? [b?.leads, b?.details].join(" - ")
+      : "Sales | Lead",
+    description: "Lead detail and activity log",
+  }
 }
 
 interface Props {

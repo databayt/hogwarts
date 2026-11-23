@@ -1,14 +1,27 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { QuestionContent } from "@/components/saas-dashboard/catalog/question-content"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-export const metadata = {
-  title: "Catalog Questions",
-  description: "Manage global question bank for the curriculum catalog",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.catalog, b?.questions].every(Boolean)
+      ? [b?.catalog, b?.questions].join(" - ")
+      : "Catalog Questions",
+    description: "Manage global question bank for the curriculum catalog",
+  }
 }
 
 interface Props {

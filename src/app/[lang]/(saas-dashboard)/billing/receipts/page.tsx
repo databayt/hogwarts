@@ -1,15 +1,28 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ReceiptsContent } from "@/components/saas-dashboard/billing/receipts/content"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
-export const metadata = {
-  title: "Receipts",
-  description: "Operator billing receipts",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.billing, b?.receipts].every(Boolean)
+      ? [b?.billing, b?.receipts].join(" - ")
+      : "Receipts",
+    description: "Operator billing receipts",
+  }
 }
 
 interface Props {

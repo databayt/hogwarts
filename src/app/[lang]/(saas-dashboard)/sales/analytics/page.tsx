@@ -7,9 +7,20 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AnalyticsContent } from "@/components/saas-dashboard/sales/analytics-content"
 
-export const metadata: Metadata = {
-  title: "Sales | Analytics",
-  description: "Tier funnel, weekly cadence, status distribution",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const b = dictionary?.platform?.breadcrumb
+  return {
+    title: [b?.sales, b?.analytics].every(Boolean)
+      ? [b?.sales, b?.analytics].join(" - ")
+      : "Sales | Analytics",
+    description: "Tier funnel, weekly cadence, status distribution",
+  }
 }
 
 interface Props {
