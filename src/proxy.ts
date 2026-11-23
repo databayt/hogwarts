@@ -15,6 +15,11 @@ import {
   getSubdomainFromHost,
   isMainDomainHost,
 } from "@/lib/root-domain"
+import {
+  isAppVersionRefused,
+  parseMinVersion,
+  updateRequiredBody,
+} from "@/lib/mobile-app-version"
 import { isTenantOnlyPath } from "@/lib/tenant-paths"
 import { currentSubjectSlug } from "@/components/catalog/legacy-slugs"
 import { i18n, type Locale } from "@/components/internationalization/config"
@@ -227,6 +232,24 @@ function getRoleFromCookie(request: NextRequest): Role | null {
 }
 
 export async function proxy(req: NextRequest) {
+  // The one choke point for refusing old Android builds: every /api/mobile/*
+  // call passes here (see the matcher), so no route repeats the check.
+  if (req.nextUrl.pathname.startsWith("/api/mobile/")) {
+    const min = parseMinVersion(process.env.MOBILE_MIN_APP_VERSION)
+    if (
+      isAppVersionRefused({
+        pathname: req.nextUrl.pathname,
+        header: req.headers.get("x-app-version"),
+        min,
+      })
+    ) {
+      return NextResponse.json(
+        updateRequiredBody(min, req.headers.get("accept-language")),
+        { status: 426 }
+      )
+    }
+    return NextResponse.next()
+  }
   const session = await getSessionState(req)
   const response = await routeRequest(req, session.state === "valid")
   if (session.state === "stale") {
@@ -524,5 +547,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
 
 export const config = {
   // Exclude: _next, static files, and ALL API routes from middleware
-  matcher: ["/((?!_next/|api/|.*\\..*).*)"],
+  // /api/mobile/* is matched on purpose: the old-app-version check lives in
+  // proxy(), which returns straight away for it. Every other API route stays out.
+  matcher: ["/api/mobile/:path*", "/((?!_next/|api/|.*\\..*).*)"],
 }

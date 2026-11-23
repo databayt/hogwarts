@@ -28,6 +28,8 @@ export const env = createEnv({
     // Cron auth — every src/app/api/cron/* route checks this against the
     // Authorization header. Vercel cron sets `Bearer <CRON_SECRET>` for us.
     CRON_SECRET: z.string().min(1).optional(),
+    // Oldest Android versionCode /api/mobile still serves (426 below it). Unset or 0 = off.
+    MOBILE_MIN_APP_VERSION: z.coerce.number().int().min(0).optional(),
 
     // ADEK / regulator compliance (Epic 01). encryption.ts reads
     // COMPLIANCE_ENCRYPTION_KEY directly (AES-256-GCM, 32-byte hex); the ADEK
@@ -135,6 +137,7 @@ export const env = createEnv({
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   },
   runtimeEnv: {
+    MOBILE_MIN_APP_VERSION: process.env.MOBILE_MIN_APP_VERSION,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

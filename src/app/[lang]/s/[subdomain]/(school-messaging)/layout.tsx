@@ -15,6 +15,7 @@ import {
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
+import { AndroidAppGateMount } from "@/components/school-dashboard/live/android-app-gate-mount"
 import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
@@ -143,6 +144,9 @@ export default async function MessagingLayout({
           >
             {children}
           </div>
+          <Suspense fallback={null}>
+            <AndroidAppGateMount subdomain={subdomain} lang={lang} />
+          </Suspense>
           <Suspense fallback={null}>
             <MustChangePasswordGate
               userId={session.user.id}

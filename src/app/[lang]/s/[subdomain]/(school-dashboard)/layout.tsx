@@ -27,6 +27,7 @@ import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
+import { AndroidAppGateMount } from "@/components/school-dashboard/live/android-app-gate-mount"
 import { schoolAndroidApp } from "@/components/school-dashboard/live/android-app"
 import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import PlatformHeader from "@/components/template/platform-header/content"
@@ -238,6 +239,9 @@ export default async function PlatformLayout({
                       lang={lang}
                       app={schoolAndroidApp(subdomain, lang)}
                     />
+                    <Suspense fallback={null}>
+                      <AndroidAppGateMount subdomain={subdomain} lang={lang} />
+                    </Suspense>
                     <OfflineWarmup urls={warmUrls} />
                     {children}
                     <ReportIssueFooter />

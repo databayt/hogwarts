@@ -6,13 +6,20 @@
 
 // Keep the live-room group out of build-time page-data collection
 // (page-data OOM safety); these routes are auth-gated and render on demand.
+import { Suspense } from "react"
+
+import { AndroidAppGateMount } from "@/components/school-dashboard/live/android-app-gate-mount"
+
 export const dynamic = "force-dynamic"
 
-export default function LiveRoomLayout({
+export default async function LiveRoomLayout({
   children,
+  params,
 }: {
   children: React.ReactNode
+  params: Promise<{ subdomain: string; lang: string }>
 }) {
+  const { subdomain, lang } = await params
   // `min-h-dvh`, not `h-dvh` with `overflow-hidden`: the pre-join card is ONE
   // SECTION of a page that scrolls, with more to come below it, so the group
   // must not be locked to the viewport. The in-call view sets its own `h-dvh`,
@@ -39,6 +46,11 @@ export default function LiveRoomLayout({
   return (
     <div className="bg-background mx-[calc(-1*var(--container-px,0px))] min-h-dvh w-[calc(100%+2*var(--container-px,0px))]">
       {children}
+      {/* Android browsers cannot share the screen or keep the class alive in
+          the background: app schools get "open the app" instead. */}
+      <Suspense fallback={null}>
+        <AndroidAppGateMount subdomain={subdomain} lang={lang} />
+      </Suspense>
     </div>
   )
 }

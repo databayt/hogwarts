@@ -804,5 +804,17 @@
       "title": "Make-up class cancelled",
       "body": "The {what} make-up class on {day} at {time} was cancelled"
     }
+  },
+  "appGate": {
+    "title": "Open the class from the {app} app",
+    "why": "On Android, the browser cannot share the screen or keep the class alive in the background.",
+    "open": "Open the app",
+    "download": "Download the app",
+    "cantInstall": "Can't install the app?",
+    "confirmTitle": "Continue in the browser today?",
+    "confirmBody": "We will let the school office (and your class supervisor, if you are a student) know you used the browser today. You can continue for the rest of today only; tomorrow we will ask for the app again.",
+    "confirmYes": "Continue in the browser today",
+    "confirmNo": "Go back",
+    "notice": "{name} could not install the app and used the browser today"
   }
 }

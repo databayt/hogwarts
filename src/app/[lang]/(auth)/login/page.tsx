@@ -14,6 +14,7 @@ import { LoginForm } from "@/components/auth/login/form"
 import { type Locale } from "@/components/internationalization/config"
 import { AuthFormSkeleton } from "@/components/auth/form-skeleton"
 import { getAuthDictionary } from "@/components/internationalization/dictionaries"
+import { AndroidAppGateMount } from "@/components/school-dashboard/live/android-app-gate-mount"
 import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 interface Props {
@@ -42,6 +43,9 @@ const LoginPage = async ({ params, searchParams }: Props) => {
     callbackUrl ?? ""
   )
 
+  // An app school's login on an Android browser shows only "open the app".
+  const gate = <AndroidAppGateMount subdomain={subdomain} lang={lang} />
+
   if (subdomain === DEMO_SUBDOMAIN && !isApplying) {
     const demoRoles = dictionary?.auth?.demoRoles
     const roles = DEMO_ROLE_KEYS.map((key) => ({
@@ -60,6 +64,7 @@ const LoginPage = async ({ params, searchParams }: Props) => {
           />
         }
       >
+        {gate}
         <ForgetSavedPages />
         <DemoLoginForm dictionary={dictionary} roles={roles} />
       </Suspense>
@@ -68,6 +73,7 @@ const LoginPage = async ({ params, searchParams }: Props) => {
 
   return (
     <Suspense fallback={<AuthFormSkeleton label={dictionary?.common?.loading} />}>
+      {gate}
       <ForgetSavedPages />
       <LoginForm dictionary={dictionary} />
     </Suspense>
