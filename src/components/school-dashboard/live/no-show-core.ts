@@ -50,6 +50,9 @@ export async function runNoShowScan(now: Date = new Date()): Promise<NoShowScan>
         gte: new Date(t - NO_SHOW_LOOKBACK_HOURS * 3_600_000),
       },
       scheduledEnd: { gt: now },
+      // The demo school's timetable runs untaught every day: alerting its fixture
+      // admin is noise on the account used in sales demos (23 alerts, 11-23 08:56).
+      school: { domain: { not: "demo" } },
       // Nobody teaching has ever been in the room.
       participants: {
         none: { role: { in: ["HOST", "CO_HOST"] }, joinedAt: { not: null } },
