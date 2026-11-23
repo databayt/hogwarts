@@ -27,18 +27,31 @@ export function mayCoverSession(input: {
   stage: LiveStage | null
   /** The stages this user supervises in this school. */
   supervisedStages: readonly string[]
+  /** This user supervises THIS class (the section's homeroom teacher — Al-Ibda's «مشرفة الصف»). */
+  isClassSupervisor?: boolean
 }): boolean {
   if (COVER_ADMIN_ROLES.includes(input.role ?? "")) return true
+  if (input.isClassSupervisor) return true
   if (!input.stage || !isLiveStage(input.stage)) return false
   return input.supervisedStages.includes(input.stage)
 }
 
-/** Admins first, then the stage's supervisors — each person once. */
+/**
+ * Admins, the class's own supervisor (its homeroom teacher), then the stage's
+ * supervisors — each person once, never the teacher who is absent.
+ */
 export function noTeacherRecipients(input: {
   adminUserIds: readonly string[]
   supervisorUserIds: readonly string[]
+  classSupervisorUserIds?: readonly (string | null | undefined)[]
+  absentTeacherUserId?: string | null
 }): string[] {
-  return [...new Set([...input.adminUserIds, ...input.supervisorUserIds])]
+  const all = [
+    ...input.adminUserIds,
+    ...(input.classSupervisorUserIds ?? []).filter((u): u is string => !!u),
+    ...input.supervisorUserIds,
+  ]
+  return [...new Set(all)].filter((u) => u !== input.absentTeacherUserId)
 }
 
 /**

@@ -76,7 +76,11 @@ export async function loadCover(
         coveredByUserId: true,
         subject: { select: { name: true } },
         section: {
-          select: { name: true, grade: { select: GRADE_STAGE_SELECT } },
+          select: {
+            name: true,
+            grade: { select: GRADE_STAGE_SELECT },
+            homeroomTeacher: { select: { userId: true } },
+          },
         },
         school: { select: { timezone: true } },
       },
@@ -93,6 +97,7 @@ export async function loadCover(
       role: actor.role,
       stage,
       supervisedStages: stages,
+      isClassSupervisor: session.section?.homeroomTeacher?.userId === actor.userId,
     })
   ) {
     return { ok: false, reason: "forbidden" }

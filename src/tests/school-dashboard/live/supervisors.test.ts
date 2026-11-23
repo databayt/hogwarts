@@ -63,3 +63,34 @@ describe("recipients and roles", () => {
     expect(isSupervisorRole(undefined)).toBe(false)
   })
 })
+
+describe("the class's own supervisor (homeroom teacher)", () => {
+  it("is alerted along with the admins, once, and never the absent teacher", () => {
+    expect(
+      noTeacherRecipients({
+        adminUserIds: ["admin"],
+        supervisorUserIds: ["stage-sup", "homeroom"],
+        classSupervisorUserIds: ["homeroom", null],
+        absentTeacherUserId: "stage-sup",
+      })
+    ).toEqual(["admin", "homeroom"])
+  })
+
+  it("does not alert the class supervisor about her own missed class", () => {
+    expect(
+      noTeacherRecipients({
+        adminUserIds: ["admin"],
+        supervisorUserIds: [],
+        classSupervisorUserIds: ["afrah"],
+        absentTeacherUserId: "afrah",
+      })
+    ).toEqual(["admin"])
+  })
+
+  it("may cover her class with no stage assignment", () => {
+    expect(
+      mayCoverSession({ role: "TEACHER", stage: "kg", supervisedStages: [], isClassSupervisor: true })
+    ).toBe(true)
+    expect(mayCoverSession({ role: "TEACHER", stage: "kg", supervisedStages: [] })).toBe(false)
+  })
+})

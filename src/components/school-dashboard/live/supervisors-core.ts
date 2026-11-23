@@ -74,6 +74,14 @@ export async function supervisesSection(
   client: Client = db
 ): Promise<boolean> {
   try {
+    // The class's own supervisor: its homeroom teacher (how Al-Ibda records «مشرفة الصف»).
+    if (sectionId) {
+      const own = await client.section.findFirst({
+        where: { id: sectionId, schoolId, homeroomTeacher: { userId } },
+        select: { id: true },
+      })
+      if (own) return true
+    }
     const stages = await supervisedStages(schoolId, userId, client)
     if (stages.length === 0) return false
     const stage = await stageOfSection(schoolId, sectionId, client)

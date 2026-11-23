@@ -69,8 +69,13 @@ export async function runNoShowScan(now: Date = new Date()): Promise<NoShowScan>
       coveredByUserId: true,
       subject: { select: { name: true } },
       section: {
-        select: { name: true, grade: { select: GRADE_STAGE_SELECT } },
+        select: {
+          name: true,
+          grade: { select: GRADE_STAGE_SELECT },
+          homeroomTeacher: { select: { userId: true } },
+        },
       },
+      teacher: { select: { userId: true } },
       school: { select: { timezone: true, preferredLanguage: true } },
     },
     take: 500,
@@ -118,6 +123,8 @@ export async function runNoShowScan(now: Date = new Date()): Promise<NoShowScan>
       supervisorUserIds: supervisors
         .filter((p) => p.schoolId === s.schoolId && p.stage === stage)
         .map((p) => p.userId),
+      classSupervisorUserIds: [s.section?.homeroomTeacher?.userId],
+      absentTeacherUserId: s.teacher?.userId ?? null,
     })
     if (recipients.length === 0) continue
 
