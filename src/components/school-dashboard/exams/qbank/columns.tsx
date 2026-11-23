@@ -14,7 +14,13 @@ import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-import { BLOOM_LEVELS, DIFFICULTY_LEVELS, QUESTION_TYPES } from "./config"
+import {
+  BLOOM_LEVELS,
+  getBloomLabels,
+  getDifficultyLabels,
+  getQuestionTypeLabels,
+  getSourceLabels,
+} from "./config"
 import type { QuestionBankRow } from "./types"
 
 export type { QuestionBankRow }
@@ -23,162 +29,129 @@ export interface QuestionBankColumnCallbacks {
   onDelete?: (row: QuestionBankRow) => void
   subjects?: { label: string; value: string }[]
   lang?: string
+  /** `dictionary.exams.qbank` — see ./t.ts */
+  t?: Record<string, any>
 }
 
-const getQuestionTypeBadge = (type: string, lang = "en") => {
-  const labels: Record<string, Record<string, string>> = {
-    ar: {
-      MULTIPLE_CHOICE: "اختيار متعدد",
-      TRUE_FALSE: "صح/خطأ",
-      FILL_BLANK: "أكمل الفراغ",
-      SHORT_ANSWER: "إجابة قصيرة",
-      ESSAY: "مقال",
-      MATCHING: "مطابقة",
-      ORDERING: "ترتيب",
-      MULTI_SELECT: "اختيار متعدد",
-    },
-    en: {},
-  }
-  const arLabel = labels.ar[type]
-  const config = QUESTION_TYPES.find((qt) => qt.value === type)
-  const label = lang === "ar" && arLabel ? arLabel : config?.label || type
-  return <Badge variant="outline">{label}</Badge>
+const DIFFICULTY_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  EASY: "default",
+  MEDIUM: "secondary",
+  HARD: "destructive",
 }
 
-const getDifficultyBadge = (difficulty: string, lang = "en") => {
-  const labels: Record<string, string> =
-    lang === "ar"
-      ? { EASY: "سهل", MEDIUM: "متوسط", HARD: "صعب" }
-      : { EASY: "Easy", MEDIUM: "Medium", HARD: "Hard" }
-  const variants: Record<
-    string,
-    "default" | "secondary" | "destructive" | "outline"
-  > = {
-    EASY: "default",
-    MEDIUM: "secondary",
-    HARD: "destructive",
-  }
-
-  return (
-    <Badge variant={variants[difficulty] || "outline"}>
-      {labels[difficulty] || difficulty}
-    </Badge>
-  )
+const SOURCE_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  MANUAL: "outline",
+  AI: "secondary",
+  IMPORTED: "default",
 }
 
-const getBloomBadge = (bloomLevel: string, lang = "en") => {
+export const QuestionTypeBadge = ({
+  type,
+  t,
+}: {
+  type: string
+  t?: Record<string, any>
+}) => <Badge variant="outline">{getQuestionTypeLabels(t)[type] || type}</Badge>
+
+export const DifficultyBadge = ({
+  difficulty,
+  t,
+}: {
+  difficulty: string
+  t?: Record<string, any>
+}) => (
+  <Badge variant={DIFFICULTY_VARIANTS[difficulty] || "outline"}>
+    {getDifficultyLabels(t)[difficulty] || difficulty}
+  </Badge>
+)
+
+const BloomBadge = ({
+  bloomLevel,
+  t,
+}: {
+  bloomLevel: string
+  t?: Record<string, any>
+}) => {
   const config = BLOOM_LEVELS.find((bl) => bl.value === bloomLevel)
-  const labels: Record<string, string> =
-    lang === "ar"
-      ? {
-          REMEMBER: "تذكر",
-          UNDERSTAND: "فهم",
-          APPLY: "تطبيق",
-          ANALYZE: "تحليل",
-          EVALUATE: "تقييم",
-          CREATE: "إبداع",
-        }
-      : {}
-  const label =
-    (lang === "ar" && labels[bloomLevel]) || config?.label || bloomLevel
   return (
     <Badge
       variant="outline"
       style={{ backgroundColor: config?.color, borderColor: config?.color }}
       className="text-xs"
     >
-      {label}
+      {getBloomLabels(t)[bloomLevel] || bloomLevel}
     </Badge>
   )
 }
 
-const getSourceBadge = (source: string, lang = "en") => {
-  const labels: Record<string, string> =
-    lang === "ar"
-      ? { MANUAL: "يدوي", AI: "ذكاء اصطناعي", IMPORTED: "مستورد" }
-      : { MANUAL: "Manual", AI: "AI", IMPORTED: "Imported" }
-  const variants: Record<
-    string,
-    "default" | "secondary" | "destructive" | "outline"
-  > = {
-    MANUAL: "outline",
-    AI: "secondary",
-    IMPORTED: "default",
-  }
-
-  return (
-    <Badge variant={variants[source] || "outline"} className="text-xs">
-      {labels[source] || source}
-    </Badge>
-  )
-}
+const SourceBadge = ({
+  source,
+  t,
+}: {
+  source: string
+  t?: Record<string, any>
+}) => (
+  <Badge variant={SOURCE_VARIANTS[source] || "outline"} className="text-xs">
+    {getSourceLabels(t)[source] || source}
+  </Badge>
+)
 
 export const getQuestionBankColumns = (
   callbacks?: QuestionBankColumnCallbacks
 ): ColumnDef<QuestionBankRow>[] => {
   const lang = callbacks?.lang || "en"
   const isAr = lang === "ar"
+  const dt = callbacks?.t
+  const c = (dt?.list?.columns ?? {}) as Record<string, string>
+  const l = (dt?.list ?? {}) as Record<string, string>
+  const q = (dt?.list?.quality ?? {}) as Record<string, string>
 
   const t = {
-    question: isAr ? "السؤال" : "Question",
-    type: isAr ? "النوع" : "Type",
-    difficulty: isAr ? "الصعوبة" : "Difficulty",
-    bloomLevel: isAr ? "مستوى بلوم" : "Bloom Level",
-    subject: isAr ? "المادة" : "Subject",
-    points: isAr ? "النقاط" : "Points",
-    source: isAr ? "المصدر" : "Source",
-    used: isAr ? "الاستخدام" : "Used",
-    times: isAr ? "مرات" : "times",
-    successRate: isAr ? "نسبة النجاح" : "Success Rate",
-    quality: isAr ? "الجودة" : "Quality",
-    created: isAr ? "تاريخ الإنشاء" : "Created",
-    actions: isAr ? "إجراءات" : "Actions",
-    view: isAr ? "عرض" : "View",
-    edit: isAr ? "تعديل" : "Edit",
-    delete: isAr ? "حذف" : "Delete",
-    new: isAr ? "جديد" : "New",
-    good: isAr ? "جيد" : "Good",
-    moderate: isAr ? "متوسط" : "Moderate",
-    tooEasy: isAr ? "سهل جداً" : "Too Easy",
-    tooHard: isAr ? "صعب جداً" : "Too Hard",
-    mismatch: isAr ? "غير متطابق" : "Mismatch",
-    manual: isAr ? "يدوي" : "Manual",
-    ai: isAr ? "ذكاء اصطناعي" : "AI",
-    imported: isAr ? "مستورد" : "Imported",
-    openMenu: isAr ? "فتح القائمة" : "Open menu",
+    question: c.question ?? "",
+    type: c.type ?? "",
+    difficulty: c.difficulty ?? "",
+    bloomLevel: c.bloomLevel ?? "",
+    subject: c.subject ?? "",
+    points: c.points ?? "",
+    source: c.source ?? "",
+    used: c.used ?? "",
+    times: c.times ?? "",
+    successRate: c.successRate ?? "",
+    quality: c.quality ?? "",
+    created: c.created ?? "",
+    actions: l.actions ?? "",
+    view: l.view ?? "",
+    edit: l.edit ?? "",
+    delete: l.delete ?? "",
+    new: q.new ?? "",
+    good: q.good ?? "",
+    moderate: q.moderate ?? "",
+    tooEasy: q.tooEasy ?? "",
+    tooHard: q.tooHard ?? "",
+    mismatch: q.mismatch ?? "",
+    openMenu: l.openMenu ?? "",
   }
+  const typeLabels = getQuestionTypeLabels(dt)
+  const difficultyLabels = getDifficultyLabels(dt)
+  const bloomLabels = getBloomLabels(dt)
+  const sourceLabels = getSourceLabels(dt)
 
-  const questionTypeOptions = isAr
-    ? [
-        { label: "اختيار متعدد", value: "MULTIPLE_CHOICE" },
-        { label: "صح/خطأ", value: "TRUE_FALSE" },
-        { label: "أكمل الفراغ", value: "FILL_BLANK" },
-        { label: "إجابة قصيرة", value: "SHORT_ANSWER" },
-        { label: "مقال", value: "ESSAY" },
-        { label: "مطابقة", value: "MATCHING" },
-        { label: "ترتيب", value: "ORDERING" },
-        { label: "اختيار متعدد", value: "MULTI_SELECT" },
-      ]
-    : QUESTION_TYPES.map((qt) => ({ label: qt.label, value: qt.value }))
-
-  const difficultyOptions = isAr
-    ? [
-        { label: "سهل", value: "EASY" },
-        { label: "متوسط", value: "MEDIUM" },
-        { label: "صعب", value: "HARD" },
-      ]
-    : DIFFICULTY_LEVELS.map((dl) => ({ label: dl.label, value: dl.value }))
-
-  const bloomOptions = isAr
-    ? [
-        { label: "تذكر", value: "REMEMBER" },
-        { label: "فهم", value: "UNDERSTAND" },
-        { label: "تطبيق", value: "APPLY" },
-        { label: "تحليل", value: "ANALYZE" },
-        { label: "تقييم", value: "EVALUATE" },
-        { label: "إبداع", value: "CREATE" },
-      ]
-    : BLOOM_LEVELS.map((bl) => ({ label: bl.label, value: bl.value }))
+  const questionTypeOptions = Object.entries(typeLabels).map(
+    ([value, label]) => ({ label, value })
+  )
+  const difficultyOptions = Object.entries(difficultyLabels).map(
+    ([value, label]) => ({ label, value })
+  )
+  const bloomOptions = Object.entries(bloomLabels).map(([value, label]) => ({
+    label,
+    value,
+  }))
 
   return [
     {
@@ -204,7 +177,9 @@ export const getQuestionBankColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.type} />
       ),
-      cell: ({ getValue }) => getQuestionTypeBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => (
+        <QuestionTypeBadge type={getValue<string>()} t={dt} />
+      ),
       meta: {
         label: t.type,
         variant: "select",
@@ -218,7 +193,9 @@ export const getQuestionBankColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.difficulty} />
       ),
-      cell: ({ getValue }) => getDifficultyBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => (
+        <DifficultyBadge difficulty={getValue<string>()} t={dt} />
+      ),
       meta: {
         label: t.difficulty,
         variant: "select",
@@ -232,7 +209,9 @@ export const getQuestionBankColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.bloomLevel} />
       ),
-      cell: ({ getValue }) => getBloomBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => (
+        <BloomBadge bloomLevel={getValue<string>()} t={dt} />
+      ),
       meta: {
         label: t.bloomLevel,
         variant: "select",
@@ -272,14 +251,16 @@ export const getQuestionBankColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.source} />
       ),
-      cell: ({ getValue }) => getSourceBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => (
+        <SourceBadge source={getValue<string>()} t={dt} />
+      ),
       meta: {
         label: t.source,
         variant: "select",
         options: [
-          { label: t.manual, value: "MANUAL" },
-          { label: t.ai, value: "AI" },
-          { label: t.imported, value: "IMPORTED" },
+          { label: sourceLabels.MANUAL, value: "MANUAL" },
+          { label: sourceLabels.AI, value: "AI" },
+          { label: sourceLabels.IMPORTED, value: "IMPORTED" },
         ],
       },
       enableColumnFilter: true,

@@ -32,12 +32,12 @@ interface AttemptHistoryProps {
   title?: string
 }
 
-export function AttemptHistory({
-  attempts,
-  title = "My Attempts",
-}: AttemptHistoryProps) {
+export function AttemptHistory({ attempts, title }: AttemptHistoryProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.shared
+  // New keys live in the `exams` namespace, not yet in the typed dictionary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tx = (dictionary as any)?.exams?.shared ?? {}
   const { locale } = useLocale()
 
   if (attempts.length === 0) return null
@@ -52,11 +52,16 @@ export function AttemptHistory({
   return (
     <Card className="max-md:bg-muted max-md:border-0">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{title}</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">
+            {title || (tx.myAttempts ?? "")}
+          </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {attempts.length} attempt{attempts.length !== 1 ? "s" : ""}
+              {(attempts.length === 1
+                ? (tx.attemptsCountOne ?? "")
+                : (tx.attemptsCountMany ?? "")
+              ).replace("{count}", String(attempts.length))}
             </Badge>
             {improving && (
               <Badge
@@ -64,7 +69,7 @@ export function AttemptHistory({
                 className="border-emerald-300 text-xs text-emerald-600"
               >
                 <TrendingUp className="me-1 h-3 w-3" />
-                Improving
+                {t?.improving ?? ""}
               </Badge>
             )}
           </div>
@@ -72,19 +77,15 @@ export function AttemptHistory({
         {/* Summary stats */}
         <div className="mt-2 grid grid-cols-3 gap-3">
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">{t?.best ?? "Best"}</p>
+            <p className="text-muted-foreground text-xs">{t?.best ?? ""}</p>
             <p className="text-sm font-bold">{Math.round(bestScore)}%</p>
           </div>
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">
-              {t?.average ?? "Average"}
-            </p>
+            <p className="text-muted-foreground text-xs">{t?.average ?? ""}</p>
             <p className="text-sm font-bold">{Math.round(avgScore)}%</p>
           </div>
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">
-              {t?.attempts ?? "Attempts"}
-            </p>
+            <p className="text-muted-foreground text-xs">{t?.attempts ?? ""}</p>
             <p className="text-sm font-bold">{attempts.length}</p>
           </div>
         </div>
@@ -108,10 +109,10 @@ export function AttemptHistory({
                   <Medal className="h-3.5 w-3.5 shrink-0 text-amber-500" />
                 )}
               </div>
-              <div className="text-muted-foreground mt-0.5 flex items-center gap-2 text-xs">
+              <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
                 {attempt.name && <span>{attempt.name}</span>}
                 <span>
-                  {t?.attemptNumber ?? "Attempt #"}
+                  {t?.attemptNumber ?? ""}
                   {attempt.attemptNumber}
                 </span>
                 {attempt.submittedAt && (

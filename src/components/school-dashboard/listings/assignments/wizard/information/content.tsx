@@ -47,9 +47,9 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title={fd?.assignmentInformation || "Assignment Information"}
+          title={fd?.assignmentInformation ?? ""}
           description={
-            fd?.enterBasicInfo || "Enter the assignment's basic information."
+            fd?.enterBasicInfo ?? ""
           }
         />
         <InformationForm

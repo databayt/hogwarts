@@ -8,8 +8,9 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
+import { qbankT } from "../../t"
 import { useQuestionWizard } from "../use-question-wizard"
 import { QuestionForm } from "./form"
 
@@ -17,20 +18,15 @@ function useTabHeadings(): Record<
   string,
   { title: string; description: string }
 > {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.wizard?.question as
-    | Record<string, string>
-    | undefined
+  const t = qbankT(useDictionaryFallback<any>()).wizard?.question
   return {
     question: {
-      title: t?.tabQuestion ?? "Question",
-      description:
-        t?.tabQuestionDesc ?? "Enter the question text, subject, and type.",
+      title: t?.tabQuestion ?? "",
+      description: t?.tabQuestionDesc ?? "",
     },
     details: {
-      title: t?.tabDetailsTitle ?? "Question Details",
-      description:
-        t?.tabDetailsDesc ?? "Set difficulty, points, tags, and explanation.",
+      title: t?.tabDetailsTitle ?? "",
+      description: t?.tabDetailsDesc ?? "",
     },
   }
 }

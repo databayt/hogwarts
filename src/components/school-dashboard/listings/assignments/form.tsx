@@ -21,7 +21,11 @@ import {
   getAssignment,
   updateAssignment,
 } from "@/components/school-dashboard/listings/assignments/actions"
-import { assignmentCreateSchema } from "@/components/school-dashboard/listings/assignments/validation"
+import {
+  assignmentCreateSchema,
+  createAssignmentCreateSchema,
+} from "@/components/school-dashboard/listings/assignments/validation"
+import { assignmentValidationOf } from "@/components/school-dashboard/listings/assignments/validation-messages"
 
 import { DetailsStep } from "./details"
 import { InformationStep } from "./information"
@@ -39,7 +43,9 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const form = useForm<z.infer<typeof assignmentCreateSchema>>({
-    resolver: zodResolver(assignmentCreateSchema),
+    resolver: zodResolver(
+      createAssignmentCreateSchema(assignmentValidationOf(fullDict))
+    ),
     defaultValues: {
       title: "",
       description: "",
@@ -88,8 +94,8 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
       if (res?.success) {
         SuccessToast(
           currentId
-            ? t?.success?.assignmentUpdated || "Assignment updated"
-            : t?.success?.assignmentCreated || "Assignment created"
+            ? t?.success?.assignmentUpdated ?? ""
+            : t?.success?.assignmentCreated ?? ""
         )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
@@ -102,16 +108,14 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         toast.error(
           res?.error ||
             (currentId
-              ? t?.error?.assignmentUpdateFailed ||
-                "Failed to update assignment"
-              : t?.error?.assignmentCreateFailed ||
-                "Failed to create assignment")
+              ? t?.error?.assignmentUpdateFailed ?? ""
+              : t?.error?.assignmentCreateFailed ?? "")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
       toast.error(
-        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+        fullDict?.common?.unexpectedError ?? ""
       )
     }
   }
@@ -175,8 +179,8 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
     | Record<string, any>
     | undefined
   const stepLabels: Record<number, string> = {
-    1: fd?.basicInformation || "Basic Information",
-    2: fd?.assignmentDetails || "Assignment Details",
+    1: fd?.basicInformation ?? "",
+    2: fd?.assignmentDetails ?? "",
   }
 
   return (
@@ -185,17 +189,17 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         <ModalFormLayout
           title={
             isView
-              ? fd?.viewAssignment || "View Assignment"
+              ? fd?.viewAssignment ?? ""
               : currentId
-                ? fd?.editAssignment || "Edit Assignment"
-                : fd?.createAssignment || "Create Assignment"
+                ? fd?.editAssignment ?? ""
+                : fd?.createAssignment ?? ""
           }
           description={
             isView
-              ? fd?.viewDetails || "View assignment details"
+              ? fd?.viewDetails ?? ""
               : currentId
-                ? fd?.updateDetails || "Update assignment details"
-                : fd?.createForClass || "Create a new assignment for your class"
+                ? fd?.updateDetails ?? ""
+                : fd?.createForClass ?? ""
           }
         >
           {renderCurrentStep()}

@@ -37,6 +37,8 @@ interface Props {
   childId?: string
   /** The child switcher, rendered between the banner and the list. */
   switcher?: ReactNode
+  /** The school's IANA zone; due dates print on the school's clock. */
+  timeZone?: string
 }
 
 type Text = Record<string, string | undefined>
@@ -78,6 +80,7 @@ export function MyAssignmentsContent({
   childName,
   childId,
   switcher,
+  timeZone,
 }: Props) {
   const school = dictionary?.school as Record<string, any> | undefined
   const root = (school?.assignments ?? {}) as Record<string, any>
@@ -132,6 +135,7 @@ export function MyAssignmentsContent({
   // What every row needs besides its own assignment.
   const rowProps = {
     lang: locale,
+    timeZone,
     detail,
     readOnly,
     detailHref: (id: string) => `/${lang}/assignments/${id}${detailQuery}`,
@@ -164,7 +168,7 @@ export function MyAssignmentsContent({
                   formatAssignmentDate(next.dueDate, lang, {
                     day: "numeric",
                     month: "long",
-                  }),
+                  }, timeZone),
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -354,6 +358,7 @@ function AssignmentRow({
   trailing,
   defaultOpen = false,
   lang,
+  timeZone,
   detail,
   readOnly,
   detailHref,
@@ -365,6 +370,7 @@ function AssignmentRow({
   trailing?: ReactNode
   defaultOpen?: boolean
   lang: Locale
+  timeZone?: string
   detail: Record<string, unknown>
   readOnly: boolean
   detailHref: (id: string) => string
@@ -383,8 +389,8 @@ function AssignmentRow({
             <DateTile
               weekday={formatAssignmentDate(a.dueDate, lang, {
                 weekday: "short",
-              })}
-              day={formatAssignmentDate(a.dueDate, lang, { day: "numeric" })}
+              }, timeZone)}
+              day={formatAssignmentDate(a.dueDate, lang, { day: "numeric" }, timeZone)}
             />
           }
           title={a.title}
@@ -434,6 +440,7 @@ function AssignmentRow({
             submission={a.submission}
             labels={detail}
             lang={lang}
+            timeZone={timeZone}
             totalPoints={a.totalPoints}
           />
         ) : (

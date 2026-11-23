@@ -30,6 +30,7 @@ import {
   ShieldAlert,
 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -99,6 +100,12 @@ export function ExamPlayer({
   const t = dictionary?.school?.exams?.take
   const exams = dictionary?.school?.exams
   const tc = dictionary?.school?.exams?.takeContent
+  // New keys live in the `exams` namespace, not yet in the typed dictionary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tx = (dictionary as any)?.exams?.take ?? {}
+  const errorText = (code: string) =>
+    tx.errors?.[code] ??
+    actionErrorMessage(code, dictionary, tx.errors?.generic ?? "")
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [showSecurityWarning, setShowSecurityWarning] = useState(false)
@@ -144,7 +151,7 @@ export function ExamPlayer({
     onSubmit: () => {
       router.push(`/${locale}/exams/${exam.id}`)
     },
-    onError: setError,
+    onError: (code) => setError(errorText(code)),
   })
 
   // Proctor hook
@@ -242,9 +249,7 @@ export function ExamPlayer({
         return renderEssay(question, currentAnswer)
       default:
         return (
-          <p className="text-muted-foreground">
-            {t?.unsupportedType ?? "Unsupported question type"}
-          </p>
+          <p className="text-muted-foreground">{t?.unsupportedType ?? ""}</p>
         )
     }
   }
@@ -270,7 +275,7 @@ export function ExamPlayer({
             {options.map((option, idx) => (
               <div
                 key={idx}
-                className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3"
+                className="hover:bg-muted/50 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3"
               >
                 <RadioGroupItem
                   value={option.id || idx.toString()}
@@ -278,7 +283,7 @@ export function ExamPlayer({
                 />
                 <Label
                   htmlFor={`option-${idx}`}
-                  className="flex-1 cursor-pointer"
+                  className="min-w-0 flex-1 cursor-pointer break-words"
                 >
                   {option.text}
                 </Label>
@@ -300,7 +305,7 @@ export function ExamPlayer({
           return (
             <div
               key={idx}
-              className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3"
+              className="hover:bg-muted/50 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3"
               onClick={() => {
                 const current = answer?.selectedOptionIds || []
                 const next = isSelected
@@ -310,7 +315,9 @@ export function ExamPlayer({
               }}
             >
               <Checkbox checked={isSelected} />
-              <Label className="flex-1 cursor-pointer">{option.text}</Label>
+              <Label className="min-w-0 flex-1 cursor-pointer break-words">
+                {option.text}
+              </Label>
             </div>
           )
         })}
@@ -331,16 +338,22 @@ export function ExamPlayer({
         }
       >
         <div className="space-y-3">
-          <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
+          <div className="hover:bg-muted/50 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="true" id="true" />
-            <Label htmlFor="true" className="flex-1 cursor-pointer text-lg">
-              {tc?.true ?? "True"}
+            <Label
+              htmlFor="true"
+              className="min-w-0 flex-1 cursor-pointer text-lg break-words"
+            >
+              {tc?.true ?? ""}
             </Label>
           </div>
-          <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
+          <div className="hover:bg-muted/50 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="false" id="false" />
-            <Label htmlFor="false" className="flex-1 cursor-pointer text-lg">
-              {tc?.false ?? "False"}
+            <Label
+              htmlFor="false"
+              className="min-w-0 flex-1 cursor-pointer text-lg break-words"
+            >
+              {tc?.false ?? ""}
             </Label>
           </div>
         </div>
@@ -356,7 +369,7 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Input
-          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
+          placeholder={t?.answerPlaceholder ?? ""}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -375,7 +388,7 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
+          placeholder={t?.answerPlaceholder ?? ""}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -383,7 +396,7 @@ export function ExamPlayer({
           className="min-h-[150px] text-base"
         />
         <p className="text-muted-foreground text-sm">
-          {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
+          {(answer?.answerText || "").length} {tc?.characters ?? ""}
         </p>
       </div>
     )
@@ -397,22 +410,20 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder={
-            t?.essayPlaceholder ?? "Write your essay response here..."
-          }
+          placeholder={t?.essayPlaceholder ?? ""}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
           }
           className="min-h-[300px] text-base"
         />
-        <div className="text-muted-foreground flex justify-between text-sm">
+        <div className="text-muted-foreground flex flex-wrap justify-between gap-x-4 text-sm">
           <span>
             {(answer?.answerText || "").split(/\s+/).filter(Boolean).length}{" "}
-            {tc?.words ?? "words"}
+            {tc?.words ?? ""}
           </span>
           <span>
-            {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
+            {(answer?.answerText || "").length} {tc?.characters ?? ""}
           </span>
         </div>
       </div>
@@ -422,11 +433,11 @@ export function ExamPlayer({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <div className="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
           <p className="text-muted-foreground mt-4">
-            {t?.startingSession ?? "Starting exam session..."}
+            {t?.startingSession ?? ""}
           </p>
         </div>
       </div>
@@ -441,10 +452,10 @@ export function ExamPlayer({
     >
       {/* Header with Timer */}
       <div className="bg-background sticky top-0 z-50 border-b px-4 py-3">
-        <div className="container mx-auto flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold">{exam.title}</h1>
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-semibold break-words">{exam.title}</h1>
               {isMonitoringActive && (
                 <TooltipProvider>
                   <Tooltip>
@@ -452,17 +463,15 @@ export function ExamPlayer({
                       <Badge variant="outline" className="gap-1">
                         <Shield className="h-3 w-3" />
                         {isStrictMode
-                          ? (tc?.proctored ?? "Proctored")
-                          : (tc?.monitored ?? "Monitored")}
+                          ? (tc?.proctored ?? "")
+                          : (tc?.monitored ?? "")}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
                         {isStrictMode
-                          ? (tc?.strictProctoring ??
-                            "Strict proctoring is active. Suspicious activity is being monitored.")
-                          : (tc?.activityMonitored ??
-                            "Activity is being monitored.")}
+                          ? (tc?.strictProctoring ?? "")
+                          : (tc?.activityMonitored ?? "")}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -470,17 +479,17 @@ export function ExamPlayer({
               )}
             </div>
             <p className="text-muted-foreground text-sm">
-              {tc?.question ?? "Question"} {currentQuestionIndex + 1}{" "}
-              {tc?.ofLabel ?? "of"} {totalQuestions}
+              {tc?.question ?? ""} {currentQuestionIndex + 1}{" "}
+              {tc?.ofLabel ?? ""} {totalQuestions}
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {/* Saving indicator */}
             {isSaving && (
               <Badge variant="secondary" className="gap-1">
                 <Save className="h-3 w-3 animate-pulse" />
-                {tc?.saving ?? "Saving..."}
+                {tc?.saving ?? ""}
               </Badge>
             )}
 
@@ -496,11 +505,12 @@ export function ExamPlayer({
 
             {/* Submit button */}
             <Button
+              className="min-h-11"
               onClick={() => setShowSubmitDialog(true)}
               disabled={isSubmitting}
             >
               <Send className="me-2 h-4 w-4" />
-              {exams?.submit ?? "Submit"}
+              {exams?.submit ?? ""}
             </Button>
           </div>
         </div>
@@ -510,8 +520,7 @@ export function ExamPlayer({
           <div className="flex items-center gap-2">
             <Progress value={progress} className="flex-1" />
             <span className="text-muted-foreground text-sm">
-              {answeredIndices.size}/{totalQuestions}{" "}
-              {t?.answered ?? "answered"}
+              {answeredIndices.size}/{totalQuestions} {t?.answered ?? ""}
             </span>
           </div>
         </div>
@@ -543,24 +552,22 @@ export function ExamPlayer({
             {currentQuestion && (
               <Card>
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline">
-                          {tc?.question ?? "Question"}{" "}
-                          {currentQuestionIndex + 1}
+                          {tc?.question ?? ""} {currentQuestionIndex + 1}
                         </Badge>
                         <Badge variant="secondary">
                           {currentQuestion.points}{" "}
                           {currentQuestion.points === 1
-                            ? (tc?.point ?? "point")
-                            : (tc?.points ?? "points")}
+                            ? (tc?.point ?? "")
+                            : (tc?.points ?? "")}
                         </Badge>
                         <Badge>
-                          {currentQuestion.question.questionType.replace(
-                            "_",
-                            " "
-                          )}
+                          {tx.questionTypes?.[
+                            currentQuestion.question.questionType
+                          ] ?? ""}
                         </Badge>
                       </div>
                     </div>
@@ -571,7 +578,16 @@ export function ExamPlayer({
                         variant="ghost"
                         size="icon"
                         onClick={toggleFlag}
+                        aria-label={
+                          flaggedQuestions.has(currentQuestionIndex)
+                            ? (tx.unflagQuestion ?? "")
+                            : (tx.flagQuestion ?? "")
+                        }
+                        aria-pressed={flaggedQuestions.has(
+                          currentQuestionIndex
+                        )}
                         className={cn(
+                          "size-11",
                           flaggedQuestions.has(currentQuestionIndex) &&
                             "text-yellow-500"
                         )}
@@ -595,7 +611,7 @@ export function ExamPlayer({
 
                 <CardContent className="space-y-6">
                   {/* Question text */}
-                  <div className="text-lg leading-relaxed">
+                  <div className="text-lg leading-relaxed break-words">
                     {currentQuestion.question.questionText}
                   </div>
 
@@ -604,7 +620,7 @@ export function ExamPlayer({
                     <div className="overflow-hidden rounded-lg border">
                       <img
                         src={currentQuestion.question.imageUrl}
-                        alt={tc?.questionImage ?? "Question image"}
+                        alt={tc?.questionImage ?? ""}
                         className="h-auto max-w-full"
                       />
                     </div>
@@ -616,21 +632,23 @@ export function ExamPlayer({
                   {renderQuestionInput()}
 
                   {/* Navigation buttons */}
-                  <div className="flex justify-between pt-4">
+                  <div className="flex justify-between gap-2 pt-4">
                     <Button
                       variant="outline"
+                      className="min-h-11"
                       onClick={() => goToQuestion(currentQuestionIndex - 1)}
                       disabled={currentQuestionIndex === 0}
                     >
                       <ChevronLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-                      {exams?.previous ?? "Previous"}
+                      {exams?.previous ?? ""}
                     </Button>
 
                     <Button
+                      className="min-h-11"
                       onClick={() => goToQuestion(currentQuestionIndex + 1)}
                       disabled={currentQuestionIndex === totalQuestions - 1}
                     >
-                      {exams?.next ?? "Next"}
+                      {exams?.next ?? ""}
                       <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
@@ -647,16 +665,15 @@ export function ExamPlayer({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              {t?.timeWarning?.title ?? "5 Minutes Remaining"}
+              {t?.timeWarning?.title ?? ""}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t?.timeWarning?.description ??
-                "You have 5 minutes left to complete and submit your exam. Make sure to review your answers before the time runs out."}
+              {t?.timeWarning?.description ?? ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction>
-              {t?.timeWarning?.continue ?? "Continue Exam"}
+              {t?.timeWarning?.continue ?? ""}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -671,16 +688,15 @@ export function ExamPlayer({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <ShieldAlert className="text-destructive h-5 w-5" />
-              {t?.securityWarning?.title ?? "Security Warning"}
+              {t?.securityWarning?.title ?? ""}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t?.securityWarning?.description ??
-                "Multiple suspicious activities have been detected during this exam session. Your activity is being logged and may be reviewed by your instructor."}
+              {t?.securityWarning?.description ?? ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction>
-              {t?.securityWarning?.acknowledge ?? "I Understand"}
+              {t?.securityWarning?.acknowledge ?? ""}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -690,24 +706,16 @@ export function ExamPlayer({
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t?.submitDialog?.title ?? "Submit Exam?"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t?.submitDialog?.title ?? ""}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>
-                {(
-                  t?.submitDialog?.answeredCount ??
-                  "You have answered {answered} out of {total} questions."
-                )
+                {(t?.submitDialog?.answeredCount ?? "")
                   .replace("{answered}", String(answeredIndices.size))
                   .replace("{total}", String(totalQuestions))}
               </p>
               {answeredIndices.size < totalQuestions && (
                 <p className="text-yellow-600 dark:text-yellow-400">
-                  {(
-                    t?.submitDialog?.unansweredWarning ??
-                    "Warning: {count} questions are unanswered."
-                  ).replace(
+                  {(t?.submitDialog?.unansweredWarning ?? "").replace(
                     "{count}",
                     String(totalQuestions - answeredIndices.size)
                   )}
@@ -715,26 +723,23 @@ export function ExamPlayer({
               )}
               {flaggedQuestions.size > 0 && (
                 <p className="text-yellow-600 dark:text-yellow-400">
-                  {(
-                    t?.submitDialog?.flaggedWarning ??
-                    "You have {count} flagged question(s)."
-                  ).replace("{count}", String(flaggedQuestions.size))}
+                  {(t?.submitDialog?.flaggedWarning ?? "").replace(
+                    "{count}",
+                    String(flaggedQuestions.size)
+                  )}
                 </p>
               )}
-              <p>
-                {t?.submitDialog?.finalWarning ??
-                  "Once submitted, you cannot change your answers."}
-              </p>
+              <p>{t?.submitDialog?.finalWarning ?? ""}</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              {t?.submitDialog?.continue ?? "Continue Exam"}
+              {t?.submitDialog?.continue ?? ""}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting
-                ? (t?.submitDialog?.submitting ?? "Submitting...")
-                : (t?.submitDialog?.submit ?? "Submit Exam")}
+                ? (t?.submitDialog?.submitting ?? "")
+                : (t?.submitDialog?.submit ?? "")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

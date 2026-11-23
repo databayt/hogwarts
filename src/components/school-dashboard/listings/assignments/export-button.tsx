@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ExportButton as UnifiedExportButton } from "@/components/file"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { getAssignmentsExportData } from "./actions"
 import {
@@ -71,6 +72,9 @@ export function ExportButton({
   const [data, setData] = useState<AssignmentExportData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fullDictionary = useDictionaryFallback<Record<string, any> | null>(null)
+  const fetchFailed: string =
+    fullDictionary?.assignments?.export?.fetchFailed ?? ""
 
   // Fetch data for export
   const fetchData = useCallback(async () => {
@@ -81,14 +85,14 @@ export function ExportButton({
       if (result.success && result.data) {
         setData(result.data as AssignmentExportData[])
       } else {
-        setError(result.error ?? "Failed to fetch data")
+        setError(result.error ?? fetchFailed)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch data")
+      setError(err instanceof Error ? err.message : fetchFailed)
     } finally {
       setIsLoading(false)
     }
-  }, [filters])
+  }, [filters, fetchFailed])
 
   // Fetch on mount and filter changes
   useEffect(() => {
@@ -101,7 +105,7 @@ export function ExportButton({
         filename: "assignments",
         columns: ASSIGNMENT_EXPORT_COLUMNS,
         locale,
-        title: dictionary?.title || "Assignment List",
+        title: dictionary?.title ?? "",
       }}
       data={data}
       formats={formats}
@@ -111,12 +115,12 @@ export function ExportButton({
       showColumnSelector={showColumnSelector}
       disabled={isLoading || data.length === 0}
       dictionary={{
-        export: dictionary?.export || "Export",
-        exportAs: dictionary?.exportAs || "Export as",
+        export: dictionary?.export ?? "",
+        exportAs: dictionary?.exportAs ?? "",
         csv: dictionary?.csv || "CSV",
-        excel: dictionary?.excel || "Excel",
+        excel: dictionary?.excel ?? "",
         pdf: dictionary?.pdf || "PDF",
-        exporting: dictionary?.exporting || "Exporting...",
+        exporting: dictionary?.exporting ?? "",
       }}
       onExportError={(err) => {
         console.error("Export failed:", err)

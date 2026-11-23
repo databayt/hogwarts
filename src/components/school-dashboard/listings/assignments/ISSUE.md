@@ -1,19 +1,28 @@
 # Assignments -- Production Readiness Tracker
 
-## 2026-11-22 — open: due dates are printed in two zones
+## 2026-11-23 — closed: due dates print on the school's clock · i18n + phone pass
 
-Seen on `/assignments` in a browser on Gulf time (local, demo data): React reports a hydration
-mismatch on the phone card's line — «١٥ ديسمبر» from the server, «١٦ ديسمبر» in the browser.
-`date.ts` → `formatAssignmentDate` takes no time zone, so the server prints UTC and the browser
-its own zone; a due time between 20:00 and 24:00 UTC lands on different days, the page redraws
-itself, and two readers see two dates. Not fixed. Al-Ibda's 20 assignments have no due time in
-that range today (7 at 00:00 UTC, the rest by day), so nobody there sees it yet.
-
-Fix when touched: give `formatAssignmentDate` a `timeZone` and pass the school's — client callers
-have `useSchoolTimeZone()` (`context/school-context.tsx`), server callers the school row. Call
-sites: `assignment-card`, `columns`, `detail`, `my-assignments-content`, `submission-card`,
-`family-submission`, `submissions-review`. The same fault was fixed on the timetable page and in
-`live/` the same day (`timetable/ISSUE.md`).
+- [x] **Due dates in two zones — fixed.** `formatAssignmentDate(date, locale, style, timeZone)` now
+      always formats in an explicit zone (`DEFAULT_ASSIGNMENT_TIME_ZONE` = `Africa/Khartoum` when
+      the school row has none), so the server and the browser print the same day and a 22:30 UTC
+      due date reads 00:30 the next day in Khartoum. Client callers (`assignment-card`, `detail`,
+      `submission-card`, `submissions-review`, and `columns` via `table.tsx`) pass
+      `useSchoolTimeZone()`; server callers (`my-assignments-content`, `family-submission`) take a
+      `timeZone` prop that `content.tsx` reads from the school row. Tests:
+      `tests/school-dashboard/listings/assignments/date-zone.test.ts`.
+- [x] **Translated.** New dictionary namespaces `assignments` and `exams`
+      (`internationalization/dictionaries/{ar,en}/`, registered in `namespaces.ts`): zod messages,
+      export errors, wizard save/complete errors, and the exam surfaces (quiz, quick, mock, qbank,
+      paper, take, shared). English fallbacks were removed from `listings/assignments/**` — the
+      `school.assignments` keys already existed. Dead English/bilingual constants in `config.ts`
+      and `wizard/config.ts` were deleted.
+- [x] **Zod builders.** `createAssignmentCreateSchema(messages)`, `createAssignmentUpdateSchema`,
+      `createInformationSchema`, `createDetailsSchema` take `assignments.validation`; the plain
+      exports stay for server actions (English from the dictionary file). The weight message is
+      "100%" everywhere. Tests: `validation-i18n.test.ts`; parity of the two namespaces:
+      `tests/i18n/assignments-exams-parity.test.ts`.
+- [ ] `columns/export.ts` keeps inline `(en, ar)` pairs for export headers (by design: the export
+      lib takes both); move to the dictionary if a third language arrives.
 
 ## 2026-10-19 — online-school pass (LOCAL, not pushed) · `c45032510` `60fa1bdec`
 

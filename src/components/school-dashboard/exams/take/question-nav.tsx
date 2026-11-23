@@ -67,10 +67,10 @@ export function QuestionNav({
   return (
     <Card className={cn("sticky top-32", className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">{t?.questions ?? "Questions"}</CardTitle>
-        <CardDescription className="text-xs">
-          {answeredIndices.size} {dictionary?.school?.exams?.of ?? "of"}{" "}
-          {totalQuestions} {t?.answered ?? "answered"}
+        <CardTitle className="text-sm">{t?.questions ?? ""}</CardTitle>
+        <CardDescription className="text-xs break-words">
+          {answeredIndices.size} {dictionary?.school?.exams?.of ?? ""}{" "}
+          {totalQuestions} {t?.answered ?? ""}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -80,8 +80,8 @@ export function QuestionNav({
         </div>
 
         {/* Question grid */}
-        <ScrollArea className="h-[calc(100vh-400px)]">
-          <div className="grid grid-cols-5 gap-2">
+        <ScrollArea className="h-60 lg:h-[calc(100vh-400px)]">
+          <div className="grid grid-cols-5 gap-2 min-[380px]:grid-cols-6 sm:grid-cols-8 lg:grid-cols-5">
             {Array.from({ length: totalQuestions }, (_, idx) => {
               const isCurrent = idx === currentIndex
               const isAnswered = answeredIndices.has(idx)
@@ -95,7 +95,7 @@ export function QuestionNav({
                   }
                   size="sm"
                   className={cn(
-                    "relative h-10 w-10 p-0 text-sm",
+                    "relative size-11 p-0 text-sm",
                     isAnswered &&
                       !isCurrent &&
                       "bg-green-100 hover:bg-green-200 dark:bg-green-900/50 dark:hover:bg-green-900",
@@ -119,20 +119,20 @@ export function QuestionNav({
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="bg-primary h-4 w-4 rounded" />
-            <span>{t?.current ?? "Current"}</span>
+            <span>{t?.current ?? ""}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 rounded bg-green-100 dark:bg-green-900/50" />
-            <span>{t?.answered ?? "Answered"}</span>
+            <span>{t?.answered ?? ""}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 rounded border" />
-            <span>{t?.notAnswered ?? "Not answered"}</span>
+            <span>{t?.notAnswered ?? ""}</span>
           </div>
           {flaggedIndices.size > 0 && (
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 rounded border ring-2 ring-yellow-500" />
-              <span>{t?.flaggedForReview ?? "Flagged for review"}</span>
+              <span>{t?.flaggedForReview ?? ""}</span>
             </div>
           )}
         </div>
@@ -143,17 +143,13 @@ export function QuestionNav({
             <div className="text-lg font-semibold text-green-600 dark:text-green-400">
               {answeredIndices.size}
             </div>
-            <div className="text-muted-foreground">
-              {t?.answered ?? "Answered"}
-            </div>
+            <div className="text-muted-foreground">{t?.answered ?? ""}</div>
           </div>
           <div className="bg-muted rounded p-2">
             <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
               {totalQuestions - answeredIndices.size}
             </div>
-            <div className="text-muted-foreground">
-              {t?.remaining ?? "Remaining"}
-            </div>
+            <div className="text-muted-foreground">{t?.remaining ?? ""}</div>
           </div>
         </div>
       </CardContent>
@@ -171,8 +167,10 @@ export function MobileQuestionNav({
   onSelect,
   className,
 }: Omit<QuestionNavProps, "flaggedIndices" | "onToggleFlag">) {
+  const { dictionary } = useDictionary()
+  const label = dictionary?.school?.exams?.takeContent?.question ?? ""
   return (
-    <div className={cn("overflow-x-auto pb-2", className)}>
+    <div className={cn("max-w-full overflow-x-auto pb-2", className)}>
       <div className="flex gap-2">
         {Array.from({ length: totalQuestions }, (_, idx) => {
           const isCurrent = idx === currentIndex
@@ -181,8 +179,11 @@ export function MobileQuestionNav({
           return (
             <button
               key={idx}
+              type="button"
+              aria-label={`${label} ${idx + 1}`}
+              aria-current={isCurrent ? "step" : undefined}
               className={cn(
-                "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors",
+                "flex size-11 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors",
                 isCurrent && "bg-primary text-primary-foreground",
                 !isCurrent &&
                   isAnswered &&

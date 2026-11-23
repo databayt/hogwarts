@@ -3,7 +3,7 @@
 
 import type { WizardConfig } from "@/components/form/wizard"
 
-/** Default wizard config with English labels. Use getAssignmentWizardConfig(lang) for i18n. */
+/** Structure only — labels come from the dictionary (getDictAssignmentWizardConfig). */
 export const ASSIGNMENT_WIZARD_CONFIG: WizardConfig = {
   id: "assignment",
   steps: ["information", "details"],
@@ -11,36 +11,13 @@ export const ASSIGNMENT_WIZARD_CONFIG: WizardConfig = {
     1: ["information"],
     2: ["details"],
   },
-  groupLabels: ["Assignment Info", "Details & Grading"],
+  groupLabels: ["", ""],
   requiredSteps: ["information", "details"],
-  finalLabel: "Create Assignment",
+  finalLabel: "",
 }
 
-export const getAssignmentWizardConfig = (lang?: string): WizardConfig => ({
-  ...ASSIGNMENT_WIZARD_CONFIG,
-  groupLabels:
-    lang === "ar"
-      ? ["معلومات الواجب", "التفاصيل والتقييم"]
-      : ["Assignment Info", "Details & Grading"],
-  finalLabel: lang === "ar" ? "إنشاء واجب" : "Create Assignment",
-})
-
-/** @deprecated Use getAssignmentTypes from ../config for bilingual support */
-export const ASSESSMENT_TYPE_OPTIONS = [
-  { label: "Homework", value: "HOMEWORK" },
-  { label: "Quiz", value: "QUIZ" },
-  { label: "Test", value: "TEST" },
-  { label: "Midterm", value: "MIDTERM" },
-  { label: "Final Exam", value: "FINAL_EXAM" },
-  { label: "Project", value: "PROJECT" },
-  { label: "Lab Report", value: "LAB_REPORT" },
-  { label: "Essay", value: "ESSAY" },
-  { label: "Presentation", value: "PRESENTATION" },
-]
-
 // --- Dictionary-based factory functions ---
-// These accept a dictionary section (Record<string, any>) and fall back to
-// English defaults when dictionary is not yet loaded.
+// These accept a dictionary section (`school.assignments`).
 
 type Dict = Record<string, any> | undefined
 
@@ -50,10 +27,10 @@ export const getDictAssignmentWizardConfig = (d?: Dict): WizardConfig => {
   return {
     ...ASSIGNMENT_WIZARD_CONFIG,
     groupLabels: [
-      w?.assignmentInfo || "Assignment Info",
-      w?.detailsAndGrading || "Details & Grading",
+      w?.assignmentInfo ?? "",
+      w?.detailsAndGrading ?? "",
     ],
-    finalLabel: w?.createAssignment || "Create Assignment",
+    finalLabel: w?.createAssignment ?? "",
   }
 }
 
@@ -61,14 +38,14 @@ export const getDictAssignmentWizardConfig = (d?: Dict): WizardConfig => {
 export const getDictAssessmentTypeOptions = (d?: Dict) => {
   const t = d?.detail?.types as Record<string, string> | undefined
   return [
-    { label: t?.homework || "Homework", value: "HOMEWORK" },
-    { label: t?.quiz || "Quiz", value: "QUIZ" },
-    { label: t?.test || "Test", value: "TEST" },
-    { label: t?.midterm || "Midterm", value: "MIDTERM" },
-    { label: t?.finalExam || "Final Exam", value: "FINAL_EXAM" },
-    { label: t?.project || "Project", value: "PROJECT" },
-    { label: t?.labReport || "Lab Report", value: "LAB_REPORT" },
-    { label: t?.essay || "Essay", value: "ESSAY" },
-    { label: t?.presentation || "Presentation", value: "PRESENTATION" },
+    { label: t?.homework ?? "", value: "HOMEWORK" },
+    { label: t?.quiz ?? "", value: "QUIZ" },
+    { label: t?.test ?? "", value: "TEST" },
+    { label: t?.midterm ?? "", value: "MIDTERM" },
+    { label: t?.finalExam ?? "", value: "FINAL_EXAM" },
+    { label: t?.project ?? "", value: "PROJECT" },
+    { label: t?.labReport ?? "", value: "LAB_REPORT" },
+    { label: t?.essay ?? "", value: "ESSAY" },
+    { label: t?.presentation ?? "", value: "PRESENTATION" },
   ]
 }

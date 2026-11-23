@@ -33,6 +33,7 @@ import { GenerateWithTemplateButton } from "../../documents/generate-with-templa
 import { getOrCreatePaperConfig, getPaperData } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
 import { ConfigForm } from "./config-form"
+import { paperErrorText } from "./error-text"
 import { GenerationPanel } from "./generation-panel"
 import { PaperActions } from "./paper-actions"
 import { PaperList } from "./paper-list"
@@ -68,11 +69,9 @@ export async function Content({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {t?.title || "Exam Paper Generation"}
+              {t?.title || ""}
             </h1>
-            <p className="text-muted-foreground mt-1">
-              {t?.subtitle || "Configure and print exam papers"}
-            </p>
+            <p className="text-muted-foreground mt-1">{t?.subtitle || ""}</p>
           </div>
           <GenerateWithTemplateButton
             category="EXAM_PAPER"
@@ -81,11 +80,13 @@ export async function Content({
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>{t?.error || "Error"}</CardTitle>
+            <CardTitle>{t?.error || ""}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              {configResult.error || t?.failed_to_load || "Failed to load data"}
+              {configResult.code
+                ? paperErrorText(configResult, dictionary)
+                : (t?.failed_to_load ?? "")}
             </p>
           </CardContent>
         </Card>
@@ -108,11 +109,9 @@ export async function Content({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {t?.title || "Exam Paper Generation"}
+            {t?.title || ""}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {t?.subtitle || "Configure and print exam papers"}
-          </p>
+          <p className="text-muted-foreground mt-1">{t?.subtitle || ""}</p>
         </div>
 
         {/* Quick Actions */}
@@ -120,7 +119,7 @@ export async function Content({
           <Button variant="outline" size="sm" asChild>
             <Link href={`/${locale}/exams/paper/${generatedExamId}/preview`}>
               <Eye className="h-4 w-4" />
-              <span className="ms-2">{t?.preview || "Preview"}</span>
+              <span className="ms-2">{t?.preview || ""}</span>
             </Link>
           </Button>
           <GenerateWithTemplateButton
@@ -143,26 +142,23 @@ export async function Content({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-2">
               <FileText className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
-                {config.generatedExam.questions.length}{" "}
-                {t?.questions || "questions"}
+                {config.generatedExam.questions.length} {t?.questions || ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Printer className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
-                {config.papers.length}{" "}
-                {t?.printed_versions || "printed versions"}
+                {config.papers.length} {t?.printed_versions || ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <RefreshCw className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
-                {config.versionCount}{" "}
-                {t?.versions_to_generate || "versions to generate"}
+                {config.versionCount} {t?.versions_to_generate || ""}
               </span>
             </div>
           </div>
@@ -174,22 +170,22 @@ export async function Content({
         {[
           {
             step: 1,
-            label: t?.configure || "Configure",
+            label: t?.configure || "",
             done: true,
           },
           {
             step: 2,
-            label: t?.generate || "Generate",
+            label: t?.generate || "",
             done: config.papers.length > 0,
           },
           {
             step: 3,
-            label: t?.preview || "Preview",
+            label: t?.preview || "",
             done: config.papers.some((p) => p.pdfUrl),
           },
           {
             step: 4,
-            label: t?.papers || "Download",
+            label: t?.papers || "",
             done: config.papers.some((p) => p.pdfUrl),
           },
         ].map(({ step, label, done }, idx) => (
@@ -222,14 +218,14 @@ export async function Content({
         defaultValue={config.papers.length > 0 ? "papers" : "config"}
         className="space-y-4"
       >
-        <TabsList>
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="config" className="gap-1.5">
             <Settings className="h-3.5 w-3.5" />
-            {t?.settings || "Settings"}
+            {t?.settings || ""}
           </TabsTrigger>
           <TabsTrigger value="generate" className="gap-1.5">
             <Sparkles className="h-3.5 w-3.5" />
-            {t?.generate || "Generate"}
+            {t?.generate || ""}
             {config.papers.length > 0 && (
               <Badge variant="secondary" className="ms-1 px-1.5 py-0 text-xs">
                 {config.papers.length}
@@ -238,7 +234,7 @@ export async function Content({
           </TabsTrigger>
           <TabsTrigger value="papers" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            {t?.papers || "Papers"}
+            {t?.papers || ""}
           </TabsTrigger>
         </TabsList>
 

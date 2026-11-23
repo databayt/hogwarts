@@ -69,20 +69,15 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {mc?.title ?? "Mock Exams"}
-        </h2>
-        <p className="text-muted-foreground">
-          {mc?.description ??
-            "Browse practice exams from the catalog by subject and chapter"}
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{mc?.title ?? ""}</h2>
+        <p className="text-muted-foreground">{mc?.description ?? ""}</p>
       </div>
 
       <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {mc?.totalExams ?? "Total Exams"}
+              {mc?.totalExams ?? ""}
             </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -91,7 +86,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
               {exams.length}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {mc?.availableMockExams ?? "Available mock exams"}
+              {mc?.availableMockExams ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -99,7 +94,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {mc?.subjects ?? "Subjects"}
+              {mc?.subjects ?? ""}
             </CardTitle>
             <GraduationCap className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -108,7 +103,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
               {subjects.length}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {mc?.acrossSubjects ?? "Across subjects"}
+              {mc?.acrossSubjects ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -116,7 +111,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {mc?.avgDuration ?? "Avg Duration"}
+              {mc?.avgDuration ?? ""}
             </CardTitle>
             <Clock className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -125,7 +120,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
               {avgDuration}m
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {mc?.averageExamDuration ?? "Average exam duration"}
+              {mc?.averageExamDuration ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -133,7 +128,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {mc?.questionsLabel ?? "Questions"}
+              {mc?.questionsLabel ?? ""}
             </CardTitle>
             <BookOpen className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -142,7 +137,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
               {totalQuestions}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {mc?.totalQuestionsAcrossExams ?? "Total questions across exams"}
+              {mc?.totalQuestionsAcrossExams ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -155,10 +150,7 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
       />
 
       {isStudentOrGuardian && attempts.length > 0 && (
-        <AttemptHistory
-          attempts={attempts}
-          title={mc?.myMockAttempts ?? "My Mock Exam Attempts"}
-        />
+        <AttemptHistory attempts={attempts} title={mc?.myMockAttempts ?? ""} />
       )}
     </div>
   )

@@ -33,6 +33,7 @@ interface UseExamSessionOptions {
   onSessionStart?: (session: ExamSessionData) => void
   onAutoSave?: () => void
   onSubmit?: () => void
+  /** Receives an error code (e.g. NOT_FOUND, SUBMIT_FAILED) the caller maps to dictionary text. */
   onError?: (error: string) => void
 }
 
@@ -73,10 +74,10 @@ export function useExamSession({
         setSession(result.session as unknown as ExamSessionData)
         onSessionStart?.(result.session as unknown as ExamSessionData)
       } else {
-        onError?.(result.error || "Failed to start session")
+        onError?.(result.error || "START_FAILED")
       }
     } catch (error) {
-      onError?.("Failed to start session")
+      onError?.("START_FAILED")
     } finally {
       setIsLoading(false)
     }
@@ -126,7 +127,7 @@ export function useExamSession({
 
   // Submit exam
   const submitExam = useCallback(async () => {
-    if (!session) return { success: false, error: "No active session" }
+    if (!session) return { success: false, error: "NO_ACTIVE_SESSION" }
 
     setIsSubmitting(true)
     try {
@@ -147,15 +148,13 @@ export function useExamSession({
       if (result.success) {
         onSubmit?.()
       } else {
-        onError?.(
-          ("error" in result && result.error) || "Failed to submit exam"
-        )
+        onError?.(("error" in result && result.error) || "SUBMIT_FAILED")
       }
 
       return result
     } catch (error) {
-      onError?.("Failed to submit exam")
-      return { success: false, error: "Failed to submit exam" }
+      onError?.("SUBMIT_FAILED")
+      return { success: false, error: "SUBMIT_FAILED" }
     } finally {
       setIsSubmitting(false)
     }

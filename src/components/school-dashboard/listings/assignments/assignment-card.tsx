@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { formatAssignmentDate } from "./date"
 import { statusLabel, statusVariant, typeLabel } from "./labels"
 import type { AssignmentRow } from "./list-core"
@@ -45,6 +47,7 @@ export function AssignmentCard({
     string,
     string
   >
+  const timeZone = useSchoolTimeZone()
   const href = `/${lang}/assignments/${row.id}`
   const actionsLabel = (dictionary?.actions as string) ?? ""
   const hasMenu = permissions.showEditAction || permissions.showDeleteAction
@@ -73,7 +76,7 @@ export function AssignmentCard({
           {[
             typeLabel(types, row.type),
             `${row.totalPoints} ${dictionary?.points ?? ""}`,
-            formatAssignmentDate(row.dueDate, lang),
+            formatAssignmentDate(row.dueDate, lang, "short", timeZone),
           ].join(" · ")}
         </span>
       </Link>

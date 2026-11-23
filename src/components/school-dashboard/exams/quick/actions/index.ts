@@ -17,13 +17,13 @@ import {
 import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { gradeQuickResponses, toTakeQuestions } from "../grading"
 import {
   quickAssessmentCreateSchema,
   quickAssessmentReviewSchema,
   quickAssessmentUpdateSchema,
   submitQuickResponseSchema,
 } from "../validation"
-import { gradeQuickResponses, toTakeQuestions } from "../grading"
 import type {
   ActionResponse,
   QuickAssessmentResults,

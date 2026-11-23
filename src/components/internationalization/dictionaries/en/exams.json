@@ -1,0 +1,629 @@
+{
+  "qbank": {
+    "form": {
+      "questionType": "Question Type",
+      "questionText": "Question Text",
+      "tags": "Tags",
+      "explanation": "Explanation (Optional)",
+      "explanationPlaceholder": "Explain the concept...",
+      "options": "Options",
+      "optionPlaceholder": "Enter option text",
+      "optionExplanation": "Optional explanation",
+      "acceptedAnswers": "Accepted Answers",
+      "enterAccepted": "Enter accepted answer",
+      "sampleAnswer": "Sample Answer",
+      "samplePlaceholder": "Provide a good sample answer...",
+      "gradingRubric": "Grading Rubric",
+      "rubricPlaceholder": "Describe key points for grading...",
+      "tagPlaceholder": "Type and press Enter",
+      "updated": "Question updated!",
+      "created": "Question created!",
+      "saveFailed": "Failed to save question",
+      "attachLesson": "Lesson (optional)",
+      "attachChapter": "All chapters",
+      "attachNone": "Not attached",
+      "attachHint": "Attach this question to a lesson to include it in that lesson's practice quiz.",
+      "attachPickSubject": "Choose a subject first.",
+      "attachLoading": "Loading…",
+      "attachEmpty": "No lessons available for this subject.",
+      "createTitle": "Create Question",
+      "editTitle": "Edit Question",
+      "subject": "Subject",
+      "selectSubject": "Select subject",
+      "selectType": "Select type",
+      "questionPlaceholder": "Enter your question here...",
+      "difficulty": "Difficulty",
+      "bloomLevel": "Bloom Level",
+      "selectDifficulty": "Select difficulty",
+      "selectLevel": "Select level",
+      "points": "Points",
+      "timeEstimate": "Time Estimate (min)",
+      "optional": "Optional",
+      "caseSensitive": "Case sensitive",
+      "rubricDescription": "List the criteria for grading this question",
+      "tagHint": "Press Enter to add tags (e.g., algebra, geometry)",
+      "add": "Add",
+      "addOption": "Add Option",
+      "addAnswer": "Add Answer",
+      "option": "Option",
+      "answer": "Answer",
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "update": "Update",
+      "create": "Create"
+    },
+    "aiGenerate": {
+      "subject": "Subject",
+      "selectSubject": "Select subject",
+      "topic": "Topic",
+      "questionType": "Question Type",
+      "difficulty": "Difficulty",
+      "bloomLevel": "Bloom's Level",
+      "numQuestions": "Number of Questions",
+      "additionalInstructions": "Additional Instructions (optional)",
+      "generateFailed": "Generation failed",
+      "saveFailed": "Failed to save",
+      "title": "Generate Questions with AI",
+      "topicPlaceholder": "e.g., Photosynthesis, Quadratic Equations",
+      "instructionsPlaceholder": "e.g., Focus on practical applications, include diagrams description...",
+      "generating": "Generating...",
+      "generate": "Generate Questions",
+      "savedToBank": "{count} saved to Question Bank",
+      "viewBank": "View Question Bank",
+      "review": "Review Generated Questions ({selected}/{total} selected)",
+      "saving": "Saving...",
+      "saveCount": "Save {count}",
+      "questionShort": "Q",
+      "pointsCount": "{count} pts",
+      "accepted": "Accepted:",
+      "sampleAnswer": "Sample answer:",
+      "select": "Select",
+      "deselect": "Deselect"
+    },
+    "catalog": {
+      "searchPlaceholder": "Search catalog questions...",
+      "allSubjects": "All subjects",
+      "difficulty": "Difficulty",
+      "difficultyAll": "All",
+      "difficultyEasy": "Easy",
+      "difficultyMedium": "Medium",
+      "difficultyHard": "Hard",
+      "type": "Type",
+      "typeAll": "All",
+      "typeMCQ": "MCQ",
+      "typeTrueFalse": "True/False",
+      "typeShortAnswer": "Short Answer",
+      "typeEssay": "Essay",
+      "headers": {
+        "question": "Question",
+        "subject": "Subject",
+        "type": "Type",
+        "difficulty": "Difficulty",
+        "used": "Used",
+        "action": "Action"
+      },
+      "noResults": "No catalog questions found",
+      "adopted": "Adopted",
+      "adopt": "Adopt",
+      "totalQuestions": "{count} questions total"
+    },
+    "analytics": {
+      "error": "Error",
+      "loadFailed": "Failed to load analytics",
+      "considerUpdating": "Consider updating",
+      "removeOrReplace": "Remove or replace",
+      "difficultyDescription": "Proportion of students answering correctly (p-value)",
+      "discriminationDescription": "Difference between high and low performers (D-index)",
+      "difficultyDistribution": "Difficulty Distribution",
+      "qualityDistribution": "Quality Distribution",
+      "headers": {
+        "question": "Question",
+        "subject": "Subject",
+        "type": "Type",
+        "quality": "Quality",
+        "difficulty": "Difficulty",
+        "issues": "Issues",
+        "action": "Action"
+      },
+      "noDataTitle": "No Analytics Available",
+      "noDataDescription": "Analytics will appear here after exams are completed and graded.",
+      "noDataHint": "At least 10 responses per question are needed for analysis.",
+      "totalQuestions": "Total Questions",
+      "withSufficientData": "With sufficient data",
+      "goodQuality": "Good Quality",
+      "percentOfQuestions": "{percent}% of questions",
+      "needsRevision": "Needs Revision",
+      "shouldRetire": "Should Retire",
+      "avgQuality": "Avg Quality Score",
+      "avgDifficulty": "Avg Difficulty",
+      "avgDiscrimination": "Avg Discrimination",
+      "difficultyDistributionDesc": "Spread of question difficulty across the bank",
+      "qualityDistributionDesc": "Overall item quality based on psychometric analysis",
+      "flaggedTitle": "Questions Needing Attention",
+      "flaggedDescription": "Questions flagged for revision or retirement based on psychometric analysis",
+      "refresh": "Refresh Analytics",
+      "difficultyLevels": {
+        "veryEasy": "Very Easy",
+        "easy": "Easy",
+        "moderate": "Moderate",
+        "difficult": "Difficult",
+        "veryDifficult": "Very Difficult"
+      },
+      "qualityLevels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "poor": "Poor",
+        "needsReview": "Needs Review"
+      },
+      "flags": {
+        "insufficient_data": "Insufficient data",
+        "too_easy": "Too easy",
+        "too_hard": "Too hard",
+        "negative_discrimination": "Negative discrimination",
+        "low_discrimination": "Low discrimination",
+        "poor_distractors": "Poor distractors"
+      },
+      "actions": {
+        "keep": "Keep",
+        "revise": "Revise",
+        "retire": "Retire",
+        "needs_review": "Needs review"
+      }
+    },
+    "config": {
+      "questionTypes": {
+        "mcq": "Multiple Choice",
+        "trueFalse": "True/False",
+        "fillBlank": "Fill in the Blank",
+        "shortAnswer": "Short Answer",
+        "essay": "Essay",
+        "matching": "Matching",
+        "ordering": "Ordering",
+        "multiSelect": "Multi Select"
+      },
+      "difficulty": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "bloomLevels": {
+        "remember": "Remember",
+        "understand": "Understand",
+        "apply": "Apply",
+        "analyze": "Analyze",
+        "evaluate": "Evaluate",
+        "create": "Create"
+      },
+      "sources": {
+        "manual": "Manual",
+        "aiGenerated": "AI Generated",
+        "imported": "Imported"
+      },
+      "typeDescriptions": {
+        "mcq": "Questions with multiple options, one or more correct answers",
+        "trueFalse": "Binary choice questions",
+        "fillBlank": "Short answer questions with specific expected answers",
+        "shortAnswer": "1-2 sentence responses requiring manual or AI grading",
+        "essay": "Long-form answers requiring manual or AI grading",
+        "matching": "Match items from two columns",
+        "ordering": "Arrange items in the correct sequence",
+        "multiSelect": "Select all correct answers from a list"
+      },
+      "difficultyDescriptions": {
+        "easy": "Basic recall and understanding questions",
+        "medium": "Application and analysis questions",
+        "hard": "Evaluation and creation questions"
+      },
+      "bloomDescriptions": {
+        "remember": "Recall facts and basic concepts",
+        "understand": "Explain ideas or concepts",
+        "apply": "Use information in new situations",
+        "analyze": "Draw connections among ideas",
+        "evaluate": "Justify a stand or decision",
+        "create": "Produce new or original work"
+      },
+      "sourceDescriptions": {
+        "manual": "Created manually by teacher",
+        "aiGenerated": "Generated using AI",
+        "imported": "Imported from external source"
+      }
+    },
+    "wizard": {
+      "question": {
+        "title": "Question",
+        "description": "Enter the question text, subject, and type.",
+        "detailsTitle": "Question Details",
+        "detailsDescription": "Set difficulty, points, tags, and explanation.",
+        "questionText": "Question Text",
+        "questionPlaceholder": "Enter the question (minimum 10 characters)",
+        "questionType": "Question Type",
+        "optionalPlaceholder": "Optional",
+        "tagsPlaceholder": "Enter comma-separated tags",
+        "explanationPlaceholder": "Explain the correct answer (optional)",
+        "imagePlaceholder": "Optional image URL",
+        "tabQuestion": "Question",
+        "tabQuestionDesc": "Enter the question text, subject, and type.",
+        "tabDetails": "Details",
+        "tabDetailsTitle": "Question Details",
+        "tabDetailsDesc": "Set difficulty, points, tags, and explanation.",
+        "subject": "Subject",
+        "questionTextPlaceholder": "Enter the question (minimum 10 characters)",
+        "difficulty": "Difficulty",
+        "bloomLevel": "Bloom's Level",
+        "points": "Points",
+        "timeEstimate": "Time Estimate (minutes)",
+        "optional": "Optional",
+        "tags": "Tags",
+        "explanation": "Explanation",
+        "imageUrl": "Image URL",
+        "imageUrlPlaceholder": "Optional image URL",
+        "saveFailed": "Failed to save"
+      },
+      "answers": {
+        "answerOptions": "Answer Options",
+        "enterOption": "Enter option text",
+        "optionalExplanation": "Optional explanation",
+        "markCorrect": "Mark as correct answer",
+        "selectCorrect": "Select the Correct Answer",
+        "acceptedAnswers": "Accepted Answers",
+        "enterAccepted": "Enter accepted answer",
+        "sampleAnswer": "Enter the expected sample answer",
+        "rubricPlaceholder": "Describe how to grade this answer (optional)",
+        "modelAnswer": "Enter a model answer (minimum 50 characters)",
+        "rubricCriteria": "Describe rubric criteria (minimum 20 characters)",
+        "matchingPairs": "Matching Pairs",
+        "enterLeft": "Enter left side item",
+        "enterRight": "Enter matching right side item",
+        "correctOrder": "Items in Correct Order",
+        "enterItem": "Enter item text",
+        "title": "Answer Options",
+        "description": "Configure the answer options for this question.",
+        "answerOptionsSelectAll": "Answer Options (select all correct)",
+        "addOption": "Add Option",
+        "option": "Option",
+        "text": "Text",
+        "enterOptionText": "Enter option text",
+        "correctAnswer": "Correct Answer",
+        "explanation": "Explanation",
+        "correct": "Correct",
+        "markAsCorrect": "Mark as correct answer",
+        "selectCorrectAnswer": "Select the Correct Answer",
+        "trueLabel": "True",
+        "falseLabel": "False",
+        "addAnswer": "Add Answer",
+        "answer": "Answer",
+        "enterAcceptedAnswer": "Enter accepted answer",
+        "caseSensitivity": "Case Sensitivity",
+        "caseSensitiveLabel": "Answers are case-sensitive",
+        "sampleAnswerPlaceholder": "Enter the expected sample answer",
+        "gradingRubric": "Grading Rubric",
+        "gradingRubricPlaceholder": "Describe how to grade this answer (optional)",
+        "essaySamplePlaceholder": "Enter a model answer (minimum 50 characters)",
+        "essayRubricPlaceholder": "Describe rubric criteria (minimum 20 characters)",
+        "addPair": "Add Pair",
+        "pair": "Pair",
+        "leftItem": "Left Item",
+        "leftItemPlaceholder": "Enter left side item",
+        "rightMatch": "Right Match",
+        "rightMatchPlaceholder": "Enter matching right side item",
+        "addItem": "Add Item",
+        "itemsInOrder": "Items in Correct Order",
+        "orderingDescription": "Enter items in the correct sequence. Students will need to reorder them.",
+        "item": "Item",
+        "enterItemText": "Enter item text",
+        "remove": "Remove",
+        "saveFailed": "Failed to save",
+        "completeFailed": "Failed to complete"
+      },
+      "saveQuestion": "Save Question",
+      "groupQuestion": "Question Details",
+      "groupAnswers": "Answer Options"
+    },
+    "tabbedLayout": {
+      "catalog": "Catalog",
+      "myQuestions": "My Questions"
+    },
+    "deleteFailed": "Failed to delete",
+    "deleteConfirm": "Delete this question?",
+    "list": {
+      "empty": "No questions yet",
+      "loadMore": "Load More",
+      "unknownSubject": "Unknown",
+      "pointsValue": "Points: {count}",
+      "timesUsed": "Used {count} times",
+      "actions": "Actions",
+      "openMenu": "Open menu",
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "columns": {
+        "question": "Question",
+        "type": "Type",
+        "difficulty": "Difficulty",
+        "bloomLevel": "Bloom Level",
+        "subject": "Subject",
+        "points": "Points",
+        "source": "Source",
+        "used": "Used",
+        "times": "times",
+        "successRate": "Success Rate",
+        "quality": "Quality",
+        "created": "Created"
+      },
+      "quality": {
+        "new": "New",
+        "good": "Good",
+        "moderate": "Moderate",
+        "tooEasy": "Too Easy",
+        "tooHard": "Too Hard",
+        "mismatch": "Mismatch"
+      }
+    },
+    "validation": {
+      "optionTextRequired": "Option text is required",
+      "subjectRequired": "Subject is required",
+      "questionMin": "Question must be at least 10 characters",
+      "optionsMin2": "At least 2 options required",
+      "optionsMax6": "Maximum 6 options allowed",
+      "optionsMax8": "Maximum 8 options",
+      "correctRequired": "At least one correct answer is required",
+      "trueFalseTwo": "True/False must have exactly 2 options",
+      "trueFalseCorrect": "One option must be correct",
+      "acceptedMin": "At least one accepted answer is required",
+      "sampleMin10": "Sample answer must be at least 10 characters",
+      "sampleMin50": "Sample answer must be at least 50 characters",
+      "rubricMin20": "Grading rubric must be at least 20 characters",
+      "pairsMin2": "At least 2 matching pairs required",
+      "pairsMax10": "Maximum 10 matching pairs",
+      "itemsMin2": "At least 2 items required",
+      "itemsMax10": "Maximum 10 items",
+      "twoCorrect": "At least two correct answers are required",
+      "topicMin3": "Topic must be at least 3 characters",
+      "questionsMin1": "At least 1 question",
+      "questionsMax20": "Maximum 20 questions at once",
+      "nameMin3": "Name must be at least 3 characters",
+      "durationMin": "Minimum 15 minutes",
+      "durationMax": "Maximum 8 hours",
+      "templateNeedsQuestion": "Template must have at least one question",
+      "examRequired": "Exam is required",
+      "importMin1": "At least one question required",
+      "importMax100": "Maximum 100 questions per import",
+      "questionTextMin": "Question text must be at least 10 characters",
+      "pointsMin": "Points must be at least 0.5",
+      "pointsMax": "Points cannot exceed 100"
+    },
+    "practice": {
+      "chooseSubject": "Choose Subject",
+      "questionsCount": "{count} questions",
+      "settings": "Practice Settings",
+      "difficultyLevel": "Difficulty Level",
+      "all": "All",
+      "numQuestions": "Number of Questions",
+      "available": "{count} available",
+      "start": "Start Practice",
+      "history": "Practice History",
+      "correct": "correct",
+      "wellDone": "Well Done!",
+      "completed": "You completed {count} questions",
+      "manualReview": "{count} essay/short answer questions (need manual review)",
+      "newPractice": "New Practice",
+      "tryAgain": "Try Again",
+      "exit": "Exit",
+      "typeAnswer": "Type your answer",
+      "writeAnswer": "Write your answer",
+      "acceptedAnswers": "Accepted answers:",
+      "sampleAnswer": "Sample Answer:",
+      "previous": "Previous",
+      "checkAnswer": "Check Answer",
+      "finish": "Finish",
+      "next": "Next",
+      "mixed": "Mixed"
+    }
+  },
+  "paper": {
+    "config": {
+      "compose": "Compose",
+      "compose_desc": "Choose variants for each section of the exam paper",
+      "region_copies": "Region & Print Copies",
+      "region_copies_desc": "Regional exam format and print quantity",
+      "region_preset": "Region Preset",
+      "auto_detect": "Auto-detect",
+      "region_preset_desc": "Applies regional formatting (headers, watermarks, etc.)",
+      "spare_copies": "Spare Copies",
+      "spare_copies_desc": "Extra copies beyond enrollment",
+      "custom_copies": "Custom Copies",
+      "auto_placeholder": "Auto",
+      "recommended_copies": "Recommended: {count} copies ({enrolled} enrolled + {spare} spare)",
+      "custom_copies_desc": "Override auto-calculated count",
+      "letter": "Letter"
+    },
+    "list": {
+      "deleted": "Deleted",
+      "paper_deleted": "Paper deleted successfully",
+      "version": "Version",
+      "row_actions": "Paper actions"
+    },
+    "options": {
+      "template": {
+        "CLASSIC": {
+          "label": "Classic academic",
+          "description": "Traditional exam format with school header and numbered questions"
+        },
+        "MODERN": {
+          "label": "Modern minimal",
+          "description": "Clean, spacious layout with minimal decoration"
+        },
+        "FORMAL": {
+          "label": "Formal",
+          "description": "Government-style exam with strict formatting and watermarks"
+        },
+        "CUSTOM": {
+          "label": "Custom",
+          "description": "Uses the school's brand colors and custom formatting"
+        }
+      },
+      "layout": {
+        "SINGLE_COLUMN": {
+          "label": "Single column",
+          "description": "Questions arranged vertically in one column"
+        },
+        "TWO_COLUMN": {
+          "label": "Two columns",
+          "description": "Questions arranged in two columns (saves space)"
+        },
+        "BOOKLET": {
+          "label": "Booklet",
+          "description": "Multi-page booklet with the answer sheet at the end"
+        }
+      },
+      "answerSheet": {
+        "NONE": {
+          "label": "Answers inline",
+          "description": "Students write answers below each question"
+        },
+        "SEPARATE": {
+          "label": "Separate sheet",
+          "description": "A dedicated answer sheet at the end of the exam"
+        },
+        "BUBBLE": {
+          "label": "Bubble sheet",
+          "description": "Scannable bubble sheet (multiple choice only)"
+        }
+      }
+    },
+    "validation": {
+      "maxLength": "Must be at most {max} characters",
+      "minValue": "Must be at least {min}",
+      "maxValue": "Must be at most {max}",
+      "integer": "Must be a whole number",
+      "required": "This field is required"
+    },
+    "errors": {
+      "UNAUTHORIZED": "You are not allowed to do this",
+      "NOT_FOUND": "The exam, paper or settings were not found",
+      "ALREADY_EXISTS": "Paper settings already exist for this exam",
+      "CREATE_FAILED": "Could not save the paper settings",
+      "UPDATE_FAILED": "Could not update the paper settings",
+      "DELETE_FAILED": "Could not delete. Please try again",
+      "FETCH_FAILED": "Could not load the paper data",
+      "GENERATION_FAILED": "Could not generate the paper. Please try again",
+      "INVALID_INPUT": "Some of the values entered are not valid",
+      "generic": "Something went wrong. Please try again"
+    },
+    "composition": {
+      "slots": {
+        "header": "Header",
+        "footer": "Footer",
+        "studentInfo": "Student info",
+        "instructions": "Instructions",
+        "answerSheet": "Answer sheet",
+        "cover": "Cover"
+      },
+      "decorations": "Decorations",
+      "accentBar": "Accent bar",
+      "accentBarDesc": "Colored bar at the top of the page",
+      "watermark": "Watermark",
+      "watermarkDesc": "Diagonal text behind the content",
+      "doubleFrame": "Double frame",
+      "doubleFrameDesc": "Double border around the content"
+    },
+    "actions": {
+      "downloadPdf": "Download PDF",
+      "preparing": "Preparing...",
+      "print": "Print",
+      "printing": "Printing..."
+    }
+  },
+  "take": {
+    "errors": {
+      "NOT_FOUND": "The exam or session was not found",
+      "UNAUTHORIZED": "You are not allowed to take this exam",
+      "VALIDATION_ERROR": "The submitted data is not valid",
+      "EXAM_NOT_FOUND": "This exam was not found",
+      "EXAM_UPDATE_FAILED": "Could not update the exam session. Please try again",
+      "SAVE_FAILED": "Could not save your answers",
+      "LOAD_FAILED": "Could not load the exam",
+      "STUDENT_NOT_FOUND": "Your student record was not found",
+      "MAX_ATTEMPTS_REACHED": "You have used all the allowed attempts for this exam",
+      "START_FAILED": "Could not start the exam session",
+      "SUBMIT_FAILED": "Could not submit the exam. Please try again",
+      "NO_ACTIVE_SESSION": "There is no active exam session",
+      "generic": "Something went wrong. Please try again"
+    },
+    "questionTypes": {
+      "MULTIPLE_CHOICE": "Multiple choice",
+      "TRUE_FALSE": "True / False",
+      "FILL_BLANK": "Fill in the blank",
+      "SHORT_ANSWER": "Short answer",
+      "ESSAY": "Essay"
+    },
+    "flagQuestion": "Flag this question for review",
+    "unflagQuestion": "Remove the flag from this question"
+  },
+  "shared": {
+    "questionTypes": {
+      "MULTIPLE_CHOICE": "MCQ",
+      "TRUE_FALSE": "T/F",
+      "SHORT_ANSWER": "Short",
+      "ESSAY": "Essay",
+      "FILL_BLANK": "Fill",
+      "MATCHING": "Match",
+      "ORDERING": "Order",
+      "MULTI_SELECT": "Multi"
+    },
+    "bloomLevels": {
+      "REMEMBER": "Remember",
+      "UNDERSTAND": "Understand",
+      "APPLY": "Apply",
+      "ANALYZE": "Analyze",
+      "EVALUATE": "Evaluate",
+      "CREATE": "Create"
+    },
+    "questionsCount": "{count} questions",
+    "notAvailable": "N/A",
+    "myAttempts": "My Attempts",
+    "attemptsCountOne": "{count} attempt",
+    "attemptsCountMany": "{count} attempts"
+  },
+  "quick": {
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "closed": "Closed",
+      "archived": "Archived"
+    },
+    "list": {
+      "actions": "Actions",
+      "minutes": "{count} min"
+    },
+    "toast": {
+      "launchFailed": "Couldn't launch the assessment",
+      "closeFailed": "Couldn't close the assessment",
+      "createFailed": "Couldn't create the assessment"
+    },
+    "take": {
+      "timeRemaining": "Time remaining",
+      "submitFailed": "Couldn't submit your answers. Please try again."
+    },
+    "validation": {
+      "titleRequired": "Title is required",
+      "questionsRequired": "Choose at least one question",
+      "durationRange": "Duration must be between 1 and 60 minutes",
+      "idRequired": "Assessment is required",
+      "assessmentIdRequired": "Assessment is required"
+    }
+  },
+  "quiz": {
+    "minutes": "{count} min",
+    "points": "{count} pts"
+  },
+  "mock": {
+    "minutes": "{count} min",
+    "take": {
+      "points": "{count} pts",
+      "timeRemaining": "Time remaining",
+      "submitFailed": "Couldn't submit the exam. Please try again."
+    }
+  }
+}

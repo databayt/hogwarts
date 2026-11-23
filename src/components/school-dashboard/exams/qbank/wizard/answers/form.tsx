@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useTransition,
 } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -19,12 +20,13 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
+import { qbankT } from "../../t"
 import { completeQuestionWizard } from "../actions"
 import { useQuestionWizard } from "../use-question-wizard"
 import { updateQuestionAnswers } from "./actions"
-import { answersSchema, type AnswersFormData } from "./validation"
+import { createAnswersSchema, type AnswersFormData } from "./validation"
 
 interface AnswersFormProps {
   questionId: string
@@ -34,10 +36,12 @@ interface AnswersFormProps {
 
 export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
   ({ questionId, initialData, onValidChange }, ref) => {
-    const { dictionary } = useDictionary()
-    const t = dictionary?.school?.exams?.qbankUi?.wizard?.answers as
-      | Record<string, string>
-      | undefined
+    const qt = qbankT(useDictionaryFallback<any>())
+    const t = qt.wizard?.answers as Record<string, string> | undefined
+    const schema = useMemo(
+      () => createAnswersSchema(qt.validation).answersSchema,
+      [qt.validation]
+    )
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
     const params = useParams()
@@ -46,7 +50,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
 
     const form = useForm<AnswersFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(answersSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         options: initialData?.options || [
           { text: "", isCorrect: true, explanation: "" },
@@ -155,17 +159,14 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
               const data = form.getValues()
               const result = await updateQuestionAnswers(questionId, data)
               if (!result.success) {
-                ErrorToast(result.error || (t?.saveFailed ?? "Failed to save"))
+                ErrorToast(result.error || (t?.saveFailed ?? ""))
                 reject(new Error(result.error))
                 return
               }
 
               const completeResult = await completeQuestionWizard(questionId)
               if (!completeResult.success) {
-                ErrorToast(
-                  completeResult.error ||
-                    (t?.completeFailed ?? "Failed to complete")
-                )
+                ErrorToast(completeResult.error || (t?.completeFailed ?? ""))
                 reject(new Error(completeResult.error))
                 return
               }
@@ -174,9 +175,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
               resolve()
             } catch (err) {
               const msg =
-                err instanceof Error
-                  ? err.message
-                  : (t?.saveFailed ?? "Failed to save")
+                err instanceof Error ? err.message : (t?.saveFailed ?? "")
               ErrorToast(msg)
               reject(err)
             }
@@ -210,9 +209,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
           {questionType === "MULTIPLE_CHOICE" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  {t?.answerOptions ?? "Answer Options"}
-                </h4>
+                <h4 className="font-medium">{t?.answerOptions ?? ""}</h4>
                 <Button
                   type="button"
                   variant="outline"
@@ -227,7 +224,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   disabled={isPending}
                 >
                   <Plus className="me-1 h-4 w-4" />
-                  {t?.addOption ?? "Add Option"}
+                  {t?.addOption ?? ""}
                 </Button>
               </div>
               {optionFields.map((field, index) => (
@@ -237,12 +234,13 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {t?.option ?? "Option"} {index + 1}
+                      {t?.option ?? ""} {index + 1}
                     </span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={t?.remove ?? ""}
                       onClick={() => removeOption(index)}
                       disabled={isPending || optionFields.length <= 2}
                     >
@@ -251,8 +249,8 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   </div>
                   <InputField
                     name={`options.${index}.text`}
-                    label={t?.text ?? "Text"}
-                    placeholder={t?.enterOptionText ?? "Enter option text"}
+                    label={t?.text ?? ""}
+                    placeholder={t?.enterOptionText ?? ""}
                     required
                     disabled={isPending}
                   />
@@ -265,15 +263,13 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                         onChange={() => handleMCQCorrectChange(index)}
                         disabled={isPending}
                       />
-                      {t?.correctAnswer ?? "Correct Answer"}
+                      {t?.correctAnswer ?? ""}
                     </label>
                   </div>
                   <InputField
                     name={`options.${index}.explanation`}
-                    label={t?.explanation ?? "Explanation"}
-                    placeholder={
-                      t?.optionalExplanation ?? "Optional explanation"
-                    }
+                    label={t?.explanation ?? ""}
+                    placeholder={t?.optionalExplanation ?? ""}
                     disabled={isPending}
                   />
                 </div>
@@ -286,8 +282,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">
-                  {t?.answerOptionsSelectAll ??
-                    "Answer Options (select all correct)"}
+                  {t?.answerOptionsSelectAll ?? ""}
                 </h4>
                 <Button
                   type="button"
@@ -303,7 +298,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   disabled={isPending}
                 >
                   <Plus className="me-1 h-4 w-4" />
-                  {t?.addOption ?? "Add Option"}
+                  {t?.addOption ?? ""}
                 </Button>
               </div>
               {optionFields.map((field, index) => (
@@ -313,12 +308,13 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {t?.option ?? "Option"} {index + 1}
+                      {t?.option ?? ""} {index + 1}
                     </span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={t?.remove ?? ""}
                       onClick={() => removeOption(index)}
                       disabled={isPending || optionFields.length <= 2}
                     >
@@ -327,23 +323,21 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   </div>
                   <InputField
                     name={`options.${index}.text`}
-                    label={t?.text ?? "Text"}
-                    placeholder={t?.enterOptionText ?? "Enter option text"}
+                    label={t?.text ?? ""}
+                    placeholder={t?.enterOptionText ?? ""}
                     required
                     disabled={isPending}
                   />
                   <CheckboxField
                     name={`options.${index}.isCorrect`}
-                    label={t?.correct ?? "Correct"}
-                    checkboxLabel={t?.markAsCorrect ?? "Mark as correct answer"}
+                    label={t?.correct ?? ""}
+                    checkboxLabel={t?.markAsCorrect ?? ""}
                     disabled={isPending}
                   />
                   <InputField
                     name={`options.${index}.explanation`}
-                    label={t?.explanation ?? "Explanation"}
-                    placeholder={
-                      t?.optionalExplanation ?? "Optional explanation"
-                    }
+                    label={t?.explanation ?? ""}
+                    placeholder={t?.optionalExplanation ?? ""}
                     disabled={isPending}
                   />
                 </div>
@@ -354,12 +348,10 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
           {/* TRUE_FALSE */}
           {questionType === "TRUE_FALSE" && (
             <div className="space-y-4">
-              <h4 className="font-medium">
-                {t?.selectCorrectAnswer ?? "Select the Correct Answer"}
-              </h4>
-              {["True", "False"].map((label, index) => (
+              <h4 className="font-medium">{t?.selectCorrectAnswer ?? ""}</h4>
+              {[t?.trueLabel ?? "", t?.falseLabel ?? ""].map((label, index) => (
                 <label
-                  key={label}
+                  key={index}
                   className="bg-muted/50 flex items-center gap-3 rounded-lg border p-4"
                 >
                   <input
@@ -379,9 +371,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
           {questionType === "FILL_BLANK" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  {t?.acceptedAnswers ?? "Accepted Answers"}
-                </h4>
+                <h4 className="font-medium">{t?.acceptedAnswers ?? ""}</h4>
                 <Button
                   type="button"
                   variant="outline"
@@ -390,17 +380,15 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   disabled={isPending}
                 >
                   <Plus className="me-1 h-4 w-4" />
-                  {t?.addAnswer ?? "Add Answer"}
+                  {t?.addAnswer ?? ""}
                 </Button>
               </div>
               {acceptedFields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
                   <InputField
                     name={`acceptedAnswers.${index}`}
-                    label={`${t?.answer ?? "Answer"} ${index + 1}`}
-                    placeholder={
-                      t?.enterAcceptedAnswer ?? "Enter accepted answer"
-                    }
+                    label={`${t?.answer ?? ""} ${index + 1}`}
+                    placeholder={t?.enterAcceptedAnswer ?? ""}
                     required
                     disabled={isPending}
                   />
@@ -409,6 +397,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                     variant="ghost"
                     size="icon"
                     className="mt-6"
+                    aria-label={t?.remove ?? ""}
                     onClick={() => removeAccepted(index)}
                     disabled={isPending || acceptedFields.length <= 1}
                   >
@@ -418,10 +407,8 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
               ))}
               <CheckboxField
                 name="caseSensitive"
-                label={t?.caseSensitivity ?? "Case Sensitivity"}
-                checkboxLabel={
-                  t?.caseSensitiveLabel ?? "Answers are case-sensitive"
-                }
+                label={t?.caseSensitivity ?? ""}
+                checkboxLabel={t?.caseSensitiveLabel ?? ""}
                 disabled={isPending}
               />
             </div>
@@ -432,21 +419,15 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
             <div className="space-y-4">
               <TextareaField
                 name="sampleAnswer"
-                label={t?.sampleAnswer ?? "Sample Answer"}
-                placeholder={
-                  t?.sampleAnswerPlaceholder ??
-                  "Enter the expected sample answer"
-                }
+                label={t?.sampleAnswer ?? ""}
+                placeholder={t?.sampleAnswerPlaceholder ?? ""}
                 required
                 disabled={isPending}
               />
               <TextareaField
                 name="gradingRubric"
-                label={t?.gradingRubric ?? "Grading Rubric"}
-                placeholder={
-                  t?.gradingRubricPlaceholder ??
-                  "Describe how to grade this answer (optional)"
-                }
+                label={t?.gradingRubric ?? ""}
+                placeholder={t?.gradingRubricPlaceholder ?? ""}
                 disabled={isPending}
               />
             </div>
@@ -457,21 +438,15 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
             <div className="space-y-4">
               <TextareaField
                 name="sampleAnswer"
-                label={t?.sampleAnswer ?? "Sample Answer"}
-                placeholder={
-                  t?.essaySamplePlaceholder ??
-                  "Enter a model answer (minimum 50 characters)"
-                }
+                label={t?.sampleAnswer ?? ""}
+                placeholder={t?.essaySamplePlaceholder ?? ""}
                 required
                 disabled={isPending}
               />
               <TextareaField
                 name="gradingRubric"
-                label={t?.gradingRubric ?? "Grading Rubric"}
-                placeholder={
-                  t?.essayRubricPlaceholder ??
-                  "Describe rubric criteria (minimum 20 characters)"
-                }
+                label={t?.gradingRubric ?? ""}
+                placeholder={t?.essayRubricPlaceholder ?? ""}
                 required
                 disabled={isPending}
               />
@@ -482,9 +457,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
           {questionType === "MATCHING" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  {t?.matchingPairs ?? "Matching Pairs"}
-                </h4>
+                <h4 className="font-medium">{t?.matchingPairs ?? ""}</h4>
                 <Button
                   type="button"
                   variant="outline"
@@ -499,7 +472,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   disabled={isPending}
                 >
                   <Plus className="me-1 h-4 w-4" />
-                  {t?.addPair ?? "Add Pair"}
+                  {t?.addPair ?? ""}
                 </Button>
               </div>
               {optionFields.map((field, index) => (
@@ -509,12 +482,13 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {t?.pair ?? "Pair"} {index + 1}
+                      {t?.pair ?? ""} {index + 1}
                     </span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={t?.remove ?? ""}
                       onClick={() => removeOption(index)}
                       disabled={isPending || optionFields.length <= 2}
                     >
@@ -523,20 +497,15 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   </div>
                   <InputField
                     name={`options.${index}.text`}
-                    label={t?.leftItem ?? "Left Item"}
-                    placeholder={
-                      t?.leftItemPlaceholder ?? "Enter left side item"
-                    }
+                    label={t?.leftItem ?? ""}
+                    placeholder={t?.leftItemPlaceholder ?? ""}
                     required
                     disabled={isPending}
                   />
                   <InputField
                     name={`options.${index}.explanation`}
-                    label={t?.rightMatch ?? "Right Match"}
-                    placeholder={
-                      t?.rightMatchPlaceholder ??
-                      "Enter matching right side item"
-                    }
+                    label={t?.rightMatch ?? ""}
+                    placeholder={t?.rightMatchPlaceholder ?? ""}
                     required
                     disabled={isPending}
                   />
@@ -549,9 +518,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
           {questionType === "ORDERING" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  {t?.itemsInOrder ?? "Items in Correct Order"}
-                </h4>
+                <h4 className="font-medium">{t?.itemsInOrder ?? ""}</h4>
                 <Button
                   type="button"
                   variant="outline"
@@ -566,12 +533,11 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   disabled={isPending}
                 >
                   <Plus className="me-1 h-4 w-4" />
-                  {t?.addItem ?? "Add Item"}
+                  {t?.addItem ?? ""}
                 </Button>
               </div>
               <p className="text-muted-foreground text-sm">
-                {t?.orderingDescription ??
-                  "Enter items in the correct sequence. Students will need to reorder them."}
+                {t?.orderingDescription ?? ""}
               </p>
               {optionFields.map((field, index) => (
                 <div
@@ -584,8 +550,8 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                   <div className="flex-1">
                     <InputField
                       name={`options.${index}.text`}
-                      label={`${t?.item ?? "Item"} ${index + 1}`}
-                      placeholder={t?.enterItemText ?? "Enter item text"}
+                      label={`${t?.item ?? ""} ${index + 1}`}
+                      placeholder={t?.enterItemText ?? ""}
                       required
                       disabled={isPending}
                     />
@@ -595,6 +561,7 @@ export const AnswersForm = forwardRef<WizardFormRef, AnswersFormProps>(
                     variant="ghost"
                     size="icon"
                     className="mt-6"
+                    aria-label={t?.remove ?? ""}
                     onClick={() => removeOption(index)}
                     disabled={isPending || optionFields.length <= 2}
                   >

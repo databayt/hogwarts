@@ -28,6 +28,8 @@ import {
   AssignmentAttachments,
   type AttachmentLink,
 } from "./assignment-attachments"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { formatAssignmentDate } from "./date"
 import { statusLabel, statusVariant, typeLabel } from "./labels"
 import { FamilySubmissionStatus } from "./family-submission"
@@ -92,6 +94,7 @@ export function AssignmentDetailContent({
     any
   >
   const staffView = !viewer
+  const timeZone = useSchoolTimeZone()
 
   const backButton = (
     <Button
@@ -152,7 +155,7 @@ export function AssignmentDetailContent({
       key: "due",
       label: dictionary?.school?.assignments?.dueDate ?? "",
       icon: <Calendar className="text-muted-foreground size-4" />,
-      value: formatAssignmentDate(data.dueDate, lang),
+      value: formatAssignmentDate(data.dueDate, lang, "short", timeZone),
     },
     {
       key: "points",
@@ -170,14 +173,14 @@ export function AssignmentDetailContent({
       key: "created",
       label: t.createdAt,
       icon: <Calendar className="text-muted-foreground size-4" />,
-      value: formatAssignmentDate(data.createdAt, lang),
+      value: formatAssignmentDate(data.createdAt, lang, "short", timeZone),
       staffOnly: true,
     },
     {
       key: "updated",
       label: t.updatedAt,
       icon: <Calendar className="text-muted-foreground size-4" />,
-      value: formatAssignmentDate(data.updatedAt, lang),
+      value: formatAssignmentDate(data.updatedAt, lang, "short", timeZone),
       staffOnly: true,
     },
   ]
@@ -279,7 +282,7 @@ export function AssignmentDetailContent({
             {[
               audience,
               viewer?.role === "GUARDIAN" ? viewer.childName : null,
-              `${t.due} ${formatAssignmentDate(data.dueDate, lang, "long")}`,
+              `${t.due} ${formatAssignmentDate(data.dueDate, lang, "long", timeZone)}`,
             ]
               .filter(Boolean)
               .join(" · ")}

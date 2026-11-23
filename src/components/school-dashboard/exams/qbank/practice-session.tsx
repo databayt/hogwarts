@@ -26,6 +26,10 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+
+import { getDifficultyLabels } from "./config"
+import { fmt, qbankT } from "./t"
 
 interface SubjectSummary {
   id: string
@@ -87,7 +91,9 @@ export function PracticeSession({
   const [showAnswer, setShowAnswer] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
 
-  const isAr = lang === "ar"
+  const qt = qbankT(useDictionaryFallback<any>())
+  const t = (qt.practice ?? {}) as Record<string, string>
+  const difficultyLabels = getDifficultyLabels(qt)
 
   // Filter questions by subject and difficulty
   const availableQuestions = useMemo(() => {
@@ -206,7 +212,8 @@ export function PracticeSession({
     const percentage =
       autoGradable > 0 ? Math.round((correctCount / autoGradable) * 100) : 0
 
-    const name = subjects.find((s) => s.id === selectedSubject)?.name || "Mixed"
+    const name =
+      subjects.find((s) => s.id === selectedSubject)?.name || (t.mixed ?? "")
 
     const entry = {
       id: Date.now().toString(),
@@ -259,9 +266,7 @@ export function PracticeSession({
       <div className="space-y-6">
         {/* Subject cards */}
         <div>
-          <h3 className="mb-3 font-semibold">
-            {isAr ? "اختر المادة" : "Choose Subject"}
-          </h3>
+          <h3 className="mb-3 font-semibold">{t.chooseSubject ?? ""}</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subjects.map((sub) => (
               <Card
@@ -288,17 +293,17 @@ export function PracticeSession({
                 </CardHeader>
                 <CardContent className="pb-3">
                   <p className="text-muted-foreground mb-2 text-sm">
-                    {sub.totalQuestions} {isAr ? "سؤال" : "questions"}
+                    {fmt(t.questionsCount, { count: sub.totalQuestions })}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Badge variant="default" className="text-xs">
-                      {isAr ? "سهل" : "Easy"} {sub.easyCount}
+                      {difficultyLabels.EASY} {sub.easyCount}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
-                      {isAr ? "متوسط" : "Medium"} {sub.mediumCount}
+                      {difficultyLabels.MEDIUM} {sub.mediumCount}
                     </Badge>
                     <Badge variant="destructive" className="text-xs">
-                      {isAr ? "صعب" : "Hard"} {sub.hardCount}
+                      {difficultyLabels.HARD} {sub.hardCount}
                     </Badge>
                   </div>
                 </CardContent>
@@ -312,23 +317,23 @@ export function PracticeSession({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-4 w-4" />
-              {isAr ? "إعدادات التدريب" : "Practice Settings"}
+              {t.settings ?? ""}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>{isAr ? "مستوى الصعوبة" : "Difficulty Level"}</Label>
+                <Label>{t.difficultyLevel ?? ""}</Label>
                 <RadioGroup
                   value={selectedDifficulty}
                   onValueChange={setSelectedDifficulty}
                   className="mt-2 flex flex-wrap gap-2"
                 >
                   {[
-                    { value: "ALL", label: isAr ? "الكل" : "All" },
-                    { value: "EASY", label: isAr ? "سهل" : "Easy" },
-                    { value: "MEDIUM", label: isAr ? "متوسط" : "Medium" },
-                    { value: "HARD", label: isAr ? "صعب" : "Hard" },
+                    { value: "ALL", label: t.all ?? "" },
+                    { value: "EASY", label: difficultyLabels.EASY },
+                    { value: "MEDIUM", label: difficultyLabels.MEDIUM },
+                    { value: "HARD", label: difficultyLabels.HARD },
                   ].map((opt) => (
                     <div key={opt.value} className="flex items-center gap-1.5">
                       <RadioGroupItem value={opt.value} id={opt.value} />
@@ -341,9 +346,7 @@ export function PracticeSession({
               </div>
 
               <div>
-                <Label htmlFor="count">
-                  {isAr ? "عدد الأسئلة" : "Number of Questions"}
-                </Label>
+                <Label htmlFor="count">{t.numQuestions ?? ""}</Label>
                 <Input
                   id="count"
                   type="number"
@@ -353,10 +356,10 @@ export function PracticeSession({
                   onChange={(e) =>
                     setQuestionCount(Math.max(1, parseInt(e.target.value) || 1))
                   }
-                  className="mt-2 w-24"
+                  className="mt-2 w-full sm:w-24"
                 />
                 <p className="text-muted-foreground mt-1 text-xs">
-                  {availableQuestions.length} {isAr ? "سؤال متاح" : "available"}
+                  {fmt(t.available, { count: availableQuestions.length })}
                 </p>
               </div>
             </div>
@@ -364,10 +367,10 @@ export function PracticeSession({
             <Button
               onClick={startPractice}
               disabled={availableQuestions.length === 0}
-              className="w-full sm:w-auto"
+              className="min-h-11 w-full sm:w-auto"
             >
               <Zap className="me-2 h-4 w-4" />
-              {isAr ? "ابدأ التدريب" : "Start Practice"}
+              {t.start ?? ""}
               {availableQuestions.length > 0 &&
                 ` (${Math.min(questionCount, availableQuestions.length)})`}
             </Button>
@@ -377,14 +380,12 @@ export function PracticeSession({
         {/* Practice History */}
         {practiceHistory.length > 0 && (
           <div>
-            <h3 className="mb-3 font-semibold">
-              {isAr ? "سجل التدريب" : "Practice History"}
-            </h3>
+            <h3 className="mb-3 font-semibold">{t.history ?? ""}</h3>
             <div className="space-y-2">
               {practiceHistory.map((entry) => (
                 <Card key={entry.id} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
                       <div
                         className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
                           entry.percentage >= 70
@@ -400,14 +401,14 @@ export function PracticeSession({
                         <p className="text-sm font-medium">{entry.name}</p>
                         <p className="text-muted-foreground text-xs">
                           {entry.correctCount}/{entry.totalQuestions}{" "}
-                          {isAr ? "صحيح" : "correct"} &middot;{" "}
+                          {t.correct ?? ""} &middot;{" "}
                           {formatDate(entry.completedAt, lang)}
                         </p>
                       </div>
                     </div>
                     {entry.difficulty !== "ALL" && (
                       <Badge variant="outline" className="text-xs">
-                        {entry.difficulty}
+                        {difficultyLabels[entry.difficulty] ?? entry.difficulty}
                       </Badge>
                     )}
                   </div>
@@ -434,20 +435,16 @@ export function PracticeSession({
         <Card>
           <CardContent className="flex flex-col items-center py-8">
             <Trophy className="text-primary mb-4 h-16 w-16" />
-            <h2 className="mb-2 text-2xl font-bold">
-              {isAr ? "أحسنت!" : "Well Done!"}
-            </h2>
+            <h2 className="mb-2 text-2xl font-bold">{t.wellDone ?? ""}</h2>
             <p className="text-muted-foreground mb-4">
-              {isAr
-                ? `أكملت ${total} سؤال`
-                : `You completed ${total} questions`}
+              {fmt(t.completed, { count: total })}
             </p>
 
             {autoGradable > 0 && (
               <div className="mb-4 w-full space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>
-                    {correctCount}/{autoGradable} {isAr ? "صحيح" : "correct"}
+                    {correctCount}/{autoGradable} {t.correct ?? ""}
                   </span>
                   <span className="font-bold">{percentage}%</span>
                 </div>
@@ -457,21 +454,22 @@ export function PracticeSession({
 
             {total > autoGradable && (
               <p className="text-muted-foreground mb-4 text-sm">
-                {total - autoGradable}{" "}
-                {isAr
-                  ? "أسئلة مقالية (تحتاج مراجعة يدوية)"
-                  : "essay/short answer questions (need manual review)"}
+                {fmt(t.manualReview, { count: total - autoGradable })}
               </p>
             )}
 
-            <div className="flex gap-3">
-              <Button onClick={restartPractice} variant="outline">
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button
+                onClick={restartPractice}
+                variant="outline"
+                className="min-h-11"
+              >
                 <RotateCcw className="me-2 h-4 w-4" />
-                {isAr ? "تدريب جديد" : "New Practice"}
+                {t.newPractice ?? ""}
               </Button>
-              <Button onClick={startPractice}>
+              <Button onClick={startPractice} className="min-h-11">
                 <Flame className="me-2 h-4 w-4" />
-                {isAr ? "أعد المحاولة" : "Try Again"}
+                {t.tryAgain ?? ""}
               </Button>
             </div>
           </CardContent>
@@ -506,8 +504,8 @@ export function PracticeSession({
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground text-sm">
             {currentIndex + 1} / {sessionQuestions.length}
           </span>
@@ -520,14 +518,17 @@ export function PracticeSession({
                   : "destructive"
             }
           >
-            {currentQuestion.difficulty}
+            {difficultyLabels[currentQuestion.difficulty] ??
+              currentQuestion.difficulty}
           </Badge>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={restartPractice}
-          title={isAr ? "إنهاء" : "Exit"}
+          title={t.exit ?? ""}
+          aria-label={t.exit ?? ""}
+          className="size-11 shrink-0"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -538,7 +539,9 @@ export function PracticeSession({
       {/* Question card */}
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <p className="text-lg font-medium">{currentQuestion.questionText}</p>
+          <p className="text-lg font-medium break-words">
+            {currentQuestion.questionText}
+          </p>
 
           {/* MCQ / True-False */}
           {(currentQuestion.questionType === "MULTIPLE_CHOICE" ||
@@ -561,10 +564,13 @@ export function PracticeSession({
                   return (
                     <div
                       key={opt.id}
-                      className={`flex items-center gap-3 rounded-lg border p-3 ${optClass}`}
+                      className={`flex min-h-11 min-w-0 items-center gap-3 rounded-lg border p-3 ${optClass}`}
                     >
                       <RadioGroupItem value={opt.id} id={opt.id} />
-                      <Label htmlFor={opt.id} className="flex-1 cursor-pointer">
+                      <Label
+                        htmlFor={opt.id}
+                        className="min-w-0 flex-1 cursor-pointer break-words"
+                      >
                         {opt.text}
                       </Label>
                       {showAnswer && opt.isCorrect && (
@@ -580,7 +586,7 @@ export function PracticeSession({
           {currentQuestion.questionType === "FILL_BLANK" && (
             <div>
               <Input
-                placeholder={isAr ? "اكتب إجابتك" : "Type your answer"}
+                placeholder={t.typeAnswer ?? ""}
                 value={answer?.answerText || ""}
                 onChange={(e) =>
                   handleAnswer(currentQuestion.id, {
@@ -591,8 +597,7 @@ export function PracticeSession({
               />
               {showAnswer && opts?.acceptedAnswers && (
                 <p className="mt-2 text-sm text-green-600">
-                  {isAr ? "الإجابات المقبولة:" : "Accepted answers:"}{" "}
-                  {opts.acceptedAnswers.join(", ")}
+                  {t.acceptedAnswers ?? ""} {opts.acceptedAnswers.join(", ")}
                 </p>
               )}
             </div>
@@ -603,7 +608,7 @@ export function PracticeSession({
             currentQuestion.questionType === "ESSAY") && (
             <div>
               <Textarea
-                placeholder={isAr ? "اكتب إجابتك" : "Write your answer"}
+                placeholder={t.writeAnswer ?? ""}
                 value={answer?.answerText || ""}
                 onChange={(e) =>
                   handleAnswer(currentQuestion.id, {
@@ -616,7 +621,7 @@ export function PracticeSession({
               {showAnswer && opts?.sampleAnswer && (
                 <div className="mt-2 rounded-lg border border-green-200 bg-green-50 p-3">
                   <p className="mb-1 text-xs font-medium text-green-700">
-                    {isAr ? "الإجابة النموذجية:" : "Sample Answer:"}
+                    {t.sampleAnswer ?? ""}
                   </p>
                   <p className="text-sm text-green-800">{opts.sampleAnswer}</p>
                 </div>
@@ -627,31 +632,30 @@ export function PracticeSession({
       </Card>
 
       {/* Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Button
           variant="outline"
+          className="min-h-11"
           onClick={prevQuestion}
           disabled={currentIndex === 0}
         >
           <ChevronLeft className="me-1 h-4 w-4 rtl:rotate-180" />
-          {isAr ? "السابق" : "Previous"}
+          {t.previous ?? ""}
         </Button>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {!showAnswer && (
-            <Button variant="secondary" onClick={revealAnswer}>
-              {isAr ? "تحقق من الإجابة" : "Check Answer"}
+            <Button
+              variant="secondary"
+              className="min-h-11"
+              onClick={revealAnswer}
+            >
+              {t.checkAnswer ?? ""}
             </Button>
           )}
 
-          <Button onClick={nextQuestion}>
-            {isLastQuestion
-              ? isAr
-                ? "إنهاء"
-                : "Finish"
-              : isAr
-                ? "التالي"
-                : "Next"}
+          <Button className="min-h-11" onClick={nextQuestion}>
+            {isLastQuestion ? (t.finish ?? "") : (t.next ?? "")}
             {!isLastQuestion && (
               <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
             )}

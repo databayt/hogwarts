@@ -26,6 +26,7 @@ import { getEnrolledSubjectIds } from "../lib/scope"
 import type { QuestionBankRow } from "./columns"
 import { questionBankSearchParams } from "./list-params"
 import PracticeContent from "./practice-content"
+import { qbankT } from "./t"
 import { QBankTabbedLayout } from "./tabbed-layout"
 import { QuestionBankTable } from "./table"
 
@@ -206,7 +207,8 @@ export default async function QuestionBankContent({
         questionType: q.questionType,
         difficulty: q.difficulty,
         bloomLevel: q.bloomLevel,
-        subjectName: q.subject?.name ?? "Unknown",
+        subjectName:
+          q.subject?.name ?? qbankT(dictionary).list?.unknownSubject ?? "",
         points: Number(q.points),
         source: q.source,
         timesUsed: q.analytics?.timesUsed || 0,

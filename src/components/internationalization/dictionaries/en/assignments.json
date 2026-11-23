@@ -1,0 +1,19 @@
+{
+  "validation": {
+    "titleRequired": "Title is required",
+    "classRequired": "Class is required",
+    "totalPointsMin": "Total points must be greater than 0",
+    "weightMin": "Weight must be greater than 0",
+    "weightMax": "Weight cannot exceed 100%",
+    "dueDateRequired": "Due date is required",
+    "idRequired": "Required"
+  },
+  "export": {
+    "fetchFailed": "Failed to fetch data",
+    "exportFailed": "Export failed"
+  },
+  "form": {
+    "saveFailed": "Failed to save",
+    "completeFailed": "Failed to complete"
+  }
+}

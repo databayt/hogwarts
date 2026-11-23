@@ -43,7 +43,10 @@ export interface ReviewAssessment {
 export async function loadQuickReview(
   id: string
 ): Promise<ReviewAssessment | null> {
-  const [session, { schoolId }] = await Promise.all([auth(), getTenantContext()])
+  const [session, { schoolId }] = await Promise.all([
+    auth(),
+    getTenantContext(),
+  ])
   const userId = session?.user?.id
   const role = session?.user?.role
   if (!userId || !role || !schoolId || !REVIEW_ROLES.includes(role)) return null

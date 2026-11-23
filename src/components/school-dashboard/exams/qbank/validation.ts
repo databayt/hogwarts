@@ -40,132 +40,172 @@ import {
 } from "@prisma/client"
 import { z } from "zod"
 
+/**
+ * Messages come from the dictionary (`exams.qbank.validation`), the same
+ * factory pattern as `createLoginSchema` in auth/validation.ts. A missing key
+ * leaves zod's own default message — never hard-coded English. The plain
+ * exports below are the builders called with `{}`, for server actions that
+ * only need pass/fail.
+ */
+export type QbankValidationMessages = Record<string, string | undefined>
+
 // ========== Question Bank Schemas ==========
 
-export const questionOptionSchema = z.object({
-  text: z.string().min(1, "Option text is required"),
-  isCorrect: z.boolean(),
-  explanation: z.string().optional(),
-})
+export function createQuestionBankSchemas(m: QbankValidationMessages = {}) {
+  const questionOptionSchema = z.object({
+    text: z.string().min(1, m.optionTextRequired),
+    isCorrect: z.boolean(),
+    explanation: z.string().optional(),
+  })
 
-export const questionBankBaseSchema = z.object({
-  subjectId: z.string().min(1, "Subject is required"),
-  questionText: z.string().min(10, "Question must be at least 10 characters"),
-  questionType: z.nativeEnum(QuestionType),
-  difficulty: z.nativeEnum(DifficultyLevel),
-  bloomLevel: z.nativeEnum(BloomLevel),
-  points: z.coerce.number().min(0.5).max(100),
-  timeEstimate: z.coerce.number().min(0).max(480).optional(),
-  tags: z.array(z.string()).default([]),
-  explanation: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal("")),
-})
+  const questionBankBaseSchema = z.object({
+    subjectId: z.string().min(1, m.subjectRequired),
+    questionText: z.string().min(10, m.questionMin),
+    questionType: z.nativeEnum(QuestionType),
+    difficulty: z.nativeEnum(DifficultyLevel),
+    bloomLevel: z.nativeEnum(BloomLevel),
+    points: z.coerce.number().min(0.5).max(100),
+    timeEstimate: z.coerce.number().min(0).max(480).optional(),
+    tags: z.array(z.string()).default([]),
+    explanation: z.string().optional(),
+    imageUrl: z.string().url().optional().or(z.literal("")),
+  })
 
-export const multipleChoiceSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.MULTIPLE_CHOICE),
-  options: z
-    .array(questionOptionSchema)
-    .min(2, "At least 2 options required")
-    .max(6, "Maximum 6 options allowed")
-    .refine(
-      (options) => options.some((opt) => opt.isCorrect),
-      "At least one correct answer is required"
-    ),
-})
+  const multipleChoiceSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.MULTIPLE_CHOICE),
+    options: z
+      .array(questionOptionSchema)
+      .min(2, m.optionsMin2)
+      .max(6, m.optionsMax6)
+      .refine(
+        (options) => options.some((opt) => opt.isCorrect),
+        m.correctRequired
+      ),
+  })
 
-export const trueFalseSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.TRUE_FALSE),
-  options: z
-    .array(questionOptionSchema)
-    .length(2, "True/False must have exactly 2 options")
-    .refine(
-      (options) => options.some((opt) => opt.isCorrect),
-      "One option must be correct"
-    ),
-})
+  const trueFalseSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.TRUE_FALSE),
+    options: z
+      .array(questionOptionSchema)
+      .length(2, m.trueFalseTwo)
+      .refine(
+        (options) => options.some((opt) => opt.isCorrect),
+        m.trueFalseCorrect
+      ),
+  })
 
-export const fillBlankSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.FILL_BLANK),
-  acceptedAnswers: z
-    .array(z.string().min(1))
-    .min(1, "At least one accepted answer is required"),
-  caseSensitive: z.boolean().default(false),
-})
+  const fillBlankSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.FILL_BLANK),
+    acceptedAnswers: z.array(z.string().min(1)).min(1, m.acceptedMin),
+    caseSensitive: z.boolean().default(false),
+  })
 
-export const shortAnswerSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.SHORT_ANSWER),
-  sampleAnswer: z
-    .string()
-    .min(10, "Sample answer must be at least 10 characters"),
-  gradingRubric: z.string().optional(),
-})
+  const shortAnswerSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.SHORT_ANSWER),
+    sampleAnswer: z.string().min(10, m.sampleMin10),
+    gradingRubric: z.string().optional(),
+  })
 
-export const essaySchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.ESSAY),
-  sampleAnswer: z
-    .string()
-    .min(50, "Sample answer must be at least 50 characters"),
-  gradingRubric: z
-    .string()
-    .min(20, "Grading rubric must be at least 20 characters"),
-})
+  const essaySchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.ESSAY),
+    sampleAnswer: z.string().min(50, m.sampleMin50),
+    gradingRubric: z.string().min(20, m.rubricMin20),
+  })
 
-export const matchingSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.MATCHING),
-  options: z
-    .array(questionOptionSchema)
-    .min(2, "At least 2 matching pairs required")
-    .max(10, "Maximum 10 matching pairs"),
-})
+  const matchingSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.MATCHING),
+    options: z
+      .array(questionOptionSchema)
+      .min(2, m.pairsMin2)
+      .max(10, m.pairsMax10),
+  })
 
-export const orderingSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.ORDERING),
-  options: z
-    .array(questionOptionSchema)
-    .min(2, "At least 2 items required")
-    .max(10, "Maximum 10 items"),
-})
+  const orderingSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.ORDERING),
+    options: z
+      .array(questionOptionSchema)
+      .min(2, m.itemsMin2)
+      .max(10, m.itemsMax10),
+  })
 
-export const multiSelectSchema = questionBankBaseSchema.extend({
-  questionType: z.literal(QuestionType.MULTI_SELECT),
-  options: z
-    .array(questionOptionSchema)
-    .min(2, "At least 2 options required")
-    .max(8, "Maximum 8 options")
-    .refine(
-      (options) => options.filter((opt) => opt.isCorrect).length >= 2,
-      "At least two correct answers are required"
-    ),
-})
+  const multiSelectSchema = questionBankBaseSchema.extend({
+    questionType: z.literal(QuestionType.MULTI_SELECT),
+    options: z
+      .array(questionOptionSchema)
+      .min(2, m.optionsMin2)
+      .max(8, m.optionsMax8)
+      .refine(
+        (options) => options.filter((opt) => opt.isCorrect).length >= 2,
+        m.twoCorrect
+      ),
+  })
 
-export const questionBankSchema = z.discriminatedUnion("questionType", [
-  multipleChoiceSchema,
-  trueFalseSchema,
-  fillBlankSchema,
-  shortAnswerSchema,
-  essaySchema,
-  matchingSchema,
-  orderingSchema,
-  multiSelectSchema,
-])
+  const questionBankSchema = z.discriminatedUnion("questionType", [
+    multipleChoiceSchema,
+    trueFalseSchema,
+    fillBlankSchema,
+    shortAnswerSchema,
+    essaySchema,
+    matchingSchema,
+    orderingSchema,
+    multiSelectSchema,
+  ])
+
+  return {
+    questionOptionSchema,
+    questionBankBaseSchema,
+    multipleChoiceSchema,
+    trueFalseSchema,
+    fillBlankSchema,
+    shortAnswerSchema,
+    essaySchema,
+    matchingSchema,
+    orderingSchema,
+    multiSelectSchema,
+    questionBankSchema,
+  }
+}
+
+/** The form's resolver schema, with dictionary messages. */
+export function createQuestionBankSchema(m: QbankValidationMessages = {}) {
+  return createQuestionBankSchemas(m).questionBankSchema
+}
+
+const defaultSchemas = createQuestionBankSchemas({})
+
+export const questionOptionSchema = defaultSchemas.questionOptionSchema
+export const questionBankBaseSchema = defaultSchemas.questionBankBaseSchema
+export const multipleChoiceSchema = defaultSchemas.multipleChoiceSchema
+export const trueFalseSchema = defaultSchemas.trueFalseSchema
+export const fillBlankSchema = defaultSchemas.fillBlankSchema
+export const shortAnswerSchema = defaultSchemas.shortAnswerSchema
+export const essaySchema = defaultSchemas.essaySchema
+export const matchingSchema = defaultSchemas.matchingSchema
+export const orderingSchema = defaultSchemas.orderingSchema
+export const multiSelectSchema = defaultSchemas.multiSelectSchema
+export const questionBankSchema = defaultSchemas.questionBankSchema
 
 export type QuestionBankSchema = z.infer<typeof questionBankSchema>
 
 // ========== AI Generation Schema ==========
 
-export const aiGenerationSchema = z.object({
-  subjectId: z.string().min(1, "Subject is required"),
-  topic: z.string().min(3, "Topic must be at least 3 characters"),
-  questionType: z.nativeEnum(QuestionType),
-  difficulty: z.nativeEnum(DifficultyLevel),
-  bloomLevel: z.nativeEnum(BloomLevel),
-  numberOfQuestions: z.coerce
-    .number()
-    .min(1, "At least 1 question")
-    .max(20, "Maximum 20 questions at once"),
-  additionalInstructions: z.string().max(500).optional(),
-  tags: z.array(z.string()).default([]),
-})
+export function createAiGenerationSchema(m: QbankValidationMessages = {}) {
+  return z.object({
+    subjectId: z.string().min(1, m.subjectRequired),
+    topic: z.string().min(3, m.topicMin3),
+    questionType: z.nativeEnum(QuestionType),
+    difficulty: z.nativeEnum(DifficultyLevel),
+    bloomLevel: z.nativeEnum(BloomLevel),
+    numberOfQuestions: z.coerce
+      .number()
+      .min(1, m.questionsMin1)
+      .max(20, m.questionsMax20),
+    additionalInstructions: z.string().max(500).optional(),
+    tags: z.array(z.string()).default([]),
+  })
+}
+
+export const aiGenerationSchema = createAiGenerationSchema({})
 
 export type AIGenerationSchema = z.infer<typeof aiGenerationSchema>
 
@@ -191,48 +231,57 @@ const bloomDistributionSchema = z.partialRecord(
   z.coerce.number().min(0).max(50)
 )
 
-export const examTemplateSchema = z
-  .object({
-    name: z.string().min(3, "Name must be at least 3 characters"),
-    description: z.string().max(500).optional(),
-    subjectId: z.string().min(1, "Subject is required"),
-    duration: z.coerce
-      .number()
-      .min(15, "Minimum 15 minutes")
-      .max(480, "Maximum 8 hours"),
-    totalMarks: z.coerce.number().min(1).max(1000),
-    distribution: templateDistributionSchema,
-    bloomDistribution: bloomDistributionSchema.optional(),
-  })
-  .refine(
-    (data) => {
-      // Ensure at least one question type has questions
-      const totalQuestions = Object.values(data.distribution).reduce(
-        (sum, difficulties) =>
-          sum + Object.values(difficulties).reduce((s, count) => s + count, 0),
-        0
-      )
-      return totalQuestions > 0
-    },
-    {
-      message: "Template must have at least one question",
-      path: ["distribution"],
-    }
-  )
+export function createExamTemplateSchema(m: QbankValidationMessages = {}) {
+  return z
+    .object({
+      name: z.string().min(3, m.nameMin3),
+      description: z.string().max(500).optional(),
+      subjectId: z.string().min(1, m.subjectRequired),
+      duration: z.coerce
+        .number()
+        .min(15, m.durationMin)
+        .max(480, m.durationMax),
+      totalMarks: z.coerce.number().min(1).max(1000),
+      distribution: templateDistributionSchema,
+      bloomDistribution: bloomDistributionSchema.optional(),
+    })
+    .refine(
+      (data) => {
+        // Ensure at least one question type has questions
+        const totalQuestions = Object.values(data.distribution).reduce(
+          (sum, difficulties) =>
+            sum +
+            Object.values(difficulties).reduce((s, count) => s + count, 0),
+          0
+        )
+        return totalQuestions > 0
+      },
+      {
+        message: m.templateNeedsQuestion,
+        path: ["distribution"],
+      }
+    )
+}
+
+export const examTemplateSchema = createExamTemplateSchema({})
 
 export type ExamTemplateSchema = z.infer<typeof examTemplateSchema>
 
 // ========== Exam Generator Schema ==========
 
-export const examGeneratorSchema = z.object({
-  examId: z.string().min(1, "Exam is required"),
-  templateId: z.string().optional(),
-  isRandomized: z.boolean().default(false),
-  seed: z.string().optional(),
-  customDistribution: templateDistributionSchema.optional(),
-  questionIds: z.array(z.string()).optional(),
-  generationNotes: z.string().max(500).optional(),
-})
+export function createExamGeneratorSchema(m: QbankValidationMessages = {}) {
+  return z.object({
+    examId: z.string().min(1, m.examRequired),
+    templateId: z.string().optional(),
+    isRandomized: z.boolean().default(false),
+    seed: z.string().optional(),
+    customDistribution: templateDistributionSchema.optional(),
+    questionIds: z.array(z.string()).optional(),
+    generationNotes: z.string().max(500).optional(),
+  })
+}
+
+export const examGeneratorSchema = createExamGeneratorSchema({})
 
 export type ExamGeneratorSchema = z.infer<typeof examGeneratorSchema>
 
@@ -242,14 +291,18 @@ export const bulkImportQuestionSchema = questionBankBaseSchema.omit({
   subjectId: true,
 })
 
-export const bulkImportSchema = z.object({
-  subjectId: z.string().min(1, "Subject is required"),
-  source: z.nativeEnum(QuestionSource).default(QuestionSource.IMPORTED),
-  questions: z
-    .array(bulkImportQuestionSchema)
-    .min(1, "At least one question required")
-    .max(100, "Maximum 100 questions per import"),
-})
+export function createBulkImportSchema(m: QbankValidationMessages = {}) {
+  return z.object({
+    subjectId: z.string().min(1, m.subjectRequired),
+    source: z.nativeEnum(QuestionSource).default(QuestionSource.IMPORTED),
+    questions: z
+      .array(bulkImportQuestionSchema)
+      .min(1, m.importMin1)
+      .max(100, m.importMax100),
+  })
+}
+
+export const bulkImportSchema = createBulkImportSchema({})
 
 export type BulkImportSchema = z.infer<typeof bulkImportSchema>
 
@@ -280,7 +333,7 @@ export type TemplateFiltersSchema = z.infer<typeof templateFiltersSchema>
 // ========== Update Schemas ==========
 
 export const updateQuestionSchema = questionBankBaseSchema.partial().extend({
-  id: z.string().min(1, "Question ID is required"),
+  id: z.string().min(1),
   options: z.array(questionOptionSchema).optional(),
   acceptedAnswers: z.array(z.string().min(1)).optional(),
   caseSensitive: z.boolean().optional(),
@@ -291,7 +344,7 @@ export const updateQuestionSchema = questionBankBaseSchema.partial().extend({
 export type UpdateQuestionSchema = z.infer<typeof updateQuestionSchema>
 
 export const updateTemplateSchema = examTemplateSchema.partial().extend({
-  id: z.string().min(1, "Template ID is required"),
+  id: z.string().min(1),
 })
 
 export type UpdateTemplateSchema = z.infer<typeof updateTemplateSchema>
@@ -333,7 +386,7 @@ export function validateQuestionByType(
     default:
       return {
         success: false,
-        error: { issues: [{ message: "Invalid question type" }] },
+        error: { issues: [{ message: "invalidType" }] },
       }
   }
 }

@@ -60,10 +60,10 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{d?.assignmentTitle || "Assignment Title"}</FormLabel>
+            <FormLabel>{d?.assignmentTitle ?? ""}</FormLabel>
             <FormControl>
               <Input
-                placeholder={d?.enterTitle || "Enter assignment title"}
+                placeholder={d?.enterTitle ?? ""}
                 disabled={isView}
                 {...field}
               />
@@ -78,11 +78,11 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{d?.description || "Description"}</FormLabel>
+            <FormLabel>{d?.description ?? ""}</FormLabel>
             <FormControl>
               <Textarea
                 placeholder={
-                  d?.enterDescription || "Enter assignment description..."
+                  d?.enterDescription ?? ""
                 }
                 className="min-h-[100px]"
                 disabled={isView}
@@ -99,7 +99,7 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="classId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{d?.class || "Class"}</FormLabel>
+            <FormLabel>{d?.class ?? ""}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -107,7 +107,7 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={d?.selectClass || "Select class"} />
+                  <SelectValue placeholder={d?.selectClass ?? ""} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

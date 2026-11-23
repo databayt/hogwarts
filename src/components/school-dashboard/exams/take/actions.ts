@@ -150,7 +150,8 @@ export async function startExamSession(input: StartExamSessionInput) {
     if (existingAttempts >= exam.maxAttempts) {
       return {
         success: false,
-        error: `Maximum attempts (${exam.maxAttempts}) reached`,
+        error: "MAX_ATTEMPTS_REACHED",
+        details: String(exam.maxAttempts),
       }
     }
 
@@ -454,7 +455,7 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
 
     return {
       success: true,
-      message: "Exam submitted successfully",
+      message: "SUBMITTED", // code, not display text
     }
   } catch (error) {
     console.error("Submit exam error:", error)

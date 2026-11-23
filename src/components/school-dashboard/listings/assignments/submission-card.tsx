@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { SuccessToast } from "@/components/atom/toast"
 
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { formatAssignmentDate } from "./date"
 import { presignSubmissionUpload, submitAssignment } from "./submit-actions"
 import type { OwnSubmission } from "./submit-core"
@@ -40,10 +42,11 @@ export function StudentSubmissionCard({
   locale = "en",
   className,
 }: SubmissionCardProps) {
-  const t = (k: string, fallback: string) => {
+  const t = (k: string) => {
     const v = labels?.[k]
-    return typeof v === "string" ? v : fallback
+    return typeof v === "string" ? v : ""
   }
+  const timeZone = useSchoolTimeZone()
   const [content, setContent] = useState(existing?.content ?? "")
   // Uploaded file URLs for this hand-in. The server always took attachments;
   // the card only took typed text, and an online school hands in photos of
@@ -59,7 +62,7 @@ export function StudentSubmissionCard({
 
   // Stored keys are `<timestamp>_<name>` (presignUpload); show the name.
   const fileName = (url: string) =>
-    decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "file").replace(
+    decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "").replace(
       /^\d{10,}[_-]/,
       ""
     )
@@ -77,7 +80,7 @@ export function StudentSubmissionCard({
         })
         if (!res.success) {
           toast.error(
-            t("uploadFailed", "Couldn't upload {name}").replace(
+            t("uploadFailed").replace(
               "{name}",
               file.name
             )
@@ -91,7 +94,7 @@ export function StudentSubmissionCard({
         })
         if (!put.ok) {
           toast.error(
-            t("uploadFailed", "Couldn't upload {name}").replace(
+            t("uploadFailed").replace(
               "{name}",
               file.name
             )
@@ -113,7 +116,7 @@ export function StudentSubmissionCard({
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       // The outbox carries text only — files need the connection to upload.
       if (files.length > 0) {
-        toast.error(t("offlineFiles", "Files need a connection to hand in"))
+        toast.error(t("offlineFiles"))
         return
       }
       void enqueue({
@@ -131,7 +134,7 @@ export function StudentSubmissionCard({
         attachments: files,
       })
       if (!res.success || !res.data) {
-        toast.error(t("submitFailed", "Couldn't submit — please try again"))
+        toast.error(t("submitFailed"))
         return
       }
       setState({
@@ -142,7 +145,7 @@ export function StudentSubmissionCard({
         feedback: null,
         attachments: files,
       })
-      SuccessToast(t("submitted", "Submitted"))
+      SuccessToast(t("submitted"))
     })
   }
 
@@ -151,7 +154,7 @@ export function StudentSubmissionCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Send className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
-          {t("yourSubmission", "Your submission")}
+          {t("yourSubmission")}
           {state?.submittedAt && (
             <Badge
               variant={
@@ -160,10 +163,10 @@ export function StudentSubmissionCard({
               className="ms-auto"
             >
               {state.status === "LATE_SUBMITTED"
-                ? t("submittedLate", "Submitted late")
+                ? t("submittedLate")
                 : graded
-                  ? t("graded", "Graded")
-                  : t("submitted", "Submitted")}
+                  ? t("graded")
+                  : t("submitted")}
             </Badge>
           )}
         </CardTitle>
@@ -172,8 +175,8 @@ export function StudentSubmissionCard({
         {state?.submittedAt && (
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <Clock className="h-3.5 w-3.5" aria-hidden />
-            {t("submittedAt", "Submitted")}{" "}
-            {formatAssignmentDate(state.submittedAt, locale, "datetime")}
+            {t("submittedAt")}{" "}
+            {formatAssignmentDate(state.submittedAt, locale, "datetime", timeZone)}
           </p>
         )}
 
@@ -197,13 +200,13 @@ export function StudentSubmissionCard({
             )}
             {state?.score !== null && state?.score !== undefined && (
               <p className="font-medium">
-                {t("score", "Score")}: {state.score}
+                {t("score")}: {state.score}
               </p>
             )}
             {state?.feedback && (
               <p className="text-muted-foreground text-sm">
                 <span className="font-medium">
-                  {t("feedback", "Feedback")}:{" "}
+                  {t("feedback")}:{" "}
                 </span>
                 {state.feedback}
               </p>
@@ -212,20 +215,14 @@ export function StudentSubmissionCard({
         ) : queued ? (
           <p className="flex items-center gap-2 text-sm" role="status">
             <WifiOff className="h-4 w-4" aria-hidden />
-            {t(
-              "savedOffline",
-              "Saved on this device — it will be handed in when you're back online."
-            )}
+            {t("savedOffline")}
           </p>
         ) : (
           <>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={t(
-                "submissionPlaceholder",
-                "Write your answer here…"
-              )}
+              placeholder={t("submissionPlaceholder")}
               rows={6}
               maxLength={20000}
               disabled={pending}
@@ -244,7 +241,7 @@ export function StudentSubmissionCard({
                       onClick={() =>
                         setFiles((prev) => prev.filter((f) => f !== url))
                       }
-                      aria-label={t("removeFile", "Remove")}
+                      aria-label={t("removeFile")}
                       className="relative ms-1 after:absolute after:-inset-2 after:content-['']"
                     >
                       <X className="h-3 w-3" aria-hidden />
@@ -270,8 +267,8 @@ export function StudentSubmissionCard({
               >
                 <Paperclip className="me-2 h-4 w-4" aria-hidden />
                 {uploading
-                  ? t("uploading", "Uploading…")
-                  : t("attachFiles", "Attach files")}
+                  ? t("uploading")
+                  : t("attachFiles")}
               </Button>
               <Button
                 type="button"
@@ -283,16 +280,13 @@ export function StudentSubmissionCard({
                 }
               >
                 {state?.submittedAt
-                  ? t("resubmit", "Resubmit")
-                  : t("submit", "Submit")}
+                  ? t("resubmit")
+                  : t("submit")}
               </Button>
               {state?.submittedAt && (
                 <span className="text-muted-foreground flex items-center gap-1 text-xs">
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                  {t(
-                    "resubmitHint",
-                    "Resubmitting replaces what you handed in"
-                  )}
+                  {t("resubmitHint")}
                 </span>
               )}
             </div>

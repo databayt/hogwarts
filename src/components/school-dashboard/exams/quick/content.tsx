@@ -41,12 +41,9 @@ export async function QuickAssessmentContent({
       <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            {d?.title ?? "Quick Assessments"}
+            {d?.title ?? ""}
           </h2>
-          <p className="text-muted-foreground">
-            {d?.description ??
-              "Create and manage exit tickets, polls, warm-ups, and check-ins"}
-          </p>
+          <p className="text-muted-foreground">{d?.description ?? ""}</p>
         </div>
         {canCreate && (
           <Button
@@ -55,7 +52,7 @@ export async function QuickAssessmentContent({
           >
             <a href="quick/new">
               <Plus className="me-2 h-4 w-4" />
-              {d?.newAssessment ?? "New Assessment"}
+              {d?.newAssessment ?? ""}
             </a>
           </Button>
         )}
@@ -65,7 +62,7 @@ export async function QuickAssessmentContent({
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {d?.total ?? "Total"}
+              {d?.total ?? ""}
             </CardTitle>
             <Activity className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -74,7 +71,7 @@ export async function QuickAssessmentContent({
               {stats.total}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {d?.allAssessments ?? "All quick assessments"}
+              {d?.allAssessments ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -82,7 +79,7 @@ export async function QuickAssessmentContent({
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {d?.active ?? "Active"}
+              {d?.active ?? ""}
             </CardTitle>
             <Clock className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -91,7 +88,7 @@ export async function QuickAssessmentContent({
               {stats.active}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {d?.currentlyRunning ?? "Currently running"}
+              {d?.currentlyRunning ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -99,7 +96,7 @@ export async function QuickAssessmentContent({
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {d?.completed ?? "Completed"}
+              {d?.completed ?? ""}
             </CardTitle>
             <CheckCircle2 className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -108,7 +105,7 @@ export async function QuickAssessmentContent({
               {stats.completed}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {d?.finishedAssessments ?? "Finished assessments"}
+              {d?.finishedAssessments ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -116,7 +113,7 @@ export async function QuickAssessmentContent({
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {d?.responses ?? "Responses"}
+              {d?.responses ?? ""}
             </CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -125,7 +122,7 @@ export async function QuickAssessmentContent({
               {stats.totalResponses}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {d?.totalStudentResponses ?? "Total student responses"}
+              {d?.totalStudentResponses ?? ""}
             </p>
           </CardContent>
         </Card>

@@ -22,7 +22,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
 
 import { closeQuickAssessment, launchQuickAssessment } from "./actions"
 import type { QuickAssessmentSummary } from "./actions/types"
@@ -40,6 +43,9 @@ export function QuickAssessmentList({
   const { toast } = useToast()
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.quick
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (useDictionaryFallback(dictionary) as any)?.exams?.quick ?? {}
+  const xToast = x.toast ?? {}
   const [isLoading, setIsLoading] = useState<string | null>(null)
 
   const handleLaunch = async (id: string) => {
@@ -48,21 +54,21 @@ export function QuickAssessmentList({
       const result = await launchQuickAssessment(id)
       if (result.success) {
         toast({
-          title: t?.toast?.success ?? "Success",
-          description: t?.toast?.launched ?? "Assessment launched successfully",
+          title: t?.toast?.success ?? "",
+          description: t?.toast?.launched ?? "",
         })
         router.refresh()
       } else {
         toast({
-          title: t?.toast?.error ?? "Error",
-          description: result.error || "Failed to launch assessment",
+          title: t?.toast?.error ?? "",
+          description: xToast.launchFailed ?? "",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: t?.toast?.error ?? "Error",
-        description: t?.toast?.unexpected ?? "An unexpected error occurred",
+        title: t?.toast?.error ?? "",
+        description: t?.toast?.unexpected ?? "",
         variant: "destructive",
       })
     } finally {
@@ -76,21 +82,21 @@ export function QuickAssessmentList({
       const result = await closeQuickAssessment(id)
       if (result.success) {
         toast({
-          title: t?.toast?.success ?? "Success",
-          description: t?.toast?.closed ?? "Assessment closed successfully",
+          title: t?.toast?.success ?? "",
+          description: t?.toast?.closed ?? "",
         })
         router.refresh()
       } else {
         toast({
-          title: t?.toast?.error ?? "Error",
-          description: result.error || "Failed to close assessment",
+          title: t?.toast?.error ?? "",
+          description: xToast.closeFailed ?? "",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: t?.toast?.error ?? "Error",
-        description: t?.toast?.unexpected ?? "An unexpected error occurred",
+        title: t?.toast?.error ?? "",
+        description: t?.toast?.unexpected ?? "",
         variant: "destructive",
       })
     } finally {
@@ -108,31 +114,27 @@ export function QuickAssessmentList({
 
     return (
       <Badge
-        variant={variants[status] || "secondary"}
+        variant={variants[status] || ""}
         className={
-          (variants[status] || "secondary") === "secondary"
+          (variants[status] || "") === "secondary"
             ? "max-md:bg-background"
             : undefined
         }
       >
-        {status.toLowerCase().replace("_", " ")}
+        {x.status?.[status.toLowerCase()] ?? ""}
       </Badge>
     )
   }
 
   const getTypeBadge = (type: string) => {
     const labels: Record<string, string> = {
-      EXIT_TICKET: t?.form?.types?.exitTicket ?? "Exit Ticket",
-      POLL: t?.form?.types?.poll ?? "Poll",
-      WARM_UP: t?.form?.types?.warmUp ?? "Warm-Up",
-      CHECK_IN: t?.form?.types?.checkIn ?? "Check-In",
+      EXIT_TICKET: t?.form?.types?.exitTicket ?? "",
+      POLL: t?.form?.types?.poll ?? "",
+      WARM_UP: t?.form?.types?.warmUp ?? "",
+      CHECK_IN: t?.form?.types?.checkIn ?? "",
     }
 
-    return (
-      <Badge variant="outline">
-        {labels[type] || type.toLowerCase().replace("_", " ")}
-      </Badge>
-    )
+    return <Badge variant="outline">{labels[type] || ""}</Badge>
   }
 
   if (assessments.length === 0) {
@@ -140,8 +142,7 @@ export function QuickAssessmentList({
       <Card className="max-md:bg-muted max-md:border-0">
         <CardContent className="flex min-h-[200px] items-center justify-center">
           <p className="text-muted-foreground">
-            {t?.content?.noAssessments ??
-              "No quick assessments found. Create your first assessment to get started."}
+            {t?.content?.noAssessments ?? ""}
           </p>
         </CardContent>
       </Card>
@@ -149,12 +150,12 @@ export function QuickAssessmentList({
   }
 
   return (
-    <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {assessments.map((assessment) => (
         <Card key={assessment.id} className="max-md:bg-muted max-md:border-0">
           <CardHeader className="max-md:p-4 max-md:pb-2">
             <div className="flex items-start justify-between">
-              <div className="flex-1 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1">
                 <CardTitle className="line-clamp-1 max-md:text-sm max-md:leading-5">
                   {assessment.title}
                 </CardTitle>
@@ -166,7 +167,12 @@ export function QuickAssessmentList({
               {canManage && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-11 md:size-9"
+                      aria-label={x.list?.actions ?? ""}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -176,7 +182,7 @@ export function QuickAssessmentList({
                         router.push(`/exams/quick/${assessment.id}`)
                       }
                     >
-                      {t?.content?.viewDetails ?? "View Details"}
+                      {t?.content?.viewDetails ?? ""}
                     </DropdownMenuItem>
                     {assessment.status === "DRAFT" && (
                       <DropdownMenuItem
@@ -184,7 +190,7 @@ export function QuickAssessmentList({
                         disabled={isLoading === assessment.id}
                       >
                         <Play className="me-2 h-4 w-4" />
-                        {t?.content?.launch ?? "Launch"}
+                        {t?.content?.launch ?? ""}
                       </DropdownMenuItem>
                     )}
                     {assessment.status === "ACTIVE" && (
@@ -193,7 +199,7 @@ export function QuickAssessmentList({
                         disabled={isLoading === assessment.id}
                       >
                         <Square className="me-2 h-4 w-4" />
-                        {t?.content?.close ?? "Close"}
+                        {t?.content?.close ?? ""}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
@@ -202,35 +208,28 @@ export function QuickAssessmentList({
             </div>
           </CardHeader>
           <CardContent className="space-y-2 max-md:px-4 max-md:pb-4">
-            <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:grid-cols-1 max-md:gap-1 max-md:text-xs">
+            <div className="text-muted-foreground grid grid-cols-1 gap-2 text-sm max-md:gap-1 max-md:text-xs sm:grid-cols-2">
               <div>
-                <span className="font-medium">
-                  {t?.list?.class ?? "Class:"}
-                </span>{" "}
+                <span className="font-medium">{t?.list?.class ?? ""}</span>{" "}
                 {assessment.className}
               </div>
               <div>
-                <span className="font-medium">
-                  {t?.list?.subject ?? "Subject:"}
-                </span>{" "}
+                <span className="font-medium">{t?.list?.subject ?? ""}</span>{" "}
                 {assessment.name}
               </div>
               <div>
-                <span className="font-medium">
-                  {t?.list?.questions ?? "Questions:"}
-                </span>{" "}
+                <span className="font-medium">{t?.list?.questions ?? ""}</span>{" "}
                 {assessment.questionCount}
               </div>
               <div>
-                <span className="font-medium">
-                  {t?.list?.duration ?? "Duration:"}
-                </span>{" "}
-                {assessment.duration}m
+                <span className="font-medium">{t?.list?.duration ?? ""}</span>{" "}
+                {(x.list?.minutes ?? "").replace(
+                  "{count}",
+                  String(assessment.duration)
+                )}
               </div>
-              <div className="col-span-2 max-md:col-span-1">
-                <span className="font-medium">
-                  {t?.list?.responses ?? "Responses:"}
-                </span>{" "}
+              <div className="sm:col-span-2">
+                <span className="font-medium">{t?.list?.responses ?? ""}</span>{" "}
                 {assessment.responseCount}
               </div>
             </div>

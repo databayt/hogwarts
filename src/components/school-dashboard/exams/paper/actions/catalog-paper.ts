@@ -84,6 +84,8 @@ export async function browsePaperTemplates(filters?: {
 interface AdoptPaperResult {
   success: boolean
   error?: string
+  /** Stable code the client maps to a translated message. */
+  code?: string
   data?: { configId: string }
 }
 
@@ -94,7 +96,7 @@ export async function adoptPaperTemplate(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
     }
 
     const schoolId = session.user.schoolId
@@ -109,7 +111,11 @@ export async function adoptPaperTemplate(
     })
 
     if (!catalogTemplate) {
-      return { success: false, error: "Template not available" }
+      return {
+        success: false,
+        error: "Template not available",
+        code: "NOT_FOUND",
+      }
     }
 
     // Check if generated exam exists and belongs to school
@@ -117,7 +123,11 @@ export async function adoptPaperTemplate(
       where: { id: generatedExamId, schoolId },
     })
     if (!generatedExam) {
-      return { success: false, error: "Generated exam not found" }
+      return {
+        success: false,
+        error: "Generated exam not found",
+        code: "NOT_FOUND",
+      }
     }
 
     // Check if config already exists for this generated exam
@@ -206,6 +216,10 @@ export async function adoptPaperTemplate(
     return { success: true, data: { configId: config.id } }
   } catch (error) {
     console.error("Adopt catalog paper template error:", error)
-    return { success: false, error: "Failed to adopt template" }
+    return {
+      success: false,
+      error: "Failed to adopt template",
+      code: "CREATE_FAILED",
+    }
   }
 }

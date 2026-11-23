@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -30,12 +30,18 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
 import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
 import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
 import { createQuickAssessment, listQuickCheckQuestions } from "./actions"
-import { quickAssessmentCreateSchema } from "./validation"
+import {
+  createQuickAssessmentCreateSchema,
+  type QuickValidationMessages,
+} from "./validation"
 
 export function QuickAssessmentForm() {
   const router = useRouter()
@@ -44,10 +50,21 @@ export function QuickAssessmentForm() {
   const t = dictionary?.school?.exams?.quick
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  type FormValues = z.output<typeof quickAssessmentCreateSchema>
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (useDictionaryFallback(dictionary) as any)?.exams?.quick ?? {}
+  const validation: QuickValidationMessages = x.validation ?? {}
+  const schema = useMemo(
+    () => createQuickAssessmentCreateSchema(validation),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [x.validation]
+  )
+
+  type FormValues = z.output<
+    ReturnType<typeof createQuickAssessmentCreateSchema>
+  >
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(quickAssessmentCreateSchema) as any,
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       title: "",
       gradeId: "",
@@ -82,22 +99,21 @@ export function QuickAssessmentForm() {
 
       if (result.success) {
         toast({
-          title: t?.toast?.success ?? "Success",
-          description:
-            t?.toast?.created ?? "Quick assessment created successfully",
+          title: t?.toast?.success ?? "",
+          description: t?.toast?.created ?? "",
         })
         router.push("/exams/quick")
       } else {
         toast({
-          title: t?.toast?.error ?? "Error",
-          description: result.error || "Failed to create assessment",
+          title: t?.toast?.error ?? "",
+          description: x.toast?.createFailed ?? "",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: t?.toast?.error ?? "Error",
-        description: t?.toast?.unexpected ?? "An unexpected error occurred",
+        title: t?.toast?.error ?? "",
+        description: t?.toast?.unexpected ?? "",
         variant: "destructive",
       })
     } finally {
@@ -113,13 +129,10 @@ export function QuickAssessmentForm() {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t?.form?.title ?? "Title"}</FormLabel>
+              <FormLabel>{t?.form?.title ?? ""}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder={
-                    t?.formPage?.titlePlaceholder ??
-                    "e.g., Exit Ticket - Lesson 3"
-                  }
+                  placeholder={t?.formPage?.titlePlaceholder ?? ""}
                   {...field}
                 />
               </FormControl>
@@ -134,35 +147,33 @@ export function QuickAssessmentForm() {
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t?.form?.type ?? "Assessment Type"}</FormLabel>
+                <FormLabel>{t?.form?.type ?? ""}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={t?.form?.selectType ?? "Select type"}
-                      />
+                      <SelectValue placeholder={t?.form?.selectType ?? ""} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="EXIT_TICKET">
-                      {t?.form?.types?.exitTicket ?? "Exit Ticket"}
+                      {t?.form?.types?.exitTicket ?? ""}
                     </SelectItem>
                     <SelectItem value="POLL">
-                      {t?.form?.types?.poll ?? "Poll"}
+                      {t?.form?.types?.poll ?? ""}
                     </SelectItem>
                     <SelectItem value="WARM_UP">
-                      {t?.form?.types?.warmUp ?? "Warm-Up"}
+                      {t?.form?.types?.warmUp ?? ""}
                     </SelectItem>
                     <SelectItem value="CHECK_IN">
-                      {t?.form?.types?.checkIn ?? "Check-In"}
+                      {t?.form?.types?.checkIn ?? ""}
                     </SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  {t?.form?.typeDescription ?? "Type of formative assessment"}
+                  {t?.form?.typeDescription ?? ""}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -174,9 +185,7 @@ export function QuickAssessmentForm() {
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {t?.form?.duration ?? "Duration (minutes)"}
-                </FormLabel>
+                <FormLabel>{t?.form?.duration ?? ""}</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -189,7 +198,7 @@ export function QuickAssessmentForm() {
                   />
                 </FormControl>
                 <FormDescription>
-                  {t?.form?.durationDescription ?? "Time limit in minutes"}
+                  {t?.form?.durationDescription ?? ""}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -208,7 +217,7 @@ export function QuickAssessmentForm() {
           name="questionIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t?.form?.questionIds ?? "Questions"}</FormLabel>
+              <FormLabel>{t?.form?.questionIds ?? ""}</FormLabel>
               <QuestionPicker
                 subjectId={subjectId}
                 value={field.value}
@@ -228,11 +237,10 @@ export function QuickAssessmentForm() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">
-                    {t?.formPage?.anonymousResponses ?? "Anonymous Responses"}
+                    {t?.formPage?.anonymousResponses ?? ""}
                   </FormLabel>
                   <FormDescription>
-                    {t?.formPage?.anonymousDescription ??
-                      "Students can submit responses anonymously"}
+                    {t?.formPage?.anonymousDescription ?? ""}
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -252,11 +260,10 @@ export function QuickAssessmentForm() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">
-                    {t?.formPage?.showResults ?? "Show Results to Students"}
+                    {t?.formPage?.showResults ?? ""}
                   </FormLabel>
                   <FormDescription>
-                    {t?.formPage?.showResultsDescription ??
-                      "Display results to students after completion"}
+                    {t?.formPage?.showResultsDescription ?? ""}
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -277,11 +284,11 @@ export function QuickAssessmentForm() {
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            {t?.formPage?.cancel ?? "Cancel"}
+            {t?.formPage?.cancel ?? ""}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            {t?.formPage?.createAssessment ?? "Create Assessment"}
+            {t?.formPage?.createAssessment ?? ""}
           </Button>
         </div>
       </form>
@@ -331,23 +338,21 @@ function QuestionPicker({
   if (!subjectId) {
     return (
       <p className="text-muted-foreground text-sm">
-        {labels?.pickSubjectFirst ??
-          "Choose the subject first to see its questions."}
+        {labels?.pickSubjectFirst ?? ""}
       </p>
     )
   }
   if (rows === null) {
     return (
       <p className="text-muted-foreground text-sm" role="status">
-        {labels?.loadingQuestions ?? "Loading questions…"}
+        {labels?.loadingQuestions ?? ""}
       </p>
     )
   }
   if (rows.length === 0) {
     return (
       <p className="text-muted-foreground text-sm">
-        {labels?.noBankQuestions ??
-          "This subject has no questions in the bank yet."}
+        {labels?.noBankQuestions ?? ""}
       </p>
     )
   }
@@ -356,7 +361,7 @@ function QuestionPicker({
   return (
     <div className="space-y-2">
       <p className="text-muted-foreground text-xs">
-        {(labels?.questionsSelected ?? "{count} selected").replace(
+        {(labels?.questionsSelected ?? "").replace(
           "{count}",
           String(selected.size)
         )}

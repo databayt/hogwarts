@@ -172,7 +172,7 @@ export function useAutoSave(config: AutoSaveConfig) {
         setState((prev) => ({
           ...prev,
           isSaving: false,
-          error: error instanceof Error ? error : new Error("Save failed"),
+          error: error instanceof Error ? error : new Error("SAVE_FAILED"),
         }))
       }
     }

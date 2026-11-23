@@ -1,0 +1,629 @@
+{
+  "qbank": {
+    "form": {
+      "questionType": "نوع السؤال",
+      "questionText": "نص السؤال",
+      "tags": "الوسوم",
+      "explanation": "الشرح (اختياري)",
+      "explanationPlaceholder": "اشرح المفهوم...",
+      "options": "الخيارات",
+      "optionPlaceholder": "أدخل نص الخيار",
+      "optionExplanation": "شرح اختياري",
+      "acceptedAnswers": "الإجابات المقبولة",
+      "enterAccepted": "أدخل الإجابة المقبولة",
+      "sampleAnswer": "إجابة نموذجية",
+      "samplePlaceholder": "قدم إجابة نموذجية جيدة...",
+      "gradingRubric": "معايير التقييم",
+      "rubricPlaceholder": "صف النقاط الرئيسية للتقييم...",
+      "tagPlaceholder": "اكتب واضغط Enter",
+      "updated": "تم تحديث السؤال!",
+      "created": "تم إنشاء السؤال!",
+      "saveFailed": "فشل حفظ السؤال",
+      "attachLesson": "الدرس (اختياري)",
+      "attachChapter": "كل الوحدات",
+      "attachNone": "غير مرتبط",
+      "attachHint": "اربط هذا السؤال بدرس ليظهر ضمن الاختبار التدريبي لذلك الدرس.",
+      "attachPickSubject": "اختر المادة أولًا.",
+      "attachLoading": "جارٍ التحميل…",
+      "attachEmpty": "لا توجد دروس متاحة لهذه المادة.",
+      "createTitle": "إنشاء سؤال",
+      "editTitle": "تعديل السؤال",
+      "subject": "المادة",
+      "selectSubject": "اختر المادة",
+      "selectType": "اختر النوع",
+      "questionPlaceholder": "اكتب السؤال هنا...",
+      "difficulty": "الصعوبة",
+      "bloomLevel": "مستوى بلوم",
+      "selectDifficulty": "اختر الصعوبة",
+      "selectLevel": "اختر المستوى",
+      "points": "الدرجة",
+      "timeEstimate": "الوقت المقدّر (دقيقة)",
+      "optional": "اختياري",
+      "caseSensitive": "حساس لحالة الأحرف",
+      "rubricDescription": "اذكر معايير تصحيح هذا السؤال",
+      "tagHint": "اضغط Enter لإضافة وسم (مثل: جبر، هندسة)",
+      "add": "إضافة",
+      "addOption": "إضافة خيار",
+      "addAnswer": "إضافة إجابة",
+      "option": "الخيار",
+      "answer": "الإجابة",
+      "remove": "حذف",
+      "cancel": "إلغاء",
+      "update": "تحديث",
+      "create": "إنشاء"
+    },
+    "aiGenerate": {
+      "subject": "المادة",
+      "selectSubject": "اختر المادة",
+      "topic": "الموضوع",
+      "questionType": "نوع السؤال",
+      "difficulty": "الصعوبة",
+      "bloomLevel": "مستوى بلوم",
+      "numQuestions": "عدد الأسئلة",
+      "additionalInstructions": "تعليمات إضافية (اختياري)",
+      "generateFailed": "فشل الإنشاء",
+      "saveFailed": "فشل الحفظ",
+      "title": "إنشاء أسئلة بالذكاء الاصطناعي",
+      "topicPlaceholder": "مثال: البناء الضوئي، المعادلات التربيعية",
+      "instructionsPlaceholder": "مثال: ركّز على التطبيقات العملية وأضف وصفًا للرسوم...",
+      "generating": "جارٍ الإنشاء...",
+      "generate": "إنشاء الأسئلة",
+      "savedToBank": "تم حفظ {count} في بنك الأسئلة",
+      "viewBank": "عرض بنك الأسئلة",
+      "review": "مراجعة الأسئلة المُنشأة ({selected}/{total} محدد)",
+      "saving": "جارٍ الحفظ...",
+      "saveCount": "حفظ {count}",
+      "questionShort": "س",
+      "pointsCount": "{count} درجة",
+      "accepted": "المقبول:",
+      "sampleAnswer": "الإجابة النموذجية:",
+      "select": "تحديد",
+      "deselect": "إلغاء التحديد"
+    },
+    "catalog": {
+      "searchPlaceholder": "البحث في أسئلة الكتالوج...",
+      "allSubjects": "جميع المواد",
+      "difficulty": "الصعوبة",
+      "difficultyAll": "الكل",
+      "difficultyEasy": "سهل",
+      "difficultyMedium": "متوسط",
+      "difficultyHard": "صعب",
+      "type": "النوع",
+      "typeAll": "الكل",
+      "typeMCQ": "اختيار من متعدد",
+      "typeTrueFalse": "صح/خطأ",
+      "typeShortAnswer": "إجابة قصيرة",
+      "typeEssay": "مقالي",
+      "headers": {
+        "question": "السؤال",
+        "subject": "المادة",
+        "type": "النوع",
+        "difficulty": "الصعوبة",
+        "used": "الاستخدام",
+        "action": "الإجراء"
+      },
+      "noResults": "لا توجد أسئلة في الكتالوج",
+      "adopted": "تمت الإضافة",
+      "adopt": "إضافة",
+      "totalQuestions": "الإجمالي {count} سؤال"
+    },
+    "analytics": {
+      "error": "خطأ",
+      "loadFailed": "فشل تحميل التحليلات",
+      "considerUpdating": "يُنصح بالتحديث",
+      "removeOrReplace": "إزالة أو استبدال",
+      "difficultyDescription": "نسبة الطلاب الذين أجابوا بشكل صحيح (قيمة p)",
+      "discriminationDescription": "الفرق بين الأداء العالي والمنخفض (مؤشر D)",
+      "difficultyDistribution": "توزيع الصعوبة",
+      "qualityDistribution": "توزيع الجودة",
+      "headers": {
+        "question": "السؤال",
+        "subject": "المادة",
+        "type": "النوع",
+        "quality": "الجودة",
+        "difficulty": "الصعوبة",
+        "issues": "المشاكل",
+        "action": "الإجراء"
+      },
+      "noDataTitle": "لا توجد تحليلات",
+      "noDataDescription": "ستظهر التحليلات هنا بعد إجراء الاختبارات وتصحيحها.",
+      "noDataHint": "يلزم 10 إجابات على الأقل لكل سؤال لإجراء التحليل.",
+      "totalQuestions": "إجمالي الأسئلة",
+      "withSufficientData": "ببيانات كافية",
+      "goodQuality": "جودة جيدة",
+      "percentOfQuestions": "{percent}% من الأسئلة",
+      "needsRevision": "تحتاج مراجعة",
+      "shouldRetire": "يُنصح بسحبها",
+      "avgQuality": "متوسط درجة الجودة",
+      "avgDifficulty": "متوسط الصعوبة",
+      "avgDiscrimination": "متوسط التمييز",
+      "difficultyDistributionDesc": "توزيع صعوبة الأسئلة في البنك",
+      "qualityDistributionDesc": "جودة الأسئلة بحسب التحليل السيكومتري",
+      "flaggedTitle": "أسئلة تحتاج إلى انتباه",
+      "flaggedDescription": "أسئلة تحتاج إلى مراجعة أو سحب بحسب التحليل السيكومتري",
+      "refresh": "تحديث التحليلات",
+      "difficultyLevels": {
+        "veryEasy": "سهل جدًا",
+        "easy": "سهل",
+        "moderate": "متوسط",
+        "difficult": "صعب",
+        "veryDifficult": "صعب جدًا"
+      },
+      "qualityLevels": {
+        "excellent": "ممتاز",
+        "good": "جيد",
+        "fair": "مقبول",
+        "poor": "ضعيف",
+        "needsReview": "يحتاج مراجعة"
+      },
+      "flags": {
+        "insufficient_data": "بيانات غير كافية",
+        "too_easy": "سهل جدًا",
+        "too_hard": "صعب جدًا",
+        "negative_discrimination": "تمييز سلبي",
+        "low_discrimination": "تمييز منخفض",
+        "poor_distractors": "مشتتات ضعيفة"
+      },
+      "actions": {
+        "keep": "إبقاء",
+        "revise": "مراجعة",
+        "retire": "سحب",
+        "needs_review": "يحتاج مراجعة"
+      }
+    },
+    "config": {
+      "questionTypes": {
+        "mcq": "اختيار من متعدد",
+        "trueFalse": "صح/خطأ",
+        "fillBlank": "إكمال الفراغ",
+        "shortAnswer": "إجابة قصيرة",
+        "essay": "مقالي",
+        "matching": "مطابقة",
+        "ordering": "ترتيب",
+        "multiSelect": "اختيار متعدد"
+      },
+      "difficulty": {
+        "easy": "سهل",
+        "medium": "متوسط",
+        "hard": "صعب"
+      },
+      "bloomLevels": {
+        "remember": "التذكر",
+        "understand": "الفهم",
+        "apply": "التطبيق",
+        "analyze": "التحليل",
+        "evaluate": "التقييم",
+        "create": "الإبداع"
+      },
+      "sources": {
+        "manual": "يدوي",
+        "aiGenerated": "إنشاء بالذكاء الاصطناعي",
+        "imported": "مستورد"
+      },
+      "typeDescriptions": {
+        "mcq": "أسئلة بعدة خيارات وإجابة صحيحة واحدة أو أكثر",
+        "trueFalse": "أسئلة اختيار بين صح وخطأ",
+        "fillBlank": "أسئلة إجابة قصيرة بإجابات متوقعة محددة",
+        "shortAnswer": "إجابات من جملة أو جملتين تُصحَّح يدويًا أو بالذكاء الاصطناعي",
+        "essay": "إجابات مطولة تُصحَّح يدويًا أو بالذكاء الاصطناعي",
+        "matching": "مطابقة العناصر بين عمودين",
+        "ordering": "ترتيب العناصر بالتسلسل الصحيح",
+        "multiSelect": "اختيار كل الإجابات الصحيحة من قائمة"
+      },
+      "difficultyDescriptions": {
+        "easy": "أسئلة التذكر والفهم الأساسية",
+        "medium": "أسئلة التطبيق والتحليل",
+        "hard": "أسئلة التقييم والإبداع"
+      },
+      "bloomDescriptions": {
+        "remember": "استرجاع الحقائق والمفاهيم الأساسية",
+        "understand": "شرح الأفكار والمفاهيم",
+        "apply": "استخدام المعلومات في مواقف جديدة",
+        "analyze": "ربط الأفكار ببعضها",
+        "evaluate": "تبرير موقف أو قرار",
+        "create": "إنتاج عمل جديد أو أصيل"
+      },
+      "sourceDescriptions": {
+        "manual": "أنشأه المعلم يدويًا",
+        "aiGenerated": "أُنشئ بالذكاء الاصطناعي",
+        "imported": "مستورد من مصدر خارجي"
+      }
+    },
+    "wizard": {
+      "question": {
+        "title": "السؤال",
+        "description": "أدخل نص السؤال والمادة والنوع.",
+        "detailsTitle": "تفاصيل السؤال",
+        "detailsDescription": "حدد الصعوبة والنقاط والوسوم والشرح.",
+        "questionText": "نص السؤال",
+        "questionPlaceholder": "أدخل السؤال (10 أحرف على الأقل)",
+        "questionType": "نوع السؤال",
+        "optionalPlaceholder": "اختياري",
+        "tagsPlaceholder": "أدخل الوسوم مفصولة بفواصل",
+        "explanationPlaceholder": "اشرح الإجابة الصحيحة (اختياري)",
+        "imagePlaceholder": "رابط صورة اختياري",
+        "tabQuestion": "السؤال",
+        "tabQuestionDesc": "أدخل نص السؤال والمادة والنوع.",
+        "tabDetails": "التفاصيل",
+        "tabDetailsTitle": "تفاصيل السؤال",
+        "tabDetailsDesc": "حدد الصعوبة والدرجة والوسوم والشرح.",
+        "subject": "المادة",
+        "questionTextPlaceholder": "أدخل السؤال (10 أحرف على الأقل)",
+        "difficulty": "الصعوبة",
+        "bloomLevel": "مستوى بلوم",
+        "points": "الدرجة",
+        "timeEstimate": "الوقت المقدّر (بالدقائق)",
+        "optional": "اختياري",
+        "tags": "الوسوم",
+        "explanation": "الشرح",
+        "imageUrl": "رابط الصورة",
+        "imageUrlPlaceholder": "رابط صورة (اختياري)",
+        "saveFailed": "فشل الحفظ"
+      },
+      "answers": {
+        "answerOptions": "خيارات الإجابة",
+        "enterOption": "أدخل نص الخيار",
+        "optionalExplanation": "شرح اختياري",
+        "markCorrect": "تحديد كإجابة صحيحة",
+        "selectCorrect": "اختر الإجابة الصحيحة",
+        "acceptedAnswers": "الإجابات المقبولة",
+        "enterAccepted": "أدخل الإجابة المقبولة",
+        "sampleAnswer": "أدخل الإجابة النموذجية المتوقعة",
+        "rubricPlaceholder": "صف كيفية تقييم هذه الإجابة (اختياري)",
+        "modelAnswer": "أدخل إجابة نموذجية (50 حرفاً على الأقل)",
+        "rubricCriteria": "صف معايير التقييم (20 حرفاً على الأقل)",
+        "matchingPairs": "أزواج المطابقة",
+        "enterLeft": "أدخل العنصر الأيسر",
+        "enterRight": "أدخل العنصر المطابق الأيمن",
+        "correctOrder": "العناصر بالترتيب الصحيح",
+        "enterItem": "أدخل نص العنصر",
+        "title": "خيارات الإجابة",
+        "description": "قم بتكوين خيارات الإجابة لهذا السؤال.",
+        "answerOptionsSelectAll": "خيارات الإجابة (حدد كل الصحيح)",
+        "addOption": "إضافة خيار",
+        "option": "الخيار",
+        "text": "النص",
+        "enterOptionText": "أدخل نص الخيار",
+        "correctAnswer": "الإجابة الصحيحة",
+        "explanation": "الشرح",
+        "correct": "صحيح",
+        "markAsCorrect": "تحديد كإجابة صحيحة",
+        "selectCorrectAnswer": "اختر الإجابة الصحيحة",
+        "trueLabel": "صح",
+        "falseLabel": "خطأ",
+        "addAnswer": "إضافة إجابة",
+        "answer": "الإجابة",
+        "enterAcceptedAnswer": "أدخل الإجابة المقبولة",
+        "caseSensitivity": "حساسية الأحرف",
+        "caseSensitiveLabel": "الإجابات حساسة لحالة الأحرف",
+        "sampleAnswerPlaceholder": "أدخل الإجابة النموذجية المتوقعة",
+        "gradingRubric": "معايير التقييم",
+        "gradingRubricPlaceholder": "صف كيفية تقييم هذه الإجابة (اختياري)",
+        "essaySamplePlaceholder": "أدخل إجابة نموذجية (50 حرفًا على الأقل)",
+        "essayRubricPlaceholder": "صف معايير التقييم (20 حرفًا على الأقل)",
+        "addPair": "إضافة زوج",
+        "pair": "الزوج",
+        "leftItem": "العنصر الأول",
+        "leftItemPlaceholder": "أدخل عنصر الجهة الأولى",
+        "rightMatch": "العنصر المطابق",
+        "rightMatchPlaceholder": "أدخل العنصر المطابق",
+        "addItem": "إضافة عنصر",
+        "itemsInOrder": "العناصر بالترتيب الصحيح",
+        "orderingDescription": "أدخل العناصر بالترتيب الصحيح. سيعيد الطلاب ترتيبها.",
+        "item": "العنصر",
+        "enterItemText": "أدخل نص العنصر",
+        "remove": "حذف",
+        "saveFailed": "فشل الحفظ",
+        "completeFailed": "تعذّر إكمال الحفظ"
+      },
+      "saveQuestion": "حفظ السؤال",
+      "groupQuestion": "تفاصيل السؤال",
+      "groupAnswers": "خيارات الإجابة"
+    },
+    "tabbedLayout": {
+      "catalog": "الكتالوج",
+      "myQuestions": "أسئلتي"
+    },
+    "deleteFailed": "فشل الحذف",
+    "deleteConfirm": "هل تريد حذف هذا السؤال؟",
+    "list": {
+      "empty": "لا توجد أسئلة بعد",
+      "loadMore": "عرض المزيد",
+      "unknownSubject": "غير معروفة",
+      "pointsValue": "الدرجة: {count}",
+      "timesUsed": "استُخدم {count} مرة",
+      "actions": "الإجراءات",
+      "openMenu": "فتح القائمة",
+      "view": "عرض",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "columns": {
+        "question": "السؤال",
+        "type": "النوع",
+        "difficulty": "الصعوبة",
+        "bloomLevel": "مستوى بلوم",
+        "subject": "المادة",
+        "points": "الدرجة",
+        "source": "المصدر",
+        "used": "الاستخدام",
+        "times": "مرات",
+        "successRate": "نسبة النجاح",
+        "quality": "الجودة",
+        "created": "تاريخ الإنشاء"
+      },
+      "quality": {
+        "new": "جديد",
+        "good": "جيد",
+        "moderate": "متوسط",
+        "tooEasy": "سهل جدًا",
+        "tooHard": "صعب جدًا",
+        "mismatch": "غير متطابق"
+      }
+    },
+    "validation": {
+      "optionTextRequired": "نص الخيار مطلوب",
+      "subjectRequired": "المادة مطلوبة",
+      "questionMin": "يجب ألا يقل السؤال عن 10 أحرف",
+      "optionsMin2": "يلزم خياران على الأقل",
+      "optionsMax6": "الحد الأقصى 6 خيارات",
+      "optionsMax8": "الحد الأقصى 8 خيارات",
+      "correctRequired": "يلزم تحديد إجابة صحيحة واحدة على الأقل",
+      "trueFalseTwo": "سؤال صح/خطأ يجب أن يحتوي على خيارين فقط",
+      "trueFalseCorrect": "يجب أن يكون أحد الخيارين صحيحًا",
+      "acceptedMin": "يلزم إدخال إجابة مقبولة واحدة على الأقل",
+      "sampleMin10": "يجب ألا تقل الإجابة النموذجية عن 10 أحرف",
+      "sampleMin50": "يجب ألا تقل الإجابة النموذجية عن 50 حرفًا",
+      "rubricMin20": "يجب ألا تقل معايير التقييم عن 20 حرفًا",
+      "pairsMin2": "يلزم زوجان على الأقل",
+      "pairsMax10": "الحد الأقصى 10 أزواج",
+      "itemsMin2": "يلزم عنصران على الأقل",
+      "itemsMax10": "الحد الأقصى 10 عناصر",
+      "twoCorrect": "يلزم تحديد إجابتين صحيحتين على الأقل",
+      "topicMin3": "يجب ألا يقل الموضوع عن 3 أحرف",
+      "questionsMin1": "سؤال واحد على الأقل",
+      "questionsMax20": "الحد الأقصى 20 سؤالًا في المرة",
+      "nameMin3": "يجب ألا يقل الاسم عن 3 أحرف",
+      "durationMin": "الحد الأدنى 15 دقيقة",
+      "durationMax": "الحد الأقصى 8 ساعات",
+      "templateNeedsQuestion": "يجب أن يحتوي القالب على سؤال واحد على الأقل",
+      "examRequired": "الاختبار مطلوب",
+      "importMin1": "يلزم سؤال واحد على الأقل",
+      "importMax100": "الحد الأقصى 100 سؤال في كل استيراد",
+      "questionTextMin": "يجب ألا يقل نص السؤال عن 10 أحرف",
+      "pointsMin": "يجب ألا تقل الدرجة عن 0.5",
+      "pointsMax": "يجب ألا تزيد الدرجة عن 100"
+    },
+    "practice": {
+      "chooseSubject": "اختر المادة",
+      "questionsCount": "{count} سؤال",
+      "settings": "إعدادات التدريب",
+      "difficultyLevel": "مستوى الصعوبة",
+      "all": "الكل",
+      "numQuestions": "عدد الأسئلة",
+      "available": "{count} سؤال متاح",
+      "start": "ابدأ التدريب",
+      "history": "سجل التدريب",
+      "correct": "صحيح",
+      "wellDone": "أحسنت!",
+      "completed": "أكملت {count} سؤال",
+      "manualReview": "{count} من الأسئلة المقالية والقصيرة (تحتاج مراجعة المعلم)",
+      "newPractice": "تدريب جديد",
+      "tryAgain": "أعد المحاولة",
+      "exit": "إنهاء",
+      "typeAnswer": "اكتب إجابتك",
+      "writeAnswer": "اكتب إجابتك",
+      "acceptedAnswers": "الإجابات المقبولة:",
+      "sampleAnswer": "الإجابة النموذجية:",
+      "previous": "السابق",
+      "checkAnswer": "تحقق من الإجابة",
+      "finish": "إنهاء",
+      "next": "التالي",
+      "mixed": "متنوع"
+    }
+  },
+  "paper": {
+    "config": {
+      "compose": "التكوين",
+      "compose_desc": "اختر شكل كل قسم من أقسام ورقة الامتحان",
+      "region_copies": "المنهج وعدد النسخ",
+      "region_copies_desc": "نمط الامتحان حسب المنطقة وعدد النسخ المطبوعة",
+      "region_preset": "نمط المنطقة",
+      "auto_detect": "تحديد تلقائي",
+      "region_preset_desc": "يطبّق التنسيق الخاص بالمنطقة (الترويسة والعلامات المائية وغيرها)",
+      "spare_copies": "نسخ احتياطية",
+      "spare_copies_desc": "نسخ إضافية فوق عدد الطلاب المسجلين",
+      "custom_copies": "عدد نسخ مخصص",
+      "auto_placeholder": "تلقائي",
+      "recommended_copies": "المقترح: {count} نسخة ({enrolled} طالب مسجل + {spare} احتياطية)",
+      "custom_copies_desc": "تجاوز العدد المحسوب تلقائياً",
+      "letter": "ليتر"
+    },
+    "list": {
+      "deleted": "تم الحذف",
+      "paper_deleted": "تم حذف الورقة بنجاح",
+      "version": "النسخة",
+      "row_actions": "إجراءات الورقة"
+    },
+    "options": {
+      "template": {
+        "CLASSIC": {
+          "label": "كلاسيكي أكاديمي",
+          "description": "تنسيق الاختبار التقليدي مع ترويسة المدرسة والأسئلة المرقمة"
+        },
+        "MODERN": {
+          "label": "حديث بسيط",
+          "description": "تخطيط نظيف وواسع مع زخارف قليلة"
+        },
+        "FORMAL": {
+          "label": "رسمي",
+          "description": "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية"
+        },
+        "CUSTOM": {
+          "label": "مخصص",
+          "description": "يستخدم ألوان هوية المدرسة والتنسيق المخصص"
+        }
+      },
+      "layout": {
+        "SINGLE_COLUMN": {
+          "label": "عمود واحد",
+          "description": "الأسئلة مرتبة عموديًا في عمود واحد"
+        },
+        "TWO_COLUMN": {
+          "label": "عمودان",
+          "description": "الأسئلة مرتبة في عمودين (توفّر المساحة)"
+        },
+        "BOOKLET": {
+          "label": "كتيب",
+          "description": "كتيب متعدد الصفحات مع ورقة الإجابة في النهاية"
+        }
+      },
+      "answerSheet": {
+        "NONE": {
+          "label": "الإجابات مباشرة",
+          "description": "يكتب الطلاب الإجابات أسفل كل سؤال"
+        },
+        "SEPARATE": {
+          "label": "ورقة منفصلة",
+          "description": "ورقة إجابة مخصصة في نهاية الاختبار"
+        },
+        "BUBBLE": {
+          "label": "ورقة الفقاعات",
+          "description": "ورقة فقاعات للمسح الضوئي (اختيار من متعدد فقط)"
+        }
+      }
+    },
+    "validation": {
+      "maxLength": "يجب ألا يزيد عن {max} حرفاً",
+      "minValue": "يجب ألا تقل القيمة عن {min}",
+      "maxValue": "يجب ألا تزيد القيمة عن {max}",
+      "integer": "يجب أن يكون رقماً صحيحاً",
+      "required": "هذا الحقل مطلوب"
+    },
+    "errors": {
+      "UNAUTHORIZED": "غير مصرّح لك بهذا الإجراء",
+      "NOT_FOUND": "لم يتم العثور على الاختبار أو الورقة أو الإعدادات",
+      "ALREADY_EXISTS": "إعدادات الورقة موجودة مسبقاً لهذا الاختبار",
+      "CREATE_FAILED": "تعذّر حفظ إعدادات الورقة",
+      "UPDATE_FAILED": "تعذّر تحديث إعدادات الورقة",
+      "DELETE_FAILED": "تعذّر الحذف. حاول مرة أخرى",
+      "FETCH_FAILED": "تعذّر تحميل بيانات الورقة",
+      "GENERATION_FAILED": "تعذّر إنشاء الورقة. حاول مرة أخرى",
+      "INVALID_INPUT": "بعض القيم المدخلة غير صحيحة",
+      "generic": "حدث خطأ ما. حاول مرة أخرى"
+    },
+    "composition": {
+      "slots": {
+        "header": "الترويسة",
+        "footer": "التذييل",
+        "studentInfo": "بيانات الطالب",
+        "instructions": "التعليمات",
+        "answerSheet": "ورقة الإجابة",
+        "cover": "الغلاف"
+      },
+      "decorations": "الزخارف",
+      "accentBar": "شريط ملوّن",
+      "accentBarDesc": "شريط ملوّن أعلى الصفحة",
+      "watermark": "علامة مائية",
+      "watermarkDesc": "نص مائل خلف المحتوى",
+      "doubleFrame": "إطار مزدوج",
+      "doubleFrameDesc": "إطار مزدوج حول المحتوى"
+    },
+    "actions": {
+      "downloadPdf": "تحميل PDF",
+      "preparing": "جارٍ التجهيز...",
+      "print": "طباعة",
+      "printing": "جارٍ الطباعة..."
+    }
+  },
+  "take": {
+    "errors": {
+      "NOT_FOUND": "لم يتم العثور على الاختبار أو الجلسة",
+      "UNAUTHORIZED": "غير مصرّح لك بأداء هذا الاختبار",
+      "VALIDATION_ERROR": "البيانات المرسلة غير صحيحة",
+      "EXAM_NOT_FOUND": "لم يتم العثور على هذا الاختبار",
+      "EXAM_UPDATE_FAILED": "تعذّر تحديث جلسة الاختبار. حاول مرة أخرى",
+      "SAVE_FAILED": "تعذّر حفظ إجاباتك",
+      "LOAD_FAILED": "تعذّر تحميل الاختبار",
+      "STUDENT_NOT_FOUND": "لم يتم العثور على سجل الطالب",
+      "MAX_ATTEMPTS_REACHED": "لقد استنفدت جميع المحاولات المسموحة لهذا الاختبار",
+      "START_FAILED": "تعذّر بدء جلسة الاختبار",
+      "SUBMIT_FAILED": "تعذّر تسليم الاختبار. حاول مرة أخرى",
+      "NO_ACTIVE_SESSION": "لا توجد جلسة اختبار نشطة",
+      "generic": "حدث خطأ ما. حاول مرة أخرى"
+    },
+    "questionTypes": {
+      "MULTIPLE_CHOICE": "اختيار من متعدد",
+      "TRUE_FALSE": "صح / خطأ",
+      "FILL_BLANK": "أكمل الفراغ",
+      "SHORT_ANSWER": "إجابة قصيرة",
+      "ESSAY": "مقال"
+    },
+    "flagQuestion": "وضع علامة على هذا السؤال للمراجعة",
+    "unflagQuestion": "إزالة العلامة عن هذا السؤال"
+  },
+  "shared": {
+    "questionTypes": {
+      "MULTIPLE_CHOICE": "اختيار",
+      "TRUE_FALSE": "صح/خطأ",
+      "SHORT_ANSWER": "قصير",
+      "ESSAY": "مقال",
+      "FILL_BLANK": "فراغ",
+      "MATCHING": "مطابقة",
+      "ORDERING": "ترتيب",
+      "MULTI_SELECT": "متعدد"
+    },
+    "bloomLevels": {
+      "REMEMBER": "التذكّر",
+      "UNDERSTAND": "الفهم",
+      "APPLY": "التطبيق",
+      "ANALYZE": "التحليل",
+      "EVALUATE": "التقويم",
+      "CREATE": "الإبداع"
+    },
+    "questionsCount": "{count} سؤالاً",
+    "notAvailable": "غير متاح",
+    "myAttempts": "محاولاتي",
+    "attemptsCountOne": "{count} محاولة",
+    "attemptsCountMany": "{count} محاولات"
+  },
+  "quick": {
+    "status": {
+      "draft": "مسودة",
+      "active": "نشط",
+      "closed": "مغلق",
+      "archived": "مؤرشف"
+    },
+    "list": {
+      "actions": "الإجراءات",
+      "minutes": "{count} دقيقة"
+    },
+    "toast": {
+      "launchFailed": "تعذّر إطلاق الاختبار القصير",
+      "closeFailed": "تعذّر إغلاق الاختبار القصير",
+      "createFailed": "تعذّر إنشاء الاختبار القصير"
+    },
+    "take": {
+      "timeRemaining": "الوقت المتبقي",
+      "submitFailed": "تعذّر إرسال إجاباتك. حاول مرة أخرى."
+    },
+    "validation": {
+      "titleRequired": "العنوان مطلوب",
+      "questionsRequired": "اختر سؤالاً واحداً على الأقل",
+      "durationRange": "يجب أن تكون المدة بين 1 و60 دقيقة",
+      "idRequired": "الاختبار مطلوب",
+      "assessmentIdRequired": "الاختبار مطلوب"
+    }
+  },
+  "quiz": {
+    "minutes": "{count} دقيقة",
+    "points": "{count} درجة"
+  },
+  "mock": {
+    "minutes": "{count} دقيقة",
+    "take": {
+      "points": "{count} درجة",
+      "timeRemaining": "الوقت المتبقي",
+      "submitFailed": "تعذّر إرسال الاختبار. حاول مرة أخرى."
+    }
+  }
+}

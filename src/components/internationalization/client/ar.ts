@@ -38,6 +38,8 @@ import attendanceTake from "../dictionaries/ar/attendance-take.json"
 import attendanceRisk from "../dictionaries/ar/attendance-risk.json"
 import attendanceReports from "../dictionaries/ar/attendance-reports.json"
 import liveClasses from "../dictionaries/ar/live-classes.json"
+import assignments from "../dictionaries/ar/assignments.json"
+import exams from "../dictionaries/ar/exams.json"
 import parentPortal from "../dictionaries/ar/parentPortal.json"
 
 export const dictionary = {
@@ -72,5 +74,7 @@ export const dictionary = {
   attendanceRisk,
   attendanceReports,
   liveClasses,
+  assignments,
+  exams,
   parentPortal,
 } as unknown as Dictionary

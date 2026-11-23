@@ -14,6 +14,9 @@ const BASE: Intl.DateTimeFormatOptions = {
   day: "numeric",
 }
 
+/** Used when the school row carries no zone (matches the timetable and live pages). */
+export const DEFAULT_ASSIGNMENT_TIME_ZONE = "Africa/Khartoum"
+
 export type AssignmentDateStyle = "short" | "long" | "datetime"
 
 export function assignmentDateLocale(locale: string | undefined): string {
@@ -23,7 +26,9 @@ export function assignmentDateLocale(locale: string | undefined): string {
 export function formatAssignmentDate(
   date: Date | string | number | null | undefined,
   locale: string | undefined,
-  style: AssignmentDateStyle | Intl.DateTimeFormatOptions = "short"
+  style: AssignmentDateStyle | Intl.DateTimeFormatOptions = "short",
+  /** The school's IANA zone — server and browser print the same day. */
+  timeZone?: string | null
 ): string {
   if (date === null || date === undefined || date === "") return ""
   const d = date instanceof Date ? date : new Date(date)
@@ -39,5 +44,6 @@ export function formatAssignmentDate(
   return new Intl.DateTimeFormat(assignmentDateLocale(locale), {
     ...options,
     calendar: "gregory",
+    timeZone: timeZone || DEFAULT_ASSIGNMENT_TIME_ZONE,
   }).format(d)
 }

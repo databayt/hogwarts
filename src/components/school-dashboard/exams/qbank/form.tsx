@@ -2,11 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, type UseFormReturn } from "react-hook-form"
-import type { z } from "zod"
 
 import { BloomLevel, DifficultyLevel, QuestionType } from "@/lib/client-enums"
 import { Badge } from "@/components/ui/badge"
@@ -34,18 +33,19 @@ import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { createQuestion, updateQuestion } from "./actions"
 import {
-  BLOOM_LEVELS,
   calculateDefaultPoints,
-  DIFFICULTY_LEVELS,
-  QUESTION_TYPES,
+  getBloomLevelOptions,
+  getDifficultyLevelOptions,
+  getQuestionTypeOptions,
 } from "./config"
 import { LessonAttachField } from "./lesson-attach-field"
+import { qbankT } from "./t"
 import type { QuestionBankDTO } from "./types"
-import { questionBankSchema } from "./validation"
+import { createQuestionBankSchema, type QuestionBankSchema } from "./validation"
 
 interface QuestionBankFormProps {
   initialData?: QuestionBankDTO
@@ -65,12 +65,15 @@ export function QuestionBankForm({
   subjects,
   onSuccess,
 }: QuestionBankFormProps) {
-  // Default dictionary fallback for when component is used without i18n
-  const dict = dictionary?.generate || {}
-  const { dictionary: hookDict } = useDictionary()
-  const t = hookDict?.school?.exams?.qbankUi?.form as
-    | Record<string, string>
-    | undefined
+  const qt = qbankT(useDictionaryFallback<any>(dictionary))
+  const t = qt.form as Record<string, string> | undefined
+  const questionBankSchema = useMemo(
+    () => createQuestionBankSchema(qt.validation),
+    [qt.validation]
+  )
+  const typeOptions = useMemo(() => getQuestionTypeOptions(qt), [qt])
+  const difficultyOptions = useMemo(() => getDifficultyLevelOptions(qt), [qt])
+  const bloomOptions = useMemo(() => getBloomLevelOptions(qt), [qt])
   const { closeModal } = useModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedType, setSelectedType] = useState<QuestionType>(
@@ -145,7 +148,7 @@ export function QuestionBankForm({
     }
   }, [watchType, watchDifficulty, initialData, form])
 
-  const onSubmit = async (values: z.infer<typeof questionBankSchema>) => {
+  const onSubmit = async (values: QuestionBankSchema) => {
     setIsSubmitting(true)
     try {
       const formData = new FormData()
@@ -174,11 +177,7 @@ export function QuestionBankForm({
         : await createQuestion(formData)
 
       if (result.success) {
-        SuccessToast(
-          initialData?.id
-            ? (t?.updated ?? "Question updated!")
-            : (t?.created ?? "Question created!")
-        )
+        SuccessToast(initialData?.id ? (t?.updated ?? "") : (t?.created ?? ""))
         closeModal()
         // Use callback for optimistic update instead of page reload
         if (onSuccess) {
@@ -188,11 +187,7 @@ export function QuestionBankForm({
         ErrorToast(result.error)
       }
     } catch (error) {
-      ErrorToast(
-        error instanceof Error
-          ? error.message
-          : (t?.saveFailed ?? "Failed to save question")
-      )
+      ErrorToast(error instanceof Error ? error.message : (t?.saveFailed ?? ""))
     } finally {
       setIsSubmitting(false)
     }
@@ -203,7 +198,7 @@ export function QuestionBankForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
-            {initialData?.id ? "Pencil Question" : "Create Question"}
+            {initialData?.id ? (t?.editTitle ?? "") : (t?.createTitle ?? "")}
           </h2>
 
           {/* Subject Selection */}
@@ -212,7 +207,7 @@ export function QuestionBankForm({
             name="subjectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{"Subject"}</FormLabel>
+                <FormLabel>{t?.subject ?? ""}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -220,7 +215,7 @@ export function QuestionBankForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={"Select subject"} />
+                      <SelectValue placeholder={t?.selectSubject ?? ""} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -261,7 +256,7 @@ export function QuestionBankForm({
             name="questionType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t?.questionType ?? "Question Type"}</FormLabel>
+                <FormLabel>{t?.questionType ?? ""}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -269,11 +264,11 @@ export function QuestionBankForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={"Select type"} />
+                      <SelectValue placeholder={t?.selectType ?? ""} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {QUESTION_TYPES.map((type) => (
+                    {typeOptions.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -282,7 +277,7 @@ export function QuestionBankForm({
                 </Select>
                 <FormDescription>
                   {
-                    QUESTION_TYPES.find((t) => t.value === field.value)
+                    typeOptions.find((o) => o.value === field.value)
                       ?.description
                   }
                 </FormDescription>
@@ -297,10 +292,10 @@ export function QuestionBankForm({
             name="questionText"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t?.questionText ?? "Question Text"}</FormLabel>
+                <FormLabel>{t?.questionText ?? ""}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={"Enter your question here..."}
+                    placeholder={t?.questionPlaceholder ?? ""}
                     className="min-h-[100px]"
                     disabled={isView}
                     {...field}
@@ -312,13 +307,13 @@ export function QuestionBankForm({
           />
 
           {/* Difficulty & Bloom Level Row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.difficulty ?? "Difficulty"}</FormLabel>
+                  <FormLabel>{t?.difficulty ?? ""}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -326,11 +321,11 @@ export function QuestionBankForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={"Select difficulty"} />
+                        <SelectValue placeholder={t?.selectDifficulty ?? ""} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {DIFFICULTY_LEVELS.map((level) => (
+                      {difficultyOptions.map((level) => (
                         <SelectItem key={level.value} value={level.value}>
                           <span className="flex items-center gap-2">
                             <span
@@ -352,7 +347,7 @@ export function QuestionBankForm({
               name="bloomLevel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.bloomLevel ?? "Bloom Level"}</FormLabel>
+                  <FormLabel>{t?.bloomLevel ?? ""}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -360,13 +355,14 @@ export function QuestionBankForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={"Select level"} />
+                        <SelectValue placeholder={t?.selectLevel ?? ""} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {BLOOM_LEVELS.map((level) => (
+                      {bloomOptions.map((level) => (
                         <SelectItem key={level.value} value={level.value}>
-                          {level.label} - {level.description}
+                          {level.label}
+                          {level.description ? ` - ${level.description}` : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -378,13 +374,13 @@ export function QuestionBankForm({
           </div>
 
           {/* Points & Time Estimate */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="points"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.points ?? "Points"}</FormLabel>
+                  <FormLabel>{t?.points ?? ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -411,9 +407,7 @@ export function QuestionBankForm({
               name="timeEstimate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t?.timeEstimate ?? "Time Estimate (min)"}
-                  </FormLabel>
+                  <FormLabel>{t?.timeEstimate ?? ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -427,7 +421,7 @@ export function QuestionBankForm({
                       ref={field.ref}
                     />
                   </FormControl>
-                  <FormDescription>{t?.optional ?? "Optional"}</FormDescription>
+                  <FormDescription>{t?.optional ?? ""}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -459,7 +453,7 @@ export function QuestionBankForm({
             name="tags"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t?.tags ?? "Tags"}</FormLabel>
+                <FormLabel>{t?.tags ?? ""}</FormLabel>
                 <FormControl>
                   <TagsInput
                     value={field.value || []}
@@ -467,10 +461,7 @@ export function QuestionBankForm({
                     disabled={isView}
                   />
                 </FormControl>
-                <FormDescription>
-                  {t?.tagPlaceholder ??
-                    "Press Enter to add tags (e.g., algebra, geometry)"}
-                </FormDescription>
+                <FormDescription>{t?.tagHint ?? ""}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -482,15 +473,10 @@ export function QuestionBankForm({
             name="explanation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {t?.explanation ?? "Explanation (Optional)"}
-                </FormLabel>
+                <FormLabel>{t?.explanation ?? ""}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={
-                      t?.explanationPlaceholder ??
-                      "Explain the concept or provide additional context..."
-                    }
+                    placeholder={t?.explanationPlaceholder ?? ""}
                     disabled={isView}
                     {...field}
                   />
@@ -503,20 +489,25 @@ export function QuestionBankForm({
 
         {/* Actions */}
         {!isView && (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
+              className="max-sm:min-h-11"
               onClick={closeModal}
               disabled={isSubmitting}
             >
-              {"Cancel"}
+              {t?.cancel ?? ""}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="max-sm:min-h-11"
+              disabled={isSubmitting}
+            >
               {isSubmitting && (
                 <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
               )}
-              {initialData?.id ? "Update" : "Create"}
+              {initialData?.id ? (t?.update ?? "") : (t?.create ?? "")}
             </Button>
           </div>
         )}
@@ -535,8 +526,7 @@ function MultipleChoiceFields({
   isView: boolean
   type: QuestionType
 }) {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.form as
+  const t = qbankT(useDictionaryFallback<any>()).form as
     | Record<string, string>
     | undefined
   const options = form.watch("options") || []
@@ -562,11 +552,11 @@ function MultipleChoiceFields({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <FormLabel>{t?.options ?? "Options"}</FormLabel>
+        <FormLabel>{t?.options ?? ""}</FormLabel>
         {!isTrueFalse && !isView && options.length < 6 && (
           <Button type="button" variant="outline" size="sm" onClick={addOption}>
             <Icons.plus className="me-2 h-4 w-4" />
-            Add Option
+            {t?.addOption ?? ""}
           </Button>
         )}
       </div>
@@ -589,11 +579,7 @@ function MultipleChoiceFields({
             />
             <div className="flex-1 space-y-2">
               <Input
-                placeholder={
-                  t?.optionPlaceholder
-                    ? `${t.optionPlaceholder} ${index + 1}`
-                    : `Option ${index + 1}`
-                }
+                placeholder={`${t?.option ?? ""} ${index + 1}`}
                 value={option.text}
                 onChange={(e) => {
                   const current = form.getValues("options")
@@ -603,7 +589,7 @@ function MultipleChoiceFields({
                 disabled={isView}
               />
               <Input
-                placeholder={t?.optionExplanation ?? "Explanation (optional)"}
+                placeholder={t?.optionExplanation ?? ""}
                 value={option.explanation || ""}
                 onChange={(e) => {
                   const current = form.getValues("options")
@@ -619,6 +605,7 @@ function MultipleChoiceFields({
                 type="button"
                 variant="ghost"
                 size="sm"
+                aria-label={t?.remove ?? ""}
                 onClick={() => removeOption(index)}
               >
                 <Icons.x className="h-4 w-4" />
@@ -639,8 +626,7 @@ function FillBlankFields({
   form: UseFormReturn<any>
   isView: boolean
 }) {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.form as
+  const t = qbankT(useDictionaryFallback<any>()).form as
     | Record<string, string>
     | undefined
   const answers = form.watch("acceptedAnswers") || [""]
@@ -662,11 +648,11 @@ function FillBlankFields({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <FormLabel>{t?.acceptedAnswers ?? "Accepted Answers"}</FormLabel>
+        <FormLabel>{t?.acceptedAnswers ?? ""}</FormLabel>
         {!isView && (
           <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
             <Icons.plus className="me-2 h-4 w-4" />
-            Add Answer
+            {t?.addAnswer ?? ""}
           </Button>
         )}
       </div>
@@ -675,11 +661,7 @@ function FillBlankFields({
         {answers.map((answer: string, index: number) => (
           <div key={index} className="flex gap-2">
             <Input
-              placeholder={
-                t?.enterAccepted
-                  ? `${t.enterAccepted} ${index + 1}`
-                  : `Answer ${index + 1}`
-              }
+              placeholder={`${t?.answer ?? ""} ${index + 1}`}
               value={answer}
               onChange={(e) => {
                 const current = form.getValues("acceptedAnswers")
@@ -693,6 +675,7 @@ function FillBlankFields({
                 type="button"
                 variant="ghost"
                 size="sm"
+                aria-label={t?.remove ?? ""}
                 onClick={() => removeAnswer(index)}
               >
                 <Icons.x className="h-4 w-4" />
@@ -714,9 +697,7 @@ function FillBlankFields({
                 disabled={isView}
               />
             </FormControl>
-            <FormLabel className="!mt-0">
-              {t?.caseSensitive ?? "Case sensitive"}
-            </FormLabel>
+            <FormLabel className="!mt-0">{t?.caseSensitive ?? ""}</FormLabel>
           </FormItem>
         )}
       />
@@ -732,8 +713,7 @@ function SubjectiveFields({
   form: UseFormReturn<any>
   isView: boolean
 }) {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.form as
+  const t = qbankT(useDictionaryFallback<any>()).form as
     | Record<string, string>
     | undefined
   return (
@@ -743,12 +723,10 @@ function SubjectiveFields({
         name="sampleAnswer"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t?.sampleAnswer ?? "Sample Answer"}</FormLabel>
+            <FormLabel>{t?.sampleAnswer ?? ""}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={
-                  t?.samplePlaceholder ?? "Provide a good sample answer..."
-                }
+                placeholder={t?.samplePlaceholder ?? ""}
                 className="min-h-[100px]"
                 disabled={isView}
                 {...field}
@@ -764,20 +742,15 @@ function SubjectiveFields({
         name="gradingRubric"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t?.gradingRubric ?? "Grading Rubric"}</FormLabel>
+            <FormLabel>{t?.gradingRubric ?? ""}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={
-                  t?.rubricPlaceholder ?? "Describe key points for grading..."
-                }
+                placeholder={t?.rubricPlaceholder ?? ""}
                 disabled={isView}
                 {...field}
               />
             </FormControl>
-            <FormDescription>
-              {t?.rubricDescription ??
-                "List the criteria for grading this question"}
-            </FormDescription>
+            <FormDescription>{t?.rubricDescription ?? ""}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -796,8 +769,7 @@ function TagsInput({
   onChange: (tags: string[]) => void
   disabled?: boolean
 }) {
-  const { dictionary: tagDict } = useDictionary()
-  const t2 = tagDict?.school?.exams?.qbankUi?.form as
+  const t2 = qbankT(useDictionaryFallback<any>()).form as
     | Record<string, string>
     | undefined
   const [input, setInput] = useState("")
@@ -826,7 +798,7 @@ function TagsInput({
               addTag()
             }
           }}
-          placeholder={t2?.tagInputPlaceholder ?? "Type and press Enter"}
+          placeholder={t2?.tagPlaceholder ?? ""}
           disabled={disabled}
         />
         <Button
@@ -836,7 +808,7 @@ function TagsInput({
           onClick={addTag}
           disabled={disabled}
         >
-          {t2?.add ?? "Add"}
+          {t2?.add ?? ""}
         </Button>
       </div>
       {value.length > 0 && (
@@ -847,6 +819,7 @@ function TagsInput({
               {!disabled && (
                 <button
                   type="button"
+                  aria-label={t2?.remove ?? ""}
                   onClick={() => removeTag(tag)}
                   className="hover:text-destructive ms-1"
                 >

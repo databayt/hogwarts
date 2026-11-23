@@ -14,6 +14,8 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 
 import { gradeSubmission } from "./actions"
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { formatAssignmentDate } from "./date"
 import type { SubmissionReview, SubmissionReviewRow } from "./submissions-core"
 
@@ -55,7 +57,7 @@ export function SubmissionsReview({
       <p className="text-muted-foreground text-sm">{handed}</p>
       {review.rows.length === 0 ? (
         <p className="text-muted-foreground">
-          {labels.noSubmissions ?? "No one has handed in yet."}
+          {labels.noSubmissions ?? ""}
         </p>
       ) : (
         <ul className="divide-y rounded-lg border">
@@ -86,6 +88,7 @@ function SubmissionRow({
   locale: Locale
 }) {
   const router = useRouter()
+  const timeZone = useSchoolTimeZone()
   const [score, setScore] = useState(row.score?.toString() ?? "")
   const [feedback, setFeedback] = useState(row.feedback ?? "")
   const [pending, startTransition] = useTransition()
@@ -106,10 +109,10 @@ function SubmissionRow({
         feedback: feedback.trim() || undefined,
       })
       if (res.success) {
-        SuccessToast(labels.gradeSaved ?? "Grade saved")
+        SuccessToast(labels.gradeSaved ?? "")
         router.refresh()
       } else {
-        ErrorToast(labels.gradeFailed ?? "Couldn't save the grade")
+        ErrorToast(labels.gradeFailed ?? "")
       }
     })
   }
@@ -121,15 +124,15 @@ function SubmissionRow({
         <span className="flex items-center gap-2">
           {row.status === "LATE_SUBMITTED" && (
             <Badge variant="destructive">
-              {labels.submittedLate ?? "Late"}
+              {labels.submittedLate ?? ""}
             </Badge>
           )}
           {graded && (
-            <Badge variant="secondary">{labels.graded ?? "Graded"}</Badge>
+            <Badge variant="secondary">{labels.graded ?? ""}</Badge>
           )}
           {row.submittedAt && (
             <span className="text-muted-foreground text-xs">
-              {formatAssignmentDate(row.submittedAt, locale, "datetime")}
+              {formatAssignmentDate(row.submittedAt, locale, "datetime", timeZone)}
             </span>
           )}
         </span>
@@ -164,7 +167,7 @@ function SubmissionRow({
       <div className="flex flex-wrap items-end gap-3">
         <label className="space-y-1">
           <span className="text-muted-foreground text-xs">
-            {labels.score ?? "Score"} / {totalPoints}
+            {labels.score ?? ""} / {totalPoints}
           </span>
           <Input
             type="number"
@@ -180,7 +183,7 @@ function SubmissionRow({
         </label>
         <label className="min-w-0 flex-1 basis-48 space-y-1">
           <span className="text-muted-foreground text-xs">
-            {labels.feedback ?? "Feedback"}
+            {labels.feedback ?? ""}
           </span>
           <Textarea
             rows={1}
@@ -195,7 +198,7 @@ function SubmissionRow({
           size="sm"
           className="max-sm:min-h-11 max-sm:w-full"
         >
-          {labels.saveGrade ?? "Save"}
+          {labels.saveGrade ?? ""}
         </Button>
       </div>
     </li>

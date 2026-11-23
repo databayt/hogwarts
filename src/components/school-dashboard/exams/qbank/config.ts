@@ -9,60 +9,46 @@ import {
 } from "@prisma/client"
 
 // Question Types Configuration
+// Labels and descriptions live in the dictionary (exams.qbank.config) — use
+// getQuestionTypeOptions(t) etc. below; these constants carry only values.
 export const QUESTION_TYPES = [
   {
-    label: "Multiple Choice",
     value: QuestionType.MULTIPLE_CHOICE,
-    description: "Questions with multiple options, one or more correct answers",
     icon: "CircleDot",
     supportsAutoGrading: true,
   },
   {
-    label: "True/False",
     value: QuestionType.TRUE_FALSE,
-    description: "Binary choice questions",
     icon: "ToggleLeft",
     supportsAutoGrading: true,
   },
   {
-    label: "Fill in the Blank",
     value: QuestionType.FILL_BLANK,
-    description: "Short answer questions with specific expected answers",
     icon: "Type",
     supportsAutoGrading: true,
   },
   {
-    label: "Short Answer",
     value: QuestionType.SHORT_ANSWER,
-    description: "1-2 sentence responses requiring manual or AI grading",
     icon: "FileText",
     supportsAutoGrading: false,
   },
   {
-    label: "Essay",
     value: QuestionType.ESSAY,
-    description: "Long-form answers requiring manual or AI grading",
     icon: "BookOpen",
     supportsAutoGrading: false,
   },
   {
-    label: "Matching",
     value: QuestionType.MATCHING,
-    description: "Match items from two columns",
     icon: "ArrowLeftRight",
     supportsAutoGrading: true,
   },
   {
-    label: "Ordering",
     value: QuestionType.ORDERING,
-    description: "Arrange items in the correct sequence",
     icon: "ListOrdered",
     supportsAutoGrading: true,
   },
   {
-    label: "Multi Select",
     value: QuestionType.MULTI_SELECT,
-    description: "Select all correct answers from a list",
     icon: "CheckCheck",
     supportsAutoGrading: true,
   },
@@ -71,23 +57,17 @@ export const QUESTION_TYPES = [
 // Difficulty Levels Configuration
 export const DIFFICULTY_LEVELS = [
   {
-    label: "Easy",
     value: DifficultyLevel.EASY,
-    description: "Basic recall and understanding questions",
     color: "green" as const,
     points: 1,
   },
   {
-    label: "Medium",
     value: DifficultyLevel.MEDIUM,
-    description: "Application and analysis questions",
     color: "yellow" as const,
     points: 2,
   },
   {
-    label: "Hard",
     value: DifficultyLevel.HARD,
-    description: "Evaluation and creation questions",
     color: "red" as const,
     points: 3,
   },
@@ -96,81 +76,33 @@ export const DIFFICULTY_LEVELS = [
 // Bloom's Taxonomy Levels Configuration
 export const BLOOM_LEVELS = [
   {
-    label: "Remember",
     value: BloomLevel.REMEMBER,
     level: 1,
-    description: "Recall facts and basic concepts",
-    examples: ["Define...", "List...", "Identify...", "Name...", "State..."],
     color: "#E3F2FD" as const,
   },
   {
-    label: "Understand",
     value: BloomLevel.UNDERSTAND,
     level: 2,
-    description: "Explain ideas or concepts",
-    examples: [
-      "Explain...",
-      "Describe...",
-      "Summarize...",
-      "Interpret...",
-      "Compare...",
-    ],
     color: "#BBDEFB" as const,
   },
   {
-    label: "Apply",
     value: BloomLevel.APPLY,
     level: 3,
-    description: "Use information in new situations",
-    examples: [
-      "Apply...",
-      "Solve...",
-      "Use...",
-      "Demonstrate...",
-      "Calculate...",
-    ],
     color: "#90CAF9" as const,
   },
   {
-    label: "Analyze",
     value: BloomLevel.ANALYZE,
     level: 4,
-    description: "Draw connections among ideas",
-    examples: [
-      "Analyze...",
-      "Compare...",
-      "Contrast...",
-      "Examine...",
-      "Categorize...",
-    ],
     color: "#64B5F6" as const,
   },
   {
-    label: "Evaluate",
     value: BloomLevel.EVALUATE,
     level: 5,
-    description: "Justify a stand or decision",
-    examples: [
-      "Evaluate...",
-      "Justify...",
-      "Critique...",
-      "Judge...",
-      "Defend...",
-    ],
     color: "#42A5F5" as const,
   },
   {
-    label: "Create",
     value: BloomLevel.CREATE,
     level: 6,
-    description: "Produce new or original work",
-    examples: [
-      "Create...",
-      "Design...",
-      "Construct...",
-      "Develop...",
-      "Formulate...",
-    ],
     color: "#2196F3" as const,
   },
 ] as const
@@ -178,21 +110,15 @@ export const BLOOM_LEVELS = [
 // Question Source Configuration
 export const QUESTION_SOURCES = [
   {
-    label: "Manual",
     value: QuestionSource.MANUAL,
-    description: "Created manually by teacher",
     icon: "User",
   },
   {
-    label: "AI Generated",
     value: QuestionSource.AI,
-    description: "Generated using AI",
     icon: "Sparkles",
   },
   {
-    label: "Imported",
     value: QuestionSource.IMPORTED,
-    description: "Imported from external source",
     icon: "Upload",
   },
 ] as const
@@ -362,228 +288,91 @@ export function getQuestionSourceConfig(source: QuestionSource) {
 }
 
 // --- Dictionary-based factory functions ---
-// These accept the exams dictionary section (Record<string, any>)
-// and fall back to English defaults when dictionary is not yet loaded.
+// These take the `exams.qbank` dictionary subtree (see ./t.ts `qbankT`).
+// No English fallbacks: a missing key renders empty, never the wrong language.
 
 type QbankDict = Record<string, any> | undefined
 
-export const getQuestionTypeOptions = (d?: QbankDict) => {
-  const qt = d?.qbankUi?.config?.questionTypes as
-    | Record<string, string>
-    | undefined
-  return [
-    {
-      label: qt?.mcq || "Multiple Choice",
-      value: QuestionType.MULTIPLE_CHOICE,
-      description:
-        "Questions with multiple options, one or more correct answers",
-      icon: "CircleDot",
-      supportsAutoGrading: true,
-    },
-    {
-      label: qt?.trueFalse || "True/False",
-      value: QuestionType.TRUE_FALSE,
-      description: "Binary choice questions",
-      icon: "ToggleLeft",
-      supportsAutoGrading: true,
-    },
-    {
-      label: qt?.fillBlank || "Fill in the Blank",
-      value: QuestionType.FILL_BLANK,
-      description: "Short answer questions with specific expected answers",
-      icon: "Type",
-      supportsAutoGrading: true,
-    },
-    {
-      label: qt?.shortAnswer || "Short Answer",
-      value: QuestionType.SHORT_ANSWER,
-      description: "1-2 sentence responses requiring manual or AI grading",
-      icon: "FileText",
-      supportsAutoGrading: false,
-    },
-    {
-      label: qt?.essay || "Essay",
-      value: QuestionType.ESSAY,
-      description: "Long-form answers requiring manual or AI grading",
-      icon: "BookOpen",
-      supportsAutoGrading: false,
-    },
-    {
-      label: qt?.matching || "Matching",
-      value: QuestionType.MATCHING,
-      description: "Match items from two columns",
-      icon: "ArrowLeftRight",
-      supportsAutoGrading: true,
-    },
-    {
-      label: qt?.ordering || "Ordering",
-      value: QuestionType.ORDERING,
-      description: "Arrange items in the correct sequence",
-      icon: "ListOrdered",
-      supportsAutoGrading: true,
-    },
-    {
-      label: qt?.multiSelect || "Multi Select",
-      value: QuestionType.MULTI_SELECT,
-      description: "Select all correct answers from a list",
-      icon: "CheckCheck",
-      supportsAutoGrading: true,
-    },
-  ]
-}
+const typeKeys = {
+  MULTIPLE_CHOICE: "mcq",
+  TRUE_FALSE: "trueFalse",
+  FILL_BLANK: "fillBlank",
+  SHORT_ANSWER: "shortAnswer",
+  ESSAY: "essay",
+  MATCHING: "matching",
+  ORDERING: "ordering",
+  MULTI_SELECT: "multiSelect",
+} as const
 
-export const getDifficultyLevelOptions = (d?: QbankDict) => {
-  const dl = d?.qbankUi?.config?.difficulty as
-    | Record<string, string>
-    | undefined
-  return [
-    {
-      label: dl?.easy || "Easy",
-      value: DifficultyLevel.EASY,
-      description: "Basic recall and understanding questions",
-      color: "green" as const,
-      points: 1,
-    },
-    {
-      label: dl?.medium || "Medium",
-      value: DifficultyLevel.MEDIUM,
-      description: "Application and analysis questions",
-      color: "yellow" as const,
-      points: 2,
-    },
-    {
-      label: dl?.hard || "Hard",
-      value: DifficultyLevel.HARD,
-      description: "Evaluation and creation questions",
-      color: "red" as const,
-      points: 3,
-    },
-  ]
-}
+export const getQuestionTypeOptions = (t?: QbankDict) =>
+  QUESTION_TYPES.map((qt) => ({
+    ...qt,
+    label: (t?.config?.questionTypes?.[typeKeys[qt.value]] ?? "") as string,
+    description: (t?.config?.typeDescriptions?.[typeKeys[qt.value]] ??
+      "") as string,
+  }))
 
-export const getBloomLevelOptions = (d?: QbankDict) => {
-  const bl = d?.qbankUi?.config?.bloomLevels as
-    | Record<string, string>
-    | undefined
-  return [
-    {
-      label: bl?.remember || "Remember",
-      value: BloomLevel.REMEMBER,
-      level: 1,
-      description: "Recall facts and basic concepts",
-    },
-    {
-      label: bl?.understand || "Understand",
-      value: BloomLevel.UNDERSTAND,
-      level: 2,
-      description: "Explain ideas or concepts",
-    },
-    {
-      label: bl?.apply || "Apply",
-      value: BloomLevel.APPLY,
-      level: 3,
-      description: "Use information in new situations",
-    },
-    {
-      label: bl?.analyze || "Analyze",
-      value: BloomLevel.ANALYZE,
-      level: 4,
-      description: "Draw connections among ideas",
-    },
-    {
-      label: bl?.evaluate || "Evaluate",
-      value: BloomLevel.EVALUATE,
-      level: 5,
-      description: "Justify a stand or decision",
-    },
-    {
-      label: bl?.create || "Create",
-      value: BloomLevel.CREATE,
-      level: 6,
-      description: "Produce new or original work",
-    },
-  ]
-}
+export const getDifficultyLevelOptions = (t?: QbankDict) =>
+  DIFFICULTY_LEVELS.map((dl) => {
+    const key = dl.value.toLowerCase()
+    return {
+      ...dl,
+      label: (t?.config?.difficulty?.[key] ?? "") as string,
+      description: (t?.config?.difficultyDescriptions?.[key] ?? "") as string,
+    }
+  })
 
-export const getQuestionSourceOptions = (d?: QbankDict) => {
-  const qs = d?.qbankUi?.config?.sources as Record<string, string> | undefined
-  return [
-    {
-      label: qs?.manual || "Manual",
-      value: QuestionSource.MANUAL,
-      description: "Created manually by teacher",
-      icon: "User",
-    },
-    {
-      label: qs?.aiGenerated || "AI Generated",
-      value: QuestionSource.AI,
-      description: "Generated using AI",
-      icon: "Sparkles",
-    },
-    {
-      label: qs?.imported || "Imported",
-      value: QuestionSource.IMPORTED,
-      description: "Imported from external source",
-      icon: "Upload",
-    },
-  ]
-}
+export const getBloomLevelOptions = (t?: QbankDict) =>
+  BLOOM_LEVELS.map((bl) => {
+    const key = bl.value.toLowerCase()
+    return {
+      ...bl,
+      label: (t?.config?.bloomLevels?.[key] ?? "") as string,
+      description: (t?.config?.bloomDescriptions?.[key] ?? "") as string,
+    }
+  })
 
-/** Get question type labels map for display */
-export const getQuestionTypeLabels = (
-  d?: QbankDict
-): Record<string, string> => {
-  const qt = d?.qbankUi?.config?.questionTypes as
-    | Record<string, string>
-    | undefined
-  return {
-    MULTIPLE_CHOICE: qt?.mcq || "Multiple Choice",
-    TRUE_FALSE: qt?.trueFalse || "True/False",
-    FILL_BLANK: qt?.fillBlank || "Fill in the Blank",
-    SHORT_ANSWER: qt?.shortAnswer || "Short Answer",
-    ESSAY: qt?.essay || "Essay",
-    MATCHING: qt?.matching || "Matching",
-    ORDERING: qt?.ordering || "Ordering",
-    MULTI_SELECT: qt?.multiSelect || "Multi Select",
-  }
-}
+export const getQuestionSourceOptions = (t?: QbankDict) =>
+  QUESTION_SOURCES.map((qs) => {
+    const key = qs.value === "AI" ? "aiGenerated" : qs.value.toLowerCase()
+    return {
+      ...qs,
+      label: (t?.config?.sources?.[key] ?? "") as string,
+      description: (t?.config?.sourceDescriptions?.[key] ?? "") as string,
+    }
+  })
 
-/** Get difficulty labels map for display */
-export const getDifficultyLabels = (d?: QbankDict): Record<string, string> => {
-  const dl = d?.qbankUi?.config?.difficulty as
-    | Record<string, string>
-    | undefined
-  return {
-    EASY: dl?.easy || "Easy",
-    MEDIUM: dl?.medium || "Medium",
-    HARD: dl?.hard || "Hard",
-  }
-}
+/** Question type labels map for display */
+export const getQuestionTypeLabels = (t?: QbankDict): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(typeKeys).map(([value, key]) => [
+      value,
+      (t?.config?.questionTypes?.[key] ?? "") as string,
+    ])
+  )
 
-/** Get bloom level labels map for display */
-export const getBloomLabels = (d?: QbankDict): Record<string, string> => {
-  const bl = d?.qbankUi?.config?.bloomLevels as
-    | Record<string, string>
-    | undefined
-  return {
-    REMEMBER: bl?.remember || "Remember",
-    UNDERSTAND: bl?.understand || "Understand",
-    APPLY: bl?.apply || "Apply",
-    ANALYZE: bl?.analyze || "Analyze",
-    EVALUATE: bl?.evaluate || "Evaluate",
-    CREATE: bl?.create || "Create",
-  }
-}
+/** Difficulty labels map for display */
+export const getDifficultyLabels = (t?: QbankDict): Record<string, string> => ({
+  EASY: t?.config?.difficulty?.easy ?? "",
+  MEDIUM: t?.config?.difficulty?.medium ?? "",
+  HARD: t?.config?.difficulty?.hard ?? "",
+})
 
-/** Get question source labels map for display */
-export const getSourceLabels = (d?: QbankDict): Record<string, string> => {
-  const qs = d?.qbankUi?.config?.sources as Record<string, string> | undefined
-  return {
-    MANUAL: qs?.manual || "Manual",
-    AI: qs?.aiGenerated || "AI Generated",
-    IMPORTED: qs?.imported || "Imported",
-  }
-}
+/** Bloom level labels map for display */
+export const getBloomLabels = (t?: QbankDict): Record<string, string> =>
+  Object.fromEntries(
+    BLOOM_LEVELS.map((bl) => [
+      bl.value,
+      (t?.config?.bloomLevels?.[bl.value.toLowerCase()] ?? "") as string,
+    ])
+  )
+
+/** Question source labels map for display */
+export const getSourceLabels = (t?: QbankDict): Record<string, string> => ({
+  MANUAL: t?.config?.sources?.manual ?? "",
+  AI: t?.config?.sources?.aiGenerated ?? "",
+  IMPORTED: t?.config?.sources?.imported ?? "",
+})
 
 export function calculateDefaultPoints(
   type: QuestionType,

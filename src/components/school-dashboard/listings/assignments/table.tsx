@@ -24,6 +24,8 @@ import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { useSchoolTimeZone } from "@/components/school-dashboard/context/school-context"
+
 import { deleteAssignment, getAssignments } from "./actions"
 import { AssignmentCard } from "./assignment-card"
 import { getAssignmentColumns, type AssignmentRow } from "./columns"
@@ -50,6 +52,7 @@ function AssignmentsTableInner({
   permissions = FULL_UI_PERMISSIONS,
 }: AssignmentsTableProps) {
   const router = useRouter()
+  const timeZone = useSchoolTimeZone()
 
   // Translations with fallbacks
   const d = dictionary as Record<string, any> | undefined
@@ -121,12 +124,13 @@ function AssignmentsTableInner({
         dictionary,
         common,
         lang,
+        timeZone,
         callbacks: {
           onDelete: handleDelete,
         },
         permissions,
       }),
-    [dictionary, common, lang, handleDelete, permissions]
+    [dictionary, common, lang, timeZone, handleDelete, permissions]
   )
 
   // Use pageCount of 1 since we're handling all data client-side

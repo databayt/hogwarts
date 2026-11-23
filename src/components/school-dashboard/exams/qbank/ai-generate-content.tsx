@@ -33,12 +33,18 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import {
   generateQuestionsAI,
   saveAIGeneratedQuestions,
 } from "./actions/ai-generation"
+import {
+  getBloomLabels,
+  getDifficultyLabels,
+  getQuestionTypeLabels,
+} from "./config"
+import { fmt, qbankT } from "./t"
 import type { AIGeneratedQuestion } from "./types"
 
 interface SubjectOption {
@@ -50,60 +56,21 @@ interface AIGenerateContentProps {
   subjects: SubjectOption[]
 }
 
-const QUESTION_TYPE_LABELS: Record<string, string> = {
-  MULTIPLE_CHOICE: "Multiple Choice",
-  TRUE_FALSE: "True/False",
-  SHORT_ANSWER: "Short Answer",
-  ESSAY: "Essay",
-  FILL_BLANK: "Fill in the Blank",
-}
-
-const DIFFICULTY_LABELS: Record<string, string> = {
-  EASY: "Easy",
-  MEDIUM: "Medium",
-  HARD: "Hard",
-}
-
-const BLOOM_LABELS: Record<string, string> = {
-  REMEMBER: "Remember",
-  UNDERSTAND: "Understand",
-  APPLY: "Apply",
-  ANALYZE: "Analyze",
-  EVALUATE: "Evaluate",
-  CREATE: "Create",
-}
-
 export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
   const router = useRouter()
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.aiGenerate
-  // The question bank's own labels for the enums this form offers; the
-  // English constants above stay as the fallback.
-  const cfg = dictionary?.school?.exams?.qbankUi?.config
+  const qt = qbankT(useDictionaryFallback<any>())
+  const t = qt.aiGenerate as Record<string, string> | undefined
+  // The question bank's own labels for the enums this form offers.
+  const allTypeLabels = getQuestionTypeLabels(qt)
   const typeLabels: Record<string, string> = {
-    MULTIPLE_CHOICE:
-      cfg?.questionTypes?.mcq ?? QUESTION_TYPE_LABELS.MULTIPLE_CHOICE,
-    TRUE_FALSE:
-      cfg?.questionTypes?.trueFalse ?? QUESTION_TYPE_LABELS.TRUE_FALSE,
-    SHORT_ANSWER:
-      cfg?.questionTypes?.shortAnswer ?? QUESTION_TYPE_LABELS.SHORT_ANSWER,
-    ESSAY: cfg?.questionTypes?.essay ?? QUESTION_TYPE_LABELS.ESSAY,
-    FILL_BLANK:
-      cfg?.questionTypes?.fillBlank ?? QUESTION_TYPE_LABELS.FILL_BLANK,
+    MULTIPLE_CHOICE: allTypeLabels.MULTIPLE_CHOICE,
+    TRUE_FALSE: allTypeLabels.TRUE_FALSE,
+    SHORT_ANSWER: allTypeLabels.SHORT_ANSWER,
+    ESSAY: allTypeLabels.ESSAY,
+    FILL_BLANK: allTypeLabels.FILL_BLANK,
   }
-  const difficultyLabels: Record<string, string> = {
-    EASY: cfg?.difficulty?.easy ?? DIFFICULTY_LABELS.EASY,
-    MEDIUM: cfg?.difficulty?.medium ?? DIFFICULTY_LABELS.MEDIUM,
-    HARD: cfg?.difficulty?.hard ?? DIFFICULTY_LABELS.HARD,
-  }
-  const bloomLabels: Record<string, string> = {
-    REMEMBER: cfg?.bloomLevels?.remember ?? BLOOM_LABELS.REMEMBER,
-    UNDERSTAND: cfg?.bloomLevels?.understand ?? BLOOM_LABELS.UNDERSTAND,
-    APPLY: cfg?.bloomLevels?.apply ?? BLOOM_LABELS.APPLY,
-    ANALYZE: cfg?.bloomLevels?.analyze ?? BLOOM_LABELS.ANALYZE,
-    EVALUATE: cfg?.bloomLevels?.evaluate ?? BLOOM_LABELS.EVALUATE,
-    CREATE: cfg?.bloomLevels?.create ?? BLOOM_LABELS.CREATE,
-  }
+  const difficultyLabels = getDifficultyLabels(qt)
+  const bloomLabels = getBloomLabels(qt)
 
   // Form state
   const [subjectId, setSubjectId] = useState("")
@@ -147,7 +114,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
       // Select all by default
       setSelectedIndices(new Set(result.data.map((_, i) => i)))
     } else if (!result.success) {
-      setError(result.error || (t?.generateFailed ?? "Generation failed"))
+      setError(result.error || (t?.generateFailed ?? ""))
     }
 
     setIsGenerating(false)
@@ -188,7 +155,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
     if (result.success && result.data) {
       setSavedCount(result.data.savedCount)
     } else if (!result.success) {
-      setError(result.error || (t?.saveFailed ?? "Failed to save"))
+      setError(result.error || (t?.saveFailed ?? ""))
     }
 
     setIsSaving(false)
@@ -204,19 +171,16 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
         <CardHeader className="max-md:p-5 max-md:pb-3">
           <CardTitle className="flex items-center gap-2 max-md:text-base">
             <Sparkles className="h-5 w-5" />
-            {dictionary?.school?.exams?.qbank?.aiGenerate ??
-              "Generate Questions with AI"}
+            {t?.title ?? ""}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 max-md:px-5 max-md:pb-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>{t?.subject ?? "Subject"}</Label>
+              <Label>{t?.subject ?? ""}</Label>
               <Select value={subjectId} onValueChange={setSubjectId}>
                 <SelectTrigger className="max-md:bg-background">
-                  <SelectValue
-                    placeholder={t?.selectSubject ?? "Select subject"}
-                  />
+                  <SelectValue placeholder={t?.selectSubject ?? ""} />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((s) => (
@@ -229,17 +193,17 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>{t?.topic ?? "Topic"}</Label>
+              <Label>{t?.topic ?? ""}</Label>
               <Input
                 className="max-md:bg-background"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Photosynthesis, Quadratic Equations"
+                placeholder={t?.topicPlaceholder ?? ""}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>{t?.questionType ?? "Question Type"}</Label>
+              <Label>{t?.questionType ?? ""}</Label>
               <Select value={questionType} onValueChange={setQuestionType}>
                 <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
@@ -255,7 +219,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>{t?.difficulty ?? "Difficulty"}</Label>
+              <Label>{t?.difficulty ?? ""}</Label>
               <Select value={difficulty} onValueChange={setDifficulty}>
                 <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
@@ -271,7 +235,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>{t?.bloomLevel ?? "Bloom\u2019s Level"}</Label>
+              <Label>{t?.bloomLevel ?? ""}</Label>
               <Select value={bloomLevel} onValueChange={setBloomLevel}>
                 <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
@@ -287,7 +251,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>{t?.numQuestions ?? "Number of Questions"}</Label>
+              <Label>{t?.numQuestions ?? ""}</Label>
               <Input
                 className="max-md:bg-background"
                 type="number"
@@ -304,15 +268,12 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>
-              {t?.additionalInstructions ??
-                "Additional Instructions (optional)"}
-            </Label>
+            <Label>{t?.additionalInstructions ?? ""}</Label>
             <Textarea
               className="max-md:bg-background"
               value={additionalInstructions}
               onChange={(e) => setAdditionalInstructions(e.target.value)}
-              placeholder="e.g., Focus on practical applications, include diagrams description..."
+              placeholder={t?.instructionsPlaceholder ?? ""}
               maxLength={500}
               rows={2}
             />
@@ -326,12 +287,12 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
+                {t?.generating ?? ""}
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Generate Questions
+                {t?.generate ?? ""}
               </>
             )}
           </Button>
@@ -353,8 +314,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
           <CardContent className="flex items-center gap-2 pt-4 max-md:flex-wrap">
             <CheckCircle className="h-5 w-5 text-green-500" />
             <p className="text-sm font-medium">
-              {savedCount} question{savedCount !== 1 ? "s" : ""} saved to
-              Question Bank
+              {fmt(t?.savedToBank, { count: savedCount })}
             </p>
             <Button
               variant="outline"
@@ -362,7 +322,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
               className="ms-auto"
               onClick={() => router.push("../qbank")}
             >
-              View Question Bank
+              {t?.viewBank ?? ""}
             </Button>
           </CardContent>
         </Card>
@@ -373,8 +333,10 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-3">
             <h3 className="text-lg font-semibold">
-              Review Generated Questions ({selectedIndices.size}/
-              {generatedQuestions.length} selected)
+              {fmt(t?.review, {
+                selected: selectedIndices.size,
+                total: generatedQuestions.length,
+              })}
             </h3>
             <Button
               onClick={handleSave}
@@ -384,13 +346,12 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
+                  {t?.saving ?? ""}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Save {selectedIndices.size} Question
-                  {selectedIndices.size !== 1 ? "s" : ""}
+                  {fmt(t?.saveCount, { count: selectedIndices.size })}
                 </>
               )}
             </Button>
@@ -419,11 +380,12 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                     {selectedIndices.has(idx) && <Check className="h-3 w-3" />}
                   </button>
 
-                  <div className="flex-1 space-y-2">
+                  <div className="min-w-0 flex-1 space-y-2 break-words">
                     {/* Question header */}
                     <div className="flex items-center gap-2 max-md:flex-wrap">
                       <span className="text-muted-foreground text-sm font-medium">
-                        Q{idx + 1}
+                        {t?.questionShort ?? ""}
+                        {idx + 1}
                       </span>
                       <Badge variant="secondary">
                         {typeLabels[q.questionType] ?? q.questionType}
@@ -432,7 +394,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                         {difficultyLabels[q.difficulty] ?? q.difficulty}
                       </Badge>
                       <Badge variant="outline">
-                        {q.points} pt{q.points !== 1 ? "s" : ""}
+                        {fmt(t?.pointsCount, { count: q.points })}
                       </Badge>
                     </div>
 
@@ -468,7 +430,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                     {q.acceptedAnswers && q.acceptedAnswers.length > 0 && (
                       <p className="text-sm">
                         <span className="text-muted-foreground">
-                          Accepted:{" "}
+                          {t?.accepted ?? ""}{" "}
                         </span>
                         {q.acceptedAnswers.join(", ")}
                       </p>
@@ -478,7 +440,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                     {q.sampleAnswer && (
                       <div className="text-sm">
                         <span className="text-muted-foreground">
-                          Sample answer:{" "}
+                          {t?.sampleAnswer ?? ""}{" "}
                         </span>
                         <span>{q.sampleAnswer}</span>
                       </div>
@@ -495,8 +457,17 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                   {/* Remove button */}
                   <button
                     onClick={() => toggleSelection(idx)}
-                    className="text-muted-foreground hover:text-destructive"
-                    title={selectedIndices.has(idx) ? "Deselect" : "Select"}
+                    className="text-muted-foreground hover:text-destructive flex shrink-0 items-center justify-center max-md:size-11"
+                    title={
+                      selectedIndices.has(idx)
+                        ? (t?.deselect ?? "")
+                        : (t?.select ?? "")
+                    }
+                    aria-label={
+                      selectedIndices.has(idx)
+                        ? (t?.deselect ?? "")
+                        : (t?.select ?? "")
+                    }
                   >
                     {selectedIndices.has(idx) ? (
                       <Trash2 className="h-4 w-4" />

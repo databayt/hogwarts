@@ -128,16 +128,13 @@ export function LessonAttachField({
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <Label>{labels?.lesson ?? "Lesson (optional)"}</Label>
-        <p className="text-muted-foreground text-xs">
-          {labels?.hint ??
-            "Attach this question to a lesson to include it in that lesson's practice quiz."}
-        </p>
+        <Label>{labels?.lesson ?? ""}</Label>
+        <p className="text-muted-foreground text-xs">{labels?.hint ?? ""}</p>
       </div>
 
       {!subjectId ? (
         <p className="text-muted-foreground text-sm">
-          {labels?.pickSubject ?? "Choose a subject first."}
+          {labels?.pickSubject ?? ""}
         </p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -150,12 +147,10 @@ export function LessonAttachField({
             disabled={disabled}
           >
             <SelectTrigger>
-              <SelectValue placeholder={labels?.chapter ?? "All chapters"} />
+              <SelectValue placeholder={labels?.chapter ?? ""} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>
-                {labels?.chapter ?? "All chapters"}
-              </SelectItem>
+              <SelectItem value={NONE}>{labels?.chapter ?? ""}</SelectItem>
               {chapters.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -172,16 +167,12 @@ export function LessonAttachField({
             <SelectTrigger>
               <SelectValue
                 placeholder={
-                  loading
-                    ? (labels?.loading ?? "Loading…")
-                    : (labels?.none ?? "Not attached")
+                  loading ? (labels?.loading ?? "") : (labels?.none ?? "")
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>
-                {labels?.none ?? "Not attached"}
-              </SelectItem>
+              <SelectItem value={NONE}>{labels?.none ?? ""}</SelectItem>
               {lessons.map((l) => (
                 <SelectItem key={l.id} value={l.id}>
                   {l.name}
@@ -193,9 +184,7 @@ export function LessonAttachField({
       )}
 
       {subjectId && !loading && lessons.length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          {labels?.empty ?? "No lessons available for this subject."}
-        </p>
+        <p className="text-muted-foreground text-sm">{labels?.empty ?? ""}</p>
       )}
     </div>
   )

@@ -10,7 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
+
+const TYPE_KEYS: Record<string, string> = {
+  EXIT_TICKET: "exitTicket",
+  POLL: "poll",
+  WARM_UP: "warmUp",
+  CHECK_IN: "checkIn",
+}
 
 interface QuestionData {
   id: string
@@ -27,7 +37,14 @@ export function QuickAssessmentTake({
   assessmentId,
 }: QuickAssessmentTakeProps) {
   const { dictionary } = useDictionary()
+  const dict = useDictionaryFallback(dictionary)
   const t = dictionary?.school?.exams?.quick?.take
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (dict as any)?.exams?.quick ?? {}
+  const xt = x.take ?? {}
+  const typeLabels = (dictionary?.school?.exams?.quick?.form?.types ??
+    {}) as Record<string, string>
+  const [submitError, setSubmitError] = useState(false)
 
   const [assessment, setAssessment] = useState<{
     id: string
@@ -87,6 +104,7 @@ export function QuickAssessmentTake({
   async function handleSubmit() {
     if (submitting || submitted) return
     setSubmitting(true)
+    setSubmitError(false)
     try {
       const { submitQuickResponse } = await import("./actions")
       const responses = Object.entries(answers).map(([questionId, answer]) => ({
@@ -99,7 +117,8 @@ export function QuickAssessmentTake({
       })
       setSubmitted(true)
     } catch {
-      // Silently handle - student can retry
+      // Student can retry
+      setSubmitError(true)
     }
     setSubmitting(false)
   }
@@ -115,11 +134,9 @@ export function QuickAssessmentTake({
   if (!assessment || assessment.status !== "ACTIVE") {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-        <h2 className="text-xl font-semibold">
-          {t?.notAvailable ?? "Assessment Not Available"}
-        </h2>
+        <h2 className="text-xl font-semibold">{t?.notAvailable ?? ""}</h2>
         <p className="text-muted-foreground text-sm">
-          {t?.notAvailable ?? "This assessment is no longer active."}
+          {t?.notAvailableDescription ?? ""}
         </p>
       </div>
     )
@@ -131,11 +148,9 @@ export function QuickAssessmentTake({
         <div className="rounded-full bg-green-100 p-4">
           <CheckCircle className="h-8 w-8 text-green-600" />
         </div>
-        <h2 className="text-xl font-semibold">
-          {t?.submitted ?? "Submitted!"}
-        </h2>
+        <h2 className="text-xl font-semibold">{t?.submitted ?? ""}</h2>
         <p className="text-muted-foreground text-sm">
-          {t?.submitted ?? "Thank you for completing this assessment."}
+          {t?.submittedDescription ?? ""}
         </p>
       </div>
     )
@@ -148,16 +163,20 @@ export function QuickAssessmentTake({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">{assessment.title}</h2>
-          <p className="text-muted-foreground text-sm capitalize">
-            {assessment.type.replace("_", " ").toLowerCase()}
+    <div className="mx-auto w-full max-w-2xl min-w-0 space-y-6 py-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold break-words">{assessment.title}</h2>
+          <p className="text-muted-foreground text-sm">
+            {typeLabels[TYPE_KEYS[assessment.type]] ?? ""}
           </p>
         </div>
         {timeLeft !== null && (
-          <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+          <div
+            className="flex items-center gap-2 rounded-lg border px-3 py-2"
+            role="timer"
+            aria-label={xt.timeRemaining ?? ""}
+          >
             <Clock className="h-4 w-4" />
             <span className="font-mono text-sm font-medium">
               {formatTime(timeLeft)}
@@ -170,7 +189,7 @@ export function QuickAssessmentTake({
         {assessment.questions.map((q, index) => (
           <Card key={q.id}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">
+              <CardTitle className="text-base break-words">
                 {index + 1}. {q.questionText}
               </CardTitle>
             </CardHeader>
@@ -186,19 +205,24 @@ export function QuickAssessmentTake({
                   {(q.options || []).map((opt, oi) => (
                     <div
                       key={oi}
-                      className="flex items-center space-x-2 rtl:space-x-reverse"
+                      className="flex min-h-11 min-w-0 items-center gap-2"
                     >
                       <RadioGroupItem
                         value={String(oi)}
                         id={`q${q.id}-o${oi}`}
                       />
-                      <Label htmlFor={`q${q.id}-o${oi}`}>{opt.text}</Label>
+                      <Label
+                        htmlFor={`q${q.id}-o${oi}`}
+                        className="min-h-11 min-w-0 flex-1 items-center leading-6 break-words"
+                      >
+                        {opt.text}
+                      </Label>
                     </div>
                   ))}
                 </RadioGroup>
               ) : (
                 <Textarea
-                  placeholder={t?.answerPlaceholder ?? "Type your answer..."}
+                  placeholder={t?.answerPlaceholder ?? ""}
                   value={answers[q.id] || ""}
                   onChange={(e) =>
                     setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
@@ -211,15 +235,25 @@ export function QuickAssessmentTake({
         ))}
       </div>
 
+      {submitError && (
+        <p role="alert" className="text-destructive text-sm">
+          {xt.submitFailed ?? ""}
+        </p>
+      )}
+
       <div className="flex justify-end">
-        <Button onClick={handleSubmit} disabled={submitting}>
+        <Button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="min-h-11 max-sm:w-full"
+        >
           {submitting ? (
             <>
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              {t?.submitting ?? "Submitting..."}
+              {t?.submitting ?? ""}
             </>
           ) : (
-            (dictionary?.school?.exams?.submit ?? "Submit")
+            (dictionary?.school?.exams?.submit ?? "")
           )}
         </Button>
       </div>

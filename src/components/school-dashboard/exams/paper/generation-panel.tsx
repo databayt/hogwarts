@@ -29,6 +29,7 @@ import {
 } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
 import { getVersionCode } from "./config"
+import { paperErrorText } from "./error-text"
 
 interface GenerationPanelProps {
   generatedExamId: string
@@ -51,12 +52,7 @@ export function GenerationPanel({
 
   const handleGenerateSingle = (versionIndex: number) => {
     const versionCode = getVersionCode(versionIndex)
-    setCurrentTask(
-      (t?.generating_version || "Generating version {code}").replace(
-        "{code}",
-        versionCode
-      )
-    )
+    setCurrentTask((t?.generating_version || "").replace("{code}", versionCode))
     setProgress(0)
 
     startTransition(async () => {
@@ -71,22 +67,23 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: t?.success || "Success",
-            description: (
-              t?.version_generated || "Version {code} generated successfully"
-            ).replace("{code}", versionCode),
+            title: t?.success || "",
+            description: (t?.version_generated || "").replace(
+              "{code}",
+              versionCode
+            ),
           })
         } else {
           toast({
-            title: tp?.error || "Error",
-            description: result.error,
+            title: tp?.error || "",
+            description: paperErrorText(result, dictionary),
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: tp?.error || "Error",
-          description: t?.generation_failed || "Generation failed",
+          title: tp?.error || "",
+          description: t?.generation_failed || "",
           variant: "destructive",
         })
       } finally {
@@ -97,7 +94,7 @@ export function GenerationPanel({
   }
 
   const handleGenerateAll = () => {
-    setCurrentTask(t?.generating_all || "Generating all versions")
+    setCurrentTask(t?.generating_all || "")
     setProgress(0)
 
     startTransition(async () => {
@@ -112,22 +109,23 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: t?.success || "Success",
-            description: (
-              t?.versions_generated || "{count} versions generated successfully"
-            ).replace("{count}", String(result.data.papers.length)),
+            title: t?.success || "",
+            description: (t?.versions_generated || "").replace(
+              "{count}",
+              String(result.data.papers.length)
+            ),
           })
         } else {
           toast({
-            title: tp?.error || "Error",
-            description: result.error,
+            title: tp?.error || "",
+            description: paperErrorText(result, dictionary),
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: tp?.error || "Error",
-          description: t?.generation_failed || "Generation failed",
+          title: tp?.error || "",
+          description: t?.generation_failed || "",
           variant: "destructive",
         })
       } finally {
@@ -138,7 +136,7 @@ export function GenerationPanel({
   }
 
   const handleGenerateAnswerKey = () => {
-    setCurrentTask(t?.generating_answer_key || "Generating answer key")
+    setCurrentTask(t?.generating_answer_key || "")
     setProgress(0)
 
     startTransition(async () => {
@@ -152,21 +150,20 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: t?.success || "Success",
-            description:
-              t?.answer_key_generated || "Answer key generated successfully",
+            title: t?.success || "",
+            description: t?.answer_key_generated || "",
           })
         } else {
           toast({
-            title: tp?.error || "Error",
-            description: result.error,
+            title: tp?.error || "",
+            description: paperErrorText(result, dictionary),
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: tp?.error || "Error",
-          description: t?.generation_failed || "Generation failed",
+          title: tp?.error || "",
+          description: t?.generation_failed || "",
           variant: "destructive",
         })
       } finally {
@@ -196,13 +193,8 @@ export function GenerationPanel({
       {/* Single Version Generation */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {t?.generate_single || "Generate Single Version"}
-          </CardTitle>
-          <CardDescription>
-            {t?.generate_single_desc ||
-              "Generate a single version of the exam paper"}
-          </CardDescription>
+          <CardTitle>{t?.generate_single || ""}</CardTitle>
+          <CardDescription>{t?.generate_single_desc || ""}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -221,14 +213,11 @@ export function GenerationPanel({
                 >
                   <FileText className="h-4 w-4" />
                   <span className="ms-2">
-                    {(t?.version || "Version {code}").replace(
-                      "{code}",
-                      versionCode
-                    )}
+                    {(t?.version || "").replace("{code}", versionCode)}
                   </span>
                   {existingPaper && (
                     <span className="text-muted-foreground ms-1 text-xs">
-                      ({t?.exists || "exists"})
+                      ({t?.exists || ""})
                     </span>
                   )}
                 </Button>
@@ -241,19 +230,19 @@ export function GenerationPanel({
       {/* Batch Generation */}
       <Card>
         <CardHeader>
-          <CardTitle>{t?.batch || "Batch Generation"}</CardTitle>
+          <CardTitle>{t?.batch || ""}</CardTitle>
           <CardDescription>
-            {(
-              t?.batch_desc ||
-              "Generate all {count} versions at once with answer key"
-            ).replace("{count}", String(config.versionCount))}
+            {(t?.batch_desc || "").replace(
+              "{count}",
+              String(config.versionCount)
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Button onClick={handleGenerateAll} disabled={isPending}>
             <Printer className="h-4 w-4" />
             <span className="ms-2">
-              {(t?.generate_versions || "Generate {count} Versions").replace(
+              {(t?.generate_versions || "").replace(
                 "{count}",
                 String(config.versionCount)
               )}
@@ -266,7 +255,7 @@ export function GenerationPanel({
             disabled={isPending}
           >
             <Key className="h-4 w-4" />
-            <span className="ms-2">{t?.answer_key || "Answer Key"}</span>
+            <span className="ms-2">{t?.answer_key || ""}</span>
           </Button>
         </CardContent>
       </Card>
@@ -274,15 +263,13 @@ export function GenerationPanel({
       {/* Download Section */}
       <Card>
         <CardHeader>
-          <CardTitle>{t?.download || "Download"}</CardTitle>
-          <CardDescription>
-            {t?.download_desc || "Download generated papers"}
-          </CardDescription>
+          <CardTitle>{t?.download || ""}</CardTitle>
+          <CardDescription>{t?.download_desc || ""}</CardDescription>
         </CardHeader>
         <CardContent>
           {config.papers.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {t?.no_papers || "No papers generated yet"}
+              {t?.no_papers || ""}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -299,18 +286,18 @@ export function GenerationPanel({
                       <Download className="h-4 w-4" />
                       <span className="ms-2">
                         {paper.versionCode
-                          ? (t?.version || "Version {code}").replace(
+                          ? (t?.version || "").replace(
                               "{code}",
                               paper.versionCode
                             )
-                          : t?.paper_label || "Paper"}
+                          : t?.paper_label || ""}
                       </span>
                     </a>
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
                       <span className="ms-2">
-                        {paper.versionCode || t?.paper_label || "Paper"}
+                        {paper.versionCode || (t?.paper_label ?? "")}
                       </span>
                     </>
                   )}

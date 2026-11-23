@@ -56,6 +56,9 @@ export function MockExamTaking({
   } | null>(null)
 
   const d = dictionary?.school?.exams
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (dictionary as any)?.exams?.mock?.take ?? {}
+  const [submitError, setSubmitError] = useState(false)
 
   // Timer
   useEffect(() => {
@@ -91,6 +94,7 @@ export function MockExamTaking({
   )
 
   const handleSubmit = useCallback(async () => {
+    setSubmitError(false)
     setPhase("submitting")
     const result = await submitMockExam({
       catalogExamId: exam.id,
@@ -101,6 +105,7 @@ export function MockExamTaking({
       setResults(result.data)
       setPhase("results")
     } else {
+      setSubmitError(true)
       setPhase("taking")
     }
   }, [exam.id, answers])
@@ -110,9 +115,7 @@ export function MockExamTaking({
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-          <p className="text-muted-foreground mt-4">
-            {d?.submitting || "Grading your answers..."}
-          </p>
+          <p className="text-muted-foreground mt-4">{d?.submitting || ""}</p>
         </div>
       </div>
     )
@@ -131,19 +134,21 @@ export function MockExamTaking({
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-4xl min-w-0 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">{exam.title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold break-words">{exam.title}</h2>
           <p className="text-muted-foreground text-sm">
-            {exam.name} &middot; {d?.mockExam || "Mock Exam"}
+            {exam.name} &middot; {d?.mockExam || ""}
           </p>
         </div>
         {timeLeft !== null && (
           <Badge
             variant={timeLeft < 300 ? "destructive" : "secondary"}
             className="gap-1 text-base"
+            role="timer"
+            aria-label={x.timeRemaining ?? ""}
           >
             <Clock className="h-4 w-4" />
             {formatTime(timeLeft)}
@@ -153,12 +158,12 @@ export function MockExamTaking({
 
       {/* Progress */}
       <div className="space-y-1">
-        <div className="flex justify-between text-sm">
+        <div className="flex flex-wrap justify-between gap-x-3 text-sm">
           <span>
-            {d?.question || "Question"} {currentIndex + 1}/{exam.totalQuestions}
+            {d?.question || ""} {currentIndex + 1}/{exam.totalQuestions}
           </span>
           <span>
-            {answeredCount}/{exam.totalQuestions} {d?.answered || "answered"}
+            {answeredCount}/{exam.totalQuestions} {d?.answered || ""}
           </span>
         </div>
         <Progress value={progress} />
@@ -168,11 +173,16 @@ export function MockExamTaking({
       {currentQuestion && (
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <CardTitle className="text-base">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <CardTitle className="min-w-0 flex-1 text-base break-words">
                 {currentIndex + 1}. {currentQuestion.questionText}
               </CardTitle>
-              <Badge variant="outline">{currentQuestion.points} pts</Badge>
+              <Badge variant="outline" className="shrink-0">
+                {(x.points ?? "").replace(
+                  "{count}",
+                  String(currentQuestion.points)
+                )}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -185,40 +195,58 @@ export function MockExamTaking({
         </Card>
       )}
 
+      {submitError && (
+        <p role="alert" className="text-destructive text-sm">
+          {x.submitFailed ?? ""}
+        </p>
+      )}
+
       {/* Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button
           variant="outline"
+          className="min-h-11"
           disabled={currentIndex === 0}
           onClick={() => setCurrentIndex((i) => i - 1)}
         >
           <ChevronLeft className="me-1 h-4 w-4 rtl:rotate-180" />
-          {d?.previous || "Previous"}
+          {d?.previous || ""}
         </Button>
 
-        <div className="flex gap-2">
+        <div className="order-last flex w-full flex-wrap justify-center gap-1 sm:order-none sm:w-auto">
           {/* Question dots */}
           {exam.questions.map((q, i) => (
             <button
               key={q.id}
               onClick={() => setCurrentIndex(i)}
-              className={`h-3 w-3 rounded-full transition-colors ${
-                i === currentIndex
-                  ? "bg-primary"
-                  : answers[q.id]
-                    ? "bg-primary/40"
-                    : "bg-muted"
-              }`}
-              aria-label={`Question ${i + 1}`}
-            />
+              type="button"
+              className="flex size-11 items-center justify-center rounded-full sm:size-6"
+              aria-label={`${d?.question ?? ""} ${i + 1}`}
+              aria-current={i === currentIndex ? "step" : undefined}
+            >
+              <span
+                className={`h-3 w-3 rounded-full transition-colors ${
+                  i === currentIndex
+                    ? "bg-primary"
+                    : answers[q.id]
+                      ? "bg-primary/40"
+                      : "bg-muted"
+                }`}
+              />
+            </button>
           ))}
         </div>
 
         {currentIndex === exam.totalQuestions - 1 ? (
-          <Button onClick={handleSubmit}>{d?.submit || "Submit"}</Button>
+          <Button className="min-h-11" onClick={handleSubmit}>
+            {d?.submit || ""}
+          </Button>
         ) : (
-          <Button onClick={() => setCurrentIndex((i) => i + 1)}>
-            {d?.next || "Next"}
+          <Button
+            className="min-h-11"
+            onClick={() => setCurrentIndex((i) => i + 1)}
+          >
+            {d?.next || ""}
             <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
           </Button>
         )}
@@ -248,12 +276,12 @@ function QuestionInput({
         {question.options.map((opt) => (
           <div
             key={opt.id}
-            className="flex items-center space-x-2 rtl:space-x-reverse"
+            className="flex min-h-11 min-w-0 items-center gap-2"
           >
             <RadioGroupItem value={opt.id} id={`${question.id}-${opt.id}`} />
             <Label
               htmlFor={`${question.id}-${opt.id}`}
-              className="cursor-pointer"
+              className="min-h-11 min-w-0 flex-1 cursor-pointer leading-6 break-words"
             >
               {opt.text}
             </Label>
@@ -267,7 +295,7 @@ function QuestionInput({
     <Textarea
       value={selectedValue}
       onChange={(e) => onChange(e.target.value)}
-      placeholder={qDict?.school?.exams?.typeAnswer ?? "Type your answer..."}
+      placeholder={qDict?.school?.exams?.typeAnswer ?? ""}
       rows={question.questionType === "ESSAY" ? 8 : 3}
     />
   )
@@ -295,7 +323,7 @@ function MockExamResults({
   const passed = results.percentage >= 50
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl min-w-0 space-y-6">
       {/* Score Summary */}
       <Card className={passed ? "border-green-500/20" : "border-red-500/20"}>
         <CardHeader>
@@ -305,28 +333,26 @@ function MockExamResults({
             ) : (
               <XCircle className="h-6 w-6 text-red-500" />
             )}
-            {d?.mockResult || "Mock Exam Result"}
+            {d?.mockResult || ""}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-8">
+          <div className="flex flex-wrap gap-x-8 gap-y-4">
             <div>
-              <p className="text-muted-foreground text-sm">
-                {d?.score || "Score"}
-              </p>
+              <p className="text-muted-foreground text-sm">{d?.score || ""}</p>
               <p className="text-3xl font-bold">
                 {results.score}/{results.totalPoints}
               </p>
             </div>
             <div>
               <p className="text-muted-foreground text-sm">
-                {d?.percentage || "Percentage"}
+                {d?.percentage || ""}
               </p>
               <p className="text-3xl font-bold">{results.percentage}%</p>
             </div>
             <div className="flex items-end">
               <Badge variant={passed ? "default" : "destructive"}>
-                {passed ? d?.passed || "Passed" : d?.failed || "Failed"}
+                {passed ? d?.passed || "" : d?.failed || ""}
               </Badge>
             </div>
           </div>
@@ -335,9 +361,7 @@ function MockExamResults({
 
       {/* Question Review */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">
-          {d?.reviewAnswers || "Review Answers"}
-        </h3>
+        <h3 className="text-lg font-semibold">{d?.reviewAnswers || ""}</h3>
         {results.questions.map((q, idx) => {
           const studentAnswer = answers[q.id]
           const selectedId =
@@ -383,8 +407,8 @@ function MockExamResults({
               }
             >
               <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-sm font-medium">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="min-w-0 text-sm font-medium break-words">
                     {idx + 1}. {q.questionText}
                   </CardTitle>
                   {isAutoGraded && (
@@ -397,7 +421,7 @@ function MockExamResults({
                   )}
                   {!isAutoGraded && (
                     <Badge variant="outline" className="shrink-0">
-                      {d?.manualReview || "Self-review"}
+                      {d?.manualReview || ""}
                     </Badge>
                   )}
                 </div>
@@ -415,7 +439,7 @@ function MockExamResults({
                       return (
                         <div
                           key={opt.id}
-                          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm ${
+                          className={`flex min-w-0 items-center gap-2 rounded-md px-3 py-1.5 text-sm break-words ${
                             isOptionCorrect
                               ? "bg-green-50 font-medium text-green-700 dark:bg-green-950/30 dark:text-green-400"
                               : isSelected && !isOptionCorrect
@@ -445,7 +469,7 @@ function MockExamResults({
                   studentAnswer && (
                     <div>
                       <p className="text-muted-foreground text-xs font-medium">
-                        {d?.yourAnswer || "Your Answer"}:
+                        {d?.yourAnswer || ""}:
                       </p>
                       <p className="mt-1 text-sm">
                         {typeof studentAnswer === "string"
@@ -459,7 +483,7 @@ function MockExamResults({
                 {q.questionType === "FILL_BLANK" && q.correctAnswer && (
                   <div className="mt-2">
                     <p className="text-xs font-medium text-green-600 dark:text-green-400">
-                      {d?.correctAnswer || "Correct Answer"}:
+                      {d?.correctAnswer || ""}:
                     </p>
                     <p className="text-sm">{q.correctAnswer}</p>
                   </div>
@@ -471,7 +495,7 @@ function MockExamResults({
                     q.questionType === "SHORT_ANSWER") && (
                     <div className="bg-muted/50 mt-2 rounded-md p-3">
                       <p className="text-xs font-medium">
-                        {d?.modelAnswer || "Model Answer"}:
+                        {d?.modelAnswer || ""}:
                       </p>
                       <p className="mt-1 text-sm">{q.sampleAnswer}</p>
                     </div>
@@ -490,8 +514,8 @@ function MockExamResults({
         })}
       </div>
 
-      <Button variant="outline" onClick={onBack}>
-        {d?.backToMocks || "Back to Mock Exams"}
+      <Button variant="outline" className="min-h-11" onClick={onBack}>
+        {d?.backToMocks || ""}
       </Button>
     </div>
   )

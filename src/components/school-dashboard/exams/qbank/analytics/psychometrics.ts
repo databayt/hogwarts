@@ -334,6 +334,28 @@ export function getDiscriminationLabel(dIndex: number): string {
   return "Needs Review"
 }
 
+/** Dictionary key for the difficulty band (exams.qbank.analytics.difficultyLevels) */
+export function getDifficultyKey(
+  pValue: number
+): "veryEasy" | "easy" | "moderate" | "difficult" | "veryDifficult" {
+  if (pValue >= 0.9) return "veryEasy"
+  if (pValue >= 0.7) return "easy"
+  if (pValue >= 0.5) return "moderate"
+  if (pValue >= 0.3) return "difficult"
+  return "veryDifficult"
+}
+
+/** Dictionary key for the discrimination band (exams.qbank.analytics.qualityLevels) */
+export function getDiscriminationKey(
+  dIndex: number
+): "excellent" | "good" | "fair" | "poor" | "needsReview" {
+  if (dIndex >= 0.4) return "excellent"
+  if (dIndex >= 0.3) return "good"
+  if (dIndex >= 0.2) return "fair"
+  if (dIndex >= 0) return "poor"
+  return "needsReview"
+}
+
 /**
  * Get quality score color for UI
  */

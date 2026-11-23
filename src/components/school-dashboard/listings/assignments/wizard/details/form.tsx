@@ -33,7 +33,8 @@ import {
   presignAssignmentAttachment,
   updateAssignmentDetails,
 } from "./actions"
-import { detailsSchema, type DetailsFormData } from "./validation"
+import { assignmentValidationOf } from "../../validation-messages"
+import { createDetailsSchema, type DetailsFormData } from "./validation"
 
 interface DetailsFormProps {
   assignmentId: string
@@ -46,12 +47,15 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
     const { dictionary } = useDictionary()
+    const formMessages = ((dictionary as any)?.assignments?.form ?? {}) as Record<string, string>
     const fd = (dictionary?.school as Record<string, any>)?.assignments
       ?.form as Record<string, any> | undefined
 
     const form = useForm<DetailsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(detailsSchema) as any,
+      resolver: zodResolver(
+        createDetailsSchema(assignmentValidationOf(dictionary))
+      ) as any,
       defaultValues: {
         totalPoints: initialData?.totalPoints ?? 100,
         weight: initialData?.weight ?? 10,
@@ -136,7 +140,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
         for (const file of Array.from(list).slice(0, 10 - next.length)) {
           const failed = () =>
             toast.error(
-              (fd?.uploadFailed || "Couldn't upload {name}").replace(
+              (fd?.uploadFailed ?? "").replace(
                 "{name}",
                 file.name
               )
@@ -198,7 +202,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
               )
               if (!saveResult.success) {
                 ErrorToast(
-                  actionErrorMessage(saveResult.error, dictionary, "Failed to save")
+                  actionErrorMessage(saveResult.error, dictionary, formMessages.saveFailed ?? "")
                 )
                 reject(new Error(saveResult.error))
                 return
@@ -212,7 +216,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                   actionErrorMessage(
                     completeResult.error,
                     dictionary,
-                    "Failed to complete"
+                    formMessages.completeFailed ?? ""
                   )
                 )
                 reject(new Error(completeResult.error))
@@ -223,7 +227,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
               router.push("/assignments")
               resolve()
             } catch (err) {
-              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, "Failed to save"))
+              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, formMessages.saveFailed ?? ""))
               reject(err)
             }
           })
@@ -306,7 +310,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
           )}
           <InputField
             name="totalPoints"
-            label={fd?.totalPoints || "Total Points"}
+            label={fd?.totalPoints ?? ""}
             type="number"
             placeholder="100"
             required
@@ -314,7 +318,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
           />
           <InputField
             name="weight"
-            label={fd?.weightPercent || "Weight (%)"}
+            label={fd?.weightPercent ?? ""}
             type="number"
             placeholder="10"
             required
@@ -322,21 +326,21 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
           />
           <DateField
             name="dueDate"
-            label={fd?.dueDate || "Due Date"}
+            label={fd?.dueDate ?? ""}
             required
             disabled={isPending}
           />
           <TextareaField
             name="instructions"
-            label={fd?.instructions || "Instructions"}
+            label={fd?.instructions ?? ""}
             placeholder={
-              fd?.enterInstructions || "Enter assignment instructions"
+              fd?.enterInstructions ?? ""
             }
             disabled={isPending}
           />
           <div className="space-y-2">
             <p className="text-sm font-medium">
-              {fd?.attachments || "Assignment attachments (images or PDF)"}
+              {fd?.attachments ?? ""}
             </p>
             {files.length > 0 && (
               <ul className="flex flex-wrap gap-2">
@@ -356,7 +360,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                           { shouldDirty: true }
                         )
                       }
-                      aria-label={fd?.removeFile || "Remove"}
+                      aria-label={fd?.removeFile ?? ""}
                       className="relative ms-1 after:absolute after:-inset-2 after:content-['']"
                     >
                       <X className="h-3 w-3" aria-hidden />
@@ -381,8 +385,8 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
             >
               <Paperclip className="me-2 h-4 w-4" aria-hidden />
               {uploading
-                ? fd?.uploading || "Uploading…"
-                : fd?.attachFile || "Attach an image or file"}
+                ? fd?.uploading ?? ""
+                : fd?.attachFile ?? ""}
             </Button>
           </div>
         </form>

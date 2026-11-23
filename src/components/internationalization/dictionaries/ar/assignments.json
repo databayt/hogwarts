@@ -1,0 +1,19 @@
+{
+  "validation": {
+    "titleRequired": "العنوان مطلوب",
+    "classRequired": "الفصل مطلوب",
+    "totalPointsMin": "يجب أن تكون الدرجة الكلية أكبر من صفر",
+    "weightMin": "يجب أن يكون الوزن أكبر من صفر",
+    "weightMax": "لا يمكن أن يتجاوز الوزن 100%",
+    "dueDateRequired": "تاريخ التسليم مطلوب",
+    "idRequired": "مطلوب"
+  },
+  "export": {
+    "fetchFailed": "تعذّر جلب البيانات",
+    "exportFailed": "تعذّر التصدير"
+  },
+  "form": {
+    "saveFailed": "تعذّر الحفظ",
+    "completeFailed": "تعذّر الإكمال"
+  }
+}

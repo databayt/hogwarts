@@ -53,7 +53,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{d?.assignmentType || "Assignment Type"}</FormLabel>
+            <FormLabel>{d?.assignmentType ?? ""}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -62,7 +62,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue
-                    placeholder={d?.selectType || "Select assignment type"}
+                    placeholder={d?.selectType ?? ""}
                   />
                 </SelectTrigger>
               </FormControl>
@@ -85,7 +85,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
           name="totalPoints"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{d?.totalPoints || "Total Points"}</FormLabel>
+              <FormLabel>{d?.totalPoints ?? ""}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -109,7 +109,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
           name="weight"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{d?.weightPercent || "Weight (%)"}</FormLabel>
+              <FormLabel>{d?.weightPercent ?? ""}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -135,7 +135,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="dueDate"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>{d?.dueDate || "Due Date"}</FormLabel>
+            <FormLabel>{d?.dueDate ?? ""}</FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -150,7 +150,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
                     {field.value ? (
                       format(field.value, "PPP")
                     ) : (
-                      <span>{d?.pickDate || "Pick a date"}</span>
+                      <span>{d?.pickDate ?? ""}</span>
                     )}
                     <Calendar className="ms-auto h-4 w-4 opacity-50" />
                   </Button>
@@ -176,11 +176,11 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="instructions"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{d?.instructions || "Instructions"}</FormLabel>
+            <FormLabel>{d?.instructions ?? ""}</FormLabel>
             <FormControl>
               <Textarea
                 placeholder={
-                  d?.enterInstructions || "Enter assignment instructions..."
+                  d?.enterInstructions ?? ""
                 }
                 className="min-h-[120px]"
                 disabled={isView}

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { SearchParams } from "nuqs/server"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -55,6 +56,16 @@ export default async function AssignmentsContent({
 
   const view = assignmentsViewForRole(session.user.role)
 
+  // Due dates print on the school's clock, not the server's or the reader's.
+  const timeZone = schoolId
+    ? ((
+        await db.school.findUnique({
+          where: { id: schoolId },
+          select: { timezone: true },
+        })
+      )?.timezone ?? undefined)
+    : undefined
+
   if (view === "staff") {
     return (
       <StaffAssignmentsContent
@@ -72,6 +83,7 @@ export default async function AssignmentsContent({
         assignments={assignments}
         dictionary={dictionary}
         lang={lang}
+        timeZone={timeZone}
       />
     )
   }
@@ -93,6 +105,7 @@ export default async function AssignmentsContent({
         dictionary={dictionary}
         lang={lang}
         mode="guardian"
+        timeZone={timeZone}
         childName={child?.name}
         childId={child?.id}
         switcher={

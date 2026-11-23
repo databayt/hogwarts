@@ -50,26 +50,6 @@ interface StudentProgressProps {
   isGuardian?: boolean
 }
 
-const QUESTION_TYPE_LABELS: Record<string, string> = {
-  MULTIPLE_CHOICE: "MCQ",
-  TRUE_FALSE: "T/F",
-  SHORT_ANSWER: "Short",
-  ESSAY: "Essay",
-  FILL_BLANK: "Fill",
-  MATCHING: "Match",
-  ORDERING: "Order",
-  MULTI_SELECT: "Multi",
-}
-
-const BLOOM_LABELS: Record<string, string> = {
-  REMEMBER: "Remember",
-  UNDERSTAND: "Understand",
-  APPLY: "Apply",
-  ANALYZE: "Analyze",
-  EVALUATE: "Evaluate",
-  CREATE: "Create",
-}
-
 const SUBJECT_COLORS = [
   "#2563eb",
   "#16a34a",
@@ -84,6 +64,12 @@ const SUBJECT_COLORS = [
 export function StudentProgress({ isGuardian }: StudentProgressProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.shared
+  // New keys live in the `exams` namespace, not yet in the typed dictionary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tx = (dictionary as any)?.exams?.shared ?? {}
+  const scoreLabel = dictionary?.school?.exams?.score ?? ""
+  const typeLabel = (type: string) => tx.questionTypes?.[type] ?? ""
+  const bloomLabel = (level: string) => tx.bloomLevels?.[level] ?? ""
   const [data, setData] = useState<ProgressData | null>(null)
   const [children, setChildren] = useState<{ id: string; name: string }[]>([])
   const [selectedChild, setSelectedChild] = useState<string>("")
@@ -125,11 +111,10 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FileText className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {t?.noProgressData ?? "No Progress Data Yet"}
+            {t?.noProgressData ?? ""}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {t?.noProgressDescription ??
-              "Take some exams to see your progress here."}
+            {t?.noProgressDescription ?? ""}
           </p>
         </CardContent>
       </Card>
@@ -153,14 +138,14 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
   // Prepare radar chart data for question types
   const radarData = data.questionTypePerformance.map((qt) => ({
-    type: QUESTION_TYPE_LABELS[qt.type] || qt.type,
+    type: typeLabel(qt.type),
     percentage: qt.percentage,
     fullMark: 100,
   }))
 
   // Prepare bar chart data for Bloom levels
   const bloomData = data.bloomPerformance.map((bl) => ({
-    level: BLOOM_LABELS[bl.level] || bl.level,
+    level: bloomLabel(bl.level),
     percentage: bl.percentage,
     total: bl.total,
   }))
@@ -169,12 +154,12 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
     <div className="space-y-6">
       {/* Guardian child selector */}
       {isGuardian && children.length > 1 && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium">
-            {t?.viewingProgress ?? "Viewing progress for:"}
+            {t?.viewingProgress ?? ""}
           </span>
           <Select value={selectedChild} onValueChange={setSelectedChild}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="min-h-11 w-full sm:w-[200px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -194,7 +179,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {t?.overallAverage ?? "Overall Average"}
+              {t?.overallAverage ?? ""}
             </CardTitle>
             <Award className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -203,7 +188,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
               {data.overallAverage}%
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {(t?.acrossExams ?? "Across {count} exams").replace(
+              {(t?.acrossExams ?? "").replace(
                 "{count}",
                 String(data.totalExams)
               )}
@@ -214,7 +199,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {t?.examsTaken ?? "Exams Taken"}
+              {t?.examsTaken ?? ""}
             </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
@@ -223,7 +208,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
               {data.totalExams}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {data.subjectTrends.length} {t?.subjects ?? "subjects"}
+              {data.subjectTrends.length} {t?.subjects ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -231,16 +216,16 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {t?.bestSubject ?? "Best Subject"}
+              {t?.bestSubject ?? ""}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-emerald-500 max-md:hidden" />
           </CardHeader>
           <CardContent className="max-md:px-4 max-md:pb-4">
             <div className="truncate text-lg font-bold max-md:text-base max-md:leading-6">
-              {data.bestSubject || "N/A"}
+              {data.bestSubject || (tx.notAvailable ?? "")}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {t?.highestAverage ?? "Highest average"}
+              {t?.highestAverage ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -248,16 +233,16 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
             <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
-              {t?.needsWork ?? "Needs Work"}
+              {t?.needsWork ?? ""}
             </CardTitle>
             <TrendingDown className="h-4 w-4 text-orange-500 max-md:hidden" />
           </CardHeader>
           <CardContent className="max-md:px-4 max-md:pb-4">
             <div className="truncate text-lg font-bold max-md:text-base max-md:leading-6">
-              {data.weakestSubject || "N/A"}
+              {data.weakestSubject || (tx.notAvailable ?? "")}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
-              {t?.lowestAverage ?? "Lowest average"}
+              {t?.lowestAverage ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -267,9 +252,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
       {data.subjectTrends.length > 0 && lineChartData.length > 1 && (
         <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base">
-                {t?.subjectTrends ?? "Subject Score Trends"}
+                {t?.subjectTrends ?? ""}
               </CardTitle>
               <div className="flex flex-wrap gap-1.5">
                 {data.subjectTrends.map((s) => (
@@ -325,7 +310,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  {t?.questionTypePerformance ?? "Question Type Performance"}
+                  {t?.questionTypePerformance ?? ""}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -342,7 +327,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
                     fillOpacity={0.3}
                   />
                   <Tooltip
-                    formatter={(value: number) => [`${value}%`, "Score"]}
+                    formatter={(value: number) => [`${value}%`, scoreLabel]}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -358,7 +343,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  {t?.questionTypePerformance ?? "Question Type Performance"}
+                  {t?.questionTypePerformance ?? ""}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -368,17 +353,15 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
                   key={qt.type}
                   className="flex items-center justify-between"
                 >
-                  <span className="text-sm">
-                    {QUESTION_TYPE_LABELS[qt.type] || qt.type}
-                  </span>
+                  <span className="text-sm">{typeLabel(qt.type)}</span>
                   <div className="flex items-center gap-2">
-                    <div className="bg-muted h-2 w-24 overflow-hidden rounded-full">
+                    <div className="bg-muted h-2 w-16 overflow-hidden rounded-full sm:w-24">
                       <div
                         className="h-full rounded-full bg-blue-500"
                         style={{ width: `${qt.percentage}%` }}
                       />
                     </div>
-                    <span className="w-12 text-end text-sm font-medium">
+                    <span className="min-w-10 text-end text-sm font-medium sm:min-w-12">
                       {qt.percentage}%
                     </span>
                   </div>
@@ -395,7 +378,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  {t?.bloomsTaxonomy ?? "Bloom's Taxonomy"}
+                  {t?.bloomsTaxonomy ?? ""}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -416,8 +399,8 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
                   />
                   <Tooltip
                     formatter={(value: number, _name: string, props: any) => [
-                      `${value}% (${props.payload.total} questions)`,
-                      "Score",
+                      `${value}% (${(tx.questionsCount ?? "").replace("{count}", String(props.payload.total))})`,
+                      scoreLabel,
                     ]}
                   />
                   <Bar
@@ -438,8 +421,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
           <Card className="max-md:bg-muted max-md:border-0">
             <CardContent className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
-                {t?.detailedAnalytics ??
-                  "Detailed question-level analytics will appear after your exams are graded."}
+                {t?.detailedAnalytics ?? ""}
               </p>
             </CardContent>
           </Card>

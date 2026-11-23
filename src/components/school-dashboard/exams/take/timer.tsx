@@ -117,7 +117,7 @@ export function ExamTimer({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg px-4 py-2 font-mono transition-colors",
+        "flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 font-mono transition-colors sm:px-4",
         urgency === "normal" && "bg-muted text-foreground",
         urgency === "warning" &&
           "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
@@ -139,14 +139,14 @@ export function ExamTimer({
       </span>
 
       {isPaused && (
-        <Badge variant="secondary" className="ms-2">
-          {tc?.paused ?? "Paused"}
+        <Badge variant="secondary" className="sm:ms-2">
+          {tc?.paused ?? ""}
         </Badge>
       )}
 
       {urgency === "critical" && !isPaused && (
-        <Badge variant="destructive" className="ms-2">
-          {tc?.hurry ?? "Hurry!"}
+        <Badge variant="destructive" className="sm:ms-2">
+          {tc?.hurry ?? ""}
         </Badge>
       )}
     </div>

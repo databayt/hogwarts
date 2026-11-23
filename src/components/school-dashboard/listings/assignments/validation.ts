@@ -3,35 +3,60 @@
 
 import { z } from "zod"
 
-export const assignmentBaseSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  classId: z.string().min(1, "Class is required"),
-  type: z.enum([
-    "HOMEWORK",
-    "QUIZ",
-    "TEST",
-    "MIDTERM",
-    "FINAL_EXAM",
-    "PROJECT",
-    "LAB_REPORT",
-    "ESSAY",
-    "PRESENTATION",
-  ]),
-  totalPoints: z.number().min(0.01, "Total points must be greater than 0"),
-  weight: z
-    .number()
-    .min(0.01, "Weight must be greater than 0")
-    .max(100, "Weight cannot exceed 100%"),
-  dueDate: z.date(),
-  instructions: z.string().optional(),
-})
+import {
+  defaultAssignmentValidationMessages,
+  type AssignmentValidationMessages,
+} from "./validation-messages"
+
+const ASSIGNMENT_TYPES = [
+  "HOMEWORK",
+  "QUIZ",
+  "TEST",
+  "MIDTERM",
+  "FINAL_EXAM",
+  "PROJECT",
+  "LAB_REPORT",
+  "ESSAY",
+  "PRESENTATION",
+] as const
+
+/**
+ * Schema builders — pass `assignments.validation` from the dictionary so the
+ * form shows the reader's language (mirrors `createLoginSchema`). The plain
+ * exports below are the same schemas in the default language for server code.
+ */
+export function createAssignmentBaseSchema(m: AssignmentValidationMessages) {
+  return z.object({
+    title: z.string().min(1, m.titleRequired),
+    description: z.string().optional(),
+    classId: z.string().min(1, m.classRequired),
+    type: z.enum(ASSIGNMENT_TYPES),
+    totalPoints: z.number().min(0.01, m.totalPointsMin),
+    weight: z.number().min(0.01, m.weightMin).max(100, m.weightMax),
+    dueDate: z.date({ message: m.dueDateRequired }),
+    instructions: z.string().optional(),
+  })
+}
+
+export function createAssignmentCreateSchema(m: AssignmentValidationMessages) {
+  return createAssignmentBaseSchema(m)
+}
+
+export function createAssignmentUpdateSchema(m: AssignmentValidationMessages) {
+  return createAssignmentBaseSchema(m)
+    .partial()
+    .extend({ id: z.string().min(1, m.idRequired) })
+}
+
+export const assignmentBaseSchema = createAssignmentBaseSchema(
+  defaultAssignmentValidationMessages
+)
 
 export const assignmentCreateSchema = assignmentBaseSchema
 
-export const assignmentUpdateSchema = assignmentBaseSchema.partial().extend({
-  id: z.string().min(1, "Required"),
-})
+export const assignmentUpdateSchema = createAssignmentUpdateSchema(
+  defaultAssignmentValidationMessages
+)
 
 export const sortItemSchema = z.object({
   id: z.string(),

@@ -35,45 +35,83 @@ export const orientationSchema = z.enum(["portrait", "landscape"])
 // PAPER CONFIG FORM SCHEMA
 // ============================================================================
 
-export const paperConfigFormSchema = z.object({
-  // Template & Layout
-  template: examPaperTemplateSchema.default("CLASSIC"),
-  layout: paperLayoutSchema.default("SINGLE_COLUMN"),
-  answerSheetType: answerSheetTypeSchema.default("SEPARATE"),
+/** Localized messages for the paper config form (`exams.paper.validation`). */
+export interface PaperValidationMessages {
+  /** "Must be at most {max} characters" */
+  maxLength?: string
+  /** "Must be at least {min}" */
+  minValue?: string
+  /** "Must be at most {max}" */
+  maxValue?: string
+  /** "Must be a whole number" */
+  integer?: string
+  /** "Required" */
+  required?: string
+}
 
-  // Header
-  showSchoolLogo: z.boolean().default(true),
-  showExamTitle: z.boolean().default(true),
-  showInstructions: z.boolean().default(true),
-  customInstructions: z.string().max(2000).optional(),
-  showStudentInfo: z.boolean().default(true),
+const fill = (message: string | undefined, key: string, value: number) =>
+  message ? message.replace(`{${key}}`, String(value)) : undefined
 
-  // Questions
-  showQuestionNumbers: z.boolean().default(true),
-  showPointsPerQuestion: z.boolean().default(true),
-  showQuestionType: z.boolean().default(false),
-  shuffleQuestions: z.boolean().default(false),
-  shuffleOptions: z.boolean().default(false),
+/**
+ * Builds the config form schema with localized messages. Mirrors
+ * `createLoginSchema` in components/auth/validation.ts: pass the
+ * `exams.paper.validation` subtree of the dictionary.
+ */
+export function createPaperConfigFormSchema(
+  messages: PaperValidationMessages = {}
+) {
+  const str = (max: number) =>
+    z.string().max(max, { message: fill(messages.maxLength, "max", max) })
+  const num = (min: number, max: number) =>
+    z
+      .number({ message: messages.required })
+      .int({ message: messages.integer })
+      .min(min, { message: fill(messages.minValue, "min", min) })
+      .max(max, { message: fill(messages.maxValue, "max", max) })
 
-  // Answer Space
-  answerLinesShort: z.number().int().min(1).max(10).default(3),
-  answerLinesEssay: z.number().int().min(5).max(30).default(12),
+  return z.object({
+    // Template & Layout
+    template: examPaperTemplateSchema.default("CLASSIC"),
+    layout: paperLayoutSchema.default("SINGLE_COLUMN"),
+    answerSheetType: answerSheetTypeSchema.default("SEPARATE"),
 
-  // Footer & Print
-  showPageNumbers: z.boolean().default(true),
-  showTotalPages: z.boolean().default(true),
-  customFooter: z.string().max(500).optional(),
-  pageSize: pageSizeSchema.default("A4"),
-  orientation: orientationSchema.default("portrait"),
+    // Header
+    showSchoolLogo: z.boolean().default(true),
+    showExamTitle: z.boolean().default(true),
+    showInstructions: z.boolean().default(true),
+    customInstructions: str(2000).optional(),
+    showStudentInfo: z.boolean().default(true),
 
-  // Versioning
-  versionCount: z.number().int().min(1).max(5).default(1),
+    // Questions
+    showQuestionNumbers: z.boolean().default(true),
+    showPointsPerQuestion: z.boolean().default(true),
+    showQuestionType: z.boolean().default(false),
+    shuffleQuestions: z.boolean().default(false),
+    shuffleOptions: z.boolean().default(false),
 
-  // Regional preset & copy count
-  regionPreset: z.string().max(50).optional(),
-  customCopies: z.number().int().min(1).max(1000).optional(),
-  spareCopies: z.number().int().min(0).max(50).default(2),
-})
+    // Answer Space
+    answerLinesShort: num(1, 10).default(3),
+    answerLinesEssay: num(5, 30).default(12),
+
+    // Footer & Print
+    showPageNumbers: z.boolean().default(true),
+    showTotalPages: z.boolean().default(true),
+    customFooter: str(500).optional(),
+    pageSize: pageSizeSchema.default("A4"),
+    orientation: orientationSchema.default("portrait"),
+
+    // Versioning
+    versionCount: num(1, 5).default(1),
+
+    // Regional preset & copy count
+    regionPreset: str(50).optional(),
+    customCopies: num(1, 1000).optional(),
+    spareCopies: num(0, 50).default(2),
+  })
+}
+
+/** Plain (English-default-free) schema for server-side callers. */
+export const paperConfigFormSchema = createPaperConfigFormSchema({})
 
 export type PaperConfigFormInput = z.input<typeof paperConfigFormSchema>
 export type PaperConfigFormOutput = z.output<typeof paperConfigFormSchema>

@@ -3,17 +3,25 @@
 
 import { z } from "zod"
 
-export const detailsSchema = z.object({
-  totalPoints: z.coerce
-    .number()
-    .min(0.01, "Total points must be greater than 0"),
-  weight: z.coerce
-    .number()
-    .min(0.01, "Weight must be greater than 0")
-    .max(100, "Weight cannot exceed 100"),
-  dueDate: z.coerce.date({ message: "Due date is required" }),
-  instructions: z.string().optional(),
-  attachments: z.array(z.string().url()).max(10).default([]),
-})
+import {
+  defaultAssignmentValidationMessages,
+  type AssignmentValidationMessages,
+} from "../../validation-messages"
+
+/** Builder — pass `assignments.validation` so the wizard speaks the reader's language. */
+export function createDetailsSchema(m: AssignmentValidationMessages) {
+  return z.object({
+    totalPoints: z.coerce.number().min(0.01, m.totalPointsMin),
+    weight: z.coerce.number().min(0.01, m.weightMin).max(100, m.weightMax),
+    dueDate: z.coerce.date({ message: m.dueDateRequired }),
+    instructions: z.string().optional(),
+    attachments: z.array(z.string().url()).max(10).default([]),
+  })
+}
+
+/** Default-language schema for server actions. */
+export const detailsSchema = createDetailsSchema(
+  defaultAssignmentValidationMessages
+)
 
 export type DetailsFormData = z.infer<typeof detailsSchema>

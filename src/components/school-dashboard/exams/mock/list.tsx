@@ -23,7 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
 
 import type { MockExamItem, MockSubjectFilter, SchoolMockItem } from "./types"
 
@@ -40,6 +43,8 @@ export function MockExamList({
 }: MockExamListProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.mockUi
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (useDictionaryFallback(dictionary) as any)?.exams?.mock ?? {}
   const [subjectFilter, setSubjectFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [mockSource, setMockSource] = useState<string>("catalog")
@@ -60,21 +65,21 @@ export function MockExamList({
         <Tabs value={mockSource} onValueChange={setMockSource}>
           <TabsList>
             <TabsTrigger value="catalog">
-              {t?.catalog ?? "Catalog"} ({exams.length})
+              {t?.catalog ?? ""} ({exams.length})
             </TabsTrigger>
             <TabsTrigger value="school">
-              {t?.school ?? "School"} ({schoolMocks.length})
+              {t?.school ?? ""} ({schoolMocks.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
       )}
 
       {mockSource === "school" && schoolMocks.length > 0 ? (
-        <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {schoolMocks.map((mock) => (
             <Card key={mock.id} className="max-md:bg-muted max-md:border-0">
               <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
-                <CardTitle className="line-clamp-2 text-base max-md:text-sm max-md:leading-5">
+                <CardTitle className="line-clamp-2 text-base break-words max-md:text-sm max-md:leading-5">
                   {mock.title}
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
@@ -87,10 +92,10 @@ export function MockExamList({
                 </div>
               </CardHeader>
               <CardContent className="max-md:px-4 max-md:pb-4">
-                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:gap-1 max-md:text-xs">
+                <div className="text-muted-foreground grid grid-cols-1 gap-2 text-sm max-md:gap-1 max-md:text-xs min-[480px]:grid-cols-2">
                   <div className="flex items-center gap-1">
                     <FileText className="h-3.5 w-3.5" />
-                    {mock.totalQuestions} {t?.questions ?? "questions"}
+                    {mock.totalQuestions} {t?.questions ?? ""}
                   </div>
                   {mock.templateName && (
                     <div className="flex items-center gap-1">
@@ -105,11 +110,11 @@ export function MockExamList({
                   asChild
                   size="sm"
                   variant="outline"
-                  className="max-md:bg-background w-full gap-1 max-md:h-9 max-md:rounded-full"
+                  className="max-md:bg-background w-full gap-1 max-md:min-h-11 max-md:rounded-full"
                 >
                   <Link href={`exams/${mock.examId}/take`}>
                     <Play className="h-3.5 w-3.5" />
-                    {t?.startMock ?? "Start Mock"}
+                    {t?.startMock ?? ""}
                   </Link>
                 </Button>
               </CardFooter>
@@ -118,15 +123,13 @@ export function MockExamList({
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={t?.allSubjects ?? "All Subjects"} />
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder={t?.allSubjects ?? ""} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">
-                  {t?.allSubjects ?? "All Subjects"}
-                </SelectItem>
+                <SelectItem value="all">{t?.allSubjects ?? ""}</SelectItem>
                 {subjects.map((s) => (
                   <SelectItem key={s.id} value={s.slug}>
                     {s.name}
@@ -135,20 +138,22 @@ export function MockExamList({
               </SelectContent>
             </Select>
 
-            <Tabs value={typeFilter} onValueChange={setTypeFilter}>
-              <TabsList>
-                <TabsTrigger value="all">{t?.tabs?.all ?? "All"}</TabsTrigger>
-                <TabsTrigger value="final">
-                  {t?.tabs?.final ?? "Final"}
-                </TabsTrigger>
+            <Tabs
+              value={typeFilter}
+              onValueChange={setTypeFilter}
+              className="max-w-full"
+            >
+              <TabsList className="max-w-full overflow-x-auto">
+                <TabsTrigger value="all">{t?.tabs?.all ?? ""}</TabsTrigger>
+                <TabsTrigger value="final">{t?.tabs?.final ?? ""}</TabsTrigger>
                 <TabsTrigger value="midterm">
-                  {t?.tabs?.midterm ?? "Midterm"}
+                  {t?.tabs?.midterm ?? ""}
                 </TabsTrigger>
                 <TabsTrigger value="chapter_test">
-                  {t?.tabs?.chapter ?? "Chapter"}
+                  {t?.tabs?.chapter ?? ""}
                 </TabsTrigger>
                 <TabsTrigger value="practice">
-                  {t?.tabs?.practice ?? "Practice"}
+                  {t?.tabs?.practice ?? ""}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -157,19 +162,17 @@ export function MockExamList({
           {filtered.length === 0 ? (
             <Card className="max-md:bg-muted max-md:border-0">
               <CardContent className="flex min-h-[200px] items-center justify-center">
-                <p className="text-muted-foreground">
-                  {t?.noMocks ?? "No mock exams found matching your filters."}
-                </p>
+                <p className="text-muted-foreground">{t?.noMocks ?? ""}</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((exam) => (
                 <Card key={exam.id} className="max-md:bg-muted max-md:border-0">
                   <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <CardTitle className="line-clamp-2 text-base max-md:text-sm max-md:leading-5">
+                        <CardTitle className="line-clamp-2 text-base break-words max-md:text-sm max-md:leading-5">
                           {exam.title}
                         </CardTitle>
                       </div>
@@ -198,9 +201,9 @@ export function MockExamList({
                     </div>
                   </CardHeader>
                   <CardContent className="max-md:px-4 max-md:pb-4">
-                    <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:gap-1 max-md:text-xs">
+                    <div className="text-muted-foreground grid grid-cols-1 gap-2 text-sm max-md:gap-1 max-md:text-xs min-[480px]:grid-cols-2">
                       {exam.chapterName && (
-                        <div className="col-span-2 flex items-center gap-1">
+                        <div className="flex items-center gap-1 min-[480px]:col-span-2">
                           <BookOpen className="h-3.5 w-3.5" />
                           <span className="line-clamp-1">
                             {exam.chapterName}
@@ -210,19 +213,22 @@ export function MockExamList({
                       {exam.durationMinutes && (
                         <div className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
-                          {exam.durationMinutes}m
+                          {(x.minutes ?? "").replace(
+                            "{count}",
+                            String(exam.durationMinutes)
+                          )}
                         </div>
                       )}
                       {exam.totalMarks && (
                         <div className="flex items-center gap-1">
                           <Target className="h-3.5 w-3.5" />
-                          {exam.totalMarks} {t?.marks ?? "marks"}
+                          {exam.totalMarks} {t?.marks ?? ""}
                         </div>
                       )}
                       {exam.totalQuestions && (
                         <div className="flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5" />
-                          {exam.totalQuestions} {t?.questions ?? "questions"}
+                          {exam.totalQuestions} {t?.questions ?? ""}
                         </div>
                       )}
                     </div>
@@ -231,11 +237,11 @@ export function MockExamList({
                     <Button
                       asChild
                       size="sm"
-                      className="w-full gap-1 max-md:h-9 max-md:rounded-full"
+                      className="w-full gap-1 max-md:min-h-11 max-md:rounded-full"
                     >
                       <Link href={`mock/${exam.id}/take`}>
                         <Play className="h-3.5 w-3.5" />
-                        {t?.startMock ?? "Start Mock"}
+                        {t?.startMock ?? ""}
                       </Link>
                     </Button>
                   </CardFooter>

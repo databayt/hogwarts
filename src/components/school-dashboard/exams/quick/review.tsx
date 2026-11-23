@@ -149,8 +149,12 @@ export function QuickReview({
               <Card>
                 <CardContent className="space-y-3 p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">{t?.difficulty?.[q.difficulty] ?? q.difficulty}</Badge>
-                    <Badge variant="outline">{t?.bloom?.[q.bloom] ?? q.bloom}</Badge>
+                    <Badge variant="outline">
+                      {t?.difficulty?.[q.difficulty] ?? q.difficulty}
+                    </Badge>
+                    <Badge variant="outline">
+                      {t?.bloom?.[q.bloom] ?? q.bloom}
+                    </Badge>
                     {q.ai && <Badge variant="secondary">{t?.aiBadge}</Badge>}
                   </div>
                   <p className="font-medium" dir="auto">

@@ -45,6 +45,8 @@ export interface GetAssignmentColumnsProps {
   dictionary?: Dictionary["school"]["assignments"]
   common?: Dictionary["school"]["common"]
   lang?: Locale
+  /** The school's IANA zone for the date cells. */
+  timeZone?: string
   callbacks?: AssignmentColumnCallbacks
   permissions?: UIPermissions
 }
@@ -53,6 +55,7 @@ export const getAssignmentColumns = ({
   dictionary,
   common,
   lang,
+  timeZone,
   callbacks,
   permissions = FULL_UI_PERMISSIONS,
 }: GetAssignmentColumnsProps): ColumnDef<AssignmentRow>[] => {
@@ -145,7 +148,7 @@ export const getAssignmentColumns = ({
       id: "dueDate",
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {formatAssignmentDate(getValue<string>(), lang)}
+          {formatAssignmentDate(getValue<string>(), lang, "short", timeZone)}
         </span>
       ),
     },
@@ -157,7 +160,7 @@ export const getAssignmentColumns = ({
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {formatAssignmentDate(getValue<string>(), lang)}
+          {formatAssignmentDate(getValue<string>(), lang, "short", timeZone)}
         </span>
       ),
     },

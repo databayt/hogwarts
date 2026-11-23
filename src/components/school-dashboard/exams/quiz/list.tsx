@@ -24,7 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  useDictionary,
+  useDictionaryFallback,
+} from "@/components/internationalization/use-dictionary"
 
 import type { QuizItem, QuizQuestionStats, QuizSubjectFilter } from "./types"
 
@@ -37,13 +40,15 @@ interface QuizListProps {
 export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.quizUi
+  // New keys live in the `exams` namespace (not in the TS types yet)
+  const x = (useDictionaryFallback(dictionary) as any)?.exams?.quiz ?? {}
   // The question bank's own difficulty labels — same source ai-generate-content.tsx
   // uses — so "byDifficulty" doesn't print raw EASY/MEDIUM/HARD enum keys.
   const cfg = dictionary?.school?.exams?.qbankUi?.config
   const difficultyLabels: Record<string, string> = {
-    EASY: cfg?.difficulty?.easy ?? "Easy",
-    MEDIUM: cfg?.difficulty?.medium ?? "Medium",
-    HARD: cfg?.difficulty?.hard ?? "Hard",
+    EASY: cfg?.difficulty?.easy ?? "",
+    MEDIUM: cfg?.difficulty?.medium ?? "",
+    HARD: cfg?.difficulty?.hard ?? "",
   }
   const [subjectFilter, setSubjectFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -66,15 +71,13 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={t?.allSubjects ?? "All Subjects"} />
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder={t?.allSubjects ?? ""} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">
-              {t?.allSubjects ?? "All Subjects"}
-            </SelectItem>
+            <SelectItem value="all">{t?.allSubjects ?? ""}</SelectItem>
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.slug}>
                 {s.name}
@@ -83,12 +86,16 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
           </SelectContent>
         </Select>
 
-        <Tabs value={typeFilter} onValueChange={setTypeFilter}>
-          <TabsList>
-            <TabsTrigger value="all">{t?.tabs?.all ?? "All"}</TabsTrigger>
-            <TabsTrigger value="quiz">{t?.tabs?.quiz ?? "Quiz"}</TabsTrigger>
+        <Tabs
+          value={typeFilter}
+          onValueChange={setTypeFilter}
+          className="max-w-full"
+        >
+          <TabsList className="max-w-full overflow-x-auto">
+            <TabsTrigger value="all">{t?.tabs?.all ?? ""}</TabsTrigger>
+            <TabsTrigger value="quiz">{t?.tabs?.quiz ?? ""}</TabsTrigger>
             <TabsTrigger value="diagnostic">
-              {t?.tabs?.diagnostic ?? "Diagnostic"}
+              {t?.tabs?.diagnostic ?? ""}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -97,18 +104,16 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
       {filtered.length === 0 ? (
         <Card className="max-md:bg-muted max-md:border-0">
           <CardContent className="flex min-h-[200px] items-center justify-center">
-            <p className="text-muted-foreground">
-              {t?.noQuizzes ?? "No quizzes match the selected filters."}
-            </p>
+            <p className="text-muted-foreground">{t?.noQuizzes ?? ""}</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((quiz) => (
             <Card key={quiz.id} className="max-md:bg-muted max-md:border-0">
               <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
                 <div className="space-y-1">
-                  <CardTitle className="line-clamp-2 text-base max-md:text-sm max-md:leading-5">
+                  <CardTitle className="line-clamp-2 text-base break-words max-md:text-sm max-md:leading-5">
                     {quiz.title}
                   </CardTitle>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -141,25 +146,43 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                       .join(" → ")}
                   </p>
                 )}
-                <div className="text-muted-foreground grid grid-cols-3 gap-2 text-sm max-md:gap-1 max-md:text-xs">
+                <div className="text-muted-foreground grid grid-cols-1 gap-2 text-sm max-md:gap-1 max-md:text-xs min-[480px]:grid-cols-3">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{quiz.durationMinutes ?? "—"}m</span>
+                    <span>
+                      {quiz.durationMinutes != null
+                        ? (x.minutes ?? "").replace(
+                            "{count}",
+                            String(quiz.durationMinutes)
+                          )
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <FileText className="h-3.5 w-3.5" />
-                    <span>{quiz.totalQuestions ?? "—"}Q</span>
+                    <span>
+                      {quiz.totalQuestions != null
+                        ? `${quiz.totalQuestions} ${t?.questions ?? ""}`
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Zap className="h-3.5 w-3.5" />
-                    <span>{quiz.totalMarks ?? "—"}pts</span>
+                    <span>
+                      {quiz.totalMarks != null
+                        ? (x.points ?? "").replace(
+                            "{count}",
+                            String(quiz.totalMarks)
+                          )
+                        : "—"}
+                    </span>
                   </div>
                 </div>
                 {quiz.usageCount > 0 && (
                   <div className="text-muted-foreground mt-2 flex items-center gap-1 text-xs">
                     <BookOpen className="h-3 w-3" />
                     <span>
-                      {(t?.usageCount ?? "Used {count} times").replace(
+                      {(t?.usageCount ?? "").replace(
                         "{count}",
                         String(quiz.usageCount)
                       )}
@@ -171,11 +194,11 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                 <Button
                   asChild
                   size="sm"
-                  className="w-full gap-1 max-md:h-9 max-md:rounded-full"
+                  className="min-h-11 w-full gap-1 max-md:rounded-full md:min-h-9"
                 >
                   <Link href={`mock/${quiz.id}/take`}>
                     <Play className="h-3.5 w-3.5" />
-                    {t?.startQuiz ?? "Start Quiz"}
+                    {t?.startQuiz ?? ""}
                   </Link>
                 </Button>
               </CardFooter>
@@ -186,10 +209,8 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
 
       {filteredStats.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">
-            {t?.questionPool ?? "Question Pool by Subject"}
-          </h3>
-          <div className="grid gap-3 max-md:gap-2 md:grid-cols-2">
+          <h3 className="text-lg font-semibold">{t?.questionPool ?? ""}</h3>
+          <div className="grid grid-cols-1 gap-3 max-md:gap-2 sm:grid-cols-2">
             {filteredStats.map((stat) => {
               const maxQuestions = Math.max(
                 ...filteredStats.map((s) => s.totalQuestions)
@@ -200,10 +221,10 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                   className="max-md:bg-muted max-md:border-0"
                 >
                   <CardContent className="pt-4">
-                    <div className="mb-2 flex items-center justify-between">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2">
                       <span className="text-sm font-medium">{stat.name}</span>
                       <span className="text-muted-foreground text-sm">
-                        {stat.totalQuestions} {t?.questions ?? "questions"}
+                        {stat.totalQuestions} {t?.questions ?? ""}
                       </span>
                     </div>
                     <Progress

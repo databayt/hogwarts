@@ -46,6 +46,7 @@ vi.mock("@/components/atom/toast", () => ({
 }))
 
 vi.mock("@/components/internationalization/use-dictionary", () => ({
+  useDictionaryFallback: (prop?: unknown) => prop ?? {},
   useDictionary: () => ({
     dictionary: {
       school: {

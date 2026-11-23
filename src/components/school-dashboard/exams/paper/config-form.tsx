@@ -7,7 +7,7 @@
  * Paper Configuration Form
  * Configures exam paper generation settings
  */
-import { useState, useTransition } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -46,27 +46,17 @@ import type { CompositionConfig } from "../templates/composition"
 import { createPaperConfig, updatePaperConfig } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
 import { CompositionPanel, parseBlockConfig } from "./composition-panel"
+import { paperErrorText } from "./error-text"
 import { ANSWER_SHEET_TYPES, PAPER_LAYOUTS, PAPER_TEMPLATES } from "./types"
-import { paperConfigFormSchema } from "./validation"
+import { createPaperConfigFormSchema } from "./validation"
 import type { PaperConfigFormInput } from "./validation"
 
+/** Region preset ids; labels come from `school.exams.paper.standards`. */
 const REGION_PRESETS = {
-  "sd-national": {
-    label: "Sudan National",
-    labelAr: "الامتحان الوطني السوداني",
-  },
-  "sa-national": {
-    label: "Saudi National",
-    labelAr: "الامتحان الوطني السعودي",
-  },
-  "us-standard": {
-    label: "US K-12 Standard",
-    labelAr: "المعيار الأمريكي K-12",
-  },
-  "mena-private": {
-    label: "MENA Private/International",
-    labelAr: "مدارس خاصة/دولية",
-  },
+  "sd-national": "sudan",
+  "sa-national": "saudi",
+  "us-standard": "usK12",
+  "mena-private": "mena",
 } as const
 
 interface ConfigFormProps {
@@ -89,6 +79,20 @@ export function ConfigForm({
   const t = dictionary?.generate?.paper?.config as
     | Record<string, string>
     | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tx = (dictionary as any)?.exams?.paper ?? {}
+  const options = tx.options ?? {}
+  const standards =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((dictionary as any)?.school?.exams?.paper?.standards ?? {}) as Record<
+      string,
+      string
+    >
+  const schema = useMemo(
+    () => createPaperConfigFormSchema(tx.validation ?? {}),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tx.validation]
+  )
   const [isPending, startTransition] = useTransition()
   const [previewKey, setPreviewKey] = useState(0)
   const [composition, setComposition] = useState<CompositionConfig>(() =>
@@ -99,7 +103,7 @@ export function ConfigForm({
   const isEditing = !!existingConfig
 
   const form = useForm<PaperConfigFormInput>({
-    resolver: zodResolver(paperConfigFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: existingConfig
       ? {
           template: existingConfig.template,
@@ -175,9 +179,8 @@ export function ConfigForm({
 
         if (result.success) {
           toast({
-            title: t?.saved || "Saved",
-            description:
-              t?.config_saved || "Paper configuration saved successfully",
+            title: t?.saved || "",
+            description: t?.config_saved || "",
           })
           setPreviewKey((k) => k + 1)
           if (!isEditing) {
@@ -185,15 +188,15 @@ export function ConfigForm({
           }
         } else {
           toast({
-            title: dictionary?.generate?.paper?.error || "Error",
-            description: result.error,
+            title: dictionary?.generate?.paper?.error || "",
+            description: paperErrorText(result, dictionary),
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: dictionary?.generate?.paper?.error || "Error",
-          description: t?.unexpected_error || "An unexpected error occurred",
+          title: dictionary?.generate?.paper?.error || "",
+          description: t?.unexpected_error || "",
           variant: "destructive",
         })
       }
@@ -215,11 +218,8 @@ export function ConfigForm({
         {/* Template & Layout */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.template_layout || "Template & Layout"}</CardTitle>
-            <CardDescription>
-              {t?.template_layout_desc ||
-                "Choose the exam paper style and layout"}
-            </CardDescription>
+            <CardTitle>{t?.template_layout || ""}</CardTitle>
+            <CardDescription>{t?.template_layout_desc || ""}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-3">
             <FormField
@@ -227,7 +227,7 @@ export function ConfigForm({
               name="template"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.template || "Template"}</FormLabel>
+                  <FormLabel>{t?.template || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -241,21 +241,15 @@ export function ConfigForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(PAPER_TEMPLATES).map(
-                        ([key, template]) => (
-                          <SelectItem key={key} value={key}>
-                            {template.label}
-                          </SelectItem>
-                        )
-                      )}
+                      {Object.keys(PAPER_TEMPLATES).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {options.template?.[key]?.label ?? ""}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {
-                      PAPER_TEMPLATES[
-                        field.value as keyof typeof PAPER_TEMPLATES
-                      ]?.description
-                    }
+                    {(field.value ? options.template?.[field.value] : undefined)?.description ?? ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -267,7 +261,7 @@ export function ConfigForm({
               name="layout"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.layout || "Layout"}</FormLabel>
+                  <FormLabel>{t?.layout || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -281,18 +275,15 @@ export function ConfigForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(PAPER_LAYOUTS).map(([key, layout]) => (
+                      {Object.keys(PAPER_LAYOUTS).map((key) => (
                         <SelectItem key={key} value={key}>
-                          {layout.label}
+                          {options.layout?.[key]?.label ?? ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {
-                      PAPER_LAYOUTS[field.value as keyof typeof PAPER_LAYOUTS]
-                        ?.description
-                    }
+                    {(field.value ? options.layout?.[field.value] : undefined)?.description ?? ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -304,7 +295,7 @@ export function ConfigForm({
               name="answerSheetType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.answer_sheet || "Answer Sheet"}</FormLabel>
+                  <FormLabel>{t?.answer_sheet || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -318,19 +309,15 @@ export function ConfigForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(ANSWER_SHEET_TYPES).map(([key, type]) => (
+                      {Object.keys(ANSWER_SHEET_TYPES).map((key) => (
                         <SelectItem key={key} value={key}>
-                          {type.label}
+                          {options.answerSheet?.[key]?.label ?? ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {
-                      ANSWER_SHEET_TYPES[
-                        field.value as keyof typeof ANSWER_SHEET_TYPES
-                      ]?.description
-                    }
+                    {(field.value ? options.answerSheet?.[field.value] : undefined)?.description ?? ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -342,11 +329,8 @@ export function ConfigForm({
         {/* Compose — Section Variants */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.compose || "Compose"}</CardTitle>
-            <CardDescription>
-              {t?.compose_desc ||
-                "Choose variants for each section of the exam paper"}
-            </CardDescription>
+            <CardTitle>{tx.config?.compose || ""}</CardTitle>
+            <CardDescription>{tx.config?.compose_desc || ""}</CardDescription>
           </CardHeader>
           <CardContent>
             <CompositionPanel
@@ -363,10 +347,8 @@ export function ConfigForm({
         {/* Header Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.header_settings || "Header Settings"}</CardTitle>
-            <CardDescription>
-              {t?.header_settings_desc || "Customize the exam paper header"}
-            </CardDescription>
+            <CardTitle>{t?.header_settings || ""}</CardTitle>
+            <CardDescription>{t?.header_settings_desc || ""}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <FormField
@@ -375,9 +357,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.school_logo || "School Logo"}</FormLabel>
+                    <FormLabel>{t?.school_logo || ""}</FormLabel>
                     <FormDescription>
-                      {t?.school_logo_desc || "Display school logo in header"}
+                      {t?.school_logo_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -399,9 +381,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.exam_title || "Exam Title"}</FormLabel>
+                    <FormLabel>{t?.exam_title || ""}</FormLabel>
                     <FormDescription>
-                      {t?.exam_title_desc || "Display exam title"}
+                      {t?.exam_title_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -423,9 +405,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.student_info || "Student Info"}</FormLabel>
+                    <FormLabel>{t?.student_info || ""}</FormLabel>
                     <FormDescription>
-                      {t?.student_info_desc || "Name and ID fields"}
+                      {t?.student_info_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -447,9 +429,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.instructions || "Instructions"}</FormLabel>
+                    <FormLabel>{t?.instructions || ""}</FormLabel>
                     <FormDescription>
-                      {t?.instructions_desc || "Display exam instructions"}
+                      {t?.instructions_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -470,23 +452,17 @@ export function ConfigForm({
               name="customInstructions"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel>
-                    {t?.custom_instructions || "Custom Instructions"}
-                  </FormLabel>
+                  <FormLabel>{t?.custom_instructions || ""}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={
-                        t?.custom_instructions_placeholder ||
-                        "Enter additional instructions..."
-                      }
+                      placeholder={t?.custom_instructions_placeholder || ""}
                       className="min-h-20"
                       {...field}
                       onBlur={() => triggerPreview()}
                     />
                   </FormControl>
                   <FormDescription>
-                    {t?.custom_instructions_desc ||
-                      "Additional instructions for students"}
+                    {t?.custom_instructions_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -498,10 +474,8 @@ export function ConfigForm({
         {/* Question Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.question_settings || "Question Settings"}</CardTitle>
-            <CardDescription>
-              {t?.question_settings_desc || "Customize question display"}
-            </CardDescription>
+            <CardTitle>{t?.question_settings || ""}</CardTitle>
+            <CardDescription>{t?.question_settings_desc || ""}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <FormField
@@ -510,11 +484,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {t?.question_numbers || "Question Numbers"}
-                    </FormLabel>
+                    <FormLabel>{t?.question_numbers || ""}</FormLabel>
                     <FormDescription>
-                      {t?.question_numbers_desc || "Show question numbers"}
+                      {t?.question_numbers_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -536,10 +508,8 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.points || "Points"}</FormLabel>
-                    <FormDescription>
-                      {t?.points_desc || "Show points per question"}
-                    </FormDescription>
+                    <FormLabel>{t?.points || ""}</FormLabel>
+                    <FormDescription>{t?.points_desc || ""}</FormDescription>
                   </div>
                   <FormControl>
                     <Switch
@@ -560,9 +530,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.question_type || "Question Type"}</FormLabel>
+                    <FormLabel>{t?.question_type || ""}</FormLabel>
                     <FormDescription>
-                      {t?.question_type_desc || "Show question type label"}
+                      {t?.question_type_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -584,11 +554,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {t?.shuffle_questions || "Shuffle Questions"}
-                    </FormLabel>
+                    <FormLabel>{t?.shuffle_questions || ""}</FormLabel>
                     <FormDescription>
-                      {t?.shuffle_questions_desc || "Randomize question order"}
+                      {t?.shuffle_questions_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -610,11 +578,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {t?.shuffle_options || "Shuffle Options"}
-                    </FormLabel>
+                    <FormLabel>{t?.shuffle_options || ""}</FormLabel>
                     <FormDescription>
-                      {t?.shuffle_options_desc || "Randomize option order"}
+                      {t?.shuffle_options_desc || ""}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -635,9 +601,7 @@ export function ConfigForm({
               name="answerLinesShort"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t?.short_answer_lines || "Short Answer Lines"}
-                  </FormLabel>
+                  <FormLabel>{t?.short_answer_lines || ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -651,8 +615,7 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {t?.short_answer_lines_desc ||
-                      "Number of lines for short answers"}
+                    {t?.short_answer_lines_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -664,7 +627,7 @@ export function ConfigForm({
               name="answerLinesEssay"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.essay_lines || "Essay Lines"}</FormLabel>
+                  <FormLabel>{t?.essay_lines || ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -677,9 +640,7 @@ export function ConfigForm({
                       }}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {t?.essay_lines_desc || "Number of lines for essay answers"}
-                  </FormDescription>
+                  <FormDescription>{t?.essay_lines_desc || ""}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -690,10 +651,8 @@ export function ConfigForm({
         {/* Print Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.print_settings || "Print Settings"}</CardTitle>
-            <CardDescription>
-              {t?.print_settings_desc || "Page and footer settings"}
-            </CardDescription>
+            <CardTitle>{t?.print_settings || ""}</CardTitle>
+            <CardDescription>{t?.print_settings_desc || ""}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <FormField
@@ -701,7 +660,7 @@ export function ConfigForm({
               name="pageSize"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.page_size || "Page Size"}</FormLabel>
+                  <FormLabel>{t?.page_size || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -716,7 +675,9 @@ export function ConfigForm({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="A4">A4</SelectItem>
-                      <SelectItem value="Letter">Letter</SelectItem>
+                      <SelectItem value="Letter">
+                        {tx.config?.letter ?? ""}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -729,7 +690,7 @@ export function ConfigForm({
               name="orientation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.orientation || "Orientation"}</FormLabel>
+                  <FormLabel>{t?.orientation || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -744,10 +705,10 @@ export function ConfigForm({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="portrait">
-                        {t?.portrait || "Portrait"}
+                        {t?.portrait || ""}
                       </SelectItem>
                       <SelectItem value="landscape">
-                        {t?.landscape || "Landscape"}
+                        {t?.landscape || ""}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -762,7 +723,7 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.page_numbers || "Page Numbers"}</FormLabel>
+                    <FormLabel>{t?.page_numbers || ""}</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -783,7 +744,7 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t?.total_pages || "Total Pages"}</FormLabel>
+                    <FormLabel>{t?.total_pages || ""}</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -803,12 +764,10 @@ export function ConfigForm({
               name="customFooter"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel>{t?.custom_footer || "Custom Footer"}</FormLabel>
+                  <FormLabel>{t?.custom_footer || ""}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={
-                        t?.custom_footer_placeholder || "Footer text..."
-                      }
+                      placeholder={t?.custom_footer_placeholder || ""}
                       {...field}
                       onBlur={() => triggerPreview()}
                     />
@@ -823,7 +782,7 @@ export function ConfigForm({
               name="versionCount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.version_count || "Version Count"}</FormLabel>
+                  <FormLabel>{t?.version_count || ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -834,8 +793,7 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {t?.version_count_desc ||
-                      "Number of exam versions (A, B, C...)"}
+                    {t?.version_count_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -847,10 +805,9 @@ export function ConfigForm({
         {/* Region Preset & Print Copies */}
         <Card>
           <CardHeader>
-            <CardTitle>{t?.region_copies || "Region & Print Copies"}</CardTitle>
+            <CardTitle>{tx.config?.region_copies || ""}</CardTitle>
             <CardDescription>
-              {t?.region_copies_desc ||
-                "Regional exam format and print quantity"}
+              {tx.config?.region_copies_desc || ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -859,7 +816,7 @@ export function ConfigForm({
               name="regionPreset"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.region_preset || "Region Preset"}</FormLabel>
+                  <FormLabel>{tx.config?.region_preset || ""}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value === "auto" ? undefined : value)
@@ -874,18 +831,17 @@ export function ConfigForm({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="auto">
-                        {t?.auto_detect || "Auto-detect"}
+                        {tx.config?.auto_detect || ""}
                       </SelectItem>
                       {Object.entries(REGION_PRESETS).map(([key, preset]) => (
                         <SelectItem key={key} value={key}>
-                          {isRTL ? preset.labelAr : preset.label}
+                          {standards[preset] ?? ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {t?.region_preset_desc ||
-                      "Applies regional formatting (headers, watermarks, etc.)"}
+                    {tx.config?.region_preset_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -897,7 +853,7 @@ export function ConfigForm({
               name="spareCopies"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.spare_copies || "Spare Copies"}</FormLabel>
+                  <FormLabel>{tx.config?.spare_copies || ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -908,7 +864,7 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {t?.spare_copies_desc || "Extra copies beyond enrollment"}
+                    {tx.config?.spare_copies_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -920,7 +876,7 @@ export function ConfigForm({
               name="customCopies"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t?.custom_copies || "Custom Copies"}</FormLabel>
+                  <FormLabel>{tx.config?.custom_copies || ""}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -929,7 +885,7 @@ export function ConfigForm({
                       placeholder={
                         recommendedCopies
                           ? String(recommendedCopies)
-                          : t?.auto_placeholder || "Auto"
+                          : tx.config?.auto_placeholder || ""
                       }
                       value={field.value ?? ""}
                       onChange={(e) =>
@@ -941,10 +897,7 @@ export function ConfigForm({
                   </FormControl>
                   <FormDescription>
                     {recommendedCopies
-                      ? (
-                          t?.recommended_copies ||
-                          "Recommended: {count} copies ({enrolled} enrolled + {spare} spare)"
-                        )
+                      ? (tx.config?.recommended_copies || "")
                           .replace("{count}", String(recommendedCopies))
                           .replace(
                             "{enrolled}",
@@ -957,8 +910,7 @@ export function ConfigForm({
                             "{spare}",
                             String(form.watch("spareCopies") ?? 2)
                           )
-                      : t?.custom_copies_desc ||
-                        "Override auto-calculated count"}
+                      : tx.config?.custom_copies_desc || ""}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -970,12 +922,10 @@ export function ConfigForm({
         {/* Actions */}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()}>
-            {t?.cancel || "Cancel"}
+            {t?.cancel || ""}
           </Button>
           <Button type="submit" disabled={isPending}>
-            {isPending
-              ? t?.saving || "Saving..."
-              : t?.save_settings || "Save Settings"}
+            {isPending ? t?.saving || "" : t?.save_settings || ""}
           </Button>
         </div>
       </form>

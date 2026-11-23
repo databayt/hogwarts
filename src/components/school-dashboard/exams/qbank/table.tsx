@@ -5,7 +5,7 @@
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Sparkles } from "lucide-react"
+import { Loader2, Plus, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useModal } from "@/components/atom/modal/context"
@@ -16,7 +16,7 @@ import {
   ErrorToast,
 } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
@@ -25,6 +25,8 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { deleteQuestion, getQuestions } from "./actions"
 import { getQuestionBankColumns, type QuestionBankRow } from "./columns"
 import { QuestionBankForm } from "./form"
+import { QuestionCard } from "./question-card"
+import { qbankT } from "./t"
 
 interface QuestionBankTableProps {
   initialData: QuestionBankRow[]
@@ -46,9 +48,9 @@ function QuestionBankTableInner({
   subjectOptions,
 }: QuestionBankTableProps) {
   const router = useRouter()
-  const { dictionary: hookDict } = useDictionary()
+  const fullDict = useDictionaryFallback<any>(dictionary)
   const { locale } = useLocale()
-  const t = hookDict?.school?.exams?.qbankUi
+  const t = qbankT(fullDict)
 
   // State for incremental loading
   const [data, setData] = useState<QuestionBankRow[]>(initialData)
@@ -71,9 +73,7 @@ function QuestionBankTableInner({
       try {
         // Never build the sentence from the question text — that mixes
         // scripts mid-string and breaks bidi rendering in Arabic.
-        const ok = await confirmDeleteDialog(
-          t?.deleteConfirm ?? "Delete this question?"
-        )
+        const ok = await confirmDeleteDialog(t.deleteConfirm ?? "")
         if (!ok) return
 
         // Optimistic remove
@@ -85,15 +85,11 @@ function QuestionBankTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(result.error || (t?.deleteFailed ?? "Failed to delete"))
+          ErrorToast(result.error || (t.deleteFailed ?? ""))
         }
       } catch (e) {
         refresh()
-        ErrorToast(
-          e instanceof Error
-            ? e.message
-            : (t?.deleteFailed ?? "Failed to delete")
-        )
+        ErrorToast(e instanceof Error ? e.message : (t.deleteFailed ?? ""))
       }
     },
     [refresh, t]
@@ -109,8 +105,9 @@ function QuestionBankTableInner({
         lang: locale,
         onDelete: handleDelete,
         subjects,
+        t,
       }),
-    [handleDelete, subjects, locale]
+    [handleDelete, subjects, locale, t]
   )
 
   const handleLoadMore = useCallback(async () => {
@@ -130,7 +127,7 @@ function QuestionBankTableInner({
             questionType: q.questionType,
             difficulty: q.difficulty,
             bloomLevel: q.bloomLevel,
-            subjectName: q.subject?.name || "Unknown",
+            subjectName: q.subject?.name || (t.list?.unknownSubject ?? ""),
             points: Number(q.points),
             source: q.source,
             timesUsed: q.analytics?.timesUsed || 0,
@@ -148,7 +145,7 @@ function QuestionBankTableInner({
     } finally {
       setIsLoading(false)
     }
-  }, [currentPage, perPage, isLoading, hasMore])
+  }, [currentPage, perPage, isLoading, hasMore, t])
 
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<QuestionBankRow>({
@@ -170,68 +167,100 @@ function QuestionBankTableInner({
     window.location.href = `/generate/questions/ai-generate${qs}`
   }
 
+  const addLabel = dictionary?.generate?.actions?.addQuestion ?? ""
+  const aiLabel = dictionary?.generate?.actions?.generateWithAI ?? ""
+
   return (
-    <div className="w-full">
-      <DataTable
+    <div className="flex w-full flex-col gap-2.5">
+      {/* Filters + add/generate. On a phone the controls grow to 44px and the
+          search takes a full row. */}
+      <DataTableToolbar
         table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={handleLoadMore}
+        className="max-md:[&_button]:min-h-11 max-md:[&_input]:h-11 max-md:[&_input]:w-full"
       >
-        <DataTableToolbar table={table}>
-          {!readOnly && (
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 gap-2"
-                onClick={() => openModal()}
-                aria-label={
-                  dictionary?.generate?.actions?.addQuestion || "Add Question"
-                }
-                title={
-                  dictionary?.generate?.actions?.addQuestion || "Add Question"
-                }
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {dictionary?.generate?.actions?.addQuestion || "Add Question"}
-                </span>
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="h-8 gap-2"
-                onClick={handleAIGenerate}
-                aria-label={
-                  dictionary?.generate?.actions?.generateWithAI || "AI Generate"
-                }
-                title={
-                  dictionary?.generate?.actions?.generateWithAI || "AI Generate"
-                }
-              >
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {dictionary?.generate?.actions?.generateWithAI ||
-                    "AI Generate"}
-                </span>
-              </Button>
-            </div>
-          )}
-        </DataTableToolbar>
-        <Modal
-          content={
-            <QuestionBankForm
-              dictionary={dictionary}
-              subjects={subjectOptions}
-              onSuccess={refresh}
-            />
-          }
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-2 max-md:min-h-11"
+              onClick={() => openModal()}
+              aria-label={addLabel}
+              title={addLabel}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{addLabel}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 gap-2 max-md:min-h-11"
+              onClick={handleAIGenerate}
+              aria-label={aiLabel}
+              title={aiLabel}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">{aiLabel}</span>
+            </Button>
+          </div>
+        )}
+      </DataTableToolbar>
+
+      {/* Phone: stacked cards. md and up: the table. Same `table` state. */}
+      <div className="md:hidden">
+        {data.length === 0 ? (
+          <p className="text-muted-foreground py-12 text-center text-sm">
+            {t.list?.empty ?? ""}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {table.getRowModel().rows.map((row) => (
+              <QuestionCard
+                key={row.id}
+                row={row.original}
+                t={t}
+                readOnly={readOnly}
+                onDelete={handleDelete}
+              />
+            ))}
+          </ul>
+        )}
+        {hasMore && (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 min-h-11 w-full"
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            aria-busy={isLoading}
+          >
+            {isLoading && <Loader2 className="me-2 size-4 animate-spin" />}
+            {t.list?.loadMore ?? ""}
+          </Button>
+        )}
+      </div>
+
+      <div className="hidden md:block">
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading}
+          onLoadMore={handleLoadMore}
         />
-      </DataTable>
+      </div>
+
+      <Modal
+        content={
+          <QuestionBankForm
+            dictionary={dictionary}
+            subjects={subjectOptions}
+            onSuccess={refresh}
+          />
+        }
+      />
     </div>
   )
 }

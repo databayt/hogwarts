@@ -13,6 +13,7 @@ import { useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { DEFAULT_COMPOSITION, VARIANT_REGISTRY } from "../templates/composition"
 import type { CompositionConfig, SlotName } from "../templates/composition"
@@ -21,15 +22,6 @@ interface CompositionPanelProps {
   value: CompositionConfig
   onChange: (config: CompositionConfig) => void
   locale: "en" | "ar"
-}
-
-const SLOT_LABELS: Record<SlotName, { en: string; ar: string }> = {
-  header: { en: "Header", ar: "الرأس" },
-  footer: { en: "Footer", ar: "التذييل" },
-  studentInfo: { en: "Student Info", ar: "بيانات الطالب" },
-  instructions: { en: "Instructions", ar: "التعليمات" },
-  answerSheet: { en: "Answer Sheet", ar: "ورقة الإجابة" },
-  cover: { en: "Cover", ar: "الغلاف" },
 }
 
 const SLOT_ORDER: SlotName[] = [
@@ -47,6 +39,8 @@ export function CompositionPanel({
   locale,
 }: CompositionPanelProps) {
   const isRTL = locale === "ar"
+  const dict = useDictionaryFallback()
+  const t = (dict as any)?.exams?.paper?.composition ?? {}
 
   const handleSlotChange = useCallback(
     (slot: SlotName, variant: string) => {
@@ -77,7 +71,7 @@ export function CompositionPanel({
       {/* Slot variant selectors */}
       {SLOT_ORDER.map((slot) => {
         const variants = VARIANT_REGISTRY[slot]
-        const label = SLOT_LABELS[slot][locale]
+        const label = t?.slots?.[slot] ?? ""
         const currentValue = value.slots[slot]
 
         return (
@@ -108,16 +102,14 @@ export function CompositionPanel({
       {/* Decorations */}
       <div className="border-t pt-4">
         <Label className="mb-3 block text-sm font-medium">
-          {isRTL ? "الزخارف" : "Decorations"}
+          {t.decorations ?? ""}
         </Label>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label className="text-sm">
-                {isRTL ? "شريط ملون" : "Accent Bar"}
-              </Label>
+              <Label className="text-sm">{t.accentBar ?? ""}</Label>
               <p className="text-muted-foreground text-xs">
-                {isRTL ? "شريط ملون أعلى الصفحة" : "Colored bar at page top"}
+                {t.accentBarDesc ?? ""}
               </p>
             </div>
             <Switch
@@ -130,11 +122,9 @@ export function CompositionPanel({
 
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label className="text-sm">
-                {isRTL ? "علامة مائية" : "Watermark"}
-              </Label>
+              <Label className="text-sm">{t.watermark ?? ""}</Label>
               <p className="text-muted-foreground text-xs">
-                {isRTL ? "نص مائل خلف المحتوى" : "Diagonal text behind content"}
+                {t.watermarkDesc ?? ""}
               </p>
             </div>
             <Switch
@@ -147,13 +137,9 @@ export function CompositionPanel({
 
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label className="text-sm">
-                {isRTL ? "إطار مزدوج" : "Double Frame"}
-              </Label>
+              <Label className="text-sm">{t.doubleFrame ?? ""}</Label>
               <p className="text-muted-foreground text-xs">
-                {isRTL
-                  ? "إطار مزدوج حول المحتوى"
-                  : "Double border around content"}
+                {t.doubleFrameDesc ?? ""}
               </p>
             </div>
             <Switch

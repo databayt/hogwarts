@@ -12,11 +12,14 @@ export function FamilySubmissionStatus({
   labels,
   lang,
   totalPoints,
+  timeZone,
 }: {
   submission: StudentSubmission | null
   labels: Record<string, unknown>
   lang: string
   totalPoints: number
+  /** The school's IANA zone (server component: no hook). */
+  timeZone?: string
 }) {
   const t = (k: string) => (labels?.[k] as string | undefined) ?? ""
   const graded =
@@ -33,7 +36,7 @@ export function FamilySubmissionStatus({
               ? t("submittedLate")
               : t("submitted")}
             {" · "}
-            {formatAssignmentDate(submission.submittedAt, lang, "datetime")}
+            {formatAssignmentDate(submission.submittedAt, lang, "datetime", timeZone)}
           </p>
           {graded && submission.score != null ? (
             <p className="font-medium tabular-nums">

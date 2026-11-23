@@ -22,7 +22,11 @@ import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scop
 import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
 import { updateAssignmentInformation } from "./actions"
-import { informationSchema, type InformationFormData } from "./validation"
+import { assignmentValidationOf } from "../../validation-messages"
+import {
+  createInformationSchema,
+  type InformationFormData,
+} from "./validation"
 
 interface InformationFormProps {
   assignmentId: string
@@ -34,6 +38,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ assignmentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const { dictionary } = useDictionary()
+    const formMessages = ((dictionary as any)?.assignments?.form ?? {}) as Record<string, string>
     const fd = (dictionary?.school as Record<string, any>)?.assignments
       ?.form as Record<string, any> | undefined
     // Type labels come from the dictionary (`school.assignments.detail.types`)
@@ -43,7 +48,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(informationSchema) as any,
+      resolver: zodResolver(
+        createInformationSchema(assignmentValidationOf(dictionary))
+      ) as any,
       defaultValues: {
         title: initialData?.title || "",
         gradeId: initialData?.gradeId || "",
@@ -92,14 +99,14 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               )
               if (!result.success) {
                 ErrorToast(
-                  actionErrorMessage(result.error, dictionary, "Failed to save")
+                  actionErrorMessage(result.error, dictionary, formMessages.saveFailed ?? "")
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, "Failed to save"))
+              ErrorToast(actionErrorMessage("UNKNOWN", dictionary, formMessages.saveFailed ?? ""))
               reject(err)
             }
           })
@@ -111,8 +118,8 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label={fd?.assignmentTitle || "Title"}
-            placeholder={fd?.enterTitle || "Enter assignment title"}
+            label={fd?.assignmentTitle ?? ""}
+            placeholder={fd?.enterTitle ?? ""}
             required
             disabled={isPending}
           />
@@ -123,15 +130,15 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
           />
           <SelectField
             name="type"
-            label={fd?.assignmentType || "Type"}
+            label={fd?.assignmentType ?? ""}
             options={[...typeOptions]}
             required
             disabled={isPending}
           />
           <TextareaField
             name="description"
-            label={fd?.description || "Description"}
-            placeholder={fd?.enterDescription || "Enter assignment description"}
+            label={fd?.description ?? ""}
+            placeholder={fd?.enterDescription ?? ""}
             disabled={isPending}
           />
         </form>

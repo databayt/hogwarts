@@ -173,6 +173,16 @@ export const featureDictionaries = {
     ar: () =>
       import("./dictionaries/ar/live-classes.json").then((m) => m.default),
   },
+  assignments: {
+    en: () =>
+      import("./dictionaries/en/assignments.json").then((m) => m.default),
+    ar: () =>
+      import("./dictionaries/ar/assignments.json").then((m) => m.default),
+  },
+  exams: {
+    en: () => import("./dictionaries/en/exams.json").then((m) => m.default),
+    ar: () => import("./dictionaries/ar/exams.json").then((m) => m.default),
+  },
   parentPortal: {
     en: () =>
       import("./dictionaries/en/parentPortal.json").then((m) => m.default),

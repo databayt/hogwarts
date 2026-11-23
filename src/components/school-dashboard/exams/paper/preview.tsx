@@ -41,14 +41,14 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || ""}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[600px] items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
               <p className="text-muted-foreground text-sm">
-                {t?.loading_preview || "Loading preview..."}
+                {t?.loading_preview || ""}
               </p>
             </div>
           </div>
@@ -61,12 +61,12 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || ""}</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
             <FileWarning className="h-4 w-4" />
-            <AlertTitle>{t?.error || "Error"}</AlertTitle>
+            <AlertTitle>{t?.error || ""}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         </CardContent>
@@ -78,12 +78,12 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || ""}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[600px] items-center justify-center">
             <p className="text-muted-foreground text-sm">
-              {t?.no_preview_data || "No data available for preview"}
+              {t?.no_preview_data || ""}
             </p>
           </div>
         </CardContent>
@@ -95,7 +95,7 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || ""}</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[600px] w-full" />
@@ -111,7 +111,7 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
+        <CardTitle>{t?.preview_title || ""}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[600px] w-full overflow-hidden rounded-md border">

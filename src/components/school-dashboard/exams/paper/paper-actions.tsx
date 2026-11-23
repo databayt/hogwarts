@@ -12,6 +12,7 @@ import { BlobProvider } from "@react-pdf/renderer"
 import { Download, Loader2, Printer } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { getTemplate } from "./templates"
 import type { ExamPaperData } from "./types"
@@ -21,8 +22,9 @@ interface PaperActionsProps {
   locale: "en" | "ar"
 }
 
-export function PaperActions({ data, locale }: PaperActionsProps) {
-  const isRTL = locale === "ar"
+export function PaperActions({ data }: PaperActionsProps) {
+  const dict = useDictionaryFallback()
+  const t = (dict as any)?.exams?.paper?.actions ?? {}
   const [isPrinting, setIsPrinting] = useState(false)
 
   if (!data) return null
@@ -71,13 +73,7 @@ export function PaperActions({ data, locale }: PaperActionsProps) {
               <Download className="h-4 w-4" />
             )}
             <span className="ms-2">
-              {loading
-                ? isRTL
-                  ? "جاري التحميل..."
-                  : "Preparing..."
-                : isRTL
-                  ? "تحميل PDF"
-                  : "Download PDF"}
+              {loading ? (t.preparing ?? "") : (t.downloadPdf ?? "")}
             </span>
           </Button>
 
@@ -93,13 +89,7 @@ export function PaperActions({ data, locale }: PaperActionsProps) {
               <Printer className="h-4 w-4" />
             )}
             <span className="ms-2">
-              {isPrinting
-                ? isRTL
-                  ? "جاري الطباعة..."
-                  : "Printing..."
-                : isRTL
-                  ? "طباعة"
-                  : "Print"}
+              {isPrinting ? (t.printing ?? "") : (t.print ?? "")}
             </span>
           </Button>
         </div>

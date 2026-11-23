@@ -64,12 +64,14 @@ import {
   TooltipTrigger,
   Tooltip as UITooltip,
 } from "@/components/ui/tooltip"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
+import { getQuestionTypeLabels } from "../config"
+import { fmt, qbankT } from "../t"
 import { getAnalyticsDashboard } from "./actions"
 import {
-  getDifficultyLabel,
-  getDiscriminationLabel,
+  getDifficultyKey,
+  getDiscriminationKey,
   getQualityColor,
 } from "./psychometrics"
 
@@ -121,8 +123,9 @@ interface DashboardData {
 }
 
 export function AnalyticsDashboard() {
-  const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.qbankUi?.analytics
+  const qt = qbankT(useDictionaryFallback<any>())
+  const t = qt.analytics
+  const typeLabels = getQuestionTypeLabels(qt)
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -134,10 +137,7 @@ export function AnalyticsDashboard() {
     if (result.success && result.data) {
       setData(result.data as DashboardData)
     } else {
-      setError(
-        ("error" in result && result.error) ||
-          (t?.loadFailed ?? "Failed to load analytics")
-      )
+      setError(("error" in result && result.error) || (t?.loadFailed ?? ""))
     }
     setIsLoading(false)
   }
@@ -158,7 +158,7 @@ export function AnalyticsDashboard() {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>{t?.error ?? "Error"}</AlertTitle>
+        <AlertTitle>{t?.error ?? ""}</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )
@@ -169,11 +169,11 @@ export function AnalyticsDashboard() {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <BarChart3 className="text-muted-foreground h-12 w-12" />
-          <h3 className="mt-4 text-lg font-semibold">No Analytics Available</h3>
+          <h3 className="mt-4 text-lg font-semibold">{t?.noDataTitle ?? ""}</h3>
           <p className="text-muted-foreground mt-2 text-center">
-            Analytics will appear here after exams are completed and graded.
+            {t?.noDataDescription ?? ""}
             <br />
-            At least 10 responses per question are needed for analysis.
+            {t?.noDataHint ?? ""}
           </p>
         </CardContent>
       </Card>
@@ -183,23 +183,27 @@ export function AnalyticsDashboard() {
   // Prepare chart data
   const difficultyChartData = [
     {
-      name: "Very Easy",
+      name: t?.difficultyLevels?.veryEasy ?? "",
       value: data.difficultyDistribution.veryEasy,
       color: "#22c55e",
     },
-    { name: "Easy", value: data.difficultyDistribution.easy, color: "#84cc16" },
     {
-      name: "Moderate",
+      name: t?.difficultyLevels?.easy ?? "",
+      value: data.difficultyDistribution.easy,
+      color: "#84cc16",
+    },
+    {
+      name: t?.difficultyLevels?.moderate ?? "",
       value: data.difficultyDistribution.moderate,
       color: "#eab308",
     },
     {
-      name: "Difficult",
+      name: t?.difficultyLevels?.difficult ?? "",
       value: data.difficultyDistribution.difficult,
       color: "#f97316",
     },
     {
-      name: "Very Difficult",
+      name: t?.difficultyLevels?.veryDifficult ?? "",
       value: data.difficultyDistribution.veryDifficult,
       color: "#ef4444",
     },
@@ -207,13 +211,25 @@ export function AnalyticsDashboard() {
 
   const qualityChartData = [
     {
-      name: "Excellent",
+      name: t?.qualityLevels?.excellent ?? "",
       value: data.qualityDistribution.excellent,
       color: "#22c55e",
     },
-    { name: "Good", value: data.qualityDistribution.good, color: "#84cc16" },
-    { name: "Fair", value: data.qualityDistribution.fair, color: "#eab308" },
-    { name: "Poor", value: data.qualityDistribution.poor, color: "#ef4444" },
+    {
+      name: t?.qualityLevels?.good ?? "",
+      value: data.qualityDistribution.good,
+      color: "#84cc16",
+    },
+    {
+      name: t?.qualityLevels?.fair ?? "",
+      value: data.qualityDistribution.fair,
+      color: "#eab308",
+    },
+    {
+      name: t?.qualityLevels?.poor ?? "",
+      value: data.qualityDistribution.poor,
+      color: "#ef4444",
+    },
   ].filter((d) => d.value > 0)
 
   return (
@@ -223,7 +239,7 @@ export function AnalyticsDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Questions
+              {t?.totalQuestions ?? ""}
             </CardTitle>
             <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -232,25 +248,7 @@ export function AnalyticsDashboard() {
               {data.summary.totalQuestions}
             </div>
             <p className="text-muted-foreground text-xs">
-              With sufficient data
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Good Quality</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.summary.goodQuestions}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {Math.round(
-                (data.summary.goodQuestions / data.summary.totalQuestions) * 100
-              )}
-              % of questions
+              {t?.withSufficientData ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -258,27 +256,51 @@ export function AnalyticsDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Needs Revision
+              {t?.goodQuality ?? ""}
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.needsRevise}</div>
+            <div className="text-2xl font-bold">
+              {data.summary.goodQuestions}
+            </div>
             <p className="text-muted-foreground text-xs">
-              {t?.considerUpdating ?? "Consider updating"}
+              {fmt(t?.percentOfQuestions, {
+                percent: Math.round(
+                  (data.summary.goodQuestions / data.summary.totalQuestions) *
+                    100
+                ),
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Should Retire</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.needsRevision ?? ""}
+            </CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.summary.needsRevise}</div>
+            <p className="text-muted-foreground text-xs">
+              {t?.considerUpdating ?? ""}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.shouldRetire ?? ""}
+            </CardTitle>
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.summary.needsRetire}</div>
             <p className="text-muted-foreground text-xs">
-              {t?.removeOrReplace ?? "Remove or replace"}
+              {t?.removeOrReplace ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -289,7 +311,7 @@ export function AnalyticsDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg Quality Score
+              {t?.avgQuality ?? ""}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -306,17 +328,14 @@ export function AnalyticsDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              Avg Difficulty
+              {t?.avgDifficulty ?? ""}
               <TooltipProvider>
                 <UITooltip>
                   <TooltipTrigger>
                     <HelpCircle className="text-muted-foreground h-4 w-4" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>
-                      {t?.difficultyDescription ??
-                        "Proportion of students answering correctly (p-value)"}
-                    </p>
+                    <p>{t?.difficultyDescription ?? ""}</p>
                   </TooltipContent>
                 </UITooltip>
               </TooltipProvider>
@@ -327,7 +346,9 @@ export function AnalyticsDashboard() {
               {(data.summary.avgDifficulty * 100).toFixed(1)}%
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              {getDifficultyLabel(data.summary.avgDifficulty)}
+              {t?.difficultyLevels?.[
+                getDifficultyKey(data.summary.avgDifficulty)
+              ] ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -335,17 +356,14 @@ export function AnalyticsDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              Avg Discrimination
+              {t?.avgDiscrimination ?? ""}
               <TooltipProvider>
                 <UITooltip>
                   <TooltipTrigger>
                     <HelpCircle className="text-muted-foreground h-4 w-4" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>
-                      {t?.discriminationDescription ??
-                        "Difference between high and low performers (D-index)"}
-                    </p>
+                    <p>{t?.discriminationDescription ?? ""}</p>
                   </TooltipContent>
                 </UITooltip>
               </TooltipProvider>
@@ -356,7 +374,9 @@ export function AnalyticsDashboard() {
               {data.summary.avgDiscrimination.toFixed(2)}
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              {getDiscriminationLabel(data.summary.avgDiscrimination)}
+              {t?.qualityLevels?.[
+                getDiscriminationKey(data.summary.avgDiscrimination)
+              ] ?? ""}
             </p>
           </CardContent>
         </Card>
@@ -366,11 +386,9 @@ export function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>
-              {t?.difficultyDistribution ?? "Difficulty Distribution"}
-            </CardTitle>
+            <CardTitle>{t?.difficultyDistribution ?? ""}</CardTitle>
             <CardDescription>
-              Spread of question difficulty across the bank
+              {t?.difficultyDistributionDesc ?? ""}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -398,11 +416,9 @@ export function AnalyticsDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>
-              {t?.qualityDistribution ?? "Quality Distribution"}
-            </CardTitle>
+            <CardTitle>{t?.qualityDistribution ?? ""}</CardTitle>
             <CardDescription>
-              Overall item quality based on psychometric analysis
+              {t?.qualityDistributionDesc ?? ""}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -428,26 +444,21 @@ export function AnalyticsDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Questions Needing Attention
+              {t?.flaggedTitle ?? ""}
             </CardTitle>
-            <CardDescription>
-              Questions flagged for revision or retirement based on psychometric
-              analysis
-            </CardDescription>
+            <CardDescription>{t?.flaggedDescription ?? ""}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t?.headers?.question ?? "Question"}</TableHead>
-                  <TableHead>{t?.headers?.subject ?? "Subject"}</TableHead>
-                  <TableHead>{t?.headers?.type ?? "Type"}</TableHead>
-                  <TableHead>{t?.headers?.quality ?? "Quality"}</TableHead>
-                  <TableHead>
-                    {t?.headers?.difficulty ?? "Difficulty"}
-                  </TableHead>
-                  <TableHead>{t?.headers?.issues ?? "Issues"}</TableHead>
-                  <TableHead>{t?.headers?.action ?? "Action"}</TableHead>
+                  <TableHead>{t?.headers?.question ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.subject ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.type ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.quality ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.difficulty ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.issues ?? ""}</TableHead>
+                  <TableHead>{t?.headers?.action ?? ""}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -459,7 +470,7 @@ export function AnalyticsDashboard() {
                     <TableCell>{q.subject}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {q.questionType.replace("_", " ")}
+                        {typeLabels[q.questionType] || q.questionType}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -486,7 +497,7 @@ export function AnalyticsDashboard() {
                             variant="outline"
                             className="text-xs"
                           >
-                            {flag.replace(/_/g, " ")}
+                            {t?.flags?.[flag] ?? flag.replace(/_/g, " ")}
                           </Badge>
                         ))}
                       </div>
@@ -501,7 +512,9 @@ export function AnalyticsDashboard() {
                               : "destructive"
                         }
                       >
-                        {q.recommendedAction}
+                        {(q.recommendedAction &&
+                          t?.actions?.[q.recommendedAction]) ||
+                          q.recommendedAction}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -514,11 +527,16 @@ export function AnalyticsDashboard() {
 
       {/* Refresh Button */}
       <div className="flex justify-end">
-        <Button variant="outline" onClick={loadData} disabled={isLoading}>
+        <Button
+          variant="outline"
+          className="max-md:min-h-11 max-md:w-full"
+          onClick={loadData}
+          disabled={isLoading}
+        >
           <RefreshCw
             className={cn("me-2 h-4 w-4", isLoading && "animate-spin")}
           />
-          Refresh Analytics
+          {t?.refresh ?? ""}
         </Button>
       </div>
     </div>

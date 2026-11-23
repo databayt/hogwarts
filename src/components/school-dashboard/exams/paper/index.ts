@@ -39,6 +39,7 @@ export { ANSWER_SHEET_TYPES, PAPER_LAYOUTS, PAPER_TEMPLATES } from "./types"
 // Validation schemas
 export {
   answerSheetTypeSchema,
+  createPaperConfigFormSchema,
   createPaperConfigSchema,
   deletePaperConfigSchema,
   downloadAnswerKeySchema,
@@ -60,7 +61,11 @@ export {
   validatePaperConfig,
 } from "./validation"
 
-export type { PaperConfigFormInput, PaperConfigFormOutput } from "./validation"
+export type {
+  PaperConfigFormInput,
+  PaperConfigFormOutput,
+  PaperValidationMessages,
+} from "./validation"
 
 // Configuration constants
 export {

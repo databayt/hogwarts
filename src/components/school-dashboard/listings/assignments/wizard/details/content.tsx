@@ -43,10 +43,9 @@ export default function DetailsContent() {
     >
       <FormLayout>
         <FormHeading
-          title={fd?.detailsAndGrading || "Details & Grading"}
+          title={fd?.detailsAndGrading ?? ""}
           description={
-            fd?.setGradingDetails ||
-            "Set the grading details, due date, and instructions."
+            fd?.setGradingDetails ?? ""
           }
         />
         <DetailsForm
