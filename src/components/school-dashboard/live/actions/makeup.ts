@@ -55,7 +55,10 @@ async function resolveActor(): Promise<
   | { ok: true; actor: MakeupActor }
   | { ok: false; response: ReturnType<typeof actionError> }
 > {
-  const ctx = await requireContext("start_live_class")
+  // `read_school_dashboard` also admits STAFF — a stage supervisor may be one;
+  // makeup-core holds every actor to their own classes, an admin or a
+  // supervisor of the class's stage.
+  const ctx = await requireContext("read_school_dashboard")
   if (!ctx.ok) return ctx
   return {
     ok: true,

@@ -152,6 +152,22 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     icon: Video,
     requiresAction: false,
   },
+  live_class_no_teacher: {
+    icon: Video,
+    requiresAction: true,
+  },
+  live_class_makeup_booked: {
+    icon: Video,
+    requiresAction: false,
+  },
+  live_class_makeup_moved: {
+    icon: Video,
+    requiresAction: false,
+  },
+  live_class_makeup_cancelled: {
+    icon: Video,
+    requiresAction: false,
+  },
   // Platform content-review lane (school submits -> DEVELOPER decides).
   content_review: {
     icon: ListChecks,
@@ -310,6 +326,10 @@ export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
     live_class_started: 1,
     live_class_cancelled: 14,
     live_class_recording_ready: 90,
+    live_class_no_teacher: 1,
+    live_class_makeup_booked: 14,
+    live_class_makeup_moved: 14,
+    live_class_makeup_cancelled: 14,
     content_review: 90,
     content_approved: 90,
     content_rejected: 90,

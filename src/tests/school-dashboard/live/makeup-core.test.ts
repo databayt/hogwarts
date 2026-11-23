@@ -15,7 +15,7 @@ import {
   afterLiveClassCreated,
   createLiveClassCore,
 } from "@/components/school-dashboard/live/actions/create-core"
-import { notifyClassCancelled } from "@/components/school-dashboard/live/actions/notifications"
+import { notifyMakeup } from "@/components/school-dashboard/live/actions/notifications"
 import { combinedGroupForSlot } from "@/components/school-dashboard/live/combined"
 import {
   cancelMakeup,
@@ -23,6 +23,7 @@ import {
   findScheduleConflicts,
   listMissedClasses,
   missedClassWhere,
+  noTeacherClassWhere,
   replanMakeup,
   suggestMakeupSlots,
   type MakeupActor,
@@ -61,7 +62,7 @@ vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
   liveSessionRevalidatePaths: () => ["/live-session"],
 }))
 vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
-  notifyClassCancelled: vi.fn(),
+  notifyMakeup: vi.fn(),
 }))
 vi.mock("@/components/school-dashboard/live/combined", () => ({
   combinedGroupForSlot: vi.fn(async () => null),
@@ -107,6 +108,7 @@ const missedRow = (over: Row = {}): Row => ({
   sectionId: "sec-7",
   subjectId: "sub-math",
   makeupForId: null,
+  coveredByUserId: null,
   timetableId: "tt-1",
   teacherId: "t-1",
   title: "Algebra",
@@ -189,6 +191,18 @@ describe("missedClassWhere", () => {
       sectionId: { not: null },
       subjectId: { not: null },
       makeupForId: null,
+      coveredByUserId: null,
+    })
+  })
+
+  it("a covered class is not missed; a class with no teacher yet can still be made up", () => {
+    expect(missedClassWhere(SCHOOL).coveredByUserId).toBeNull()
+    const w = noTeacherClassWhere(SCHOOL, new Date("2026-11-22T09:00:00Z"))
+    expect(w.status).toEqual({ in: ["scheduled", "live"] })
+    expect(w.coveredByUserId).toBeNull()
+    expect(w.scheduledStart).toEqual({ lte: new Date("2026-11-22T08:55:00Z") })
+    expect(w.participants).toEqual({
+      none: { role: { in: ["HOST", "CO_HOST"] }, joinedAt: { not: null } },
     })
   })
 })
@@ -611,10 +625,11 @@ describe("cancelMakeup", () => {
     })
     const cb = mock(after).mock.calls[0][0] as () => void
     cb()
-    expect(notifyClassCancelled).toHaveBeenCalledWith(
+    expect(notifyMakeup).toHaveBeenCalledWith(
       SCHOOL,
       "makeup-1",
-      "أُلغيت الحصة التعويضية"
+      "cancelled",
+      teacherActor.userId
     )
   })
 

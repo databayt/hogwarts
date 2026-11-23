@@ -4,6 +4,32 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## A class with no teacher — 2026-11-23 (Al-Ibda: 15 classes on 11-22)
+
+**On `main`, unit-tested; not deployed, not typechecked here, not seen in a browser. The migration
+`20261123120000_live_supervisors_cover` is NOT applied** (hand-applied, additive).
+
+- **Supervisors per stage** — `LiveClassSupervisor` (kg · primary · intermediate · secondary), picked by
+  an admin in the live-classes settings («مشرفو الحصص المباشرة», `supervisors-panel.tsx`,
+  `actions/supervisors.ts`). A section's stage comes from its grade through one pure rule, `stage.ts`
+  (the school's own grade/level names first, then gradeNumber ≤ 0 = kg, the level enum, the 1–6 / 7–9 / 10–12 ladder).
+- **No-show alert** — `/api/cron/live-class-no-show` every 5 min (quiet hours: hourly): a timetable class or
+  make-up 5 min past its start, no HOST/CO_HOST ever joined, not covered → admins + the stage's supervisors get
+  `live_class_no_teacher` (in_app + push, `deep_link /live/<id>/cover`), once per class (a notice row is the
+  dedupe). Rule + words: `no-show.ts`; scan: `no-show-core.ts`. Language is the SCHOOL's (users have none).
+- **Cover** — `/live/<id>/cover` (admin or stage supervisor; others go to the dashboard). «ادخل كمعلم الحصة»
+  → `coverSessionAction` sets `coveredByUserId/coveredAt` once (guarded write; never overwrites another cover)
+  and `join-core` treats that user as HOST of that session. The end-stale job does not close a covered class
+  while its host is in the room, and a covered class is not "missed".
+- **Make-up** — «احجز حصة تعويضية» opens the existing sheet for the no-teacher class: booking releases it
+  (`cancelled`, guarded) in the same transaction (`noTeacherClassWhere`). Stage supervisors may act for the
+  absent teacher. The sheet pre-selects the earliest free time with one «احجز هذا الوقت» button. Booked / moved /
+  cancelled now send their own notices (`live_class_makeup_*`, `notifyMakeup`) to students, guardians and the
+  teacher, actor excluded; the generic "scheduled" notice no longer fires for a make-up.
+- **Not done** — the room of a released class is not closed on the SFU (empty rooms close themselves); a
+  supervisor with role STAFF cannot enter an EXTERNAL-provider class through the room page (the cover button
+  goes to the meeting link directly); the admin missed shelf was already school-wide (`listMissedClasses`).
+
 ## From one class to the next — 2026-11-22 (teachers' group, week of 11-15)
 
 Read from the school's teachers' group and checked against production records and the video

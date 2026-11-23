@@ -45,7 +45,9 @@ import {
   liveListRevalidatePaths,
   liveSessionRevalidatePaths,
 } from "./actions/helpers"
-import { notifyClassCancelled } from "./actions/notifications"
+import { notifyMakeup } from "./actions/notifications"
+import { supervisesSection } from "./supervisors-core"
+import { NO_SHOW_AFTER_MINUTES } from "./no-show"
 import { combinedGroupForSlot, groupSectionIds } from "./combined"
 import {
   DEFAULT_SCHOOL_TZ,
@@ -145,8 +147,8 @@ const TX_OPTIONS = { timeout: 15_000, maxWait: 10_000 } as const
 
 /**
  * The predicate behind "a class that was missed": cancelled, never started
- * (`actualStart` null — also what the end-stale cron leaves behind), not the
- * practice room, not deleted, with a section AND a subject (an all-day open
+ * (`actualStart` null — also what the end-stale cron leaves behind), not
+ * covered by an admin or supervisor, not the practice room, not deleted, with a section AND a subject (an all-day open
  * room has no subject), and not itself a make-up (a make-up is never "missed").
  */
 export function missedClassWhere(
@@ -161,6 +163,37 @@ export function missedClassWhere(
     sectionId: { not: null },
     subjectId: { not: null },
     makeupForId: null,
+    // A class an admin or supervisor covered is not "missed" — someone took it.
+    coveredByUserId: null,
+  }
+}
+
+/**
+ * A class that is happening right now with NO teacher: `NO_SHOW_AFTER_MINUTES`
+ * past its start, still `scheduled` / `live`, no HOST or CO_HOST ever joined,
+ * not covered. The admin (or a supervisor) who sees «حصة بلا معلم» may book its
+ * make-up straight away instead of waiting for the end-stale cron to cancel it:
+ * booking releases the class (`cancelled`) in the same transaction.
+ */
+export function noTeacherClassWhere(
+  schoolId: string,
+  now: Date = new Date()
+): Prisma.ConferenceWhereInput {
+  return {
+    schoolId,
+    status: { in: ["scheduled", "live"] },
+    isPractice: false,
+    deletedAt: null,
+    sectionId: { not: null },
+    subjectId: { not: null },
+    makeupForId: null,
+    coveredByUserId: null,
+    scheduledStart: {
+      lte: new Date(now.getTime() - NO_SHOW_AFTER_MINUTES * 60_000),
+    },
+    participants: {
+      none: { role: { in: ["HOST", "CO_HOST"] }, joinedAt: { not: null } },
+    },
   }
 }
 
@@ -216,6 +249,21 @@ function mayActFor(
     !!teacherUserId &&
     teacherUserId === actor.userId
   )
+}
+
+/**
+ * `mayActFor`, plus the supervisors of the class's stage (an admin picks them
+ * in the live-class settings): they act for the absent teacher too.
+ */
+async function mayActForSection(
+  actor: MakeupActor,
+  teacherUserId: string | null | undefined,
+  sectionId: string | null | undefined,
+  client: Client = db
+): Promise<boolean> {
+  if (mayActFor(actor, teacherUserId)) return true
+  if (actor.role === "DEVELOPER") return true
+  return supervisesSection(actor.schoolId, actor.userId, sectionId, client)
 }
 
 /** Thrown inside a transaction so it rolls back; mapped to an actionError. */
@@ -467,20 +515,30 @@ export async function suggestMakeupSlots(
   const limit = opts.limit ?? 12
   const schoolId = actor.schoolId
 
+  const suggestSelect = {
+    id: true,
+    teacherId: true,
+    sectionId: true,
+    timetableId: true,
+    scheduledStart: true,
+    scheduledEnd: true,
+    teacher: { select: { userId: true } },
+    section: { select: { gradeId: true } },
+  } satisfies Prisma.ConferenceSelect
   const [missed, school, termRes] = await Promise.all([
-    db.conference.findFirst({
-      where: { ...missedClassWhere(schoolId), id: missedId },
-      select: {
-        id: true,
-        teacherId: true,
-        sectionId: true,
-        timetableId: true,
-        scheduledStart: true,
-        scheduledEnd: true,
-        teacher: { select: { userId: true } },
-        section: { select: { gradeId: true } },
-      },
-    }),
+    db.conference
+      .findFirst({
+        where: { ...missedClassWhere(schoolId), id: missedId },
+        select: suggestSelect,
+      })
+      .then(
+        (row) =>
+          row ??
+          db.conference.findFirst({
+            where: { ...noTeacherClassWhere(schoolId), id: missedId },
+            select: suggestSelect,
+          })
+      ),
     db.school.findUnique({
       where: { id: schoolId },
       select: { timezone: true, conferenceMaxDuration: true },
@@ -488,7 +546,9 @@ export async function suggestMakeupSlots(
     resolveActiveTerm(schoolId),
   ])
   if (!missed || !school) return actionError(ACTION_ERRORS.MAKEUP_NOT_ELIGIBLE)
-  if (!mayActFor(actor, missed.teacher.userId)) {
+  if (
+    !(await mayActForSection(actor, missed.teacher.userId, missed.sectionId))
+  ) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -636,31 +696,52 @@ async function createMakeupInTx(
   const schoolId = actor.schoolId
   if (!opts.locked) await lockMissed(tx, schoolId, input.missedId)
 
-  const missed = await tx.conference.findFirst({
+  const createSelect = {
+    id: true,
+    title: true,
+    description: true,
+    lang: true,
+    teacherId: true,
+    sectionId: true,
+    subjectId: true,
+    timetableId: true,
+    scheduledStart: true,
+    visibility: true,
+    catalogLessonId: true,
+    provider: true,
+    meetingUrl: true,
+    meetingProvider: true,
+    teacher: { select: { userId: true } },
+  } satisfies Prisma.ConferenceSelect
+  let missed = await tx.conference.findFirst({
     where: { ...missedClassWhere(schoolId), id: input.missedId },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      lang: true,
-      teacherId: true,
-      sectionId: true,
-      subjectId: true,
-      timetableId: true,
-      scheduledStart: true,
-      visibility: true,
-      catalogLessonId: true,
-      provider: true,
-      meetingUrl: true,
-      meetingProvider: true,
-      teacher: { select: { userId: true } },
-    },
+    select: createSelect,
   })
+  // A class running with no teacher (see `noTeacherClassWhere`) is released
+  // below, once the actor is known to be allowed to act for it.
+  let releasing = false
+  if (!missed) {
+    missed = await tx.conference.findFirst({
+      where: { ...noTeacherClassWhere(schoolId), id: input.missedId },
+      select: createSelect,
+    })
+    releasing = !!missed
+  }
   if (!missed || !missed.sectionId) {
     throw new MakeupAbort(ACTION_ERRORS.MAKEUP_NOT_ELIGIBLE)
   }
-  if (!mayActFor(actor, missed.teacher.userId)) {
+  if (
+    !(await mayActForSection(actor, missed.teacher.userId, missed.sectionId, tx))
+  ) {
     throw new MakeupAbort(ACTION_ERRORS.UNAUTHORIZED)
+  }
+  if (releasing) {
+    // Guarded: a teacher who walks in this very second keeps her class.
+    const { count } = await tx.conference.updateMany({
+      where: { ...noTeacherClassWhere(schoolId), id: missed.id },
+      data: { status: "cancelled" },
+    })
+    if (count !== 1) throw new MakeupAbort(ACTION_ERRORS.MAKEUP_NOT_ELIGIBLE)
   }
 
   const planned = await tx.conference.count({
@@ -762,6 +843,7 @@ export async function createMakeup(
     )
     // Only now — after the commit — is the class announced.
     afterLiveClassCreated(actor.schoolId, created)
+    after(() => notifyMakeup(actor.schoolId, created.id, "booked", actor.userId))
     revalidateLive()
     return { success: true, data: created }
   } catch (err) {
@@ -790,11 +872,14 @@ export async function cancelMakeup(
         id: true,
         status: true,
         lang: true,
+        sectionId: true,
         teacher: { select: { userId: true } },
       },
     })
     if (!makeup) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
-    if (!mayActFor(actor, makeup.teacher.userId)) {
+    if (
+      !(await mayActForSection(actor, makeup.teacher.userId, makeup.sectionId))
+    ) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     if (makeup.status !== "scheduled") {
@@ -810,8 +895,9 @@ export async function cancelMakeup(
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
 
-    const reason = MAKEUP_TEXT[pickLang(makeup.lang)].cancelled
-    after(() => notifyClassCancelled(actor.schoolId, makeup.id, reason))
+    after(() =>
+      notifyMakeup(actor.schoolId, makeup.id, "cancelled", actor.userId)
+    )
     revalidateLive()
     return { success: true, data: { id: makeup.id } }
   } catch {
@@ -840,13 +926,14 @@ export async function replanMakeup(
         status: true,
         lang: true,
         makeupForId: true,
+        sectionId: true,
         teacher: { select: { userId: true } },
       },
     })
     if (!old || !old.makeupForId) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
     }
-    if (!mayActFor(actor, old.teacher.userId)) {
+    if (!(await mayActForSection(actor, old.teacher.userId, old.sectionId))) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     if (old.status !== "scheduled") {
@@ -875,9 +962,9 @@ export async function replanMakeup(
       )
     }, TX_OPTIONS)
 
-    const reason = MAKEUP_TEXT[pickLang(old.lang)].replanned
-    after(() => notifyClassCancelled(actor.schoolId, old.id, reason))
+    // One notice — "moved" — for the new time; the cancelled one stays quiet.
     afterLiveClassCreated(actor.schoolId, created)
+    after(() => notifyMakeup(actor.schoolId, created.id, "moved", actor.userId))
     revalidateLive()
     return { success: true, data: created }
   } catch (err) {

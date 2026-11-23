@@ -1,6 +1,9 @@
 {
   "_note": "Generated from vercel.crons.full.json. Every job runs here: the 3 conference jobs moved on 2026-10-17 and the 4 admission/finance jobs (fee-due, fee-overdue, process-email-notifications, process-document-jobs) on 2026-10-19 — both GitHub bridges pinged ed.databayt.org, which 301s, and curl -f counts a 301 as success, so neither had run since the cutover. Keyed by cron expression (UTC) → cron route paths. funnel-apply moved from :17 to :00 on 2026-10-24 so it no longer wakes Neon on its own; the 17 trigger stays registered with no routes (removing a trigger needs the array edited, and re-adding one takes ~19h). Overnight quiet hours for the */15 and */30 groups live in cf/worker.js.",
   "schedules": {
+    "*/5 * * * *": [
+      "/api/cron/live-class-no-show"
+    ],
     "*/15 * * * *": [
       "/api/cron/publish-announcements",
       "/api/cron/process-push-notifications",
@@ -9,7 +12,8 @@
       "/api/cron/exam-lifecycle",
       "/api/cron/live-class-reminders",
       "/api/cron/process-email-notifications",
-      "/api/cron/end-stale-live-classes"
+      "/api/cron/end-stale-live-classes",
+      "/api/cron/live-class-no-show"
     ],
     "0 * * * *": [
       "/api/cron/expire-announcements",

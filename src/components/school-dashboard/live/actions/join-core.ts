@@ -62,13 +62,22 @@ async function resolveParticipantRole(
   /** The section(s) the class covers — several for a combined class. */
   sessionSectionIds: string[],
   sessionVisibility: ConferenceVisibility = "section",
-  isPractice = false
+  isPractice = false,
+  /** Whoever covered this class (an admin or stage supervisor took it over). */
+  coveredByUserId: string | null = null
 ): Promise<ConferenceParticipantRole | null> {
   const sessionSectionId =
     sessionSectionIds.length > 1
       ? { in: sessionSectionIds }
       : (sessionSectionIds[0] ?? null)
   if (userRole === "DEVELOPER") return "HOST"
+  // Cover: the person who took over an untaught class teaches it — HOST for
+  // THIS session only, whatever their role (a supervisor may be STAFF, who
+  // otherwise could not enter a section's room at all). Set by the cover
+  // action after its own authorisation, never by input.
+  if (!isPractice && coveredByUserId && coveredByUserId === userId) {
+    return "HOST"
+  }
   // The school's practice room: every member of THIS school, whatever the
   // role. Staff roles rehearse the teacher's tools (CO_HOST); students and
   // guardians are plain participants — a guardian is NOT an observer here.
@@ -249,6 +258,7 @@ export async function performLiveClassJoin(
         lang: true,
         recordingEnabled: true,
         studentsJoinMuted: true,
+        coveredByUserId: true,
         teacher: { select: { userId: true } },
         school: {
           select: {
@@ -308,7 +318,8 @@ export async function performLiveClassJoin(
     liveClass.teacher.userId,
     await sessionSectionIds(schoolId, liveClass),
     liveClass.visibility,
-    liveClass.isPractice
+    liveClass.isPractice,
+    liveClass.coveredByUserId
   )
   // School switch: guardians observe only where the school allows it.
   if (

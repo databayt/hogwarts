@@ -173,6 +173,12 @@ model Conference {
   makeupFor   Conference?  @relation("ConferenceMakeup", fields: [makeupForId], references: [id], onDelete: SetNull)
   makeups     Conference[] @relation("ConferenceMakeup")
 
+  // Cover («تغطية»): a school admin or a stage supervisor who took over a class
+  // its teacher never opened. They hold the HOST seat for THIS session only.
+  // A plain id (no relation): it is read next to the join, never joined.
+  coveredByUserId String?
+  coveredAt       DateTime?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -194,6 +200,7 @@ model Conference {
   @@index([deletedAt])
   @@index([schoolId, isPractice])
   @@index([schoolId, makeupForId])
+  @@index([coveredByUserId])
   @@map("live_class_sessions")
 }
 
@@ -355,4 +362,22 @@ model ConferenceLink {
   // Hot path: attachLiveClasses resolves the active term's default links.
   @@index([schoolId, termId, sectionId])
   @@map("live_class_default_links")
+}
+
+// Who is told when a class has no teacher, per school stage («مشرفو الحصص
+// المباشرة»). An admin picks people (ADMIN / STAFF / TEACHER users) for each
+// stage: kg | primary | intermediate | secondary. School ADMINs are always told;
+// this table adds the supervisors of the class's own stage.
+model LiveClassSupervisor {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("LiveClassSupervisions", fields: [userId], references: [id], onDelete: Cascade)
+  stage     String // "kg" | "primary" | "intermediate" | "secondary"
+  createdAt DateTime @default(now())
+
+  @@unique([schoolId, userId, stage])
+  @@index([schoolId, stage])
+  @@map("live_class_supervisors")
 }

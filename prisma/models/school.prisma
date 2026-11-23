@@ -501,6 +501,7 @@ model School {
   conferences          Conference[]
   conferenceRecordings ConferenceRecording[]
   conferenceLinks      ConferenceLink[]
+  liveClassSupervisors LiveClassSupervisor[]
 
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]

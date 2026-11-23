@@ -18,10 +18,15 @@
 // Only LiveKit sessions ever reach `live` (external pasted-link sessions stay
 // `scheduled`), so no provider filter is needed on that arm.
 //
+// A COVERED class (an admin or stage supervisor took it over — see
+// live/actions/cover.ts) with its covering host still in the room is never
+// closed by the clock arm, and a covered class is not "missed".
+//
 // A second arm closes `scheduled` sessions nobody ever started — the sweep that
 // keeps an online school's materialized day from accumulating forever.
 
 import { after, NextResponse } from "next/server"
+import type { Prisma } from "@prisma/client"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
@@ -33,6 +38,17 @@ import { closeRoom } from "@/components/school-dashboard/live/livekit/close-room
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
+
+/** A covered class whose covering host is in the room right now. */
+const COVERED_WITH_HOST_PRESENT: Prisma.ConferenceWhereInput = {
+  coveredByUserId: { not: null },
+  participants: {
+    some: {
+      role: { in: ["HOST", "CO_HOST"] },
+      activeSince: { not: null },
+    },
+  },
+}
 
 // Minutes past scheduledEnd a `live` session may run before we treat it as
 // stranded. Generous so a class running slightly over is never cut short.
@@ -59,6 +75,7 @@ export async function GET(req: Request) {
       isPractice: false,
       timetableId: { not: null },
       scheduledEnd: { lt: new Date() },
+      NOT: COVERED_WITH_HOST_PRESENT,
     },
     select: { id: true, schoolId: true },
     take: 1000,
@@ -79,6 +96,8 @@ export async function GET(req: Request) {
       deletedAt: null,
       // The practice room never ends by the clock.
       isPractice: false,
+      // Nor does a covered class while its covering host is in the room.
+      NOT: COVERED_WITH_HOST_PRESENT,
       OR: [
         { scheduledEnd: { lt: cutoff } },
         { timetableId: { not: null }, scheduledEnd: { lt: slotCutoff } },

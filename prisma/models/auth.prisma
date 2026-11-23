@@ -119,6 +119,7 @@ model User {
 
   // Conference relations
   conferenceParticipations ConferenceParticipant[] @relation("ConferenceParticipations")
+  liveClassSupervisions    LiveClassSupervisor[]    @relation("LiveClassSupervisions")
 
   // Messaging relations
   conversationsCreated        Conversation[]            @relation("ConversationCreator")

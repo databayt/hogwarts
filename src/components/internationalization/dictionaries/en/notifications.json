@@ -133,6 +133,10 @@
     "live_class_started": "Live class is now live",
     "live_class_cancelled": "Live class cancelled",
     "live_class_recording_ready": "Recording ready",
+    "live_class_no_teacher": "Class without a teacher",
+    "live_class_makeup_booked": "Make-up class booked",
+    "live_class_makeup_moved": "Make-up class moved",
+    "live_class_makeup_cancelled": "Make-up class cancelled",
     "content_review": "Pending platform review",
     "content_approved": "Content approved",
     "content_rejected": "Content needs changes"

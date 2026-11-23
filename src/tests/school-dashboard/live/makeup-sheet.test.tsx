@@ -46,6 +46,8 @@ const labels = {
   otherTime: "Another time",
   noSlots: "No time is free",
   confirm: "Confirm make-up class",
+  bookThis: "Book this time",
+  bestTitle: "Earliest free time",
   creating: "Scheduling the class…",
   scheduled: "The make-up class is scheduled.",
   replan: "Change the time",
@@ -143,12 +145,11 @@ describe("MakeupSheet", () => {
     h.create.mockResolvedValue({ success: true, data: { id: "makeup-1" } })
     await openSheet()
 
-    const confirm = screen.getByRole("button", {
-      name: "Confirm make-up class",
-    })
-    expect(confirm).toBeDisabled()
+    // Picking a time yourself brings the confirm button; it books YOUR choice.
     fireEvent.click(screen.getByRole("button", { name: "Period 3" }))
-    fireEvent.click(confirm)
+    fireEvent.click(
+      screen.getByRole("button", { name: "Confirm make-up class" })
+    )
 
     await waitFor(() =>
       expect(h.create).toHaveBeenCalledWith({
@@ -175,10 +176,13 @@ describe("MakeupSheet", () => {
     ).toBeInTheDocument()
     await waitFor(() => expect(h.suggest).toHaveBeenCalledTimes(2))
     expect(h.refresh).not.toHaveBeenCalled()
-    // The slot must be picked again.
+    // The choice is reset: the fresh earliest time is offered again.
     expect(
-      screen.getByRole("button", { name: "Confirm make-up class" })
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Confirm make-up class" })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Book this time" })
+    ).toBeInTheDocument()
   })
 
   it("reads a typed time in the school's zone, not the device's", async () => {
@@ -242,6 +246,30 @@ describe("MakeupSheet", () => {
       })
     )
     expect(h.create).not.toHaveBeenCalled()
+  })
+})
+
+describe("MakeupSheet — one tap", () => {
+  it("offers the earliest free time first and books it with one tap", async () => {
+    h.create.mockResolvedValue({ success: true, data: { id: "makeup-1" } })
+    await openSheet()
+
+    // Shown prominently, in the school's zone (Tokyo, UTC+9 → 14:00).
+    expect(screen.getByText("Earliest free time")).toBeInTheDocument()
+    expect(screen.getByText(/Tue, Dec 1 · 02:00 PM/)).toBeInTheDocument()
+    // No second confirm until the viewer picks something themselves.
+    expect(
+      screen.queryByRole("button", { name: "Confirm make-up class" })
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Book this time" }))
+    await waitFor(() =>
+      expect(h.create).toHaveBeenCalledWith({
+        missedId: "missed-1",
+        startIso: "2026-12-01T05:00:00.000Z",
+        endIso: "2026-12-01T05:45:00.000Z",
+      })
+    )
   })
 })
 

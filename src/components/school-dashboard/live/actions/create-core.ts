@@ -61,7 +61,11 @@ export function afterLiveClassCreated(
   session: CreatedSession
 ) {
   // Best-effort fan-out — failures here must not roll back the create.
-  after(() => notifyClassScheduled(schoolId, session.id))
+  // A make-up has its own notice (`notifyMakeup`, sent by makeup-core with the
+  // actor left out) — saying "scheduled" as well would tell everyone twice.
+  if (!session.makeupForId) {
+    after(() => notifyClassScheduled(schoolId, session.id))
+  }
 
   after(() => prewarm("Conference", session, { schoolId }))
   for (const path of liveListRevalidatePaths()) {

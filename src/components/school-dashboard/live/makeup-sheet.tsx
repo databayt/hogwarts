@@ -136,6 +136,9 @@ export function MakeupSheet({
   const [day, setDay] = useState<string | null>(null)
   const [slot, setSlot] = useState<MakeupSlotDto | null>(null)
   const [customOpen, setCustomOpen] = useState(false)
+  // The viewer picked a day / time / custom time themselves — the lower
+  // confirm button then books THEIR choice; untouched, the suggestion is one tap.
+  const [touched, setTouched] = useState(false)
   const [customDate, setCustomDate] = useState("")
   const [customTime, setCustomTime] = useState("")
   const [pending, startTransition] = useTransition()
@@ -155,11 +158,11 @@ export function MakeupSheet({
       if (id !== requestId.current) return
       if (isSuccess<MakeupSuggestions>(result)) {
         setData(result.data)
-        setDay((current) =>
-          result.data.days.some((d) => d.day === current)
-            ? current
-            : (result.data.days[0]?.day ?? null)
-        )
+        // One tap: the earliest free time is already chosen and shown as the
+        // primary action; the day / time chips below only change it.
+        setSlot(result.data.days[0]?.slots[0] ?? null)
+        setDay(result.data.days[0]?.day ?? null)
+        setTouched(false)
       } else {
         setData(null)
         setError(
@@ -225,15 +228,21 @@ export function MakeupSheet({
       ? { startIso: slot.startIso, endIso: slot.endIso }
       : null
 
-  function confirm() {
-    if (!chosen) return
+  // The earliest free time — the suggestion shown first and booked in one tap.
+  const best: { day: string; slot: MakeupSlotDto } | null = days[0]?.slots[0]
+    ? { day: days[0].day, slot: days[0].slots[0] }
+    : null
+  const pickedOther = customOpen || touched
+
+  function confirm(target: { startIso: string; endIso: string } | null = chosen) {
+    if (!target) return
     startTransition(async () => {
       setError(null)
       try {
         const result =
           mode === "replan" && makeupId
-            ? await replanMakeupAction({ makeupId, ...chosen })
-            : await createMakeupAction({ missedId, ...chosen })
+            ? await replanMakeupAction({ makeupId, ...target })
+            : await createMakeupAction({ missedId, ...target })
         if (isSuccess(result)) {
           SuccessToast(labels.scheduled)
           setOpen(false)
@@ -287,6 +296,36 @@ export function MakeupSheet({
             <p className="text-muted-foreground text-sm">{labels.noSlots}</p>
           ) : null}
 
+          {best && !customOpen ? (
+            <div
+              className="bg-muted/40 space-y-3 rounded-xl border p-4"
+              data-slot="makeup-best"
+            >
+              <p className="text-muted-foreground text-xs">
+                {labels.bestTitle}
+              </p>
+              <p className="text-lg font-semibold">
+                <bdi>
+                  {fmtDay(best.day)} · {fmtTime(best.slot.startIso)}
+                </bdi>
+              </p>
+              <Button
+                type="button"
+                className={cn(TOUCH, "w-full")}
+                disabled={pending}
+                aria-busy={pending}
+                onClick={() =>
+                  confirm({
+                    startIso: best.slot.startIso,
+                    endIso: best.slot.endIso,
+                  })
+                }
+              >
+                {pending ? labels.creating : labels.bookThis}
+              </Button>
+            </div>
+          ) : null}
+
           {days.length > 0 ? (
             <>
               <div className="space-y-2">
@@ -302,6 +341,7 @@ export function MakeupSheet({
                       onClick={() => {
                         setDay(d.day)
                         setSlot(null)
+                        setTouched(true)
                       }}
                     >
                       {fmtDay(d.day)}
@@ -327,6 +367,7 @@ export function MakeupSheet({
                           onClick={() => {
                             setSlot(s)
                             setCustomOpen(false)
+                            setTouched(true)
                           }}
                         >
                           {s.periodName ??
@@ -350,6 +391,7 @@ export function MakeupSheet({
                 onClick={() => {
                   setCustomOpen((v) => !v)
                   setSlot(null)
+                  setTouched(true)
                 }}
               >
                 {labels.otherTime}
@@ -387,15 +429,17 @@ export function MakeupSheet({
             </p>
           ) : null}
 
-          <Button
-            type="button"
-            className={cn(TOUCH, "w-full")}
-            disabled={!chosen || pending}
-            aria-busy={pending}
-            onClick={confirm}
-          >
-            {pending ? labels.creating : labels.confirm}
-          </Button>
+          {pickedOther || !best ? (
+            <Button
+              type="button"
+              className={cn(TOUCH, "w-full")}
+              disabled={!chosen || pending}
+              aria-busy={pending}
+              onClick={() => confirm()}
+            >
+              {pending ? labels.creating : labels.confirm}
+            </Button>
+          ) : null}
         </div>
       </SheetContent>
     </Sheet>

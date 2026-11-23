@@ -13,6 +13,12 @@ import { schoolNameDisplay } from "@/lib/school-name-format"
 
 import { sessionSectionIds } from "../combined"
 import { DEFAULT_SCHOOL_TZ } from "../day-window"
+import {
+  makeupAudience,
+  makeupNotice,
+  MAKEUP_NOTICE_TYPE,
+  type MakeupNoticeKind,
+} from "../makeup-notice"
 import { ON_ROSTER } from "../roster"
 
 type LiveEventKind =
@@ -622,3 +628,74 @@ export const notifyClassRecordingReady = (
   sessionId: string
 ) =>
   dispatch(schoolId, sessionId, "recordingReady", "live_class_recording_ready")
+
+/**
+ * A make-up class was booked, moved or cancelled — tell the section's students,
+ * their guardians and the class's teacher, in the app and on the phone, with a
+ * link to the make-up's own page. `actorUserId` (who just did it) is left out.
+ * The audience is the one every other notice of this file uses (`loadSession`).
+ */
+export async function notifyMakeup(
+  schoolId: string,
+  makeupId: string,
+  kind: MakeupNoticeKind,
+  actorUserId?: string | null
+): Promise<{ created: number }> {
+  try {
+    const resolved = await loadSession(schoolId, makeupId)
+    if (!resolved) return { created: 0 }
+    const { session, lang, teacherUserId } = resolved
+    const targets = makeupAudience({
+      teacherUserId,
+      studentUserIds: resolved.userIds,
+      guardianUserIds: [],
+      actorUserId,
+    })
+    if (targets.length === 0) return { created: 0 }
+
+    const locale = lang === "ar" ? "ar" : "en-US"
+    const day = new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: session.timeZone,
+    }).format(session.scheduledStart)
+    const time = new Intl.DateTimeFormat(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: session.timeZone,
+    }).format(session.scheduledStart)
+    const { title, body } = makeupNotice(kind, lang, {
+      what: session.title.replace(MAKEUP_TITLE_PREFIX, ""),
+      day,
+      time,
+    })
+    const route = session.routePath
+    const { created } = await dispatchNotificationsToAudience({
+      schoolId,
+      type: MAKEUP_NOTICE_TYPE[kind],
+      title,
+      body,
+      lang,
+      priority: "high",
+      channels: NOW_CHANNELS,
+      metadata: {
+        kind: `makeup_${kind}`,
+        sessionId: makeupId,
+        sectionId: session.sectionId,
+        url: route,
+        deep_link: route,
+      },
+      targetUserIds: targets,
+    })
+    return { created }
+  } catch (err) {
+    console.error("[live-class] notifyMakeup failed", {
+      schoolId,
+      makeupId,
+      kind,
+      err: err instanceof Error ? err.message : err,
+    })
+    return { created: 0 }
+  }
+}

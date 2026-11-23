@@ -18,9 +18,14 @@ import {
   getSchoolLiveUsage,
 } from "@/components/school-dashboard/live/actions/usage"
 import { GradeOnlinePolicy } from "@/components/school-dashboard/live/grade-online-policy"
+import { listLiveSupervisors } from "@/components/school-dashboard/live/actions/supervisors"
 import { SectionOnlinePolicy } from "@/components/school-dashboard/live/section-online-policy"
 import { SectionRecordingPolicy } from "@/components/school-dashboard/live/section-recording-policy"
 import { LiveSettingsForm } from "@/components/school-dashboard/live/settings-form"
+import {
+  LiveSupervisorsPanel,
+  type SupervisorsLabels,
+} from "@/components/school-dashboard/live/supervisors-panel"
 
 /**
  * The live-class settings panel — one component behind two doors:
@@ -44,6 +49,7 @@ export async function LiveSettingsPanel({
     gradesResult,
     usage,
     liveUsage,
+    supervisorsResult,
   ] = await Promise.all([
     getLiveSettings(),
     listLiveTerms(),
@@ -58,7 +64,17 @@ export async function LiveSettingsPanel({
     schoolId
       ? getSchoolLiveUsage(schoolId, currentMonthStart())
       : Promise.resolve(null),
+    listLiveSupervisors(),
   ])
+  const supervisors =
+    "success" in supervisorsResult && supervisorsResult.success
+      ? supervisorsResult.data
+      : null
+  const sv = (
+    dictionary?.liveClasses as
+      | { supervisors?: SupervisorsLabels }
+      | undefined
+  )?.supervisors
   const grades =
     "success" in gradesResult && gradesResult.success ? gradesResult.data : []
   if (!("success" in settings) || !settings.success) {
@@ -408,6 +424,12 @@ export async function LiveSettingsPanel({
           },
         }}
       />
+      {supervisors && sv ? (
+        <LiveSupervisorsPanel
+          initial={supervisors}
+          labels={sv}
+        />
+      ) : null}
     </div>
   )
 }

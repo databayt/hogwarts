@@ -344,7 +344,9 @@
       "MAKEUP_CONFLICT": "This time clashes with another class.",
       "MAKEUP_ALREADY_PLANNED": "A make-up class is already planned for this class.",
       "MAKEUP_NOT_ELIGIBLE": "This class cannot be made up."
-    }
+    },
+    "bookThis": "Book this time",
+    "bestTitle": "Earliest time free for the teacher and the section"
   },
   "errors": {
     "notAuthenticated": "You need to sign in.",
@@ -746,5 +748,61 @@
     "denied": "Notifications are blocked for this site in your browser settings. Allow them to get class alerts.",
     "failed": "Couldn't turn alerts on. Try again.",
     "done": "Done. Class alerts will arrive on this device."
+  },
+  "cover": {
+    "title": "A class with no teacher",
+    "description": "The class started at {time} and the teacher has not joined yet.",
+    "classLabel": "Class",
+    "timeLabel": "Time",
+    "waitingLabel": "Students",
+    "waiting": "{n} waiting in the room",
+    "waitingNone": "Nobody is in the room yet",
+    "enter": "Enter as the class teacher",
+    "entering": "Entering…",
+    "makeup": "Book a make-up class",
+    "taken": "Someone else is already covering this class.",
+    "mine": "You are covering this class. Enter whenever you like.",
+    "over": "The class time is over. You can still book a make-up class.",
+    "error": "Could not open the class. Please try again."
+  },
+  "supervisors": {
+    "title": "Live-class supervisors",
+    "description": "Pick, for each stage, who is alerted when a class has started five minutes ago and its teacher has not joined. School admins are always alerted.",
+    "stages": {
+      "kg": "Kindergarten",
+      "primary": "Primary",
+      "intermediate": "Intermediate",
+      "secondary": "Secondary"
+    },
+    "roles": {
+      "ADMIN": "Admin",
+      "STAFF": "Staff",
+      "TEACHER": "Teacher"
+    },
+    "search": "Search by name or email",
+    "searchHint": "Type at least two characters",
+    "noResults": "No results",
+    "none": "Nobody picked yet",
+    "add": "Add",
+    "remove": "Remove {name}",
+    "error": "Could not save the change. Please try again."
+  },
+  "noShow": {
+    "title": "Class without a teacher",
+    "body": "{what} — started at {time} and the teacher has not joined. Cover it or book a make-up."
+  },
+  "makeupNotice": {
+    "booked": {
+      "title": "Make-up class: {what}",
+      "body": "The missed {what} class has a make-up: {day} at {time}"
+    },
+    "moved": {
+      "title": "Make-up class moved",
+      "body": "The {what} make-up class moved to {day} at {time}"
+    },
+    "cancelled": {
+      "title": "Make-up class cancelled",
+      "body": "The {what} make-up class on {day} at {time} was cancelled"
+    }
   }
 }

@@ -98,6 +98,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/live-class-no-show",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/expire-live-recordings",
       "schedule": "30 2 * * *"
     },
