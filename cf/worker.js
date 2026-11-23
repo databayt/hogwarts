@@ -26,7 +26,7 @@ import crons from "./crons.json"
 // Khartoum/Kigali) the frequent groups run on the hour only, so the database
 // wakes once an hour instead of every 15 minutes. The jobs are queue sweeps
 // and the next run picks up whatever waited.
-const QUIET_CRONS = new Set(["*/15 * * * *", "*/30 * * * *"])
+const QUIET_CRONS = new Set(["*/5 * * * *", "*/15 * * * *", "*/30 * * * *"])
 const QUIET_FROM_UTC = 20
 const QUIET_UNTIL_UTC = 2
 
@@ -207,6 +207,18 @@ async function collectRum(request, env) {
   return accepted
 }
 
+// ---- Which container instance serves the site ---------------------------------
+// Normally "main". A secret change does not reach a running container: a busy
+// Durable Object keeps serving on the previous Worker version, so a restart can
+// land on the old env (2026-11-22, the database move: five restarts, all on the
+// old database). Changing CONTAINER_NAME together with the secrets makes the new
+// version address a NEW Durable Object, which starts a fresh container from the
+// current env; the old one is then stopped through the ops route (?stop=<name>).
+function containerName(env) {
+  const name = typeof env.CONTAINER_NAME === "string" ? env.CONTAINER_NAME.trim() : ""
+  return name || "main"
+}
+
 // ---- Shared WhatsApp bridge for other databayt Workers ------------------------
 // The Evolution process in this container (cf/entry.cjs, 127.0.0.1:8080) also
 // carries Space's linked phone, so Space needs no container of its own
@@ -217,7 +229,7 @@ async function collectRum(request, env) {
 // own instance name; schools use school_<id>.
 export class WhatsappBridge extends WorkerEntrypoint {
   fetch(request) {
-    return getContainer(this.env.HOGWARTS, "main").fetch(
+    return getContainer(this.env.HOGWARTS, containerName(this.env)).fetch(
       switchPort(request, 8080)
     )
   }
@@ -238,9 +250,13 @@ async function restartContainer(request, env) {
   if (!env.CRON_SECRET || auth !== "Bearer " + env.CRON_SECRET) {
     return new Response("Not Found", { status: 404 })
   }
-  await getContainer(env.HOGWARTS, "main").stop()
+  // ?stop=<name> stops a PREVIOUS instance (after CONTAINER_NAME changed) —
+  // never two WhatsApp bridges on one linked phone.
+  const other = new URL(request.url).searchParams.get("stop")
+  const name = other && /^[a-z0-9-]{1,40}$/.test(other) ? other : containerName(env)
+  await getContainer(env.HOGWARTS, name).stop()
   return new Response(
-    "stopped — the next request starts the container with the current secrets\n"
+    "stopped " + name + " — the next request starts the container with the current secrets\n"
   )
 }
 
@@ -254,14 +270,14 @@ export default {
     const cacheable =
       request.method === "GET" &&
       EDGE_CACHEABLE.some((re) => re.test(url.pathname))
-    if (!cacheable) return getContainer(env.HOGWARTS, "main").fetch(request)
+    if (!cacheable) return getContainer(env.HOGWARTS, containerName(env)).fetch(request)
 
     const cache = caches.default
     const key = edgeCacheKey(url, request)
     const hit = await cache.match(key)
     if (hit) return stamped(hit, "hit")
 
-    const response = await getContainer(env.HOGWARTS, "main").fetch(
+    const response = await getContainer(env.HOGWARTS, containerName(env)).fetch(
       identityRequest(request)
     )
     if (freezable(response)) {
@@ -281,7 +297,7 @@ export default {
       console.log("cron: quiet hours, skipped", controller.cron)
       return
     }
-    const container = getContainer(env.HOGWARTS, "main")
+    const container = getContainer(env.HOGWARTS, containerName(env))
     const run = async (path) => {
       const started = Date.now()
       try {

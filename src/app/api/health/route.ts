@@ -59,6 +59,8 @@ interface HealthCheck {
   version: string
   environment: string
   uptime: number
+  /** Which container instance answered (cf/worker.js CONTAINER_NAME) — proves a switch reached it. */
+  container: string
   checks: {
     database: HealthCheckResult
     memory: HealthCheckResult
@@ -293,6 +295,7 @@ export async function GET(request: NextRequest) {
       version: process.env.npm_package_version || "1.0.0",
       environment: process.env.NODE_ENV || "unknown",
       uptime: process.uptime ? Math.round(process.uptime()) : 0,
+      container: process.env.CONTAINER_NAME?.trim() || "main",
       checks,
     }
 
@@ -356,6 +359,7 @@ export async function GET(request: NextRequest) {
       version: process.env.npm_package_version || "1.0.0",
       environment: process.env.NODE_ENV || "unknown",
       uptime: process.uptime ? Math.round(process.uptime()) : 0,
+      container: process.env.CONTAINER_NAME?.trim() || "main",
       checks: {
         database: { status: "fail", error: "Health check failed" },
         memory: { status: "fail", error: "Health check failed" },

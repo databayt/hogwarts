@@ -316,13 +316,27 @@ point_app_at() {
   : "${CF_BUILD_DIR:?CF_BUILD_DIR (a deploy-cloudflare.sh build)}" "${PROD_ENV:?PROD_ENV (the production dotenv)}"
   [[ -d $CF_BUILD_DIR ]] || die "$CF_BUILD_DIR does not exist — build first"
   out=$(mktemp -t db-move.XXXXXX.json)
-  DBU=$pooled DIU=$direct EVU=$evo node -e '
+  # A NEW container name with the new secrets: the new Worker version then
+  # addresses a fresh Durable Object that starts its container from the current
+  # env. Restarting the old one is not enough — a busy Durable Object keeps
+  # serving on the previous version and restarts on the old env (2026-11-22).
+  local prev next
+  prev=$(cat "$MOVE_DIR/container-name" 2>/dev/null || echo main)
+  next="main-$(date +%Y%m%d%H%M)"
+  DBU=$pooled DIU=$direct EVU=$evo CN=$next node -e '
     process.stdout.write(JSON.stringify({
-      DATABASE_URL: process.env.DBU, DIRECT_URL: process.env.DIU, EVOLUTION_DATABASE_URL: process.env.EVU }))' > "$out"
-  say "secrets → Worker (DATABASE_URL, DIRECT_URL, EVOLUTION_DATABASE_URL; host $(host_of "$pooled"))"
+      DATABASE_URL: process.env.DBU, DIRECT_URL: process.env.DIU, EVOLUTION_DATABASE_URL: process.env.EVU,
+      CONTAINER_NAME: process.env.CN }))' > "$out"
+  say "secrets → Worker (DATABASE_URL, DIRECT_URL, EVOLUTION_DATABASE_URL, CONTAINER_NAME=$next; host $(host_of "$pooled"))"
   pnpm exec wrangler secret bulk "$out" >/dev/null; rm -f "$out"
   say "deploy from $CF_BUILD_DIR"
   CF_BUILD_DIR=$CF_BUILD_DIR scripts/deploy-cloudflare.sh "$PROD_ENV" deploy
+  echo "$next" > "$MOVE_DIR/container-name"
+  # The old container holds a WhatsApp bridge on the same phone: stop it, once
+  # the new version is live (two bridges on one linked phone fight).
+  sleep 20
+  say "stop the previous container ($prev)"
+  curl -fsS -X POST "$SITE/__ops/container/restart?stop=$prev" -H "authorization: Bearer $(kc cf-hogwarts-CRON_SECRET)" >/dev/null || say "!! could not stop $prev — stop it by hand"
 }
 
 # Restart the container until the app's connections show up on $1 (a libpq URL
