@@ -2,17 +2,24 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
-import { QuizContent } from "@/components/school-dashboard/exams/quiz/content"
+import {
+  QuizContent,
+  type QuizSearchParams,
+} from "@/components/school-dashboard/exams/quiz/content"
 
 interface QuizPageProps {
   params: Promise<{
     lang: Locale
     subdomain: string
   }>
+  searchParams: Promise<QuizSearchParams>
 }
 
-export default async function QuizPage({ params }: QuizPageProps) {
+export default async function QuizPage({
+  params,
+  searchParams,
+}: QuizPageProps) {
   const { lang } = await params
 
-  return <QuizContent lang={lang} />
+  return <QuizContent lang={lang} searchParams={await searchParams} />
 }

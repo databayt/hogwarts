@@ -29,3 +29,16 @@ export interface QuizSubjectFilter {
   name: string
   slug: string
 }
+
+export interface QuizPage {
+  items: QuizItem[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
+export interface QuizSummary {
+  totalQuizzes: number
+  avgQuestions: number
+}

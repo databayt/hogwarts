@@ -2,9 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { useTransition } from "react"
 import Link from "next/link"
-import { BookOpen, Clock, FileText, Play, Zap } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  Play,
+  Zap,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,9 +44,32 @@ interface QuizListProps {
   quizzes: QuizItem[]
   subjects: QuizSubjectFilter[]
   questionStats: QuizQuestionStats[]
+  page: number
+  pageCount: number
+  total: number
+  pageSize: number
+  subjectId: string
+  type: string
+  catalogMode: boolean
+  canBrowseCatalog: boolean
 }
 
-export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
+const ALL = "all"
+const CATALOG = "__catalog"
+
+export function QuizList({
+  quizzes,
+  subjects,
+  questionStats,
+  page,
+  pageCount,
+  total,
+  pageSize,
+  subjectId,
+  type,
+  catalogMode,
+  canBrowseCatalog,
+}: QuizListProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.quizUi
   // New keys live in the `exams` namespace (not in the TS types yet)
@@ -50,36 +82,53 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
     MEDIUM: cfg?.difficulty?.medium ?? "",
     HARD: cfg?.difficulty?.hard ?? "",
   }
-  const [subjectFilter, setSubjectFilter] = useState<string>("all")
-  const [typeFilter, setTypeFilter] = useState<string>("all")
 
-  const filtered = useMemo(() => {
-    return quizzes.filter((q) => {
-      if (subjectFilter !== "all" && q.subjectSlug !== subjectFilter)
-        return false
-      if (typeFilter !== "all" && q.examType !== typeFilter) return false
-      return true
-    })
-  }, [quizzes, subjectFilter, typeFilter])
+  // Filters and the page live in the URL: the server returns one page at a time
+  const router = useRouter()
+  const pathname = usePathname()
+  const current = useSearchParams()
+  const [pending, startTransition] = useTransition()
 
-  const filteredStats = useMemo(() => {
-    if (subjectFilter === "all") return questionStats
-    const subject = subjects.find((s) => s.slug === subjectFilter)
-    if (!subject) return questionStats
-    return questionStats.filter((s) => s.catalogSubjectId === subject.id)
-  }, [questionStats, subjectFilter, subjects])
+  const navigate = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(current.toString())
+    for (const [k, v] of Object.entries(patch)) {
+      if (v) next.set(k, v)
+      else next.delete(k)
+    }
+    const qs = next.toString()
+    startTransition(() => router.push(qs ? `${pathname}?${qs}` : pathname))
+  }
+
+  const onSubject = (value: string) => {
+    if (value === CATALOG)
+      navigate({ scope: "catalog", subject: null, page: null })
+    else if (value === ALL) navigate({ scope: null, subject: null, page: null })
+    else navigate({ subject: value, page: null })
+  }
+  const subjectValue = subjectId || (catalogMode ? CATALOG : ALL)
+  const typeValue = type || ALL
+
+  const filtered = quizzes
+  const filteredStats = questionStats
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const to = (page - 1) * pageSize + quizzes.length
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+        <Select value={subjectValue} onValueChange={onSubject}>
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder={t?.allSubjects ?? ""} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t?.allSubjects ?? ""}</SelectItem>
+            <SelectItem value={ALL}>
+              {catalogMode ? (x.mySubjects ?? "") : (t?.allSubjects ?? "")}
+            </SelectItem>
+            {canBrowseCatalog && (
+              <SelectItem value={CATALOG}>{x.allCatalog ?? ""}</SelectItem>
+            )}
             {subjects.map((s) => (
-              <SelectItem key={s.id} value={s.slug}>
+              <SelectItem key={s.id} value={s.id}>
                 {s.name}
               </SelectItem>
             ))}
@@ -87,8 +136,10 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
         </Select>
 
         <Tabs
-          value={typeFilter}
-          onValueChange={setTypeFilter}
+          value={typeValue}
+          onValueChange={(v) =>
+            navigate({ type: v === ALL ? null : v, page: null })
+          }
           className="max-w-full"
         >
           <TabsList className="max-w-full overflow-x-auto">
@@ -108,7 +159,10 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="grid grid-cols-1 gap-4 aria-busy:opacity-60 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          aria-busy={pending}
+        >
           {filtered.map((quiz) => (
             <Card key={quiz.id} className="max-md:bg-muted max-md:border-0">
               <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
@@ -205,6 +259,49 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
             </Card>
           ))}
         </div>
+      )}
+
+      {pageCount > 1 && (
+        <nav
+          aria-label={x.pager?.label ?? ""}
+          className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between"
+        >
+          <p className="text-muted-foreground text-sm">
+            {(x.pager?.showing ?? "")
+              .replace("{from}", String(from))
+              .replace("{to}", String(to))
+              .replace("{total}", String(total))}
+          </p>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-11 flex-1 gap-1 sm:min-h-9 sm:flex-none"
+              disabled={page <= 1 || pending}
+              onClick={() =>
+                navigate({ page: page - 1 > 1 ? String(page - 1) : null })
+              }
+            >
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+              {x.pager?.previous ?? ""}
+            </Button>
+            <span className="text-muted-foreground px-2 text-sm tabular-nums">
+              {(x.pager?.pageOf ?? "")
+                .replace("{page}", String(page))
+                .replace("{pages}", String(pageCount))}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-11 flex-1 gap-1 sm:min-h-9 sm:flex-none"
+              disabled={page >= pageCount || pending}
+              onClick={() => navigate({ page: String(page + 1) })}
+            >
+              {x.pager?.next ?? ""}
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          </div>
+        </nav>
       )}
 
       {filteredStats.length > 0 && (

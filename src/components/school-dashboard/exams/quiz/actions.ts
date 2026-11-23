@@ -6,40 +6,50 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { localize } from "@/components/translation/localize"
 
-import type { QuizItem, QuizQuestionStats, QuizSubjectFilter } from "./types"
+import {
+  buildQuestionWhere,
+  buildQuizWhere,
+  pageArgs,
+  QUIZ_EXAM_TYPES,
+  QUIZ_PAGE_SIZE,
+  type QuizFilters,
+} from "./query"
+import type {
+  QuizPage,
+  QuizQuestionStats,
+  QuizSubjectFilter,
+  QuizSummary,
+} from "./types"
 
-const QUIZ_EXAM_TYPES = ["quiz", "diagnostic"]
+/** One page of quizzes (never the whole catalog) plus the total for the pager. */
+export async function getQuizzes(filters?: QuizFilters): Promise<QuizPage> {
+  const where = buildQuizWhere(filters)
+  const pageSize = filters?.pageSize ?? QUIZ_PAGE_SIZE
+  const { page, take, skip } = pageArgs(filters?.page, pageSize)
 
-export async function getQuizzes(filters?: {
-  catalogSubjectId?: string
-  examType?: string
-  enrolledSubjectIds?: string[]
-}): Promise<QuizItem[]> {
-  const where: Record<string, unknown> = {
-    status: "PUBLISHED",
-    examType: { in: QUIZ_EXAM_TYPES },
-  }
-
-  if (filters?.catalogSubjectId) {
-    where.subjectId = filters.catalogSubjectId
-  } else if (filters?.enrolledSubjectIds) {
-    where.subjectId = { in: filters.enrolledSubjectIds }
-  }
-
-  if (filters?.examType && QUIZ_EXAM_TYPES.includes(filters.examType)) {
-    where.examType = filters.examType
-  }
-
-  const [rawExams, { schoolId }] = await Promise.all([
+  const [rawExams, total, { schoolId }] = await Promise.all([
     db.exam.findMany({
       where,
-      include: {
+      // Only what the cards render: no questions / description / JSON columns.
+      select: {
+        id: true,
+        title: true,
+        lang: true,
+        examType: true,
+        durationMinutes: true,
+        totalMarks: true,
+        totalQuestions: true,
+        usageCount: true,
         subject: { select: { name: true, slug: true, color: true } },
         chapter: { select: { name: true } },
         lesson: { select: { name: true } },
       },
-      orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
+      // id last: a stable order, so pages never overlap or skip rows
+      orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }, { id: "asc" }],
+      take,
+      skip,
     }),
+    db.exam.count({ where }),
     getTenantContext(),
   ])
 
@@ -47,68 +57,88 @@ export async function getQuizzes(filters?: {
     ? await localize("Exam", rawExams, { schoolId })
     : rawExams
 
-  return exams.map((e) => ({
-    id: e.id,
-    title: e.title,
-    examType: e.examType,
-    durationMinutes: e.durationMinutes,
-    totalMarks: e.totalMarks,
-    totalQuestions: e.totalQuestions,
-    usageCount: e.usageCount,
-    name: e.subject.name,
-    subjectSlug: e.subject.slug,
-    subjectColor: e.subject.color,
-    chapterName: e.chapter?.name ?? null,
-    lessonName: e.lesson?.name ?? null,
-  }))
+  return {
+    items: exams.map((e) => ({
+      id: e.id,
+      title: e.title,
+      examType: e.examType,
+      durationMinutes: e.durationMinutes,
+      totalMarks: e.totalMarks,
+      totalQuestions: e.totalQuestions,
+      usageCount: e.usageCount,
+      name: e.subject.name,
+      subjectSlug: e.subject.slug,
+      subjectColor: e.subject.color,
+      chapterName: e.chapter?.name ?? null,
+      lessonName: e.lesson?.name ?? null,
+    })),
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  }
 }
 
+/** Headline numbers over the whole filtered set, by aggregate. */
+export async function getQuizSummary(
+  filters?: QuizFilters
+): Promise<QuizSummary> {
+  const agg = await db.exam.aggregate({
+    where: buildQuizWhere(filters),
+    _count: { _all: true },
+    _avg: { totalQuestions: true },
+  })
+  return {
+    totalQuizzes: agg._count._all,
+    avgQuestions: Math.round(agg._avg.totalQuestions ?? 0),
+  }
+}
+
+/** Question-bank breakdown per subject — groupBy, never the rows. */
 export async function getQuizQuestionStats(
   catalogSubjectId?: string,
   enrolledSubjectIds?: string[]
 ): Promise<QuizQuestionStats[]> {
-  const where: Record<string, unknown> = {
-    status: "PUBLISHED" as const,
-    approvalStatus: "APPROVED" as const,
-  }
+  const where = buildQuestionWhere(catalogSubjectId, enrolledSubjectIds)
 
-  if (catalogSubjectId) {
-    where.catalogSubjectId = catalogSubjectId
-  } else if (enrolledSubjectIds) {
-    where.catalogSubjectId = { in: enrolledSubjectIds }
-  }
-
-  const questions = await db.question.findMany({
+  const groups = await db.question.groupBy({
+    by: ["catalogSubjectId", "difficulty", "questionType"],
     where,
-    select: {
-      catalogSubjectId: true,
-      catalogSubject: { select: { name: true } },
-      difficulty: true,
-      questionType: true,
-    },
+    _count: { _all: true },
   })
 
+  const ids = [
+    ...new Set(
+      groups.map((g) => g.catalogSubjectId).filter((id): id is string => !!id)
+    ),
+  ]
+  const names = ids.length
+    ? await db.subject.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, name: true },
+      })
+    : []
+  const nameById = new Map(names.map((s) => [s.id, s.name]))
+
   const statsMap = new Map<string, QuizQuestionStats>()
-
-  for (const q of questions) {
-    if (!q.catalogSubjectId) continue
-
-    let stats = statsMap.get(q.catalogSubjectId)
+  for (const g of groups) {
+    if (!g.catalogSubjectId) continue
+    const count = g._count._all
+    let stats = statsMap.get(g.catalogSubjectId)
     if (!stats) {
       stats = {
-        catalogSubjectId: q.catalogSubjectId,
-        name: q.catalogSubject?.name ?? "Unknown",
+        catalogSubjectId: g.catalogSubjectId,
+        name: nameById.get(g.catalogSubjectId) ?? "Unknown",
         totalQuestions: 0,
         byDifficulty: {},
         byType: {},
       }
-      statsMap.set(q.catalogSubjectId, stats)
+      statsMap.set(g.catalogSubjectId, stats)
     }
-
-    stats.totalQuestions++
-    stats.byDifficulty[q.difficulty] =
-      (stats.byDifficulty[q.difficulty] ?? 0) + 1
-    stats.byType[q.questionType] = (stats.byType[q.questionType] ?? 0) + 1
+    stats.totalQuestions += count
+    stats.byDifficulty[g.difficulty] =
+      (stats.byDifficulty[g.difficulty] ?? 0) + count
+    stats.byType[g.questionType] = (stats.byType[g.questionType] ?? 0) + count
   }
 
   return Array.from(statsMap.values()).sort(

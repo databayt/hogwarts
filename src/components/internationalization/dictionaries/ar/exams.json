@@ -616,7 +616,16 @@
   },
   "quiz": {
     "minutes": "{count} دقيقة",
-    "points": "{count} درجة"
+    "points": "{count} درجة",
+    "allCatalog": "كل مواد المنهج",
+    "mySubjects": "موادي",
+    "pager": {
+      "label": "صفحات الاختبارات",
+      "previous": "السابق",
+      "next": "التالي",
+      "pageOf": "صفحة {page} من {pages}",
+      "showing": "عرض {from}-{to} من {total}"
+    }
   },
   "mock": {
     "minutes": "{count} دقيقة",

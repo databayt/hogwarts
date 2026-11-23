@@ -9,37 +9,59 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { getEnrolledSubjectIds } from "../lib/scope"
 import { getStudentAttempts } from "../shared/attempt-actions"
 import { AttemptHistory } from "../shared/attempt-history"
 import {
   getQuizQuestionStats,
+  getQuizSummary,
   getQuizzes,
   getSubjectsForQuizFilter,
 } from "./actions"
 import { QuizList } from "./list"
+import { clampPage } from "./query"
+import { resolveQuizScope } from "./scope"
 
-export async function QuizContent({ lang }: { lang?: Locale } = {}) {
+export interface QuizSearchParams {
+  page?: string
+  subject?: string
+  type?: string
+  scope?: string
+}
+
+export async function QuizContent({
+  lang,
+  searchParams,
+}: { lang?: Locale; searchParams?: QuizSearchParams } = {}) {
   const dictionary = await getDictionary((lang ?? "ar") as Locale)
   const d = dictionary?.school?.exams?.quizUi
   const { schoolId } = await getTenantContext()
   const session = await auth()
   const role = session?.user?.role
 
-  // For students/guardians, scope to enrolled catalog subjects
-  const enrolledSubjectIds =
-    schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
-      ? await getEnrolledSubjectIds(role, session?.user?.id, schoolId)
-      : null
-
+  const scope = await resolveQuizScope(role, session?.user?.id, schoolId)
   const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
 
-  const [quizzes, questionStats, subjects, attempts] = await Promise.all([
-    getQuizzes({
-      enrolledSubjectIds: enrolledSubjectIds ?? undefined,
-    }),
-    getQuizQuestionStats(undefined, enrolledSubjectIds ?? undefined),
-    getSubjectsForQuizFilter(enrolledSubjectIds ?? undefined),
+  // Staff may widen to the whole catalog; it is still paginated.
+  const catalogMode =
+    scope.canBrowseCatalog && searchParams?.scope === "catalog"
+  const baseScope = catalogMode ? undefined : scope.subjectIds
+
+  const subjects = await getSubjectsForQuizFilter(baseScope)
+  // A subject outside the viewer's scope is ignored, never honoured
+  const subjectId = subjects.some((s) => s.id === searchParams?.subject)
+    ? searchParams?.subject
+    : undefined
+
+  const filters = {
+    catalogSubjectId: subjectId,
+    examType: searchParams?.type,
+    enrolledSubjectIds: baseScope,
+  }
+
+  const [quizPage, summary, questionStats, attempts] = await Promise.all([
+    getQuizzes({ ...filters, page: clampPage(searchParams?.page) }),
+    getQuizSummary(filters),
+    getQuizQuestionStats(subjectId, baseScope),
     isStudentOrGuardian ? getStudentAttempts() : Promise.resolve([]),
   ])
 
@@ -47,14 +69,7 @@ export async function QuizContent({ lang }: { lang?: Locale } = {}) {
     (sum, s) => sum + s.totalQuestions,
     0
   )
-
-  const avgQuestions =
-    quizzes.length > 0
-      ? Math.round(
-          quizzes.reduce((sum, q) => sum + (q.totalQuestions ?? 0), 0) /
-            quizzes.length
-        )
-      : 0
+  const avgQuestions = summary.avgQuestions
 
   return (
     <div className="space-y-6">
@@ -73,7 +88,7 @@ export async function QuizContent({ lang }: { lang?: Locale } = {}) {
           </CardHeader>
           <CardContent className="max-md:px-4 max-md:pb-4">
             <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
-              {quizzes.length}
+              {summary.totalQuizzes}
             </div>
             <p className="text-muted-foreground text-xs max-md:hidden">
               {d?.availableQuizzes}
@@ -134,9 +149,17 @@ export async function QuizContent({ lang }: { lang?: Locale } = {}) {
       </div>
 
       <QuizList
-        quizzes={quizzes}
+        quizzes={quizPage.items}
         subjects={subjects}
-        questionStats={questionStats}
+        questionStats={questionStats.slice(0, 12)}
+        page={quizPage.page}
+        pageCount={quizPage.pageCount}
+        total={quizPage.total}
+        pageSize={quizPage.pageSize}
+        subjectId={subjectId ?? ""}
+        type={searchParams?.type ?? ""}
+        catalogMode={catalogMode}
+        canBrowseCatalog={scope.canBrowseCatalog}
       />
 
       {isStudentOrGuardian && attempts.length > 0 && (

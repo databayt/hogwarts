@@ -616,7 +616,16 @@
   },
   "quiz": {
     "minutes": "{count} min",
-    "points": "{count} pts"
+    "points": "{count} pts",
+    "allCatalog": "All catalog subjects",
+    "mySubjects": "My subjects",
+    "pager": {
+      "label": "Quiz pages",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages}",
+      "showing": "Showing {from}-{to} of {total}"
+    }
   },
   "mock": {
     "minutes": "{count} min",
