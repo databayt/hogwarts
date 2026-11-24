@@ -272,6 +272,9 @@ async function resolveRequestHost(
   }
 }
 
+/** Stay signed in: a 30-day web session that slides forward while in use. */
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60
+
 /**
  * Build the NextAuth options for one request (Auth.js v5 lazy
  * initialization). The cookie Domain attribute must follow the root domain
@@ -284,7 +287,7 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
     adapter: MultiTenantPrismaAdapter(db),
     session: {
       strategy: "jwt",
-      maxAge: 24 * 60 * 60, // 24 hours
+      maxAge: SESSION_MAX_AGE, // 30 days; updateAge slides it forward on use
       updateAge: process.env.NODE_ENV === "production" ? 5 * 60 : 60 * 60, // 5 minutes in prod (for critical updates), 1 hour in dev
       generateSessionToken: () => {
         const bytes = new Uint8Array(32)
@@ -369,7 +372,7 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
               path: "/",
               secure: process.env.NODE_ENV === "production",
               domain: cookieDomain,
-              maxAge: 24 * 60 * 60,
+              maxAge: SESSION_MAX_AGE,
             })
           } catch {
             // cookies() may not be available in all contexts
@@ -418,7 +421,7 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           path: "/",
           secure: process.env.NODE_ENV === "production",
           domain: cookieDomain,
-          maxAge: 24 * 60 * 60, // 24 hours - matches session.maxAge
+          maxAge: SESSION_MAX_AGE, // 30 days - matches session.maxAge
         },
       },
       callbackUrl: {
@@ -599,7 +602,7 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           if (trigger === "signIn") {
             authLogger.debug("JWT: Forcing session update after signIn")
             token.iat = Math.floor(Date.now() / 1000)
-            token.exp = Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 24 hours
+            token.exp = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE // 30 days
             // Force session refresh by updating token
             token.sessionToken = `session_${Date.now()}`
             // Force session update by changing a critical field
@@ -749,7 +752,7 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
                 path: "/",
                 secure: process.env.NODE_ENV === "production",
                 domain: cookieDomain,
-                maxAge: 24 * 60 * 60,
+                maxAge: SESSION_MAX_AGE,
               })
             }
           } catch {

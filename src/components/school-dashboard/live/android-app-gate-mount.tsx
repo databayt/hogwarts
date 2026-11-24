@@ -1,5 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { auth } from "@/auth"
 import { getSchoolTimeZone } from "@/components/school-dashboard/attendance/core/school-day"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { loadFeature } from "@/components/internationalization/namespaces"
@@ -23,9 +24,10 @@ export async function AndroidAppGateMount({
   const loc = lang === "en" ? "en" : "ar"
   const app = schoolAndroidApp(subdomain, loc)
   if (!app || !subdomain) return null
-  const [school, dict] = await Promise.all([
+  const [school, dict, session] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     loadFeature("liveClasses", loc) as Promise<Record<string, any>>,
+    auth().catch(() => null),
   ])
   const schoolId = school.success ? school.data?.id : undefined
   const timeZone = schoolId ? await getSchoolTimeZone(schoolId) : null
@@ -35,6 +37,7 @@ export async function AndroidAppGateMount({
       subdomain={subdomain}
       lang={loc}
       timeZone={timeZone}
+      signedIn={!!session?.user?.id}
       labels={{ ...g, title: g.title.replaceAll("{app}", app.name) }}
     />
   )

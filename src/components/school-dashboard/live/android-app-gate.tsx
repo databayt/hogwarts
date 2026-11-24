@@ -2,17 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useSyncExternalStore } from "react"
+import { useState, useSyncExternalStore, type MouseEvent } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { typographyVariants } from "@/lib/typography"
 
 import { apkUrlFor } from "./android-app"
-import { reportWebFallback } from "./android-gate-actions"
+import { createAppHandoffCode, reportWebFallback } from "./android-gate-actions"
 import {
   APP_STORAGE_KEY,
   buildGateIntentUrl,
+  buildHandoffIntentUrl,
   hasAppFlag,
   parseCookies,
   schoolDateString,
@@ -61,11 +62,14 @@ export function AndroidAppGate({
   lang,
   timeZone,
   labels,
+  signedIn = false,
 }: {
   subdomain: string
   lang: string
   timeZone?: string | null
   labels: AppGateLabels
+  /** A web session exists: «open the app» hands it over as a one-time code. */
+  signedIn?: boolean
 }) {
   const [confirming, setConfirming] = useState(false)
   const gated = useSyncExternalStore(
@@ -106,6 +110,24 @@ export function AndroidAppGate({
     apk
   )
   const rtl = lang !== "en"
+
+  const openApp = async (e: MouseEvent) => {
+    if (!signedIn) return // plain link, no code
+    e.preventDefault()
+    let code: string | null = null
+    try {
+      code = (await createAppHandoffCode())?.code ?? null
+    } catch {
+      // fall through: open the app without a code
+    }
+    location.href = buildHandoffIntentUrl(
+      location.host,
+      location.pathname,
+      location.search,
+      apk,
+      code
+    )
+  }
 
   const letThrough = () => {
     setCookie(WEB_OK_COOKIE, schoolDateString(timeZone), 2 * DAY)
@@ -154,6 +176,7 @@ export function AndroidAppGate({
             <p className={typographyVariants.pageDescription}>{labels.why}</p>
             <a
               href={intent}
+              onClick={openApp}
               className={cn(buttonVariants({ size: "lg" }), "h-14 w-full")}
             >
               {labels.open}

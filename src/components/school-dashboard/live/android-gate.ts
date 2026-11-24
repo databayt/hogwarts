@@ -105,3 +105,24 @@ export function buildGateIntentUrl(
 ): string {
   return buildIntentUrl(host, `${pathname}${search}`, apkUrl)
 }
+
+/** Query param carrying the one-time handoff code into the app. */
+export const APP_LOGIN_PARAM = "app_login"
+
+/**
+ * Same intent as `buildGateIntentUrl`, with the handoff code appended to the
+ * https target's query. The code goes only in the target, never in the
+ * `browser_fallback_url` (the APK link).
+ */
+export function buildHandoffIntentUrl(
+  host: string,
+  pathname: string,
+  search: string,
+  apkUrl: string,
+  code: string | null | undefined
+): string {
+  if (!code) return buildGateIntentUrl(host, pathname, search, apkUrl)
+  const q = new URLSearchParams(search)
+  q.set(APP_LOGIN_PARAM, code)
+  return buildGateIntentUrl(host, pathname, `?${q.toString()}`, apkUrl)
+}

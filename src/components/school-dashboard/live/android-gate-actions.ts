@@ -4,6 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import {
+  HANDOFF_MAX_LIVE,
+  HANDOFF_TTL_MS,
+  handoffIdentifier,
+  hashHandoffCode,
+  newHandoffCode,
+} from "@/lib/app-handoff"
 import { db } from "@/lib/db"
 
 const TEXT = {
@@ -65,5 +72,43 @@ export async function reportWebFallback(
   } catch (error) {
     console.error("[reportWebFallback]", error)
     return { notified: 0 }
+  }
+}
+
+/**
+ * A signed-in web session mints a 60-second, single-use code the app trades
+ * for tokens (POST /api/mobile/auth/handoff). Only the hash is stored.
+ * Returns null when not signed in or on any failure — the caller then opens
+ * the app without a code.
+ */
+export async function createAppHandoffCode(): Promise<{ code: string } | null> {
+  try {
+    const session = await auth()
+    const userId = session?.user?.id
+    const schoolId = session?.user?.schoolId
+    if (!userId || !schoolId) return null
+
+    const identifier = handoffIdentifier(userId, schoolId)
+    const now = new Date()
+    await db.verificationToken.deleteMany({
+      where: { email: identifier, expires: { lte: now } },
+    })
+    const live = await db.verificationToken.count({
+      where: { email: identifier, expires: { gt: now } },
+    })
+    if (live >= HANDOFF_MAX_LIVE) return null
+
+    const code = newHandoffCode()
+    await db.verificationToken.create({
+      data: {
+        email: identifier,
+        token: hashHandoffCode(code),
+        expires: new Date(now.getTime() + HANDOFF_TTL_MS),
+      },
+    })
+    return { code }
+  } catch (error) {
+    console.error("[createAppHandoffCode]", error)
+    return null
   }
 }

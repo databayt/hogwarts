@@ -124,3 +124,30 @@ describe("buildGateIntentUrl", () => {
     expect(url).toContain(`S.browser_fallback_url=${encodeURIComponent(apk)};end`)
   })
 })
+
+describe("buildHandoffIntentUrl", () => {
+  const apk = "https://cdn.databayt.org/balqalam/app/alabidae/alabidae.apk"
+  it("appends the code to the target, keeping path and query", async () => {
+    const { buildHandoffIntentUrl } = await import(
+      "@/components/school-dashboard/live/android-gate"
+    )
+    const url = buildHandoffIntentUrl("a.balqalam.com", "/ar/live/abc", "?x=1", apk, "CODE_1")
+    expect(url.startsWith("intent://a.balqalam.com/ar/live/abc?x=1&app_login=CODE_1#Intent;")).toBe(true)
+  })
+  it("keeps the fallback untouched and free of the code", async () => {
+    const { buildHandoffIntentUrl } = await import(
+      "@/components/school-dashboard/live/android-gate"
+    )
+    const url = buildHandoffIntentUrl("a.balqalam.com", "/ar", "", apk, "CODE_1")
+    expect(url).toContain(`S.browser_fallback_url=${encodeURIComponent(apk)};end`)
+    expect(url.split("S.browser_fallback_url")[1]).not.toContain("CODE_1")
+  })
+  it("without a code equals the plain gate url", async () => {
+    const { buildHandoffIntentUrl, buildGateIntentUrl } = await import(
+      "@/components/school-dashboard/live/android-gate"
+    )
+    expect(buildHandoffIntentUrl("h", "/p", "?q=1", apk, null)).toBe(
+      buildGateIntentUrl("h", "/p", "?q=1", apk)
+    )
+  })
+})

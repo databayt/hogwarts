@@ -21,7 +21,7 @@ if (!process.env.AUTH_SECRET) {
 export const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET)
 
 const ACCESS_TOKEN_EXPIRY = "24h"
-const REFRESH_TOKEN_EXPIRY = "7d"
+const REFRESH_TOKEN_EXPIRY = "90d" // sliding: every refresh mints a new one
 
 export async function generateAccessToken(user: {
   id: string
