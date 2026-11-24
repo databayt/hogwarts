@@ -363,6 +363,21 @@ async function applyEvent(
               platform: detected.platform,
             })
           }
+          // The SDK says an Android browser: the school's own app is the way in.
+          // Once a day per person; best-effort, after the response.
+          if (detected?.client === "web" && detected.platform === "android") {
+            after(() =>
+              import("@/components/school-dashboard/school/readiness/alerts")
+                .then((m) =>
+                  m.runAndroidWebJoinAlert({
+                    schoolId,
+                    userId: identity,
+                    sessionId,
+                  })
+                )
+                .catch(() => {})
+            )
+          }
           // Someone is in the room now. If their other side is not, tell it
           // (actions/waiting-nudge.ts). After the response and best-effort:
           // a notice must never cost the presence write its delivery.

@@ -3001,7 +3001,16 @@ export async function getResourceUsageByRole(role: string) {
   if (!schoolId) return []
 
   const session = await auth()
-  return loadResourceUsage(role, { schoolId, userId: session?.user?.id })
+  // The caller names a role; never let it ask for more than the session holds
+  // (the admin rows carry school-wide readiness counts).
+  const actual = session?.user?.role
+  const effective =
+    (role === "ADMIN" || role === "DEVELOPER") &&
+    actual !== "ADMIN" &&
+    actual !== "DEVELOPER"
+      ? (actual ?? "USER")
+      : role
+  return loadResourceUsage(effective, { schoolId, userId: session?.user?.id })
 }
 
 /**

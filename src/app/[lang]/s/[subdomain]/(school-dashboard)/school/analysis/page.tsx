@@ -9,6 +9,7 @@ import AnalysisContent from "@/components/school-dashboard/school/analysis/conte
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<{ date?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -19,9 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
+  const { date } = await searchParams
   const dictionary = await getDictionary(lang)
 
-  return <AnalysisContent dictionary={dictionary} lang={lang} />
+  return <AnalysisContent dictionary={dictionary} lang={lang} date={date} />
 }

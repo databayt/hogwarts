@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Check, Copy, Eye, IdCard, KeyRound } from "lucide-react"
+import { BellRing, Check, Copy, Eye, IdCard, KeyRound } from "lucide-react"
 
 import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,6 +19,12 @@ import { NameContactLine } from "@/components/school-dashboard/shared/name-conta
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { fillT, roleLabel } from "./labels"
+import { deviceKind } from "./readiness-cells"
+import {
+  AttendanceCell,
+  DeviceCell,
+  StatusCell,
+} from "./readiness-cells-ui"
 import type { UnifiedMember } from "./types"
 
 export type MemberRow = UnifiedMember & {
@@ -32,6 +38,8 @@ interface ColumnOptions {
   onActivate?: (member: MemberRow) => void
   onRemove?: (member: MemberRow) => void
   onResetPassword?: (member: MemberRow) => void
+  /** Send the member a reminder built from their readiness reasons. */
+  onRemind?: (member: MemberRow) => void
   /** Own row: admins change their own password in Settings, not here. */
   currentUserId?: string
   canManage?: boolean
@@ -208,6 +216,83 @@ export const getMemberColumns = (
       enableColumnFilter: true,
     },
     {
+      // Where they take classes: the school app or a browser.
+      id: "device",
+      accessorFn: (row) => deviceKind(row.deviceClient),
+      filterFn: anyOf,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.readiness_device} />
+      ),
+      cell: ({ row }) => <DeviceCell member={row.original} t={t} />,
+      meta: {
+        label: t.readiness_device,
+        variant: "select",
+        options: [
+          { label: t.readiness_device_app, value: "app" },
+          { label: t.readiness_device_web, value: "web" },
+          { label: t.readiness_device_unknown, value: "unknown" },
+        ],
+      },
+      enableColumnFilter: true,
+      enableSorting: false,
+    },
+    {
+      id: "lastSeen",
+      accessorFn: (row) => row.lastSeenAtStr ?? "",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.readiness_lastSeen} />
+      ),
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">
+          {row.original.lastSeenAtStr ??
+            (row.original.readinessLevel ? t.readiness_never : "—")}
+        </span>
+      ),
+      meta: { label: t.readiness_lastSeen, variant: "text" },
+      enableSorting: false,
+    },
+    {
+      id: "attendance",
+      accessorFn: (row) => row.attendancePct ?? -1,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.readiness_attendance} />
+      ),
+      cell: ({ row }) => (
+        <AttendanceCell
+          role={row.original.role}
+          pct={row.original.attendancePct}
+        />
+      ),
+      meta: { label: t.readiness_attendance, variant: "text" },
+    },
+    {
+      // URL key is `status`: the dashboard links here with `?status=bad`.
+      id: "status",
+      accessorFn: (row) => row.readinessLevel ?? "",
+      filterFn: anyOf,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.readiness_status} />
+      ),
+      cell: ({ row }) => (
+        <StatusCell
+          level={row.original.readinessLevel}
+          reasons={row.original.readinessReasons}
+          t={t}
+        />
+      ),
+      meta: {
+        label: t.readiness_status,
+        variant: "select",
+        options: [
+          { label: t.readiness_level_ok, value: "ok" },
+          { label: t.readiness_level_warn, value: "warn" },
+          { label: t.readiness_level_bad, value: "bad" },
+        ],
+      },
+      enableColumnFilter: true,
+      enableSorting: false,
+    },
+    {
       accessorKey: "memberStatus",
       filterFn: anyOf,
       id: "memberStatus",
@@ -314,6 +399,15 @@ export const getMemberColumns = (
                 label={t.manageRecord}
                 href={record}
               />
+            )}
+            {member.readinessLevel && (
+              <DropdownMenuItem
+                disabled={member.readinessLevel === "ok"}
+                onClick={() => options.onRemind?.(member)}
+              >
+                <BellRing className="h-4 w-4" />
+                {t.readiness_remind}
+              </DropdownMenuItem>
             )}
             {!isSelf && (
               <ActionMenuItem

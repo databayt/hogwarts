@@ -268,6 +268,22 @@ export async function GET(request: NextRequest) {
     // app must too. `is_today` says which it landed on; a day it fell PAST is
     // never reported, closure included. When nothing in the lookahead window
     // has classes it stays on today, which is the payload iOS has always read.
+    // Whether the app shows «جاهزية الصفوف»: admins always, a teacher only
+    // when they supervise (homeroom) a class. Best-effort, never fails the payload.
+    const canViewReadinessP = (async () => {
+      if (hasRole(auth, "ADMIN", "DEVELOPER")) return true
+      if (role !== "TEACHER") return false
+      try {
+        const own = await db.section.findFirst({
+          where: { schoolId, homeroomTeacher: { userId } },
+          select: { id: true },
+        })
+        return !!own
+      } catch {
+        return false
+      }
+    })()
+
     const todayTimetableP = (async () => {
       if (role === "STUDENT" || role === "TEACHER") {
         try {
@@ -334,12 +350,14 @@ export async function GET(request: NextRequest) {
       upcoming,
       roleStats,
       todayTimetable,
+      canViewReadiness,
     ] = await Promise.all([
       commonReads,
       eventsTodayP,
       upcomingP,
       roleStatsP,
       todayTimetableP,
+      canViewReadinessP,
     ])
 
     const nextActions = rankNextActions(role, upcoming)
@@ -379,6 +397,8 @@ export async function GET(request: NextRequest) {
       next_actions: nextActions,
       quick_actions: quickActions,
       today_timetable: todayTimetable,
+      // --- additive (2026-11) ---
+      can_view_readiness: canViewReadiness,
     })
   } catch (error) {
     console.error("Mobile dashboard error:", error)

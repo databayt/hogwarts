@@ -5,6 +5,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -18,6 +19,7 @@ import {
 } from "./chart-interactive-bar"
 import { RadialTextChart } from "./chart-radial-text"
 import type { DashboardRole } from "./resource-usage-section"
+import type { AdminReadinessOverview } from "./queries"
 import { SectionHeading } from "./section-heading"
 
 // ============================================================================
@@ -27,6 +29,12 @@ import { SectionHeading } from "./section-heading"
 export interface ChartSectionProps {
   role: DashboardRole
   className?: string
+  /**
+   * Real numbers for the ADMIN charts (class attendance, platform readiness,
+   * how people join). Loaded on the server; when given, the ADMIN charts show
+   * these (or an empty state) instead of the placeholder series.
+   */
+  readiness?: AdminReadinessOverview
 }
 
 export interface RoleChartData {
@@ -451,7 +459,21 @@ function translateDataLabels(
   })
 }
 
-function ChartSectionInner({ role, className }: ChartSectionProps) {
+/** Empty state for a real chart with nothing to plot — never invented numbers. */
+function ChartEmpty({ title, message }: { title: string; message: string }) {
+  return (
+    <Card className="bg-muted flex flex-col border-none shadow-none">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-muted-foreground flex min-h-[160px] flex-1 items-center justify-center text-center text-sm">
+        {message}
+      </CardContent>
+    </Card>
+  )
+}
+
+function ChartSectionInner({ role, className, readiness }: ChartSectionProps) {
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
   const dict = dictionary?.school?.dashboard?.charts as
@@ -494,6 +516,79 @@ function ChartSectionInner({ role, className }: ChartSectionProps) {
   // other role keeps all three. Restore by dropping these two flags.
   const showBarChart = role !== "STUDENT"
   const showRadialChart = role !== "STUDENT"
+
+  // ADMIN with server-loaded readiness: the three charts are real.
+  const real = role === "ADMIN" && readiness ? readiness : null
+  const emptyMessage = dictionary?.school?.dashboard?.readiness?.chartsEmpty as
+    | string
+    | undefined
+  if (real) {
+    const noMessage = emptyMessage || "No data"
+    const areaTertiary = cl?.adminAreaTertiary || "Computer/iPhone"
+    const hasSeats = real.attendance.some((d) => d.expected > 0)
+    const hasJoins = real.joinsByDay.some(
+      (d) => d.app + d.androidWeb + d.desktop > 0
+    )
+    const weekday = (iso: string) =>
+      new Date(`${iso}T12:00:00Z`).toLocaleDateString(locale, {
+        weekday: "short",
+        timeZone: "UTC",
+      })
+    return (
+      <section className={className}>
+        <SectionHeading title={sectionTitle} />
+        <div className="space-y-4">
+          {hasSeats ? (
+            <InteractiveBarChart
+              data={real.attendance.map((d) => ({
+                date: d.date,
+                primary: d.joined,
+                secondary: d.expected,
+              }))}
+              title={barTitle}
+              description={barDesc}
+              primaryLabel={barPrimary}
+              secondaryLabel={barSecondary}
+              timeZone="UTC"
+            />
+          ) : (
+            <ChartEmpty title={barTitle} message={noMessage} />
+          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            {real.readinessPercent !== null ? (
+              <RadialTextChart
+                value={real.readinessPercent}
+                suffix="%"
+                label={radialLabel}
+                trendLabel={radialTrend}
+                maxValue={100}
+                hideTrend
+              />
+            ) : (
+              <ChartEmpty title={radialLabel} message={noMessage} />
+            )}
+            {hasJoins ? (
+              <AreaChartStacked
+                data={real.joinsByDay.map((d) => ({
+                  label: weekday(d.date),
+                  primary: d.app,
+                  secondary: d.androidWeb,
+                  tertiary: d.desktop,
+                }))}
+                primaryLabel={areaPrimary}
+                secondaryLabel={areaSecondary}
+                tertiaryLabel={areaTertiary}
+                trendLabel={areaTrend}
+                hideTrend
+              />
+            ) : (
+              <ChartEmpty title={areaTrend} message={noMessage} />
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className={className}>

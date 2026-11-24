@@ -97,6 +97,18 @@ export async function logLoginAttempt(params: {
         client: params.client ?? null,
       },
     })
+    // Three failures in 30 minutes tell the person's supervisor + admins
+    // (readiness/alerts.ts). Fire-and-forget: never blocks or fails the sign-in.
+    if (!params.success && params.schoolId) {
+      void import("@/components/school-dashboard/school/readiness/alerts")
+        .then((m) =>
+          m.alertPasswordTrouble({
+            schoolId: params.schoolId as string,
+            identifier: params.email,
+          })
+        )
+        .catch(() => {})
+    }
   } catch (error) {
     console.error("[AuditLog] Failed to log login attempt:", error)
   }

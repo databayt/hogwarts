@@ -11,7 +11,7 @@ import { typographyVariants } from "@/lib/typography"
 import { apkUrlFor } from "./android-app"
 import { reportWebFallback } from "./android-gate-actions"
 import {
-  APP_COOKIE,
+  APP_STORAGE_KEY,
   buildGateIntentUrl,
   hasAppFlag,
   parseCookies,
@@ -53,8 +53,8 @@ function setCookie(name: string, value: string, maxAgeSeconds: number) {
  * out so nobody is locked out of class for the day. Android's browser can
  * neither share the screen nor keep a class alive in the background.
  *
- * The app marks its own web visits with `?app=1`; that sets `bq_app=1` and
- * the browser is never gated again.
+ * The app marks its own web visits with `?app=1`; that sets `bq_app` in this
+ * tab's sessionStorage, so only that tab is let through.
  */
 export function AndroidAppGate({
   subdomain,
@@ -71,10 +71,25 @@ export function AndroidAppGate({
   const gated = useSyncExternalStore(
     subscribe,
     () => {
-      if (hasAppFlag(location.search)) setCookie(APP_COOKIE, "1", 365 * DAY)
+      // The app's mark lives in this tab's sessionStorage, never a cookie.
+      let appMark = false
+      try {
+        if (hasAppFlag(location.search)) {
+          sessionStorage.setItem(APP_STORAGE_KEY, "1")
+        }
+        appMark = sessionStorage.getItem(APP_STORAGE_KEY) === "1"
+      } catch {
+        // storage blocked: the mark cannot be kept, the gate stays on
+      }
       return shouldGate({
         ua: navigator.userAgent,
+        uaPlatform: (
+          navigator as Navigator & { userAgentData?: { platform?: string } }
+        ).userAgentData?.platform,
+        maxTouchPoints: navigator.maxTouchPoints,
+        screenMin: Math.min(screen.width, screen.height),
         isAppSchool: true,
+        appMark,
         cookies: parseCookies(document.cookie),
         todayInSchoolZone: schoolDateString(timeZone),
       })

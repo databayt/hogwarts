@@ -33,6 +33,17 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
+// The admin usage rows are real readiness counts now; feed them a fixed roster.
+vi.mock("@/components/school-dashboard/school/readiness/queries", () => ({
+  loadMemberReadiness: vi.fn(async () => [
+    { lastSeenAt: new Date(), device: { client: "app" }, pushOn: true },
+    { lastSeenAt: new Date(), device: { client: "web" }, pushOn: false },
+    { lastSeenAt: null, device: { client: null }, pushOn: false },
+    { lastSeenAt: null, device: { client: null }, pushOn: false },
+  ]),
+  loadClassReadiness: vi.fn(async () => []),
+}))
+
 vi.mock("@/lib/teaching-scope", () => ({
   getTeacherSectionIds: vi.fn().mockResolvedValue([]),
   getTeacherPairs: vi.fn().mockResolvedValue([]),
@@ -397,38 +408,9 @@ describe("GET /api/mobile/dashboard/sections", () => {
 
     const body = await (await call()).json()
     expect(body.resource_usage).toEqual([
-      {
-        key: "activeUsers",
-        name: "Active Users",
-        used: 500,
-        limit: 2000,
-        unit: "users",
-        percent: 25,
-      },
-      {
-        key: "storageUsed",
-        name: "Storage Used",
-        used: 45,
-        limit: 100,
-        unit: "GB",
-        percent: 45,
-      },
-      {
-        key: "activeSessions",
-        name: "Active Sessions",
-        used: 60,
-        limit: 500,
-        unit: "sessions",
-        percent: 12,
-      },
-      {
-        key: "systemHealth",
-        name: "System Health",
-        used: 98,
-        limit: 100,
-        unit: "%",
-        percent: 98,
-      },
+      { key: "activeUsers", name: "Active (7 days)", used: 2, limit: 4, unit: "users", percent: 50 },
+      { key: "onApp", name: "On the app", used: 1, limit: 4, unit: "users", percent: 25 },
+      { key: "pushOn", name: "Notifications on", used: 1, limit: 4, unit: "users", percent: 25 },
     ])
     expect(body.invoices[0]).toMatchObject({ id: "inv9", status: "open" })
   })

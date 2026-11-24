@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildGateIntentUrl,
   hasAppFlag,
+  isAndroidDevice,
   parseCookies,
   schoolDateString,
   shouldGate,
@@ -18,6 +19,10 @@ const MAC =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15"
 const CROS =
   "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+const DESKTOP_SITE =
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+const IPAD =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 const TODAY = "2026-11-23"
 const base = { ua: PHONE, isAppSchool: true, cookies: {}, todayInSchoolZone: TODAY }
 
@@ -30,9 +35,19 @@ describe("shouldGate", () => {
     for (const ua of [IPHONE, MAC, CROS, "", null])
       expect(shouldGate({ ...base, ua })).toBe(false)
   })
-  it("lets the app's own visits through", () => {
-    expect(shouldGate({ ...base, cookies: { bq_app: "1" } })).toBe(false)
-    expect(shouldGate({ ...base, cookies: { bq_app: "0" } })).toBe(true)
+  it("lets only a tab marked by the app through", () => {
+    expect(shouldGate({ ...base, appMark: true })).toBe(false)
+    expect(shouldGate({ ...base, appMark: false })).toBe(true)
+  })
+  it("no longer trusts the old bq_app cookie", () => {
+    expect(shouldGate({ ...base, cookies: { bq_app: "1" } })).toBe(true)
+  })
+  it("gates Chrome's desktop-site mode on a touch phone", () => {
+    const d = { ...base, ua: DESKTOP_SITE, maxTouchPoints: 5, screenMin: 412 }
+    expect(shouldGate(d)).toBe(true)
+  })
+  it("gates when client hints say Android", () => {
+    expect(shouldGate({ ...base, ua: DESKTOP_SITE, uaPlatform: "Android" })).toBe(true)
   })
   it("lets today's escape through, not yesterday's", () => {
     expect(shouldGate({ ...base, cookies: { bq_web_ok: TODAY } })).toBe(false)
@@ -40,6 +55,33 @@ describe("shouldGate", () => {
   })
   it("ignores a school without its own app", () => {
     expect(shouldGate({ ...base, isAppSchool: false })).toBe(false)
+  })
+})
+
+describe("isAndroidDevice", () => {
+  it("plain Android UAs", () => {
+    expect(isAndroidDevice({ ua: PHONE })).toBe(true)
+  })
+  it("desktop-site mode: Linux UA + touch + small screen", () => {
+    expect(
+      isAndroidDevice({ ua: DESKTOP_SITE, maxTouchPoints: 5, screenMin: 412 })
+    ).toBe(true)
+    expect(
+      isAndroidDevice({ ua: DESKTOP_SITE, maxTouchPoints: 5, screenMin: 900 })
+    ).toBe(true)
+  })
+  it("a real Linux desktop is not gated", () => {
+    expect(isAndroidDevice({ ua: DESKTOP_SITE, maxTouchPoints: 0, screenMin: 1080 })).toBe(false)
+    // touch laptop with a big screen
+    expect(isAndroidDevice({ ua: DESKTOP_SITE, maxTouchPoints: 10, screenMin: 1080 })).toBe(false)
+    expect(isAndroidDevice({ ua: DESKTOP_SITE })).toBe(false)
+  })
+  it("ChromeOS is not gated even with touch", () => {
+    expect(isAndroidDevice({ ua: CROS, maxTouchPoints: 10, screenMin: 800 })).toBe(false)
+  })
+  it("iPad is not gated", () => {
+    expect(isAndroidDevice({ ua: IPAD, maxTouchPoints: 5, screenMin: 820 })).toBe(false)
+    expect(isAndroidDevice({ ua: IPHONE, maxTouchPoints: 5, screenMin: 390 })).toBe(false)
   })
 })
 

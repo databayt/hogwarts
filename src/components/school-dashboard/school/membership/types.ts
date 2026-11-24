@@ -4,6 +4,24 @@ import type {
   UserRole,
 } from "@prisma/client"
 
+import type { ReadinessLevel, ReadinessReason } from "../readiness/rules"
+
+/** Readiness facts merged onto a member row (serializable). */
+export type MemberReadinessFields = {
+  deviceClient: "app" | "web" | null
+  devicePlatform: string | null
+  appVersion: number | null
+  /** School-local relative text («منذ ٣ أيام»); null = never seen. */
+  lastSeenAtStr: string | null
+  /** Joined / expected, 0-100; null when no classes were expected. */
+  attendancePct: number | null
+  /** null = no readiness data for this member. */
+  readinessLevel: ReadinessLevel | null
+  readinessReasons: ReadinessReason[]
+  failedSignIns3d: number
+  pushOn: boolean
+}
+
 export type UnifiedMember = {
   id: string
   name: string
@@ -27,7 +45,7 @@ export type UnifiedMember = {
   /** Teaching load / family size, formatted (and translated) by the column. */
   classCount: number
   childCount: number
-}
+} & Partial<MemberReadinessFields>
 
 export type MembershipRequestRow = {
   id: string

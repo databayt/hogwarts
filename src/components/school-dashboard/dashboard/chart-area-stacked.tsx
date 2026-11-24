@@ -26,14 +26,20 @@ export interface AreaChartStackedData {
   label: string
   primary: number
   secondary: number
+  /** Optional third stacked series (e.g. a third join channel). */
+  tertiary?: number
 }
 
 export interface AreaChartStackedProps {
   data?: AreaChartStackedData[]
   primaryLabel?: string
   secondaryLabel?: string
+  /** Names the third series; the series is drawn only when this is set. */
+  tertiaryLabel?: string
   trend?: number
   trendLabel?: string
+  /** Real data with no period-over-period figure: print the label only. */
+  hideTrend?: boolean
 }
 
 const defaultChartData = [
@@ -49,8 +55,10 @@ function AreaChartStackedInner({
   data,
   primaryLabel = "Desktop",
   secondaryLabel = "Mobile",
+  tertiaryLabel,
   trend = 5.2,
   trendLabel = "January - June 2024",
+  hideTrend = false,
 }: AreaChartStackedProps) {
   const { dictionary } = useDictionary()
   const cl = dictionary?.school?.dashboard?.chartLabels as
@@ -62,11 +70,13 @@ function AreaChartStackedInner({
         label: d.label,
         primary: d.primary,
         secondary: d.secondary,
+        tertiary: d.tertiary ?? 0,
       }))
     : defaultChartData.map((d) => ({
         label: d.month,
         primary: d.desktop,
         secondary: d.mobile,
+        tertiary: 0,
       }))
 
   const chartConfig = {
@@ -77,6 +87,10 @@ function AreaChartStackedInner({
     secondary: {
       label: secondaryLabel,
       color: "hsl(var(--chart-2))",
+    },
+    tertiary: {
+      label: tertiaryLabel ?? "",
+      color: "hsl(var(--chart-3))",
     },
   } satisfies ChartConfig
 
@@ -119,6 +133,16 @@ function AreaChartStackedInner({
               stroke="var(--color-secondary)"
               stackId="a"
             />
+            {tertiaryLabel && (
+              <Area
+                dataKey="tertiary"
+                type="natural"
+                fill="var(--color-tertiary)"
+                fillOpacity={0.4}
+                stroke="var(--color-tertiary)"
+                stackId="a"
+              />
+            )}
             <Area
               dataKey="primary"
               type="natural"
@@ -131,7 +155,13 @@ function AreaChartStackedInner({
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
-        <div className="flex items-center gap-2 leading-none font-medium">
+        <div
+          className={
+            hideTrend
+              ? "hidden"
+              : "flex items-center gap-2 leading-none font-medium"
+          }
+        >
           {trend >= 0 ? (
             <>
               {cl?.trendingUp || "Trending up by"} {trend}%{" "}

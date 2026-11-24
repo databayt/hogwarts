@@ -3,8 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { QuickLookData } from "./actions"
+import { AttentionCard } from "./attention-card"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { ChartSection } from "./lazy-charts"
+import type { AdminReadinessOverview } from "./queries"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import type { WeatherData } from "./weather-actions"
@@ -18,6 +20,8 @@ export interface AdminDashboardClientProps {
   subdomain: string
   quickLookData?: QuickLookData
   weatherData?: WeatherData | null
+  /** Real class/readiness numbers for the charts and the follow-up card. */
+  readiness?: AdminReadinessOverview
 }
 
 // ============================================================================
@@ -48,6 +52,7 @@ export function AdminDashboardClient({
   subdomain,
   quickLookData,
   weatherData,
+  readiness,
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
@@ -65,7 +70,11 @@ export function AdminDashboardClient({
 
         {/* Analytics, directly under the quick actions rather than below the
             two tables — the order the student dashboard settled on. */}
-        <ChartSection role="ADMIN" />
+        <ChartSection role="ADMIN" readiness={readiness} />
+
+        {readiness && (
+          <AttentionCard members={readiness.attention} locale={locale} />
+        )}
 
         <ResourceUsageSection role="ADMIN" />
 

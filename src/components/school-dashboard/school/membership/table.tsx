@@ -13,7 +13,7 @@ import { Ban, Download, ShieldCheck } from "lucide-react"
 import { initialsOf, type NameContact } from "@/lib/name-utils"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
-import { SuccessToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { formatConsoleDate } from "@/components/school-dashboard/school/format"
 import {
@@ -30,12 +30,25 @@ import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { bulkActivate, bulkSuspend, exportMembersCSV } from "./actions"
+import {
+  bulkActivate,
+  bulkSuspend,
+  exportMembersCSV,
+  sendReadinessReminder,
+} from "./actions"
 import { ApprovalSection } from "./approval-section"
 import { getMemberColumns, type MemberRow } from "./columns"
 import { GradeAssignDialog } from "./grade-assign-dialog"
 import { InviteDialog } from "./invite-dialog"
 import { fillT, roleLabel } from "./labels"
+import {
+  csvCell,
+  deviceText,
+  levelLabelKey,
+  reasonLabel,
+  visibleReasons,
+} from "./readiness-cells"
+import { DeviceIcon, LevelBadge } from "./readiness-cells-ui"
 import { ResetPasswordDialog } from "./reset-password-dialog"
 import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
@@ -70,6 +83,8 @@ interface MembershipTableProps {
   credentialsLabels?: Record<string, string>
   /** The signed-in admin — their own row has no "Reset password". */
   currentUserId?: string
+  /** `?q=` — seeds the search box. */
+  initialSearch?: string
 }
 
 export function MembershipTable({
@@ -82,11 +97,12 @@ export function MembershipTable({
   t,
   credentialsLabels,
   currentUserId,
+  initialSearch = "",
 }: MembershipTableProps) {
   const BATCH_SIZE = 20
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, setSearchValue] = useState(initialSearch)
   // Typing stays responsive on big schools: the filter runs on the deferred
   // value, a beat behind the input.
   const deferredSearch = useDeferredValue(searchValue)
@@ -181,6 +197,18 @@ export function MembershipTable({
     setResetPasswordMember(member)
   }, [])
 
+  const handleRemind = useCallback(
+    async (member: MemberRow) => {
+      const result = await sendReadinessReminder(member.id)
+      if (result.success) {
+        SuccessToast(fillT(t.readiness_reminderSent ?? "", { name: member.name }))
+      } else {
+        ErrorToast(t.readiness_reminderFailed || result.error || "")
+      }
+    },
+    [t]
+  )
+
   // Build grade options for column filter
   const gradeOptions = useMemo(() => {
     const unique = new Map<string, string>()
@@ -201,6 +229,7 @@ export function MembershipTable({
         onActivate: handleActivate,
         onRemove: handleRemove,
         onResetPassword: handleResetPassword,
+        onRemind: handleRemind,
         currentUserId,
         canManage,
         nameContact,
@@ -216,6 +245,7 @@ export function MembershipTable({
       handleActivate,
       handleRemove,
       handleResetPassword,
+      handleRemind,
       currentUserId,
       canManage,
       nameContact,
@@ -309,10 +339,29 @@ export function MembershipTable({
         icon: <Download className="h-4 w-4" />,
         variant: "outline" as const,
         onClick: async (rows) => {
-          const header = [t.name, t.email, t.role, t.status].join(",")
-          const csvRows = rows.map(
-            (r) =>
-              `"${r.name}","${r.email || ""}","${roleLabel(t, r.role)}","${t[r.memberStatus] ?? r.memberStatus}"`
+          const header = [
+            t.name,
+            t.email,
+            t.role,
+            t.status,
+            t.readiness_device,
+            t.readiness_lastSeen,
+            t.readiness_attendance,
+            t.readiness_status,
+          ].join(",")
+          const csvRows = rows.map((r) =>
+            [
+              csvCell(r.name),
+              csvCell(r.email),
+              csvCell(roleLabel(t, r.role)),
+              csvCell(t[r.memberStatus] ?? r.memberStatus),
+              csvCell(deviceText(r)),
+              csvCell(r.lastSeenAtStr),
+              csvCell(r.attendancePct != null ? `${r.attendancePct}%` : ""),
+              csvCell(
+                r.readinessLevel ? t[levelLabelKey(r.readinessLevel)] : ""
+              ),
+            ].join(",")
           )
           const csv = [header, ...csvRows].join("\n")
           const blob = new Blob([csv], { type: "text/csv" })
@@ -368,17 +417,37 @@ export function MembershipTable({
         visibleRows.length > 0 ? (
           <GridContainer columns={4}>
             {visibleRows.map(({ original: member }) => (
-              <GridCard
-                key={member.id}
-                avatar={{
-                  src: member.image,
-                  fallback: initialsOf(member.name),
-                }}
-                title={member.name}
-                description={roleLabel(t, member.role)}
-                subtitle={member.email || undefined}
-                href={`/${lang}/profile/${member.id}`}
-              />
+              <div key={member.id} className="relative">
+                <GridCard
+                  avatar={{
+                    src: member.image,
+                    fallback: initialsOf(member.name),
+                  }}
+                  title={member.name}
+                  description={roleLabel(t, member.role)}
+                  subtitle={
+                    member.readinessLevel
+                      ? visibleReasons(member.readinessReasons ?? [])
+                          .slice(0, 2)
+                          .map((c) => reasonLabel(t, c))
+                          .join(" · ") ||
+                        member.email ||
+                        undefined
+                      : member.email || undefined
+                  }
+                  href={`/${lang}/profile/${member.id}`}
+                />
+                {/* Status + device ride on the card's top corner. */}
+                <div className="pointer-events-none absolute end-5 top-5 flex items-center gap-1.5">
+                  <DeviceIcon
+                    client={member.deviceClient}
+                    className="text-muted-foreground"
+                  />
+                  {member.readinessLevel && (
+                    <LevelBadge level={member.readinessLevel} t={t} />
+                  )}
+                </div>
+              </div>
             ))}
           </GridContainer>
         ) : (

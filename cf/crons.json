@@ -4,6 +4,9 @@
     "*/5 * * * *": [
       "/api/cron/live-class-no-show"
     ],
+    "5 * * * *": [
+      "/api/cron/readiness-digest"
+    ],
     "*/15 * * * *": [
       "/api/cron/publish-announcements",
       "/api/cron/process-push-notifications",

@@ -9,6 +9,7 @@ import MembershipContent from "@/components/school-dashboard/school/membership/c
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<{ q?: string | string[]; status?: string | string[] }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -19,9 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
+  const { q } = await searchParams
   const dictionary = await getDictionary(lang)
+  // `?status=` is read by the table itself (column filter id "status", URL
+  // state); `?q=` seeds the search box.
+  const initialSearch = (Array.isArray(q) ? q[0] : q)?.slice(0, 100)
 
-  return <MembershipContent dictionary={dictionary} lang={lang} />
+  return (
+    <MembershipContent
+      dictionary={dictionary}
+      lang={lang}
+      initialSearch={initialSearch}
+    />
+  )
 }

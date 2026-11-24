@@ -25,12 +25,27 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { formatNumber } from "@/components/school-dashboard/finance/lib/format-money"
 
+import { classAttendanceRate } from "../readiness/attendance"
+import {
+  loadClassReportCards,
+  pickDate,
+  schoolToday,
+  type ClassReportCardData,
+} from "../readiness/report-data"
+import { ClassReport, type ClassReportStrings } from "./class-report"
+
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  /** `?date=YYYY-MM-DD` for the class report; defaults to today (school time). */
+  date?: string
 }
 
-export default async function AnalysisContent({ dictionary, lang }: Props) {
+export default async function AnalysisContent({
+  dictionary,
+  lang,
+  date,
+}: Props) {
   const { schoolId } = await getTenantContext()
   const t = dictionary.schoolConsole.analysis
   const num = (v: number, opts?: Intl.NumberFormatOptions) =>
@@ -41,8 +56,10 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
   let totalTeachers = 0
   let totalClasses = 0
   let totalSubjects = 0
-  let attendanceRate = 0
-  let passRate = 0
+  // null = no class held in the window: shown as a dash, never a made-up rate.
+  let attendanceRate: number | null = null
+  let reportDate = date ?? ""
+  let reportCards: ClassReportCardData[] = []
 
   if (schoolId) {
     try {
@@ -60,9 +77,14 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
       totalClasses = classes
       totalSubjects = subjects
 
-      // Mock metrics for now
-      attendanceRate = 94.5
-      passRate = 87.2
+      // Real 14-day class attendance (seats joined / seats expected).
+      const [attendance, today] = await Promise.all([
+        classAttendanceRate(schoolId, 14),
+        schoolToday(schoolId),
+      ])
+      attendanceRate = attendance.rate
+      reportDate = pickDate(date, today.today)
+      reportCards = await loadClassReportCards(schoolId, reportDate)
     } catch (error) {
       console.error("Error fetching analysis data:", error)
     }
@@ -71,8 +93,26 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
   const studentTeacherRatio =
     totalTeachers > 0 ? Math.round(totalStudents / totalTeachers) : 0
   // Percent figures arrive as 0-100; Intl's percent style expects a fraction.
-  const pct = (v: number) =>
-    num(v / 100, { style: "percent", maximumFractionDigits: 1 })
+  const pct = (v: number | null) =>
+    v === null ? "—" : num(v / 100, { style: "percent", maximumFractionDigits: 1 })
+
+  const rd = dictionary.school.dashboard.readiness as Record<string, string>
+  const reportStrings: ClassReportStrings = {
+    title: rd.classReportTitle,
+    description: rd.classReportDesc,
+    date: rd.date,
+    copyCard: rd.copyCard,
+    copyAll: rd.copyAll,
+    copied: rd.copied,
+    supervisor: rd.supervisor,
+    noSupervisor: rd.noSupervisor,
+    canCover: rd.canCover,
+    cannotCover: rd.cannotCover,
+    teachers: rd.teachers,
+    students: rd.students,
+    noClasses: rd.noClasses,
+    noTeacher: rd.noTeacher,
+  }
 
   return (
     <div className="space-y-6">
@@ -143,6 +183,16 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
         </Card>
       </div>
 
+      {/* Today's class readiness, section by section */}
+      {schoolId && (
+        <ClassReport
+          cards={reportCards}
+          date={reportDate}
+          lang={lang}
+          strings={reportStrings}
+        />
+      )}
+
       {/* Charts Section */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Enrollment Trends */}
@@ -204,13 +254,9 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-lg border p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {pct(passRate)}
-              </div>
-              <p className="text-muted-foreground text-sm">{t.passRate}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* No pass-rate tile: nothing real feeds it yet, and a made-up
+                87% is worse than no tile. */}
             <div className="rounded-lg border p-4">
               <div className="text-2xl font-bold">{num(totalSubjects)}</div>
               <p className="text-muted-foreground text-sm">
@@ -230,7 +276,7 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -263,21 +309,6 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900">
-                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{pct(passRate)}</p>
-                <p className="text-muted-foreground text-sm">
-                  {t.academicSuccess}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

@@ -531,6 +531,16 @@ export async function performLiveClassJoin(
     return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
   }
 
+  // A web join from an Android browser at a school with its own app: tell the
+  // person to use the app and their supervisor + admins (once a day). The
+  // webhook's SDK report is the truth and re-checks; this catches it at once.
+  // Fire-and-forget — never blocks or fails the join.
+  if (client?.client === "web" && client.platform === "android") {
+    void import("@/components/school-dashboard/school/readiness/alerts")
+      .then((m) => m.alertAndroidWebJoin({ schoolId, userId, sessionId }))
+      .catch(() => {})
+  }
+
   const expiresAt = new Date(Date.now() + 300 * 1000).toISOString()
   return {
     success: true as const,

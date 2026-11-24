@@ -29,6 +29,10 @@ export interface RadialTextChartProps {
   trend?: number
   trendLabel?: string
   maxValue?: number
+  /** Printed after the number, e.g. "%". */
+  suffix?: string
+  /** Real data with no period-over-period figure: print the label only. */
+  hideTrend?: boolean
 }
 
 function RadialTextChartInner({
@@ -37,6 +41,8 @@ function RadialTextChartInner({
   trend = 5.2,
   trendLabel = "Total visitors in the last 6 months",
   maxValue = 100,
+  suffix = "",
+  hideTrend = false,
 }: RadialTextChartProps) {
   const { dictionary } = useDictionary()
   const cl = dictionary?.school?.dashboard?.chartLabels as
@@ -95,6 +101,7 @@ function RadialTextChartInner({
                           className="fill-foreground text-4xl font-bold"
                         >
                           {value.toLocaleString()}
+                          {suffix}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
@@ -113,7 +120,13 @@ function RadialTextChartInner({
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
-        <div className="flex items-center gap-2 leading-none font-medium">
+        <div
+          className={
+            hideTrend
+              ? "hidden"
+              : "flex items-center gap-2 leading-none font-medium"
+          }
+        >
           {trend >= 0 ? (
             <>
               {cl?.trendingUp || "Trending up by"} {trend}%{" "}

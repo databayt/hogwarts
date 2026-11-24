@@ -10,14 +10,47 @@ import { schoolNow } from "@/components/school-dashboard/timetable/school-now"
 
 import { buildIntentUrl } from "./android-app"
 
-/** Set (365 d) when the app opens a web page with `?app=1` / `?from=app`. */
-export const APP_COOKIE = "bq_app"
+/**
+ * `sessionStorage` key set when the app opens a web page with `?app=1` /
+ * `?from=app`. Per tab on purpose: a Custom Tab shares Chrome's cookie jar, so
+ * a cookie let plain Chrome through forever after one app-opened page. A
+ * sessionStorage entry dies with its tab, and a Custom Tab is its own tab.
+ */
+export const APP_STORAGE_KEY = "bq_app"
 /** `bq_web_ok=<school-local YYYY-MM-DD>` — a browser let through for that day. */
 export const WEB_OK_COOKIE = "bq_web_ok"
 
 /** Android phones and tablets. iOS, desktop and ChromeOS never match. */
 export function isAndroidUa(ua: string | null | undefined): boolean {
   return !!ua && /Android/i.test(ua)
+}
+
+export type DeviceProbe = {
+  ua: string | null | undefined
+  /** `navigator.userAgentData?.platform` (Chromium client hints). */
+  uaPlatform?: string | null
+  /** `navigator.maxTouchPoints`. */
+  maxTouchPoints?: number | null
+  /** `Math.min(screen.width, screen.height)`. */
+  screenMin?: number | null
+}
+
+/**
+ * Android, including Chrome's "desktop site" mode, which drops "Android" from
+ * the user agent: that reads as plain Linux, so a touch screen no wider than a
+ * tablet stands in. A real Linux desktop has no touch; ChromeOS is excluded;
+ * iPads are not Linux.
+ */
+export function isAndroidDevice(d: DeviceProbe): boolean {
+  if (isAndroidUa(d.ua)) return true
+  if (d.uaPlatform === "Android") return true
+  const ua = d.ua ?? ""
+  return (
+    /Linux/i.test(ua) &&
+    !/CrOS/i.test(ua) &&
+    (d.maxTouchPoints ?? 0) > 0 &&
+    (d.screenMin ?? Infinity) <= 900
+  )
 }
 
 /** True when the URL carries the app's own mark. */
@@ -48,14 +81,17 @@ export function schoolDateString(
   return `${p(n.year, 4)}-${p(n.month)}-${p(n.day)}`
 }
 
-export function shouldGate(opts: {
-  ua: string | null | undefined
-  isAppSchool: boolean
-  cookies: Record<string, string>
-  todayInSchoolZone: string
-}): boolean {
-  if (!opts.isAppSchool || !isAndroidUa(opts.ua)) return false
-  if (opts.cookies[APP_COOKIE] === "1") return false
+export function shouldGate(
+  opts: DeviceProbe & {
+    isAppSchool: boolean
+    /** The tab carries the app's mark (`sessionStorage[APP_STORAGE_KEY] === "1"`). */
+    appMark?: boolean
+    cookies: Record<string, string>
+    todayInSchoolZone: string
+  }
+): boolean {
+  if (!opts.isAppSchool || !isAndroidDevice(opts)) return false
+  if (opts.appMark) return false
   if (opts.cookies[WEB_OK_COOKIE] === opts.todayInSchoolZone) return false
   return true
 }

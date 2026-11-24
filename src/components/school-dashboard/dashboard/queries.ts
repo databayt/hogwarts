@@ -15,11 +15,29 @@
  * Android dashboard and the web phone dashboard cannot drift apart.
  */
 
+import { cache } from "react"
 import { startOfYear } from "date-fns"
 
 import { db } from "@/lib/db"
 import { getTeacherPairs, getTeacherSectionIds } from "@/lib/teaching-scope"
 import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfInstant,
+  schoolDayToInstant,
+  schoolDayWindow,
+} from "@/components/school-dashboard/live/day-window"
+import {
+  attentionList,
+  joinChannel,
+  lastDaysISO,
+  okPercent,
+  type AttentionMember,
+} from "@/components/school-dashboard/school/readiness/overview"
+import {
+  loadMemberReadiness,
+  type MemberReadinessRow,
+} from "@/components/school-dashboard/school/readiness/queries"
 
 /** A row of the web's `DetailedUsageTable`. */
 export interface ResourceUsageRow {
@@ -636,44 +654,183 @@ async function principalResourceUsage(
 async function adminResourceUsage(
   schoolId: string
 ): Promise<ResourceUsageRow[]> {
-  const userCount = await db.user.count({ where: { schoolId } })
-
-  // Active sessions estimated as ~12% of total users — there is no sessions
-  // table to count.
-  const activeSessions = Math.round(userCount * 0.12)
-
+  const { usage } = await loadAdminMembers(schoolId)
+  // Limits are the school's own head-count: "how many of everyone".
   return [
     {
       key: "activeUsers",
-      name: "Active Users",
-      used: userCount,
-      limit: 2000,
+      name: "Active (7 days)",
+      used: usage.active7d,
+      limit: usage.total,
       unit: "users",
     },
-    // Placeholder — no storage accounting yet.
     {
-      key: "storageUsed",
-      name: "Storage Used",
-      used: 45,
-      limit: 100,
-      unit: "GB",
+      key: "onApp",
+      name: "On the app",
+      used: usage.onApp,
+      limit: usage.total,
+      unit: "users",
     },
     {
-      key: "activeSessions",
-      name: "Active Sessions",
-      used: activeSessions,
-      limit: 500,
-      unit: "sessions",
-    },
-    // Placeholder — no health probe wired in.
-    {
-      key: "systemHealth",
-      name: "System Health",
-      used: 98,
-      limit: 100,
-      unit: "%",
+      key: "pushOn",
+      name: "Notifications on",
+      used: usage.pushOn,
+      limit: usage.total,
+      unit: "users",
     },
   ]
+}
+
+// ============================================================================
+// ADMIN READINESS OVERVIEW — real numbers behind the three admin charts
+// ============================================================================
+
+const READINESS_DAYS = 7
+
+export interface AdminReadinessOverview {
+  /** Last 7 school days, oldest first. joined/expected are student class seats. */
+  attendance: { date: string; joined: number; expected: number }[]
+  /** Class joins per day by how the person got in. */
+  joinsByDay: { date: string; app: number; androidWeb: number; desktop: number }[]
+  /** % of teachers + students whose readiness level is ok; null with no members. */
+  readinessPercent: number | null
+  members: number
+  /** Top members to follow up (bad first, then warn). */
+  attention: AttentionMember[]
+  /** True when there is anything to chart at all. */
+  hasClassData: boolean
+}
+
+type AdminMembers = {
+  rows: MemberReadinessRow[]
+  usage: { total: number; active7d: number; onApp: number; pushOn: number }
+}
+
+/** One readiness load per request — the overview and the usage table share it. */
+const loadAdminMembers = cache(async (schoolId: string): Promise<AdminMembers> => {
+  const now = new Date()
+  const rows = await loadMemberReadiness(schoolId, { now })
+  const weekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000
+  return {
+    rows,
+    usage: {
+      total: rows.length,
+      active7d: rows.filter((r) => r.lastSeenAt && r.lastSeenAt.getTime() >= weekAgo)
+        .length,
+      onApp: rows.filter((r) => r.device.client === "app").length,
+      pushOn: rows.filter((r) => r.pushOn).length,
+    },
+  }
+})
+
+/**
+ * Everything the admin charts need, loaded on the server and serializable:
+ * class attendance and join channels for the last 7 school days (school
+ * timezone), the platform-readiness percentage and the follow-up list. Callers
+ * authenticate first and pass the tenant in.
+ */
+export async function adminReadinessOverview(
+  schoolId: string
+): Promise<AdminReadinessOverview> {
+  const now = new Date()
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  const tz = school?.timezone || DEFAULT_SCHOOL_TZ
+  const days = lastDaysISO(schoolDayOfInstant(tz, now), READINESS_DAYS)
+  const firstNoon = days.length ? schoolDayToInstant(tz, days[0]!) : null
+  const windowStart = firstNoon ? schoolDayWindow(tz, firstNoon).start : null
+
+  const members = await loadAdminMembers(schoolId)
+  const empty = {
+    attendance: days.map((date) => ({ date, joined: 0, expected: 0 })),
+    joinsByDay: days.map((date) => ({
+      date,
+      app: 0,
+      androidWeb: 0,
+      desktop: 0,
+    })),
+  }
+
+  const base = {
+    readinessPercent: okPercent(
+      members.rows.map((r) => r.readiness.level)
+    ),
+    members: members.rows.length,
+    attention: attentionList(members.rows, 8),
+  }
+  if (!windowStart) return { ...empty, ...base, hasClassData: false }
+
+  const sessionWhere = {
+    schoolId,
+    sectionId: { not: null },
+    scheduledStart: { gte: windowStart, lte: now },
+    status: { not: "cancelled" as const },
+    isPractice: false,
+    deletedAt: null,
+  }
+  const [sessions, participants] = await Promise.all([
+    db.conference.findMany({
+      where: sessionWhere,
+      select: { id: true, sectionId: true, scheduledStart: true },
+    }),
+    db.conferenceParticipant.findMany({
+      where: {
+        schoolId,
+        joinedAt: { not: null },
+        role: { in: ["PARTICIPANT", "HOST", "CO_HOST"] },
+        session: sessionWhere,
+      },
+      select: { sessionId: true, role: true, client: true, platform: true },
+    }),
+  ])
+  if (sessions.length === 0) return { ...empty, ...base, hasClassData: false }
+
+  const sectionIds = [...new Set(sessions.map((s) => s.sectionId as string))]
+  const studentCounts = await db.student.groupBy({
+    by: ["sectionId"],
+    where: { schoolId, sectionId: { in: sectionIds } },
+    _count: { _all: true },
+  })
+  const seats = new Map(
+    studentCounts.map((r) => [r.sectionId as string, r._count._all])
+  )
+
+  const dayOfSession = new Map<string, string>()
+  const byDay = new Map(
+    days.map((d) => [
+      d,
+      { joined: 0, expected: 0, app: 0, androidWeb: 0, desktop: 0 },
+    ])
+  )
+  for (const s of sessions) {
+    const day = schoolDayOfInstant(tz, s.scheduledStart)
+    dayOfSession.set(s.id, day)
+    const bucket = byDay.get(day)
+    if (bucket) bucket.expected += seats.get(s.sectionId as string) ?? 0
+  }
+  for (const p of participants) {
+    const bucket = byDay.get(dayOfSession.get(p.sessionId) ?? "")
+    if (!bucket) continue
+    if (p.role === "PARTICIPANT") bucket.joined += 1
+    const channel = joinChannel(p.client, p.platform)
+    if (channel) bucket[channel] += 1
+  }
+
+  return {
+    attendance: days.map((date) => ({
+      date,
+      joined: byDay.get(date)!.joined,
+      expected: byDay.get(date)!.expected,
+    })),
+    joinsByDay: days.map((date) => {
+      const b = byDay.get(date)!
+      return { date, app: b.app, androidWeb: b.androidWeb, desktop: b.desktop }
+    }),
+    ...base,
+    hasClassData: true,
+  }
 }
 
 async function developerResourceUsage(): Promise<ResourceUsageRow[]> {

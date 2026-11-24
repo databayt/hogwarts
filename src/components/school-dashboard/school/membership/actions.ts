@@ -2,6 +2,8 @@
 
 import { headers } from "next/headers"
 import { after } from "next/server"
+
+import { prewarm } from "@/components/translation/prewarm"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -29,7 +31,16 @@ import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { apkUrlFor } from "@/components/school-dashboard/live/android-app"
+
+import { loadMemberReadiness } from "../readiness/queries"
 import { assertMembershipPermission, getAuthContext } from "./authorization"
+import {
+  attendancePct,
+  buildReminderMessage,
+  csvCell,
+  deviceText,
+} from "./readiness-cells"
 import {
   activateMemberSchema,
   approveMemberRequestSchema,
@@ -1172,6 +1183,105 @@ export async function bulkActivate(
   }
 }
 
+// --- Readiness reminder ---
+/**
+ * Remind one member to get set up for online classes. Admin-only (same gate as
+ * suspend / password reset), tenant-scoped (the target must belong to the
+ * caller's school). The text is built from the member's CURRENT readiness
+ * reasons — recomputed here, never taken from the client — and written as an
+ * in_app + push notification row directly (like android-gate-actions), so a
+ * student's or teacher's notification preferences cannot swallow it.
+ */
+export async function sendReadinessReminder(
+  userId: string
+): Promise<ActionResponse<{ notificationId: string }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertMembershipPermission(authContext, "suspend", schoolId)
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const targetId = z.string().min(1).max(64).parse(userId)
+
+    const target = await db.user.findFirst({
+      where: { id: targetId, schoolId },
+      select: { id: true },
+    })
+    if (!target) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    const [rows, school] = await Promise.all([
+      loadMemberReadiness(schoolId, { userIds: [target.id] }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true, preferredLanguage: true },
+      }),
+    ])
+    const row = rows[0]
+    if (!row || row.readiness.level === "ok") {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "Nothing to remind")
+    }
+
+    const lang = school?.preferredLanguage === "en" ? "en" : "ar"
+    const { title, body } = buildReminderMessage(
+      row.readiness.reasons,
+      lang,
+      apkUrlFor(school?.domain)
+    )
+    if (!body) return actionError(ACTION_ERRORS.VALIDATION_ERROR, "Nothing to remind")
+
+    const notification = await db.notification.create({
+      data: {
+        schoolId,
+        userId: target.id,
+        type: "system_alert",
+        priority: "normal",
+        title,
+        body,
+        lang,
+        actorId: authContext.userId,
+        channels: ["in_app", "push"],
+        metadata: {
+          kind: "readiness_reminder",
+          reasons: row.readiness.reasons,
+        },
+      },
+      select: { id: true, title: true, body: true, lang: true },
+    })
+    after(() => prewarm("Notification", notification, { schoolId }))
+
+    after(() =>
+      logAudit({
+        userId: authContext.userId,
+        schoolId,
+        action: "member.readiness_reminder",
+        entityType: "User",
+        entityId: target.id,
+      })
+    )
+
+    return { success: true, data: { notificationId: notification.id } }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
 // --- Export Members CSV ---
 export async function exportMembersCSV(): Promise<ActionResponse<string>> {
   try {
@@ -1191,6 +1301,7 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
     const users = await db.user.findMany({
       where: { schoolId },
       select: {
+        id: true,
         username: true,
         email: true,
         role: true,
@@ -1212,14 +1323,51 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
       orderBy: { createdAt: "desc" },
     })
 
-    const header = "Name,Email,Role,Status,Joined"
+    // Readiness columns: device, last seen, attendance %, readiness status.
+    // Best effort — the export still works when the read fails.
+    const readinessById = new Map<
+      string,
+      Awaited<ReturnType<typeof loadMemberReadiness>>[number]
+    >()
+    try {
+      const rs = await loadMemberReadiness(schoolId, {
+        userIds: users.map((u) => u.id),
+      })
+      for (const r of rs) readinessById.set(r.userId, r)
+    } catch (err) {
+      console.error("[exportMembersCSV] readiness load failed:", err)
+    }
+
+    const header =
+      "Name,Email,Role,Status,Joined,Device,Last seen,Attendance %,Readiness,Reasons"
     const rows = users.map((u) => {
       const profile = u.student || u.teacher || u.staffMember || u.guardian
       const name = profile
         ? displayName(profile, "full") || u.username || ""
         : u.username || ""
       const status = u.isSuspended ? "Suspended" : "Active"
-      return `"${name}","${u.email || ""}","${u.role}","${status}","${u.createdAt.toISOString()}"`
+      const r = readinessById.get(u.id)
+      const pct = r ? attendancePct(r.attendance) : null
+      return [
+        csvCell(name),
+        csvCell(u.email),
+        csvCell(u.role),
+        csvCell(status),
+        csvCell(u.createdAt.toISOString()),
+        csvCell(
+          r
+            ? deviceText({
+                deviceClient: r.device.client,
+                devicePlatform: r.device.platform,
+                appVersion: r.device.appVersion,
+              })
+            : ""
+        ),
+        csvCell(r?.lastSeenAt?.toISOString()),
+        csvCell(pct),
+        csvCell(r?.readiness.level),
+        csvCell(r?.readiness.reasons.join(" ")),
+      ].join(",")
     })
 
     return { success: true, data: [header, ...rows].join("\n") }

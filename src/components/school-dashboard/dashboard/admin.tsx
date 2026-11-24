@@ -1,12 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { type QuickLookData } from "./actions"
 import { AdminDashboardClient } from "./admin-client"
 import { loadDashboardHero } from "./hero-data"
+import { adminReadinessOverview, type AdminReadinessOverview } from "./queries"
 
 interface Props {
   user: {
@@ -35,6 +37,17 @@ export async function AdminDashboard({
     // `admin-client.tsx`. The Upcoming/Weather hero is back, so its fetch is.
     const quickLookData: QuickLookData | undefined = undefined
     const { weatherData, school } = await hero
+    // Real class attendance, readiness and follow-up list. A failure here
+    // must not take the dashboard down — the charts show their empty state.
+    let readiness: AdminReadinessOverview | undefined
+    const { schoolId } = await getTenantContext()
+    if (schoolId) {
+      try {
+        readiness = await adminReadinessOverview(schoolId)
+      } catch (err) {
+        console.error("[AdminDashboard] readiness overview failed:", err)
+      }
+    }
 
     // Prepare data for client component
     const dashboardProps = {
@@ -44,6 +57,7 @@ export async function AdminDashboard({
       quickLookData,
       // Weather data (real-time from OpenWeatherMap)
       weatherData,
+      readiness,
     }
 
     return (
