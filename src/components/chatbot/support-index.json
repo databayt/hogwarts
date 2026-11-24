@@ -533,8 +533,8 @@
       "en": "The weekly timetable: generating it, editing a lesson, fixing clashes"
     },
     "answer": {
-      "ar": "1. افتح **الجدول الدراسي** من القائمة الجانبية. يرى المدير أسبوع المدرسة كاملًا مع فلاتر حسب الفصل والمعلم.\n2. اضبط اليوم الدراسي مرة واحدة من **الجدول الدراسي ← الإعدادات**: **أيام العمل** والحصص و**الاستراحة والغداء**.\n3. لبناء الأسبوع تلقائيًا، افتح **إنشاء**، واختر الفصل الدراسي، وراجع **القيود الصارمة** و**حدود عبء العمل**، ثم اضغط **إنشاء معاينة**.\n4. راجع المعاينة، ثم اضغط **دمج** لتبقى حصصك الحالية وتُملأ الفراغات، أو **استبدال الكل** لتبدأ من جديد.\n5. لتعديل حصة واحدة، اضغط خانتها في الجدول، واختر المادة والمعلم والقاعة، ثم احفظ.\n6. افتح **التعارضات** واضغط **فحص التعارضات** لتجد أي معلم أو قاعة محجوزة مرتين في الفصل الدراسي.\n\n- تبدأ كل مدرسة بأسبوع مملوء مسبقًا من صفوفها وموادها. والحصة التي لا يتوفر لها معلم تظهر **غير معيّن**.\n- يُرفض حفظ الحصة إذا كانت ستضع معلمًا أو قاعة أو فصلًا في مكانين في الحصة نفسها.\n- يرى المعلم أسبوعه (**اليوم** و**عرض الأسبوع**)، ويرى الطالب أسبوع فصله، ويرى ولي الأمر أسبوع كل ابن من أبنائه.\n- اطبع الجدول على ورق A4 من المتصفح.\n- من يدرّس ماذا يأتي من تبويب **المعلمون** ومن مواد كل معلم.\n- إن كانت المدرسة تدرّس مباشرة، اضغط حصة اليوم في الجدول وهي جارية (أو قبلها بعشر دقائق) للانضمام إليها، وضغطة المعلّم تبدأ الحصة.\n\nحل المشكلات:\n\n- **حصة تظهر «غير معيّن»** — لم يتوفر معلم لتلك المادة. أضف المادة إلى **تخصص** أحد المعلمين، ثم أعد الإنشاء مع **دمج**.\n- **«إنشاء جزئي» أو «فصول غير مُوزَّعة»** — تحقق من توفر المعلمين وسعة القاعات، أو خفّف **أقصى حصص/يوم** في **حدود عبء العمل**، ثم اضغط **إعادة الإنشاء**.\n- **«تم اكتشاف تعارض» عند الحفظ** — المعلم أو القاعة محجوزان في تلك الحصة. اختر حصة أو معلمًا آخر، أو عالجه من **التعارضات**.\n- **المعلم لا يرى جدوله** — يجب أن يكون المعلم معيّنًا على الحصص. راجع تبويب **المعلمون**، ثم اطلب منه تحديث الصفحة.\n- **تظهر أيام أو حصص خاطئة** — صحّح **أيام العمل** والحصص من **الجدول الدراسي ← الإعدادات** للفصل الدراسي الصحيح.",
-      "en": "1. Open **Timetable** from the sidebar. Admins see the whole school's week grid, with filters by class and teacher.\n2. Set the school day once in **Timetable → Settings**: **Working Days**, the periods and **Break & Lunch**.\n3. To build the week automatically, open **Generate**, choose the term, check the **Hard Constraints** and **Workload Limits**, then click **Generate Preview**.\n4. Review the preview. Click **Merge** to keep your current lessons and fill the gaps, or **Replace All** to start fresh.\n5. To change one lesson, click its cell in the grid, pick the subject, teacher and room, and save.\n6. Open **Conflicts** and click **Scan for Conflicts** to find any teacher or room booked twice in the term.\n\n- Every school starts with a week already filled from its grades and subjects. A slot with no free teacher shows as **Unassigned**.\n- Saving a lesson is refused if it would put a teacher, a room or a class in two places in the same period.\n- Teachers see their own teaching week (**Today** and **Week View**), students see their class's week, and parents see each child's week.\n- Print the timetable on A4 from the browser.\n- Who teaches what comes from the **Teachers** tab and each teacher's subjects.\n- When the school teaches live, click today's class in the timetable while it runs (or up to 10 minutes before) to join it. A teacher's click starts the class.\n\nTroubleshooting:\n\n- **A lesson shows Unassigned** — no teacher of that subject was free. Give a teacher that subject in their **Expertise**, then generate again with **Merge**.\n- **\"Generation Partial\" or Unplaced Classes** — check teacher availability and room capacity, or relax **Max Periods/Day** in **Workload Limits**, then **Regenerate**.\n- **\"Conflict Detected\" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.\n- **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.\n- **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term."
+      "ar": "1. افتح **الجدول الدراسي** من القائمة الجانبية. يرى المدير أسبوع المدرسة كاملًا مع فلاتر حسب الفصل والمعلم.\n2. اضبط اليوم الدراسي مرة واحدة من **الجدول الدراسي ← الإعدادات**: **أيام العمل** والحصص و**الاستراحة والغداء**.\n3. لبناء الأسبوع تلقائيًا، افتح **إنشاء**، واختر الفصل الدراسي، وراجع **القيود الصارمة** و**حدود عبء العمل**، ثم اضغط **إنشاء معاينة**.\n4. راجع المعاينة، ثم اضغط **دمج** لتبقى حصصك الحالية وتُملأ الفراغات، أو **استبدال الكل** لتبدأ من جديد.\n5. لتعديل حصة واحدة، اضغط خانتها في الجدول، واختر المادة والمعلم والقاعة، ثم احفظ.\n6. افتح **التعارضات** واضغط **فحص التعارضات** لتجد أي معلم أو قاعة محجوزة مرتين في الفصل الدراسي.\n\n- تبدأ كل مدرسة بأسبوع مملوء مسبقًا من صفوفها وموادها. والحصة التي لا يتوفر لها معلم تظهر **غير معيّن**.\n- يُرفض حفظ الحصة إذا كانت ستضع معلمًا أو قاعة أو فصلًا في مكانين في الحصة نفسها.\n- يرى المعلم أسبوعه (**اليوم** و**عرض الأسبوع**)، ويرى الطالب أسبوع فصله، ويرى ولي الأمر أسبوع كل ابن من أبنائه.\n- اطبع الجدول على ورق A4 من المتصفح.\n- من يدرّس ماذا يأتي من تبويب **المعلمون** ومن مواد كل معلم.\n- إن كانت المدرسة تدرّس مباشرة، اضغط حصة اليوم في الجدول وهي جارية (أو قبلها بعشر دقائق) للانضمام إليها، وضغطة المعلّم تبدأ الحصة.\n- أوقات الجدول والحصص بـ**توقيت المدرسة** لا توقيت جوالك، حتى لمن هو خارج البلد.\n- في يوم لا حصص لك فيه يعرض التطبيق **يوم تدريسك التالي**، فلا تظنه خطأ.\n\nحل المشكلات:\n\n- **حصة تظهر «غير معيّن»** — لم يتوفر معلم لتلك المادة. أضف المادة إلى **تخصص** أحد المعلمين، ثم أعد الإنشاء مع **دمج**.\n- **«إنشاء جزئي» أو «فصول غير مُوزَّعة»** — تحقق من توفر المعلمين وسعة القاعات، أو خفّف **أقصى حصص/يوم** في **حدود عبء العمل**، ثم اضغط **إعادة الإنشاء**.\n- **«تم اكتشاف تعارض» عند الحفظ** — المعلم أو القاعة محجوزان في تلك الحصة. اختر حصة أو معلمًا آخر، أو عالجه من **التعارضات**.\n- **المعلم لا يرى جدوله** — يجب أن يكون المعلم معيّنًا على الحصص. راجع تبويب **المعلمون**، ثم اطلب منه تحديث الصفحة.\n- **تظهر أيام أو حصص خاطئة** — صحّح **أيام العمل** والحصص من **الجدول الدراسي ← الإعدادات** للفصل الدراسي الصحيح.\n- **الجدول ظاهر لي ليوم آخر («غير متصل — يعرض آخر جدول محفوظ»)**: التطبيق لم يصل إلى الخادم فعرض آخر جدول حفظه. تأكد من الإنترنت، ثم أغلق التطبيق وافتحه أو اسحب الشاشة لأسفل. وحدّث التطبيق إن طلب ذلك.",
+      "en": "1. Open **Timetable** from the sidebar. Admins see the whole school's week grid, with filters by class and teacher.\n2. Set the school day once in **Timetable → Settings**: **Working Days**, the periods and **Break & Lunch**.\n3. To build the week automatically, open **Generate**, choose the term, check the **Hard Constraints** and **Workload Limits**, then click **Generate Preview**.\n4. Review the preview. Click **Merge** to keep your current lessons and fill the gaps, or **Replace All** to start fresh.\n5. To change one lesson, click its cell in the grid, pick the subject, teacher and room, and save.\n6. Open **Conflicts** and click **Scan for Conflicts** to find any teacher or room booked twice in the term.\n\n- Every school starts with a week already filled from its grades and subjects. A slot with no free teacher shows as **Unassigned**.\n- Saving a lesson is refused if it would put a teacher, a room or a class in two places in the same period.\n- Teachers see their own teaching week (**Today** and **Week View**), students see their class's week, and parents see each child's week.\n- Print the timetable on A4 from the browser.\n- Who teaches what comes from the **Teachers** tab and each teacher's subjects.\n- When the school teaches live, click today's class in the timetable while it runs (or up to 10 minutes before) to join it. A teacher's click starts the class.\n- Timetable and class times are in **school time**, not your phone's time, even for people abroad.\n- On a day with no classes for you, the app shows your **next teaching day**. That is not a mistake.\n\nTroubleshooting:\n\n- **A lesson shows Unassigned** — no teacher of that subject was free. Give a teacher that subject in their **Expertise**, then generate again with **Merge**.\n- **\"Generation Partial\" or Unplaced Classes** — check teacher availability and room capacity, or relax **Max Periods/Day** in **Workload Limits**, then **Regenerate**.\n- **\"Conflict Detected\" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.\n- **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.\n- **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term.\n- **My timetable shows another day (\"Offline — showing the last saved timetable\")**: the app couldn't reach the server, so it showed the last timetable it saved. Check the internet, then close and reopen the app or pull the screen down. Update the app if it asks."
     },
     "keywords": [
       "جدول",
@@ -556,6 +556,20 @@
       "حصصي",
       "ادخل جدول",
       "اشوف جدولي",
+      "الجدول ظاهر لي حق الأحد",
+      "جدولي يوم غلط",
+      "الجدول مش صحيح",
+      "الجدول بتوقيت تاني",
+      "غير متصل يعرض آخر جدول محفوظ",
+      "ظهر لي جدول يوم السبت",
+      "جدول قديم",
+      "الجدول بتوقيت السعودية",
+      "بتوقيت مدرستي",
+      "توقيت المدرسة",
+      "توقيت مدرستي",
+      "الساعة كم",
+      "وأنا برا البلد",
+      "الحصة الساعة كم",
       "timetable",
       "time table",
       "schedule",
@@ -571,7 +585,17 @@
       "school day",
       "join from timetable",
       "live class",
-      "join class"
+      "join class",
+      "my timetable shows another day",
+      "timetable shows the wrong day",
+      "timetable in another timezone",
+      "offline showing last saved timetable",
+      "old timetable",
+      "timetable shows saturday",
+      "school time",
+      "what time is the class",
+      "time zone",
+      "timezone"
     ],
     "guide": "/docs/support/timetable",
     "routes": [
@@ -595,8 +619,8 @@
       "en": "Joining a live class and using hands, chat, questions and the board"
     },
     "answer": {
-      "ar": "1. افتح **الجدول** واضغط على حصة اليوم وهي جارية، أو قبل بدئها بعشر دقائق. ويمكنك أيضاً الضغط على بطاقة الحصة أعلى صفحتك الرئيسية.\n2. تُفتح صفحة الحصة بصورتها ومعلّمها ووقتها. اضغط **انضمام**.\n3. اسمح للمتصفح باستخدام الكاميرا والميكروفون إن طلب ذلك. يدخل الطلاب بميكروفون مغلق وكاميرا معطّلة.\n4. داخل الحصة:\n   - **رفع اليد** لتطلب الكلام، ويرى المعلّم ترتيبك.\n   - **الدردشة** لرسائل الفصل، و**الأسئلة** لأسئلة يجيب عنها المعلّم.\n   - قد يعرض المعلّم **السبورة** أو الشرائح أو شاشته، فتملأ الشاشة وحدها.\n5. اضغط **مغادرة** للخروج. إن انقطع الاتصال تظهر **جارٍ إعادة الاتصال…**، وإن تعذّر ذلك فاضغط **إعادة الانضمام**.\n\n- الغرفة مفتوحة في موعد الحصة، فادخل متى وصلت: قد تسبق المعلّم إليها أو يسبقك، ولا تنتظر أحداً.\n- إن دخلت ولم تجد المعلّم فابقَ في الغرفة: تكتب لك الغرفة أنه لم يدخل بعد، ويصله إشعار بأن طلابه في انتظاره. وإن دخل المعلّم قبل طلابه يصلك إشعار **«… في الحصة الآن»**.\n- فعّل **تنبيهات الحصص** مرة واحدة على كل جهاز: تحت زر الانضمام وفي صفحتك الرئيسية يظهر «فعّل تنبيهات الحصص ليصلك إشعار على هذا الجهاز قبل كل حصة»، فاضغط **تفعيل**. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً، ثم فعّلها من التطبيق.\n- يستطيع أولياء الأمور مشاهدة حصة أبنائهم إن سمحت المدرسة بذلك، ويدخلون مشاهدين بلا كاميرا ولا ميكروفون ولا أسئلة.\n- قد يُسجَّل حضورك من الحصة: البقاء في الغرفة يُحتسب، والزيارة القصيرة لا تُحتسب.\n- الحصة التي فاتتك تظهر في صفحة **مباشر** ضمن الحصص التي يمكنك تعويضها، مع تسجيلها إن كانت المدرسة تسجّل الحصص.\n\nحل المشكلات:\n\n- **لا أستطيع تسجيل الدخول**: اكتب **اسم المستخدم** المكوّن من 6 أرقام وكلمة المرور كما أرسلتها المدرسة، لا بريدك الشخصي. في أول دخول تُطلب كلمة مرور جديدة: اكتبها واحفظها. وإن رُفضت فاطلب من المدرسة بيانات جديدة.\n- **«أنت غير مسجّل في هذه الحصة»**: الحصة لفصل آخر؛ تأكد أنك فتحت حصتك من جدولك.\n- **لا صوت أو صورة**: اضغط **اختبر الكاميرا والاتصال** تحت زر الانضمام، وتأكد من إذن المتصفح للكاميرا والميكروفون.\n- **لا يظهر الانضمام في الجدول**: الحصة ليست مباشرة اليوم، أو بقي على بدئها أكثر من عشر دقائق.\n- **لا تصلني إشعارات الحصص**: اضغط **تفعيل** في «فعّل تنبيهات الحصص». إن ظهر أن التنبيهات محظورة فاسمح بها لهذا الموقع من إعدادات المتصفح.",
-      "en": "1. Open **Timetable** and click today's class while it is running, or up to 10 minutes before it starts. You can also click the class card at the top of your home page.\n2. The class page opens with its picture, teacher and time. Click **Join**.\n3. Allow the browser to use your camera and microphone if it asks. Students enter with the microphone off and the camera off.\n4. In the class:\n   - **Raise hand** to ask to speak. The teacher sees your place in line.\n   - **Chat** for messages to the class, and **Questions** for questions the teacher answers.\n   - The teacher may share the **Whiteboard**, slides or their screen. They fill the screen on their own.\n5. Click **Leave** to leave. If the connection drops, the class says **Reconnecting…**; if that fails, click **Rejoin**.\n\n- The room is open at the class's time, so go in whenever you arrive: you may get there before the teacher or after, and you never wait for anyone.\n- If the teacher is not in yet, stay in the room: it tells you the teacher has not come in, and the teacher is notified that students are waiting. If the teacher is in before the students, you get a **\"… is in the class now\"** notification.\n- Turn on **class alerts** once on each device: under the Join button and on your home page you are offered \"Turn on class alerts to get a notification on this device before each class\". Click **Turn on**. On iPhone, add the app to your Home Screen first, then turn alerts on from the installed app.\n- Parents can watch a child's class when the school allows it. They join as observers, with no camera, microphone or questions.\n- Your attendance can be taken from the class: staying in the room counts, a short visit does not.\n- A class you missed shows on the **Live** page under the classes you can catch up on, with its recording when the school records classes.\n\nTroubleshooting:\n\n- **I can't sign in**: type the 6-digit **username** and the password your school sent, not your personal email. Your first sign-in asks for a new password: type one and keep it. If it's refused, ask the school for new details.\n- **\"You are not enrolled in this class\"**: the class belongs to another section. Check you opened your own class from your timetable.\n- **No sound or picture**: click **Test my camera and connection** under the Join button, and check the browser has permission to use the camera and microphone.\n- **No Join on the timetable**: the class is not online today, or it is more than 10 minutes away.\n- **No class notifications**: click **Turn on** in the class alerts offer. If it says notifications are blocked, allow them for this site in your browser settings."
+      "ar": "1. افتح **الجدول** واضغط على حصة اليوم وهي جارية، أو قبل بدئها بعشر دقائق. ويمكنك أيضاً الضغط على بطاقة الحصة أعلى صفحتك الرئيسية.\n2. تُفتح صفحة الحصة بصورتها ومعلّمها ووقتها. اضغط **انضمام**.\n3. اسمح للمتصفح باستخدام الكاميرا والميكروفون إن طلب ذلك. يدخل الطلاب بميكروفون مغلق وكاميرا معطّلة.\n4. داخل الحصة:\n   - **رفع اليد** لتطلب الكلام، ويرى المعلّم ترتيبك.\n   - **الدردشة** لرسائل الفصل، و**الأسئلة** لأسئلة يجيب عنها المعلّم.\n   - قد يعرض المعلّم **السبورة** أو الشرائح أو شاشته، فتملأ الشاشة وحدها.\n5. اضغط **مغادرة** للخروج. إن انقطع الاتصال تظهر **جارٍ إعادة الاتصال…**، وإن تعذّر ذلك فاضغط **إعادة الانضمام**.\n\n- الغرفة مفتوحة في موعد الحصة، فادخل متى وصلت: قد تسبق المعلّم إليها أو يسبقك، ولا تنتظر أحداً.\n- إن دخلت ولم تجد المعلّم فابقَ في الغرفة: تكتب لك الغرفة أنه لم يدخل بعد، ويصله إشعار بأن طلابه في انتظاره. وإن دخل المعلّم قبل طلابه يصلك إشعار **«… في الحصة الآن»**.\n- فعّل **تنبيهات الحصص** مرة واحدة على كل جهاز: تحت زر الانضمام وفي صفحتك الرئيسية يظهر «فعّل تنبيهات الحصص ليصلك إشعار على هذا الجهاز قبل كل حصة»، فاضغط **تفعيل**. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً، ثم فعّلها من التطبيق.\n- يستطيع أولياء الأمور مشاهدة حصة أبنائهم إن سمحت المدرسة بذلك، ويدخلون مشاهدين بلا كاميرا ولا ميكروفون ولا أسئلة.\n- قد يُسجَّل حضورك من الحصة: البقاء في الغرفة يُحتسب، والزيارة القصيرة لا تُحتسب.\n- الحصة التي فاتتك تظهر في صفحة **مباشر** ضمن الحصص التي يمكنك تعويضها، مع تسجيلها إن كانت المدرسة تسجّل الحصص.\n- في جوال أندرويد تُفتح الحصص في **التطبيق** فقط؛ يظهر في الصفحة **افتح التطبيق** أو **نزّل التطبيق**. وإن لم تستطع التثبيت فزر **ما قدرت أثبّت التطبيق** يدخلك من المتصفح لذلك اليوم ويُبلّغ مشرف الصف. آيفون والحاسوب يستخدمان المتصفح عادة. انظر تثبيت التطبيق.\n- موعد الحصة بـ**توقيت المدرسة**، ويظهر زر الانضمام عند بداية الحصة.\n\nحل المشكلات:\n\n- **لا أستطيع تسجيل الدخول**: اكتب **اسم المستخدم** المكوّن من 6 أرقام وكلمة المرور كما أرسلتها المدرسة، لا بريدك الشخصي. في أول دخول تُطلب كلمة مرور جديدة: اكتبها واحفظها. وإن رُفضت فاطلب من المدرسة بيانات جديدة.\n- **«أنت غير مسجّل في هذه الحصة»**: الحصة لفصل آخر؛ تأكد أنك فتحت حصتك من جدولك.\n- **لا صوت أو صورة**: اضغط **اختبر الكاميرا والاتصال** تحت زر الانضمام، وتأكد من إذن المتصفح للكاميرا والميكروفون.\n- **لا يظهر الانضمام في الجدول**: الحصة ليست مباشرة اليوم، أو بقي على بدئها أكثر من عشر دقائق.\n- **لا تصلني إشعارات الحصص**: اضغط **تفعيل** في «فعّل تنبيهات الحصص». إن ظهر أن التنبيهات محظورة فاسمح بها لهذا الموقع من إعدادات المتصفح.\n- **لا ميكروفون أو كاميرا**: افتح إعدادات الجوال ← التطبيق ← **الأذونات** وفعّل الميكروفون والكاميرا، ثم استخدم زرّيهما داخل الحصة.\n- **المعلم لم يدخل بعد وأنا في الحصة**: يصل تنبيه إلى مشرفة الصف بعد خمس دقائق، وتغطي الحصة أو تحجز حصة تعويضية.",
+      "en": "1. Open **Timetable** and click today's class while it is running, or up to 10 minutes before it starts. You can also click the class card at the top of your home page.\n2. The class page opens with its picture, teacher and time. Click **Join**.\n3. Allow the browser to use your camera and microphone if it asks. Students enter with the microphone off and the camera off.\n4. In the class:\n   - **Raise hand** to ask to speak. The teacher sees your place in line.\n   - **Chat** for messages to the class, and **Questions** for questions the teacher answers.\n   - The teacher may share the **Whiteboard**, slides or their screen. They fill the screen on their own.\n5. Click **Leave** to leave. If the connection drops, the class says **Reconnecting…**; if that fails, click **Rejoin**.\n\n- The room is open at the class's time, so go in whenever you arrive: you may get there before the teacher or after, and you never wait for anyone.\n- If the teacher is not in yet, stay in the room: it tells you the teacher has not come in, and the teacher is notified that students are waiting. If the teacher is in before the students, you get a **\"… is in the class now\"** notification.\n- Turn on **class alerts** once on each device: under the Join button and on your home page you are offered \"Turn on class alerts to get a notification on this device before each class\". Click **Turn on**. On iPhone, add the app to your Home Screen first, then turn alerts on from the installed app.\n- Parents can watch a child's class when the school allows it. They join as observers, with no camera, microphone or questions.\n- Your attendance can be taken from the class: staying in the room counts, a short visit does not.\n- A class you missed shows on the **Live** page under the classes you can catch up on, with its recording when the school records classes.\n- On an Android phone classes open in the **app** only; the page shows **Open the app** or **Get the app**. If you can't install it, **I couldn't install the app** lets you in through the browser for that day and tells the supervisor. iPhone and computers use the browser as usual. See Installing the app.\n- Class time is **school time**, and the join button appears when the class starts.\n\nTroubleshooting:\n\n- **I can't sign in**: type the 6-digit **username** and the password your school sent, not your personal email. Your first sign-in asks for a new password: type one and keep it. If it's refused, ask the school for new details.\n- **\"You are not enrolled in this class\"**: the class belongs to another section. Check you opened your own class from your timetable.\n- **No sound or picture**: click **Test my camera and connection** under the Join button, and check the browser has permission to use the camera and microphone.\n- **No Join on the timetable**: the class is not online today, or it is more than 10 minutes away.\n- **No class notifications**: click **Turn on** in the class alerts offer. If it says notifications are blocked, allow them for this site in your browser settings.\n- **No microphone or camera**: open phone Settings ← the app ← **Permissions** and allow the microphone and camera, then use their buttons inside the class.\n- **The teacher hasn't joined and I'm in the class**: after five minutes the class supervisor is alerted and covers it or books a make-up class."
     },
     "keywords": [
       "حصة مباشرة",
@@ -628,6 +652,16 @@
       "حصة ابني",
       "أتابع حصة",
       "مشاهدة حصة ابني",
+      "ما قادر ادخل الحصة",
+      "ما قادرة أدخل",
+      "الحصة ما فتحت",
+      "الصوت ما ظاهر",
+      "ما سامع",
+      "الميك ما شغال",
+      "افتح التطبيق",
+      "نزّل التطبيق",
+      "زر الانضمام ما ظهر",
+      "بتقول افتح التطبيق",
       "join live",
       "video class",
       "classroom online",
@@ -644,9 +678,65 @@
       "rejoin",
       "reconnecting",
       "my live class",
-      "watch my child's class"
+      "watch my child's class",
+      "can't enter the class",
+      "class didn't open",
+      "can't hear",
+      "mic not working",
+      "open the app",
+      "get the app",
+      "join button missing"
     ],
     "guide": "/docs/support/live-classes",
+    "routes": [
+      "/live"
+    ]
+  },
+  {
+    "slug": "makeup-class",
+    "roles": [
+      "admin",
+      "teacher",
+      "parent",
+      "student"
+    ],
+    "title": {
+      "ar": "الحصة التعويضية",
+      "en": "Make-up classes"
+    },
+    "summary": {
+      "ar": "حجز حصة تعويضية لحصة فاتت أو لم يحضرها المعلم",
+      "en": "Booking a make-up class for a missed class or a teacher who didn't attend"
+    },
+    "answer": {
+      "ar": "1. افتح **مباشر** (أو **الحصص الفائتة**) وابحث عن الحصة التي فاتت.\n2. اضغط **احجز** بجانبها.\n3. يقترح النظام **أقرب وقت فارغ** للمعلم والفصل. راجعه ثم اضغط **تأكيد**.\n4. يصل إشعار بالحصة الجديدة إلى الطلاب وأولياء الأمور وإلى المعلم، وقبلها بعشر دقائق يصلهم تذكير.\n\n- إن لم تدخل المعلمة حصتها بعد خمس دقائق من بدايتها وصل تنبيه إلى مشرفة الصف والإدارة، فتستطيع المشرفة أن تحجز **حصة تعويضية** أو تدخل كمعلمة الحصة.\n- إن تغيّر موعد حصة تعويضية وصل إشعار بالموعد الجديد للجميع.\n- الموعد المعروض هو بتوقيت المدرسة، حتى لمن هو خارج البلد.\n- الحصة التي فاتت وسُجّلت تظهر مع تسجيلها إن كانت المدرسة تسجّل الحصص.\n\nحل المشكلات:\n\n- **لا يظهر زر «احجز»**: الحصة لم تفُت بعد، أو ليست لفصلك. راجع مشرفة الصف.\n- **لا يناسبني الوقت المقترح**: اختر وقتًا آخر من الأوقات الفارغة قبل التأكيد.\n- **لم يصل إشعار الحصة التعويضية**: فعّل الإشعارات على جوالك. انظر الإشعارات.",
+      "en": "1. Open **Live** (or **Missed classes**) and find the class that was missed.\n2. Tap **Book** next to it.\n3. The system suggests the **nearest free time** for the teacher and the class. Check it, then tap **Confirm**.\n4. Students, parents and the teacher get a notification of the new class, and a reminder ten minutes before it starts.\n\n- If a teacher hasn't entered their class five minutes after it starts, the class supervisor and the administration get an alert, and the supervisor can book a **make-up class** or enter as the class teacher.\n- If a make-up class is moved, everyone is notified of the new time.\n- The time shown is school time, even for people abroad.\n- A missed class that was recorded appears with its recording if the school records classes.\n\nTroubleshooting:\n\n- **There is no \"Book\" button**: the class hasn't been missed yet, or it isn't your class. Ask the class supervisor.\n- **The suggested time doesn't suit me**: pick another free time before confirming.\n- **I didn't get a make-up class notification**: turn on notifications on your phone. See Notifications."
+    },
+    "keywords": [
+      "حصة تعويضية",
+      "تعويض حصة",
+      "احجز حصة تعويضية",
+      "تعويض الحصة",
+      "الحصة فاتت",
+      "حصة فاتتني",
+      "حصة ما اتدرست",
+      "المعلمة غابت",
+      "حصص فاتت",
+      "الحصص الفائتة",
+      "حصة بديلة",
+      "تعويض",
+      "makeup class",
+      "make-up class",
+      "missed class",
+      "reschedule class",
+      "book a makeup",
+      "class missed",
+      "teacher was absent",
+      "replacement class",
+      "compensate class",
+      "missed classes"
+    ],
+    "guide": "/docs/support/makeup-class",
     "routes": [
       "/live"
     ]
@@ -667,8 +757,8 @@
       "en": "Entering and running a live class as the teacher"
     },
     "answer": {
-      "ar": "الحصة المباشرة مثل الفصل تماماً: الغرفة موجودة في موعد الحصة من الجدول، ويدخلها المعلّم والطلاب كلٌّ حين يصل، بلا ترتيب. لا أحد «يبدأ» الحصة، ولا أحد ينتظر أحداً.\n\n1. افتح **الجدول** واضغط **انضمام** على حصتك وهي جارية، أو قبلها بعشر دقائق. ويمكنك أيضاً الدخول من البانر الأخضر في صفحتك الرئيسية، أو من إشعار الحصة.\n2. تدخل الغرفة مباشرة. قد تجد بعض الطلاب قد سبقوك إليها، وهذا طبيعي. وإن لم يدخل أحد بعد فابقَ في الغرفة: يصل طلابك وأولياء أمورهم إشعار **«… في الحصة الآن»**.\n3. أدر الحصة:\n   - تظهر **الأيدي المرفوعة** بالترتيب، و**منح الكلمة** يُبرز الطالب على الشاشة.\n   - افتح **السبورة**، أو اعرض الشرائح أو شاشتك، وأطلق **استطلاعاً** أو تقييماً سريعاً.\n   - أجب عن **الأسئلة** وتابع **الدردشة**.\n4. عند نهاية الحصة اضغط **مغادرة**. تُغلق الغرفة وحدها بعد موعد الحصة بعشر دقائق.\n5. بعد الحصة اختر **تحديد واجب** لتعطي الفصل واجباً فوراً، ويُخطَر الطلاب.\n\n- إن سبقك طلابك إلى الغرفة يصلك إشعار **«طلابك في انتظارك»**، والضغط عليه يدخلك الحصة.\n- فعّل **تنبيهات الحصص** مرة واحدة على كل جهاز تستخدمه: تحت زر الانضمام وفي صفحتك الرئيسية يظهر «فعّل تنبيهات الحصص ليصلك إشعار على هذا الجهاز قبل كل حصة»، فاضغط **تفعيل**. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً. واطلب من طلابك أن يفعلوا مثل ذلك.\n- إن خرج الجميع من الغرفة ثم عادوا قبل انتهاء الموعد، تبقى الحصة نفسها ويعودون إليها.\n- يُكتب الحضور وحده بعد انتهاء موعد الحصة إن فعّلت المدرسة **تسجيل الحضور تلقائياً**، ويُحسب التأخير من موعد الجرس لا من وقت دخولك. ويمكنك تصحيح أي طالب من صفحة الحصة.\n- يمكنك صرف الفصل قبل الموعد من صفحة الحصة: **إنهاء الحصة** ثم **إنهاء الحصة للجميع؟**. هذا اختياري.\n- المعلّم البديل المؤكَّد لحصتك يدخلها بدلاً منك.\n- يدخل الطلاب بميكروفون وكاميرا مغلقين، ويمكنك تغيير ذلك لكل حصة.\n\nحل المشكلات:\n\n- **لا يظهر زر الانضمام في الجدول**: بقي على الحصة أكثر من عشر دقائق، أو المدرسة مضبوطة على **حضوري**، أو الحصة ليست حصتك. راجع الإدارة.\n- **طالب لا يسمعك**: تحقّق من الميكروفون في **المزيد**، واطلب منه الضغط على **اختبر الكاميرا والاتصال**.\n- **لم يُكتب الحضور**: تسجيل الحضور التلقائي مغلق للمدرسة، أو لم يدخل أحد من الكشف.",
-      "en": "A live class works like the classroom: the room is there at the class's time on the timetable, and the teacher and the students each walk in when they arrive, in any order. Nobody \"starts\" the class and nobody waits for anyone.\n\n1. Open **Timetable** and click **Join** on your class while it is running, or up to 10 minutes before. You can also go in from the green banner on your home page, or from the class notification.\n2. You enter the room straight away. Some students may already be inside; that's normal. If nobody is in yet, stay in the room: your students and their guardians get a **\"… is in the class now\"** notification.\n3. Run the class:\n   - **Raised hands** show in order. **Give the floor** brings a student to the stage.\n   - Open the **Whiteboard**, share slides or your screen, and run a **Poll** or a quick check.\n   - Answer the **Questions** and keep an eye on the **Chat**.\n4. When the class is over, click **Leave**. The room closes on its own 10 minutes after the class's time.\n5. After the class, choose **Set homework** to give the section homework straight away. Students are notified.\n\n- If your students are in the room before you, you get a **\"Your students are waiting\"** notification; clicking it takes you into the class.\n- Turn on **class alerts** once on each device you use: under the Join button and on your home page you are offered \"Turn on class alerts to get a notification on this device before each class\". Click **Turn on**. On iPhone, add the app to your Home Screen first. Ask your students to do the same.\n- If everyone leaves the room and comes back before the class's time is up, it is still the same class.\n- Attendance is written on its own after the class's time, if your school has turned on **Auto-mark attendance**. Lateness counts from the bell, not from when you arrived. You can correct any student on the class page.\n- You can dismiss the class early from the class page: **End class**, then **End for everyone?**. This is optional.\n- A substitute teacher who has been confirmed for your period goes in instead of you.\n- Students enter with the microphone and camera off; you can change that per class.\n\nTroubleshooting:\n\n- **No Join button on the timetable**: the class is more than 10 minutes away, your school is set to **In person**, or it isn't your period. Ask the admin.\n- **A student can't hear you**: check your microphone in **More**, and ask them to click **Test my camera and connection**.\n- **Attendance wasn't written**: automatic attendance is off for the school, or nobody on the roster joined."
+      "ar": "الحصة المباشرة مثل الفصل تماماً: الغرفة موجودة في موعد الحصة من الجدول، ويدخلها المعلّم والطلاب كلٌّ حين يصل، بلا ترتيب. لا أحد «يبدأ» الحصة، ولا أحد ينتظر أحداً.\n\n1. افتح **الجدول** واضغط **انضمام** على حصتك وهي جارية، أو قبلها بعشر دقائق. ويمكنك أيضاً الدخول من البانر الأخضر في صفحتك الرئيسية، أو من إشعار الحصة.\n2. تدخل الغرفة مباشرة. قد تجد بعض الطلاب قد سبقوك إليها، وهذا طبيعي. وإن لم يدخل أحد بعد فابقَ في الغرفة: يصل طلابك وأولياء أمورهم إشعار **«… في الحصة الآن»**.\n3. أدر الحصة:\n   - تظهر **الأيدي المرفوعة** بالترتيب، و**منح الكلمة** يُبرز الطالب على الشاشة.\n   - افتح **السبورة**، أو اعرض الشرائح أو شاشتك، وأطلق **استطلاعاً** أو تقييماً سريعاً.\n   - أجب عن **الأسئلة** وتابع **الدردشة**.\n4. عند نهاية الحصة اضغط **مغادرة**. تُغلق الغرفة وحدها بعد موعد الحصة بعشر دقائق.\n5. بعد الحصة اختر **تحديد واجب** لتعطي الفصل واجباً فوراً، ويُخطَر الطلاب.\n\n- إن سبقك طلابك إلى الغرفة يصلك إشعار **«طلابك في انتظارك»**، والضغط عليه يدخلك الحصة.\n- فعّل **تنبيهات الحصص** مرة واحدة على كل جهاز تستخدمه: تحت زر الانضمام وفي صفحتك الرئيسية يظهر «فعّل تنبيهات الحصص ليصلك إشعار على هذا الجهاز قبل كل حصة»، فاضغط **تفعيل**. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً. واطلب من طلابك أن يفعلوا مثل ذلك.\n- إن خرج الجميع من الغرفة ثم عادوا قبل انتهاء الموعد، تبقى الحصة نفسها ويعودون إليها.\n- يُكتب الحضور وحده بعد انتهاء موعد الحصة إن فعّلت المدرسة **تسجيل الحضور تلقائياً**، ويُحسب التأخير من موعد الجرس لا من وقت دخولك. ويمكنك تصحيح أي طالب من صفحة الحصة.\n- يمكنك صرف الفصل قبل الموعد من صفحة الحصة: **إنهاء الحصة** ثم **إنهاء الحصة للجميع؟**. هذا اختياري.\n- المعلّم البديل المؤكَّد لحصتك يدخلها بدلاً منك.\n- يدخل الطلاب بميكروفون وكاميرا مغلقين، ويمكنك تغيير ذلك لكل حصة.\n\nحل المشكلات:\n\n- **لا يظهر زر الانضمام في الجدول**: بقي على الحصة أكثر من عشر دقائق، أو المدرسة مضبوطة على **حضوري**، أو الحصة ليست حصتك. راجع الإدارة.\n- **طالب لا يسمعك**: تحقّق من الميكروفون في **المزيد**، واطلب منه الضغط على **اختبر الكاميرا والاتصال**.\n- **لم يُكتب الحضور**: تسجيل الحضور التلقائي مغلق للمدرسة، أو لم يدخل أحد من الكشف.\n- **الصوت يقطع أو المشاركة تفشل على الجوال**: انظر مشاركة الشاشة والصوت.\n- **أنا معلّمة والتطبيق لا يعرض حصصي**: ادخل باسم المستخدم لا البريد، وإن عرض مدرسة أخرى فأعد تثبيته. انظر تثبيت التطبيق.",
+      "en": "A live class works like the classroom: the room is there at the class's time on the timetable, and the teacher and the students each walk in when they arrive, in any order. Nobody \"starts\" the class and nobody waits for anyone.\n\n1. Open **Timetable** and click **Join** on your class while it is running, or up to 10 minutes before. You can also go in from the green banner on your home page, or from the class notification.\n2. You enter the room straight away. Some students may already be inside; that's normal. If nobody is in yet, stay in the room: your students and their guardians get a **\"… is in the class now\"** notification.\n3. Run the class:\n   - **Raised hands** show in order. **Give the floor** brings a student to the stage.\n   - Open the **Whiteboard**, share slides or your screen, and run a **Poll** or a quick check.\n   - Answer the **Questions** and keep an eye on the **Chat**.\n4. When the class is over, click **Leave**. The room closes on its own 10 minutes after the class's time.\n5. After the class, choose **Set homework** to give the section homework straight away. Students are notified.\n\n- If your students are in the room before you, you get a **\"Your students are waiting\"** notification; clicking it takes you into the class.\n- Turn on **class alerts** once on each device you use: under the Join button and on your home page you are offered \"Turn on class alerts to get a notification on this device before each class\". Click **Turn on**. On iPhone, add the app to your Home Screen first. Ask your students to do the same.\n- If everyone leaves the room and comes back before the class's time is up, it is still the same class.\n- Attendance is written on its own after the class's time, if your school has turned on **Auto-mark attendance**. Lateness counts from the bell, not from when you arrived. You can correct any student on the class page.\n- You can dismiss the class early from the class page: **End class**, then **End for everyone?**. This is optional.\n- A substitute teacher who has been confirmed for your period goes in instead of you.\n- Students enter with the microphone and camera off; you can change that per class.\n\nTroubleshooting:\n\n- **No Join button on the timetable**: the class is more than 10 minutes away, your school is set to **In person**, or it isn't your period. Ask the admin.\n- **A student can't hear you**: check your microphone in **More**, and ask them to click **Test my camera and connection**.\n- **Attendance wasn't written**: automatic attendance is off for the school, or nobody on the roster joined.\n- **The voice cuts out or sharing fails on a phone**: see Sharing your screen and sound.\n- **I'm a teacher and the app doesn't show my classes**: sign in with the username, not the email, and if it shows another school reinstall it. See Installing the app."
     },
     "keywords": [
       "دخول الحصة",
@@ -695,6 +785,9 @@
       "أنهي الحصة",
       "إنهاء الحصة المباشرة",
       "بدء الحصة المباشرة",
+      "الصوت بيقطع",
+      "مشاركة الشاشة ما اشتغلت",
+      "ما سامعين صوتي",
       "enter class",
       "teacher join",
       "teach online",
@@ -710,12 +803,69 @@
       "live attendance",
       "teacher live",
       "start my live class",
-      "end my live class"
+      "end my live class",
+      "voice cuts",
+      "screen share didn't work",
+      "students can't hear me"
     ],
     "guide": "/docs/support/teach-live",
     "routes": [
       "/live"
     ]
+  },
+  {
+    "slug": "screen-share",
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "مشاركة الشاشة والصوت في الحصة",
+      "en": "Sharing your screen and sound in class"
+    },
+    "summary": {
+      "ar": "مشاركة الشاشة والصوت في الحصة من الجوال وحل انقطاع الصوت",
+      "en": "Sharing the screen and sound in a class from a phone, and fixing cut-off audio"
+    },
+    "answer": {
+      "ar": "1. على أندرويد ادخل الحصة **من التطبيق** (من **مباشر** أو من الجدول)، فمتصفح الجوال لا يشارك الشاشة ولا يُبقي الحصة تعمل في الخلفية.\n2. اضغط زر **مشاركة الشاشة** داخل الحصة، ووافق على نافذة الإذن.\n3. افتح الكتاب أو الفيديو أو الموقع الذي تريد عرضه، ثم ارجع إلى الحصة متى شئت: المشاركة تبقى تعمل.\n4. يسمع الطلاب **صوت الفيديو** مع الشاشة، وصوتك أيضًا أثناء المشاركة.\n5. لإيقاف العرض اضغط **إيقاف المشاركة**. وللرسم والكتابة اضغط زر **السبورة**.\n\n- على الحاسوب اختر **علامة تبويب** في المتصفح وفعّل مشاركة صوت علامة التبويب ليسمع الطلاب الفيديو.\n- على آيفون مشاركة الشاشة غير متاحة بعد، فاستخدم الحاسوب أو جوال أندرويد.\n- جرّب مع زميلة قبل حصتك في **غرفة التجربة**.\n- مع بيانات الجوال يرسل التطبيق الشاشة بجودة أخف حتى لا تغطي على الصوت، والواي فاي أفضل.\n\nحل المشكلات:\n\n- **الصوت يقطع مع مشاركة الشاشة على بيانات الجوال**: حدّث التطبيق من زر **تحديث** (النسخة الجديدة ترسل الشاشة بجودة أخف)، وفضّل الواي فاي. إن قطع الصوت بعد التحديث فأبلغ عن المشكلة باسم الحصة ووقتها.\n- **الطلاب لا يسمعونني أثناء المشاركة**: حدّث التطبيق، وتأكد أنك داخل من التطبيق لا من المتصفح.\n- **المشاركة لا تعمل أو لا يظهر زرها**: أنت في متصفح الجوال؛ افتح الحصة من التطبيق. وإن فشلت المشاركة بعد التحديث فاختر **الشاشة كاملة** بدل تطبيق واحد.\n- **الكتاب يغلق الحصة عندما أفتحه**: شارك الشاشة أولًا ثم افتح الكتاب، ولا تخرج من التطبيق قبل بدء المشاركة.\n- **السبورة والمشاركة لا تعملان معًا**: كل مرة تظهر واحدة منهما؛ أوقف الأولى ثم شغّل الثانية.",
+      "en": "1. On Android, join the class **from the app** (from **Live** or the timetable). A phone browser can't share the screen or keep the class running in the background.\n2. Tap **Share screen** inside the class and accept the permission prompt.\n3. Open the book, video or site you want to show, then come back to the class whenever you like: the share keeps running.\n4. Students hear the **video's sound** with the screen, and your voice too while you share.\n5. To stop, tap **Stop sharing**. To draw or write, tap the **whiteboard** button.\n\n- On a computer pick a browser **tab** and turn on tab audio so students hear the video.\n- Screen sharing is not available on iPhone yet. Use a computer or an Android phone.\n- Practice with a colleague before your class in the **test room**.\n- On mobile data the app sends the screen at a lighter quality so it doesn't drown out the sound. Wi-Fi is better.\n\nTroubleshooting:\n\n- **The voice cuts out while sharing on mobile data**: update the app with the **Update** button (the new version sends the screen at a lighter quality) and prefer Wi-Fi. If it still cuts after updating, report the problem with the class name and time.\n- **Students can't hear me while I share**: update the app, and make sure you joined from the app, not the browser.\n- **Sharing doesn't work or has no button**: you are in the phone browser; open the class from the app. If it fails after updating, choose **Entire screen** instead of a single app.\n- **The class closes when I open the book**: start sharing first, then open the book, and don't leave the app before sharing begins.\n- **The whiteboard and the share don't work together**: only one shows at a time; stop the first, then start the second."
+    },
+    "keywords": [
+      "مشاركة الشاشة",
+      "شارك الشاشة",
+      "شير الشاشة",
+      "مشاركة الشاشه ما اشتغلت",
+      "المشاركة ما بتشتغل",
+      "الصوت بيقطع",
+      "الصوت بيقطع مع مشاركة الشاشة",
+      "الصوت يقطع",
+      "ما سامعين صوتي",
+      "الطلاب ما بسمعوني",
+      "صوت الفيديو",
+      "صوت يوتيوب",
+      "السبورة ما بتشتغل",
+      "مشاركة الشاشة من الجوال",
+      "الكتاب ما بيفتح في الحصة",
+      "افتح كتاب في الحصة",
+      "share screen",
+      "screen sharing",
+      "voice cuts",
+      "audio cuts",
+      "no sound when sharing",
+      "whiteboard",
+      "screen share not working",
+      "share my screen",
+      "sound cuts out",
+      "voice cuts when sharing the screen",
+      "students can't hear me",
+      "video sound",
+      "youtube sound",
+      "whiteboard not working",
+      "share screen from phone",
+      "open a book in class"
+    ],
+    "guide": "/docs/support/screen-share"
   },
   {
     "slug": "holidays",
@@ -881,8 +1031,8 @@
       "en": "Handing in homework and marking it"
     },
     "answer": {
-      "ar": "**الطالب: التسليم**\n\n1. افتح **واجباتي**؛ يظهر الواجب الجديد أولاً مع موعد تسليمه.\n2. اكتب إجابتك، واضغط **إرفاق ملفات** لإضافة صور عملك أو ملف PDF أو مستند أو تسجيل صوتي (حتى 25 ميغابايت للملف، و10 ملفات).\n3. اضغط **تسليم**. يمكنك إعادة التسليم حتى يصحّحه المعلّم، وإعادة التسليم تستبدل ما سلّمته.\n\n**المعلّم: الإنشاء والتصحيح**\n\n1. افتح **الواجبات ← إنشاء واجب**، واختر الصف، والفصل أو الصف كاملاً، والمادة والنوع، ثم الدرجة وموعد التسليم. إنهاء المعالج ينشر الواجب ويُخطر الطلاب.\n2. افتح الواجب ثم تبويب **التسليمات**؛ ترى من سلّم (مثلاً «سلّم 12 من 25») ونصوصهم وملفاتهم.\n3. أدخل **الدرجة** و**الملاحظات** لكل تسليم واضغط **حفظ**.\n\n- بعد الحصة المباشرة يعطي **تحديد واجب** في صفحة الحصة الفصلَ واجباً بخطوة واحدة.\n- يصل الطلابَ تذكير قبل موعد التسليم بيوم، والتسليم بعد الموعد يُوسم **متأخر**.\n- يرى أولياء الأمور واجبات أبنائهم ودرجاتهم في بوابة أولياء الأمور.\n\nحل المشكلات:\n\n- **الطالب لا يرى الواجب**: تأكد أنه لصفه أو فصله، وأن معالج الواجب اكتمل.\n- **«الملفات تحتاج اتصالاً لتسليمها»**: لا تُحفظ الملفات دون اتصال؛ سلّم عند عودة الاتصال، أما النص وحده فيُحفظ دون اتصال.\n- **فشل رفع ملف**: تحقّق من نوعه وحجمه (25 ميغابايت حداً أقصى) ثم أعد المحاولة.",
-      "en": "**Student: hand in**\n\n1. Open **My assignments**. New homework is listed first, with its due date.\n2. Write your answer, and click **Attach files** to add photos of your work, a PDF, a document or a voice note (up to 25MB each, 10 files).\n3. Click **Submit**. You can resubmit until the teacher marks it; resubmitting replaces what you handed in.\n\n**Teacher: set and mark**\n\n1. Open **Assignments → Create assignment**, choose the grade, the section or the whole grade, the subject and the type, then the points and due date. Finishing publishes it and notifies the students.\n2. Open the assignment and the **Submissions** tab. You see who handed in (for example \"12 of 25 handed in\"), their text and their files.\n3. Enter the **Score** and **Feedback** for each hand-in and click **Save**.\n\n- After a live class, **Set homework** on the class page gives the section homework in one step.\n- Students get a reminder the day before the due date. Work handed in after the due date is marked **Late**.\n- Parents see their child's homework and marks in the parent portal.\n\nTroubleshooting:\n\n- **A student doesn't see the homework**: check it was set for their grade or section, and that the assignment wizard was finished.\n- **\"Files need a connection to hand in\"**: files can't be saved offline. Hand in when you're back online; text alone can be saved offline.\n- **An upload fails**: check the file type and size (25MB at most), then try again."
+      "ar": "**الطالب: التسليم**\n\n1. افتح **واجباتي**؛ يظهر الواجب الجديد أولاً مع موعد تسليمه.\n2. اكتب إجابتك، واضغط **إرفاق ملفات** لإضافة صور عملك أو ملف PDF أو مستند أو تسجيل صوتي (حتى 25 ميغابايت للملف، و10 ملفات).\n3. اضغط **تسليم**. يمكنك إعادة التسليم حتى يصحّحه المعلّم، وإعادة التسليم تستبدل ما سلّمته.\n\n**المعلّم: الإنشاء والتصحيح**\n\n1. افتح **الواجبات ← إنشاء واجب**، واختر الصف، والفصل أو الصف كاملاً، والمادة والنوع، ثم الدرجة وموعد التسليم. إنهاء المعالج ينشر الواجب ويُخطر الطلاب.\n2. افتح الواجب ثم تبويب **التسليمات**؛ ترى من سلّم (مثلاً «سلّم 12 من 25») ونصوصهم وملفاتهم.\n3. أدخل **الدرجة** و**الملاحظات** لكل تسليم واضغط **حفظ**.\n\n- بعد الحصة المباشرة يعطي **تحديد واجب** في صفحة الحصة الفصلَ واجباً بخطوة واحدة.\n- يصل الطلابَ تذكير قبل موعد التسليم بيوم، والتسليم بعد الموعد يُوسم **متأخر**.\n- يرى أولياء الأمور واجبات أبنائهم ودرجاتهم في بوابة أولياء الأمور.\n- الكتب والمواد والواجبات والاختبارات القصيرة كلها داخل المنصة: **المواد** و**الواجبات** من القائمة ☰. لا تُرسَل الواجبات في مجموعات واتساب؛ مجموعات واتساب للصفوف تديرها المدرسة.\n- إن لم تجد الواجبات في الصفحة الرئيسية فافتحها من **القائمة ☰ ← الواجبات**.\n\nحل المشكلات:\n\n- **الطالب لا يرى الواجب**: تأكد أنه لصفه أو فصله، وأن معالج الواجب اكتمل.\n- **«الملفات تحتاج اتصالاً لتسليمها»**: لا تُحفظ الملفات دون اتصال؛ سلّم عند عودة الاتصال، أما النص وحده فيُحفظ دون اتصال.\n- **فشل رفع ملف**: تحقّق من نوعه وحجمه (25 ميغابايت حداً أقصى) ثم أعد المحاولة.",
+      "en": "**Student: hand in**\n\n1. Open **My assignments**. New homework is listed first, with its due date.\n2. Write your answer, and click **Attach files** to add photos of your work, a PDF, a document or a voice note (up to 25MB each, 10 files).\n3. Click **Submit**. You can resubmit until the teacher marks it; resubmitting replaces what you handed in.\n\n**Teacher: set and mark**\n\n1. Open **Assignments → Create assignment**, choose the grade, the section or the whole grade, the subject and the type, then the points and due date. Finishing publishes it and notifies the students.\n2. Open the assignment and the **Submissions** tab. You see who handed in (for example \"12 of 25 handed in\"), their text and their files.\n3. Enter the **Score** and **Feedback** for each hand-in and click **Save**.\n\n- After a live class, **Set homework** on the class page gives the section homework in one step.\n- Students get a reminder the day before the due date. Work handed in after the due date is marked **Late**.\n- Parents see their child's homework and marks in the parent portal.\n- Books, materials, homework and quizzes are all on the platform: **Materials** and **Homework** from the ☰ menu. Homework isn't sent in WhatsApp groups; the class WhatsApp groups are run by the school.\n- If you can't find homework on the home page, open it from **☰ menu ← Homework**.\n\nTroubleshooting:\n\n- **A student doesn't see the homework**: check it was set for their grade or section, and that the assignment wizard was finished.\n- **\"Files need a connection to hand in\"**: files can't be saved offline. Hand in when you're back online; text alone can be saved offline.\n- **An upload fails**: check the file type and size (25MB at most), then try again."
     },
     "keywords": [
       "واجب",
@@ -905,6 +1055,18 @@
       "hand in",
       "submit",
       "attach file",
+      "الكتب المقررة",
+      "وين الكتب المقررة",
+      "وين الكتب",
+      "الكتاب المقرر",
+      "المواد",
+      "مواد الدراسة",
+      "المنهج",
+      "الكتاب في المنصة",
+      "الاختبارات القصيرة",
+      "واجبات الأولاد وين",
+      "غير مصرح لك بالوصول",
+      "الواجب ما ظهر",
       "submission",
       "upload",
       "photo of work",
@@ -915,7 +1077,17 @@
       "late",
       "due date",
       "my assignments",
-      "set homework"
+      "set homework",
+      "textbooks",
+      "where are the books",
+      "where are the set books",
+      "course books",
+      "materials",
+      "subject materials",
+      "quizzes",
+      "where is the homework",
+      "not authorized to access",
+      "homework not showing"
     ],
     "guide": "/docs/support/homework",
     "routes": [
@@ -1113,8 +1285,8 @@
       "en": "Signing in and resetting a password"
     },
     "answer": {
-      "ar": "1. افتح **عنوان مدرستك** نفسه، مثل `yourschool.balqalam.com`، ثم صفحة الدخول. حساب كل مدرسة لا يعمل إلا على عنوانها.\n2. في خانة **البريد الإلكتروني أو اسم المستخدم** اكتب بريدك، أو رمز الدخول المكوّن من ٦ أرقام الذي أعطتك إياه المدرسة.\n3. اكتب **كلمة المرور** واضغط **دخول**، فتفتح **لوحة التحكم** مباشرة. إن ظهرت لك صفحة المدرسة العامة فافتح القائمة **☰** واضغط **المنصة**.\n4. أول دخول بالرقم السري الذي أعطتك إياه المدرسة؟ تطلب منك المنصة أن **تختار كلمة المرور الخاصة بك**: اكتب كلمة جديدة مرتين (تكفي ٤ أرقام) واضغط **احفظ وتابع**.\n5. نسيت كلمة المرور ولديك بريد؟ اضغط **نسيت كلمة المرور؟** وأدخل بريدك، ثم افتح رابط الاستعادة الذي يصلك.\n6. نسيتها وتدخل برمز من ٦ أرقام دون بريد؟ اطلب من إدارة المدرسة، فيفتح المدير صفك في **الطلاب** أو **المعلمين** أو **أولياء الأمور** أو **الموظفين** ويضغط **إنشاء بيانات الدخول**، فيصلك رقم سري جديد فورًا.\n\n- رمز الدخول ٦ أرقام، والرقم السري من المدرسة ٤ أرقام، ولكل شخص في المدرسة رمزه الخاص.\n- تريد تغيير بريدك الإلكتروني؟ اطلب من إدارة المدرسة تعديله على حسابك.\n- تستطيع تغيير كلمة المرور في أي وقت من **الإعدادات ← كلمة المرور**.\n- عندما يعيد المدير تعيين كلمة مرورك يُرفع أي حظر عن حسابك فورًا.\n\nحل المشكلات:\n\n- **«الحساب غير موجود»**: اكتب في الخانة الأولى رمز الدخول المكوّن من ٦ أرقام كما وصلك، لا اسمك ولا رقم جوالك. إن استمرت الرسالة فحسابك لم يُنشأ بعد، فاطلب من إدارة المدرسة **إنشاء بيانات الدخول**.\n- **الرمز يعمل والبريد لا يعمل**: قد لا يكون بريدك مسجلًا على حسابك. ادخل بالرمز، واطلب من الإدارة إضافة بريدك.\n- **الخانة تبدو ممتلئة لكن تظهر «مطلوب»**: المتصفح يقترح بريدًا محفوظًا دون أن يكتبه. اضغط داخل الخانة واكتب بنفسك.\n- **«تم رفض الوصول»**: أنت داخل بحساب لا يتبع هذه المدرسة. اضغط **تسجيل الخروج** من القائمة ثم ادخل برمزك.\n- **«محاولات خاطئة كثيرة»**: بعد ٥ محاولات خاطئة يُحظر الدخول ١٥ دقيقة. انتظر، أو اطلب من إدارة المدرسة إعادة تعيين كلمة المرور فيُفتح الحساب فورًا.\n- **«اسم المستخدم أو البريد الإلكتروني أو كلمة المرور غير صحيحة» رغم صحتها**: تأكد أنك على عنوان مدرستك لا على balqalam.com ولا على مدرسة أخرى، وأن الرمز بلا مسافات.\n- **لم تصل رسالة الاستعادة**: افحص البريد المزعج وانتظر دقائق. نرسلها فقط إن كان البريد مسجلًا على حساب، ومن يدخل برمز يطلب من إدارة المدرسة.\n- **«انتهت صلاحية رابط إعادة التعيين»**: اضغط **نسيت كلمة المرور؟** من جديد واستخدم أحدث رسالة.\n- **«هذا الحساب موقوف»**: لا يرفع الإيقاف إلا المدرسة، فتواصل مع إدارتها.",
-      "en": "1. Open your **school's own address**, for example `yourschool.balqalam.com`, and go to the login page. A login only works at the school that created it.\n2. In **Email or username**, type your email, or the 6-digit login code the school gave you.\n3. Type your **Password** and click **Login**. Your **Dashboard** opens. If you see the school's public home page instead, open the **☰** menu and tap **Platform**.\n4. First time in with the PIN from the school? Balqalam asks you to **Choose your own password**: type a new one twice (4 digits is enough) and click **Save and continue**.\n5. Forgot your password and you have an email? Click **Forgot Password?**, enter your email, and open the reset link we send you.\n6. Forgot it and you sign in with a 6-digit code (no email)? Ask the school office. An admin opens your row in **Students**, **Teachers**, **Parents** or **Staff** and clicks **Generate Credentials**. That gives you a new PIN on the spot.\n\n- The login code is 6 digits and the school's PIN is 4 digits. Every person in a school has their own code.\n- Want to change your email? Ask the school office to update it on your account.\n- You can change your password any time in **Settings → Password**.\n- When an admin resets your password, any lockout is lifted at the same time.\n\nTroubleshooting:\n\n- **\"Account not found\"**: type the 6-digit login code in the first box exactly as you received it, not your name or phone number. If it keeps happening, your account hasn't been created yet, so ask the school office to **Generate Credentials**.\n- **The code works but my email doesn't**: your email may not be on your account. Sign in with the code and ask the office to add your email.\n- **The box looks filled but says \"required\"**: the browser is suggesting a saved email without typing it. Tap the box and type it yourself.\n- **\"Access Denied\"**: you are signed in with an account that doesn't belong to this school. Click **Logout** in the menu, then sign in with your code.\n- **\"Too many wrong attempts\"**: after 5 wrong tries the login is blocked for 15 minutes. Wait, or ask the school office to reset your password, which unblocks you straight away.\n- **\"Wrong username, email or password\" with the right password**: check that you are on your own school's address and not balqalam.com or another school's, and that the code has no spaces.\n- **The reset email never arrives**: check spam, and wait a few minutes. We only send it if that email is on an account. If you sign in with a code, ask the school office instead.\n- **\"This reset link has expired\"**: click **Forgot Password?** again and use the newest email.\n- **\"This account is suspended\"**: only the school can lift this. Contact the school office."
+      "ar": "1. افتح **عنوان مدرستك** نفسه، مثل `yourschool.balqalam.com`، ثم صفحة الدخول. حساب كل مدرسة لا يعمل إلا على عنوانها.\n2. في خانة **البريد الإلكتروني أو اسم المستخدم** اكتب بريدك، أو رمز الدخول المكوّن من ٦ أرقام الذي أعطتك إياه المدرسة.\n3. اكتب **كلمة المرور** واضغط **دخول**، فتفتح **لوحة التحكم** مباشرة. إن ظهرت لك صفحة المدرسة العامة فافتح القائمة **☰** واضغط **المنصة**.\n4. أول دخول بالرقم السري الذي أعطتك إياه المدرسة؟ تطلب منك المنصة أن **تختار كلمة المرور الخاصة بك**: اكتب كلمة جديدة مرتين (تكفي ٤ أرقام) واضغط **احفظ وتابع**.\n5. نسيت كلمة المرور ولديك بريد؟ اضغط **نسيت كلمة المرور؟** وأدخل بريدك، ثم افتح رابط الاستعادة الذي يصلك.\n6. نسيتها وتدخل برمز من ٦ أرقام دون بريد؟ اطلب من إدارة المدرسة، فيفتح المدير صفك في **الطلاب** أو **المعلمين** أو **أولياء الأمور** أو **الموظفين** ويضغط **إنشاء بيانات الدخول**، فيصلك رقم سري جديد فورًا.\n\n- رمز الدخول ٦ أرقام، والرقم السري من المدرسة ٤ أرقام، ولكل شخص في المدرسة رمزه الخاص.\n- تريد تغيير بريدك الإلكتروني؟ اطلب من إدارة المدرسة تعديله على حسابك.\n- تستطيع تغيير كلمة المرور في أي وقت من **الإعدادات ← كلمة المرور**.\n- عندما يعيد المدير تعيين كلمة مرورك يُرفع أي حظر عن حسابك فورًا.\n- في تطبيق المدرسة تدخل **باسم المستخدم** (الرقم الذي على بطاقتك) لا بالبريد، وكلمة المرور رقم سري من المدرسة.\n- لا تُبقِ حسابَي شخصين على جوال واحد: اخرج من القائمة ☰ ← **تسجيل الخروج** قبل أن يدخل غيرك.\n\nحل المشكلات:\n\n- **«الحساب غير موجود»**: اكتب في الخانة الأولى رمز الدخول المكوّن من ٦ أرقام كما وصلك، لا اسمك ولا رقم جوالك. إن استمرت الرسالة فحسابك لم يُنشأ بعد، فاطلب من إدارة المدرسة **إنشاء بيانات الدخول**.\n- **الرمز يعمل والبريد لا يعمل**: قد لا يكون بريدك مسجلًا على حسابك. ادخل بالرمز، واطلب من الإدارة إضافة بريدك.\n- **الخانة تبدو ممتلئة لكن تظهر «مطلوب»**: المتصفح يقترح بريدًا محفوظًا دون أن يكتبه. اضغط داخل الخانة واكتب بنفسك.\n- **«تم رفض الوصول»**: أنت داخل بحساب لا يتبع هذه المدرسة. اضغط **تسجيل الخروج** من القائمة ثم ادخل برمزك.\n- **«محاولات خاطئة كثيرة»**: بعد ٥ محاولات خاطئة يُحظر الدخول ١٥ دقيقة. انتظر، أو اطلب من إدارة المدرسة إعادة تعيين كلمة المرور فيُفتح الحساب فورًا.\n- **«اسم المستخدم أو البريد الإلكتروني أو كلمة المرور غير صحيحة» رغم صحتها**: تأكد أنك على عنوان مدرستك لا على balqalam.com ولا على مدرسة أخرى، وأن الرمز بلا مسافات.\n- **لم تصل رسالة الاستعادة**: افحص البريد المزعج وانتظر دقائق. نرسلها فقط إن كان البريد مسجلًا على حساب، ومن يدخل برمز يطلب من إدارة المدرسة.\n- **«انتهت صلاحية رابط إعادة التعيين»**: اضغط **نسيت كلمة المرور؟** من جديد واستخدم أحدث رسالة.\n- **«هذا الحساب موقوف»**: لا يرفع الإيقاف إلا المدرسة، فتواصل مع إدارتها.\n- **«كلمة المرور غلط» وأنا متأكد منها**: تأكد أنك تكتب اسم المستخدم لا البريد، وأن التطبيق ليس مفتوحًا على حساب شخص آخر (اخرج ثم ادخل). إن استمر فاطلب من مشرفة الصف أو إدارة المدرسة إعادة تعيين كلمة المرور.",
+      "en": "1. Open your **school's own address**, for example `yourschool.balqalam.com`, and go to the login page. A login only works at the school that created it.\n2. In **Email or username**, type your email, or the 6-digit login code the school gave you.\n3. Type your **Password** and click **Login**. Your **Dashboard** opens. If you see the school's public home page instead, open the **☰** menu and tap **Platform**.\n4. First time in with the PIN from the school? Balqalam asks you to **Choose your own password**: type a new one twice (4 digits is enough) and click **Save and continue**.\n5. Forgot your password and you have an email? Click **Forgot Password?**, enter your email, and open the reset link we send you.\n6. Forgot it and you sign in with a 6-digit code (no email)? Ask the school office. An admin opens your row in **Students**, **Teachers**, **Parents** or **Staff** and clicks **Generate Credentials**. That gives you a new PIN on the spot.\n\n- The login code is 6 digits and the school's PIN is 4 digits. Every person in a school has their own code.\n- Want to change your email? Ask the school office to update it on your account.\n- You can change your password any time in **Settings → Password**.\n- When an admin resets your password, any lockout is lifted at the same time.\n- In the school app you sign in with your **username** (the number on your card), not your email, and the password is a PIN from the school.\n- Don't keep two people's accounts on one phone: tap ☰ ← **Sign out** before someone else signs in.\n\nTroubleshooting:\n\n- **\"Account not found\"**: type the 6-digit login code in the first box exactly as you received it, not your name or phone number. If it keeps happening, your account hasn't been created yet, so ask the school office to **Generate Credentials**.\n- **The code works but my email doesn't**: your email may not be on your account. Sign in with the code and ask the office to add your email.\n- **The box looks filled but says \"required\"**: the browser is suggesting a saved email without typing it. Tap the box and type it yourself.\n- **\"Access Denied\"**: you are signed in with an account that doesn't belong to this school. Click **Logout** in the menu, then sign in with your code.\n- **\"Too many wrong attempts\"**: after 5 wrong tries the login is blocked for 15 minutes. Wait, or ask the school office to reset your password, which unblocks you straight away.\n- **\"Wrong username, email or password\" with the right password**: check that you are on your own school's address and not balqalam.com or another school's, and that the code has no spaces.\n- **The reset email never arrives**: check spam, and wait a few minutes. We only send it if that email is on an account. If you sign in with a code, ask the school office instead.\n- **\"This reset link has expired\"**: click **Forgot Password?** again and use the newest email.\n- **\"This account is suspended\"**: only the school can lift this. Contact the school office.\n- **\"Wrong password\" though I'm sure it's right**: make sure you type the username, not the email, and that the app isn't open on someone else's account (sign out, then in). If it continues, ask the class supervisor or the school administration to reset the password."
     },
     "keywords": [
       "كلمه المرور",
@@ -1147,6 +1319,14 @@
       "تغيير الايميل",
       "اغير البريد",
       "تغيير البريد",
+      "كلمة المرور غلط",
+      "كلمة السر غلط",
+      "الرقم السري غلط",
+      "اسم المستخدم مش الإيميل",
+      "التطبيق فاتح على حساب تاني",
+      "بيغلط في كلمة المرور",
+      "ما بقدر ادخل",
+      "ولي الأمر ما عارف اسم المستخدم",
       "password",
       "forgot",
       "log in",
@@ -1172,7 +1352,14 @@
       "required",
       "change my email",
       "change email",
-      "update email"
+      "update email",
+      "wrong password",
+      "wrong pin",
+      "username not email",
+      "app is signed in as someone else",
+      "keeps saying wrong password",
+      "can't sign in",
+      "parent doesn't know the username"
     ],
     "guide": "/docs/support/login"
   },
@@ -1298,8 +1485,8 @@
       "en": "Installing the app on a phone, working offline"
     },
     "answer": {
-      "ar": "1. افتح عنوان مدرستك على جوالك (مثل `yourschool.balqalam.com`) وسجّل الدخول.\n2. تظهر نافذة **أضف بالقلم إلى الشاشة الرئيسية**، فاضغط **متابعة**.\n3. **أندرويد (كروم)**: وافق على نافذة التثبيت، فتُضاف أيقونة التطبيق إلى الشاشة الرئيسية.\n4. **آيفون (سفاري)**: اختر **إضافة إلى الشاشة الرئيسية** من قائمة المشاركة، ثم **إضافة**.\n5. افتح «بالقلم» من أيقونته، فيعمل بملء الشاشة كأي تطبيق.\n\n- لا يوجد تنزيل من App Store أو Play Store، فالتطبيق يُثبَّت من الموقع باسم مدرستك وألوانها.\n- دون إنترنت تُحفظ على الجوال: **التحضير السريع**، ودروس «لوموس» واختباراتها، وتسليم الواجبات، وتُرسَل عند عودة الاتصال.\n- الصفحات التي فتحتها من قبل تُفتح دون إنترنت، وتُمسح عند تسجيل الخروج إن كان الجوال مشتركًا.\n- فعّل الإشعارات الفورية لتصلك بداية الحصص والواجبات الجديدة حتى والتطبيق مغلق. انظر الإشعارات.\n\nحل المشكلات:\n\n- **لا تظهر نافذة التثبيت**: تظهر على الجوال فقط، لا على الكمبيوتر ولا بعد التثبيت، وتختفي ١٤ يومًا بعد إغلاقها. ثبّت من قائمة المتصفح: كروم **⋮ ← تثبيت التطبيق**، أو سفاري **مشاركة ← إضافة إلى الشاشة الرئيسية**.\n- **لا يوجد «إضافة إلى الشاشة الرئيسية» على الآيفون**: افتح العنوان في **سفاري**، لا في متصفح واتساب الداخلي أو تطبيق آخر.\n- **رسالة «حُفظ التحضير على هذا الجهاز» لا تختفي**: اتصل بالإنترنت وافتح التطبيق، فيتزامن وحده.\n- **صفحة لا تفتح دون إنترنت**: لم تفتحها على هذا الجوال من قبل. افتحها مرة وأنت متصل.",
-      "en": "1. On your phone, open your school's address (for example `yourschool.balqalam.com`) and sign in.\n2. A sheet appears: **Add balqalam to your Home Screen**. Tap **Continue**.\n3. **Android (Chrome)**: confirm the install prompt. The app icon is added to your home screen.\n4. **iPhone (Safari)**: in the share sheet, choose **Add to Home Screen**, then **Add**.\n5. Open Balqalam from its icon. It opens full screen like a normal app.\n\n- There's no App Store or Play Store download. The app installs from the website, with your school's name and colours.\n- Offline, **Quick Attendance**, Lumos lessons, quizzes and assignment submissions are saved on the phone and sent when the connection returns.\n- Pages you've already opened can be reopened offline. On a shared phone they're cleared when you sign out.\n- Turn on push notifications to hear about classes starting and new homework, even with the app closed. See Notifications.\n\nTroubleshooting:\n\n- **The install sheet doesn't appear**: it only shows on phones, not on a computer or once the app is installed, and it stays hidden for 14 days after you close it. Install from the browser menu instead: Chrome **⋮ → Install app**, or Safari **Share → Add to Home Screen**.\n- **iPhone has no \"Add to Home Screen\"**: open the address in **Safari**, not in WhatsApp's built-in browser or another app.\n- **\"Attendance saved on this device\" won't go away**: connect to the internet and open the app. It syncs on its own.\n- **A page says it can't load offline**: you haven't opened that page on this phone yet. Open it once while you're online."
+      "ar": "1. افتح عنوان مدرستك على جوالك (مثل `yourschool.balqalam.com`) وسجّل الدخول.\n2. تظهر نافذة **أضف بالقلم إلى الشاشة الرئيسية**، فاضغط **متابعة**.\n3. **أندرويد (كروم)**: وافق على نافذة التثبيت، فتُضاف أيقونة التطبيق إلى الشاشة الرئيسية.\n4. **آيفون (سفاري)**: اختر **إضافة إلى الشاشة الرئيسية** من قائمة المشاركة، ثم **إضافة**.\n5. افتح «بالقلم» من أيقونته، فيعمل بملء الشاشة كأي تطبيق.\n\n- لا يوجد تنزيل من App Store أو Play Store، فالتطبيق يُثبَّت من الموقع باسم مدرستك وألوانها.\n- دون إنترنت تُحفظ على الجوال: **التحضير السريع**، ودروس «لوموس» واختباراتها، وتسليم الواجبات، وتُرسَل عند عودة الاتصال.\n- الصفحات التي فتحتها من قبل تُفتح دون إنترنت، وتُمسح عند تسجيل الخروج إن كان الجوال مشتركًا.\n- فعّل الإشعارات الفورية لتصلك بداية الحصص والواجبات الجديدة حتى والتطبيق مغلق. انظر الإشعارات.\n- على أندرويد يستخدم الجميع **تطبيق المدرسة** الخاص بها (لا الخطوات أعلاه): انظر تثبيت تطبيق المدرسة وتحديثه. الخطوات أعلاه لآيفون والحاسوب.\n\nحل المشكلات:\n\n- **لا تظهر نافذة التثبيت**: تظهر على الجوال فقط، لا على الكمبيوتر ولا بعد التثبيت، وتختفي ١٤ يومًا بعد إغلاقها. ثبّت من قائمة المتصفح: كروم **⋮ ← تثبيت التطبيق**، أو سفاري **مشاركة ← إضافة إلى الشاشة الرئيسية**.\n- **لا يوجد «إضافة إلى الشاشة الرئيسية» على الآيفون**: افتح العنوان في **سفاري**، لا في متصفح واتساب الداخلي أو تطبيق آخر.\n- **رسالة «حُفظ التحضير على هذا الجهاز» لا تختفي**: اتصل بالإنترنت وافتح التطبيق، فيتزامن وحده.\n- **صفحة لا تفتح دون إنترنت**: لم تفتحها على هذا الجوال من قبل. افتحها مرة وأنت متصل.",
+      "en": "1. On your phone, open your school's address (for example `yourschool.balqalam.com`) and sign in.\n2. A sheet appears: **Add balqalam to your Home Screen**. Tap **Continue**.\n3. **Android (Chrome)**: confirm the install prompt. The app icon is added to your home screen.\n4. **iPhone (Safari)**: in the share sheet, choose **Add to Home Screen**, then **Add**.\n5. Open Balqalam from its icon. It opens full screen like a normal app.\n\n- There's no App Store or Play Store download. The app installs from the website, with your school's name and colours.\n- Offline, **Quick Attendance**, Lumos lessons, quizzes and assignment submissions are saved on the phone and sent when the connection returns.\n- Pages you've already opened can be reopened offline. On a shared phone they're cleared when you sign out.\n- Turn on push notifications to hear about classes starting and new homework, even with the app closed. See Notifications.\n- On Android everyone uses the **school's own app** (not the steps above): see Installing and updating the school app. The steps above are for iPhone and computers.\n\nTroubleshooting:\n\n- **The install sheet doesn't appear**: it only shows on phones, not on a computer or once the app is installed, and it stays hidden for 14 days after you close it. Install from the browser menu instead: Chrome **⋮ → Install app**, or Safari **Share → Add to Home Screen**.\n- **iPhone has no \"Add to Home Screen\"**: open the address in **Safari**, not in WhatsApp's built-in browser or another app.\n- **\"Attendance saved on this device\" won't go away**: connect to the internet and open the app. It syncs on its own.\n- **A page says it can't load offline**: you haven't opened that page on this phone yet. Open it once while you're online."
     },
     "keywords": [
       "جوال",
@@ -1308,9 +1495,7 @@
       "تلفون",
       "تطبيق",
       "تطبيق الجوال",
-      "تنزيل التطبيق",
       "ايفون",
-      "اندرويد",
       "بدون انترنت",
       "دون انترنت",
       "بدون نت",
@@ -1322,17 +1507,99 @@
       "phone",
       "app",
       "iphone",
-      "android",
       "install",
       "offline",
       "internet",
       "home screen",
       "no connection",
-      "download app",
       "push notifications",
       "notifications on phone"
     ],
     "guide": "/docs/support/mobile"
+  },
+  {
+    "slug": "install-app",
+    "roles": [
+      "teacher",
+      "student",
+      "parent",
+      "admin"
+    ],
+    "title": {
+      "ar": "تثبيت تطبيق المدرسة وتحديثه (أندرويد)",
+      "en": "Installing and updating the school app (Android)"
+    },
+    "summary": {
+      "ar": "تثبيت تطبيق المدرسة على أندرويد وتحديثه وحل مشاكل التثبيت",
+      "en": "Installing the school app on Android, updating it, and fixing install problems"
+    },
+    "answer": {
+      "ar": "1. افتح **رابط التطبيق** الذي أرسلته مدرستك، أو الموجود في صفحة دخول مدرستك، على جوال أندرويد، ثم نزّل الملف.\n2. إن طلب الجوال ذلك فاسمح بالتثبيت من هذا المصدر، واضغط **تثبيت**.\n3. افتح التطبيق، واسمح له بالميكروفون والكاميرا والإشعارات عندما يسأل.\n4. سجّل الدخول **باسم المستخدم** (الرقم الذي على بطاقتك) وكلمة المرور، لا بالبريد.\n5. عندما يظهر **تحديث مطلوب** اضغط **تحديث الآن** وانتظر. إن كنت داخل حصة مباشرة ينتظر التطبيق حتى تخرج منها ثم يطلب التحديث.\n\n- التطبيق باسم مدرستك وألوانها، ويُنزَّل من رابط المدرسة لا من متجر Play. لذلك قد يعرض الجوال تحذيرًا عند التثبيت، والتطبيق آمن.\n- أبقِ **نسخة واحدة** من التطبيق على جوالك. أيقونة قديمة (مثل الأيقونة البرتقالية للموقع) تسبب لخبطة، فاحذفها بضغطة مطوّلة ثم **إزالة**.\n- على آيفون وعلى الحاسوب لا تحتاج تطبيقًا: افتح عنوان المدرسة في المتصفح. انظر الجوال والعمل دون إنترنت.\n- في أندرويد تُفتح الحصص في التطبيق فقط. إن فتحت الحصة من المتصفح ظهرت **افتح التطبيق** أو **نزّل التطبيق**.\n\nحل المشكلات:\n\n- **«تم حظر التطبيق لحماية جهازك» أو «التطبيق ضار للجهاز»**: هذا تحذير عادي لأن التطبيق ليس في المتجر. لا تضغط **حسنًا**؛ اضغط **مزيد من التفاصيل** ثم **التثبيت على أي حال**.\n- **التثبيت يرفض بعد ذلك**: افتح **متجر Play ← صورتك ← Play Protect ← ⚙️** وأوقف **فحص التطبيقات**، ثم ثبّت، ثم أعد تشغيله. في سامسونج أوقف **الحظر التلقائي** من الإعدادات.\n- **الرابط لا يفتح**: أوقف الـVPN، أو بدّل بين الواي فاي وبيانات الجوال، ثم أعد المحاولة.\n- **ما قدرت أثبّت التطبيق**: اضغط **ما قدرت أثبّت التطبيق** في صفحة الحصة، فتدخل من المتصفح لذلك اليوم فقط، ويُبلَّغ مشرف الصف.\n- **التطبيق يعرض مدرسة أخرى أو حصصًا ليست حصصك، أو يُغلق بعد الشعار**: احذف التطبيق (ضغطة مطوّلة ← **إلغاء التثبيت**)، ثم نزّله من جديد من رابط مدرستك، وسجّل الدخول باسم المستخدم.\n- **أريد رابط التطبيق**: اطلبه من المشرفة أو إدارة المدرسة، أو اسأل المساعد.",
+      "en": "1. Open the **app link** your school sent you, or the one on your school's sign-in page, on an Android phone, and download the file.\n2. If the phone asks, allow installing from this source, then tap **Install**.\n3. Open the app and allow the microphone, camera and notifications when it asks.\n4. Sign in with your **username** (the number on your card) and password, not your email.\n5. When **Update required** appears, tap **Update now** and wait. If you are in a live class, the app waits until you leave and then asks.\n\n- The app carries your school's name and colors. It is installed from your school's link, not from the Play Store, so the phone may show a warning. The app is safe.\n- Keep **one copy** of the app on your phone. An old icon (such as the orange website icon) causes confusion. Long-press it and choose **Uninstall**.\n- iPhone and computers need no app: open your school's address in the browser. See Mobile and offline.\n- On Android, classes open in the app only. If you open a class in the browser it shows **Open the app** or **Get the app**.\n\nTroubleshooting:\n\n- **\"App blocked to protect your device\" or \"harmful app\"**: this is normal because the app is not in the store. Do not tap **OK**; tap **More details**, then **Install anyway**.\n- **It still refuses to install**: open **Play Store ← your picture ← Play Protect ← ⚙️** and turn off **Scan apps**, install, then turn it back on. On Samsung turn off **Auto Blocker** in Settings.\n- **The link won't open**: turn off the VPN, or switch between Wi-Fi and mobile data, then try again.\n- **I can't install the app**: tap **I couldn't install the app** on the class page. You get in through the browser for that day only, and the class supervisor is told.\n- **The app shows another school, classes that are not yours, or closes after the logo**: uninstall it (long-press, **Uninstall**), download it again from your school's link, and sign in with your username.\n- **I need the app link**: ask the class supervisor or the school administration, or ask the assistant."
+    },
+    "keywords": [
+      "تثبيت التطبيق",
+      "تنزيل التطبيق",
+      "نزل التطبيق",
+      "حمل التطبيق",
+      "رابط التطبيق",
+      "رسل لي رابط التطبيق",
+      "ارسل رابط التطبيق",
+      "التطبيق ما نزل",
+      "التطبيق ما اتثبت",
+      "التطبيق بيرفض يتثبت",
+      "ما قدرت أثبت التطبيق",
+      "تم حظر التطبيق",
+      "التثبيت على أي حال",
+      "حظر التطبيق",
+      "التطبيق ضار للجهاز",
+      "Play Protect",
+      "الحظر التلقائي",
+      "مصدر غير معروف",
+      "تحديث مطلوب",
+      "تحديث الآن",
+      "تحديث التطبيق",
+      "التطبيق القديم",
+      "الأيقونة البرتقالية",
+      "أيقونتين",
+      "التطبيق بيقفل بعد الشعار",
+      "التطبيق بيقفل طوالي",
+      "التطبيق بيفتح على مدرسة تانية",
+      "التطبيق ظاهر فيه مدرسة ثانية",
+      "حصص ما حصصي",
+      "مسح التطبيق وتنزيله",
+      "الرابط ما فتح",
+      "install app",
+      "download app",
+      "app blocked",
+      "update app",
+      "apk",
+      "app closes",
+      "wrong school in app",
+      "تطبيق اندرويد",
+      "جوال اندرويد",
+      "تنزيل التطبيق على اندرويد",
+      "app link",
+      "send me the app link",
+      "app won't install",
+      "install anyway",
+      "play protect",
+      "unknown source",
+      "update required",
+      "update now",
+      "update the app",
+      "old app",
+      "two icons",
+      "app closes after the logo",
+      "app shows another school",
+      "link does not open",
+      "reinstall the app",
+      "android phone",
+      "android app",
+      "app on android",
+      "download the school app"
+    ],
+    "guide": "/docs/support/install-app"
   },
   {
     "slug": "notifications",
@@ -1351,8 +1618,8 @@
       "en": "Turning on push notifications and what you are notified about"
     },
     "answer": {
-      "ar": "1. اضغط الجرس أعلى الصفحة لفتح **الإشعارات**، ثم تبويب **الإعدادات**.\n2. تحت **الإشعارات الفورية على هذا الجهاز** اضغط **تفعيل**، واسمح بالإشعارات عندما يطلب المتصفح.\n3. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً (مشاركة ← إضافة إلى الشاشة الرئيسية)، ثم فعّل الإشعارات من التطبيق المثبَّت.\n4. اختر أنواع الإشعارات التي تريدها بالبريد وبالإشعار الفوري.\n\n- يصلك إشعار عندما تقترب حصة أنت فيها وعندما تبدأ (مع رابط يدخلك الحصة مباشرة)، وعند تحديد واجب، وعن الغياب والإعلانات والرسائل.\n- يعرض الجرس أعلى لوحة التحكم كل الإشعارات حتى مع إيقاف الإشعارات الفورية.\n- فعّل الإشعارات على كل جهاز تستخدمه على حدة.\n\nحل المشكلات:\n\n- **«الإشعارات محظورة لهذا الموقع»**: اسمح بإشعارات الموقع من إعدادات المتصفح، ثم اضغط **تفعيل** مجدداً.\n- **«هذا المتصفح لا يدعم الإشعارات الفورية»**: استخدم إصداراً حديثاً من Chrome أو Edge أو Safari أو Firefox، أو ثبّت التطبيق على هاتفك.\n- **وصل تذكير الحصة متأخراً أو لم يصل**: تُرسل التذكيرات قبيل كل حصة؛ تأكد أن الإشعارات الفورية مفعّلة على هذا الجهاز.",
-      "en": "1. Click the bell at the top of the page to open **Notifications**, then the **Settings** tab.\n2. Under **Push notifications on this device**, click **Turn on** and allow notifications when the browser asks.\n3. On iPhone, first add the app to your Home Screen (Share → Add to Home Screen), then turn notifications on from the installed app.\n4. Choose which kinds of notification you want by email and by push.\n\n- You're notified when a class you belong to is starting soon and when it starts (with a link straight into the class), when homework is set, and about absences, announcements and messages.\n- The bell at the top of the dashboard shows every notification, even with push off.\n- Turn notifications on separately on each device you use.\n\nTroubleshooting:\n\n- **\"Notifications are blocked for this site\"**: allow notifications for the site in your browser settings, then click **Turn on** again.\n- **\"This browser does not support push notifications\"**: use a current Chrome, Edge, Safari or Firefox, or install the app on your phone.\n- **A class reminder came late or not at all**: reminders are sent shortly before each class; check push is on for this device."
+      "ar": "1. اضغط الجرس أعلى الصفحة لفتح **الإشعارات**، ثم تبويب **الإعدادات**.\n2. تحت **الإشعارات الفورية على هذا الجهاز** اضغط **تفعيل**، واسمح بالإشعارات عندما يطلب المتصفح.\n3. على iPhone أضف التطبيق إلى الشاشة الرئيسية أولاً (مشاركة ← إضافة إلى الشاشة الرئيسية)، ثم فعّل الإشعارات من التطبيق المثبَّت.\n4. اختر أنواع الإشعارات التي تريدها بالبريد وبالإشعار الفوري.\n\n- يصلك إشعار عندما تقترب حصة أنت فيها وعندما تبدأ (مع رابط يدخلك الحصة مباشرة)، وعند تحديد واجب، وعن الغياب والإعلانات والرسائل.\n- يعرض الجرس أعلى لوحة التحكم كل الإشعارات حتى مع إيقاف الإشعارات الفورية.\n- فعّل الإشعارات على كل جهاز تستخدمه على حدة.\n- في تطبيق أندرويد يسألك التطبيق عن الإشعارات بعد الدخول: اضغط **السماح**. يصلك تذكير **قبل كل حصة بعشر دقائق**، وإشعار عند حجز حصة تعويضية أو تغيير موعدها.\n\nحل المشكلات:\n\n- **«الإشعارات محظورة لهذا الموقع»**: اسمح بإشعارات الموقع من إعدادات المتصفح، ثم اضغط **تفعيل** مجدداً.\n- **«هذا المتصفح لا يدعم الإشعارات الفورية»**: استخدم إصداراً حديثاً من Chrome أو Edge أو Safari أو Firefox، أو ثبّت التطبيق على هاتفك.\n- **وصل تذكير الحصة متأخراً أو لم يصل**: تُرسل التذكيرات قبيل كل حصة؛ تأكد أن الإشعارات الفورية مفعّلة على هذا الجهاز.\n- **ظهر في التطبيق «الإشعارات مقفولة»**: اضغط **فتح الإعدادات** وفعّل إشعارات التطبيق.",
+      "en": "1. Click the bell at the top of the page to open **Notifications**, then the **Settings** tab.\n2. Under **Push notifications on this device**, click **Turn on** and allow notifications when the browser asks.\n3. On iPhone, first add the app to your Home Screen (Share → Add to Home Screen), then turn notifications on from the installed app.\n4. Choose which kinds of notification you want by email and by push.\n\n- You're notified when a class you belong to is starting soon and when it starts (with a link straight into the class), when homework is set, and about absences, announcements and messages.\n- The bell at the top of the dashboard shows every notification, even with push off.\n- Turn notifications on separately on each device you use.\n- In the Android app, it asks about notifications after you sign in: tap **Allow**. You get a reminder **ten minutes before every class**, and a notification when a make-up class is booked or moved.\n\nTroubleshooting:\n\n- **\"Notifications are blocked for this site\"**: allow notifications for the site in your browser settings, then click **Turn on** again.\n- **\"This browser does not support push notifications\"**: use a current Chrome, Edge, Safari or Firefox, or install the app on your phone.\n- **A class reminder came late or not at all**: reminders are sent shortly before each class; check push is on for this device.\n- **The app shows \"Notifications are off\"**: tap **Open settings** and turn on the app's notifications."
     },
     "keywords": [
       "إشعارات",
@@ -1370,17 +1637,93 @@
       "push",
       "alerts",
       "reminder",
+      "الإشعارات مقفولة",
+      "فتح الإعدادات",
+      "السماح بالإشعارات",
+      "تذكير قبل الحصة بعشر دقائق",
+      "ما وصلني إشعار الحصة",
       "notify",
       "class reminder",
       "no notifications",
       "turn on notifications",
       "phone notifications",
       "bell",
-      "email notifications"
+      "email notifications",
+      "notifications are off",
+      "open settings",
+      "allow notifications",
+      "reminder ten minutes before class",
+      "didn't get the class notification"
     ],
     "guide": "/docs/support/notifications",
     "routes": [
       "/notifications"
+    ]
+  },
+  {
+    "slug": "class-supervisor",
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "مشرفة الصف وجاهزية الصفوف",
+      "en": "Class supervisor and class readiness"
+    },
+    "summary": {
+      "ar": "تغطية حصة بلا معلم، وتقرير جاهزية الصفوف والملخص الصباحي",
+      "en": "Covering a class with no teacher, the class readiness report and the morning summary"
+    },
+    "answer": {
+      "ar": "1. عندما تبدأ حصة وتمرّ **٥ دقائق** دون أن يدخلها المعلم يصلك تنبيه كمشرفة الصف، ويصل الإدارة أيضًا. اضغط الإشعار.\n2. اختر أحد الخيارين:\n   - **ادخل كمعلم الحصة** لتدرّسي الفصل بنفسك أو تبقي الطلاب في غرفة الحصة.\n   - **احجز حصة تعويضية** لموعد لاحق. انظر الحصة التعويضية.\n3. لمعرفة من هو جاهز، افتح **جاهزية الصفوف** من قائمة التطبيق، أو من **المدرسة ← التحليل** على الويب.\n4. يعرض التقرير لكل صف: من يستخدم التطبيق، ومن لم يحضر حصة منذ بداية الأسبوع، ومن لم يسجّل دخوله أبدًا، ومن أخطأ في كلمة المرور مرات كثيرة، ومن لم تصله الإشعارات.\n5. يصلك كل صباح **ملخص يومي** بحصص اليوم وجاهزية الجميع، فاتصل بمن ظهر عنده تنبيه قبل حصته.\n\n- يُسجَّل لكل صف مشرفة (أو أكثر)، وللمشرفة أن تدخل أي حصة في صفها وتغطيها.\n- لتصلك تنبيهات الغياب تحتاجين **أحدث نسخة من التطبيق** و**الإشعارات مفعّلة**.\n- من يظهر عنده «متصفح الأندرويد: يحتاج يثبّت التطبيق» عليه تثبيت التطبيق. انظر تثبيت تطبيق المدرسة.\n- من أخطأ في كلمة المرور مرات كثيرة اطلبي من إدارة المدرسة إعادة تعيينها.\n\nحل المشكلات:\n\n- **لا يصلني تنبيه غياب المعلم**: حدّثي التطبيق وفعّلي الإشعارات (**السماح**). انظر الإشعارات.\n- **لا أجد «ادخل كمعلم الحصة»**: لستِ مسجّلة مشرفةً لهذا الصف؛ اطلبي من الإدارة تسجيلك.\n- **الطلاب في الحصة ولا معلم**: المشرفة تدخل وتغطي الحصة، أو تحجز حصة تعويضية.\n- **تقرير الجاهزية لا يظهر لي**: يظهر للمشرفات والإدارة فقط.",
+      "en": "1. When a class starts and **5 minutes** pass without its teacher, you get an alert as class supervisor, and so does the administration. Tap the notification.\n2. Choose one:\n   - **Enter as the class teacher** to teach the class yourself or keep the students in the room.\n   - **Book a make-up class** for a later time. See Make-up classes.\n3. To see who is ready, open **Class readiness** from the app menu, or **School ← Analysis** on the web.\n4. The report shows each class: who uses the app, who hasn't attended a class since the start of the week, who has never signed in, who entered a wrong password many times, and who isn't getting notifications.\n5. Every morning you get a **daily summary** of the day's classes and everyone's readiness, so call anyone flagged before their class.\n\n- Each class has one or more supervisors, and a supervisor can enter and cover any class in theirs.\n- To get absence alerts you need the **latest app version** and **notifications on**.\n- Anyone flagged \"Android browser: needs to install the app\" must install it. See Installing the school app.\n- For someone who keeps entering a wrong password, ask the school administration to reset it.\n\nTroubleshooting:\n\n- **I don't get the teacher-absent alert**: update the app and turn notifications on (**Allow**). See Notifications.\n- **I can't find \"Enter as the class teacher\"**: you aren't registered as supervisor of that class; ask the administration to register you.\n- **Students are in class and there is no teacher**: the supervisor enters and covers it, or books a make-up class.\n- **I don't see the readiness report**: it is shown to supervisors and the administration only."
+    },
+    "keywords": [
+      "مشرفة الصف",
+      "مشرف الصف",
+      "مشرف الصف يدخل الحصة",
+      "حصة بلا معلم",
+      "حصة ما فيها معلم",
+      "المعلم ما دخل",
+      "المعلمة ما دخلت",
+      "الطلاب بيدخلوا وما في معلم",
+      "ادخل كمعلم الحصة",
+      "تغطية حصة",
+      "جاهزية الصفوف",
+      "تقرير الجاهزية",
+      "الملخص الصباحي",
+      "من ما دخل التطبيق",
+      "من ما حضر",
+      "مشكلة دخول الطلاب",
+      "class supervisor",
+      "class readiness",
+      "readiness report",
+      "morning summary",
+      "teacher did not join",
+      "no teacher in class",
+      "cover a class",
+      "ما في معلم",
+      "وما في معلم",
+      "كمعلم الحصة",
+      "المعلمة غايبة",
+      "المعلم غايب",
+      "المعلمة غابت",
+      "الاستاذة غايبة",
+      "supervisor enters the class",
+      "class with no teacher",
+      "teacher absent",
+      "students are in and there is no teacher",
+      "enter as the class teacher",
+      "who isn't using the app",
+      "who didn't attend",
+      "sign-in trouble report",
+      "who hasn't attended",
+      "who is not using the app",
+      "no teacher"
+    ],
+    "guide": "/docs/support/class-supervisor",
+    "routes": [
+      "/school/analysis"
     ]
   },
   {
@@ -1495,8 +1838,8 @@
       "en": "When and how to reach the Balqalam team"
     },
     "answer": {
-      "ar": "1. راسلنا على **hi@databayt.org**.\n2. اذكر اسم مدرستك، ووصف ما حدث، وأرفق لقطة شاشة.\n3. ويفيدنا أن تذكر الصفحة التي كنت فيها، وما ضغطته، ونص رسالة الخطأ إن ظهرت.\n\n- الدعم عبر واتساب والبريد، من الأحد إلى الخميس خلال ساعات العمل.\n- اطّلع أولًا على الأسئلة الشائعة، فقد تجد الإجابة هناك.\n\nحل المشكلات:\n\n- **لم يصلك رد بعد** — نرد من الأحد إلى الخميس خلال ساعات العمل. راجع مجلد الرسائل غير المرغوبة، ثم راسلنا مرة أخرى بالعنوان نفسه.\n- **الأمر عاجل والجميع لا يستطيع الدخول** — اذكر ذلك في عنوان الرسالة، وأرفق عنوان مدرستك على الإنترنت.\n- **لا تعرف كيف تأخذ لقطة شاشة** — على الحاسوب اضغط **PrtSc** (ويندوز) أو **Shift + Cmd + 4** (ماك)، وعلى الجوال اضغط زر التشغيل ورفع الصوت معًا.",
-      "en": "1. Email **hi@databayt.org**.\n2. Include your school's name, what went wrong and a screenshot.\n3. It also helps to tell us the page you were on, what you clicked, and any error message.\n\n- Support runs by WhatsApp and email, Sunday to Thursday during working hours.\n- Check the common questions first. The answer may already be there.\n\nTroubleshooting:\n\n- **No reply yet** — we answer Sunday to Thursday during working hours. Check your spam folder, then write again with the same subject.\n- **It's urgent, everyone is locked out** — say so in the subject line and include your school's web address.\n- **You can't take a screenshot** — on a computer press **PrtSc** (Windows) or **Shift + Cmd + 4** (Mac). On a phone press the power and volume-up buttons together."
+      "ar": "1. اسأل **المساعد** أولًا (الأيقونة 🤖 على الويب، أو **المساعد** في قائمة التطبيق) وراجع أدلة المساعدة.\n2. إن لم تُحَل المشكلة فتواصل مع **إدارة المدرسة** (مشرفة الصف أو المدير).\n3. وإن بقيت فراسل **فريق المنصة** على **hi@databayt.org**، واذكر اسم مدرستك، ووصف ما حدث، وأرفق لقطة شاشة.\n4. في أي وقت وفي أي صفحة اضغط **الإبلاغ عن مشكلة** (من قائمة التطبيق أو الرابط أسفل الصفحات) واكتب مشكلتك بكلماتك، وأرفق لقطة شاشة إن أمكن.\n\n- الدعم عبر واتساب والبريد، من الأحد إلى الخميس خلال ساعات العمل.\n- اطّلع أولًا على الأسئلة الشائعة، فقد تجد الإجابة هناك.\n\nحل المشكلات:\n\n- **لم يصلك رد بعد** — نرد من الأحد إلى الخميس خلال ساعات العمل. راجع مجلد الرسائل غير المرغوبة، ثم راسلنا مرة أخرى بالعنوان نفسه.\n- **الأمر عاجل والجميع لا يستطيع الدخول** — اذكر ذلك في عنوان الرسالة، وأرفق عنوان مدرستك على الإنترنت.\n- **لا تعرف كيف تأخذ لقطة شاشة** — على الحاسوب اضغط **PrtSc** (ويندوز) أو **Shift + Cmd + 4** (ماك)، وعلى الجوال اضغط زر التشغيل ورفع الصوت معًا.",
+      "en": "1. Ask the **assistant** first (the 🤖 icon on the web, or **Assistant** in the app menu) and check the help guides.\n2. If that doesn't solve it, contact the **school administration** (the class supervisor or the principal).\n3. If it still persists, write to the **platform team** at **hi@databayt.org** with your school's name, what happened and a screenshot.\n4. At any time, on any screen, tap **Report a problem** (in the app menu or the link at the bottom of pages) and describe it in your own words, with a screenshot if you can.\n\n- Support runs by WhatsApp and email, Sunday to Thursday during working hours.\n- Check the common questions first. The answer may already be there.\n\nTroubleshooting:\n\n- **No reply yet** — we answer Sunday to Thursday during working hours. Check your spam folder, then write again with the same subject.\n- **It's urgent, everyone is locked out** — say so in the subject line and include your school's web address.\n- **You can't take a screenshot** — on a computer press **PrtSc** (Windows) or **Shift + Cmd + 4** (Mac). On a phone press the power and volume-up buttons together."
     },
     "keywords": [
       "تواصل",
@@ -1511,6 +1854,13 @@
       "ابلغ عن مشكله",
       "عاجل",
       "ساعدوني",
+      "وين أجد المساعدة",
+      "من أكلم",
+      "كيف أبلغ عن مشكلة",
+      "الإبلاغ عن مشكلة",
+      "مشكلة في التطبيق",
+      "رد الدعم",
+      "المساعد ما حل مشكلتي",
       "contact",
       "support",
       "help desk",
@@ -1522,7 +1872,13 @@
       "issue",
       "complaint",
       "report a problem",
-      "urgent"
+      "urgent",
+      "where do I get help",
+      "who do I contact",
+      "how do I report a problem",
+      "app problem",
+      "assistant didn't solve it",
+      "didn't find it"
     ],
     "guide": "/docs/support/contact"
   }

@@ -2,7 +2,7 @@
 title: "Timetable"
 description: The weekly timetable, generated for every section, edited by click, and checked for clashes.
 summary: "The weekly timetable: generating it, editing a lesson, fixing clashes"
-keywords: ["timetable", "time table", "schedule", "class schedule", "weekly schedule", "period", "periods", "lesson time", "clash", "conflict", "double booked", "working days", "school day", "join from timetable", "live class", "join class"]
+keywords: ["timetable", "time table", "schedule", "class schedule", "weekly schedule", "period", "periods", "lesson time", "clash", "conflict", "double booked", "working days", "school day", "join from timetable", "live class", "join class", "my timetable shows another day", "timetable shows the wrong day", "timetable in another timezone", "offline showing last saved timetable", "old timetable", "timetable shows saturday", "school time", "what time is the class", "time zone", "timezone"]
 roles: ["admin", "teacher", "parent"]
 flow: view-timetable
 routes: ["/timetable"]
@@ -27,6 +27,8 @@ routes: ["/timetable"]
 - Print the timetable on A4 from the browser.
 - Who teaches what comes from the **Teachers** tab and each teacher's subjects.
 - When the school teaches live, click today's class in the timetable while it runs (or up to 10 minutes before) to join it. A teacher's click starts the class.
+- Timetable and class times are in **school time**, not your phone's time, even for people abroad.
+- On a day with no classes for you, the app shows your **next teaching day**. That is not a mistake.
 
 ## Troubleshooting
 
@@ -35,6 +37,7 @@ routes: ["/timetable"]
 - **"Conflict Detected" when saving** — the teacher or room is already booked in that period. Pick another period or teacher, or fix it from **Conflicts**.
 - **A teacher can't see their timetable** — the teacher must be assigned to the lessons. Check the **Teachers** tab, then ask them to reload.
 - **The wrong days or periods appear** — fix **Working Days** and the periods in **Timetable → Settings** for the right term.
+- **My timetable shows another day ("Offline — showing the last saved timetable")**: the app couldn't reach the server, so it showed the last timetable it saved. Check the internet, then close and reopen the app or pull the screen down. Update the app if it asks.
 
 ## Related
 

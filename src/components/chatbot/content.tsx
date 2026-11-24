@@ -122,6 +122,14 @@ export const ChatbotContent = forwardRef<
       return () => window.removeEventListener("open-chatbot", handleOpenChatbot)
     }, [openChat])
 
+    // `?chat=1` opens the assistant on arrival — the Android app's «المساعد»
+    // lands here through a Custom Tab.
+    useEffect(() => {
+      if (new URLSearchParams(window.location.search).get("chat") === "1") {
+        openChat()
+      }
+    }, [openChat])
+
     const handleSendMessage = useCallback(
       (message: string) => {
         sendMessage(message)

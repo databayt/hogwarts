@@ -124,6 +124,22 @@
     }
   },
   {
+    "slug": "makeup-class",
+    "routes": [
+      "/live"
+    ],
+    "roles": [
+      "admin",
+      "teacher",
+      "parent",
+      "student"
+    ],
+    "title": {
+      "ar": "الحصة التعويضية",
+      "en": "Make-up classes"
+    }
+  },
+  {
     "slug": "teach-live",
     "routes": [
       "/live"
@@ -223,6 +239,20 @@
     "title": {
       "ar": "الإشعارات",
       "en": "Notifications"
+    }
+  },
+  {
+    "slug": "class-supervisor",
+    "routes": [
+      "/school/analysis"
+    ],
+    "roles": [
+      "teacher",
+      "admin"
+    ],
+    "title": {
+      "ar": "مشرفة الصف وجاهزية الصفوف",
+      "en": "Class supervisor and class readiness"
     }
   }
 ]
