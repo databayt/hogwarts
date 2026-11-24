@@ -18,6 +18,8 @@ import type {
 } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { touchActivity } from "@/lib/activity"
+import type { ClientKind, Platform } from "@/lib/client-info"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -211,12 +213,28 @@ export type JoinActor = {
   schoolId: string
 }
 
+/**
+ * How the joiner is connecting, as far as the caller can tell: stamped on the
+ * participant row and on `user_presence`. The LiveKit webhook later overwrites
+ * the row with the SDK's own report (the truth), so this is a best guess.
+ */
+export type JoinClientInfo = {
+  client: ClientKind
+  platform: Platform
+  appVersion?: number | null
+}
+
 export async function performLiveClassJoin(
   sessionId: string,
   {
     allowAutoStart = true,
     actor,
-  }: { allowAutoStart?: boolean; actor?: JoinActor } = {}
+    client,
+  }: {
+    allowAutoStart?: boolean
+    actor?: JoinActor
+    client?: JoinClientInfo
+  } = {}
 ): Promise<JoinResult> {
   let userId: string
   let role: UserRole
@@ -283,7 +301,7 @@ export async function performLiveClassJoin(
     }),
     db.conferenceParticipant.findUnique({
       where: { sessionId_userId: { sessionId, userId } },
-      select: { status: true },
+      select: { status: true, client: true },
     }),
   ])
   if (!liveClass) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
@@ -445,7 +463,14 @@ export async function performLiveClassJoin(
     }
   }
 
-  // Upsert participant row + token timestamp.
+  // Upsert participant row + token timestamp (+ how they connect, when known).
+  const clientFields = client
+    ? {
+        client: client.client,
+        platform: client.platform,
+        ...(client.appVersion != null ? { appVersion: client.appVersion } : {}),
+      }
+    : {}
   await db.conferenceParticipant.upsert({
     where: { sessionId_userId: { sessionId, userId } },
     create: {
@@ -454,12 +479,26 @@ export async function performLiveClassJoin(
       userId,
       role: participantRole,
       tokenIssuedAt: new Date(),
+      ...clientFields,
     },
     update: {
       role: participantRole,
       tokenIssuedAt: new Date(),
+      // The ~4-min token refresh must not overwrite what the LiveKit webhook
+      // already established from the SDK (the truth) with a user-agent guess.
+      ...(existingParticipant?.client ? {} : clientFields),
     },
   })
+  // Record how they use the platform (throttled, never throws).
+  if (client) {
+    void touchActivity({
+      userId,
+      schoolId,
+      client: client.client,
+      platform: client.platform,
+      appVersion: client.appVersion ?? null,
+    })
+  }
 
   // The person's own name, in the school's display — never the username,
   // which for a school member is their login code (see room-name.ts).

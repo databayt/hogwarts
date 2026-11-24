@@ -3,7 +3,9 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { touchActivity } from "@/lib/activity"
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+import { parseAppVersion } from "@/lib/client-info"
 import { toAsciiDigits } from "@/lib/ascii-digits"
 import { db } from "@/lib/db"
 import { passwordMatches } from "@/lib/password-match"
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
         failureReason: reason,
         schoolId: userSchoolId ?? schoolId,
         ip: ip ?? undefined,
+        client: "app",
       })
 
     let user
@@ -161,6 +164,14 @@ export async function POST(request: NextRequest) {
 
     // Returns tokens + user info (including student grade for STUDENT-role users)
     const authResponse = await buildAuthResponse(user)
+    // The app signed in: record it (throttled, never throws).
+    void touchActivity({
+      userId: user.id,
+      schoolId: user.schoolId,
+      client: "app",
+      platform: "android",
+      appVersion: parseAppVersion(request.headers.get("X-App-Version")),
+    })
     return NextResponse.json(authResponse)
   } catch (error) {
     console.error("Mobile auth error:", error)

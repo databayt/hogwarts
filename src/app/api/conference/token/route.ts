@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
+import { platformFromHeaders } from "@/lib/client-info"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
 
   const result = await performLiveClassJoin(sessionId, {
     allowAutoStart: false,
+    client: { client: "web", platform: platformFromHeaders(req.headers) },
   })
 
   const status = result.success

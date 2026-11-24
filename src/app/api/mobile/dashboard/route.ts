@@ -3,6 +3,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { touchActivity } from "@/lib/activity"
+import { parseAppVersion } from "@/lib/client-info"
 import { db } from "@/lib/db"
 import { parseEnabledModules } from "@/lib/enabled-modules"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -32,6 +34,15 @@ export async function GET(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     const { schoolId, userId, role } = auth
+
+    // The app was opened: record it (throttled to ~1 write/hour, never throws).
+    void touchActivity({
+      userId,
+      schoolId,
+      client: "app",
+      platform: "android",
+      appVersion: parseAppVersion(request.headers.get("X-App-Version")),
+    })
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)

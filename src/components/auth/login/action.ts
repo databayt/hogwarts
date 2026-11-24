@@ -8,7 +8,9 @@ import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { AuthError } from "next-auth"
 import * as z from "zod"
 
+import { touchActivity } from "@/lib/activity"
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+import { platformFromHeaders } from "@/lib/client-info"
 import { toAsciiDigits } from "@/lib/ascii-digits"
 import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
@@ -127,6 +129,7 @@ export const login = async (
       failureReason: "USER_NOT_FOUND",
       schoolId: loginSchoolId ?? null,
       ip: clientIp,
+      client: "web",
     })
     return { error: "EMAIL_NOT_FOUND" }
   }
@@ -422,10 +425,20 @@ export const login = async (
     }
 
     // Log successful login (fire-and-forget)
+    const webPlatform = platformFromHeaders(requestHeaders)
     logLoginAttempt({
       email: trimmedIdentifier,
       success: true,
       schoolId: existingUser.schoolId,
+      userAgent: requestHeaders.get("user-agent") ?? undefined,
+      ip: clientIp,
+      client: "web",
+    })
+    void touchActivity({
+      userId: existingUser.id,
+      schoolId: existingUser.schoolId,
+      client: "web",
+      platform: webPlatform,
     })
 
     return { success: "Login successful!", redirectUrl: finalRedirectUrl }
@@ -437,6 +450,7 @@ export const login = async (
         failureReason: error.type,
         schoolId: existingUser.schoolId,
         ip: clientIp,
+        client: "web",
       })
       switch (error.type) {
         case "CredentialsSignin":

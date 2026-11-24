@@ -78,6 +78,7 @@ vi.mock("@/components/auth/mail", () => ({
   sendVerificationEmail: vi.fn(),
 }))
 
+vi.mock("@/lib/activity", () => ({ touchActivity: vi.fn() }))
 vi.mock("@/lib/audit-log", () => ({
   isBruteForceBlocked: vi.fn().mockResolvedValue(false),
   logLoginAttempt: vi.fn(),

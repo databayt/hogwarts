@@ -82,6 +82,8 @@ export async function logLoginAttempt(params: {
   ip?: string
   userAgent?: string
   schoolId?: string | null
+  /** "app" | "web" — which client the attempt came from. */
+  client?: "app" | "web"
 }): Promise<void> {
   try {
     await db.loginAttempt.create({
@@ -92,6 +94,7 @@ export async function logLoginAttempt(params: {
         ip: params.ip,
         userAgent: params.userAgent,
         schoolId: params.schoolId || null,
+        client: params.client ?? null,
       },
     })
   } catch (error) {

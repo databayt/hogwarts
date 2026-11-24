@@ -7,6 +7,8 @@ import { after } from "next/server"
 import { Prisma } from "@prisma/client"
 import { WebhookReceiver, type WebhookEvent } from "livekit-server-sdk"
 
+import { touchActivity } from "@/lib/activity"
+import { clientFromLiveKit } from "@/lib/client-info"
 import { db } from "@/lib/db"
 import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import { notifyClassRecordingReady } from "@/components/school-dashboard/live/actions/notifications"
@@ -38,7 +40,32 @@ export async function verifyWebhook(
   authHeader: string | null
 ): Promise<WebhookEvent> {
   if (!authHeader) throw new Error("missing authorization header")
-  return getReceiver().receive(body, authHeader)
+  const event = await getReceiver().receive(body, authHeader)
+  // The SDK's typed ParticipantInfo has no `clientInfo` and the receiver parses
+  // with `ignoreUnknownFields`, so a field the SFU does send is dropped. Keep
+  // it from the raw (already signature-verified) body for the join handler.
+  try {
+    const raw = JSON.parse(body)?.participant?.clientInfo
+    if (raw && typeof raw === "object") rawClientInfo.set(event, raw)
+  } catch {
+    // not JSON-parsable twice — nothing to keep
+  }
+  return event
+}
+
+const rawClientInfo = new WeakMap<WebhookEvent, unknown>()
+
+/**
+ * The participant's LiveKit `ClientInfo` (`sdk`, `os`) from a webhook event,
+ * mapped to our `{client, platform}` — or null when the event carries none.
+ * Read it BEFORE `truncatePayload`, which keeps only the identity.
+ */
+export function clientFromWebhookEvent(event: WebhookEvent) {
+  const info =
+    (event.participant as { clientInfo?: unknown } | undefined)?.clientInfo ??
+    rawClientInfo.get(event)
+  if (!info || typeof info !== "object") return null
+  return clientFromLiveKit(info as { sdk?: string | number; os?: string })
 }
 
 /**
@@ -292,6 +319,10 @@ async function applyEvent(
       const identity = event.participant?.identity
       if (identity) {
         const now = eventTime(event)
+        // The SDK's own report of what is connecting — the truth, unlike the
+        // user-agent guess made at token time (it sees through Chrome's
+        // "desktop site"). Null when the event carries none.
+        const detected = clientFromWebhookEvent(event)
         const existing = await db.conferenceParticipant.findFirst({
           where: { sessionId, userId: identity, schoolId },
           select: { id: true, joinedAt: true, activeSince: true, status: true },
@@ -315,12 +346,23 @@ async function applyEvent(
               status: "joined",
               joinedAt: existing.joinedAt ?? now,
               activeSince: existing.activeSince ?? now,
+              ...(detected
+                ? { client: detected.client, platform: detected.platform }
+                : {}),
               ...(existing.joinedAt && !existing.activeSince
                 ? { reconnectCount: { increment: 1 } }
                 : {}),
             },
             select: { id: true },
           })
+          if (detected) {
+            void touchActivity({
+              userId: identity,
+              schoolId,
+              client: detected.client,
+              platform: detected.platform,
+            })
+          }
           // Someone is in the room now. If their other side is not, tell it
           // (actions/waiting-nudge.ts). After the response and best-effort:
           // a notice must never cost the presence write its delivery.

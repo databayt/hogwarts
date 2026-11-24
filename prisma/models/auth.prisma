@@ -168,6 +168,9 @@ model User {
   lessonQuizAttempts    LessonQuizAttempt[]
   catalogCertificates   SubjectCertificate[]
 
+  // Readiness: how this person last used the platform
+  presence UserPresence?
+
   // Membership relations
   membershipRequests         MembershipRequest[] @relation("MembershipRequestUser")
   reviewedMembershipRequests MembershipRequest[] @relation("MembershipRequestReviewer")

@@ -385,6 +385,7 @@ model School {
   // Audit relations
   auditLogs     AuditLog[]
   loginAttempts LoginAttempt[]
+  userPresence  UserPresence[]
 
   // Sales Module relations
   leads          Lead[]

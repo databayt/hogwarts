@@ -43,6 +43,8 @@ model LoginAttempt {
   userAgent     String?
   success       Boolean
   failureReason String?
+  // "app" | "web" — which client the sign-in came from.
+  client        String?  @db.VarChar(8)
   timestamp     DateTime @default(now())
 
   school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -51,4 +53,26 @@ model LoginAttempt {
   @@index([email, timestamp])
   @@index([ip, timestamp])
   @@map("login_attempts")
+}
+
+// One row per person: how they last used the platform. Written by
+// `touchActivity` (src/lib/activity.ts), throttled to ~1 write/hour unless the
+// client/platform/app version changed. Feeds the readiness status.
+model UserPresence {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  schoolId         String?
+  lastSeenAt       DateTime
+  lastClient       String?   @db.VarChar(8) // "app" | "web"
+  lastPlatform     String?   @db.VarChar(12)
+  lastAppVersion   Int?
+  lastAppAt        DateTime? // last time the native app was used
+  lastAndroidWebAt DateTime? // last time an Android phone used the web instead
+  updatedAt        DateTime  @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  @@index([schoolId, lastSeenAt])
+  @@map("user_activity")
 }

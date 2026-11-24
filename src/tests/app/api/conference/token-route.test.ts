@@ -91,6 +91,7 @@ describe("GET /api/conference/token", () => {
     const res = await GET(req("s1"))
     expect(performLiveClassJoin).toHaveBeenCalledWith("s1", {
       allowAutoStart: false,
+      client: { client: "web", platform: "other" },
     })
     expect(res.status).toBe(200)
     expect(res.headers.get("Cache-Control")).toBe("no-store")

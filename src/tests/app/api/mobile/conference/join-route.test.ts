@@ -73,6 +73,7 @@ describe("GET /api/mobile/conference/[id]/join", () => {
 
     expect(performLiveClassJoin).toHaveBeenCalledWith(SESSION, {
       actor: { userId: USER, role: "STUDENT", schoolId: SCHOOL },
+      client: { client: "app", platform: "android", appVersion: null },
     })
     expect(res.status).toBe(200)
     expect(res.headers.get("Cache-Control")).toBe("no-store")

@@ -2,7 +2,24 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { performLiveClassJoin, type JoinResult } from "./join-core"
+import { headers } from "next/headers"
+
+import { platformFromHeaders } from "@/lib/client-info"
+
+import {
+  performLiveClassJoin,
+  type JoinClientInfo,
+  type JoinResult,
+} from "./join-core"
+
+/** The web client's best-guess platform, from the request that triggered this. */
+async function webClientInfo(): Promise<JoinClientInfo | undefined> {
+  try {
+    return { client: "web", platform: platformFromHeaders(await headers()) }
+  } catch {
+    return undefined // no request scope (tests, scripts)
+  }
+}
 
 /**
  * Request a join token for a live class. Validates auth + tenant +
@@ -15,5 +32,8 @@ import { performLiveClassJoin, type JoinResult } from "./join-core"
  * LiveKit JWTs are stateless and cannot be invalidated once issued).
  */
 export async function joinLiveClass(sessionId: string): Promise<JoinResult> {
-  return performLiveClassJoin(sessionId, { allowAutoStart: true })
+  return performLiveClassJoin(sessionId, {
+    allowAutoStart: true,
+    client: await webClientInfo(),
+  })
 }

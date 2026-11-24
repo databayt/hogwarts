@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
+import { parseAppVersion } from "@/lib/client-info"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
@@ -69,6 +70,12 @@ export async function GET(
       userId: auth.userId,
       role: auth.role as UserRole,
       schoolId: auth.schoolId,
+    },
+    // The mobile lane is the native Android app (iOS has no live-class client).
+    client: {
+      client: "app",
+      platform: "android",
+      appVersion: parseAppVersion(request.headers.get("X-App-Version")),
     },
   })
 
