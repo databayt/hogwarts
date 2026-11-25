@@ -58,6 +58,7 @@ import type {
 import { ANDROID_APP_URL } from "../android-app"
 import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
 import { REACTIONS, timerLeft } from "./class-channel"
+import { noteTrace } from "./connection-trace"
 import { formatClock, timerDone, useTimerNow } from "./class-timer"
 import type { RoomLabels } from "./labels"
 import { QUALITY_TONE } from "./overlays"
@@ -284,7 +285,7 @@ export const ClassControls = memo(function ClassControls({
         )}
 
       {canPublish && <CameraDisc labels={labels} />}
-      {canPublish && <MicDisc labels={labels} />}
+      {canPublish && <MicDisc labels={labels} onError={onShareError} />}
       {/* The school's Hands switch decides this disc. It used to render for
           every student regardless, while the teacher's hands list exists only
           with the tool on — a raised hand nobody could see or lower. */}
@@ -635,9 +636,22 @@ function ClassToolsCard({
   )
 }
 
-function MicDisc({ labels }: { labels: RoomLabels }) {
+function MicDisc({
+  labels,
+  onError,
+}: {
+  labels: RoomLabels
+  onError?: (message: string) => void
+}) {
   const { toggle, enabled, pending } = useTrackToggle({
     source: Track.Source.Microphone,
+    // Without a handler a blocked microphone rejects into nothing: the disc
+    // stays red and the family reports "the mic closes by itself".
+    onDeviceError: (e) => {
+      const kind = micFailureKind(e)
+      noteTrace("mic", kind)
+      onError?.(micErrorMessage(kind, labels))
+    },
   })
   return (
     <button
@@ -652,11 +666,46 @@ function MicDisc({ labels }: { labels: RoomLabels }) {
       aria-pressed={enabled}
       aria-label={enabled ? labels.mic : labels.micMuted}
       disabled={pending}
-      onClick={() => void toggle()}
+      onClick={() => {
+        noteTrace("mic", enabled ? "off" : "on")
+        void toggle()
+      }}
     >
       <SfSymbol glyph={enabled ? micFill : micSlashFill} pt={GLYPH_PT} />
     </button>
   )
+}
+
+export type MicFailure = "denied" | "missing" | "in-use" | "failed"
+
+/** Which way a microphone start failed, from the browser's error name. */
+export function micFailureKind(e: Error): MicFailure {
+  if (e.name === "NotAllowedError" || e.name === "SecurityError") return "denied"
+  if (e.name === "NotFoundError" || e.name === "OverconstrainedError")
+    return "missing"
+  if (e.name === "NotReadableError" || e.name === "AbortError") return "in-use"
+  return "failed"
+}
+
+/**
+ * The words for a failed microphone. In WhatsApp's or Facebook's in-app
+ * browser there is no microphone at all, so say where to open the class.
+ */
+export function micErrorMessage(
+  kind: MicFailure,
+  labels: RoomLabels,
+  ua: string = typeof navigator === "undefined" ? "" : navigator.userAgent
+): string {
+  if (/WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(ua)) return labels.micInAppBrowser
+  const text =
+    kind === "denied"
+      ? labels.deviceDenied
+      : kind === "missing"
+        ? labels.deviceMissing
+        : kind === "in-use"
+          ? labels.deviceInUse
+          : labels.deviceFailed
+  return text.replace("{device}", labels.deviceMic)
 }
 
 function CameraDisc({ labels }: { labels: RoomLabels }) {

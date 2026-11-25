@@ -41,6 +41,11 @@ export const TRACE_KINDS = [
   "quality",
   /** The screen wake lock: on, refused, released. */
   "wake",
+  /**
+   * The microphone toggle: on, off, denied, missing, in-use, failed. A "the mic
+   * closes by itself" report (Al-Ibda 2026-11-25) left no trace before this.
+   */
+  "mic",
 ] as const
 
 export type TraceKind = (typeof TRACE_KINDS)[number]

@@ -207,6 +207,7 @@
     "deviceMissing": "No {device} was found on this device. You can still listen and chat.",
     "deviceInUse": "Another app is using your {device}. Close it, then rejoin.",
     "deviceFailed": "Your {device} could not start. You can still listen and chat.",
+    "micInAppBrowser": "The microphone does not work inside WhatsApp or Facebook. Open the class in Chrome or in the school app.",
     "card": {
       "joinLesson": "Join C{c}, L{l}",
       "joining": "Joining…",

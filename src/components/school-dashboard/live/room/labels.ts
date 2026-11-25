@@ -225,6 +225,8 @@ export const DEFAULT_ROOM_LABELS = {
     "No {device} was found on this device. You can still listen and chat.",
   deviceInUse: "Another app is using your {device}. Close it, then rejoin.",
   deviceFailed: "Your {device} could not start. You can still listen and chat.",
+  micInAppBrowser:
+    "The microphone does not work inside WhatsApp or Facebook. Open the class in Chrome or in the school app.",
   /** Android -> the school's app, and the silent-mic banner for hosts. */
   androidAppTitle: "Open the class in the app",
   androidAppOpen: "Open in the app",
