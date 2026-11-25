@@ -399,6 +399,7 @@ export async function GET(request: NextRequest) {
       today_timetable: todayTimetable,
       // --- additive (2026-11) ---
       can_view_readiness: canViewReadiness,
+      can_view_analysis: hasRole(auth, "ADMIN", "DEVELOPER"),
     })
   } catch (error) {
     console.error("Mobile dashboard error:", error)
