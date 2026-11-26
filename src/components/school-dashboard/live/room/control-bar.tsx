@@ -59,6 +59,11 @@ import { ANDROID_APP_URL } from "../android-app"
 import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
 import { REACTIONS, timerLeft } from "./class-channel"
 import { noteTrace } from "./connection-trace"
+import {
+  deviceErrorMessage,
+  deviceFailureKind,
+  useDeviceFailure,
+} from "./permission-guide"
 import { formatClock, timerDone, useTimerNow } from "./class-timer"
 import type { RoomLabels } from "./labels"
 import { QUALITY_TONE } from "./overlays"
@@ -643,12 +648,14 @@ function MicDisc({
   labels: RoomLabels
   onError?: (message: string) => void
 }) {
+  const guide = useDeviceFailure()
   const { toggle, enabled, pending } = useTrackToggle({
     source: Track.Source.Microphone,
     // Without a handler a blocked microphone rejects into nothing: the disc
     // stays red and the family reports "the mic closes by itself".
     onDeviceError: (e) => {
       const kind = micFailureKind(e)
+      if (guide) return guide.report("mic", kind)
       noteTrace("mic", kind)
       onError?.(micErrorMessage(kind, labels))
     },
@@ -680,11 +687,7 @@ export type MicFailure = "denied" | "missing" | "in-use" | "failed"
 
 /** Which way a microphone start failed, from the browser's error name. */
 export function micFailureKind(e: Error): MicFailure {
-  if (e.name === "NotAllowedError" || e.name === "SecurityError") return "denied"
-  if (e.name === "NotFoundError" || e.name === "OverconstrainedError")
-    return "missing"
-  if (e.name === "NotReadableError" || e.name === "AbortError") return "in-use"
-  return "failed"
+  return deviceFailureKind(e)
 }
 
 /**
@@ -694,23 +697,21 @@ export function micFailureKind(e: Error): MicFailure {
 export function micErrorMessage(
   kind: MicFailure,
   labels: RoomLabels,
-  ua: string = typeof navigator === "undefined" ? "" : navigator.userAgent
+  ua?: string
 ): string {
-  if (/WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(ua)) return labels.micInAppBrowser
-  const text =
-    kind === "denied"
-      ? labels.deviceDenied
-      : kind === "missing"
-        ? labels.deviceMissing
-        : kind === "in-use"
-          ? labels.deviceInUse
-          : labels.deviceFailed
-  return text.replace("{device}", labels.deviceMic)
+  return deviceErrorMessage(kind, "mic", labels, ua)
 }
 
 function CameraDisc({ labels }: { labels: RoomLabels }) {
+  const guide = useDeviceFailure()
   const { toggle, enabled, pending } = useTrackToggle({
     source: Track.Source.Camera,
+    // A blocked camera used to fail silently on tap; it now opens the guide.
+    onDeviceError: (e) => {
+      const kind = deviceFailureKind(e)
+      if (guide) return guide.report("camera", kind)
+      noteTrace("camera", kind)
+    },
   })
   return (
     <button

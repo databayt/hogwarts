@@ -46,6 +46,8 @@ export const TRACE_KINDS = [
    * closes by itself" report (Al-Ibda 2026-11-25) left no trace before this.
    */
   "mic",
+  /** The camera toggle: denied, missing, in-use, failed, auto-on. */
+  "camera",
 ] as const
 
 export type TraceKind = (typeof TRACE_KINDS)[number]

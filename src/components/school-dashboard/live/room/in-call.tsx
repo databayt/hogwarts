@@ -31,6 +31,11 @@ import type {
 } from "@/components/school-dashboard/live/types"
 
 import type { RoomLabels } from "./labels"
+import {
+  PermissionGuideProvider,
+  PermissionWatcher,
+  useDeviceFailure,
+} from "./permission-guide"
 import { RoomShell } from "./room-shell"
 import { SilentHostBanner } from "./silent-host-banner"
 import type { SlideOption } from "./slide-options"
@@ -91,7 +96,15 @@ interface Props {
   onEnd: (kind: InCallEnd) => void
 }
 
-export function InCall({
+export function InCall(props: Props) {
+  return (
+    <PermissionGuideProvider labels={props.labels.room} locale={props.locale}>
+      <InCallRoom {...props} />
+    </PermissionGuideProvider>
+  )
+}
+
+function InCallRoom({
   ticket,
   sessionId,
   title,
@@ -104,11 +117,11 @@ export function InCall({
   detailHref,
   onEnd,
 }: Props) {
+  const guide = useDeviceFailure()
   const router = useRouter()
   // A camera/mic the browser refused or could not find. The call carries on —
   // a student who denied the camera can still listen — so this is a notice
   // over the room, not an error that replaces it.
-  const [deviceNotice, setDeviceNotice] = useState<string | null>(null)
   const [micFailed, setMicFailed] = useState(false)
   const options = useMemo(() => roomOptionsFor(ticket.role), [ticket.role])
   const isHost = ticket.role === "HOST" || ticket.role === "CO_HOST"
@@ -130,20 +143,20 @@ export function InCall({
           isHost || (ticket.role !== "OBSERVER" && !ticket.roomConfig.joinMuted)
         }
         onMediaDeviceFailure={(failure, kind) => {
-          if (kind === "audioinput") setMicFailed(true)
-          const device =
-            kind === "audioinput"
-              ? labels.room.deviceMic
-              : labels.room.deviceCamera
-          const text =
+          const device = kind === "audioinput" ? "mic" : "camera"
+          if (device === "mic") setMicFailed(true)
+          // Same classifier and words as the tap path: a block opens the
+          // step-by-step guide, the rest a short notice.
+          guide?.report(
+            device,
             failure === MediaDeviceFailure.PermissionDenied
-              ? labels.room.deviceDenied
+              ? "denied"
               : failure === MediaDeviceFailure.NotFound
-                ? labels.room.deviceMissing
+                ? "missing"
                 : failure === MediaDeviceFailure.DeviceInUse
-                  ? labels.room.deviceInUse
-                  : labels.room.deviceFailed
-          setDeviceNotice(text.replace("{device}", device))
+                  ? "in-use"
+                  : "failed"
+          )
         }}
         // A connection that never came up. Without this the only trace was a
         // console warning and the reader sat on an empty stage. The same
@@ -182,21 +195,7 @@ export function InCall({
         }}
         className="h-full w-full"
       >
-        {deviceNotice && (
-          <div
-            role="alert"
-            className="bg-background/95 fixed inset-x-4 top-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-xl border p-3 text-sm shadow-lg"
-          >
-            <p className="flex-1">{deviceNotice}</p>
-            <button
-              type="button"
-              className="text-muted-foreground shrink-0 underline"
-              onClick={() => setDeviceNotice(null)}
-            >
-              {labels.room.dismiss}
-            </button>
-          </div>
-        )}
+        <PermissionWatcher labels={labels.room} />
         {isHost && (
           <SilentHostBanner micFailed={micFailed} labels={labels.room} />
         )}
