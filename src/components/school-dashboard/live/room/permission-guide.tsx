@@ -106,7 +106,8 @@ export function PermissionGuideProvider({
       noteTrace(device, kind)
       if (kind === "denied") {
         setBlocked((b) => ({ ...b, [device]: true }))
-        setOpen(device)
+        // Both blocked: the mic's guide first — a class can run without the camera.
+        setOpen((o) => (o === "mic" && device === "camera" ? "mic" : device))
         return
       }
       setNotice({ text: deviceErrorMessage(kind, device, labels), ok: false })
@@ -217,7 +218,11 @@ function PermissionGuide({
 
   return (
     <Dialog open={device !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent dir={dir} className="max-h-[85dvh] overflow-y-auto">
+      <DialogContent
+        dir={dir}
+        showCloseButton={false}
+        className="max-h-[85dvh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle>
             {kind === "mic" ? labels.permMicTitle : labels.permCameraTitle}
