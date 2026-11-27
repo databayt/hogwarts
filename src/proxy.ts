@@ -76,6 +76,9 @@ const publicRoutes = [
   "/licenses-en",
   // Public marketing survey (lead-gen) — anyone can answer it.
   "/survey",
+  // Play-listing legal pages: public, no account.
+  "/privacy",
+  "/delete-account",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
@@ -105,7 +108,7 @@ const publicShareRoutes = ["/invoice/", "/report-card/", "/certificate/"]
 // to the school's own domain, and the rewrite made that link a 404. They are
 // NOT public: an invitee still gets bounced to login first (with the school's
 // context), which is the intended flow.
-const globalRootRoutes = ["/accept-invite"]
+const globalRootRoutes = ["/accept-invite", "/privacy", "/delete-account"]
 
 function isPublicShareRoute(pathWithoutLocale: string): boolean {
   return publicShareRoutes.some(

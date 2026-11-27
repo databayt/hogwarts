@@ -31,6 +31,9 @@ export const publicRoutes = [
   "/licenses-en",
   // Public marketing survey (lead-gen) — anyone can answer it.
   "/survey",
+  // Play-listing legal pages: public, no account.
+  "/privacy",
+  "/delete-account",
   // NOTE: /onboarding is removed from public routes
   // Auth is now handled client-side in OnboardingContent for better UX
   // This allows the component to redirect with callback URL

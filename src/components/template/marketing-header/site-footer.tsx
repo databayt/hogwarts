@@ -37,6 +37,20 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
           </a>
           {" · "}
           <ReportIssue />
+          {" · "}
+          <a
+            href={`/${locale}/privacy`}
+            className="underline underline-offset-4"
+          >
+            {isRTL ? "سياسة الخصوصية" : "Privacy"}
+          </a>
+          {" · "}
+          <a
+            href={`/${locale}/delete-account`}
+            className="underline underline-offset-4"
+          >
+            {isRTL ? "حذف الحساب" : "Delete account"}
+          </a>
         </p>
       </div>
     </footer>
